@@ -1,0 +1,369 @@
+import json
+from datetime import datetime
+
+from sqlalchemy import text
+
+from app import engine, init_db
+
+
+def clean_details(items):
+    return json.dumps(
+        [{"label": label, "value": value} for label, value in items if value],
+        ensure_ascii=False,
+    )
+
+
+def record_exists(title):
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("SELECT id FROM submissions WHERE title = :title LIMIT 1"),
+            {"title": title},
+        ).first()
+
+    return result is not None
+
+
+def insert_record(record):
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                INSERT INTO submissions (
+                    submission_type,
+                    title,
+                    related_to,
+                    source_url,
+                    submitter_name,
+                    submitter_role,
+                    contact,
+                    needs_verification,
+                    review_status,
+                    details_json,
+                    created_at
+                )
+                VALUES (
+                    :submission_type,
+                    :title,
+                    :related_to,
+                    :source_url,
+                    :submitter_name,
+                    :submitter_role,
+                    :contact,
+                    :needs_verification,
+                    :review_status,
+                    :details_json,
+                    :created_at
+                )
+                """
+            ),
+            {
+                "submission_type": record["submission_type"],
+                "title": record["title"],
+                "related_to": record.get("related_to", ""),
+                "source_url": record.get("source_url", ""),
+                "submitter_name": "LiteFeet Archive",
+                "submitter_role": "Archive Research Seed",
+                "contact": "",
+                "needs_verification": 1,
+                "review_status": record["review_status"],
+                "details_json": clean_details(record["details"]),
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+            },
+        )
+
+
+RECORDS = [
+    {
+        "submission_type": "historical_claim",
+        "title": "LiteFeet / Get Lite Emerged from Harlem and the Bronx",
+        "related_to": "LiteFeet origins, Get Lite, Harlem, Bronx",
+        "review_status": "Community Supported",
+        "source_url": "https://daily.redbullmusicacademy.com/2013/05/new-york-stories-emma-warren/",
+        "details": [
+            ("Claim Text", "LiteFeet, also written Lite Feet and often described as getting lite, is a New York street dance culture connected to Harlem and the Bronx in the early-to-mid 2000s."),
+            ("Confidence", "High based on multiple public sources, but still open to community context and correction."),
+            ("Sources to Review", "Red Bull Music Academy Daily, Vulture, STEEZY, CBS/Paramount, academic writing on LiteFeet."),
+            ("Archive Note", "Community members can add details about early dancers, crews, courts, parties, battles, and borough-specific history."),
+        ],
+    },
+    {
+        "submission_type": "historical_claim",
+        "title": "The Real Harlem Shake Predates LiteFeet",
+        "related_to": "Harlem Shake, LiteFeet roots, Al B, Rucker Park",
+        "review_status": "Community Supported",
+        "source_url": "https://www.smithsonianmag.com/smart-news/presenting-the-real-harlem-shake-21838530/",
+        "details": [
+            ("Claim Text", "The real Harlem Shake predates LiteFeet and helped shape the movement vocabulary, feeling, and cultural lineage connected to LiteFeet."),
+            ("Confidence", "High, but exact origin details vary by source and community memory."),
+            ("Sources to Review", "Smithsonian, DNAinfo, IUDance, AllHipHop, Vulture."),
+            ("Archive Note", "This claim should collect memories and sources around Al B / Al Cisco / Albert Boyce, Rucker Park, Go Crazy Boyz, music videos, and Harlem dance history."),
+        ],
+    },
+    {
+        "submission_type": "historical_claim",
+        "title": "The 2013 Harlem Shake Meme Is Not the Real Harlem Shake",
+        "related_to": "Harlem Shake meme, real Harlem Shake, cultural confusion",
+        "review_status": "Community Supported",
+        "source_url": "https://www.dance-enthusiast.com/features/view/Lite-Feet-Chrybaby-Cozie/",
+        "details": [
+            ("Claim Text", "The 2013 viral Harlem Shake meme is not the real Harlem Shake and was criticized by Harlem dancers for disconnecting the name from the actual Harlem dance."),
+            ("Confidence", "High based on first-person and media sources."),
+            ("Sources to Review", "Dance Enthusiast interview with Chrybaby Cozie, Wired, AllHipHop."),
+            ("Archive Note", "This record should preserve the difference between the real Harlem Shake and the internet meme."),
+        ],
+    },
+    {
+        "submission_type": "move_info",
+        "title": "Bad One / Badone",
+        "related_to": "Bad One, Badone, LiteFeet move vocabulary",
+        "review_status": "Needs Verification",
+        "source_url": "https://www.youtube.com/watch?v=rpmEoTVcmoo",
+        "details": [
+            ("Move / Style Name", "Bad One / Badone"),
+            ("Move Origin / Context", "Bad One/Badone appears in LiteFeet tutorial titles, move lists, and music callouts, but public written sources do not clearly confirm the originator, first crew, first year, original spelling, or earliest known use."),
+            ("Confidence", "Medium for the claim that Bad One/Badone is a recognized LiteFeet move. Low/unknown for origin details."),
+            ("Needs Verification", "Originator, first known year, borough/crew/event, original spelling, whether Bad One and Badone are historically the same, and any older names or variations."),
+            ("Archive Question", "Who taught you Bad One? What year did you first see it? What crew or borough did you connect it with? Was it called Bad One, Badone, Bad Bad One, or something else?"),
+        ],
+    },
+    {
+        "submission_type": "historical_claim",
+        "title": "Bad One / Badone Is a Recognized LiteFeet Move",
+        "related_to": "Bad One, Badone, LiteFeet basics",
+        "review_status": "Needs Verification",
+        "source_url": "https://www.youtube.com/watch?v=rpmEoTVcmoo",
+        "details": [
+            ("Claim Text", "Bad One/Badone is a recognized LiteFeet move used in Get Lite/LiteFeet vocabulary."),
+            ("Confidence", "Medium. Supported by tutorial/video evidence, but still needs community confirmation and source expansion."),
+            ("Sources to Review", "YouTube tutorials, YouTube Bad One playlists, Pond5 Litefeet music brief."),
+            ("Archive Note", "This should remain open for community verification until origin and lineage details are stronger."),
+        ],
+    },
+    {
+        "submission_type": "move_info",
+        "title": "Harlem Shake",
+        "related_to": "Harlem Shake, LiteFeet roots",
+        "review_status": "Community Supported",
+        "source_url": "https://www.smithsonianmag.com/smart-news/presenting-the-real-harlem-shake-21838530/",
+        "details": [
+            ("Move / Style Name", "Harlem Shake"),
+            ("Move Origin / Context", "Older Harlem dance commonly connected to Al B / Al Cisco / Albert Boyce, Rucker Park, and early-2000s music video exposure. It is part of the cultural lineage feeding LiteFeet."),
+            ("Sources to Review", "Smithsonian, DNAinfo, IUDance, AllHipHop, Vulture."),
+            ("Archive Note", "Exact origin details and personal accounts should be community-reviewed."),
+        ],
+    },
+    {
+        "submission_type": "move_info",
+        "title": "Tone Wop / Tone Whop",
+        "related_to": "Tone Wop, Tone Whop, LiteFeet movement vocabulary",
+        "review_status": "Needs Verification",
+        "source_url": "https://www.steezy.co/posts/learn-about-lite-feet-the-newest-evolution-in-hip-hop-dance",
+        "details": [
+            ("Move / Style Name", "Tone Wop / Tone Whop"),
+            ("Move Origin / Context", "Listed in public LiteFeet education sources as a foundational or popular LiteFeet move, often connected with Rev Up/Whop vocabulary."),
+            ("Confidence", "Supported as a recognized term, but origin and lineage details need community verification."),
+            ("Archive Note", "Needs first-person dancer context, video links, and history from people who learned or taught the move."),
+        ],
+    },
+    {
+        "submission_type": "move_info",
+        "title": "Rev Up / Whop",
+        "related_to": "Rev Up, Whop, LiteFeet movement vocabulary",
+        "review_status": "Needs Verification",
+        "source_url": "https://www.youtube.com/watch?v=CJvCzHksm54",
+        "details": [
+            ("Move / Style Name", "Rev Up / Whop"),
+            ("Move Origin / Context", "Appears in LiteFeet tutorials and is often connected to Tone Wop vocabulary."),
+            ("Confidence", "Supported by tutorial evidence; origin and historical context need community verification."),
+            ("Archive Note", "Needs details on names, variations, who popularized it, and how dancers describe it."),
+        ],
+    },
+    {
+        "submission_type": "move_info",
+        "title": "Lock In",
+        "related_to": "Lock In, LiteFeet routine punctuation",
+        "review_status": "Needs Verification",
+        "source_url": "https://www.steezy.co/posts/learn-about-lite-feet-the-newest-evolution-in-hip-hop-dance",
+        "details": [
+            ("Move / Style Name", "Lock In"),
+            ("Move Origin / Context", "Described by STEEZY as a move used like an exclamation point ending routines."),
+            ("Confidence", "Supported by public dance-education source; origin and popularization need community verification."),
+            ("Archive Note", "Needs examples, dancer explanations, and source links."),
+        ],
+    },
+    {
+        "submission_type": "move_info",
+        "title": "Shoe Tricks / Hat Tricks",
+        "related_to": "LiteFeet performance vocabulary, Showtime",
+        "review_status": "Community Supported",
+        "source_url": "https://www.steezy.co/posts/learn-about-lite-feet-the-newest-evolution-in-hip-hop-dance",
+        "details": [
+            ("Move / Style Name", "Shoe tricks / hat tricks"),
+            ("Move Origin / Context", "Core visual vocabulary in LiteFeet and Showtime-style performance, especially connected to battles, cyphers, and subway performances."),
+            ("Confidence", "Supported by public sources and visible performance practice."),
+            ("Archive Note", "Specific tricks, originators, variations, and notable examples should be added separately."),
+        ],
+    },
+    {
+        "submission_type": "historical_claim",
+        "title": "LiteFeet and Subway Showtime Criminalization",
+        "related_to": "LiteFeet, Showtime, subway dancing, criminalization, public space",
+        "review_status": "Community Supported",
+        "source_url": "https://i-d.co/article/documenting-new-yorks-recently-criminalised-subculture-of-subway-dancing/",
+        "details": [
+            ("Claim Text", "LiteFeet became strongly associated with subway Showtime performance culture, and public coverage in the mid-2010s connected subway dance policing to broken-windows enforcement, race, class, and public-space politics."),
+            ("Confidence", "High based on documentary, journalism, and academic sources."),
+            ("Sources to Review", "i-D/Vice, Viewing NYC, The Nation, Katie Beswick academic chapter, Urban Democracy Lab."),
+            ("Archive Note", "This record should collect community experiences and sources around performance, policing, arrests, safety debates, and public-space culture."),
+        ],
+    },
+    {
+        "submission_type": "dancer_profile",
+        "title": "Al B / Al Cisco / Albert Boyce",
+        "related_to": "Real Harlem Shake, Rucker Park",
+        "review_status": "Needs Verification",
+        "source_url": "https://www.smithsonianmag.com/smart-news/presenting-the-real-harlem-shake-21838530/",
+        "details": [
+            ("Dancer Name / Alias", "Al B / Al Cisco / Albert Boyce"),
+            ("Known For", "Widely credited in public sources as central to the original Harlem Shake / Albee origin story connected to Rucker Park."),
+            ("Confidence", "Supported by public sources, but exact origin details and family/community accounts should be reviewed carefully."),
+            ("Archive Note", "Needs community context, source links, and careful distinction between documented sources and oral history."),
+        ],
+    },
+    {
+        "submission_type": "dancer_profile",
+        "title": "Mr. YouTube",
+        "related_to": "LiteFeet origins, LiteFeet education",
+        "review_status": "Needs Verification",
+        "source_url": "https://www.steezy.co/posts/learn-about-lite-feet-the-newest-evolution-in-hip-hop-dance",
+        "details": [
+            ("Dancer Name / Alias", "Mr. YouTube"),
+            ("Known For", "Identified by STEEZY as one of the original creators of Lite Feet and instructor of an Intro to Lite Feet program; also appears in Vulture's early LiteFeet history coverage."),
+            ("Confidence", "Supported by public sources; deeper timeline and community details need verification."),
+            ("Archive Note", "Needs source links, profile details, battle/event history, and community context."),
+        ],
+    },
+    {
+        "submission_type": "dancer_profile",
+        "title": "Chrybaby Cozie / Daniel Holloway",
+        "related_to": "LiteFeet pioneer, Harlem Lite Feet, preservation",
+        "review_status": "Community Supported",
+        "source_url": "https://www.dance-enthusiast.com/features/view/Lite-Feet-Chrybaby-Cozie/",
+        "details": [
+            ("Dancer Name / Alias", "Chrybaby Cozie / Daniel Holloway"),
+            ("Known For", "Described in public sources as a Harlem Lite Feet pioneer/forefather, cultural educator, and organizer connected to Lite Feet Nation, The Breakfast Club E.A.T., Chrysolation, and preservation work."),
+            ("Confidence", "High based on interview and institutional sources."),
+            ("Archive Note", "Additional event, teaching, battle, and community history can be added over time."),
+        ],
+    },
+    {
+        "submission_type": "dancer_profile",
+        "title": "Goofy / W.A.F.F.L.E.",
+        "related_to": "W.A.F.F.L.E., Showtime, subway LiteFeet",
+        "review_status": "Needs Verification",
+        "source_url": "https://www.vulture.com/2015/09/how-litefeet-moved-from-subway-to-mainstream.html",
+        "details": [
+            ("Dancer Name / Alias", "Goofy / W.A.F.F.L.E."),
+            ("Known For", "Vulture describes Goofy, leader of W.A.F.F.L.E., as a major promoter who helped turn LiteFeet into subway It’s Showtime performance culture."),
+            ("Confidence", "Supported by public source; profile details need community verification."),
+            ("Archive Note", "Needs W.A.F.F.L.E. timeline, member context, battles, videos, and event links."),
+        ],
+    },
+    {
+        "submission_type": "dancer_profile",
+        "title": "Kid The Wiz / Randy Vargas",
+        "related_to": "LiteFeet music, production, dance",
+        "review_status": "Needs Verification",
+        "source_url": "https://www.vice.com/en/article/litefeet-hann-kid-the-wiz-m-live-new-york-subway-dancers-showtime-music/",
+        "details": [
+            ("Dancer Name / Alias", "Kid The Wiz / Randy Vargas"),
+            ("Known For", "VICE/Noisey describes Kid The Wiz as part of the LiteFeet producer/dancer ecosystem and credits him with helping push the energy of LiteFeet music."),
+            ("Confidence", "Supported by public music source; deeper profile details need verification."),
+            ("Archive Note", "Needs source links for music, battles, performances, productions, and community history."),
+        ],
+    },
+    {
+        "submission_type": "historical_claim",
+        "title": "Get Lite to LiteFeet Music Evolution",
+        "related_to": "Get Lite, LiteFeet music, 107 BPM, producers",
+        "review_status": "Community Supported",
+        "source_url": "https://www.vice.com/en/article/litefeet-hann-kid-the-wiz-m-live-new-york-subway-dancers-showtime-music/",
+        "details": [
+            ("Claim Text", "Public music coverage describes a shift around 2011 where a newer generation of dancers and producers refreshed Get Lite into LiteFeet music by raising tempo, adding layered sound, chants, samples, and call-and-response energy."),
+            ("Confidence", "Supported by VICE/Noisey source, but specific producer timelines need community verification."),
+            ("Sources to Review", "VICE/Noisey, Pond5 LiteFeet music brief, related music/video sources."),
+            ("Archive Note", "Needs producers, tracks, DJs, tags, BPMs, and music lineage added as separate records."),
+        ],
+    },
+    {
+        "submission_type": "source_link",
+        "title": "Red Bull — Litefeet: New York's New Dance Step",
+        "related_to": "LiteFeet history source",
+        "review_status": "Community Supported",
+        "source_url": "https://daily.redbullmusicacademy.com/2013/05/new-york-stories-emma-warren/",
+        "details": [
+            ("Source Title", "Litefeet: New York's New Dance Step"),
+            ("Source Platform", "Red Bull Music Academy Daily"),
+            ("Source Context", "Strong general LiteFeet history source connecting LiteFeet to Harlem/Bronx, mid-2000s, Harlem Shake, Chicken Noodle Soup, and popping."),
+        ],
+    },
+    {
+        "submission_type": "source_link",
+        "title": "Vulture — The Rise of Litefeet",
+        "related_to": "LiteFeet history source",
+        "review_status": "Community Supported",
+        "source_url": "https://www.vulture.com/2015/09/how-litefeet-moved-from-subway-to-mainstream.html",
+        "details": [
+            ("Source Title", "The Rise of Litefeet: How the Dance Genre Moved From Subway to Mainstream"),
+            ("Source Platform", "Vulture"),
+            ("Source Context", "Narrative source for Mr. YouTube, Chrybaby Cozie, Goofy, W.A.F.F.L.E., subway Showtime, and mainstream crossover."),
+        ],
+    },
+    {
+        "submission_type": "source_link",
+        "title": "VICE/Noisey — Sound of the Underground",
+        "related_to": "LiteFeet music source",
+        "review_status": "Community Supported",
+        "source_url": "https://www.vice.com/en/article/litefeet-hann-kid-the-wiz-m-live-new-york-subway-dancers-showtime-music/",
+        "details": [
+            ("Source Title", "Sound of the Underground: How New York's Litefeet Producers Are Making Sure It’s Showtime in the City"),
+            ("Source Platform", "VICE / Noisey"),
+            ("Source Context", "Important music-production source on tempo, chants, dancers, producers, and how Get Lite became LiteFeet music."),
+        ],
+    },
+    {
+        "submission_type": "source_link",
+        "title": "STEEZY — Learn About Lite Feet",
+        "related_to": "LiteFeet education source",
+        "review_status": "Community Supported",
+        "source_url": "https://www.steezy.co/posts/learn-about-lite-feet-the-newest-evolution-in-hip-hop-dance",
+        "details": [
+            ("Source Title", "Learn About Lite Feet – The Newest Evolution in Hip Hop Dance"),
+            ("Source Platform", "STEEZY"),
+            ("Source Context", "Modern educational source explaining Get Lite, weightless footwork, battles, cyphers, tricks, Mr. YouTube, and learning culture/history/music together."),
+        ],
+    },
+]
+
+
+def main():
+    init_db()
+
+    created = 0
+    skipped = 0
+
+    for record in RECORDS:
+        if record_exists(record["title"]):
+            skipped += 1
+            print(f"Skipped existing record: {record['title']}")
+            continue
+
+        insert_record(record)
+        created += 1
+        print(f"Created record: {record['title']}")
+
+    print(f"Done. Created {created}. Skipped {skipped}.")
+
+
+if __name__ == "__main__":
+    main()
