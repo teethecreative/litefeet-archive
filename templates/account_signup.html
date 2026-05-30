@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account | LiteFeet Archive{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Create Account</h1>
+
+    <p>
+        Create an archive account to submit events, add context, verify claims, and build your contributor history.
+        Event hosts can be upgraded to affiliate host status after review.
+    </p>
+
+    {% if error %}
+        <div class="form-errors">
+            <h2>Account issue</h2>
+            <ul><li>{{ error }}</li></ul>
+        </div>
+    {% endif %}
+
+    <form class="archive-form" action="/account/signup" method="post">
+        <label for="display_name">Name or alias</label>
+        <input type="text" id="display_name" name="display_name" placeholder="Example: dancer name, host name, archive name">
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="Used for login only">
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="At least 8 characters">
+
+        <label for="organization_name">Organization / team / affiliation</label>
+        <input type="text" id="organization_name" name="organization_name" placeholder="Optional: crew, event brand, team, organization">
+
+        <div class="form-note">
+            <h3>Affiliate host access</h3>
+            <p>
+                New accounts start as contributors. Admins can upgrade approved event hosts to affiliate host status,
+                which allows their event submissions to publish faster.
+            </p>
+        </div>
+
+        <button type="submit" class="button primary">Create Account</button>
+    </form>
+</section>
+{% endblock %}

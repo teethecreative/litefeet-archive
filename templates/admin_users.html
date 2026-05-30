@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Users | LiteFeet Archive{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>User Review</h1>
+
+    <p>
+        Review contributor accounts and upgrade approved event hosts to affiliate host status.
+    </p>
+
+    <p>
+        <a href="/admin/submissions" class="button secondary">Back to Submissions</a>
+    </p>
+
+    {% if users %}
+        <div class="submission-list">
+            {% for user in users %}
+                <article class="submission-card">
+                    <div class="submission-meta">
+                        <span>{{ user["role"] }}</span>
+                        {% if user["organization_name"] %}
+                            <span>{{ user["organization_name"] }}</span>
+                        {% endif %}
+                    </div>
+
+                    <h2>{{ user["display_name"] }}</h2>
+                    <p><strong>Email:</strong> {{ user["email"] }}</p>
+                    <p><strong>Organization:</strong> {{ user["organization_name"] or "Not provided" }}</p>
+                    <p><strong>Created:</strong> {{ user["created_at"] }}</p>
+
+                    <div class="review-actions">
+                        <h3>Account Role</h3>
+
+                        <form action="/admin/users/{{ user['id'] }}/role" method="post">
+                            <label for="role_{{ user['id'] }}">Update role</label>
+                            <select id="role_{{ user['id'] }}" name="role">
+                                <option value="contributor" {% if user["role"] == "contributor" %}selected{% endif %}>Contributor</option>
+                                <option value="affiliate_host" {% if user["role"] == "affiliate_host" %}selected{% endif %}>Affiliate Host</option>
+                                <option value="admin" {% if user["role"] == "admin" %}selected{% endif %}>Admin</option>
+                                <option value="suspended" {% if user["role"] == "suspended" %}selected{% endif %}>Suspended</option>
+                            </select>
+
+                            <button type="submit" class="button primary">Save Role</button>
+                        </form>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>No user accounts yet</h3>
+            <p>
+                When contributors or event hosts create accounts, they will appear here for review.
+            </p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

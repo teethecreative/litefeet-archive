@@ -4,6 +4,7 @@ from datetime import datetime
 
 from flask import Flask, redirect, render_template, request, session, url_for
 from sqlalchemy import create_engine, text
+from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-this-secret")
@@ -107,6 +108,23 @@ def init_db():
 
 
 
+        conn.execute(
+            text(
+                f"""
+                CREATE TABLE IF NOT EXISTS archive_users (
+                    {vote_id},
+                    display_name TEXT,
+                    email TEXT UNIQUE,
+                    password_hash TEXT,
+                    role TEXT DEFAULT 'contributor',
+                    organization_name TEXT,
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
+        )
+
+
 def fetch_all(query, params=None):
     with engine.connect() as conn:
         result = conn.execute(text(query), params or {})
@@ -127,6 +145,30 @@ def check_admin_login(username, password):
 
     return username == expected_username and password == expected_password
 
+
+
+def current_user():
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return None
+
+    users = fetch_all(
+        "SELECT * FROM archive_users WHERE id = :user_id LIMIT 1",
+        {"user_id": user_id},
+    )
+
+    return users[0] if users else None
+
+
+def current_user_is_affiliate_host():
+    user = current_user()
+    return bool(user and user["role"] in {"affiliate_host", "admin"})
+
+
+def current_user_is_admin():
+    user = current_user()
+    return bool(user and user["role"] == "admin")
 
 def get_submission_title(form_data):
     return (
@@ -323,6 +365,145 @@ def about():
     return render_template("about.html")
 
 
+
+@app.route("/account/signup", methods=["GET", "POST"])
+def account_signup():
+    error = ""
+
+    if request.method == "POST":
+        display_name = request.form.get("display_name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "").strip()
+        organization_name = request.form.get("organization_name", "").strip()
+
+        if len(display_name) < 2:
+            error = "Add your name or alias."
+        elif "@" not in email:
+            error = "Add a valid email."
+        elif len(password) < 8:
+            error = "Password must be at least 8 characters."
+        else:
+            existing = fetch_all(
+                "SELECT id FROM archive_users WHERE email = :email LIMIT 1",
+                {"email": email},
+            )
+
+            if existing:
+                error = "An account with that email already exists."
+            else:
+                execute_query(
+                    """
+                    INSERT INTO archive_users (
+                        display_name,
+                        email,
+                        password_hash,
+                        role,
+                        organization_name,
+                        created_at
+                    )
+                    VALUES (
+                        :display_name,
+                        :email,
+                        :password_hash,
+                        :role,
+                        :organization_name,
+                        :created_at
+                    )
+                    """,
+                    {
+                        "display_name": display_name,
+                        "email": email,
+                        "password_hash": generate_password_hash(password),
+                        "role": "contributor",
+                        "organization_name": organization_name,
+                        "created_at": datetime.now().isoformat(timespec="seconds"),
+                    },
+                )
+
+                user = fetch_all(
+                    "SELECT * FROM archive_users WHERE email = :email LIMIT 1",
+                    {"email": email},
+                )[0]
+
+                session["user_id"] = user["id"]
+                session["user_role"] = user["role"]
+                return redirect(url_for("home"))
+
+    return render_template("account_signup.html", error=error)
+
+
+@app.route("/account/login", methods=["GET", "POST"])
+def account_login():
+    error = ""
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "").strip()
+
+        users = fetch_all(
+            "SELECT * FROM archive_users WHERE email = :email LIMIT 1",
+            {"email": email},
+        )
+
+        if not users or not check_password_hash(users[0]["password_hash"], password):
+            error = "That login did not work. Check your email and password."
+        else:
+            user = users[0]
+            session["user_id"] = user["id"]
+            session["user_role"] = user["role"]
+            return redirect(url_for("home"))
+
+    return render_template("account_login.html", error=error)
+
+
+@app.route("/account/logout")
+def account_logout():
+    session.pop("user_id", None)
+    session.pop("user_role", None)
+    return redirect(url_for("home"))
+
+
+@app.route("/admin/users")
+def admin_users():
+    users = fetch_all(
+        """
+        SELECT *
+        FROM archive_users
+        ORDER BY created_at DESC
+        """
+    )
+
+    return render_template("admin_users.html", users=users)
+
+
+@app.route("/admin/users/<int:user_id>/role", methods=["POST"])
+def update_user_role(user_id):
+    new_role = request.form.get("role", "").strip()
+
+    allowed_roles = {
+        "contributor",
+        "affiliate_host",
+        "admin",
+        "suspended",
+    }
+
+    if new_role not in allowed_roles:
+        return redirect(url_for("admin_users"))
+
+    execute_query(
+        """
+        UPDATE archive_users
+        SET role = :role
+        WHERE id = :user_id
+        """,
+        {
+            "role": new_role,
+            "user_id": user_id,
+        },
+    )
+
+    return redirect(url_for("admin_users"))
+
 @app.route("/submit", methods=["GET", "POST"])
 def submit_info():
     if request.method == "POST":
@@ -417,6 +598,10 @@ def submit_event():
 
         if errors:
             return render_template("event_submit.html", errors=errors), 400
+
+        is_affiliate = current_user_is_affiliate_host()
+        user = current_user()
+        review_status = "Community Supported" if is_affiliate else "Pending Review"
 
         details = [
             {"label": "Organization Name", "value": event_org},
