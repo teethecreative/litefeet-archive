@@ -701,3 +701,20 @@ h2 {
     margin-top: 0.5rem;
     color: var(--muted);
 }
+
+.contact-panel {
+    margin-top: 2.5rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    padding: 2rem;
+}
+
+.contact-panel h3 {
+    margin-top: 0;
+    color: var(--gold-soft);
+}
+
+.contact-panel p {
+    max-width: 760px;
+}
