@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Create Account | LiteFeet Archive{% endblock %}
+{% block title %}Create Account | LiteFeet Ledger{% endblock %}
 
 {% block content %}
 <section class="content-section">
     <h1>Create Account</h1>
 
     <p>
-        Create an archive account to submit events, add context, verify claims, and build your contributor history.
+        Create an ledger account to submit events, add context, verify claims, and build your contributor history.
         Event hosts can be upgraded to affiliate host status after review.
     </p>
 
@@ -20,7 +20,7 @@
 
     <form class="archive-form" action="/account/signup" method="post">
         <label for="display_name">Name or alias</label>
-        <input type="text" id="display_name" name="display_name" placeholder="Example: dancer name, host name, archive name">
+        <input type="text" id="display_name" name="display_name" placeholder="Example: dancer name, host name, ledger name">
 
         <label for="email">Email</label>
         <input type="email" id="email" name="email" placeholder="Used for login only">

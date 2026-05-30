@@ -1,26 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}Submit Info | LiteFeet Archive{% endblock %}
+{% block title %}Submit Info | LiteFeet Ledger{% endblock %}
 
 {% block content %}
 <section class="content-section">
     <h1>Submit to the Archive</h1>
 
     <p>
-        Help build the LiteFeet Archive by submitting event info, battle results, source links,
+        Help build the LiteFeet Ledger by submitting event info, battle results, source links,
         corrections, award history, dancer details, or context that belongs in the record.
     </p>
 
     <div class="notice">
         <h2>Links only for now</h2>
         <p>
-            The archive is not accepting direct uploads yet. Please upload videos, flyers, photos,
+            The ledger is not accepting direct uploads yet. Please upload videos, flyers, photos,
             or documents to another platform first, then paste the link below.
         </p>
     </div>
 
     <form class="archive-form" action="#" method="post">
-        <label for="submission_type">What kind of archive info are you sharing?</label>
+        <label for="submission_type">What kind of ledger info are you sharing?</label>
         <select id="submission_type" name="submission_type">
             <option value="">Choose a type</option>
             <option value="event">Event info</option>
@@ -38,7 +38,7 @@
         <div id="typePrompt" class="form-note">
             <h3>Choose a submission type to begin</h3>
             <p>
-                Different archive submissions ask for different details. Pick the option that fits what you’re sharing,
+                Different ledger submissions ask for different details. Pick the option that fits what you’re sharing,
                 and the right questions will appear here.
             </p>
         </div>
@@ -123,7 +123,7 @@
             <input type="text" id="source_title" name="source_title" placeholder="Example: battle video, event flyer, recap post, interview, award clip">
 
             <label for="source_context">What does the link show?</label>
-            <textarea id="source_context" name="source_context" rows="4" placeholder="Explain what the archive should use this link for."></textarea>
+            <textarea id="source_context" name="source_context" rows="4" placeholder="Explain what the ledger should use this link for."></textarea>
 
             <label for="source_platform">Platform</label>
             <input type="text" id="source_platform" name="source_platform" placeholder="Example: YouTube, Instagram, TikTok, Google Drive, website">
@@ -188,13 +188,13 @@
             <h3>Other Archive Info</h3>
 
             <label for="other_details">What should we know?</label>
-            <textarea id="other_details" name="other_details" rows="4" placeholder="Explain what you want to add to the archive."></textarea>
+            <textarea id="other_details" name="other_details" rows="4" placeholder="Explain what you want to add to the ledger."></textarea>
         </div>
 
         <div id="sharedFields" class="shared-fields">
             <h3>Source & Submitter Info</h3>
 
-            <p class="small-note">Source links and contact info are optional, but they help the archive review and verify submissions.</p>
+            <p class="small-note">Source links and contact info are optional, but they help the ledger review and verify submissions.</p>
 
             <label for="related_to">Related person, event, battle, award, crew, or move</label>
             <input
@@ -244,7 +244,7 @@
 <div class="form-note">
                 <h3>Before this goes public</h3>
                 <p>
-                    Every submission is reviewed before it appears in the archive. Source links may be shown as
+                    Every submission is reviewed before it appears in the ledger. Source links may be shown as
                     hyperlinks, preview cards, or embedded media depending on the platform and review status.
                 </p>
             </div>

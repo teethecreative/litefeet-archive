@@ -61,7 +61,7 @@ def insert_record(record):
                 "title": record["title"],
                 "related_to": record.get("related_to", ""),
                 "source_url": record.get("source_url", ""),
-                "submitter_name": "LiteFeet Archive",
+                "submitter_name": "LiteFeet Ledger",
                 "submitter_role": "Archive Research Seed",
                 "contact": "",
                 "needs_verification": 1,

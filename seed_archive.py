@@ -19,7 +19,7 @@ STARTER_RECORDS = [
         "related_to": "LiteFeet history",
         "review_status": "Needs Verification",
         "source_url": "",
-        "submitter_name": "LiteFeet Archive",
+        "submitter_name": "LiteFeet Ledger",
         "submitter_role": "Archive System",
         "contact": "",
         "details": [
@@ -34,7 +34,7 @@ STARTER_RECORDS = [
         "related_to": "Harlem Shake, Bad One, Get Lite, LiteFeet history",
         "review_status": "Needs Verification",
         "source_url": "",
-        "submitter_name": "LiteFeet Archive",
+        "submitter_name": "LiteFeet Ledger",
         "submitter_role": "Archive System",
         "contact": "",
         "details": [
@@ -49,7 +49,7 @@ STARTER_RECORDS = [
         "related_to": "LiteFeet Awards",
         "review_status": "Community Supported",
         "source_url": "",
-        "submitter_name": "LiteFeet Archive",
+        "submitter_name": "LiteFeet Ledger",
         "submitter_role": "Archive System",
         "contact": "",
         "details": [
@@ -64,7 +64,7 @@ STARTER_RECORDS = [
         "related_to": "LiteFeet events",
         "review_status": "Community Supported",
         "source_url": "",
-        "submitter_name": "LiteFeet Archive",
+        "submitter_name": "LiteFeet Ledger",
         "submitter_role": "Archive System",
         "contact": "",
         "details": [
@@ -79,7 +79,7 @@ STARTER_RECORDS = [
         "related_to": "LiteFeet battle records",
         "review_status": "Community Supported",
         "source_url": "",
-        "submitter_name": "LiteFeet Archive",
+        "submitter_name": "LiteFeet Ledger",
         "submitter_role": "Archive System",
         "contact": "",
         "details": [
@@ -94,7 +94,7 @@ STARTER_RECORDS = [
         "related_to": "LiteFeet dancers",
         "review_status": "Community Supported",
         "source_url": "",
-        "submitter_name": "LiteFeet Archive",
+        "submitter_name": "LiteFeet Ledger",
         "submitter_role": "Archive System",
         "contact": "",
         "details": [
@@ -109,7 +109,7 @@ STARTER_RECORDS = [
         "related_to": "LiteFeet moves and style vocabulary",
         "review_status": "Needs Verification",
         "source_url": "",
-        "submitter_name": "LiteFeet Archive",
+        "submitter_name": "LiteFeet Ledger",
         "submitter_role": "Archive System",
         "contact": "",
         "details": [
@@ -124,7 +124,7 @@ STARTER_RECORDS = [
         "related_to": "LiteFeet media archive",
         "review_status": "Community Supported",
         "source_url": "",
-        "submitter_name": "LiteFeet Archive",
+        "submitter_name": "LiteFeet Ledger",
         "submitter_role": "Archive System",
         "contact": "",
         "details": [
@@ -139,7 +139,7 @@ STARTER_RECORDS = [
         "related_to": "LiteFeet event hosts",
         "review_status": "Community Supported",
         "source_url": "",
-        "submitter_name": "LiteFeet Archive",
+        "submitter_name": "LiteFeet Ledger",
         "submitter_role": "Archive System",
         "contact": "",
         "details": [
@@ -154,7 +154,7 @@ STARTER_RECORDS = [
         "related_to": "Archive verification",
         "review_status": "Needs Verification",
         "source_url": "",
-        "submitter_name": "LiteFeet Archive",
+        "submitter_name": "LiteFeet Ledger",
         "submitter_role": "Archive System",
         "contact": "",
         "details": [

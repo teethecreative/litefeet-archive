@@ -246,7 +246,7 @@ def validate_submission(form_data):
     title = get_submission_title(form_data)
 
     if not submission_type:
-        errors.append("Choose what kind of archive info you are sharing.")
+        errors.append("Choose what kind of ledger info you are sharing.")
 
     if len(title) < 2:
         errors.append("Add at least one clear detail for this submission.")
@@ -336,7 +336,7 @@ def seed_litefeet_research_records():
                 "title": record["title"],
                 "related_to": record.get("related_to", ""),
                 "source_url": record.get("source_url", ""),
-                "submitter_name": "LiteFeet Archive",
+                "submitter_name": "LiteFeet Ledger",
                 "submitter_role": "Archive Research Seed",
                 "contact": "",
                 "needs_verification": 1,
