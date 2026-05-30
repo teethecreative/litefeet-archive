@@ -446,7 +446,7 @@ def verify_claims():
         """
         SELECT *
         FROM submissions
-        WHERE review_status IN ('Pending Review', 'Needs Verification', 'Community Supported', 'Disputed')
+        WHERE review_status IN ('Needs Verification', 'Disputed')
         ORDER BY created_at DESC
         """
     )
@@ -455,6 +455,31 @@ def verify_claims():
         "verify_claims.html",
         submissions=submissions,
         vote_counts=get_vote_counts_for_submissions(submissions),
+    )
+
+
+@app.route("/verify/<int:submission_id>")
+def verify_claim_detail(submission_id):
+    submissions = fetch_all(
+        """
+        SELECT *
+        FROM submissions
+        WHERE id = :submission_id
+        LIMIT 1
+        """,
+        {"submission_id": submission_id},
+    )
+
+    if not submissions:
+        return redirect(url_for("verify_claims"))
+
+    submission = submissions[0]
+    vote_counts = get_vote_counts_for_submissions([submission])
+
+    return render_template(
+        "verify_claim_detail.html",
+        submission=submission,
+        counts=vote_counts.get(submission_id, {"true": 0, "false": 0, "debatable": 0}),
     )
 
 
@@ -505,7 +530,7 @@ def vote_on_claim(submission_id):
         },
     )
 
-    return redirect(url_for("verify_claims"))
+    return redirect(url_for("verify_claim_detail", submission_id=submission_id))
 
 
 @app.route("/ask")

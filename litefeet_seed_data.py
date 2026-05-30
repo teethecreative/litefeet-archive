@@ -68,7 +68,7 @@ LITEFEET_RESEARCH_RECORDS = [
         "submission_type": "move_info",
         "title": "Bad One / Badone",
         "related_to": "Bad One, Badone, LiteFeet move vocabulary",
-        "review_status": "Needs Verification",
+        "review_status": "Pending Review",
         "source_url": "https://www.youtube.com/watch?v=rpmEoTVcmoo",
         "details": [
             ("Move / Style Name", "Bad One / Badone"),
@@ -82,7 +82,7 @@ LITEFEET_RESEARCH_RECORDS = [
         "submission_type": "historical_claim",
         "title": "Bad One / Badone Is a Recognized LiteFeet Move",
         "related_to": "Bad One, Badone, LiteFeet basics",
-        "review_status": "Needs Verification",
+        "review_status": "Pending Review",
         "source_url": "https://www.youtube.com/watch?v=rpmEoTVcmoo",
         "details": [
             ("Claim Text", "Bad One/Badone is a recognized LiteFeet move used in Get Lite/LiteFeet vocabulary."),
@@ -108,7 +108,7 @@ LITEFEET_RESEARCH_RECORDS = [
         "submission_type": "move_info",
         "title": "Tone Wop / Tone Whop",
         "related_to": "Tone Wop, Tone Whop, LiteFeet movement vocabulary",
-        "review_status": "Needs Verification",
+        "review_status": "Pending Review",
         "source_url": "https://www.steezy.co/posts/learn-about-lite-feet-the-newest-evolution-in-hip-hop-dance",
         "details": [
             ("Move / Style Name", "Tone Wop / Tone Whop"),
@@ -121,7 +121,7 @@ LITEFEET_RESEARCH_RECORDS = [
         "submission_type": "move_info",
         "title": "Rev Up / Whop",
         "related_to": "Rev Up, Whop, LiteFeet movement vocabulary",
-        "review_status": "Needs Verification",
+        "review_status": "Pending Review",
         "source_url": "https://www.youtube.com/watch?v=CJvCzHksm54",
         "details": [
             ("Move / Style Name", "Rev Up / Whop"),
@@ -134,7 +134,7 @@ LITEFEET_RESEARCH_RECORDS = [
         "submission_type": "move_info",
         "title": "Lock In",
         "related_to": "Lock In, LiteFeet routine punctuation",
-        "review_status": "Needs Verification",
+        "review_status": "Pending Review",
         "source_url": "https://www.steezy.co/posts/learn-about-lite-feet-the-newest-evolution-in-hip-hop-dance",
         "details": [
             ("Move / Style Name", "Lock In"),
@@ -173,7 +173,7 @@ LITEFEET_RESEARCH_RECORDS = [
         "submission_type": "dancer_profile",
         "title": "Al B / Al Cisco / Albert Boyce",
         "related_to": "Real Harlem Shake, Rucker Park",
-        "review_status": "Needs Verification",
+        "review_status": "Pending Review",
         "source_url": "https://www.smithsonianmag.com/smart-news/presenting-the-real-harlem-shake-21838530/",
         "details": [
             ("Dancer Name / Alias", "Al B / Al Cisco / Albert Boyce"),
@@ -186,7 +186,7 @@ LITEFEET_RESEARCH_RECORDS = [
         "submission_type": "dancer_profile",
         "title": "Mr. YouTube",
         "related_to": "LiteFeet origins, LiteFeet education",
-        "review_status": "Needs Verification",
+        "review_status": "Pending Review",
         "source_url": "https://www.steezy.co/posts/learn-about-lite-feet-the-newest-evolution-in-hip-hop-dance",
         "details": [
             ("Dancer Name / Alias", "Mr. YouTube"),
@@ -212,7 +212,7 @@ LITEFEET_RESEARCH_RECORDS = [
         "submission_type": "dancer_profile",
         "title": "Goofy / W.A.F.F.L.E.",
         "related_to": "W.A.F.F.L.E., Showtime, subway LiteFeet",
-        "review_status": "Needs Verification",
+        "review_status": "Pending Review",
         "source_url": "https://www.vulture.com/2015/09/how-litefeet-moved-from-subway-to-mainstream.html",
         "details": [
             ("Dancer Name / Alias", "Goofy / W.A.F.F.L.E."),
@@ -225,7 +225,7 @@ LITEFEET_RESEARCH_RECORDS = [
         "submission_type": "dancer_profile",
         "title": "Kid The Wiz / Randy Vargas",
         "related_to": "LiteFeet music, production, dance",
-        "review_status": "Needs Verification",
+        "review_status": "Pending Review",
         "source_url": "https://www.vice.com/en/article/litefeet-hann-kid-the-wiz-m-live-new-york-subway-dancers-showtime-music/",
         "details": [
             ("Dancer Name / Alias", "Kid The Wiz / Randy Vargas"),

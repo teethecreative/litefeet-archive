@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Review Claim | LiteFeet Archive{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <p><a href="/verify" class="button secondary">Back to Verify Claims</a></p>
+
+    <h1>{{ submission["title"] }}</h1>
+
+    <div class="submission-meta">
+        <span>{{ submission["submission_type"] or "Uncategorized" }}</span>
+        <span>{{ submission["review_status"] }}</span>
+    </div>
+
+    {% if submission["related_to"] %}
+        <p><strong>Related to:</strong> {{ submission["related_to"] }}</p>
+    {% endif %}
+
+    {% if submission["source_url"] %}
+        <p>
+            <strong>Source:</strong>
+            <a href="{{ submission['source_url'] }}" target="_blank" rel="noopener">Open source link</a>
+        </p>
+    {% else %}
+        <p><strong>Source:</strong> No source link attached yet.</p>
+    {% endif %}
+
+    <div class="review-details">
+        <h3>Archive Details</h3>
+
+        {% set details = submission["details_json"] | from_json %}
+        {% if details %}
+            <dl>
+                {% for item in details %}
+                    <div class="detail-row">
+                        <dt>{{ item["label"] }}</dt>
+                        <dd>{{ item["value"] }}</dd>
+                    </div>
+                {% endfor %}
+            </dl>
+        {% else %}
+            <p>No extra details were provided.</p>
+        {% endif %}
+    </div>
+
+    <div class="vote-box">
+        <h3>Community Verification</h3>
+
+        <div class="vote-preview">
+            <span>True: {{ counts["true"] }}</span>
+            <span>False: {{ counts["false"] }}</span>
+            <span>Debatable: {{ counts["debatable"] }}</span>
+        </div>
+
+        <form action="/verify/{{ submission['id'] }}/vote" method="post" class="vote-form">
+            <label for="vote_type">Is this accurate?</label>
+            <select id="vote_type" name="vote_type" required>
+                <option value="">Choose one</option>
+                <option value="true">True</option>
+                <option value="false">False</option>
+                <option value="debatable">Debatable</option>
+            </select>
+
+            <label for="source_url">Source link</label>
+            <input
+                type="url"
+                id="source_url"
+                name="source_url"
+                placeholder="Optional: paste a video, article, flyer, post, interview, or other source link"
+            >
+
+            <label for="voter_name">Your name or alias</label>
+            <input
+                type="text"
+                id="voter_name"
+                name="voter_name"
+                placeholder="Optional"
+            >
+
+            <label for="voter_role">Your role in the community</label>
+            <input
+                type="text"
+                id="voter_role"
+                name="voter_role"
+                placeholder="Optional: dancer, host, judge, fan, community member, etc."
+            >
+
+            <label for="contact">Your contact link or email</label>
+            <input
+                type="text"
+                id="contact"
+                name="contact"
+                placeholder="Optional: Instagram, email, or another way to reach you if we need more context"
+            >
+
+            <label for="note">Context or correction note</label>
+            <textarea
+                id="note"
+                name="note"
+                rows="4"
+                placeholder="Optional: explain why you marked it true, false, or debatable. Add memory, correction, source context, names, dates, crews, or event details."
+            ></textarea>
+
+            <div class="form-note">
+                <h3>Before this affects the archive</h3>
+                <p>
+                    Verification responses help show community consensus. Source links and contact info are optional,
+                    but they help the archive review and strengthen records.
+                </p>
+            </div>
+
+            <button type="submit" class="button primary">Submit Verification</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

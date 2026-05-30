@@ -496,3 +496,30 @@ h2 {
 .vote-form textarea {
     resize: vertical;
 }
+
+.verification-queue {
+    display: grid;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.queue-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+}
+
+.queue-card h2 {
+    margin: 0.8rem 0 0.5rem;
+}
+
+@media (max-width: 800px) {
+    .queue-card {
+        grid-template-columns: 1fr;
+    }
+}
