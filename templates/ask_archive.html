@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Ask the Archive | LiteFeet Archive{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Ask the Archive</h1>
+    <p>
+        The archive assistant will help answer questions about LiteFeet history, dancers, battles, events, awards,
+        moves, hosts, and community records.
+    </p>
+
+    <div class="chat-shell">
+        <div class="assistant-message">
+            <h3>Archive assistant is being built</h3>
+            <p>
+                I’ll be able to answer questions once the archive has verified records to pull from. For now, you can
+                help by submitting source links, event results, corrections, and historical context.
+            </p>
+        </div>
+
+        <form class="chat-form">
+            <input type="text" placeholder="Ask about LiteFeet history, battles, events, awards, or dancers..." disabled>
+            <button type="button" disabled>Ask</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

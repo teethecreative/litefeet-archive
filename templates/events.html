@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Events | LiteFeet Archive{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Events</h1>
+    <p>
+        Browse upcoming LiteFeet events, past battles, host updates, flyers, results, and recap links.
+    </p>
+
+    <div class="empty-state">
+        <h3>No upcoming events listed yet</h3>
+        <p>
+            The archive does not have any upcoming LiteFeet events posted right now. Event hosts can submit
+            flyers, battle cards, event links, or result links for review.
+        </p>
+        <a href="/submit" class="button primary">Submit an Event</a>
+    </div>
+
+    <div class="empty-state">
+        <h3>Past event records are still being collected</h3>
+        <p>
+            This section will hold event pages with dates, locations, hosts, battle categories, source links,
+            recaps, and verified results.
+        </p>
+    </div>
+</section>
+{% endblock %}

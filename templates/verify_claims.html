@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Claims | LiteFeet Archive{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Verify Claims</h1>
+    <p>
+        Help review archive claims by marking them true, false, or debatable and adding source links or context.
+    </p>
+
+    <div class="empty-state">
+        <h3>Waiting for community review</h3>
+        <p>
+            Claims that need verification will appear here. If you know whether something is true, false, or debatable,
+            you’ll be able to weigh in and help strengthen the archive record.
+        </p>
+
+        <div class="vote-preview">
+            <span>True: 0</span>
+            <span>False: 0</span>
+            <span>Debatable: 0</span>
+        </div>
+    </div>
+</section>
+{% endblock %}

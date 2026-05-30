@@ -17,6 +17,34 @@ def about():
 def submit_info():
     return render_template("submit.html")
 
+@app.route("/events")
+def events():
+    return render_template("events.html")
+
+
+@app.route("/dancers")
+def dancers():
+    return render_template("dancers.html")
+
+
+@app.route("/battles")
+def battles():
+    return render_template("battles.html")
+
+
+@app.route("/awards")
+def awards():
+    return render_template("awards.html")
+
+
+@app.route("/verify")
+def verify_claims():
+    return render_template("verify_claims.html")
+
+
+@app.route("/ask")
+def ask_archive():
+    return render_template("ask_archive.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
