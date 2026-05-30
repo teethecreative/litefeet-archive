@@ -42,7 +42,6 @@ def from_json_filter(value):
         return []
 
 
-def 
 def ensure_portal_tables():
     dialect = engine.dialect.name
 
@@ -332,7 +331,7 @@ def update_role_request_status(request_id):
     return redirect(url_for("admin_role_requests"))
 
 
-init_db():
+def init_db():
     dialect = engine.dialect.name
 
     if dialect == "postgresql":
