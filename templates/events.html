@@ -19,53 +19,40 @@
         {% if upcoming_soon %}
             <div class="event-square-grid">
                 {% for event in upcoming_soon %}
-                    {% set details = event["details_json"] | from_json %}
-                    {% set event_date = "" %}
-                    {% set event_time = "" %}
-                    {% set event_location = "" %}
-                    {% set event_org = "" %}
-                    {% set battle_type = "" %}
+                    {% set event_date = event["details_json"] | detail_value("Event Date") %}
+                    {% set event_time = event["details_json"] | detail_value("Event Time") %}
+                    {% set event_location = event["details_json"] | detail_value("Event Location") %}
+                    {% set event_org = event["details_json"] | detail_value("Organization Name") %}
+                    {% set battle_type = event["details_json"] | detail_value("Battle Type") %}
 
-                    {% for item in details %}
-                        {% if item["label"] == "Event Date" %}
-                            {% set event_date = item["value"] %}
-                        {% elif item["label"] == "Event Time" %}
-                            {% set event_time = item["value"] %}
-                        {% elif item["label"] == "Event Location" %}
-                            {% set event_location = item["value"] %}
-                        {% elif item["label"] == "Organization Name" %}
-                            {% set event_org = item["value"] %}
-                        {% elif item["label"] == "Battle Type" %}
-                            {% set battle_type = item["value"] %}
-                        {% endif %}
-                    {% endfor %}
+                    <a href="/events/{{ event['id'] }}" class="event-square-link">
+                        <article class="event-square-card">
+                            <div class="submission-meta">
+                                <span>{{ event["review_status"] }}</span>
+                                {% if battle_type %}
+                                    <span>{{ battle_type }}</span>
+                                {% endif %}
+                            </div>
 
-                    <article class="event-square-card">
-                        <div class="submission-meta">
-                            <span>{{ event["review_status"] }}</span>
-                            {% if battle_type %}
-                                <span>{{ battle_type }}</span>
-                            {% endif %}
-                        </div>
+                            <h3>{{ event["title"] }}</h3>
 
-                        <h3>{{ event["title"] }}</h3>
+                            <div>
+                                {% if event_org %}
+                                    <p><strong>Host:</strong> {{ event_org }}</p>
+                                {% endif %}
 
-                        {% if event_org %}
-                            <p><strong>Host:</strong> {{ event_org }}</p>
-                        {% endif %}
+                                {% if event_date or event_time %}
+                                    <p><strong>When:</strong> {{ event_date }}{% if event_time %} at {{ event_time }}{% endif %}</p>
+                                {% endif %}
 
-                        {% if event_date or event_time %}
-                            <p><strong>When:</strong> {{ event_date }}{% if event_time %} at {{ event_time }}{% endif %}</p>
-                        {% endif %}
+                                {% if event_location %}
+                                    <p><strong>Where:</strong> {{ event_location }}</p>
+                                {% endif %}
+                            </div>
 
-                        {% if event_location %}
-                            <p><strong>Where:</strong> {{ event_location }}</p>
-                        {% endif %}
-
-                        {% if event["source_url"] %}
-                            <p><a href="{{ event['source_url'] }}" target="_blank" rel="noopener">Open source</a></p>
-                        {% endif %}
-                    </article>
+                            <span class="small-note">View event details</span>
+                        </article>
+                    </a>
                 {% endfor %}
             </div>
         {% else %}
@@ -96,25 +83,12 @@
                     </thead>
                     <tbody>
                         {% for event in upcoming_later %}
-                            {% set details = event["details_json"] | from_json %}
-                            {% set event_date = "" %}
-                            {% set event_location = "" %}
-                            {% set event_org = "" %}
-                            {% set battle_type = "" %}
+                            {% set event_date = event["details_json"] | detail_value("Event Date") %}
+                            {% set event_location = event["details_json"] | detail_value("Event Location") %}
+                            {% set event_org = event["details_json"] | detail_value("Organization Name") %}
+                            {% set battle_type = event["details_json"] | detail_value("Battle Type") %}
 
-                            {% for item in details %}
-                                {% if item["label"] == "Event Date" %}
-                                    {% set event_date = item["value"] %}
-                                {% elif item["label"] == "Event Location" %}
-                                    {% set event_location = item["value"] %}
-                                {% elif item["label"] == "Organization Name" %}
-                                    {% set event_org = item["value"] %}
-                                {% elif item["label"] == "Battle Type" %}
-                                    {% set battle_type = item["value"] %}
-                                {% endif %}
-                            {% endfor %}
-
-                            <tr>
+                            <tr class="clickable-row" onclick="window.location.href='/events/{{ event['id'] }}'">
                                 <td>{{ event_date or "Date TBD" }}</td>
                                 <td>{{ event["title"] }}</td>
                                 <td>{{ event_org or "Host TBD" }}</td>
@@ -142,42 +116,24 @@
                             <th>Host</th>
                             <th>Location</th>
                             <th>Format</th>
-                            <th>Source</th>
+                            <th>Results</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for event in past_events %}
-                            {% set details = event["details_json"] | from_json %}
-                            {% set event_date = "" %}
-                            {% set event_location = "" %}
-                            {% set event_org = "" %}
-                            {% set battle_type = "" %}
+                            {% set event_date = event["details_json"] | detail_value("Event Date") %}
+                            {% set event_location = event["details_json"] | detail_value("Event Location") %}
+                            {% set event_org = event["details_json"] | detail_value("Organization Name") %}
+                            {% set battle_type = event["details_json"] | detail_value("Battle Type") %}
+                            {% set event_results = event["details_json"] | detail_value("Event Results") %}
 
-                            {% for item in details %}
-                                {% if item["label"] == "Event Date" %}
-                                    {% set event_date = item["value"] %}
-                                {% elif item["label"] == "Event Location" %}
-                                    {% set event_location = item["value"] %}
-                                {% elif item["label"] == "Organization Name" %}
-                                    {% set event_org = item["value"] %}
-                                {% elif item["label"] == "Battle Type" %}
-                                    {% set battle_type = item["value"] %}
-                                {% endif %}
-                            {% endfor %}
-
-                            <tr>
+                            <tr class="clickable-row" onclick="window.location.href='/events/{{ event['id'] }}'">
                                 <td>{{ event_date or "Date unknown" }}</td>
                                 <td>{{ event["title"] }}</td>
                                 <td>{{ event_org or "Host unknown" }}</td>
                                 <td>{{ event_location or "Location unknown" }}</td>
                                 <td>{{ battle_type or "Format unknown" }}</td>
-                                <td>
-                                    {% if event["source_url"] %}
-                                        <a href="{{ event['source_url'] }}" target="_blank" rel="noopener">Open</a>
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </td>
+                                <td>{% if event_results %}Added{% else %}Not added yet{% endif %}</td>
                             </tr>
                         {% endfor %}
                     </tbody>

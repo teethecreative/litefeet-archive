@@ -42,6 +42,18 @@ def from_json_filter(value):
         return []
 
 
+
+@app.template_filter("detail_value")
+def detail_value_filter(details_json, label):
+    details = from_json_filter(details_json or "[]")
+
+    for item in details:
+        if item.get("label") == label:
+            return item.get("value", "")
+
+    return ""
+
+
 def ensure_portal_tables():
     dialect = engine.dialect.name
 
@@ -1180,6 +1192,27 @@ def events():
 @app.route("/people")
 def people_hub():
     return redirect(url_for("dancers"))
+
+
+
+@app.route("/events/<int:event_id>")
+def event_detail(event_id):
+    events = fetch_all(
+        """
+        SELECT *
+        FROM submissions
+        WHERE id = :event_id
+        AND submission_type = 'event'
+        AND review_status IN ('Verified', 'Community Supported')
+        LIMIT 1
+        """,
+        {"event_id": event_id},
+    )
+
+    if not events:
+        return redirect(url_for("events"))
+
+    return render_template("event_detail.html", event=events[0])
 
 
 @app.route("/dancers")
