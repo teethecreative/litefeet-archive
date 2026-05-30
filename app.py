@@ -38,6 +38,21 @@ def init_db():
         """
     )
 
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS verification_votes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            submission_id INTEGER NOT NULL,
+            vote_type TEXT NOT NULL,
+            voter_name TEXT,
+            voter_role TEXT,
+            note TEXT,
+            created_at TEXT NOT NULL,
+            FOREIGN KEY (submission_id) REFERENCES submissions (id)
+        )
+        """
+    )
+
     conn.commit()
     conn.close()
 
@@ -140,6 +155,33 @@ def validate_submission(form_data):
     return errors
 
 
+def get_vote_counts(submission_id):
+    conn = get_db_connection()
+
+    rows = conn.execute(
+        """
+        SELECT vote_type, COUNT(*) AS total
+        FROM verification_votes
+        WHERE submission_id = ?
+        GROUP BY vote_type
+        """,
+        (submission_id,),
+    ).fetchall()
+
+    conn.close()
+
+    counts = {
+        "true": 0,
+        "false": 0,
+        "debatable": 0,
+    }
+
+    for row in rows:
+        counts[row["vote_type"]] = row["total"]
+
+    return counts
+
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -236,12 +278,104 @@ def awards():
 
 @app.route("/verify")
 def verify_claims():
-    return render_template("verify_claims.html")
+    conn = get_db_connection()
+
+    submissions = conn.execute(
+        """
+        SELECT *
+        FROM submissions
+        WHERE review_status IN ('Pending Review', 'Needs Verification', 'Community Supported', 'Disputed')
+        ORDER BY created_at DESC
+        """
+    ).fetchall()
+
+    vote_rows = conn.execute(
+        """
+        SELECT submission_id, vote_type, COUNT(*) AS total
+        FROM verification_votes
+        GROUP BY submission_id, vote_type
+        """
+    ).fetchall()
+
+    conn.close()
+
+    vote_counts = {}
+
+    for submission in submissions:
+        vote_counts[submission["id"]] = {
+            "true": 0,
+            "false": 0,
+            "debatable": 0,
+        }
+
+    for row in vote_rows:
+        submission_id = row["submission_id"]
+        vote_type = row["vote_type"]
+
+        if submission_id in vote_counts:
+            vote_counts[submission_id][vote_type] = row["total"]
+
+    return render_template(
+        "verify_claims.html",
+        submissions=submissions,
+        vote_counts=vote_counts,
+    )
+
+
+@app.route("/verify/<int:submission_id>/vote", methods=["POST"])
+def vote_on_claim(submission_id):
+    vote_type = request.form.get("vote_type", "").strip()
+    voter_name = request.form.get("voter_name", "").strip()
+    voter_role = request.form.get("voter_role", "").strip()
+    note = request.form.get("note", "").strip()
+
+    allowed_votes = {"true", "false", "debatable"}
+
+    if vote_type not in allowed_votes:
+        return redirect(url_for("verify_claims"))
+
+    conn = get_db_connection()
+    conn.execute(
+        """
+        INSERT INTO verification_votes (
+            submission_id,
+            vote_type,
+            voter_name,
+            voter_role,
+            note,
+            created_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (
+            submission_id,
+            vote_type,
+            voter_name,
+            voter_role,
+            note,
+            datetime.now().isoformat(timespec="seconds"),
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("verify_claims"))
 
 
 @app.route("/ask")
 def ask_archive():
     return render_template("ask_archive.html")
+
+
+@app.route("/admin/submissions")
+def admin_submissions():
+    conn = get_db_connection()
+    submissions = conn.execute(
+        "SELECT * FROM submissions ORDER BY created_at DESC"
+    ).fetchall()
+    conn.close()
+
+    return render_template("admin_submissions.html", submissions=submissions)
 
 
 @app.route("/admin/submissions/<int:submission_id>/status", methods=["POST"])
@@ -269,18 +403,6 @@ def update_submission_status(submission_id):
     conn.close()
 
     return redirect(url_for("admin_submissions"))
-
-
-
-@app.route("/admin/submissions")
-def admin_submissions():
-    conn = get_db_connection()
-    submissions = conn.execute(
-        "SELECT * FROM submissions ORDER BY created_at DESC"
-    ).fetchall()
-    conn.close()
-
-    return render_template("admin_submissions.html", submissions=submissions)
 
 
 if __name__ == "__main__":

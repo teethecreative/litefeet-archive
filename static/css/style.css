@@ -456,3 +456,43 @@ h2 {
     padding: 0.9rem 1rem;
     font: inherit;
 }
+
+.vote-box {
+    margin-top: 1.2rem;
+    background: rgba(216, 168, 63, 0.04);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1rem;
+}
+
+.vote-box h3 {
+    margin-top: 0;
+    color: var(--gold-soft);
+}
+
+.vote-form {
+    display: grid;
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+.vote-form label {
+    color: var(--gold-soft);
+    font-weight: 800;
+}
+
+.vote-form input,
+.vote-form select,
+.vote-form textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
+    background: #090909;
+    color: var(--text);
+    padding: 0.9rem 1rem;
+    font: inherit;
+}
+
+.vote-form textarea {
+    resize: vertical;
+}

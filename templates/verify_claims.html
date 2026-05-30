@@ -5,22 +5,116 @@
 {% block content %}
 <section class="content-section">
     <h1>Verify Claims</h1>
+
     <p>
-        Help review archive claims by marking them true, false, or debatable and adding source links or context.
+        Help review archive submissions by marking them true, false, or debatable. Community responses help show
+        what is supported, disputed, or still unclear.
     </p>
 
-    <div class="empty-state">
-        <h3>Waiting for community review</h3>
-        <p>
-            Claims that need verification will appear here. If you know whether something is true, false, or debatable,
-            you’ll be able to weigh in and help strengthen the archive record.
-        </p>
+    {% if submissions %}
+        <div class="submission-list">
+            {% for submission in submissions %}
+                {% set counts = vote_counts[submission["id"]] %}
 
-        <div class="vote-preview">
-            <span>True: 0</span>
-            <span>False: 0</span>
-            <span>Debatable: 0</span>
+                <article class="submission-card">
+                    <div class="submission-meta">
+                        <span>{{ submission["submission_type"] or "Uncategorized" }}</span>
+                        <span>{{ submission["review_status"] }}</span>
+                    </div>
+
+                    <h2>{{ submission["title"] }}</h2>
+
+                    {% if submission["related_to"] %}
+                        <p><strong>Related to:</strong> {{ submission["related_to"] }}</p>
+                    {% endif %}
+
+                    {% if submission["source_url"] %}
+                        <p>
+                            <strong>Source:</strong>
+                            <a href="{{ submission['source_url'] }}" target="_blank" rel="noopener">Open source link</a>
+                        </p>
+                    {% endif %}
+
+                    <div class="review-details">
+                        <h3>Archive Details</h3>
+
+                        {% set details = submission["details_json"] | from_json %}
+                        {% if details %}
+                            <dl>
+                                {% for item in details %}
+                                    <div class="detail-row">
+                                        <dt>{{ item["label"] }}</dt>
+                                        <dd>{{ item["value"] }}</dd>
+                                    </div>
+                                {% endfor %}
+                            </dl>
+                        {% else %}
+                            <p>No extra details were provided.</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="vote-box">
+                        <h3>Community Verification</h3>
+
+                        <div class="vote-preview">
+                            <span>True: {{ counts["true"] }}</span>
+                            <span>False: {{ counts["false"] }}</span>
+                            <span>Debatable: {{ counts["debatable"] }}</span>
+                        </div>
+
+                        <form action="/verify/{{ submission['id'] }}/vote" method="post" class="vote-form">
+                            <label for="vote_type_{{ submission['id'] }}">Your response</label>
+                            <select id="vote_type_{{ submission['id'] }}" name="vote_type" required>
+                                <option value="">Choose one</option>
+                                <option value="true">True</option>
+                                <option value="false">False</option>
+                                <option value="debatable">Debatable</option>
+                            </select>
+
+                            <label for="voter_name_{{ submission['id'] }}">Name or alias</label>
+                            <input
+                                type="text"
+                                id="voter_name_{{ submission['id'] }}"
+                                name="voter_name"
+                                placeholder="Optional"
+                            >
+
+                            <label for="voter_role_{{ submission['id'] }}">Role or connection</label>
+                            <input
+                                type="text"
+                                id="voter_role_{{ submission['id'] }}"
+                                name="voter_role"
+                                placeholder="Optional: dancer, host, judge, fan, community member, etc."
+                            >
+
+                            <label for="note_{{ submission['id'] }}">Context or note</label>
+                            <textarea
+                                id="note_{{ submission['id'] }}"
+                                name="note"
+                                rows="3"
+                                placeholder="Optional: add a reason, memory, source context, or correction note"
+                            ></textarea>
+
+                            <button type="submit" class="button primary">Submit Verification</button>
+                        </form>
+                    </div>
+                </article>
+            {% endfor %}
         </div>
-    </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>Waiting for community review</h3>
+            <p>
+                Claims that need verification will appear here. If you know whether something is true, false, or debatable,
+                you’ll be able to weigh in and help strengthen the archive record.
+            </p>
+
+            <div class="vote-preview">
+                <span>True: 0</span>
+                <span>False: 0</span>
+                <span>Debatable: 0</span>
+            </div>
+        </div>
+    {% endif %}
 </section>
 {% endblock %}
