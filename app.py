@@ -217,6 +217,74 @@ def get_vote_counts_for_submissions(submissions):
     return vote_counts
 
 
+def seed_litefeet_research_records():
+    try:
+        from litefeet_seed_data import LITEFEET_RESEARCH_RECORDS
+    except ImportError:
+        return
+
+    for record in LITEFEET_RESEARCH_RECORDS:
+        existing = fetch_all(
+            "SELECT id FROM submissions WHERE title = :title LIMIT 1",
+            {"title": record["title"]},
+        )
+
+        if existing:
+            continue
+
+        execute_query(
+            """
+            INSERT INTO submissions (
+                submission_type,
+                title,
+                related_to,
+                source_url,
+                submitter_name,
+                submitter_role,
+                contact,
+                needs_verification,
+                review_status,
+                details_json,
+                created_at
+            )
+            VALUES (
+                :submission_type,
+                :title,
+                :related_to,
+                :source_url,
+                :submitter_name,
+                :submitter_role,
+                :contact,
+                :needs_verification,
+                :review_status,
+                :details_json,
+                :created_at
+            )
+            """,
+            {
+                "submission_type": record["submission_type"],
+                "title": record["title"],
+                "related_to": record.get("related_to", ""),
+                "source_url": record.get("source_url", ""),
+                "submitter_name": "LiteFeet Archive",
+                "submitter_role": "Archive Research Seed",
+                "contact": "",
+                "needs_verification": 1,
+                "review_status": record["review_status"],
+                "details_json": json.dumps(
+                    [
+                        {"label": label, "value": value}
+                        for label, value in record.get("details", [])
+                        if value
+                    ],
+                    ensure_ascii=False,
+                ),
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+            },
+        )
+
+
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -486,6 +554,7 @@ def update_submission_status(submission_id):
 
 
 init_db()
+seed_litefeet_research_records()
 
 if __name__ == "__main__":
     app.run(debug=True)
