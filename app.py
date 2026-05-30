@@ -1893,47 +1893,6 @@ def create_role_request(user_id, requested_role, reason):
     )
 
 
-@app.route("/contributor")
-def contributor_portal():
-    user = current_user()
-
-    if not user:
-        return render_template(
-            "portal_gate.html",
-            portal_title="Contributor Portal",
-            portal_body="Log in or create an account to track your submissions, contribution points, role requests, and Ledger activity.",
-        )
-
-    contribution_summary = get_contribution_points(user["id"])
-
-    requests = fetch_all(
-        """
-        SELECT *
-        FROM role_requests
-        WHERE user_id = :user_id
-        ORDER BY created_at DESC
-        """,
-        {"user_id": user["id"]},
-    )
-
-    contributions = fetch_all(
-        """
-        SELECT *
-        FROM submissions
-        WHERE contributor_user_id = :user_id
-        ORDER BY created_at DESC
-        """,
-        {"user_id": user["id"]},
-    )
-
-    return render_template(
-        "contributor_portal.html",
-        user=user,
-        contribution_summary=contribution_summary,
-        requests=requests,
-        contributions=contributions,
-    )
-
 
 @app.route("/contributor/request-role", methods=["POST"])
 def contributor_request_role():
