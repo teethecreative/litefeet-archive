@@ -2,10 +2,11 @@ import json
 import os
 from datetime import datetime
 
-from flask import Flask, Response, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, session, url_for
 from sqlalchemy import create_engine, text
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-this-secret")
 
 
 def get_database_url():
@@ -25,31 +26,11 @@ def get_database_url():
 engine = create_engine(get_database_url(), future=True)
 
 
-def check_admin_auth(username, password):
-    expected_username = os.environ.get("ADMIN_USERNAME", "")
-    expected_password = os.environ.get("ADMIN_PASSWORD", "")
-
-    if not expected_username or not expected_password:
-        return False
-
-    return username == expected_username and password == expected_password
-
-
-def admin_auth_required():
-    return Response(
-        "Admin access requires a username and password.",
-        401,
-        {"WWW-Authenticate": 'Basic realm="LiteFeet Archive Admin"'},
-    )
-
-
 @app.before_request
 def protect_admin_routes():
-    if request.path.startswith("/admin"):
-        auth = request.authorization
-
-        if not auth or not check_admin_auth(auth.username, auth.password):
-            return admin_auth_required()
+    if request.path.startswith("/admin") and request.path not in {"/admin/login"}:
+        if not session.get("admin_logged_in"):
+            return redirect(url_for("admin_login", next=request.path))
 
 
 @app.template_filter("from_json")
@@ -118,6 +99,16 @@ def fetch_all(query, params=None):
 def execute_query(query, params=None):
     with engine.begin() as conn:
         conn.execute(text(query), params or {})
+
+
+def check_admin_login(username, password):
+    expected_username = os.environ.get("ADMIN_USERNAME", "").strip()
+    expected_password = os.environ.get("ADMIN_PASSWORD", "").strip()
+
+    if not expected_username or not expected_password:
+        return False
+
+    return username == expected_username and password == expected_password
 
 
 def get_submission_title(form_data):
@@ -422,6 +413,32 @@ def vote_on_claim(submission_id):
 @app.route("/ask")
 def ask_archive():
     return render_template("ask_archive.html")
+
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    error = ""
+    next_url = request.args.get("next") or url_for("admin_submissions")
+
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        next_url = request.form.get("next_url") or url_for("admin_submissions")
+
+        if check_admin_login(username, password):
+            session["admin_logged_in"] = True
+            session["admin_username"] = username
+            return redirect(next_url)
+
+        error = "That login did not work. Check the admin username and password."
+
+    return render_template("admin_login.html", error=error, next_url=next_url)
+
+
+@app.route("/admin/logout")
+def admin_logout():
+    session.clear()
+    return redirect(url_for("admin_login"))
 
 
 @app.route("/admin/submissions")

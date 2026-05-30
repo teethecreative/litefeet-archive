@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login | LiteFeet Archive{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Admin Login</h1>
+
+    <p>
+        Sign in to review submissions, update archive statuses, and manage community-submitted records.
+    </p>
+
+    {% if error %}
+        <div class="form-errors">
+            <h2>Login issue</h2>
+            <ul>
+                <li>{{ error }}</li>
+            </ul>
+        </div>
+    {% endif %}
+
+    <form class="archive-form login-form" action="/admin/login" method="post">
+        <input type="hidden" name="next_url" value="{{ next_url }}">
+
+        <label for="username">Username</label>
+        <input
+            type="text"
+            id="username"
+            name="username"
+            autocomplete="username"
+            placeholder="Enter admin username"
+        >
+
+        <label for="password">Password</label>
+        <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="current-password"
+            placeholder="Enter admin password"
+        >
+
+        <button type="submit" class="button primary">Log In</button>
+    </form>
+</section>
+{% endblock %}
