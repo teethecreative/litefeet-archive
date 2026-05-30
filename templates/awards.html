@@ -6,17 +6,51 @@
 <section class="content-section">
     <h1>LiteFeet Awards</h1>
     <p>
-        This section will preserve LiteFeet Awards history, past winners, nominees, Hall of Fame records,
+        This section preserves LiteFeet Awards history, past winners, nominees, Hall of Fame records,
         ceremony updates, clips, and source links.
     </p>
 
-    <div class="empty-state">
-        <h3>Help complete the awards archive</h3>
-        <p>
-            We’re still collecting verified nominees, winners, clips, flyers, ceremony details, and source links
-            from past LiteFeet Awards years.
-        </p>
-        <a href="/submit" class="button primary">Submit Awards Info</a>
-    </div>
+    {% if approved_awards %}
+        <div class="submission-list">
+            {% for award in approved_awards %}
+                <article class="submission-card">
+                    <div class="submission-meta">
+                        <span>{{ award["review_status"] }}</span>
+                        <span>LiteFeet Awards</span>
+                    </div>
+
+                    <h2>{{ award["title"] }}</h2>
+
+                    {% if award["source_url"] %}
+                        <p><strong>Source:</strong> <a href="{{ award['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
+                    {% endif %}
+
+                    {% set details = award["details_json"] | from_json %}
+                    {% if details %}
+                        <div class="review-details">
+                            <h3>Award Details</h3>
+                            <dl>
+                                {% for item in details %}
+                                    <div class="detail-row">
+                                        <dt>{{ item["label"] }}</dt>
+                                        <dd>{{ item["value"] }}</dd>
+                                    </div>
+                                {% endfor %}
+                            </dl>
+                        </div>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>Help complete the awards archive</h3>
+            <p>
+                We’re still collecting verified nominees, winners, clips, flyers, ceremony details, and source links
+                from past LiteFeet Awards years.
+            </p>
+            <a href="/submit" class="button primary">Submit Awards Info</a>
+        </div>
+    {% endif %}
 </section>
 {% endblock %}

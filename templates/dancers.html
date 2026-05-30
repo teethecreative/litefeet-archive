@@ -6,16 +6,50 @@
 <section class="content-section">
     <h1>Dancers</h1>
     <p>
-        The dancer directory will connect profiles to battles, awards, crews, videos, source links, and verified records.
+        The dancer directory connects profiles to battles, awards, crews, videos, source links, and verified records.
     </p>
 
-    <div class="empty-state">
-        <h3>Dancer profiles are still being built</h3>
-        <p>
-            We’re collecting verified battle results, source links, community context, and profile details for dancers
-            across LiteFeet history. If you have a video, flyer, recap, or correction, submit it for review.
-        </p>
-        <a href="/submit" class="button primary">Submit Dancer Info</a>
-    </div>
+    {% if approved_dancers %}
+        <div class="submission-list">
+            {% for dancer in approved_dancers %}
+                <article class="submission-card">
+                    <div class="submission-meta">
+                        <span>{{ dancer["review_status"] }}</span>
+                        <span>Dancer Profile</span>
+                    </div>
+
+                    <h2>{{ dancer["title"] }}</h2>
+
+                    {% if dancer["source_url"] %}
+                        <p><strong>Source:</strong> <a href="{{ dancer['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
+                    {% endif %}
+
+                    {% set details = dancer["details_json"] | from_json %}
+                    {% if details %}
+                        <div class="review-details">
+                            <h3>Profile Details</h3>
+                            <dl>
+                                {% for item in details %}
+                                    <div class="detail-row">
+                                        <dt>{{ item["label"] }}</dt>
+                                        <dd>{{ item["value"] }}</dd>
+                                    </div>
+                                {% endfor %}
+                            </dl>
+                        </div>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>Dancer profiles are still being built</h3>
+            <p>
+                We’re collecting verified battle results, source links, community context, and profile details for dancers
+                across LiteFeet history. If you have a video, flyer, recap, or correction, submit it for review.
+            </p>
+            <a href="/submit" class="button primary">Submit Dancer Info</a>
+        </div>
+    {% endif %}
 </section>
 {% endblock %}

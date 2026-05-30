@@ -6,16 +6,50 @@
 <section class="content-section">
     <h1>Battle Results</h1>
     <p>
-        Battle results will track recorded matchups, winners, dates, events, categories, judges, and source links.
+        Battle results track recorded matchups, winners, dates, events, categories, judges, and source links.
     </p>
 
-    <div class="empty-state">
-        <h3>Battle results are still being collected</h3>
-        <p>
-            This section will hold verified and community-reviewed LiteFeet battle records. Help build the record by
-            submitting result links, battle videos, flyers, or host recaps.
-        </p>
-        <a href="/submit" class="button primary">Submit Battle Result</a>
-    </div>
+    {% if approved_battles %}
+        <div class="submission-list">
+            {% for battle in approved_battles %}
+                <article class="submission-card">
+                    <div class="submission-meta">
+                        <span>{{ battle["review_status"] }}</span>
+                        <span>Battle Result</span>
+                    </div>
+
+                    <h2>{{ battle["title"] }}</h2>
+
+                    {% if battle["source_url"] %}
+                        <p><strong>Source:</strong> <a href="{{ battle['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
+                    {% endif %}
+
+                    {% set details = battle["details_json"] | from_json %}
+                    {% if details %}
+                        <div class="review-details">
+                            <h3>Battle Details</h3>
+                            <dl>
+                                {% for item in details %}
+                                    <div class="detail-row">
+                                        <dt>{{ item["label"] }}</dt>
+                                        <dd>{{ item["value"] }}</dd>
+                                    </div>
+                                {% endfor %}
+                            </dl>
+                        </div>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>Battle results are still being collected</h3>
+            <p>
+                This section will hold verified and community-reviewed LiteFeet battle records. Help build the record by
+                submitting result links, battle videos, flyers, or host recaps.
+            </p>
+            <a href="/submit" class="button primary">Submit Battle Result</a>
+        </div>
+    {% endif %}
 </section>
 {% endblock %}
