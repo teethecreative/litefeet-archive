@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LiteFeet Archive{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header class="site-header">
+    <a href="/" class="logo">LiteFeet Archive</a>
+
+    <nav class="nav-links">
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/submit">Submit Info</a>
+    </nav>
+</header>
+
+<main class="page">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <p>The LiteFeet Archive is being built with the community, for the community.</p>
+</footer>
+
+<script src="{{ url_for('static', filename='js/archive.js') }}"></script>
+</body>
+</html>

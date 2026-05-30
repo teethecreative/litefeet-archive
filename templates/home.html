@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Home | LiteFeet Archive{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <p class="eyebrow">A living archive for the culture</p>
+    <h1>The LiteFeet Archive</h1>
+    <p class="hero-text">
+        The LiteFeet Archive is a living digital archive preserving the history, people,
+        battles, events, awards, and evolution of LiteFeet culture — powered by community
+        submissions, verified event data, transparent community review, and an AI archive assistant.
+    </p>
+
+    <div class="hero-actions">
+        <a href="/submit" class="button primary">Submit Info</a>
+        <a href="/about" class="button secondary">Learn More</a>
+    </div>
+</section>
+
+<section class="card-grid">
+    <article class="card">
+        <h2>Ask the Archive</h2>
+        <p>
+            The archive assistant will help answer questions about LiteFeet history,
+            dancers, battles, events, awards, and community records.
+        </p>
+        <p class="placeholder-note">This feature is being built as the archive grows.</p>
+    </article>
+
+    <article class="card">
+        <h2>Events & Results</h2>
+        <p>
+            Track upcoming events, past battles, winners, host updates, and verified results.
+        </p>
+        <p class="placeholder-note">Event records are still being collected.</p>
+    </article>
+
+    <article class="card">
+        <h2>Community Verification</h2>
+        <p>
+            Help review claims by marking them true, false, or debatable and submitting source links.
+        </p>
+        <p class="placeholder-note">Claims needing review will appear here soon.</p>
+    </article>
+</section>
+{% endblock %}
