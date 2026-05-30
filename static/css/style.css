@@ -663,11 +663,58 @@ h2 {
     width: auto;
 }
 
-.dancer-grid {
+.people-grid,
+.dancer-grid,
+.profile-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
-    margin-top: 2rem;
+}
+
+.person-card,
+.dancer-card,
+.profile-card {
+    padding: 1rem;
+}
+
+.person-card h2,
+.dancer-card h2,
+.profile-card h2 {
+    font-size: 1.35rem;
+    line-height: 1.1;
+}
+
+.person-card p,
+.dancer-card p,
+.profile-card p {
+    font-size: 0.9rem;
+    line-height: 1.35;
+}
+
+.person-card .button,
+.dancer-card .button,
+.profile-card .button,
+.person-card a,
+.dancer-card a,
+.profile-card a {
+    font-size: 0.85rem;
+    padding: 0.75rem 0.9rem;
+}
+
+@media (min-width: 700px) {
+    .people-grid,
+    .dancer-grid,
+    .profile-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 380px) {
+    .people-grid,
+    .dancer-grid,
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .dancer-card {
