@@ -846,6 +846,37 @@ def inject_user_context():
     }
 
 
+
+def ensure_verification_flag_column():
+    dialect = engine.dialect.name
+
+    with engine.begin() as conn:
+        if dialect == "postgresql":
+            conn.execute(text("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS is_flagged_for_verification INTEGER DEFAULT 0"))
+            conn.execute(text("UPDATE submissions SET is_flagged_for_verification = 0 WHERE is_flagged_for_verification IS NULL"))
+        else:
+            existing_columns = {
+                row[1] for row in conn.execute(text("PRAGMA table_info(submissions)")).fetchall()
+            }
+
+            if "is_flagged_for_verification" not in existing_columns:
+                conn.execute(text("ALTER TABLE submissions ADD COLUMN is_flagged_for_verification INTEGER DEFAULT 0"))
+
+            conn.execute(text("UPDATE submissions SET is_flagged_for_verification = 0 WHERE is_flagged_for_verification IS NULL"))
+
+
+
+def hide_seeded_records_from_verify_queue():
+    execute_query(
+        """
+        UPDATE submissions
+        SET is_flagged_for_verification = 0
+        WHERE is_flagged_for_verification IS NULL
+        OR is_flagged_for_verification != 1
+        """
+    )
+
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -1614,7 +1645,8 @@ def verify_claims():
         """
         SELECT *
         FROM submissions
-        WHERE review_status IN ('Needs Verification', 'Disputed')
+        WHERE is_flagged_for_verification = 1
+        AND review_status IN ('Needs Verification', 'Disputed')
         ORDER BY created_at DESC
         """
     )
