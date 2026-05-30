@@ -1,28 +1,102 @@
 {% extends "base.html" %}
 
-{% block title %}Ask the Archive | LiteFeet Ledger{% endblock %}
+{% block title %}Ask the Ledger | LiteFeet Ledger{% endblock %}
 
 {% block content %}
 <section class="content-section">
-    <h1>Ask the Archive</h1>
+    <h1>Ask the Ledger</h1>
+
     <p>
-        The ledger assistant will help answer questions about LiteFeet history, dancers, battles, events, awards,
-        moves, hosts, and community records.
+        Search the LiteFeet Ledger for people, moves, battles, events, awards, source links, and historical claims.
+        The assistant can only answer from records currently saved in the ledger.
     </p>
 
-    <div class="chat-shell">
-        <div class="assistant-message">
-            <h3>Archive assistant is being built</h3>
+    <div class="ask-panel">
+        <div class="form-note">
+            <h3>Ledger assistant</h3>
             <p>
-                I’ll be able to answer questions once the ledger has verified records to pull from. For now, you can
-                help by submitting source links, event results, corrections, and historical context.
+                Ask about LiteFeet history, dancers, battles, events, awards, moves, hosts, or community records.
+                If the ledger has matching records, they’ll appear below with review status and source links.
             </p>
         </div>
 
-        <form class="chat-form">
-            <input type="text" placeholder="Ask about LiteFeet history, battles, events, awards, or dancers..." disabled>
-            <button type="button" disabled>Ask</button>
+        <form action="/ask" method="post" class="ask-form">
+            <input
+                type="text"
+                name="query"
+                value="{{ query }}"
+                placeholder="Ask about LiteFeet history, Bad One, Harlem Shake, Chrybaby Cozie, battles, awards, or dancers..."
+                required
+            >
+            <button type="submit" class="button primary">Ask</button>
         </form>
     </div>
+
+    {% if searched %}
+        <div class="ask-results">
+            {% if results %}
+                <h2>Ledger results for “{{ query }}”</h2>
+
+                <p>
+                    These results come from saved ledger records. Records marked Needs Verification or Disputed should be treated
+                    as open for community review, not final facts.
+                </p>
+
+                <div class="submission-list">
+                    {% for result in results %}
+                        <article class="submission-card">
+                            <div class="submission-meta">
+                                <span>{{ result["submission_type"] or "Uncategorized" }}</span>
+                                <span>{{ result["review_status"] }}</span>
+                            </div>
+
+                            <h2>{{ result["title"] }}</h2>
+
+                            {% if result["related_to"] %}
+                                <p><strong>Related to:</strong> {{ result["related_to"] }}</p>
+                            {% endif %}
+
+                            {% if result["source_url"] %}
+                                <p>
+                                    <strong>Source:</strong>
+                                    <a href="{{ result['source_url'] }}" target="_blank" rel="noopener">Open source link</a>
+                                </p>
+                            {% endif %}
+
+                            {% set details = result["details_json"] | from_json %}
+                            {% if details %}
+                                <div class="review-details">
+                                    <h3>Record Details</h3>
+                                    <dl>
+                                        {% for item in details[:4] %}
+                                            <div class="detail-row">
+                                                <dt>{{ item["label"] }}</dt>
+                                                <dd>{{ item["value"] }}</dd>
+                                            </div>
+                                        {% endfor %}
+                                    </dl>
+                                </div>
+                            {% endif %}
+
+                            {% if result["review_status"] in ["Needs Verification", "Disputed"] %}
+                                <p>
+                                    <a href="/verify/{{ result['id'] }}" class="button secondary">Review / Verify This</a>
+                                </p>
+                            {% endif %}
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <h3>No matching ledger records yet</h3>
+                    <p>
+                        The ledger does not have enough saved information to answer that yet. You can submit a source,
+                        event result, correction, dancer profile, or historical claim for review.
+                    </p>
+                    <a href="/submit" class="button primary">Submit Info</a>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
 </section>
 {% endblock %}

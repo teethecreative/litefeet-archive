@@ -527,3 +527,38 @@ h2 {
 .archive-form textarea::placeholder {
     line-height: 1.45;
 }
+
+.ask-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.ask-form {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.ask-form input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: #090909;
+    color: var(--text);
+    padding: 1rem 1.2rem;
+    font: inherit;
+}
+
+.ask-results {
+    margin-top: 2rem;
+}
+
+@media (max-width: 800px) {
+    .ask-form {
+        grid-template-columns: 1fr;
+    }
+}

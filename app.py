@@ -819,9 +819,50 @@ def vote_on_claim(submission_id):
     return redirect(url_for("verify_claim_detail", submission_id=submission_id))
 
 
-@app.route("/ask")
+@app.route("/ask", methods=["GET", "POST"])
 def ask_archive():
-    return render_template("ask_archive.html")
+    query = ""
+    results = []
+    searched = False
+
+    if request.method == "POST":
+        query = request.form.get("query", "").strip()
+        searched = True
+
+        if query:
+            search_term = f"%{query.lower()}%"
+
+            results = fetch_all(
+                """
+                SELECT *
+                FROM submissions
+                WHERE
+                    LOWER(title) LIKE :search_term
+                    OR LOWER(related_to) LIKE :search_term
+                    OR LOWER(source_url) LIKE :search_term
+                    OR LOWER(details_json) LIKE :search_term
+                    OR LOWER(submission_type) LIKE :search_term
+                ORDER BY
+                    CASE
+                        WHEN review_status = 'Verified' THEN 1
+                        WHEN review_status = 'Community Supported' THEN 2
+                        WHEN review_status = 'Needs Verification' THEN 3
+                        WHEN review_status = 'Disputed' THEN 4
+                        ELSE 5
+                    END,
+                    created_at DESC
+                LIMIT 12
+                """,
+                {"search_term": search_term},
+            )
+
+    return render_template(
+        "ask_archive.html",
+        query=query,
+        results=results,
+        searched=searched,
+    )
+
 
 
 @app.route("/admin/login", methods=["GET", "POST"])
