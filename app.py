@@ -651,15 +651,23 @@ def submit_event():
         review_status = "Community Supported" if is_affiliate else "Pending Review"
 
         details = [
+            {"label": "Event Timing", "value": form_data.get("event_timing", "").strip()},
             {"label": "Organization Name", "value": event_org},
             {"label": "Event Name", "value": event_name},
             {"label": "Event Date", "value": event_date},
             {"label": "Event Time", "value": event_time},
             {"label": "Event Location", "value": event_location},
             {"label": "Battle Type", "value": form_data.get("event_battle_type", "").strip()},
-            {"label": "Battle List", "value": form_data.get("event_battle_list", "").strip()},
+            {"label": "Planned Battle List", "value": form_data.get("event_battle_list", "").strip()},
             {"label": "Judges", "value": form_data.get("event_judges", "").strip()},
             {"label": "Event Details", "value": form_data.get("event_details", "").strip()},
+            {"label": "Event Results", "value": form_data.get("event_results", "").strip()},
+            {"label": "Planned Battles Status", "value": form_data.get("planned_battles_status", "").strip()},
+            {"label": "Battle Rescheduled", "value": "Yes" if form_data.get("battle_issue_rescheduled") == "yes" else ""},
+            {"label": "Battle Cancelled", "value": "Yes" if form_data.get("battle_issue_cancelled") == "yes" else ""},
+            {"label": "One Dancer on Milk Carton", "value": "Yes" if form_data.get("battle_issue_one_milk_carton") == "yes" else ""},
+            {"label": "Both Dancers on Milk Carton", "value": "Yes" if form_data.get("battle_issue_both_milk_carton") == "yes" else ""},
+            {"label": "Battle Issue Details", "value": form_data.get("battle_issue_details", "").strip()},
         ]
 
         details = [item for item in details if item["value"]]

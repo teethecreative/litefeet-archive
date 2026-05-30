@@ -9,7 +9,7 @@
     <h1>Submit an Event</h1>
 
     <p>
-        Add an upcoming or past LiteFeet event for ledger review. Events are reviewed before they appear publicly.
+        Add an upcoming, past, or on-the-spot LiteFeet event for ledger review. Events are reviewed before they appear publicly.
     </p>
 
     {% if errors %}
@@ -24,12 +24,20 @@
     {% endif %}
 
     <form class="archive-form" action="/events/submit" method="post">
+        <label for="event_timing">Is this event upcoming, past, or on the spot?</label>
+        <select id="event_timing" name="event_timing">
+            <option value="">Choose one</option>
+            <option value="future">Future / upcoming event</option>
+            <option value="past">Past event</option>
+            <option value="on_the_spot">On-the-spot event / happened without being fully planned</option>
+        </select>
+
         <label for="event_org">Organization / host name</label>
         <input
             type="text"
             id="event_org"
             name="event_org"
-            placeholder="Example: BodyBag, HypeItUpTV, LiteFeet Nation, W.A.F.F.L.E."
+            placeholder="Example: BodyBag, HypeItUpTV, event host, crew, brand, or organization"
         >
 
         <label for="event_name">Event name</label>
@@ -65,11 +73,12 @@
             <option value="team_vs_team">Team vs Team</option>
             <option value="tournament">Tournament / bracket</option>
             <option value="showcase">Showcase / cypher</option>
+            <option value="on_the_spot">On-the-spot battles</option>
             <option value="mixed">Mixed formats</option>
             <option value="other">Other</option>
         </select>
 
-        <label for="event_battle_list">Battle list</label>
+        <label for="event_battle_list">Planned battle list</label>
         <textarea
             id="event_battle_list"
             name="event_battle_list"
@@ -98,6 +107,61 @@ Judge Name | Team/Affiliation"
             rows="5"
             placeholder="Add prizes, categories, DJ, age group, rules, flyer details, doors open time, ticket info, recap notes, or anything else people should know."
         ></textarea>
+
+        <div id="pastEventFields" class="conditional-panel">
+            <h2>Past Event Results</h2>
+
+            <label for="event_results">What happened at the event?</label>
+            <textarea
+                id="event_results"
+                name="event_results"
+                rows="6"
+                placeholder="Add results, winners, standout moments, battle outcomes, crowd reactions, judges’ decisions, or recap notes."
+            ></textarea>
+
+            <label for="planned_battles_status">Did all planned battles happen?</label>
+            <select id="planned_battles_status" name="planned_battles_status">
+                <option value="">Choose one</option>
+                <option value="all_happened">Yes, all planned battles happened</option>
+                <option value="some_did_not_happen">Some battles did not happen</option>
+                <option value="none_happened">No, the planned battles did not happen</option>
+                <option value="not_planned">There was no planned battle list / battles happened on the spot</option>
+            </select>
+
+            <div id="battleIssueFields" class="conditional-panel nested-panel">
+                <h3>If a planned battle did not happen, what happened?</h3>
+
+                <label class="checkbox-row">
+                    <input type="checkbox" name="battle_issue_rescheduled" value="yes">
+                    <span>Battle was rescheduled</span>
+                </label>
+
+                <label class="checkbox-row">
+                    <input type="checkbox" name="battle_issue_cancelled" value="yes">
+                    <span>Battle was cancelled</span>
+                </label>
+
+                <label class="checkbox-row">
+                    <input type="checkbox" name="battle_issue_one_milk_carton" value="yes">
+                    <span>One dancer was on the milk carton</span>
+                </label>
+
+                <label class="checkbox-row">
+                    <input type="checkbox" name="battle_issue_both_milk_carton" value="yes">
+                    <span>Both dancers were on the milk carton</span>
+                </label>
+
+                <label for="battle_issue_details">Which battle(s) did not happen and why?</label>
+                <textarea
+                    id="battle_issue_details"
+                    name="battle_issue_details"
+                    rows="5"
+                    placeholder="Example:
+Dancer Name | Team vs Dancer Name | Team — did not happen because one dancer was missing.
+Dancer Name | Team vs Dancer Name | Team — rescheduled for another date."
+                ></textarea>
+            </div>
+        </div>
 
         <div class="form-note">
             <h3>Source & submitter info</h3>
@@ -146,4 +210,30 @@ Judge Name | Team/Affiliation"
         <button type="submit" class="button primary">Submit Event for Review</button>
     </form>
 </section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const eventTiming = document.getElementById("event_timing");
+        const pastEventFields = document.getElementById("pastEventFields");
+        const plannedBattlesStatus = document.getElementById("planned_battles_status");
+        const battleIssueFields = document.getElementById("battleIssueFields");
+
+        function updatePastFields() {
+            const showPastFields = eventTiming.value === "past" || eventTiming.value === "on_the_spot";
+            pastEventFields.classList.toggle("is-visible", showPastFields);
+        }
+
+        function updateBattleIssueFields() {
+            const value = plannedBattlesStatus.value;
+            const showIssueFields = value === "some_did_not_happen" || value === "none_happened";
+            battleIssueFields.classList.toggle("is-visible", showIssueFields);
+        }
+
+        eventTiming.addEventListener("change", updatePastFields);
+        plannedBattlesStatus.addEventListener("change", updateBattleIssueFields);
+
+        updatePastFields();
+        updateBattleIssueFields();
+    });
+</script>
 {% endblock %}

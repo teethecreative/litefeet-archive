@@ -632,3 +632,33 @@ h2 {
 .compact-empty {
     margin-top: 1rem;
 }
+
+.conditional-panel {
+    display: none;
+    margin-top: 1.5rem;
+    background: rgba(216, 168, 63, 0.04);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    padding: 1rem;
+}
+
+.conditional-panel.is-visible {
+    display: block;
+}
+
+.nested-panel {
+    margin-top: 1rem;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin: 0.7rem 0;
+    color: var(--text);
+    font-weight: 700;
+}
+
+.checkbox-row input {
+    width: auto;
+}
