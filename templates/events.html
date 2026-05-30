@@ -6,50 +6,191 @@
 <section class="content-section">
     <h1>Events</h1>
     <p>
-        Browse verified LiteFeet events, host updates, flyers, results, and recap links.
+        Browse verified LiteFeet events, host updates, battle cards, flyers, results, and recap links.
     </p>
 
-    {% if approved_events %}
-        <div class="submission-list">
-            {% for event in approved_events %}
-                <article class="submission-card">
-                    <div class="submission-meta">
-                        <span>{{ event["review_status"] }}</span>
-                        <span>Event Info</span>
-                    </div>
+    <p>
+        <a href="/events/submit" class="button primary">Submit an Event</a>
+    </p>
 
-                    <h2>{{ event["title"] }}</h2>
+    <section class="event-section">
+        <h2>Happening in the Next 2 Weeks</h2>
 
-                    {% if event["source_url"] %}
-                        <p><strong>Source:</strong> <a href="{{ event['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
-                    {% endif %}
-
+        {% if upcoming_soon %}
+            <div class="event-square-grid">
+                {% for event in upcoming_soon %}
                     {% set details = event["details_json"] | from_json %}
-                    {% if details %}
-                        <div class="review-details">
-                            <h3>Event Details</h3>
-                            <dl>
-                                {% for item in details %}
-                                    <div class="detail-row">
-                                        <dt>{{ item["label"] }}</dt>
-                                        <dd>{{ item["value"] }}</dd>
-                                    </div>
-                                {% endfor %}
-                            </dl>
+                    {% set event_date = "" %}
+                    {% set event_time = "" %}
+                    {% set event_location = "" %}
+                    {% set event_org = "" %}
+                    {% set battle_type = "" %}
+
+                    {% for item in details %}
+                        {% if item["label"] == "Event Date" %}
+                            {% set event_date = item["value"] %}
+                        {% elif item["label"] == "Event Time" %}
+                            {% set event_time = item["value"] %}
+                        {% elif item["label"] == "Event Location" %}
+                            {% set event_location = item["value"] %}
+                        {% elif item["label"] == "Organization Name" %}
+                            {% set event_org = item["value"] %}
+                        {% elif item["label"] == "Battle Type" %}
+                            {% set battle_type = item["value"] %}
+                        {% endif %}
+                    {% endfor %}
+
+                    <article class="event-square-card">
+                        <div class="submission-meta">
+                            <span>{{ event["review_status"] }}</span>
+                            {% if battle_type %}
+                                <span>{{ battle_type }}</span>
+                            {% endif %}
                         </div>
-                    {% endif %}
-                </article>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty-state">
-            <h3>No verified events listed yet</h3>
-            <p>
-                The archive does not have verified LiteFeet events posted right now. Event hosts can submit
-                flyers, battle cards, event links, or result links for review.
-            </p>
-            <a href="/events/submit" class="button primary">Submit an Event</a>
-        </div>
+
+                        <h3>{{ event["title"] }}</h3>
+
+                        {% if event_org %}
+                            <p><strong>Host:</strong> {{ event_org }}</p>
+                        {% endif %}
+
+                        {% if event_date or event_time %}
+                            <p><strong>When:</strong> {{ event_date }}{% if event_time %} at {{ event_time }}{% endif %}</p>
+                        {% endif %}
+
+                        {% if event_location %}
+                            <p><strong>Where:</strong> {{ event_location }}</p>
+                        {% endif %}
+
+                        {% if event["source_url"] %}
+                            <p><a href="{{ event['source_url'] }}" target="_blank" rel="noopener">Open source</a></p>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state compact-empty">
+                <h3>No events listed for the next 2 weeks</h3>
+                <p>
+                    When verified or affiliate-host events are coming up soon, they’ll appear here as quick event cards.
+                </p>
+            </div>
+        {% endif %}
+    </section>
+
+    {% if upcoming_later %}
+        <section class="event-section">
+            <h2>Upcoming Later</h2>
+
+            <div class="event-table-wrap">
+                <table class="event-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Event</th>
+                            <th>Host</th>
+                            <th>Location</th>
+                            <th>Format</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in upcoming_later %}
+                            {% set details = event["details_json"] | from_json %}
+                            {% set event_date = "" %}
+                            {% set event_location = "" %}
+                            {% set event_org = "" %}
+                            {% set battle_type = "" %}
+
+                            {% for item in details %}
+                                {% if item["label"] == "Event Date" %}
+                                    {% set event_date = item["value"] %}
+                                {% elif item["label"] == "Event Location" %}
+                                    {% set event_location = item["value"] %}
+                                {% elif item["label"] == "Organization Name" %}
+                                    {% set event_org = item["value"] %}
+                                {% elif item["label"] == "Battle Type" %}
+                                    {% set battle_type = item["value"] %}
+                                {% endif %}
+                            {% endfor %}
+
+                            <tr>
+                                <td>{{ event_date or "Date TBD" }}</td>
+                                <td>{{ event["title"] }}</td>
+                                <td>{{ event_org or "Host TBD" }}</td>
+                                <td>{{ event_location or "Location TBD" }}</td>
+                                <td>{{ battle_type or "Format TBD" }}</td>
+                                <td>{{ event["review_status"] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
     {% endif %}
+
+    <section class="event-section">
+        <h2>Past Events</h2>
+
+        {% if past_events %}
+            <div class="event-table-wrap">
+                <table class="event-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Event</th>
+                            <th>Host</th>
+                            <th>Location</th>
+                            <th>Format</th>
+                            <th>Source</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in past_events %}
+                            {% set details = event["details_json"] | from_json %}
+                            {% set event_date = "" %}
+                            {% set event_location = "" %}
+                            {% set event_org = "" %}
+                            {% set battle_type = "" %}
+
+                            {% for item in details %}
+                                {% if item["label"] == "Event Date" %}
+                                    {% set event_date = item["value"] %}
+                                {% elif item["label"] == "Event Location" %}
+                                    {% set event_location = item["value"] %}
+                                {% elif item["label"] == "Organization Name" %}
+                                    {% set event_org = item["value"] %}
+                                {% elif item["label"] == "Battle Type" %}
+                                    {% set battle_type = item["value"] %}
+                                {% endif %}
+                            {% endfor %}
+
+                            <tr>
+                                <td>{{ event_date or "Date unknown" }}</td>
+                                <td>{{ event["title"] }}</td>
+                                <td>{{ event_org or "Host unknown" }}</td>
+                                <td>{{ event_location or "Location unknown" }}</td>
+                                <td>{{ battle_type or "Format unknown" }}</td>
+                                <td>
+                                    {% if event["source_url"] %}
+                                        <a href="{{ event['source_url'] }}" target="_blank" rel="noopener">Open</a>
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state compact-empty">
+                <h3>No past events listed yet</h3>
+                <p>
+                    Past verified events will appear here as the ledger collects event history, battle cards, results, and recap links.
+                </p>
+            </div>
+        {% endif %}
+    </section>
 </section>
 {% endblock %}

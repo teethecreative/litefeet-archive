@@ -355,6 +355,53 @@ def seed_litefeet_research_records():
 
 
 
+
+def get_detail_value(record, label):
+    details = from_json_filter(record.get("details_json", "[]"))
+
+    for item in details:
+        if item.get("label") == label:
+            return item.get("value", "")
+
+    return ""
+
+
+def event_sort_date(record):
+    date_value = get_detail_value(record, "Event Date")
+
+    try:
+        return datetime.fromisoformat(date_value).date()
+    except ValueError:
+        return None
+
+
+def split_event_records(records):
+    today = datetime.now().date()
+    two_weeks_from_now = today.replace() + __import__("datetime").timedelta(days=14)
+
+    upcoming_soon = []
+    upcoming_later = []
+    past_events = []
+    undated_events = []
+
+    for record in records:
+        event_date = event_sort_date(record)
+
+        if not event_date:
+            undated_events.append(record)
+        elif today <= event_date <= two_weeks_from_now:
+            upcoming_soon.append(record)
+        elif event_date > two_weeks_from_now:
+            upcoming_later.append(record)
+        else:
+            past_events.append(record)
+
+    upcoming_soon.sort(key=lambda record: event_sort_date(record) or today)
+    upcoming_later.sort(key=lambda record: event_sort_date(record) or today)
+    past_events.sort(key=lambda record: event_sort_date(record) or today, reverse=True)
+
+    return upcoming_soon, upcoming_later, past_events, undated_events
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -678,8 +725,16 @@ def events():
         """
     )
 
-    return render_template("events.html", approved_events=approved_events)
+    upcoming_soon, upcoming_later, past_events, undated_events = split_event_records(approved_events)
 
+    return render_template(
+        "events.html",
+        approved_events=approved_events,
+        upcoming_soon=upcoming_soon,
+        upcoming_later=upcoming_later,
+        past_events=past_events,
+        undated_events=undated_events,
+    )
 
 @app.route("/dancers")
 def dancers():
