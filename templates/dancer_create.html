@@ -21,7 +21,7 @@
 
     <form class="archive-form" action="/dancers/create" method="post">
         <label for="dance_name">Dancer name / alias</label>
-        <input type="text" id="dance_name" name="dance_name" placeholder="Example: your dance name or public alias">
+        <input type="text" id="dance_name" name="dance_name" value="{{ request.args.get('ghost_name', '') }}" placeholder="Example: your dance name or public alias">
 
         <label for="real_name">Real name</label>
         <input type="text" id="real_name" name="real_name" placeholder="Optional">

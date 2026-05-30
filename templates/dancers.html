@@ -57,6 +57,12 @@
                     <p>
                         <a href="/dancers/{{ dancer['id'] }}" class="button secondary">View Profile / Give Flowers</a>
                     </p>
+
+                    {% if dancer["status"] == "Ghost Profile" %}
+                        <p>
+                            <a href="/dancers/create?ghost_name={{ dancer['dance_name'] }}" class="button primary">Claim This Profile</a>
+                        </p>
+                    {% endif %}
                 </article>
             {% endfor %}
         </div>

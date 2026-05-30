@@ -760,6 +760,73 @@ def ensure_dancer_tables():
             )
         )
 
+
+def seed_ghost_dancer_profiles():
+    try:
+        from ghost_dancer_seed_data import GHOST_DANCER_PROFILES
+    except ImportError:
+        return
+
+    for ghost in GHOST_DANCER_PROFILES:
+        existing = fetch_all(
+            """
+            SELECT id
+            FROM dancer_profiles
+            WHERE LOWER(dance_name) = LOWER(:dance_name)
+            LIMIT 1
+            """,
+            {"dance_name": ghost["dance_name"]},
+        )
+
+        if existing:
+            continue
+
+        bio_parts = [
+            "This is a ghost profile created from community form responses.",
+            ghost.get("source_note", ""),
+            "The dancer can claim this profile and submit full profile details for review."
+        ]
+
+        bio = " ".join(part for part in bio_parts if part)
+
+        execute_query(
+            """
+            INSERT INTO dancer_profiles (
+                user_id,
+                dance_name,
+                real_name,
+                team_affiliation,
+                borough_scene,
+                bio,
+                source_url,
+                status,
+                created_at
+            )
+            VALUES (
+                :user_id,
+                :dance_name,
+                :real_name,
+                :team_affiliation,
+                :borough_scene,
+                :bio,
+                :source_url,
+                :status,
+                :created_at
+            )
+            """,
+            {
+                "user_id": None,
+                "dance_name": ghost["dance_name"],
+                "real_name": "",
+                "team_affiliation": ghost.get("aliases", ""),
+                "borough_scene": "",
+                "bio": bio,
+                "source_url": "",
+                "status": "Ghost Profile",
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+            },
+        )
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -1115,7 +1182,7 @@ def dancers():
         """
         SELECT *
         FROM dancer_profiles
-        WHERE status IN ('Approved', 'Verified', 'Community Supported')
+        WHERE status IN ('Approved', 'Verified', 'Community Supported', 'Ghost Profile')
         ORDER BY created_at DESC
         """
     )
@@ -1226,7 +1293,7 @@ def dancer_profile_detail(dancer_id):
 
     profile = profiles[0]
 
-    if profile["status"] not in {"Approved", "Verified", "Community Supported"} and not current_user_is_admin():
+    if profile["status"] not in {"Approved", "Verified", "Community Supported", "Ghost Profile"} and not current_user_is_admin():
         return redirect(url_for("dancers"))
 
     flowers = fetch_all(
@@ -1373,6 +1440,7 @@ def update_dancer_profile_status(dancer_id):
         "Community Supported",
         "Needs Verification",
         "Rejected",
+        "Ghost Profile",
     }
 
     if new_status not in allowed_statuses:
@@ -2002,6 +2070,7 @@ def update_role_request_status(request_id):
 init_db()
 ensure_dancer_tables()
 ensure_portal_tables()
+seed_ghost_dancer_profiles()
 seed_litefeet_research_records()
 
 if __name__ == "__main__":

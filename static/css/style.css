@@ -761,3 +761,15 @@ h2 {
 .subtle-subnav a.is-active {
     color: var(--gold-soft);
 }
+
+.dancer-card .submission-meta span:first-child {
+    text-transform: capitalize;
+}
+
+.dancer-card:has(.submission-meta span:first-child) {
+    position: relative;
+}
+
+.dancer-card .button.primary {
+    margin-top: 0.4rem;
+}
