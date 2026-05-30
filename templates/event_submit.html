@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Event | LiteFeet Archive{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <p><a href="/events" class="button secondary">Back to Events</a></p>
+
+    <h1>Submit an Event</h1>
+
+    <p>
+        Add an upcoming or past LiteFeet event for archive review. Events are reviewed before they appear publicly.
+    </p>
+
+    {% if errors %}
+        <div class="form-errors">
+            <h2>Before this can be saved</h2>
+            <ul>
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <form class="archive-form" action="/events/submit" method="post">
+        <label for="event_org">Organization / host name</label>
+        <input
+            type="text"
+            id="event_org"
+            name="event_org"
+            placeholder="Example: LiteFeet Nation, W.A.F.F.L.E., event host, crew, brand, or organization"
+        >
+
+        <label for="event_name">Event name</label>
+        <input
+            type="text"
+            id="event_name"
+            name="event_name"
+            placeholder="Example: LiteFeet Battle Night, Awards Ceremony, Get Lite Cypher"
+        >
+
+        <label for="event_date">Date</label>
+        <input type="date" id="event_date" name="event_date">
+
+        <label for="event_time">Time</label>
+        <input type="time" id="event_time" name="event_time">
+
+        <label for="event_location">Location</label>
+        <input
+            type="text"
+            id="event_location"
+            name="event_location"
+            placeholder="Venue, park, school, borough, city, or online location"
+        >
+
+        <label for="event_battle_type">Battle format / event type</label>
+        <select id="event_battle_type" name="event_battle_type">
+            <option value="">Choose one</option>
+            <option value="1v1">1v1</option>
+            <option value="2v2">2v2</option>
+            <option value="3v3">3v3</option>
+            <option value="4v4">4v4</option>
+            <option value="5v5">5v5</option>
+            <option value="team_vs_team">Team vs Team</option>
+            <option value="tournament">Tournament / bracket</option>
+            <option value="showcase">Showcase / cypher</option>
+            <option value="mixed">Mixed formats</option>
+            <option value="other">Other</option>
+        </select>
+
+        <label for="event_battle_list">Battle list</label>
+        <textarea
+            id="event_battle_list"
+            name="event_battle_list"
+            rows="7"
+            placeholder="Use one battle per line:
+Dancer Name | Team vs Dancer Name | Team
+Dancer Name | Team + Dancer Name | Team vs Dancer Name | Team + Dancer Name | Team
+Team Name vs Team Name
+Tournament: list confirmed dancers/teams or bracket notes"
+        ></textarea>
+
+        <label for="event_judges">Judges</label>
+        <textarea
+            id="event_judges"
+            name="event_judges"
+            rows="4"
+            placeholder="Use one judge per line:
+Judge Name | Team/Affiliation
+Judge Name | Team/Affiliation"
+        ></textarea>
+
+        <label for="event_details">Extra event details</label>
+        <textarea
+            id="event_details"
+            name="event_details"
+            rows="5"
+            placeholder="Add prizes, categories, DJ, age group, rules, flyer details, doors open time, ticket info, recap notes, or anything else people should know."
+        ></textarea>
+
+        <div class="form-note">
+            <h3>Source & submitter info</h3>
+            <p>
+                Source links and contact info are optional, but they help the archive review and verify event records.
+            </p>
+        </div>
+
+        <label for="source_url">Source link</label>
+        <input
+            type="url"
+            id="source_url"
+            name="source_url"
+            placeholder="Optional: flyer, Instagram post, Eventbrite, YouTube recap, Google Drive, website, etc."
+        >
+
+        <label for="submitter_name">Your name or alias</label>
+        <input
+            type="text"
+            id="submitter_name"
+            name="submitter_name"
+            placeholder="Optional: how should we identify who submitted this?"
+        >
+
+        <label for="submitter_role">Your role</label>
+        <select id="submitter_role" name="submitter_role">
+            <option value="">Choose a role</option>
+            <option value="host">Event host</option>
+            <option value="dancer">Dancer</option>
+            <option value="judge">Judge</option>
+            <option value="dj">DJ</option>
+            <option value="videographer">Videographer / media</option>
+            <option value="community_member">Community member</option>
+            <option value="fan">Fan / supporter</option>
+            <option value="other">Other</option>
+        </select>
+
+        <label for="contact">Contact link or email</label>
+        <input
+            type="text"
+            id="contact"
+            name="contact"
+            placeholder="Optional: Instagram, email, or another way to reach you if we need more context"
+        >
+
+        <button type="submit" class="button primary">Submit Event for Review</button>
+    </form>
+</section>
+{% endblock %}

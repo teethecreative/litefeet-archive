@@ -523,3 +523,7 @@ h2 {
         grid-template-columns: 1fr;
     }
 }
+
+.archive-form textarea::placeholder {
+    line-height: 1.45;
+}

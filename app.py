@@ -147,9 +147,15 @@ def get_submission_title(form_data):
 def get_clean_details(form_data):
     labels = {
         "event_title": "Event Name",
+        "event_org": "Organization Name",
+        "event_name": "Event Name",
         "event_date": "Event Date",
+        "event_time": "Event Time",
         "event_location": "Event Location",
         "event_host": "Event Host",
+        "event_battle_type": "Battle Type",
+        "event_battle_list": "Battle List",
+        "event_judges": "Judges",
         "event_details": "Event Details",
         "battle_event": "Battle Event",
         "battle_date": "Battle Date",
@@ -378,6 +384,101 @@ def submit_info():
 @app.route("/submit/success")
 def submit_success():
     return render_template("submit_success.html")
+
+
+
+@app.route("/events/submit", methods=["GET", "POST"])
+def submit_event():
+    if request.method == "POST":
+        form_data = request.form.to_dict()
+
+        errors = []
+
+        event_org = form_data.get("event_org", "").strip()
+        event_name = form_data.get("event_name", "").strip()
+        event_date = form_data.get("event_date", "").strip()
+        event_time = form_data.get("event_time", "").strip()
+        event_location = form_data.get("event_location", "").strip()
+
+        if len(event_org) < 2:
+            errors.append("Add the organization or host name.")
+
+        if len(event_name) < 2:
+            errors.append("Add the event name.")
+
+        if not event_date:
+            errors.append("Add the event date.")
+
+        if not event_time:
+            errors.append("Add the event time.")
+
+        if len(event_location) < 2:
+            errors.append("Add the event location.")
+
+        if errors:
+            return render_template("event_submit.html", errors=errors), 400
+
+        details = [
+            {"label": "Organization Name", "value": event_org},
+            {"label": "Event Name", "value": event_name},
+            {"label": "Event Date", "value": event_date},
+            {"label": "Event Time", "value": event_time},
+            {"label": "Event Location", "value": event_location},
+            {"label": "Battle Type", "value": form_data.get("event_battle_type", "").strip()},
+            {"label": "Battle List", "value": form_data.get("event_battle_list", "").strip()},
+            {"label": "Judges", "value": form_data.get("event_judges", "").strip()},
+            {"label": "Event Details", "value": form_data.get("event_details", "").strip()},
+        ]
+
+        details = [item for item in details if item["value"]]
+
+        execute_query(
+            """
+            INSERT INTO submissions (
+                submission_type,
+                title,
+                related_to,
+                source_url,
+                submitter_name,
+                submitter_role,
+                contact,
+                needs_verification,
+                review_status,
+                details_json,
+                created_at
+            )
+            VALUES (
+                :submission_type,
+                :title,
+                :related_to,
+                :source_url,
+                :submitter_name,
+                :submitter_role,
+                :contact,
+                :needs_verification,
+                :review_status,
+                :details_json,
+                :created_at
+            )
+            """,
+            {
+                "submission_type": "event",
+                "title": event_name,
+                "related_to": event_org,
+                "source_url": form_data.get("source_url", "").strip(),
+                "submitter_name": form_data.get("submitter_name", "").strip(),
+                "submitter_role": form_data.get("submitter_role", "").strip(),
+                "contact": form_data.get("contact", "").strip(),
+                "needs_verification": 1,
+                "review_status": "Pending Review",
+                "details_json": json.dumps(details, ensure_ascii=False),
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+            },
+        )
+
+        return redirect(url_for("submit_success"))
+
+    return render_template("event_submit.html", errors=[])
 
 
 @app.route("/events")
