@@ -1894,23 +1894,6 @@ def create_role_request(user_id, requested_role, reason):
 
 
 
-@app.route("/contributor/request-role", methods=["POST"])
-def contributor_request_role():
-    user = current_user()
-
-    if not user:
-        return redirect(url_for("account_login"))
-
-    requested_role = request.form.get("requested_role", "").strip()
-    reason = request.form.get("reason", "").strip()
-
-    allowed_roles = {"affiliate_host", "admin"}
-
-    if requested_role in allowed_roles:
-        create_role_request(user["id"], requested_role, reason)
-
-    return redirect(url_for("contributor_portal"))
-
 
 @app.route("/event-affiliates")
 def event_affiliates_portal():
