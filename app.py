@@ -1105,7 +1105,7 @@ def events():
 
 @app.route("/people")
 def people_hub():
-    return render_template("people.html")
+    return redirect(url_for("dancers"))
 
 
 @app.route("/dancers")

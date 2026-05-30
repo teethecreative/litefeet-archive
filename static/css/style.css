@@ -742,3 +742,22 @@ h2 {
     color: var(--gold-soft);
     margin: 0.5rem 0;
 }
+
+.subtle-subnav {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+    color: var(--muted);
+    font-weight: 800;
+}
+
+.subtle-subnav a {
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.subtle-subnav a:hover,
+.subtle-subnav a.is-active {
+    color: var(--gold-soft);
+}
