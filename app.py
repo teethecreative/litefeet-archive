@@ -244,6 +244,34 @@ def ask_archive():
     return render_template("ask_archive.html")
 
 
+@app.route("/admin/submissions/<int:submission_id>/status", methods=["POST"])
+def update_submission_status(submission_id):
+    new_status = request.form.get("review_status", "").strip()
+
+    allowed_statuses = {
+        "Pending Review",
+        "Needs Verification",
+        "Community Supported",
+        "Verified",
+        "Disputed",
+        "Rejected",
+    }
+
+    if new_status not in allowed_statuses:
+        return redirect(url_for("admin_submissions"))
+
+    conn = get_db_connection()
+    conn.execute(
+        "UPDATE submissions SET review_status = ? WHERE id = ?",
+        (new_status, submission_id),
+    )
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("admin_submissions"))
+
+
+
 @app.route("/admin/submissions")
 def admin_submissions():
     conn = get_db_connection()

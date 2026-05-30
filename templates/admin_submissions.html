@@ -7,7 +7,7 @@
     <h1>Submission Review</h1>
 
     <p>
-        New archive submissions appear here first. This page is temporary for local review while the MVP is being built.
+        New archive submissions appear here first. Review each submission, check the details, and update its archive status.
     </p>
 
     {% if submissions %}
@@ -17,9 +17,7 @@
                     <div class="submission-meta">
                         <span>{{ submission["submission_type"] or "Uncategorized" }}</span>
                         <span>{{ submission["review_status"] }}</span>
-                        {% if submission["needs_verification"] %}
-                            <span>Needs Verification</span>
-                        {% endif %}
+                        <span>Needs Verification</span>
                     </div>
 
                     <h2>{{ submission["title"] }}</h2>
@@ -33,6 +31,8 @@
                             <strong>Source:</strong>
                             <a href="{{ submission['source_url'] }}" target="_blank" rel="noopener">Open source link</a>
                         </p>
+                    {% else %}
+                        <p><strong>Source:</strong> No source link submitted.</p>
                     {% endif %}
 
                     <div class="review-details">
@@ -59,6 +59,24 @@
                         <p><strong>Role:</strong> {{ submission["submitter_role"] or "Not provided" }}</p>
                         <p><strong>Contact:</strong> {{ submission["contact"] or "Not provided" }}</p>
                         <p><strong>Submitted:</strong> {{ submission["created_at"] }}</p>
+                    </div>
+
+                    <div class="review-actions">
+                        <h3>Review Status</h3>
+
+                        <form action="/admin/submissions/{{ submission['id'] }}/status" method="post">
+                            <label for="review_status_{{ submission['id'] }}">Update status</label>
+                            <select id="review_status_{{ submission['id'] }}" name="review_status">
+                                <option value="Pending Review" {% if submission["review_status"] == "Pending Review" %}selected{% endif %}>Pending Review</option>
+                                <option value="Needs Verification" {% if submission["review_status"] == "Needs Verification" %}selected{% endif %}>Needs Verification</option>
+                                <option value="Community Supported" {% if submission["review_status"] == "Community Supported" %}selected{% endif %}>Community Supported</option>
+                                <option value="Verified" {% if submission["review_status"] == "Verified" %}selected{% endif %}>Verified</option>
+                                <option value="Disputed" {% if submission["review_status"] == "Disputed" %}selected{% endif %}>Disputed</option>
+                                <option value="Rejected" {% if submission["review_status"] == "Rejected" %}selected{% endif %}>Rejected</option>
+                            </select>
+
+                            <button type="submit" class="button primary">Save Status</button>
+                        </form>
                     </div>
                 </article>
             {% endfor %}
