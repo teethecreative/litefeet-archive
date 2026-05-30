@@ -33,6 +33,8 @@
                             <strong>Source:</strong>
                             <a href="{{ submission['source_url'] }}" target="_blank" rel="noopener">Open source link</a>
                         </p>
+                    {% else %}
+                        <p><strong>Source:</strong> No source link attached yet.</p>
                     {% endif %}
 
                     <div class="review-details">
@@ -63,7 +65,7 @@
                         </div>
 
                         <form action="/verify/{{ submission['id'] }}/vote" method="post" class="vote-form">
-                            <label for="vote_type_{{ submission['id'] }}">Your response</label>
+                            <label for="vote_type_{{ submission['id'] }}">Is this accurate?</label>
                             <select id="vote_type_{{ submission['id'] }}" name="vote_type" required>
                                 <option value="">Choose one</option>
                                 <option value="true">True</option>
@@ -71,7 +73,15 @@
                                 <option value="debatable">Debatable</option>
                             </select>
 
-                            <label for="voter_name_{{ submission['id'] }}">Name or alias</label>
+                            <label for="source_url_{{ submission['id'] }}">Source link</label>
+                            <input
+                                type="url"
+                                id="source_url_{{ submission['id'] }}"
+                                name="source_url"
+                                placeholder="Optional: paste a video, article, flyer, post, interview, or other source link"
+                            >
+
+                            <label for="voter_name_{{ submission['id'] }}">Your name or alias</label>
                             <input
                                 type="text"
                                 id="voter_name_{{ submission['id'] }}"
@@ -79,7 +89,7 @@
                                 placeholder="Optional"
                             >
 
-                            <label for="voter_role_{{ submission['id'] }}">Role or connection</label>
+                            <label for="voter_role_{{ submission['id'] }}">Your role in the community</label>
                             <input
                                 type="text"
                                 id="voter_role_{{ submission['id'] }}"
@@ -87,13 +97,29 @@
                                 placeholder="Optional: dancer, host, judge, fan, community member, etc."
                             >
 
-                            <label for="note_{{ submission['id'] }}">Context or note</label>
+                            <label for="contact_{{ submission['id'] }}">Your contact link or email</label>
+                            <input
+                                type="text"
+                                id="contact_{{ submission['id'] }}"
+                                name="contact"
+                                placeholder="Optional: Instagram, email, or another way to reach you if we need more context"
+                            >
+
+                            <label for="note_{{ submission['id'] }}">Context or correction note</label>
                             <textarea
                                 id="note_{{ submission['id'] }}"
                                 name="note"
-                                rows="3"
-                                placeholder="Optional: add a reason, memory, source context, or correction note"
+                                rows="4"
+                                placeholder="Optional: explain why you marked it true, false, or debatable. Add memory, correction, source context, names, dates, crews, or event details."
                             ></textarea>
+
+                            <div class="form-note">
+                                <h3>Before this affects the archive</h3>
+                                <p>
+                                    Verification responses help show community consensus. Source links and contact info are optional,
+                                    but they help the archive review and strengthen records.
+                                </p>
+                            </div>
 
                             <button type="submit" class="button primary">Submit Verification</button>
                         </form>

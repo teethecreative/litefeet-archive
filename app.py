@@ -82,12 +82,29 @@ def init_db():
                     vote_type TEXT NOT NULL,
                     voter_name TEXT,
                     voter_role TEXT,
+                    contact TEXT,
+                    source_url TEXT,
                     note TEXT,
                     created_at TEXT NOT NULL
                 )
                 """
             )
         )
+
+        if dialect == "postgresql":
+            conn.execute(text("ALTER TABLE verification_votes ADD COLUMN IF NOT EXISTS contact TEXT"))
+            conn.execute(text("ALTER TABLE verification_votes ADD COLUMN IF NOT EXISTS source_url TEXT"))
+        else:
+            existing_vote_columns = {
+                row[1] for row in conn.execute(text("PRAGMA table_info(verification_votes)")).fetchall()
+            }
+
+            if "contact" not in existing_vote_columns:
+                conn.execute(text("ALTER TABLE verification_votes ADD COLUMN contact TEXT"))
+
+            if "source_url" not in existing_vote_columns:
+                conn.execute(text("ALTER TABLE verification_votes ADD COLUMN source_url TEXT"))
+
 
 
 def fetch_all(query, params=None):
@@ -222,6 +239,11 @@ def seed_litefeet_research_records():
         from litefeet_seed_data import LITEFEET_RESEARCH_RECORDS
     except ImportError:
         return
+
+    execute_query(
+        "DELETE FROM submissions WHERE title = :title",
+        {"title": "Shoe Tricks / Hat Tricks"},
+    )
 
     for record in LITEFEET_RESEARCH_RECORDS:
         existing = fetch_all(
@@ -441,6 +463,8 @@ def vote_on_claim(submission_id):
     vote_type = request.form.get("vote_type", "").strip()
     voter_name = request.form.get("voter_name", "").strip()
     voter_role = request.form.get("voter_role", "").strip()
+    contact = request.form.get("contact", "").strip()
+    source_url = request.form.get("source_url", "").strip()
     note = request.form.get("note", "").strip()
 
     if vote_type not in {"true", "false", "debatable"}:
@@ -453,6 +477,8 @@ def vote_on_claim(submission_id):
             vote_type,
             voter_name,
             voter_role,
+            contact,
+            source_url,
             note,
             created_at
         )
@@ -461,6 +487,8 @@ def vote_on_claim(submission_id):
             :vote_type,
             :voter_name,
             :voter_role,
+            :contact,
+            :source_url,
             :note,
             :created_at
         )
@@ -470,6 +498,8 @@ def vote_on_claim(submission_id):
             "vote_type": vote_type,
             "voter_name": voter_name,
             "voter_role": voter_role,
+            "contact": contact,
+            "source_url": source_url,
             "note": note,
             "created_at": datetime.now().isoformat(timespec="seconds"),
         },
