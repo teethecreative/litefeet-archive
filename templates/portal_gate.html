@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ portal_title }} | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>{{ portal_title }}</h1>
+
+    <p>{{ portal_body }}</p>
+
+    <div class="card-grid">
+        <article class="card">
+            <h2>Already have an account?</h2>
+            <p>Log in to continue to your portal.</p>
+            <a href="/account/login" class="button primary">Log In</a>
+        </article>
+
+        <article class="card">
+            <h2>New contributor?</h2>
+            <p>Create an account to start building your Ledger history.</p>
+            <a href="/account/signup" class="button secondary">Create Account</a>
+        </article>
+    </div>
+</section>
+{% endblock %}

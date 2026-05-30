@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Event Affiliates | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Event Affiliates</h1>
+
+    <p>
+        Event Affiliate access is for approved hosts or event representatives. Once approved, you’ll be able to submit and manage your own event records.
+    </p>
+
+    <div class="review-details">
+        <h3>Request Event Affiliate Access</h3>
+
+        <form action="/contributor/request-role" method="post" class="vote-form">
+            <input type="hidden" name="requested_role" value="affiliate_host">
+
+            <label for="reason">Tell us about your event work</label>
+            <textarea id="reason" name="reason" rows="5" placeholder="Add your organization, event series, role, social links, and why you should have affiliate access."></textarea>
+
+            <button type="submit" class="button primary">Request Event Affiliate Access</button>
+        </form>
+    </div>
+
+    <div class="review-details">
+        <h3>Your Requests</h3>
+
+        {% if requests %}
+            {% for request_item in requests %}
+                <p>
+                    <strong>{{ request_item["requested_role"] }}</strong> —
+                    {{ request_item["status"] }} —
+                    {{ request_item["created_at"] }}
+                </p>
+            {% endfor %}
+        {% else %}
+            <p>No affiliate requests submitted yet.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

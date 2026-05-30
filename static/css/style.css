@@ -718,3 +718,27 @@ h2 {
 .contact-panel p {
     max-width: 760px;
 }
+
+.footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.footer-nav a {
+    color: var(--gold-soft);
+    text-decoration: none;
+    font-weight: 800;
+}
+
+.footer-nav a:hover {
+    text-decoration: underline;
+}
+
+.big-number {
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--gold-soft);
+    margin: 0.5rem 0;
+}

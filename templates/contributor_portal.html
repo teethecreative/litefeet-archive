@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Contributor Portal | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Contributor Portal</h1>
+
+    <p>
+        Welcome, {{ user["display_name"] }}. Track your Ledger activity, contribution points, and access requests here.
+    </p>
+
+    <div class="card-grid">
+        <article class="card">
+            <h2>Your Role</h2>
+            <p>{{ user["role"] }}</p>
+        </article>
+
+        <article class="card">
+            <h2>Contribution Points</h2>
+            <p class="big-number">{{ contribution_summary["points"] }}</p>
+            <p>
+                {{ contribution_summary["submission_count"] }} submissions ·
+                {{ contribution_summary["profile_count"] }} dancer profiles
+            </p>
+        </article>
+    </div>
+
+    <div class="review-details">
+        <h3>Request Access</h3>
+        <p>
+            Request Event Affiliate access if you host or represent events. Request Admin access only if you are part of the Ledger review team.
+        </p>
+
+        <form action="/contributor/request-role" method="post" class="vote-form">
+            <label for="requested_role">Access type</label>
+            <select id="requested_role" name="requested_role">
+                <option value="affiliate_host">Event Affiliate</option>
+                <option value="admin">Admin</option>
+            </select>
+
+            <label for="reason">Why are you requesting this access?</label>
+            <textarea id="reason" name="reason" rows="4" placeholder="Tell us who you are, what you host or help with, and why you need this access."></textarea>
+
+            <button type="submit" class="button primary">Submit Request</button>
+        </form>
+    </div>
+
+    <div class="review-details">
+        <h3>Your Access Requests</h3>
+
+        {% if requests %}
+            {% for request_item in requests %}
+                <p>
+                    <strong>{{ request_item["requested_role"] }}</strong> —
+                    {{ request_item["status"] }} —
+                    {{ request_item["created_at"] }}
+                </p>
+            {% endfor %}
+        {% else %}
+            <p>No access requests yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="review-details">
+        <h3>Your Contributions</h3>
+
+        {% if contributions %}
+            {% for contribution in contributions %}
+                <p>
+                    <strong>{{ contribution["title"] }}</strong>
+                    <br>
+                    {{ contribution["submission_type"] }} · {{ contribution["review_status"] }}
+                </p>
+            {% endfor %}
+        {% else %}
+            <p>
+                New contributions will appear here after forms are connected to contributor accounts.
+            </p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Role Requests | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Role Requests</h1>
+
+    <p>
+        Review requests for Event Affiliate and Admin access.
+    </p>
+
+    <p>
+        <a href="/admin/submissions" class="button secondary">Back to Admin</a>
+    </p>
+
+    {% if requests %}
+        <div class="submission-list">
+            {% for request_item in requests %}
+                <article class="submission-card">
+                    <div class="submission-meta">
+                        <span>{{ request_item["status"] }}</span>
+                        <span>{{ request_item["requested_role"] }}</span>
+                    </div>
+
+                    <h2>{{ request_item["display_name"] }}</h2>
+
+                    <p><strong>Email:</strong> {{ request_item["email"] }}</p>
+                    <p><strong>Current role:</strong> {{ request_item["role"] }}</p>
+                    <p><strong>Reason:</strong> {{ request_item["reason"] or "No reason provided" }}</p>
+                    <p><strong>Requested:</strong> {{ request_item["created_at"] }}</p>
+
+                    <form action="/admin/role-requests/{{ request_item['id'] }}/status" method="post" class="vote-form">
+                        <label for="status_{{ request_item['id'] }}">Status</label>
+                        <select id="status_{{ request_item['id'] }}" name="status">
+                            <option value="Pending Review" {% if request_item["status"] == "Pending Review" %}selected{% endif %}>Pending Review</option>
+                            <option value="Approved" {% if request_item["status"] == "Approved" %}selected{% endif %}>Approved</option>
+                            <option value="Rejected" {% if request_item["status"] == "Rejected" %}selected{% endif %}>Rejected</option>
+                        </select>
+
+                        <button type="submit" class="button primary">Save</button>
+                    </form>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>No role requests yet</h3>
+            <p>Contributor access requests will appear here.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Event Affiliate Portal | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Event Affiliate Portal</h1>
+
+    <p>
+        Manage event records submitted from your account.
+    </p>
+
+    <p>
+        <a href="/events/submit" class="button primary">Submit New Event</a>
+    </p>
+
+    <div class="review-details">
+        <h3>Your Events</h3>
+
+        {% if events %}
+            {% for event in events %}
+                <p>
+                    <strong>{{ event["title"] }}</strong>
+                    <br>
+                    {{ event["review_status"] }} · {{ event["created_at"] }}
+                </p>
+            {% endfor %}
+        {% else %}
+            <p>No events connected to your account yet. New event submissions will appear here after the next account-linking patch.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

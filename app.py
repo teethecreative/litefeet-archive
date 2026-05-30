@@ -42,7 +42,297 @@ def from_json_filter(value):
         return []
 
 
-def init_db():
+def 
+def ensure_portal_tables():
+    dialect = engine.dialect.name
+
+    if dialect == "postgresql":
+        request_id = "id SERIAL PRIMARY KEY"
+    else:
+        request_id = "id INTEGER PRIMARY KEY AUTOINCREMENT"
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                f"""
+                CREATE TABLE IF NOT EXISTS role_requests (
+                    {request_id},
+                    user_id INTEGER NOT NULL,
+                    requested_role TEXT NOT NULL,
+                    reason TEXT,
+                    status TEXT DEFAULT 'Pending Review',
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
+        )
+
+        if dialect == "postgresql":
+            conn.execute(text("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS contributor_user_id INTEGER"))
+            conn.execute(text("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS anonymous_submission INTEGER DEFAULT 0"))
+        else:
+            existing_columns = {
+                row[1] for row in conn.execute(text("PRAGMA table_info(submissions)")).fetchall()
+            }
+
+            if "contributor_user_id" not in existing_columns:
+                conn.execute(text("ALTER TABLE submissions ADD COLUMN contributor_user_id INTEGER"))
+
+            if "anonymous_submission" not in existing_columns:
+                conn.execute(text("ALTER TABLE submissions ADD COLUMN anonymous_submission INTEGER DEFAULT 0"))
+
+
+@app.context_processor
+def inject_logged_in_user():
+    return {"logged_in_user": current_user()}
+
+
+def get_contribution_points(user_id):
+    submission_count = fetch_all(
+        """
+        SELECT COUNT(*) AS total
+        FROM submissions
+        WHERE contributor_user_id = :user_id
+        """,
+        {"user_id": user_id},
+    )[0]["total"]
+
+    profile_count = fetch_all(
+        """
+        SELECT COUNT(*) AS total
+        FROM dancer_profiles
+        WHERE user_id = :user_id
+        """,
+        {"user_id": user_id},
+    )[0]["total"]
+
+    return {
+        "submission_count": submission_count,
+        "profile_count": profile_count,
+        "points": (submission_count * 5) + (profile_count * 10),
+    }
+
+
+def create_role_request(user_id, requested_role, reason):
+    existing = fetch_all(
+        """
+        SELECT id
+        FROM role_requests
+        WHERE user_id = :user_id
+        AND requested_role = :requested_role
+        AND status = 'Pending Review'
+        LIMIT 1
+        """,
+        {
+            "user_id": user_id,
+            "requested_role": requested_role,
+        },
+    )
+
+    if existing:
+        return
+
+    execute_query(
+        """
+        INSERT INTO role_requests (
+            user_id,
+            requested_role,
+            reason,
+            status,
+            created_at
+        )
+        VALUES (
+            :user_id,
+            :requested_role,
+            :reason,
+            :status,
+            :created_at
+        )
+        """,
+        {
+            "user_id": user_id,
+            "requested_role": requested_role,
+            "reason": reason,
+            "status": "Pending Review",
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+        },
+    )
+
+
+@app.route("/contributor")
+def contributor_portal():
+    user = current_user()
+
+    if not user:
+        return render_template(
+            "portal_gate.html",
+            portal_title="Contributor Portal",
+            portal_body="Log in or create an account to track your submissions, contribution points, role requests, and Ledger activity.",
+        )
+
+    contribution_summary = get_contribution_points(user["id"])
+
+    requests = fetch_all(
+        """
+        SELECT *
+        FROM role_requests
+        WHERE user_id = :user_id
+        ORDER BY created_at DESC
+        """,
+        {"user_id": user["id"]},
+    )
+
+    contributions = fetch_all(
+        """
+        SELECT *
+        FROM submissions
+        WHERE contributor_user_id = :user_id
+        ORDER BY created_at DESC
+        """,
+        {"user_id": user["id"]},
+    )
+
+    return render_template(
+        "contributor_portal.html",
+        user=user,
+        contribution_summary=contribution_summary,
+        requests=requests,
+        contributions=contributions,
+    )
+
+
+@app.route("/contributor/request-role", methods=["POST"])
+def contributor_request_role():
+    user = current_user()
+
+    if not user:
+        return redirect(url_for("account_login"))
+
+    requested_role = request.form.get("requested_role", "").strip()
+    reason = request.form.get("reason", "").strip()
+
+    allowed_roles = {"affiliate_host", "admin"}
+
+    if requested_role in allowed_roles:
+        create_role_request(user["id"], requested_role, reason)
+
+    return redirect(url_for("contributor_portal"))
+
+
+@app.route("/event-affiliates")
+def event_affiliates_portal():
+    user = current_user()
+
+    if not user:
+        return render_template(
+            "portal_gate.html",
+            portal_title="Event Affiliates",
+            portal_body="Log in or create an account to request Event Affiliate access. Approved affiliates will be able to submit and manage their own events.",
+        )
+
+    if user["role"] not in {"affiliate_host", "admin"}:
+        requests = fetch_all(
+            """
+            SELECT *
+            FROM role_requests
+            WHERE user_id = :user_id
+            AND requested_role = 'affiliate_host'
+            ORDER BY created_at DESC
+            """,
+            {"user_id": user["id"]},
+        )
+
+        return render_template(
+            "event_affiliate_request.html",
+            user=user,
+            requests=requests,
+        )
+
+    events = fetch_all(
+        """
+        SELECT *
+        FROM submissions
+        WHERE submission_type = 'event'
+        AND contributor_user_id = :user_id
+        ORDER BY created_at DESC
+        """,
+        {"user_id": user["id"]},
+    )
+
+    return render_template(
+        "event_affiliate_portal.html",
+        user=user,
+        events=events,
+    )
+
+
+@app.route("/admin/role-requests")
+def admin_role_requests():
+    requests = fetch_all(
+        """
+        SELECT role_requests.*, archive_users.display_name, archive_users.email, archive_users.role
+        FROM role_requests
+        JOIN archive_users ON role_requests.user_id = archive_users.id
+        ORDER BY role_requests.created_at DESC
+        """
+    )
+
+    return render_template("admin_role_requests.html", requests=requests)
+
+
+@app.route("/admin/role-requests/<int:request_id>/status", methods=["POST"])
+def update_role_request_status(request_id):
+    new_status = request.form.get("status", "").strip()
+
+    allowed_statuses = {"Pending Review", "Approved", "Rejected"}
+
+    if new_status not in allowed_statuses:
+        return redirect(url_for("admin_role_requests"))
+
+    role_requests = fetch_all(
+        """
+        SELECT *
+        FROM role_requests
+        WHERE id = :request_id
+        LIMIT 1
+        """,
+        {"request_id": request_id},
+    )
+
+    if not role_requests:
+        return redirect(url_for("admin_role_requests"))
+
+    role_request = role_requests[0]
+
+    execute_query(
+        """
+        UPDATE role_requests
+        SET status = :status
+        WHERE id = :request_id
+        """,
+        {
+            "status": new_status,
+            "request_id": request_id,
+        },
+    )
+
+    if new_status == "Approved":
+        execute_query(
+            """
+            UPDATE archive_users
+            SET role = :role
+            WHERE id = :user_id
+            """,
+            {
+                "role": role_request["requested_role"],
+                "user_id": role_request["user_id"],
+            },
+        )
+
+    return redirect(url_for("admin_role_requests"))
+
+
+init_db():
     dialect = engine.dialect.name
 
     if dialect == "postgresql":
@@ -1419,8 +1709,299 @@ def update_submission_status(submission_id):
     return redirect(url_for("admin_submissions"))
 
 
+
+def ensure_portal_tables():
+    dialect = engine.dialect.name
+
+    if dialect == "postgresql":
+        request_id = "id SERIAL PRIMARY KEY"
+    else:
+        request_id = "id INTEGER PRIMARY KEY AUTOINCREMENT"
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                f"""
+                CREATE TABLE IF NOT EXISTS role_requests (
+                    {request_id},
+                    user_id INTEGER NOT NULL,
+                    requested_role TEXT NOT NULL,
+                    reason TEXT,
+                    status TEXT DEFAULT 'Pending Review',
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
+        )
+
+        if dialect == "postgresql":
+            conn.execute(text("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS contributor_user_id INTEGER"))
+            conn.execute(text("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS anonymous_submission INTEGER DEFAULT 0"))
+        else:
+            existing_columns = {
+                row[1] for row in conn.execute(text("PRAGMA table_info(submissions)")).fetchall()
+            }
+
+            if "contributor_user_id" not in existing_columns:
+                conn.execute(text("ALTER TABLE submissions ADD COLUMN contributor_user_id INTEGER"))
+
+            if "anonymous_submission" not in existing_columns:
+                conn.execute(text("ALTER TABLE submissions ADD COLUMN anonymous_submission INTEGER DEFAULT 0"))
+
+
+@app.context_processor
+def inject_logged_in_user():
+    return {"logged_in_user": current_user()}
+
+
+def get_contribution_points(user_id):
+    submission_count = fetch_all(
+        """
+        SELECT COUNT(*) AS total
+        FROM submissions
+        WHERE contributor_user_id = :user_id
+        """,
+        {"user_id": user_id},
+    )[0]["total"]
+
+    profile_count = fetch_all(
+        """
+        SELECT COUNT(*) AS total
+        FROM dancer_profiles
+        WHERE user_id = :user_id
+        """,
+        {"user_id": user_id},
+    )[0]["total"]
+
+    return {
+        "submission_count": submission_count,
+        "profile_count": profile_count,
+        "points": (submission_count * 5) + (profile_count * 10),
+    }
+
+
+def create_role_request(user_id, requested_role, reason):
+    existing = fetch_all(
+        """
+        SELECT id
+        FROM role_requests
+        WHERE user_id = :user_id
+        AND requested_role = :requested_role
+        AND status = 'Pending Review'
+        LIMIT 1
+        """,
+        {
+            "user_id": user_id,
+            "requested_role": requested_role,
+        },
+    )
+
+    if existing:
+        return
+
+    execute_query(
+        """
+        INSERT INTO role_requests (
+            user_id,
+            requested_role,
+            reason,
+            status,
+            created_at
+        )
+        VALUES (
+            :user_id,
+            :requested_role,
+            :reason,
+            :status,
+            :created_at
+        )
+        """,
+        {
+            "user_id": user_id,
+            "requested_role": requested_role,
+            "reason": reason,
+            "status": "Pending Review",
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+        },
+    )
+
+
+@app.route("/contributor")
+def contributor_portal():
+    user = current_user()
+
+    if not user:
+        return render_template(
+            "portal_gate.html",
+            portal_title="Contributor Portal",
+            portal_body="Log in or create an account to track your submissions, contribution points, role requests, and Ledger activity.",
+        )
+
+    contribution_summary = get_contribution_points(user["id"])
+
+    requests = fetch_all(
+        """
+        SELECT *
+        FROM role_requests
+        WHERE user_id = :user_id
+        ORDER BY created_at DESC
+        """,
+        {"user_id": user["id"]},
+    )
+
+    contributions = fetch_all(
+        """
+        SELECT *
+        FROM submissions
+        WHERE contributor_user_id = :user_id
+        ORDER BY created_at DESC
+        """,
+        {"user_id": user["id"]},
+    )
+
+    return render_template(
+        "contributor_portal.html",
+        user=user,
+        contribution_summary=contribution_summary,
+        requests=requests,
+        contributions=contributions,
+    )
+
+
+@app.route("/contributor/request-role", methods=["POST"])
+def contributor_request_role():
+    user = current_user()
+
+    if not user:
+        return redirect(url_for("account_login"))
+
+    requested_role = request.form.get("requested_role", "").strip()
+    reason = request.form.get("reason", "").strip()
+
+    allowed_roles = {"affiliate_host", "admin"}
+
+    if requested_role in allowed_roles:
+        create_role_request(user["id"], requested_role, reason)
+
+    return redirect(url_for("contributor_portal"))
+
+
+@app.route("/event-affiliates")
+def event_affiliates_portal():
+    user = current_user()
+
+    if not user:
+        return render_template(
+            "portal_gate.html",
+            portal_title="Event Affiliates",
+            portal_body="Log in or create an account to request Event Affiliate access. Approved affiliates will be able to submit and manage their own events.",
+        )
+
+    if user["role"] not in {"affiliate_host", "admin"}:
+        requests = fetch_all(
+            """
+            SELECT *
+            FROM role_requests
+            WHERE user_id = :user_id
+            AND requested_role = 'affiliate_host'
+            ORDER BY created_at DESC
+            """,
+            {"user_id": user["id"]},
+        )
+
+        return render_template(
+            "event_affiliate_request.html",
+            user=user,
+            requests=requests,
+        )
+
+    events = fetch_all(
+        """
+        SELECT *
+        FROM submissions
+        WHERE submission_type = 'event'
+        AND contributor_user_id = :user_id
+        ORDER BY created_at DESC
+        """,
+        {"user_id": user["id"]},
+    )
+
+    return render_template(
+        "event_affiliate_portal.html",
+        user=user,
+        events=events,
+    )
+
+
+@app.route("/admin/role-requests")
+def admin_role_requests():
+    requests = fetch_all(
+        """
+        SELECT role_requests.*, archive_users.display_name, archive_users.email, archive_users.role
+        FROM role_requests
+        JOIN archive_users ON role_requests.user_id = archive_users.id
+        ORDER BY role_requests.created_at DESC
+        """
+    )
+
+    return render_template("admin_role_requests.html", requests=requests)
+
+
+@app.route("/admin/role-requests/<int:request_id>/status", methods=["POST"])
+def update_role_request_status(request_id):
+    new_status = request.form.get("status", "").strip()
+
+    allowed_statuses = {"Pending Review", "Approved", "Rejected"}
+
+    if new_status not in allowed_statuses:
+        return redirect(url_for("admin_role_requests"))
+
+    role_requests = fetch_all(
+        """
+        SELECT *
+        FROM role_requests
+        WHERE id = :request_id
+        LIMIT 1
+        """,
+        {"request_id": request_id},
+    )
+
+    if not role_requests:
+        return redirect(url_for("admin_role_requests"))
+
+    role_request = role_requests[0]
+
+    execute_query(
+        """
+        UPDATE role_requests
+        SET status = :status
+        WHERE id = :request_id
+        """,
+        {
+            "status": new_status,
+            "request_id": request_id,
+        },
+    )
+
+    if new_status == "Approved":
+        execute_query(
+            """
+            UPDATE archive_users
+            SET role = :role
+            WHERE id = :user_id
+            """,
+            {
+                "role": role_request["requested_role"],
+                "user_id": role_request["user_id"],
+            },
+        )
+
+    return redirect(url_for("admin_role_requests"))
+
+
 init_db()
 ensure_dancer_tables()
+ensure_portal_tables()
 seed_litefeet_research_records()
 
 if __name__ == "__main__":
