@@ -781,3 +781,47 @@ h2 {
 .testimony-panel .notice {
     margin: 1.2rem 0;
 }
+
+/* Fix upcoming event cards so one event does not stretch into a giant square */
+.event-square-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 260px));
+    gap: 1rem;
+    align-items: start;
+    justify-content: start;
+}
+
+.event-square-link {
+    width: 100%;
+    max-width: 260px;
+}
+
+.event-square-card {
+    width: 100%;
+    min-height: 240px;
+    aspect-ratio: auto;
+    justify-content: flex-start;
+    gap: 1rem;
+}
+
+.event-square-card h3 {
+    margin: 1rem 0 0.5rem;
+}
+
+.event-square-card .small-note {
+    margin-top: auto;
+}
+
+@media (max-width: 800px) {
+    .event-square-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .event-square-link {
+        max-width: none;
+    }
+
+    .event-square-card {
+        min-height: auto;
+    }
+}
