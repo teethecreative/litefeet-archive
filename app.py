@@ -402,6 +402,74 @@ def split_event_records(records):
 
     return upcoming_soon, upcoming_later, past_events, undated_events
 
+
+def ensure_dancer_tables():
+    dialect = engine.dialect.name
+
+    if dialect == "postgresql":
+        profile_id = "id SERIAL PRIMARY KEY"
+        suggestion_id = "id SERIAL PRIMARY KEY"
+        flower_id = "id SERIAL PRIMARY KEY"
+    else:
+        profile_id = "id INTEGER PRIMARY KEY AUTOINCREMENT"
+        suggestion_id = "id INTEGER PRIMARY KEY AUTOINCREMENT"
+        flower_id = "id INTEGER PRIMARY KEY AUTOINCREMENT"
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                f"""
+                CREATE TABLE IF NOT EXISTS dancer_profiles (
+                    {profile_id},
+                    user_id INTEGER,
+                    dance_name TEXT NOT NULL,
+                    real_name TEXT,
+                    team_affiliation TEXT,
+                    borough_scene TEXT,
+                    bio TEXT,
+                    source_url TEXT,
+                    status TEXT DEFAULT 'Pending Review',
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
+        )
+
+        conn.execute(
+            text(
+                f"""
+                CREATE TABLE IF NOT EXISTS dancer_suggestions (
+                    {suggestion_id},
+                    dancer_profile_id INTEGER NOT NULL,
+                    suggestion_text TEXT NOT NULL,
+                    source_url TEXT,
+                    submitter_name TEXT,
+                    submitter_role TEXT,
+                    contact TEXT,
+                    status TEXT DEFAULT 'Pending Review',
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
+        )
+
+        conn.execute(
+            text(
+                f"""
+                CREATE TABLE IF NOT EXISTS dancer_flowers (
+                    {flower_id},
+                    dancer_profile_id INTEGER NOT NULL,
+                    flower_text TEXT NOT NULL,
+                    submitter_name TEXT,
+                    submitter_role TEXT,
+                    contact TEXT,
+                    status TEXT DEFAULT 'Pending Review',
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
+        )
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -746,17 +814,357 @@ def events():
 
 @app.route("/dancers")
 def dancers():
-    approved_dancers = fetch_all(
+    dancer_profiles = fetch_all(
         """
         SELECT *
-        FROM submissions
-        WHERE submission_type = 'dancer_profile'
-        AND review_status IN ('Verified', 'Community Supported')
+        FROM dancer_profiles
+        WHERE status IN ('Approved', 'Verified', 'Community Supported')
         ORDER BY created_at DESC
         """
     )
 
-    return render_template("dancers.html", approved_dancers=approved_dancers)
+    approved_flowers = fetch_all(
+        """
+        SELECT *
+        FROM dancer_flowers
+        WHERE status = 'Approved'
+        ORDER BY created_at DESC
+        """
+    )
+
+    flowers_by_profile = {}
+
+    for flower in approved_flowers:
+        profile_id = flower["dancer_profile_id"]
+
+        if profile_id not in flowers_by_profile:
+            flowers_by_profile[profile_id] = []
+
+        flowers_by_profile[profile_id].append(flower)
+
+    return render_template(
+        "dancers.html",
+        dancer_profiles=dancer_profiles,
+        flowers_by_profile=flowers_by_profile,
+    )
+
+
+@app.route("/dancers/create", methods=["GET", "POST"])
+def create_dancer_profile():
+    user = current_user()
+
+    if not user:
+        return redirect(url_for("account_login"))
+
+    error = ""
+
+    if request.method == "POST":
+        dance_name = request.form.get("dance_name", "").strip()
+        real_name = request.form.get("real_name", "").strip()
+        team_affiliation = request.form.get("team_affiliation", "").strip()
+        borough_scene = request.form.get("borough_scene", "").strip()
+        bio = request.form.get("bio", "").strip()
+        source_url = request.form.get("source_url", "").strip()
+
+        if len(dance_name) < 2:
+            error = "Add your dancer name or alias."
+        else:
+            execute_query(
+                """
+                INSERT INTO dancer_profiles (
+                    user_id,
+                    dance_name,
+                    real_name,
+                    team_affiliation,
+                    borough_scene,
+                    bio,
+                    source_url,
+                    status,
+                    created_at
+                )
+                VALUES (
+                    :user_id,
+                    :dance_name,
+                    :real_name,
+                    :team_affiliation,
+                    :borough_scene,
+                    :bio,
+                    :source_url,
+                    :status,
+                    :created_at
+                )
+                """,
+                {
+                    "user_id": user["id"],
+                    "dance_name": dance_name,
+                    "real_name": real_name,
+                    "team_affiliation": team_affiliation,
+                    "borough_scene": borough_scene,
+                    "bio": bio,
+                    "source_url": source_url,
+                    "status": "Pending Review",
+                    "created_at": datetime.now().isoformat(timespec="seconds"),
+                },
+            )
+
+            return redirect(url_for("dancers"))
+
+    return render_template("dancer_create.html", error=error)
+
+
+@app.route("/dancers/<int:dancer_id>")
+def dancer_profile_detail(dancer_id):
+    profiles = fetch_all(
+        """
+        SELECT *
+        FROM dancer_profiles
+        WHERE id = :dancer_id
+        LIMIT 1
+        """,
+        {"dancer_id": dancer_id},
+    )
+
+    if not profiles:
+        return redirect(url_for("dancers"))
+
+    profile = profiles[0]
+
+    if profile["status"] not in {"Approved", "Verified", "Community Supported"} and not current_user_is_admin():
+        return redirect(url_for("dancers"))
+
+    flowers = fetch_all(
+        """
+        SELECT *
+        FROM dancer_flowers
+        WHERE dancer_profile_id = :dancer_id
+        AND status = 'Approved'
+        ORDER BY created_at DESC
+        """,
+        {"dancer_id": dancer_id},
+    )
+
+    suggestions = fetch_all(
+        """
+        SELECT *
+        FROM dancer_suggestions
+        WHERE dancer_profile_id = :dancer_id
+        AND status = 'Approved'
+        ORDER BY created_at DESC
+        """,
+        {"dancer_id": dancer_id},
+    )
+
+    return render_template(
+        "dancer_profile_detail.html",
+        profile=profile,
+        flowers=flowers,
+        suggestions=suggestions,
+    )
+
+
+@app.route("/dancers/<int:dancer_id>/flowers", methods=["POST"])
+def give_dancer_flowers(dancer_id):
+    flower_text = request.form.get("flower_text", "").strip()
+    submitter_name = request.form.get("submitter_name", "").strip()
+    submitter_role = request.form.get("submitter_role", "").strip()
+    contact = request.form.get("contact", "").strip()
+
+    if flower_text:
+        execute_query(
+            """
+            INSERT INTO dancer_flowers (
+                dancer_profile_id,
+                flower_text,
+                submitter_name,
+                submitter_role,
+                contact,
+                status,
+                created_at
+            )
+            VALUES (
+                :dancer_profile_id,
+                :flower_text,
+                :submitter_name,
+                :submitter_role,
+                :contact,
+                :status,
+                :created_at
+            )
+            """,
+            {
+                "dancer_profile_id": dancer_id,
+                "flower_text": flower_text,
+                "submitter_name": submitter_name,
+                "submitter_role": submitter_role,
+                "contact": contact,
+                "status": "Pending Review",
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+            },
+        )
+
+    return redirect(url_for("dancer_profile_detail", dancer_id=dancer_id))
+
+
+@app.route("/dancers/<int:dancer_id>/suggest", methods=["POST"])
+def suggest_dancer_update(dancer_id):
+    suggestion_text = request.form.get("suggestion_text", "").strip()
+    source_url = request.form.get("source_url", "").strip()
+    submitter_name = request.form.get("submitter_name", "").strip()
+    submitter_role = request.form.get("submitter_role", "").strip()
+    contact = request.form.get("contact", "").strip()
+
+    if suggestion_text:
+        execute_query(
+            """
+            INSERT INTO dancer_suggestions (
+                dancer_profile_id,
+                suggestion_text,
+                source_url,
+                submitter_name,
+                submitter_role,
+                contact,
+                status,
+                created_at
+            )
+            VALUES (
+                :dancer_profile_id,
+                :suggestion_text,
+                :source_url,
+                :submitter_name,
+                :submitter_role,
+                :contact,
+                :status,
+                :created_at
+            )
+            """,
+            {
+                "dancer_profile_id": dancer_id,
+                "suggestion_text": suggestion_text,
+                "source_url": source_url,
+                "submitter_name": submitter_name,
+                "submitter_role": submitter_role,
+                "contact": contact,
+                "status": "Pending Review",
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+            },
+        )
+
+    return redirect(url_for("dancer_profile_detail", dancer_id=dancer_id))
+
+
+@app.route("/admin/dancer-profiles")
+def admin_dancer_profiles():
+    profiles = fetch_all(
+        """
+        SELECT *
+        FROM dancer_profiles
+        ORDER BY created_at DESC
+        """
+    )
+
+    return render_template("admin_dancer_profiles.html", profiles=profiles)
+
+
+@app.route("/admin/dancer-profiles/<int:dancer_id>/status", methods=["POST"])
+def update_dancer_profile_status(dancer_id):
+    new_status = request.form.get("status", "").strip()
+
+    allowed_statuses = {
+        "Pending Review",
+        "Approved",
+        "Verified",
+        "Community Supported",
+        "Needs Verification",
+        "Rejected",
+    }
+
+    if new_status not in allowed_statuses:
+        return redirect(url_for("admin_dancer_profiles"))
+
+    execute_query(
+        """
+        UPDATE dancer_profiles
+        SET status = :status
+        WHERE id = :dancer_id
+        """,
+        {
+            "status": new_status,
+            "dancer_id": dancer_id,
+        },
+    )
+
+    return redirect(url_for("admin_dancer_profiles"))
+
+
+@app.route("/admin/dancer-feedback")
+def admin_dancer_feedback():
+    suggestions = fetch_all(
+        """
+        SELECT dancer_suggestions.*, dancer_profiles.dance_name
+        FROM dancer_suggestions
+        JOIN dancer_profiles ON dancer_suggestions.dancer_profile_id = dancer_profiles.id
+        ORDER BY dancer_suggestions.created_at DESC
+        """
+    )
+
+    flowers = fetch_all(
+        """
+        SELECT dancer_flowers.*, dancer_profiles.dance_name
+        FROM dancer_flowers
+        JOIN dancer_profiles ON dancer_flowers.dancer_profile_id = dancer_profiles.id
+        ORDER BY dancer_flowers.created_at DESC
+        """
+    )
+
+    return render_template(
+        "admin_dancer_feedback.html",
+        suggestions=suggestions,
+        flowers=flowers,
+    )
+
+
+@app.route("/admin/dancer-suggestions/<int:suggestion_id>/status", methods=["POST"])
+def update_dancer_suggestion_status(suggestion_id):
+    new_status = request.form.get("status", "").strip()
+
+    if new_status not in {"Pending Review", "Approved", "Rejected"}:
+        return redirect(url_for("admin_dancer_feedback"))
+
+    execute_query(
+        """
+        UPDATE dancer_suggestions
+        SET status = :status
+        WHERE id = :suggestion_id
+        """,
+        {
+            "status": new_status,
+            "suggestion_id": suggestion_id,
+        },
+    )
+
+    return redirect(url_for("admin_dancer_feedback"))
+
+
+@app.route("/admin/dancer-flowers/<int:flower_id>/status", methods=["POST"])
+def update_dancer_flower_status(flower_id):
+    new_status = request.form.get("status", "").strip()
+
+    if new_status not in {"Pending Review", "Approved", "Rejected"}:
+        return redirect(url_for("admin_dancer_feedback"))
+
+    execute_query(
+        """
+        UPDATE dancer_flowers
+        SET status = :status
+        WHERE id = :flower_id
+        """,
+        {
+            "status": new_status,
+            "flower_id": flower_id,
+        },
+    )
+
+    return redirect(url_for("admin_dancer_feedback"))
 
 
 @app.route("/battles")
@@ -999,6 +1407,7 @@ def update_submission_status(submission_id):
 
 
 init_db()
+ensure_dancer_tables()
 seed_litefeet_research_records()
 
 if __name__ == "__main__":

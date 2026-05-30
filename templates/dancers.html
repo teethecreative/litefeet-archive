@@ -6,49 +6,62 @@
 <section class="content-section">
     <h1>Dancers</h1>
     <p>
-        The dancer directory connects profiles to battles, awards, crews, videos, source links, and verified records.
+        Dancer profiles are created by the dancers themselves. Community members can suggest additions or give flowers,
+        but public updates are reviewed before they appear.
     </p>
 
-    {% if approved_dancers %}
-        <div class="submission-list">
-            {% for dancer in approved_dancers %}
-                <article class="submission-card">
+    <p>
+        <a href="/dancers/create" class="button primary">Create Your Dancer Profile</a>
+    </p>
+
+    {% if dancer_profiles %}
+        <div class="dancer-grid">
+            {% for dancer in dancer_profiles %}
+                {% set flowers = flowers_by_profile.get(dancer["id"], []) %}
+
+                <article class="dancer-card">
                     <div class="submission-meta">
-                        <span>{{ dancer["review_status"] }}</span>
+                        <span>{{ dancer["status"] }}</span>
                         <span>Dancer Profile</span>
                     </div>
 
-                    <h2>{{ dancer["title"] }}</h2>
+                    <h2>{{ dancer["dance_name"] }}</h2>
 
-                    {% if dancer["source_url"] %}
-                        <p><strong>Source:</strong> <a href="{{ dancer['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
+                    {% if dancer["team_affiliation"] %}
+                        <p><strong>Team/Affiliation:</strong> {{ dancer["team_affiliation"] }}</p>
                     {% endif %}
 
-                    {% set details = dancer["details_json"] | from_json %}
-                    {% if details %}
-                        <div class="review-details">
-                            <h3>Profile Details</h3>
-                            <dl>
-                                {% for item in details %}
-                                    <div class="detail-row">
-                                        <dt>{{ item["label"] }}</dt>
-                                        <dd>{{ item["value"] }}</dd>
-                                    </div>
-                                {% endfor %}
-                            </dl>
+                    {% if dancer["borough_scene"] %}
+                        <p><strong>Scene:</strong> {{ dancer["borough_scene"] }}</p>
+                    {% endif %}
+
+                    {% if dancer["bio"] %}
+                        <p>{{ dancer["bio"] }}</p>
+                    {% endif %}
+
+                    {% if flowers %}
+                        <div class="flowers-preview">
+                            <h3>Flowers</h3>
+                            {% for flower in flowers[:2] %}
+                                <blockquote>{{ flower["flower_text"] }}</blockquote>
+                            {% endfor %}
                         </div>
                     {% endif %}
+
+                    <p>
+                        <a href="/dancers/{{ dancer['id'] }}" class="button secondary">View Profile / Give Flowers</a>
+                    </p>
                 </article>
             {% endfor %}
         </div>
     {% else %}
         <div class="empty-state">
-            <h3>Dancer profiles are still being built</h3>
+            <h3>Dancer profiles are waiting to be claimed</h3>
             <p>
-                We’re collecting verified battle results, source links, community context, and profile details for dancers
-                across LiteFeet history. If you have a video, flyer, recap, or correction, submit it for review.
+                Profiles should be created by the dancers themselves. Once a dancer submits a profile and it is approved,
+                it will appear here with approved flowers and community additions.
             </p>
-            <a href="/submit" class="button primary">Submit Dancer Info</a>
+            <a href="/dancers/create" class="button primary">Create Your Dancer Profile</a>
         </div>
     {% endif %}
 </section>

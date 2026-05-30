@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Dancer Profiles Admin | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Dancer Profiles</h1>
+
+    <p>
+        Review dancer-created profiles before they appear publicly.
+    </p>
+
+    <p>
+        <a href="/admin/submissions" class="button secondary">Back to Submissions</a>
+        <a href="/admin/dancer-feedback" class="button secondary">Review Flowers & Suggestions</a>
+    </p>
+
+    {% if profiles %}
+        <div class="submission-list">
+            {% for profile in profiles %}
+                <article class="submission-card">
+                    <div class="submission-meta">
+                        <span>{{ profile["status"] }}</span>
+                        <span>Dancer Profile</span>
+                    </div>
+
+                    <h2>{{ profile["dance_name"] }}</h2>
+
+                    <p><strong>Real name:</strong> {{ profile["real_name"] or "Not provided" }}</p>
+                    <p><strong>Team/Affiliation:</strong> {{ profile["team_affiliation"] or "Not provided" }}</p>
+                    <p><strong>Scene:</strong> {{ profile["borough_scene"] or "Not provided" }}</p>
+                    <p><strong>Bio:</strong> {{ profile["bio"] or "Not provided" }}</p>
+
+                    {% if profile["source_url"] %}
+                        <p><strong>Source:</strong> <a href="{{ profile['source_url'] }}" target="_blank" rel="noopener">Open source</a></p>
+                    {% endif %}
+
+                    <form action="/admin/dancer-profiles/{{ profile['id'] }}/status" method="post" class="vote-form">
+                        <label for="status_{{ profile['id'] }}">Status</label>
+                        <select id="status_{{ profile['id'] }}" name="status">
+                            <option value="Pending Review" {% if profile["status"] == "Pending Review" %}selected{% endif %}>Pending Review</option>
+                            <option value="Approved" {% if profile["status"] == "Approved" %}selected{% endif %}>Approved</option>
+                            <option value="Verified" {% if profile["status"] == "Verified" %}selected{% endif %}>Verified</option>
+                            <option value="Community Supported" {% if profile["status"] == "Community Supported" %}selected{% endif %}>Community Supported</option>
+                            <option value="Needs Verification" {% if profile["status"] == "Needs Verification" %}selected{% endif %}>Needs Verification</option>
+                            <option value="Rejected" {% if profile["status"] == "Rejected" %}selected{% endif %}>Rejected</option>
+                        </select>
+
+                        <button type="submit" class="button primary">Save Status</button>
+                    </form>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>No dancer profiles yet</h3>
+            <p>Dancer-created profiles will appear here for review.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

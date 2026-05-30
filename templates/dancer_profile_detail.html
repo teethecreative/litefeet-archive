@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile["dance_name"] }} | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <p><a href="/dancers" class="button secondary">Back to Dancers</a></p>
+
+    <h1>{{ profile["dance_name"] }}</h1>
+
+    <div class="submission-meta">
+        <span>{{ profile["status"] }}</span>
+        <span>Dancer Profile</span>
+    </div>
+
+    {% if profile["team_affiliation"] %}
+        <p><strong>Team/Affiliation:</strong> {{ profile["team_affiliation"] }}</p>
+    {% endif %}
+
+    {% if profile["borough_scene"] %}
+        <p><strong>Scene:</strong> {{ profile["borough_scene"] }}</p>
+    {% endif %}
+
+    {% if profile["source_url"] %}
+        <p><strong>Source:</strong> <a href="{{ profile['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
+    {% endif %}
+
+    {% if profile["bio"] %}
+        <div class="review-details">
+            <h3>Profile</h3>
+            <p>{{ profile["bio"] }}</p>
+        </div>
+    {% endif %}
+
+    <div class="review-details">
+        <h3>Flowers</h3>
+
+        {% if flowers %}
+            {% for flower in flowers %}
+                <blockquote class="flower-quote">
+                    {{ flower["flower_text"] }}
+                    {% if flower["submitter_name"] %}
+                        <footer>— {{ flower["submitter_name"] }}</footer>
+                    {% endif %}
+                </blockquote>
+            {% endfor %}
+        {% else %}
+            <p>No approved flowers yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="review-details">
+        <h3>Community Additions</h3>
+
+        {% if suggestions %}
+            {% for suggestion in suggestions %}
+                <p>{{ suggestion["suggestion_text"] }}</p>
+
+                {% if suggestion["source_url"] %}
+                    <p><a href="{{ suggestion['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <p>No approved community additions yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="vote-box">
+        <h3>Give Flowers</h3>
+
+        <form action="/dancers/{{ profile['id'] }}/flowers" method="post" class="vote-form">
+            <label for="flower_text">What flowers do you want to give?</label>
+            <textarea id="flower_text" name="flower_text" rows="4" placeholder="Show love, give credit, mention a moment, style, battle, impact, or contribution."></textarea>
+
+            <label for="submitter_name">Your name or alias</label>
+            <input type="text" id="submitter_name" name="submitter_name" placeholder="Optional">
+
+            <label for="submitter_role">Your role / connection</label>
+            <input type="text" id="submitter_role" name="submitter_role" placeholder="Optional: dancer, host, fan, judge, community member, etc.">
+
+            <label for="contact">Contact link or email</label>
+            <input type="text" id="contact" name="contact" placeholder="Optional">
+
+            <button type="submit" class="button primary">Submit Flowers for Review</button>
+        </form>
+    </div>
+
+    <div class="vote-box">
+        <h3>Suggest an Addition or Correction</h3>
+
+        <form action="/dancers/{{ profile['id'] }}/suggest" method="post" class="vote-form">
+            <label for="suggestion_text">Suggestion or correction</label>
+            <textarea id="suggestion_text" name="suggestion_text" rows="4" placeholder="Add missing history, source context, battle info, correction, team info, or anything that should be reviewed."></textarea>
+
+            <label for="source_url">Source link</label>
+            <input type="url" id="source_url" name="source_url" placeholder="Optional: video, article, post, flyer, interview, etc.">
+
+            <label for="suggestion_submitter_name">Your name or alias</label>
+            <input type="text" id="suggestion_submitter_name" name="submitter_name" placeholder="Optional">
+
+            <label for="suggestion_submitter_role">Your role / connection</label>
+            <input type="text" id="suggestion_submitter_role" name="submitter_role" placeholder="Optional">
+
+            <label for="suggestion_contact">Contact link or email</label>
+            <input type="text" id="suggestion_contact" name="contact" placeholder="Optional">
+
+            <button type="submit" class="button primary">Submit Suggestion for Review</button>
+        </form>
+    </div>
+</section>
+{% endblock %}

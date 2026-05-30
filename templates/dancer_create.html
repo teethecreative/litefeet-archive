@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Create Dancer Profile | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <p><a href="/dancers" class="button secondary">Back to Dancers</a></p>
+
+    <h1>Create Your Dancer Profile</h1>
+
+    <p>
+        Dancer profiles should be created by the dancer themself. After submission, the profile is reviewed before it appears publicly.
+    </p>
+
+    {% if error %}
+        <div class="form-errors">
+            <h2>Profile issue</h2>
+            <ul><li>{{ error }}</li></ul>
+        </div>
+    {% endif %}
+
+    <form class="archive-form" action="/dancers/create" method="post">
+        <label for="dance_name">Dancer name / alias</label>
+        <input type="text" id="dance_name" name="dance_name" placeholder="Example: your dance name or public alias">
+
+        <label for="real_name">Real name</label>
+        <input type="text" id="real_name" name="real_name" placeholder="Optional">
+
+        <label for="team_affiliation">Team / crew / affiliation</label>
+        <input type="text" id="team_affiliation" name="team_affiliation" placeholder="Optional: team, crew, organization, or affiliation">
+
+        <label for="borough_scene">Borough / scene</label>
+        <input type="text" id="borough_scene" name="borough_scene" placeholder="Optional: Harlem, Bronx, Brooklyn, Queens, uptown, etc.">
+
+        <label for="bio">Short bio</label>
+        <textarea id="bio" name="bio" rows="5" placeholder="Tell people who you are, what you’re known for, your style, battles, crews, history, or what you want documented."></textarea>
+
+        <label for="source_url">Source link</label>
+        <input type="url" id="source_url" name="source_url" placeholder="Optional: Instagram, YouTube, battle clip, interview, website, or other source">
+
+        <button type="submit" class="button primary">Submit Profile for Review</button>
+    </form>
+</section>
+{% endblock %}

@@ -662,3 +662,42 @@ h2 {
 .checkbox-row input {
     width: auto;
 }
+
+.dancer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.dancer-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+}
+
+.dancer-card h2 {
+    color: var(--gold-soft);
+}
+
+.flowers-preview {
+    background: rgba(216, 168, 63, 0.04);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.flower-quote,
+.flowers-preview blockquote {
+    border-left: 3px solid var(--gold);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: var(--text);
+}
+
+.flower-quote footer {
+    margin-top: 0.5rem;
+    color: var(--muted);
+}
