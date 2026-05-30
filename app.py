@@ -812,7 +812,14 @@ def events():
         undated_events=undated_events,
     )
 
+
+@app.route("/people")
+def people_hub():
+    return render_template("people.html")
+
+
 @app.route("/dancers")
+@app.route("/people/dancers")
 def dancers():
     dancer_profiles = fetch_all(
         """
@@ -1165,6 +1172,12 @@ def update_dancer_flower_status(flower_id):
     )
 
     return redirect(url_for("admin_dancer_feedback"))
+
+
+
+@app.route("/people/teams")
+def teams():
+    return render_template("teams.html")
 
 
 @app.route("/battles")

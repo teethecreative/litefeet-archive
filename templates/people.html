@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}People & Teams | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>People & Teams</h1>
+
+    <p>
+        Browse dancer profiles, ghost profiles, teams, crews, affiliations, flowers, and community-submitted history.
+    </p>
+
+    <div class="card-grid">
+        <article class="card">
+            <h2>Dancers</h2>
+            <p>
+                Claimed dancer profiles and ghost profiles live here. Dancers can claim or create their own profiles,
+                while the community can submit flowers, context, and suggestions for review.
+            </p>
+            <a href="/people/dancers" class="button primary">Open Dancers</a>
+        </article>
+
+        <article class="card">
+            <h2>Teams & Crews</h2>
+            <p>
+                Team and crew records will live on their own page, separate from individual dancer cards.
+                This section will connect teams to dancers, battles, events, eras, and source links.
+            </p>
+            <a href="/people/teams" class="button secondary">Open Teams & Crews</a>
+        </article>
+    </div>
+</section>
+{% endblock %}
