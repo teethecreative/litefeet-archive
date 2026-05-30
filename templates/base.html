@@ -11,17 +11,25 @@
 <header class="site-header">
     <a href="/" class="logo">LiteFeet Ledger</a>
 
-<nav class="nav-links">
-    <a href="/">Home</a>
-    <a href="/ask">Ask</a>
-    <a href="/events">Events</a>
-    <a href="/people/dancers">People & Teams</a>
-    <a href="/battles">Battles</a>
-    <a href="/awards">Awards</a>
-    <a href="/verify">Verify</a>
-    <a href="/about">About</a>
-    <a href="/submit">Submit Info</a>
-</nav>
+    <nav class="nav-links">
+        <a href="/">Home</a>
+        <a href="/ask">Ask</a>
+        <a href="/events">Events</a>
+        <a href="/people/dancers">People & Teams</a>
+        <a href="/battles">Battles</a>
+        <a href="/awards">Awards</a>
+        <a href="/verify">Verify</a>
+        <a href="/about">About</a>
+        <a href="/submit">Submit Info</a>
+
+        {% if current_user %}
+            <a href="/contributor">My Account</a>
+            <a href="/account/logout">Log Out</a>
+        {% else %}
+            <a href="/account/login">Log In</a>
+            <a href="/account/signup">Create Account</a>
+        {% endif %}
+    </nav>
 </header>
 
 <main class="page">
@@ -33,7 +41,13 @@
 
     <nav class="footer-nav">
         <a href="/admin/submissions">Admin</a>
-        <a href="/contributor">Contributor Portal</a>
+
+        {% if current_user %}
+            <a href="/contributor">Contributor Portal</a>
+        {% else %}
+            <a href="/account/login">Contributor Login</a>
+        {% endif %}
+
         <a href="/event-affiliates">Event Affiliates</a>
     </nav>
 </footer>

@@ -826,6 +826,14 @@ def seed_ghost_dancer_profiles():
             },
         )
 
+
+@app.context_processor
+def inject_user_context():
+    return {
+        "current_user": current_user()
+    }
+
+
 @app.route("/")
 def home():
     return render_template("home.html")
