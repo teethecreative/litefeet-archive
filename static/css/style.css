@@ -239,3 +239,187 @@ h2 {
         flex-direction: column;
     }
 }
+
+.archive-form {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 2rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+}
+
+.archive-form label {
+    font-weight: 800;
+    color: var(--gold-soft);
+    margin-top: 0.6rem;
+}
+
+.archive-form input,
+.archive-form select,
+.archive-form textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 0.9rem;
+    background: #090909;
+    color: var(--text);
+    padding: 0.9rem 1rem;
+    font: inherit;
+}
+
+.archive-form textarea {
+    resize: vertical;
+}
+
+.archive-form input::placeholder,
+.archive-form textarea::placeholder {
+    color: rgba(247, 242, 232, 0.45);
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.checkbox-row input {
+    width: auto;
+    margin-top: 0.25rem;
+}
+
+.form-note {
+    background: var(--panel-soft);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.form-note h3 {
+    margin-top: 0;
+}
+
+.conditional-section {
+    display: none;
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: rgba(216, 168, 63, 0.05);
+}
+
+.conditional-section.is-visible {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.conditional-section h3 {
+    margin: 0 0 0.5rem;
+    color: var(--gold-soft);
+}
+
+.shared-fields {
+    display: none;
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: rgba(216, 168, 63, 0.04);
+}
+
+.shared-fields.is-visible {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.shared-fields h3 {
+    margin: 0 0 0.5rem;
+    color: var(--gold-soft);
+}
+
+.submission-list {
+    display: grid;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.submission-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+}
+
+.submission-card h2 {
+    margin-top: 1rem;
+}
+
+.submission-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.submission-meta span {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.35rem 0.65rem;
+    color: var(--gold-soft);
+    background: rgba(216, 168, 63, 0.08);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.submission-card pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    background: #070707;
+    border: 1px solid var(--border);
+    border-radius: 0.8rem;
+    padding: 1rem;
+    color: var(--muted);
+}
+
+.review-details {
+    margin-top: 1.2rem;
+    background: rgba(216, 168, 63, 0.04);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1rem;
+}
+
+.review-details h3 {
+    margin-top: 0;
+    color: var(--gold-soft);
+}
+
+.review-details dl {
+    margin: 0;
+    display: grid;
+    gap: 0.8rem;
+}
+
+.detail-row {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.detail-row dt {
+    color: var(--gold-soft);
+    font-weight: 800;
+}
+
+.detail-row dd {
+    margin: 0;
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+.small-note {
+    margin-top: -0.3rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+}

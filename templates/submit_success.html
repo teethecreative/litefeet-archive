@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Submission Received | LiteFeet Archive{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Submission Received</h1>
+
+    <div class="empty-state">
+        <h3>Thanks for helping build the archive</h3>
+        <p>
+            Your submission was saved for review. It will not appear publicly until it has been checked,
+            connected to the right archive record, and marked with the proper review status.
+        </p>
+        <a href="/submit" class="button primary">Submit Another</a>
+        <a href="/" class="button secondary">Back Home</a>
+    </div>
+</section>
+{% endblock %}
