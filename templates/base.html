@@ -4,75 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}LiteFeet Ledger{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
+    <div class="site-shell">
+        <header class="site-header">
+            <a href="/" class="logo">LiteFeet Ledger</a>
 
-<header class="site-header">
-    <a href="/" class="logo">LiteFeet Ledger</a>
+            <nav class="nav-links">
+                <a href="/">Home</a>
+                <a href="/ask">Ask</a>
+                <a href="/events">Events</a>
+                <a href="/people/dancers">People & Teams</a>
+                <a href="/producers">Producers</a>
+                <a href="/battles">Battles</a>
+                <a href="/awards">Awards</a>
+                <a href="/verify">Verify</a>
+                <a href="/about">About</a>
+                <a href="/submit">Submit Info</a>
 
-    <nav class="nav-links">
-        <a href="/">Home</a>
-        <a href="/ask">Ask</a>
-        <a href="/events">Events</a>
-        <a href="/people/dancers">People & Teams</a>
-        <a href="/people/producers">Producers</a>
-        <a href="/battles">Battles</a>
-        <a href="/awards">Awards</a>
-        <a href="/verify">Verify</a>
-        <a href="/about">About</a>
-        <a href="/submit">Submit Info</a>
-
-        {% if current_user %}
-            <a href="/contributor">My Account</a>
-            <a href="/account/logout">Log Out</a>
-        {% else %}
-            {% if nav_is_admin or nav_current_user %}
-                <details class="account-menu">
-                    <summary>
-                        {% if nav_is_admin %}
-                            Admin
-                        {% elif nav_current_user %}
-                            {{ nav_current_user["display_name"] }}
-                        {% endif %}
-                        {% if nav_anonymous_mode %}
-                            <span class="anon-pill">Anon</span>
-                        {% endif %}
-                    </summary>
-
-                    <div class="account-menu-panel">
-                        {% if nav_is_admin %}
-                            <a href="/admin/submissions">Admin Dashboard</a>
-                            <a href="/admin/submissions">Submissions</a>
-                            <a href="/admin/media">Media Feed</a>
-                        {% endif %}
-
-                        {% if nav_current_user %}
-                            <a href="/account">My Account</a>
-
-                            {% if nav_claimed_profile %}
-                                <a href="{{ nav_claimed_profile | profile_url }}">View My Profile</a>
-                                <a href="/admin/people/{{ nav_claimed_profile['id'] }}/edit">Edit My Profile</a>
-                            {% else %}
-                                <a href="/people/dancers">Claim Profile</a>
+                {% if nav_is_admin or nav_current_user %}
+                    <details class="account-menu">
+                        <summary>
+                            {% if nav_is_admin %}
+                                Admin
+                            {% elif nav_current_user %}
+                                {{ nav_current_user["display_name"] }}
                             {% endif %}
-                        {% endif %}
 
-                        <form method="POST" action="/account/anonymous-mode">
-                            <button type="submit">
-                                Anonymous Mode: {% if nav_anonymous_mode %}On{% else %}Off{% endif %}
-                            </button>
-                        </form>
-
-                        <a href="/account/logout">Log Out</a>
-                    </div>
-                </details>
-            {% else %}
-                <a href="/account/login">Log In</a>
-                <a href="/account/signup">Create Account</a>
-            {% endif %}
-        {% endif %}
-    
                             {% if nav_anonymous_mode %}
                                 <span class="anon-pill">Anon</span>
                             {% endif %}
@@ -82,8 +41,7 @@
                             {% if nav_is_admin %}
                                 <a href="/admin/submissions">Admin Dashboard</a>
                                 <a href="/admin/submissions">Submissions</a>
-                            <a href="/admin/media">Media Feed</a>
-                                <a href="/admin/people">People</a>
+                                <a href="/admin/media">Media Feed</a>
                             {% endif %}
 
                             {% if nav_current_user %}
@@ -107,67 +65,26 @@
                         </div>
                     </details>
                 {% else %}
-                    
-                        {% if nav_anonymous_mode %}
-                            <span class="anon-pill">Anon</span>
-                        {% endif %}
-                    </summary>
-
-                    <div class="account-menu-panel">
-                        {% if nav_is_admin %}
-                            <a href="/admin/submissions">Admin Dashboard</a>
-                            <a href="/admin/submissions">Submissions</a>
-                            <a href="/admin/media">Media Feed</a>
-                        {% endif %}
-
-                        {% if nav_current_user %}
-                            <a href="/account">My Account</a>
-
-                            {% if nav_claimed_profile %}
-                                <a href="{{ nav_claimed_profile | profile_url }}">View My Profile</a>
-                                <a href="/admin/people/{{ nav_claimed_profile['id'] }}/edit">Edit My Profile</a>
-                            {% else %}
-                                <a href="/people/dancers">Claim Profile</a>
-                            {% endif %}
-                        {% endif %}
-
-                        <form method="POST" action="/account/anonymous-mode">
-                            <button type="submit">
-                                Anonymous Mode: {% if nav_anonymous_mode %}On{% else %}Off{% endif %}
-                            </button>
-                        </form>
-
-                        <a href="/account/logout">Log Out</a>
-                    </div>
-                </details>
-            {% else %}
-                <a href="/account/login">Log In</a>
-                <a href="/account/signup">Create Account</a>
-            {% endif %}
+                    <a href="/account/login">Log In</a>
+                    <a href="/account/signup">Create Account</a>
                 {% endif %}
             </nav>
-</header>
+        </header>
 
-<main class="page">
-    {% block content %}{% endblock %}
-</main>
+        <main>
+            {% block content %}{% endblock %}
+        </main>
 
-<footer class="site-footer">
-    <p>The LiteFeet Ledger is being built with the community, for the community.</p>
+        <footer class="site-footer">
+            <p>The LiteFeet Ledger is being built with the community, for the community.</p>
+            <div class="footer-links">
+                <a href="/admin/login">Admin</a>
+                <a href="/account/login">Contributor Login</a>
+                <a href="/event-affiliates">Event Affiliates</a>
+            </div>
+        </footer>
+    </div>
 
-    <nav class="footer-nav">
-        <a href="/admin/submissions">Admin</a>
-
-        {% if current_user %}
-            <a href="/contributor">Contributor Portal</a>
-        {% else %}
-            <a href="/account/login">Contributor Login</a>
-        {% endif %}
-
-        <a href="/event-affiliates">Event Affiliates</a>
-    </nav>
-</footer>
-
-<script src="{{ url_for('static', filename='js/archive.js') }}"></script>
+    <script src="/static/js/archive.js"></script>
 </body>
 </html>

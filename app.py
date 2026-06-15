@@ -1446,6 +1446,231 @@ def hide_seeded_records_from_verify_queue():
     )
 
 
+
+def ensure_media_items_table():
+    with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS media_items (
+                        id SERIAL PRIMARY KEY,
+                        media_type TEXT NOT NULL,
+                        title TEXT NOT NULL,
+                        artist_or_creator TEXT,
+                        url TEXT NOT NULL,
+                        platform TEXT,
+                        release_date TEXT,
+                        event_name TEXT,
+                        description TEXT,
+                        status TEXT DEFAULT 'Published',
+                        created_at TEXT
+                    )
+                    """
+                )
+            )
+        else:
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS media_items (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        media_type TEXT NOT NULL,
+                        title TEXT NOT NULL,
+                        artist_or_creator TEXT,
+                        url TEXT NOT NULL,
+                        platform TEXT,
+                        release_date TEXT,
+                        event_name TEXT,
+                        description TEXT,
+                        status TEXT DEFAULT 'Published',
+                        created_at TEXT
+                    )
+                    """
+                )
+            )
+
+
+def detect_media_platform(url):
+    value = (url or "").lower()
+
+    if "youtube.com" in value or "youtu.be" in value:
+        return "YouTube"
+    if "soundcloud.com" in value:
+        return "SoundCloud"
+    if "spotify.com" in value:
+        return "Spotify"
+    if "music.apple.com" in value or "itunes.apple.com" in value:
+        return "Apple Music"
+
+    return "Link"
+
+
+def youtube_embed_url(url):
+    parsed = urlparse(url or "")
+    host = parsed.netloc.lower()
+    path_value = parsed.path.strip("/")
+    video_id = ""
+
+    if "youtu.be" in host:
+        video_id = path_value.split("/")[0]
+    elif "youtube.com" in host:
+        query = parse_qs(parsed.query)
+        video_id = (query.get("v") or [""])[0]
+
+        if not video_id and path_value.startswith("shorts/"):
+            parts = path_value.split("/")
+            if len(parts) > 1:
+                video_id = parts[1]
+
+        if not video_id and path_value.startswith("embed/"):
+            parts = path_value.split("/")
+            if len(parts) > 1:
+                video_id = parts[1]
+
+    if video_id:
+        return f"https://www.youtube.com/embed/{video_id}"
+
+    return ""
+
+
+def spotify_embed_url(url):
+    parsed = urlparse(url or "")
+    parts = [part for part in parsed.path.split("/") if part]
+
+    if "open.spotify.com" not in parsed.netloc.lower():
+        return ""
+
+    if len(parts) >= 2:
+        return f"https://open.spotify.com/embed/{parts[0]}/{parts[1]}"
+
+    return ""
+
+
+def apple_music_embed_url(url):
+    parsed = urlparse(url or "")
+
+    if "music.apple.com" not in parsed.netloc.lower():
+        return ""
+
+    return "https://embed.music.apple.com" + parsed.path + (("?" + parsed.query) if parsed.query else "")
+
+
+@app.template_filter("media_embed_url")
+def media_embed_url(url):
+    platform = detect_media_platform(url)
+
+    if platform == "YouTube":
+        return youtube_embed_url(url)
+    if platform == "SoundCloud":
+        return "https://w.soundcloud.com/player/?url=" + quote(url or "", safe="")
+    if platform == "Spotify":
+        return spotify_embed_url(url)
+    if platform == "Apple Music":
+        return apple_music_embed_url(url)
+
+    return ""
+
+
+@app.template_filter("media_platform")
+def media_platform(url):
+    return detect_media_platform(url)
+
+
+@app.route("/admin/media", methods=["GET", "POST"])
+def admin_media():
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login", next=request.path))
+
+    ensure_media_items_table()
+
+    if request.method == "POST":
+        media_type = request.form.get("media_type", "").strip()
+        title = request.form.get("title", "").strip()
+        artist_or_creator = request.form.get("artist_or_creator", "").strip()
+        url = request.form.get("url", "").strip()
+        release_date = request.form.get("release_date", "").strip()
+        event_name = request.form.get("event_name", "").strip()
+        description = request.form.get("description", "").strip()
+        status = request.form.get("status", "Published").strip() or "Published"
+        platform = detect_media_platform(url)
+
+        if media_type and title and url:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        """
+                        INSERT INTO media_items (
+                            media_type,
+                            title,
+                            artist_or_creator,
+                            url,
+                            platform,
+                            release_date,
+                            event_name,
+                            description,
+                            status,
+                            created_at
+                        )
+                        VALUES (
+                            :media_type,
+                            :title,
+                            :artist_or_creator,
+                            :url,
+                            :platform,
+                            :release_date,
+                            :event_name,
+                            :description,
+                            :status,
+                            :created_at
+                        )
+                        """
+                    ),
+                    {
+                        "media_type": media_type,
+                        "title": title,
+                        "artist_or_creator": artist_or_creator,
+                        "url": url,
+                        "platform": platform,
+                        "release_date": release_date,
+                        "event_name": event_name,
+                        "description": description,
+                        "status": status,
+                        "created_at": datetime.now().isoformat(timespec="seconds"),
+                    },
+                )
+
+        return redirect(url_for("admin_media"))
+
+    media_items = fetch_all(
+        """
+        SELECT *
+        FROM media_items
+        ORDER BY
+            CASE WHEN release_date IS NULL OR release_date = '' THEN created_at ELSE release_date END DESC,
+            created_at DESC
+        """
+    )
+
+    return render_template("admin_media.html", media_items=media_items)
+
+
+@app.route("/admin/media/<int:item_id>/delete", methods=["POST"])
+def admin_media_delete(item_id):
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login", next=request.path))
+
+    ensure_media_items_table()
+
+    with engine.begin() as conn:
+        conn.execute(
+            text("DELETE FROM media_items WHERE id = :id"),
+            {"id": item_id},
+        )
+
+    return redirect(url_for("admin_media"))
+
+
 @app.route("/")
 def home():
     ensure_media_items_table()
