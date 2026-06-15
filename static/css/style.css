@@ -1175,3 +1175,23 @@ h2 {
     }
 }
 
+
+.profile-action-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.checkbox-line {
+    display: flex !important;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 0.6rem;
+    color: #f5f0e8 !important;
+}
+
+.checkbox-line input {
+    width: auto !important;
+}
+

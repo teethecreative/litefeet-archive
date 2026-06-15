@@ -90,6 +90,12 @@
                     <p>
                         <a href="{{ producer | profile_url }}" class="button secondary">View Profile</a>
                     </p>
+
+                    {% if not producer["user_id"] %}
+                        <p>
+                            <a href="{{ producer | profile_url }}/claim" class="button primary">Claim This Profile</a>
+                        </p>
+                    {% endif %}
                 </article>
             {% endfor %}
         </div>

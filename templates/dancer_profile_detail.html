@@ -7,9 +7,15 @@
     <div class="event-detail-topline">
         <a href="/people/dancers" class="button secondary">Back to Dancers</a>
 
-        {% if session.get("admin_logged_in") %}
-            <a href="/admin/people/{{ profile['id'] }}/edit" class="button primary">Edit Profile</a>
-        {% endif %}
+        <div class="profile-action-row">
+            {% if not profile["user_id"] %}
+                <a href="{{ profile | profile_url }}/claim" class="button primary">Claim This Profile</a>
+            {% endif %}
+
+            {% if session.get("admin_logged_in") %}
+                <a href="/admin/people/{{ profile['id'] }}/edit" class="button secondary">Edit Profile</a>
+            {% endif %}
+        </div>
     </div>
 
     <h1>{{ profile["dance_name"] }}</h1>
@@ -89,6 +95,11 @@
             <label for="contact">Contact link or email</label>
             <input type="text" id="contact" name="contact" placeholder="Optional">
 
+            <label class="checkbox-line">
+                <input type="checkbox" name="anonymous_submission" value="1">
+                Submit this anonymously
+            </label>
+
             <button type="submit" class="button primary">Submit Flowers for Review</button>
         </form>
     </details>
@@ -111,6 +122,11 @@
 
             <label for="suggestion_contact">Contact link or email</label>
             <input type="text" id="suggestion_contact" name="contact" placeholder="Optional">
+
+            <label class="checkbox-line">
+                <input type="checkbox" name="anonymous_submission" value="1">
+                Submit this anonymously
+            </label>
 
             <button type="submit" class="button primary">Submit Suggestion for Review</button>
         </form>

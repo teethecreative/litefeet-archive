@@ -2166,6 +2166,13 @@ def give_dancer_flowers(dancer_id):
     submitter_name = request.form.get("submitter_name", "").strip()
     submitter_role = request.form.get("submitter_role", "").strip()
     contact = request.form.get("contact", "").strip()
+    anonymous_submission = request.form.get("anonymous_submission") == "1"
+    user = current_user()
+
+    if anonymous_submission:
+        submitter_name = "Anonymous"
+    elif user and not submitter_name:
+        submitter_name = user["display_name"]
 
     if flower_text:
         execute_query(
@@ -2210,6 +2217,13 @@ def suggest_dancer_update(dancer_id):
     submitter_name = request.form.get("submitter_name", "").strip()
     submitter_role = request.form.get("submitter_role", "").strip()
     contact = request.form.get("contact", "").strip()
+    anonymous_submission = request.form.get("anonymous_submission") == "1"
+    user = current_user()
+
+    if anonymous_submission:
+        submitter_name = "Anonymous"
+    elif user and not submitter_name:
+        submitter_name = user["display_name"]
 
     if suggestion_text:
         execute_query(
@@ -3141,3 +3155,178 @@ def organizer_event_detail(organizer_slug, event_slug):
 
     return redirect(url_for("events"))
 
+
+def ensure_profile_claim_columns():
+    dialect = engine.dialect.name
+
+    with engine.begin() as conn:
+        if dialect == "postgresql":
+            conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN IF NOT EXISTS recent_battle TEXT"))
+            conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN IF NOT EXISTS claimed_at TEXT"))
+        else:
+            existing_columns = {
+                row[1] for row in conn.execute(text("PRAGMA table_info(dancer_profiles)")).fetchall()
+            }
+
+            if "recent_battle" not in existing_columns:
+                conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN recent_battle TEXT"))
+
+            if "claimed_at" not in existing_columns:
+                conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN claimed_at TEXT"))
+
+
+def get_profile_by_slug(profile_slug):
+    ensure_person_role_columns()
+    ensure_profile_slug_column()
+    ensure_profile_claim_columns()
+
+    profiles = fetch_all(
+        """
+        SELECT *
+        FROM dancer_profiles
+        WHERE profile_slug = :profile_slug
+        LIMIT 1
+        """,
+        {"profile_slug": profile_slug},
+    )
+
+    return profiles[0] if profiles else None
+
+
+@app.route("/profiles/<profile_slug>/claim", methods=["GET", "POST"])
+@app.route("/dancers/<profile_slug>/claim", methods=["GET", "POST"])
+def claim_profile(profile_slug):
+    profile = get_profile_by_slug(profile_slug)
+
+    if not profile:
+        return redirect(url_for("dancers"))
+
+    user = current_user()
+    error = ""
+
+    if request.method == "POST":
+        display_name = request.form.get("display_name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "").strip()
+
+        profile_name = request.form.get("dance_name", "").strip()
+        team_affiliation = request.form.get("team_affiliation", "").strip()
+        borough_scene = request.form.get("borough_scene", "").strip()
+        recent_battle = request.form.get("recent_battle", "").strip()
+        role_tags = request.form.get("role_tags", "").strip()
+
+        if not user:
+            if not email or not password:
+                error = "Create an account or log in before claiming this profile."
+            else:
+                existing_users = fetch_all(
+                    """
+                    SELECT *
+                    FROM archive_users
+                    WHERE lower(email) = lower(:email)
+                    LIMIT 1
+                    """,
+                    {"email": email},
+                )
+
+                if existing_users:
+                    existing_user = existing_users[0]
+
+                    if not check_password_hash(existing_user["password_hash"], password):
+                        error = "That email already exists. Use the correct password or log in first."
+                    else:
+                        session["user_id"] = existing_user["id"]
+                        user = existing_user
+                else:
+                    execute_query(
+                        """
+                        INSERT INTO archive_users (
+                            display_name,
+                            email,
+                            password_hash,
+                            role,
+                            organization_name,
+                            created_at
+                        )
+                        VALUES (
+                            :display_name,
+                            :email,
+                            :password_hash,
+                            :role,
+                            :organization_name,
+                            :created_at
+                        )
+                        """,
+                        {
+                            "display_name": display_name or profile_name or profile["dance_name"],
+                            "email": email,
+                            "password_hash": generate_password_hash(password),
+                            "role": "contributor",
+                            "organization_name": "",
+                            "created_at": datetime.now().isoformat(timespec="seconds"),
+                        },
+                    )
+
+                    new_user = fetch_all(
+                        """
+                        SELECT *
+                        FROM archive_users
+                        WHERE lower(email) = lower(:email)
+                        LIMIT 1
+                        """,
+                        {"email": email},
+                    )[0]
+
+                    session["user_id"] = new_user["id"]
+                    user = new_user
+
+        if user and not error:
+            final_name = profile_name or profile["dance_name"]
+            final_slug = unique_profile_slug(final_name, profile["id"])
+
+            execute_query(
+                """
+                UPDATE dancer_profiles
+                SET user_id = :user_id,
+                    dance_name = :dance_name,
+                    profile_slug = :profile_slug,
+                    team_affiliation = :team_affiliation,
+                    borough_scene = :borough_scene,
+                    recent_battle = :recent_battle,
+                    role_tags = :role_tags,
+                    status = :status,
+                    claimed_at = :claimed_at
+                WHERE id = :profile_id
+                """,
+                {
+                    "user_id": user["id"],
+                    "dance_name": final_name,
+                    "profile_slug": final_slug,
+                    "team_affiliation": team_affiliation,
+                    "borough_scene": borough_scene,
+                    "recent_battle": recent_battle,
+                    "role_tags": role_tags or profile["role_tags"] or "Dancer",
+                    "status": "Pending Review",
+                    "claimed_at": datetime.now().isoformat(timespec="seconds"),
+                    "profile_id": profile["id"],
+                },
+            )
+
+            updated_profile = fetch_all(
+                """
+                SELECT *
+                FROM dancer_profiles
+                WHERE id = :profile_id
+                LIMIT 1
+                """,
+                {"profile_id": profile["id"]},
+            )[0]
+
+            return redirect(profile_url(updated_profile))
+
+    return render_template(
+        "profile_claim.html",
+        profile=profile,
+        user=user,
+        error=error,
+    )

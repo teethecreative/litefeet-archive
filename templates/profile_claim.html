@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Claim {{ profile["dance_name"] }} | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <p>
+        <a href="{{ profile | profile_url }}" class="small-note">← Back to Profile</a>
+    </p>
+
+    <h1>Claim Profile</h1>
+    <p>
+        Claim this profile so it can be attached to your Ledger account. After review,
+        your profile updates can be connected to your public name or submitted anonymously when allowed.
+    </p>
+
+    {% if error %}
+        <div class="empty-state compact-empty">
+            <h3>{{ error }}</h3>
+        </div>
+    {% endif %}
+
+    <form method="POST" class="form-card admin-edit-form">
+        {% if not user %}
+            <h2>Create Account / Log In</h2>
+
+            <label>
+                Display Name
+                <input type="text" name="display_name" placeholder="Name or alias shown on your account">
+            </label>
+
+            <label>
+                Email
+                <input type="email" name="email" required>
+            </label>
+
+            <label>
+                Password
+                <input type="password" name="password" required>
+            </label>
+        {% else %}
+            <div class="empty-state compact-empty">
+                <h3>Claiming as {{ user["display_name"] }}</h3>
+                <p>This profile will be attached to your logged-in account.</p>
+            </div>
+        {% endif %}
+
+        <h2>Profile Info</h2>
+
+        <label>
+            Dancer / Profile Name
+            <input type="text" name="dance_name" value="{{ profile['dance_name'] }}" required>
+        </label>
+
+        <label>
+            Roles
+            <input type="text" name="role_tags" value="{{ profile['role_tags'] or 'Dancer' }}" placeholder="Dancer, Producer, Host, Judge">
+        </label>
+
+        <label>
+            Dance Team
+            <input type="text" name="team_affiliation" value="{{ profile['team_affiliation'] or '' }}" placeholder="Team, crew, affiliation, or leave blank">
+        </label>
+
+        <label>
+            Location
+            <input type="text" name="borough_scene" value="{{ profile['borough_scene'] or '' }}" placeholder="Borough, city, scene, or region">
+        </label>
+
+        <label>
+            Recent Battle <span class="small-note">(optional)</span>
+            <input type="text" name="recent_battle" value="{{ profile['recent_battle'] or '' }}" placeholder="Example: Beats & Bodies Pt. 2, Money in the Bank, etc.">
+        </label>
+
+        <button type="submit" class="button primary">Submit Claim for Review</button>
+    </form>
+</section>
+{% endblock %}
