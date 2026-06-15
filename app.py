@@ -3679,6 +3679,82 @@ def ensure_media_release_key_column():
 
 
 
+
+
+def ensure_music_projects_table():
+    ensure_media_items_table()
+
+    with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS music_projects (
+                        id SERIAL PRIMARY KEY,
+                        title TEXT NOT NULL,
+                        artist_or_creator TEXT,
+                        url TEXT,
+                        platform TEXT,
+                        release_date TEXT,
+                        description TEXT,
+                        status TEXT DEFAULT 'Published',
+                        created_at TEXT
+                    )
+                    """
+                )
+            )
+
+            conn.execute(text("ALTER TABLE media_items ADD COLUMN IF NOT EXISTS music_project_id INTEGER"))
+            conn.execute(text("ALTER TABLE media_items ADD COLUMN IF NOT EXISTS track_number INTEGER"))
+            conn.execute(text("ALTER TABLE media_items ADD COLUMN IF NOT EXISTS playable_url TEXT"))
+        else:
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS music_projects (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        title TEXT NOT NULL,
+                        artist_or_creator TEXT,
+                        url TEXT,
+                        platform TEXT,
+                        release_date TEXT,
+                        description TEXT,
+                        status TEXT DEFAULT 'Published',
+                        created_at TEXT
+                    )
+                    """
+                )
+            )
+
+            cols = conn.execute(text("PRAGMA table_info(media_items)")).fetchall()
+            existing = {col[1] for col in cols}
+
+            if "music_project_id" not in existing:
+                conn.execute(text("ALTER TABLE media_items ADD COLUMN music_project_id INTEGER"))
+            if "track_number" not in existing:
+                conn.execute(text("ALTER TABLE media_items ADD COLUMN track_number INTEGER"))
+            if "playable_url" not in existing:
+                conn.execute(text("ALTER TABLE media_items ADD COLUMN playable_url TEXT"))
+
+
+def parse_project_tracklist(tracklist):
+    tracks = []
+
+    for raw_line in (tracklist or "").splitlines():
+        line = raw_line.strip()
+
+        if not line:
+            continue
+
+        line = re.sub(r"^\s*\d+[\.\)]\s*", "", line).strip()
+        line = re.sub(r"\s+", " ", line).strip()
+
+        if line:
+            tracks.append(line)
+
+    return tracks
+
+
 def ensure_music_feedback_table():
     with engine.begin() as conn:
         if engine.dialect.name == "postgresql":
@@ -3879,10 +3955,179 @@ def submit_music_release():
     return render_template("submit_music_release.html", error=error)
 
 
+
+
+@app.route("/litefeet-music/projects/submit", methods=["GET", "POST"])
+def submit_music_project():
+    user = current_user()
+
+    if not user and not session.get("admin_logged_in"):
+        return redirect(url_for("account_login", next=request.path))
+
+    ensure_music_projects_table()
+    ensure_media_release_key_column()
+
+    error = ""
+
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        artist_or_creator = request.form.get("artist_or_creator", "").strip()
+        url = request.form.get("url", "").strip()
+        release_date = request.form.get("release_date", "").strip()
+        description = request.form.get("description", "").strip()
+        tracklist = request.form.get("tracklist", "").strip()
+
+        tracks = parse_project_tracklist(tracklist)
+
+        if not title or not artist_or_creator or not release_date:
+            error = "Project title, producer/artist, and release date are required."
+        elif not tracks:
+            error = "Add at least one track in the tracklist."
+        else:
+            try:
+                parsed_release_date = datetime.strptime(release_date, "%Y-%m-%d").date()
+                if parsed_release_date > datetime.now().date():
+                    error = "Release date cannot be in the future."
+            except ValueError:
+                error = "Use a valid release date."
+
+        if not error:
+            platform = detect_media_platform(url) if url else "No Link Yet"
+            now_value = datetime.now().isoformat(timespec="seconds")
+
+            with engine.begin() as conn:
+                result = conn.execute(
+                    text(
+                        """
+                        INSERT INTO music_projects (
+                            title,
+                            artist_or_creator,
+                            url,
+                            platform,
+                            release_date,
+                            description,
+                            status,
+                            created_at
+                        )
+                        VALUES (
+                            :title,
+                            :artist_or_creator,
+                            :url,
+                            :platform,
+                            :release_date,
+                            :description,
+                            'Published',
+                            :created_at
+                        )
+                        RETURNING id
+                        """
+                    )
+                    if engine.dialect.name == "postgresql"
+                    else text(
+                        """
+                        INSERT INTO music_projects (
+                            title,
+                            artist_or_creator,
+                            url,
+                            platform,
+                            release_date,
+                            description,
+                            status,
+                            created_at
+                        )
+                        VALUES (
+                            :title,
+                            :artist_or_creator,
+                            :url,
+                            :platform,
+                            :release_date,
+                            :description,
+                            'Published',
+                            :created_at
+                        )
+                        """
+                    ),
+                    {
+                        "title": title,
+                        "artist_or_creator": artist_or_creator,
+                        "url": url,
+                        "platform": platform,
+                        "release_date": release_date,
+                        "description": description,
+                        "created_at": now_value,
+                    },
+                )
+
+                if engine.dialect.name == "postgresql":
+                    project_id = result.scalar()
+                else:
+                    project_id = conn.execute(text("SELECT last_insert_rowid()")).scalar()
+
+                for index, track_title in enumerate(tracks, start=1):
+                    canonical_release_key = music_release_key(track_title, artist_or_creator)
+
+                    conn.execute(
+                        text(
+                            """
+                            INSERT INTO media_items (
+                                media_type,
+                                title,
+                                artist_or_creator,
+                                url,
+                                platform,
+                                release_date,
+                                event_name,
+                                description,
+                                status,
+                                canonical_release_key,
+                                music_project_id,
+                                track_number,
+                                playable_url,
+                                created_at
+                            )
+                            VALUES (
+                                'music_release',
+                                :track_title,
+                                :artist_or_creator,
+                                :url,
+                                :platform,
+                                :release_date,
+                                :event_name,
+                                :description,
+                                'Published',
+                                :canonical_release_key,
+                                :music_project_id,
+                                :track_number,
+                                '',
+                                :created_at
+                            )
+                            """
+                        ),
+                        {
+                            "track_title": track_title,
+                            "artist_or_creator": artist_or_creator,
+                            "url": url,
+                            "platform": platform,
+                            "release_date": release_date,
+                            "event_name": title,
+                            "description": f"Track {index} from {title}",
+                            "canonical_release_key": canonical_release_key,
+                            "music_project_id": project_id,
+                            "track_number": index,
+                            "created_at": now_value,
+                        },
+                    )
+
+            return redirect(url_for("litefeet_music"))
+
+    return render_template("submit_music_project.html", error=error)
+
+
 @app.route("/litefeet-music")
 def litefeet_music():
     ensure_media_items_table()
     ensure_music_feedback_table()
+    ensure_music_projects_table()
 
     period = request.args.get("period", "30")
     cutoff_date = music_period_cutoff(period)
@@ -3918,6 +4163,22 @@ def litefeet_music():
     )
 
     radar_cutoff = (datetime.now().date() - timedelta(days=7)).isoformat()
+
+    music_projects = fetch_all(
+        """
+        SELECT
+            p.*,
+            COUNT(m.id) AS track_count
+        FROM music_projects p
+        LEFT JOIN media_items m ON m.music_project_id = p.id
+        WHERE p.status = 'Published'
+        GROUP BY p.id
+        ORDER BY
+            CASE WHEN p.release_date IS NULL OR p.release_date = '' THEN p.created_at ELSE p.release_date END DESC,
+            p.created_at DESC
+        LIMIT 20
+        """
+    )
 
     release_radar = fetch_all(
         """
@@ -3965,6 +4226,7 @@ def litefeet_music():
         "litefeet_music.html",
         releases=releases,
         release_radar=release_radar,
+        music_projects=music_projects,
         period=period,
         voter_feedback=voter_feedback,
     )

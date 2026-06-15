@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Music Project | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section music-page">
+    <p class="eyebrow">LiteFeet Music</p>
+    <h1>Submit a Project</h1>
+    <p>
+        Add a beat pack, album, playlist, EP, or project. The Ledger saves the project and track names even if the outside platform link changes or gets deleted.
+    </p>
+
+    {% if error %}
+        <div class="empty-state compact-empty">
+            <h3>{{ error }}</h3>
+        </div>
+    {% endif %}
+
+    <form method="POST" class="form-card media-admin-form">
+        <label>
+            Project Title
+            <input type="text" name="title" placeholder="Project, pack, album, or playlist title" required>
+        </label>
+
+        <label>
+            Producer / Artist
+            <input type="text" name="artist_or_creator" placeholder="Producer, artist, or collective name" required>
+        </label>
+
+        <label>
+            Project Link <span class="small-note">(optional)</span>
+            <input type="url" name="url" placeholder="Untitled, SoundCloud, Spotify, Apple Music, YouTube, etc.">
+        </label>
+
+        <label>
+            Release Date
+            <input type="date" name="release_date" required>
+        </label>
+
+        <label>
+            Tracklist
+            <textarea name="tracklist" required placeholder="Paste tracks here, one per line:
+1. MSG FRM BODYBAGROCKZ
+2. BAG OF TRIX
+3. ELEMENT"></textarea>
+        </label>
+
+        <label>
+            Notes
+            <textarea name="description" placeholder="Optional project notes, context, credits, etc."></textarea>
+        </label>
+
+        <button type="submit" class="button primary">Add Project + Tracks</button>
+    </form>
+</section>
+{% endblock %}

@@ -2239,3 +2239,74 @@ main {
     }
 }
 
+
+/* Embedded music players */
+.music-embed-box {
+    border: 1px solid rgba(226, 177, 58, 0.22);
+    border-radius: 20px;
+    margin-top: 1rem;
+    overflow: hidden;
+    background: #050505;
+}
+
+.music-embed-frame {
+    border: 0;
+    display: block;
+    min-height: 360px;
+    width: 100%;
+}
+
+@media (max-width: 800px) {
+    .music-embed-frame {
+        min-height: 420px;
+    }
+}
+
+
+/* LiteFeet Music project library */
+.music-projects-section {
+    padding-top: 2rem;
+}
+
+.music-project-table-wrap {
+    max-height: 420px;
+    overflow: auto;
+    border: 1px solid rgba(226, 177, 58, 0.22);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.music-project-table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 820px;
+}
+
+.music-project-table th,
+.music-project-table td {
+    border-bottom: 1px solid rgba(226, 177, 58, 0.14);
+    padding: 0.9rem 1rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.music-project-table th {
+    color: #f0c84b;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.music-project-table td {
+    color: #f5f0e8;
+}
+
+.music-project-table a {
+    color: #f0c84b;
+    font-weight: 900;
+}
+
+.music-project-table tr:last-child td {
+    border-bottom: 0;
+}
+
