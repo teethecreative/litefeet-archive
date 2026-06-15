@@ -1952,3 +1952,42 @@ main {
     }
 }
 
+
+/* People directory inactive state */
+.inactive-profile-card {
+    opacity: 0.48;
+    filter: grayscale(0.75);
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01)),
+        rgba(255,255,255,0.025);
+    border-color: rgba(255,255,255,0.12);
+    box-shadow: none;
+}
+
+.inactive-profile-card h2,
+.inactive-profile-card h3 {
+    color: rgba(245, 240, 232, 0.65);
+}
+
+.inactive-profile-card .profile-pill {
+    border-color: rgba(255,255,255,0.16);
+    color: rgba(245, 240, 232, 0.58);
+    background: rgba(255,255,255,0.035);
+}
+
+.inactive-profile-card .button,
+.inactive-profile-card a.button {
+    opacity: 0.72;
+}
+
+.inactive-pill {
+    background: rgba(255,255,255,0.04) !important;
+    border-color: rgba(255,255,255,0.16) !important;
+    color: rgba(245, 240, 232, 0.58) !important;
+}
+
+.inactive-profile-card:hover {
+    opacity: 0.68;
+    filter: grayscale(0.45);
+}
+

@@ -59,7 +59,7 @@ function initProfileControls() {
                 const matchesRole = !roleValue || roles.includes(roleValue);
                 const matchesStatus = !statusValue || status === statusValue;
 
-                card.hidden = !(matchesSearch && matchesRole && matchesStatus);
+                card.hidden = !(matchesSearch && matchesRole && matchesStatus && matchesActivity);
             });
 
             cards.sort((a, b) => {

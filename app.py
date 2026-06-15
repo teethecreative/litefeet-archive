@@ -1447,6 +1447,19 @@ def hide_seeded_records_from_verify_queue():
 
 
 
+
+
+def ensure_activity_status_column():
+    with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN IF NOT EXISTS activity_status TEXT DEFAULT 'unknown'"))
+        else:
+            cols = conn.execute(text("PRAGMA table_info(dancer_profiles)")).fetchall()
+            existing = {col[1] for col in cols}
+            if "activity_status" not in existing:
+                conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN activity_status TEXT DEFAULT 'unknown'"))
+
+
 def ensure_media_items_table():
     with engine.begin() as conn:
         if engine.dialect.name == "postgresql":
