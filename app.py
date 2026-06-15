@@ -897,8 +897,13 @@ def seed_litefeet_research_records():
 
 
 
-def get_detail_value(record, label):
-    details = from_json_filter(record.get("details_json", "[]"))
+def get_detail_value(record_or_details_json, label):
+    if isinstance(record_or_details_json, str):
+        details = from_json_filter(record_or_details_json or "[]")
+    elif hasattr(record_or_details_json, "get"):
+        details = from_json_filter(record_or_details_json.get("details_json", "[]"))
+    else:
+        details = []
 
     for item in details:
         if item.get("label") == label:
