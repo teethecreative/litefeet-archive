@@ -41,7 +41,7 @@
         <button type="submit" class="button primary">Pull Info</button>
     </form>
 
-    <form method="POST" class="form-card media-admin-form">
+    <form method="POST" action="/litefeet-music/projects/submit" class="form-card media-admin-form">
         {% if pulled_from_link %}
             <div class="empty-state compact-empty">
                 <h3>Info pulled from {{ platform or "the link" }}.</h3>
