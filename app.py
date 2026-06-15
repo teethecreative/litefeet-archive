@@ -2053,6 +2053,7 @@ def dancer_profile_detail_by_id(dancer_id):
 
 @app.route("/dancers/<profile_slug>")
 def dancer_profile_detail(profile_slug):
+    ensure_profile_enrichment_columns()
     ensure_person_role_columns()
     ensure_profile_slug_column()
 
@@ -2825,6 +2826,39 @@ def organizer_event_detail(organizer_slug, event_slug):
             return render_template("event_detail.html", event=event)
 
     return redirect(url_for("events"))
+
+
+
+def ensure_profile_enrichment_columns():
+    new_columns = {
+        "aliases": "TEXT",
+        "era": "TEXT",
+        "style_notes": "TEXT",
+        "signature_moves": "TEXT",
+        "battle_history": "TEXT",
+        "legacy_notes": "TEXT",
+        "private_notes": "TEXT",
+        "csv_source_note": "TEXT",
+        "updated_from_csv_at": "TEXT",
+    }
+
+    with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            for column_name, column_type in new_columns.items():
+                conn.execute(
+                    text(f"ALTER TABLE dancer_profiles ADD COLUMN IF NOT EXISTS {column_name} {column_type}")
+                )
+        else:
+            existing_columns = {
+                row[1]
+                for row in conn.execute(text("PRAGMA table_info(dancer_profiles)")).fetchall()
+            }
+
+            for column_name, column_type in new_columns.items():
+                if column_name not in existing_columns:
+                    conn.execute(
+                        text(f"ALTER TABLE dancer_profiles ADD COLUMN {column_name} {column_type}")
+                    )
 
 
 def ensure_profile_claim_columns():

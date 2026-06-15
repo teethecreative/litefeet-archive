@@ -1269,3 +1269,46 @@ h2 {
     color: #f0c84b;
 }
 
+
+.profile-enrichment {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.profile-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.profile-detail-grid div,
+.profile-section-block {
+    border: 1px solid rgba(226, 177, 58, 0.22);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1rem;
+}
+
+.profile-detail-grid span,
+.profile-section-block h4 {
+    color: #f0c84b;
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.45rem;
+    text-transform: uppercase;
+}
+
+.profile-detail-grid p,
+.profile-section-block p {
+    margin: 0.35rem 0 0;
+    white-space: pre-line;
+}
+
+@media (max-width: 720px) {
+    .profile-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+

@@ -46,6 +46,56 @@
         </div>
     {% endif %}
 
+    {% if profile.get("aliases") or profile.get("era") or profile.get("style_notes") or profile.get("signature_moves") or profile.get("battle_history") or profile.get("legacy_notes") %}
+        <div class="review-details profile-enrichment">
+            <h3>Profile Details</h3>
+
+            <div class="profile-detail-grid">
+                {% if profile.get("aliases") %}
+                    <div>
+                        <span>Aliases</span>
+                        <p>{{ profile["aliases"] }}</p>
+                    </div>
+                {% endif %}
+
+                {% if profile.get("era") %}
+                    <div>
+                        <span>Era / Generation</span>
+                        <p>{{ profile["era"] }}</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if profile.get("style_notes") or profile.get("signature_moves") %}
+                <div class="profile-section-block">
+                    <h4>Style & Moves</h4>
+
+                    {% if profile.get("style_notes") %}
+                        <p><strong>Style:</strong> {{ profile["style_notes"] }}</p>
+                    {% endif %}
+
+                    {% if profile.get("signature_moves") %}
+                        <p><strong>Signature moves:</strong> {{ profile["signature_moves"] }}</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            {% if profile.get("battle_history") %}
+                <div class="profile-section-block">
+                    <h4>Battle / Moment History</h4>
+                    <p>{{ profile["battle_history"] }}</p>
+                </div>
+            {% endif %}
+
+            {% if profile.get("legacy_notes") %}
+                <div class="profile-section-block">
+                    <h4>Legacy Notes</h4>
+                    <p>{{ profile["legacy_notes"] }}</p>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
     <div class="review-details profile-snapshot">
         <h3>Profile Snapshot</h3>
 
