@@ -261,7 +261,7 @@ def people_links_filter(value):
 
     profiles = fetch_all(
         """
-        SELECT id, dance_name, profile_slug
+        SELECT id, dance_name
         FROM dancer_profiles
         WHERE dance_name IS NOT NULL
         AND TRIM(dance_name) != ''
@@ -4174,6 +4174,7 @@ def submit_music_project():
         embed_code = request.form.get("embed_code", "").strip()
         embed_url = extract_embed_src(embed_code)
         source_url = url or embed_url
+        playable_url = request.form.get("playable_url", "").strip()
         release_date = request.form.get("release_date", "").strip()
         description = request.form.get("description", "").strip()
         tracklist = request.form.get("tracklist", "").strip()
@@ -4183,6 +4184,9 @@ def submit_music_project():
 
         if not tracks and metadata.get("tracks"):
             tracks = metadata.get("tracks", [])
+
+        if not tracks and title:
+            tracks = [title]
 
         if not title and metadata.get("title"):
             title = metadata.get("title", "")
@@ -4411,6 +4415,28 @@ def litefeet_music():
         """,
         {"radar_cutoff": radar_cutoff},
     )
+
+    producer_profiles = fetch_all(
+        """
+        SELECT id, dance_name
+        FROM dancer_profiles
+        WHERE dance_name IS NOT NULL
+        """
+    )
+
+    producer_profile_map = {
+        normalize_music_text(row["dance_name"]): row
+        for row in producer_profiles
+        if row.get("dance_name")
+    }
+
+    for item in releases:
+        producer_key = normalize_music_text(item.get("artist_or_creator"))
+        item["producer_profile"] = producer_profile_map.get(producer_key)
+
+    for item in release_radar:
+        producer_key = normalize_music_text(item.get("artist_or_creator"))
+        item["producer_profile"] = producer_profile_map.get(producer_key)
 
     voter_feedback_rows = fetch_all(
         """

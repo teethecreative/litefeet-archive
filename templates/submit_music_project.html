@@ -77,6 +77,15 @@
         </label>
 
         <label>
+            Playable Track Link <span class="small-note">(optional, for single songs)</span>
+            <input
+                type="url"
+                name="playable_url"
+                value="{{ playable_url or '' }}"
+                placeholder="Direct playable audio link if available">
+        </label>
+
+        <label>
             Embed Code or Embed Link <span class="small-note">(optional)</span>
             <textarea name="embed_code" placeholder="Optional source embed">{{ embed_code or '' }}</textarea>
         </label>

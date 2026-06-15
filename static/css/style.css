@@ -2355,3 +2355,66 @@ main {
     font-weight: 700;
 }
 
+
+/* Expandable song metadata in rankings */
+.music-release-row {
+    align-items: start;
+}
+
+.ranking-main {
+    min-width: 0;
+}
+
+.song-info-details summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+.song-info-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.song-info-details summary strong {
+    display: block;
+}
+
+.producer-link {
+    color: rgba(245, 240, 232, 0.78);
+    text-decoration: none;
+}
+
+.producer-link:hover {
+    color: #f0c84b;
+    text-decoration: underline;
+}
+
+.song-info-panel {
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(226, 177, 58, 0.18);
+    border-radius: 16px;
+    margin-top: 0.85rem;
+    padding: 1rem;
+}
+
+.song-info-panel p {
+    margin: 0 0 0.45rem;
+}
+
+.song-info-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.85rem;
+}
+
+.song-info-actions audio {
+    max-width: 360px;
+    width: 100%;
+}
+
+@media (max-width: 800px) {
+    .song-info-actions audio {
+        max-width: 100%;
+    }
+}
