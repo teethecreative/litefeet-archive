@@ -8,7 +8,7 @@
         <a href="/events" class="small-note">← Back to Events</a>
 
         {% if session.get("admin_logged_in") %}
-            <a href="/admin/events/{{ event['id'] }}/edit" class="button primary">Edit Event</a>
+            <a href="/admin/submissions/{{ event['id'] }}/edit" class="button primary">Edit Event</a>
         {% endif %}
     </div>
 

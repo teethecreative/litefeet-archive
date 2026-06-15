@@ -1097,3 +1097,81 @@ h2 {
     color: #f5f0e8;
 }
 
+
+.admin-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.compact-table-wrap {
+    border: 1px solid rgba(226, 177, 58, 0.25);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.compact-history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.compact-history-table th,
+.compact-history-table td {
+    border-bottom: 1px solid rgba(226, 177, 58, 0.18);
+    padding: 0.8rem;
+    text-align: left;
+    vertical-align: top;
+}
+
+.compact-history-table th {
+    color: #f0c84b;
+    background: rgba(226, 177, 58, 0.08);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.compact-history-table td:last-child {
+    white-space: nowrap;
+}
+
+.compact-history-table a {
+    color: #f0c84b;
+    font-weight: 800;
+    margin-right: 0.6rem;
+    text-decoration: none;
+}
+
+.table-pager {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem;
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.table-pager button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.ledger-history-section {
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 800px) {
+    .admin-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .compact-table-wrap {
+        overflow-x: auto;
+    }
+
+    .compact-history-table {
+        min-width: 720px;
+    }
+}
+

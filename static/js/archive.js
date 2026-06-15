@@ -90,3 +90,66 @@ function initProfileControls() {
 }
 
 document.addEventListener("DOMContentLoaded", initProfileControls);
+
+function initPagedTables() {
+    const wrappers = document.querySelectorAll("[data-paged-table-wrap]");
+
+    wrappers.forEach((wrapper) => {
+        const table = wrapper.querySelector("[data-paged-table]");
+        if (!table) return;
+
+        const rows = Array.from(table.querySelectorAll("[data-paged-row]"));
+        const pageSize = parseInt(table.dataset.pageSize || "8", 10);
+        const prevButton = wrapper.querySelector("[data-page-prev]");
+        const nextButton = wrapper.querySelector("[data-page-next]");
+        const status = wrapper.querySelector("[data-page-status]");
+
+        let page = 1;
+        const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+
+        const renderPage = () => {
+            rows.forEach((row, index) => {
+                const start = (page - 1) * pageSize;
+                const end = start + pageSize;
+                row.hidden = !(index >= start && index < end);
+            });
+
+            if (status) {
+                status.textContent = `Page ${page} of ${totalPages}`;
+            }
+
+            if (prevButton) {
+                prevButton.disabled = page <= 1;
+            }
+
+            if (nextButton) {
+                nextButton.disabled = page >= totalPages;
+            }
+        };
+
+        if (prevButton) {
+            prevButton.addEventListener("click", () => {
+                page = Math.max(1, page - 1);
+                renderPage();
+            });
+        }
+
+        if (nextButton) {
+            nextButton.addEventListener("click", () => {
+                page = Math.min(totalPages, page + 1);
+                renderPage();
+            });
+        }
+
+        if (rows.length <= pageSize) {
+            const pager = wrapper.querySelector(".table-pager");
+            if (pager) {
+                pager.hidden = true;
+            }
+        }
+
+        renderPage();
+    });
+}
+
+document.addEventListener("DOMContentLoaded", initPagedTables);

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if mode == "new" %}New Ledger Record{% else %}Edit {{ submission["title"] }}{% endif %} | LiteFeet Ledger
+{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <p>
+        <a href="/admin/submissions" class="small-note">← Back to Admin Submissions</a>
+    </p>
+
+    <h1>{% if mode == "new" %}New Ledger Record{% else %}Edit Ledger Record{% endif %}</h1>
+    <p>Use this admin editor for events, battle results, claims, awards, source records, and other Ledger entries.</p>
+
+    <form method="POST" class="form-card admin-edit-form">
+        <label>
+            Record Type
+            <select name="submission_type">
+                {% for type in allowed_types %}
+                    <option value="{{ type }}" {% if submission and submission["submission_type"] == type %}selected{% endif %}>
+                        {{ type }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>
+            Title
+            <input type="text" name="title" value="{{ submission['title'] if submission else '' }}" required>
+        </label>
+
+        <label>
+            Related To
+            <input type="text" name="related_to" value="{{ submission['related_to'] if submission else '' }}">
+        </label>
+
+        <label>
+            Source URL
+            <input type="url" name="source_url" value="{{ submission['source_url'] if submission else '' }}">
+        </label>
+
+        <label>
+            Verification Status
+            <select name="review_status">
+                {% for status in allowed_statuses %}
+                    <option value="{{ status }}" {% if submission and submission["review_status"] == status %}selected{% endif %}>
+                        {{ status }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <div class="admin-form-grid">
+            <label>
+                Submitter Name
+                <input type="text" name="submitter_name" value="{{ submission['submitter_name'] if submission else 'LiteFeet Ledger Admin' }}">
+            </label>
+
+            <label>
+                Submitter Role
+                <input type="text" name="submitter_role" value="{{ submission['submitter_role'] if submission else 'Admin' }}">
+            </label>
+
+            <label>
+                Contact
+                <input type="text" name="contact" value="{{ submission['contact'] if submission else '' }}">
+            </label>
+        </div>
+
+        <h2>Fields</h2>
+        <p class="small-note">
+            These label/value fields are what power the public pages. For events, use fields like Organizer, Event Date, Studio, Borough, Host, Battle List, Judges, and End Results.
+        </p>
+
+        <div class="admin-field-list">
+            {% for item in details %}
+                <div class="admin-field-row">
+                    <input type="text" name="detail_label" value="{{ item['label'] }}" placeholder="Field label">
+                    <textarea name="detail_value" rows="3" placeholder="Field value">{{ item['value'] }}</textarea>
+                </div>
+            {% endfor %}
+
+            {% for i in range(10) %}
+                <div class="admin-field-row">
+                    <input type="text" name="detail_label" placeholder="New field label">
+                    <textarea name="detail_value" rows="3" placeholder="New field value"></textarea>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="button primary">
+            {% if mode == "new" %}Create Record{% else %}Save Changes{% endif %}
+        </button>
+    </form>
+</section>
+{% endblock %}
