@@ -10,6 +10,13 @@
         New producer releases, community ratings, and music that dancers would lab, shoot to, or battle to.
     </p>
 
+    {% if request.args.get("duplicate") %}
+        <div class="empty-state compact-empty">
+            <h3>That release already looks like it is in the Radar.</h3>
+            <p>The site matched it by producer/artist and title to prevent duplicate entries.</p>
+        </div>
+    {% endif %}
+
     <div class="hero-actions">
         <a class="button primary" href="/releases/submit">Add Your Release</a>
         {% if session.get("admin_logged_in") %}
@@ -57,7 +64,11 @@
                     </div>
 
                     <div class="music-card-actions">
-                        <a href="{{ item['url'] }}" target="_blank" rel="noopener" class="button small-button">Listen</a>
+                        {% if item["url"] %}
+                            <a href="{{ item['url'] }}" target="_blank" rel="noopener" class="button small-button">Listen</a>
+                        {% else %}
+                            <span class="button small-button disabled-button">Link Needed</span>
+                        {% endif %}
 
                         <details class="mini-feedback-panel">
                             <summary>Rate / React</summary>
@@ -121,6 +132,7 @@
             <label>
                 Time Period
                 <select name="period" onchange="this.form.submit()">
+                    <option value="all" {% if period == "all" %}selected{% endif %}>All Time</option>
                     <option value="week" {% if period == "week" %}selected{% endif %}>Last Week</option>
                     <option value="30" {% if period == "30" %}selected{% endif %}>Last 30 Days</option>
                     <option value="60" {% if period == "60" %}selected{% endif %}>Last 60 Days</option>

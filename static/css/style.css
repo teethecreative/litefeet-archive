@@ -2039,3 +2039,20 @@ main {
     color: #ffd96a;
 }
 
+
+.disabled-button {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.compact-empty {
+    margin: 1rem 0 1.5rem;
+    padding: 1rem 1.25rem;
+}
+
+.compact-empty h3,
+.compact-empty p {
+    margin-bottom: 0.35rem;
+}
+

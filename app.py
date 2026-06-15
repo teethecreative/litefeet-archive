@@ -3609,6 +3609,36 @@ def toggle_anonymous_mode():
 
 
 
+
+
+def normalize_music_text(value):
+    value = (value or "").lower().strip()
+    value = value.replace("&", "and")
+    value = re.sub(r"\\b(feat|ft|featuring)\\b\\.?"," ", value)
+    value = re.sub(r"[^a-z0-9]+", " ", value)
+    value = re.sub(r"\\s+", " ", value).strip()
+    return value
+
+
+def music_release_key(title, artist_or_creator):
+    title_key = normalize_music_text(title)
+    artist_key = normalize_music_text(artist_or_creator)
+    return f"{artist_key}::{title_key}".strip(":")
+
+
+def ensure_media_release_key_column():
+    ensure_media_items_table()
+
+    with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            conn.execute(text("ALTER TABLE media_items ADD COLUMN IF NOT EXISTS canonical_release_key TEXT"))
+        else:
+            cols = conn.execute(text("PRAGMA table_info(media_items)")).fetchall()
+            existing = {col[1] for col in cols}
+            if "canonical_release_key" not in existing:
+                conn.execute(text("ALTER TABLE media_items ADD COLUMN canonical_release_key TEXT"))
+
+
 def ensure_music_feedback_table():
     with engine.begin() as conn:
         if engine.dialect.name == "postgresql":
@@ -3652,6 +3682,8 @@ def ensure_music_feedback_table():
 def music_period_cutoff(period):
     today = datetime.now()
 
+    if period == "all":
+        return None
     if period == "week":
         return today - timedelta(days=7)
     if period == "30":
@@ -3672,7 +3704,8 @@ def litefeet_music():
     ensure_music_feedback_table()
 
     period = request.args.get("period", "30")
-    cutoff = music_period_cutoff(period).date().isoformat()
+    cutoff_date = music_period_cutoff(period)
+    cutoff = cutoff_date.date().isoformat() if cutoff_date else ""
 
     releases = fetch_all(
         """
@@ -3688,7 +3721,8 @@ def litefeet_music():
         WHERE m.media_type = 'music_release'
           AND m.status = 'Published'
           AND (
-                m.release_date >= :cutoff
+                :cutoff = ''
+                OR m.release_date >= :cutoff
                 OR (m.release_date IS NULL OR m.release_date = '')
           )
         GROUP BY m.id
