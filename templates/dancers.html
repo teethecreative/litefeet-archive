@@ -82,26 +82,25 @@
 
                     <h2>{{ dancer["dance_name"] }}</h2>
 
-                    {% if dancer["team_affiliation"] %}
-                        <p><strong>Team/Affiliation:</strong> {{ dancer["team_affiliation"] }}</p>
-                    {% endif %}
-
-                    {% if dancer["borough_scene"] %}
-                        <p><strong>Scene:</strong> {{ dancer["borough_scene"] }}</p>
-                    {% endif %}
-
                     <div class="profile-card-facts">
                     {% if dancer["team_affiliation"] %}
                         <p><strong>Team:</strong> {{ dancer["team_affiliation"] }}</p>
                     {% endif %}
+
                     {% if dancer["borough_scene"] %}
                         <p><strong>Location:</strong> {{ dancer["borough_scene"] }}</p>
                     {% endif %}
+
                     {% if dancer.get("era") %}
                         <p><strong>Era:</strong> {{ dancer["era"] }}</p>
                     {% endif %}
+
                     {% if dancer.get("battle_history") %}
-                        <p><strong>Recent Battle / Moment:</strong> {{ dancer["battle_history"][:180] }}{% if dancer["battle_history"]|length > 180 %}...{% endif %}</p>
+                        <p><strong>Recent Battle / Moment:</strong> {{ dancer["battle_history"][:150] }}{% if dancer["battle_history"]|length > 150 %}...{% endif %}</p>
+                    {% endif %}
+
+                    {% if not dancer["team_affiliation"] and not dancer["borough_scene"] and not dancer.get("era") and not dancer.get("battle_history") %}
+                        <p class="small-note">Profile details need confirmation.</p>
                     {% endif %}
                 </div>
 

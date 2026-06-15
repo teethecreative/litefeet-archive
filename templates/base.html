@@ -71,14 +71,7 @@
                 <a href="/account/signup">Create Account</a>
             {% endif %}
         {% endif %}
-    {% if nav_is_admin or nav_current_user %}
-                    <details class="account-menu">
-                        <summary>
-                            {% if nav_is_admin %}
-                                Admin
-                            {% elif nav_current_user %}
-                                {{ nav_current_user["display_name"] }}
-                            {% endif %}
+    
                             {% if nav_anonymous_mode %}
                                 <span class="anon-pill">Anon</span>
                             {% endif %}
@@ -112,14 +105,7 @@
                         </div>
                     </details>
                 {% else %}
-                    {% if nav_is_admin or nav_current_user %}
-                <details class="account-menu">
-                    <summary>
-                        {% if nav_is_admin %}
-                            Admin
-                        {% elif nav_current_user %}
-                            {{ nav_current_user["display_name"] }}
-                        {% endif %}
+                    
                         {% if nav_anonymous_mode %}
                             <span class="anon-pill">Anon</span>
                         {% endif %}

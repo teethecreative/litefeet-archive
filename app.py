@@ -3159,6 +3159,9 @@ def merge_profile_roles(primary_roles, duplicate_roles):
 
 @app.route("/admin/people/<int:primary_id>/merge/<int:duplicate_id>", methods=["POST"])
 def admin_merge_people(primary_id, duplicate_id):
+    ensure_person_role_columns()
+    ensure_profile_enrichment_columns()
+
     if not session.get("admin_logged_in"):
         return redirect(url_for("admin_login"))
 
