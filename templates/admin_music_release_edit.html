@@ -28,14 +28,15 @@
             <input type="url" name="playable_url" value="{{ item['playable_url'] or '' }}" placeholder="Direct playable track/audio URL">
         </label>
 
+        {% set playback = item|music_playback_status %}
         <div class="admin-playback-note">
-            {% if item["playable_url"] %}
-                <strong>Playable on site:</strong> yes.
-            {% elif item["url"] %}
-                <strong>Not playable on site yet.</strong> This release has a source link, but needs a playable track URL.
-            {% else %}
-                <strong>Not playable on site yet.</strong> This release needs a source link or playable URL.
-            {% endif %}
+            <strong>{{ playback["label"] }}</strong>
+            <p>{{ playback["admin_note"] }}</p>
+
+            <p class="small-note">
+                Direct audio usually ends in .mp3, .wav, .m4a, .aac, .ogg, .flac, or .webm.
+                Platform links may still play as embeds, but they are not audio-only files.
+            </p>
         </div>
 
         <label>

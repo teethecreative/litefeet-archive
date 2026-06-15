@@ -207,13 +207,10 @@
                         <details class="song-info-details">
                             <summary>
                                 <strong>{{ item["title"] }}</strong>
-                                {% if item.get("playable_url") %}
-                                    <span class="playback-status-chip playable-chip">Playable Audio</span>
-                                {% elif item["url"] and (item["url"]|media_embed_url) %}
-                                    <span class="playback-status-chip playable-chip">Playable Embed</span>
-                                {% else %}
-                                    <span class="playback-status-chip not-playable-chip">Not playable on site</span>
-                                {% endif %}
+                                {% set playback = item|music_playback_status %}
+                                <span class="playback-status-chip {% if playback['state'] in ['audio', 'embed', 'maybe'] %}playable-chip{% else %}not-playable-chip{% endif %}">
+                                    {{ playback["label"] }}
+                                </span>
                                 <span class="small-note">
                                     {% if item.get("producer_profile") %}
                                         <a href="{{ item['producer_profile']|profile_url }}" class="producer-link">{{ item["artist_or_creator"] or "Unknown producer" }}</a>

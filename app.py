@@ -4605,6 +4605,57 @@ def music_feedback_submit(item_id):
 
 
 
+
+
+def audio_url_is_direct_playable(url):
+    value = (url or "").lower().split("?")[0].strip()
+    return value.endswith((".mp3", ".wav", ".m4a", ".aac", ".ogg", ".oga", ".flac", ".webm"))
+
+
+def music_playback_status(item):
+    playable_url = item.get("playable_url") if hasattr(item, "get") else ""
+    source_url = item.get("url") if hasattr(item, "get") else ""
+
+    if playable_url and audio_url_is_direct_playable(playable_url):
+        return {
+            "label": "Playable Audio",
+            "admin_note": "Direct audio URL exists. This can play in the site audio player.",
+            "state": "audio",
+        }
+
+    if playable_url:
+        return {
+            "label": "Playable Link Added",
+            "admin_note": "A playable URL exists, but it is not a common direct audio file type. Test it in the browser.",
+            "state": "maybe",
+        }
+
+    if source_url and media_embed_url(source_url):
+        return {
+            "label": "Playable Embed",
+            "admin_note": "The source link can be embedded. For audio-only playback, add a direct playable URL.",
+            "state": "embed",
+        }
+
+    if source_url:
+        return {
+            "label": "Source Only",
+            "admin_note": "Source link exists, but the site cannot play it directly. Add a direct audio URL or embeddable track link.",
+            "state": "source_only",
+        }
+
+    return {
+        "label": "Archived Only",
+        "admin_note": "No source link or playable URL exists. The Ledger can show metadata, but cannot play this track.",
+        "state": "archived",
+    }
+
+
+@app.template_filter("music_playback_status")
+def music_playback_status_filter(item):
+    return music_playback_status(item)
+
+
 @app.route("/admin/music/release/<int:item_id>/edit", methods=["GET", "POST"])
 def admin_music_release_edit(item_id):
     if not session.get("admin_logged_in"):
