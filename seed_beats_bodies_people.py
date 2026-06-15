@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app import engine, init_db, ensure_person_role_columns
+from app import engine, init_db, ensure_person_role_columns, unique_profile_slug
 from sqlalchemy import text
 
 
@@ -149,6 +149,7 @@ def main():
 
             data = {
                 "dance_name": person["dance_name"],
+                "profile_slug": unique_profile_slug(person["dance_name"]),
                 "team_affiliation": "",
                 "borough_scene": "",
                 "bio": person["bio"],

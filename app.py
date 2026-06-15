@@ -80,6 +80,112 @@ def ensure_person_role_columns():
             )
         )
 
+    ensure_profile_slug_column()
+
+
+
+
+def make_profile_slug(name):
+    slug = re.sub(r"[^a-z0-9]+", "", (name or "").lower())
+
+    if not slug:
+        slug = "profile"
+
+    return slug
+
+
+def unique_profile_slug(name, current_profile_id=None):
+    base_slug = make_profile_slug(name)
+    slug = base_slug
+    counter = 2
+
+    while True:
+        params = {"slug": slug}
+
+        if current_profile_id:
+            params["current_profile_id"] = current_profile_id
+            existing = fetch_all(
+                """
+                SELECT id
+                FROM dancer_profiles
+                WHERE profile_slug = :slug
+                AND id != :current_profile_id
+                LIMIT 1
+                """,
+                params,
+            )
+        else:
+            existing = fetch_all(
+                """
+                SELECT id
+                FROM dancer_profiles
+                WHERE profile_slug = :slug
+                LIMIT 1
+                """,
+                params,
+            )
+
+        if not existing:
+            return slug
+
+        slug = f"{base_slug}{counter}"
+        counter += 1
+
+
+def ensure_profile_slug_column():
+    dialect = engine.dialect.name
+
+    with engine.begin() as conn:
+        if dialect == "postgresql":
+            conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN IF NOT EXISTS profile_slug TEXT"))
+        else:
+            existing_columns = {
+                row[1] for row in conn.execute(text("PRAGMA table_info(dancer_profiles)")).fetchall()
+            }
+
+            if "profile_slug" not in existing_columns:
+                conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN profile_slug TEXT"))
+
+    profiles = fetch_all(
+        """
+        SELECT id, dance_name, profile_slug
+        FROM dancer_profiles
+        ORDER BY id ASC
+        """
+    )
+
+    for profile in profiles:
+        expected_slug = make_profile_slug(profile["dance_name"])
+
+        if not profile["profile_slug"]:
+            expected_slug = unique_profile_slug(profile["dance_name"], profile["id"])
+
+            execute_query(
+                """
+                UPDATE dancer_profiles
+                SET profile_slug = :profile_slug
+                WHERE id = :profile_id
+                """,
+                {
+                    "profile_slug": expected_slug,
+                    "profile_id": profile["id"],
+                },
+            )
+
+
+def profile_url(profile):
+    slug = profile.get("profile_slug") if hasattr(profile, "get") else profile["profile_slug"]
+
+    if not slug:
+        slug = make_profile_slug(profile.get("dance_name", "") if hasattr(profile, "get") else profile["dance_name"])
+
+    return f"/dancers/{slug}"
+
+
+@app.template_filter("profile_url")
+def profile_url_filter(profile):
+    return profile_url(profile)
+
 
 def role_tags_to_list(role_tags):
     return [
@@ -105,7 +211,7 @@ def people_links_filter(value):
 
     profiles = fetch_all(
         """
-        SELECT id, dance_name
+        SELECT id, dance_name, profile_slug
         FROM dancer_profiles
         WHERE dance_name IS NOT NULL
         AND TRIM(dance_name) != ''
@@ -129,7 +235,7 @@ def people_links_filter(value):
             continue
 
         escaped_name = str(escape(name))
-        href = f"/dancers/{profile['id']}"
+        href = profile_url(profile)
         replacement = f'<a class="person-link" href="{href}">{escaped_name}</a>'
 
         rendered = re.sub(
@@ -1549,7 +1655,7 @@ def create_dancer_profile():
 
 
 @app.route("/dancers/<int:dancer_id>")
-def dancer_profile_detail(dancer_id):
+def dancer_profile_detail_by_id(dancer_id):
     profiles = fetch_all(
         """
         SELECT *
@@ -1558,6 +1664,41 @@ def dancer_profile_detail(dancer_id):
         LIMIT 1
         """,
         {"dancer_id": dancer_id},
+    )
+
+    if not profiles:
+        return redirect(url_for("dancers"))
+
+    profile = profiles[0]
+
+    if not profile["profile_slug"]:
+        ensure_profile_slug_column()
+        profiles = fetch_all(
+            """
+            SELECT *
+            FROM dancer_profiles
+            WHERE id = :dancer_id
+            LIMIT 1
+            """,
+            {"dancer_id": dancer_id},
+        )
+        profile = profiles[0]
+
+    return redirect(profile_url(profile))
+
+
+@app.route("/dancers/<profile_slug>")
+def dancer_profile_detail(profile_slug):
+    ensure_profile_slug_column()
+
+    profiles = fetch_all(
+        """
+        SELECT *
+        FROM dancer_profiles
+        WHERE profile_slug = :profile_slug
+        LIMIT 1
+        """,
+        {"profile_slug": profile_slug},
     )
 
     if not profiles:

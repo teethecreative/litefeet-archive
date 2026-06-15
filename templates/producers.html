@@ -88,7 +88,7 @@
                     {% endif %}
 
                     <p>
-                        <a href="/dancers/{{ producer['id'] }}" class="button secondary">View Profile</a>
+                        <a href="{{ producer | profile_url }}" class="button secondary">View Profile</a>
                     </p>
                 </article>
             {% endfor %}

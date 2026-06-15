@@ -103,7 +103,7 @@
                     {% endif %}
 
                     <p>
-                        <a href="/dancers/{{ dancer['id'] }}" class="button secondary">View Profile / Give Flowers</a>
+                        <a href="{{ dancer | profile_url }}" class="button secondary">View Profile / Give Flowers</a>
                     </p>
 
                     {% if dancer["status"] == "Ghost Profile" %}
