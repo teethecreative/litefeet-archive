@@ -1449,6 +1449,22 @@ def hide_seeded_records_from_verify_queue():
 
 
 
+
+
+def ensure_person_tier_columns():
+    with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN IF NOT EXISTS public_tier TEXT"))
+            conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN IF NOT EXISTS hall_of_fame_status TEXT"))
+        else:
+            cols = conn.execute(text("PRAGMA table_info(dancer_profiles)")).fetchall()
+            existing = {col[1] for col in cols}
+            if "public_tier" not in existing:
+                conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN public_tier TEXT"))
+            if "hall_of_fame_status" not in existing:
+                conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN hall_of_fame_status TEXT"))
+
+
 def ensure_activity_status_column():
     with engine.begin() as conn:
         if engine.dialect.name == "postgresql":

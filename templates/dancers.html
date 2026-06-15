@@ -19,7 +19,7 @@
     </p>
 
     <p>
-        <a href="/dancers/create" class="button primary">Create Your Profile</a>
+        <a href="/dancers/create" class="button subtle-card-button">Create Your Profile</a>
     </p>
 
     <div class="profile-controls" data-profile-controls>
@@ -82,7 +82,7 @@
 
                     <h2>{{ dancer["dance_name"] }}</h2>
 
-                    <div class="profile-card-facts">
+                    <div data-profile-card class="profile-card-facts">
                     {% set has_card_fact = false %}
 
                     {% if dancer["team_affiliation"] %}
@@ -120,12 +120,12 @@
                     {% endif %}
 
                     <p>
-                        <a href="{{ dancer | profile_url }}" class="button secondary">View Profile</a>
+                        <a href="{{ dancer | profile_url }}" class="button subtle-card-button secondary-subtle">View Profile</a>
                     </p>
 
                     {% if dancer["status"] == "Ghost Profile" %}
                         <p>
-                            <a href="/dancers/create?ghost_name={{ dancer['dance_name'] }}" class="button primary">Claim This Profile</a>
+                            <a href="/dancers/create?ghost_name={{ dancer['dance_name'] }}" class="button subtle-card-button">Claim This Profile</a>
                         </p>
                     {% endif %}
                 </article>

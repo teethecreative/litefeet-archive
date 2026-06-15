@@ -1991,3 +1991,51 @@ main {
     filter: grayscale(0.45);
 }
 
+
+/* People directory cleaner card actions */
+.profile-card .subtle-card-button,
+.profile-card .secondary-subtle {
+    background: transparent;
+    border: 1px solid rgba(226, 177, 58, 0.24);
+    color: rgba(245, 222, 156, 0.82);
+    font-size: 0.82rem;
+    padding: 0.55rem 0.85rem;
+}
+
+.profile-card .subtle-card-button:hover,
+.profile-card .secondary-subtle:hover {
+    background: rgba(226, 177, 58, 0.08);
+    border-color: rgba(226, 177, 58, 0.4);
+    color: #f0c84b;
+}
+
+.profile-card .profile-actions,
+.profile-card .card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tier-pill {
+    background: rgba(255,255,255,0.04);
+}
+
+.tier-rookie {
+    border-color: rgba(150, 190, 255, 0.32);
+}
+
+.tier-veteran {
+    border-color: rgba(226, 177, 58, 0.38);
+}
+
+.tier-legend {
+    border-color: rgba(255, 255, 255, 0.48);
+    color: #fff6d1;
+}
+
+.hof-pill {
+    background: rgba(226, 177, 58, 0.16);
+    border-color: rgba(226, 177, 58, 0.6);
+    color: #ffd96a;
+}
+

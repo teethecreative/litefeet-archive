@@ -175,3 +175,62 @@ function initMusicFeedSearch() {
 }
 
 document.addEventListener("DOMContentLoaded", initMusicFeedSearch);
+
+
+function initPeopleDirectoryFilters() {
+    const grid = document.querySelector("[data-profile-grid]");
+    const cards = Array.from(document.querySelectorAll("[data-profile-card]"));
+    const searchInput = document.querySelector("[data-profile-search]");
+    const sortSelect = document.querySelector("[data-profile-sort]");
+    const roleFilter = document.querySelector("[data-role-filter]");
+    const activityFilter = document.querySelector("[data-activity-filter]");
+
+    if (!grid || !cards.length) return;
+
+    function applyFilters() {
+        const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+        const selectedRole = roleFilter ? roleFilter.value.trim().toLowerCase() : "";
+        const selectedActivity = activityFilter ? activityFilter.value.trim().toLowerCase() : "";
+
+        cards.forEach((card) => {
+            const searchText = (card.dataset.search || "").toLowerCase();
+            const roleText = (card.dataset.role || "").toLowerCase();
+            const activityText = (card.dataset.activity || "unknown").toLowerCase();
+
+            const matchesSearch = !query || searchText.includes(query);
+            const matchesRole = !selectedRole || roleText.includes(selectedRole);
+            const matchesActivity = !selectedActivity || activityText === selectedActivity;
+
+            card.hidden = !(matchesSearch && matchesRole && matchesActivity);
+        });
+
+        applySort();
+    }
+
+    function applySort() {
+        const sortValue = sortSelect ? sortSelect.value : "az";
+
+        const sorted = cards.slice().sort((a, b) => {
+            const nameA = (a.dataset.name || "").toLowerCase();
+            const nameB = (b.dataset.name || "").toLowerCase();
+
+            if (sortValue === "za") {
+                return nameB.localeCompare(nameA);
+            }
+
+            return nameA.localeCompare(nameB);
+        });
+
+        sorted.forEach((card) => grid.appendChild(card));
+    }
+
+    if (searchInput) searchInput.addEventListener("input", applyFilters);
+    if (sortSelect) sortSelect.addEventListener("change", applyFilters);
+    if (roleFilter) roleFilter.addEventListener("change", applyFilters);
+    if (activityFilter) activityFilter.addEventListener("change", applyFilters);
+
+    applyFilters();
+}
+
+document.addEventListener("DOMContentLoaded", initPeopleDirectoryFilters);
+
