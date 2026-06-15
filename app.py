@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from urllib.parse import urlparse, parse_qs, quote
 from datetime import datetime
 
 from flask import Flask, redirect, render_template, request, session, url_for
@@ -1447,7 +1448,39 @@ def hide_seeded_records_from_verify_queue():
 
 @app.route("/")
 def home():
-    return render_template("home.html")
+    ensure_media_items_table()
+
+    latest_battle_videos = fetch_all(
+        """
+        SELECT *
+        FROM media_items
+        WHERE media_type = 'battle_video'
+          AND status = 'Published'
+        ORDER BY
+            CASE WHEN release_date IS NULL OR release_date = '' THEN created_at ELSE release_date END DESC,
+            created_at DESC
+        LIMIT 6
+        """
+    )
+
+    latest_music_releases = fetch_all(
+        """
+        SELECT *
+        FROM media_items
+        WHERE media_type = 'music_release'
+          AND status = 'Published'
+        ORDER BY
+            CASE WHEN release_date IS NULL OR release_date = '' THEN created_at ELSE release_date END DESC,
+            created_at DESC
+        LIMIT 24
+        """
+    )
+
+    return render_template(
+        "home.html",
+        latest_battle_videos=latest_battle_videos,
+        latest_music_releases=latest_music_releases,
+    )
 
 
 @app.route("/about")

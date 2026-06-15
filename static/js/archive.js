@@ -153,3 +153,25 @@ function initPagedTables() {
 }
 
 document.addEventListener("DOMContentLoaded", initPagedTables);
+
+function initMusicFeedSearch() {
+    const input = document.getElementById("musicFeedSearch");
+    const list = document.getElementById("musicFeedList");
+
+    if (!input || !list) {
+        return;
+    }
+
+    const cards = Array.from(list.querySelectorAll(".music-release-card"));
+
+    input.addEventListener("input", () => {
+        const query = input.value.trim().toLowerCase();
+
+        cards.forEach((card) => {
+            const haystack = (card.dataset.search || "").toLowerCase();
+            card.hidden = query && !haystack.includes(query);
+        });
+    });
+}
+
+document.addEventListener("DOMContentLoaded", initMusicFeedSearch);

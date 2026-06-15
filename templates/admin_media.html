@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Media Feed Admin | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <p class="eyebrow">Admin</p>
+    <h1>Homepage Media Feed</h1>
+    <p>Add battle videos and producer music releases to the homepage.</p>
+
+    <form method="POST" class="form-card media-admin-form">
+        <label>
+            Feed Type
+            <select name="media_type" required>
+                <option value="battle_video">Latest Battle Video</option>
+                <option value="music_release">Producer Music Release</option>
+            </select>
+        </label>
+
+        <label>
+            Title
+            <input type="text" name="title" placeholder="Example: BSN vs Lil Live" required>
+        </label>
+
+        <label>
+            Artist / Producer / Creator
+            <input type="text" name="artist_or_creator" placeholder="Example: Phresh Tune, Body Bag, HypeItUpTV">
+        </label>
+
+        <label>
+            Link
+            <input type="url" name="url" placeholder="YouTube, SoundCloud, Spotify, Apple Music link" required>
+        </label>
+
+        <label>
+            Release / Posted Date
+            <input type="date" name="release_date">
+        </label>
+
+        <label>
+            Event Name
+            <input type="text" name="event_name" placeholder="Example: Beats & Bodies Pt. 2">
+        </label>
+
+        <label>
+            Description
+            <textarea name="description" placeholder="Optional notes for the homepage."></textarea>
+        </label>
+
+        <label>
+            Status
+            <select name="status">
+                <option value="Published">Published</option>
+                <option value="Draft">Draft</option>
+            </select>
+        </label>
+
+        <button type="submit" class="button primary">Add to Homepage Feed</button>
+    </form>
+
+    <div class="review-details">
+        <h2>Current Media Items</h2>
+
+        {% if media_items %}
+            <div class="compact-history-list">
+                {% for item in media_items %}
+                    <div class="history-row">
+                        <div>
+                            <strong>{{ item["title"] }}</strong>
+                            <p class="small-note">
+                                {{ item["media_type"]|replace("_", " ")|title }}
+                                {% if item["platform"] %} · {{ item["platform"] }}{% endif %}
+                                {% if item["release_date"] %} · {{ item["release_date"]|ledger_date }}{% endif %}
+                                · {{ item["status"] }}
+                            </p>
+                            {% if item["artist_or_creator"] %}
+                                <p class="small-note">By: {{ item["artist_or_creator"] }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="button-row">
+                            <a href="{{ item['url'] }}" target="_blank" rel="noopener" class="button small-button">Open</a>
+                            <form method="POST" action="/admin/media/{{ item['id'] }}/delete">
+                                <button type="submit" class="button small-button danger-button">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No media items added yet.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
