@@ -2,7 +2,9 @@ import json
 import os
 import re
 import secrets
+from html import unescape
 from urllib.parse import urlparse, parse_qs, quote
+from urllib.request import Request, urlopen
 from datetime import datetime, timedelta
 
 from flask import Flask, redirect, render_template, request, session, url_for
@@ -1664,7 +1666,7 @@ def admin_media():
                         "media_type": media_type,
                         "title": title,
                         "artist_or_creator": artist_or_creator,
-                        "url": url,
+                        "url": source_url,
                         "platform": platform,
                         "release_date": release_date,
                         "event_name": event_name,
@@ -3681,6 +3683,167 @@ def ensure_media_release_key_column():
 
 
 
+
+
+def fetch_public_page_html(url):
+    url = (url or "").strip()
+
+    if not url.startswith(("http://", "https://")):
+        return ""
+
+    try:
+        request_obj = Request(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 LiteFeetLedgerBot/1.0"
+            },
+        )
+
+        with urlopen(request_obj, timeout=8) as response:
+            content_type = response.headers.get("Content-Type", "")
+
+            if "text/html" not in content_type and "application/xhtml" not in content_type:
+                return ""
+
+            raw = response.read(800000)
+
+        return raw.decode("utf-8", errors="ignore")
+    except Exception:
+        return ""
+
+
+def extract_meta_content(html, property_name):
+    if not html:
+        return ""
+
+    patterns = [
+        rf'<meta[^>]+property=["\\\']{re.escape(property_name)}["\\\'][^>]+content=["\\\']([^"\\\']+)["\\\']',
+        rf'<meta[^>]+content=["\\\']([^"\\\']+)["\\\'][^>]+property=["\\\']{re.escape(property_name)}["\\\']',
+        rf'<meta[^>]+name=["\\\']{re.escape(property_name)}["\\\'][^>]+content=["\\\']([^"\\\']+)["\\\']',
+        rf'<meta[^>]+content=["\\\']([^"\\\']+)["\\\'][^>]+name=["\\\']{re.escape(property_name)}["\\\']',
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, html, flags=re.I | re.S)
+        if match:
+            return unescape(match.group(1)).strip()
+
+    return ""
+
+
+def extract_page_title(html):
+    value = extract_meta_content(html, "og:title")
+
+    if value:
+        return value
+
+    match = re.search(r"<title[^>]*>(.*?)</title>", html or "", flags=re.I | re.S)
+
+    if match:
+        return unescape(re.sub(r"\s+", " ", match.group(1))).strip()
+
+    return ""
+
+
+def clean_imported_track_title(value):
+    value = unescape(value or "").strip()
+    value = re.sub(r"\s+", " ", value).strip()
+
+    if not value:
+        return ""
+
+    junk_values = {
+        "play",
+        "pause",
+        "copy link",
+        "embed",
+        "save to library",
+        "share",
+        "shuffle",
+        "repeat",
+    }
+
+    if value.lower() in junk_values:
+        return ""
+
+    if len(value) > 140:
+        return ""
+
+    return value
+
+
+def extract_possible_track_titles(html):
+    if not html:
+        return []
+
+    candidates = []
+
+    # Pull repeated JSON-ish titles from modern web apps.
+    for match in re.finditer(r'"title"\s*:\s*"([^"]{2,140})"', html):
+        candidates.append(match.group(1))
+
+    for match in re.finditer(r'"name"\s*:\s*"([^"]{2,140})"', html):
+        candidates.append(match.group(1))
+
+    # Pull aria-labels that sometimes contain track names.
+    for match in re.finditer(r'aria-label=["\\\']([^"\\\']{2,140})["\\\']', html):
+        candidates.append(match.group(1))
+
+    cleaned = []
+    seen = set()
+
+    for candidate in candidates:
+        value = clean_imported_track_title(candidate)
+        key = normalize_music_text(value)
+
+        if not value or not key:
+            continue
+
+        if key in seen:
+            continue
+
+        # Avoid importing the whole page title as a track too often.
+        if key in {"home", "library", "login", "sign up"}:
+            continue
+
+        seen.add(key)
+        cleaned.append(value)
+
+    return cleaned[:40]
+
+
+def infer_project_title_from_link(url, html):
+    title = extract_page_title(html)
+
+    if title:
+        # Clean common suffixes but keep actual project wording.
+        title = re.sub(r"\s+[-|]\s+(Untitled|SoundCloud|Spotify|Apple Music|YouTube).*$", "", title, flags=re.I).strip()
+        return title
+
+    parsed = urlparse(url or "")
+    slug = parsed.path.rstrip("/").split("/")[-1]
+    slug = re.sub(r"[-_]+", " ", slug).strip()
+
+    return slug.title() if slug else "Untitled Project"
+
+
+def fetch_music_link_metadata(url):
+    url = (url or "").strip()
+    html = fetch_public_page_html(url)
+    platform = detect_media_platform(url) if url else "No Link Yet"
+
+    title = infer_project_title_from_link(url, html) if url else ""
+    description = extract_meta_content(html, "og:description") or extract_meta_content(html, "description")
+    tracks = extract_possible_track_titles(html)
+
+    return {
+        "platform": platform,
+        "title": title,
+        "description": description,
+        "tracks": tracks,
+    }
+
+
 def ensure_music_projects_table():
     ensure_media_items_table()
 
@@ -3879,7 +4042,7 @@ def submit_music_release():
 
         if not error:
             canonical_release_key = music_release_key(title, artist_or_creator)
-            platform = detect_media_platform(url) if url else "No Link Yet"
+            platform = metadata.get("platform") or detect_media_platform(source_url) if source_url else "No Link Yet"
 
             existing_releases = fetch_all(
                 """
@@ -3940,12 +4103,12 @@ def submit_music_release():
                     {
                         "title": title,
                         "artist_or_creator": artist_or_creator,
-                        "url": url,
+                        "url": source_url,
                         "platform": platform,
                         "release_date": release_date,
                         "description": description,
                         "canonical_release_key": canonical_release_key,
-                        "embed_url": embed_url,
+                        "embed_url": "",
                         "created_at": datetime.now().isoformat(timespec="seconds"),
                     },
                 )
@@ -3973,16 +4136,29 @@ def submit_music_project():
         title = request.form.get("title", "").strip()
         artist_or_creator = request.form.get("artist_or_creator", "").strip()
         url = request.form.get("url", "").strip()
+        embed_code = request.form.get("embed_code", "").strip()
+        embed_url = extract_embed_src(embed_code)
+        source_url = url or embed_url
         release_date = request.form.get("release_date", "").strip()
         description = request.form.get("description", "").strip()
         tracklist = request.form.get("tracklist", "").strip()
 
+        metadata = fetch_music_link_metadata(source_url) if source_url else {}
         tracks = parse_project_tracklist(tracklist)
+
+        if not tracks and metadata.get("tracks"):
+            tracks = metadata.get("tracks", [])
+
+        if not title and metadata.get("title"):
+            title = metadata.get("title", "")
+
+        if not description and metadata.get("description"):
+            description = metadata.get("description", "")
 
         if not title or not artist_or_creator or not release_date:
             error = "Project title, producer/artist, and release date are required."
-        elif not tracks:
-            error = "Add at least one track in the tracklist."
+        elif not tracks and not source_url:
+            error = "Add a project link, embed link, or at least one track in the tracklist."
         else:
             try:
                 parsed_release_date = datetime.strptime(release_date, "%Y-%m-%d").date()
@@ -3992,7 +4168,7 @@ def submit_music_project():
                 error = "Use a valid release date."
 
         if not error:
-            platform = detect_media_platform(url) if url else "No Link Yet"
+            platform = detect_media_platform(source_url) if source_url else "No Link Yet"
             now_value = datetime.now().isoformat(timespec="seconds")
 
             with engine.begin() as conn:
