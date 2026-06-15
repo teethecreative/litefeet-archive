@@ -3993,6 +3993,30 @@ def music_voter_key():
     return session["music_voter_key"]
 
 
+
+
+def ensure_music_release_status_columns():
+    ensure_media_items_table()
+    ensure_music_projects_table()
+
+    with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            conn.execute(text("ALTER TABLE media_items ADD COLUMN IF NOT EXISTS release_stage TEXT DEFAULT 'released'"))
+            conn.execute(text("ALTER TABLE music_projects ADD COLUMN IF NOT EXISTS release_stage TEXT DEFAULT 'released'"))
+        else:
+            media_cols = conn.execute(text("PRAGMA table_info(media_items)")).fetchall()
+            media_existing = {col[1] for col in media_cols}
+
+            if "release_stage" not in media_existing:
+                conn.execute(text("ALTER TABLE media_items ADD COLUMN release_stage TEXT DEFAULT 'released'"))
+
+            project_cols = conn.execute(text("PRAGMA table_info(music_projects)")).fetchall()
+            project_existing = {col[1] for col in project_cols}
+
+            if "release_stage" not in project_existing:
+                conn.execute(text("ALTER TABLE music_projects ADD COLUMN release_stage TEXT DEFAULT 'released'"))
+
+
 def music_period_cutoff(period):
     today = datetime.now()
 
@@ -4170,10 +4194,12 @@ def submit_music_project():
 
     ensure_music_projects_table()
     ensure_media_release_key_column()
+    ensure_music_release_status_columns()
 
     error = ""
 
     if request.method == "POST":
+        submission_type = request.form.get("submission_type", "single").strip() or "single"
         title = request.form.get("title", "").strip()
         artist_or_creator = request.form.get("artist_or_creator", "").strip()
         url = request.form.get("url", "").strip()
@@ -4181,6 +4207,7 @@ def submit_music_project():
         embed_url = extract_embed_src(embed_code)
         source_url = url or embed_url
         playable_url = request.form.get("playable_url", "").strip()
+        release_stage = request.form.get("release_stage", "released").strip() or "released"
         release_date = request.form.get("release_date", "").strip()
         description = request.form.get("description", "").strip()
         tracklist = request.form.get("tracklist", "").strip()
@@ -4190,9 +4217,6 @@ def submit_music_project():
 
         if not tracks and metadata.get("tracks"):
             tracks = metadata.get("tracks", [])
-
-        if not tracks and title:
-            tracks = [title]
 
         if not title and metadata.get("title"):
             title = metadata.get("title", "")
@@ -4205,14 +4229,90 @@ def submit_music_project():
         elif release_date:
             try:
                 parsed_release_date = datetime.strptime(release_date, "%Y-%m-%d").date()
-                if parsed_release_date > datetime.now().date():
-                    error = "Release date cannot be in the future."
+                if parsed_release_date > datetime.now().date() and release_stage == "released":
+                    error = "Future dates should be marked as Preview or Coming Soon."
             except ValueError:
                 error = "Use a valid release date."
 
         if not error:
-            platform = detect_media_platform(source_url) if source_url else "No Link Yet"
+            platform = metadata.get("platform") or detect_media_platform(source_url) if source_url else "No Link Yet"
             now_value = datetime.now().isoformat(timespec="seconds")
+
+            if not title:
+                if tracks:
+                    title = tracks[0]
+                else:
+                    title = metadata.get("title") or "Untitled Music Submission"
+
+            if not artist_or_creator:
+                artist_or_creator = "Unknown"
+
+            if not release_date:
+                release_date = ""
+
+            # SINGLE SONG: save only one media_items record. Do NOT create music_projects row.
+            if submission_type == "single":
+                canonical_release_key = music_release_key(title, artist_or_creator)
+
+                with engine.begin() as conn:
+                    conn.execute(
+                        text(
+                            """
+                            INSERT INTO media_items (
+                                media_type,
+                                title,
+                                artist_or_creator,
+                                url,
+                                platform,
+                                release_date,
+                                event_name,
+                                description,
+                                status,
+                                canonical_release_key,
+                                release_stage,
+                                music_project_id,
+                                track_number,
+                                playable_url,
+                                created_at
+                            )
+                            VALUES (
+                                'music_release',
+                                :title,
+                                :artist_or_creator,
+                                :url,
+                                :platform,
+                                :release_date,
+                                '',
+                                :description,
+                                'Published',
+                                :canonical_release_key,
+                                :release_stage,
+                                NULL,
+                                NULL,
+                                :playable_url,
+                                :created_at
+                            )
+                            """
+                        ),
+                        {
+                            "title": title,
+                            "artist_or_creator": artist_or_creator,
+                            "url": source_url,
+                            "platform": platform,
+                            "release_date": release_date,
+                            "description": description,
+                            "canonical_release_key": canonical_release_key,
+                            "release_stage": release_stage,
+                            "playable_url": playable_url,
+                            "created_at": now_value,
+                        },
+                    )
+
+                return redirect(url_for("litefeet_music", period="all"))
+
+            # PROJECT / PACK / PLAYLIST: create a project row and track rows.
+            if not tracks:
+                tracks = [title]
 
             with engine.begin() as conn:
                 result = conn.execute(
@@ -4226,6 +4326,7 @@ def submit_music_project():
                             release_date,
                             description,
                             status,
+                            release_stage,
                             created_at
                         )
                         VALUES (
@@ -4236,6 +4337,7 @@ def submit_music_project():
                             :release_date,
                             :description,
                             'Published',
+                            :release_stage,
                             :created_at
                         )
                         RETURNING id
@@ -4252,6 +4354,7 @@ def submit_music_project():
                             release_date,
                             description,
                             status,
+                            release_stage,
                             created_at
                         )
                         VALUES (
@@ -4262,6 +4365,7 @@ def submit_music_project():
                             :release_date,
                             :description,
                             'Published',
+                            :release_stage,
                             :created_at
                         )
                         """
@@ -4269,10 +4373,11 @@ def submit_music_project():
                     {
                         "title": title,
                         "artist_or_creator": artist_or_creator,
-                        "url": url,
+                        "url": source_url,
                         "platform": platform,
                         "release_date": release_date,
                         "description": description,
+                        "release_stage": release_stage,
                         "created_at": now_value,
                     },
                 )
@@ -4299,6 +4404,7 @@ def submit_music_project():
                                 description,
                                 status,
                                 canonical_release_key,
+                                release_stage,
                                 music_project_id,
                                 track_number,
                                 playable_url,
@@ -4315,9 +4421,10 @@ def submit_music_project():
                                 :description,
                                 'Published',
                                 :canonical_release_key,
+                                :release_stage,
                                 :music_project_id,
                                 :track_number,
-                                '',
+                                :playable_url,
                                 :created_at
                             )
                             """
@@ -4325,21 +4432,24 @@ def submit_music_project():
                         {
                             "track_title": track_title,
                             "artist_or_creator": artist_or_creator,
-                            "url": url,
+                            "url": source_url,
                             "platform": platform,
                             "release_date": release_date,
                             "event_name": title,
                             "description": f"Track {index} from {title}",
                             "canonical_release_key": canonical_release_key,
+                            "release_stage": release_stage,
                             "music_project_id": project_id,
                             "track_number": index,
+                            "playable_url": playable_url if index == 1 else "",
                             "created_at": now_value,
                         },
                     )
 
-            return redirect(url_for("litefeet_music"))
+            return redirect(url_for("litefeet_music", period="all"))
 
     return render_template("submit_music_project.html", error=error)
+
 
 
 @app.route("/litefeet-music")
