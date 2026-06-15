@@ -2056,3 +2056,70 @@ main {
     margin-bottom: 0.35rem;
 }
 
+
+/* Responsive wide-screen layout correction */
+:root {
+    --ledger-page-width: min(1440px, calc(100vw - clamp(2rem, 8vw, 12rem)));
+    --ledger-narrow-width: min(1120px, calc(100vw - clamp(2rem, 8vw, 12rem)));
+}
+
+.site-header,
+.site-footer,
+main {
+    width: var(--ledger-page-width);
+    max-width: none;
+}
+
+.content-section,
+.detail-shell,
+.music-page,
+.home-hero,
+.homepage-section {
+    width: 100%;
+}
+
+.music-page,
+.people-page,
+.profile-directory-page {
+    max-width: none;
+}
+
+.profile-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.profile-filter-panel,
+.filter-panel,
+.directory-filters {
+    width: 100%;
+}
+
+@media (min-width: 1500px) {
+    :root {
+        --ledger-page-width: min(1520px, calc(100vw - 14rem));
+    }
+
+    .profile-grid {
+        grid-template-columns: repeat(4, minmax(260px, 1fr));
+    }
+}
+
+@media (min-width: 1900px) {
+    :root {
+        --ledger-page-width: min(1680px, calc(100vw - 18rem));
+    }
+}
+
+@media (max-width: 900px) {
+    :root {
+        --ledger-page-width: calc(100vw - 1.25rem);
+        --ledger-narrow-width: calc(100vw - 1.25rem);
+    }
+
+    .site-header,
+    .site-footer,
+    main {
+        width: var(--ledger-page-width);
+    }
+}
+

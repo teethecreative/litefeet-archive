@@ -3735,6 +3735,8 @@ def litefeet_music():
         {"cutoff": cutoff},
     )
 
+    radar_cutoff = (datetime.now().date() - timedelta(days=7)).isoformat()
+
     release_radar = fetch_all(
         """
         SELECT
@@ -3748,12 +3750,14 @@ def litefeet_music():
         LEFT JOIN music_feedback f ON f.media_item_id = m.id
         WHERE m.media_type = 'music_release'
           AND m.status = 'Published'
+          AND m.release_date >= :radar_cutoff
         GROUP BY m.id
         ORDER BY
-            CASE WHEN m.release_date IS NULL OR m.release_date = '' THEN m.created_at ELSE m.release_date END DESC,
+            m.release_date DESC,
             m.created_at DESC
         LIMIT 20
-        """
+        """,
+        {"radar_cutoff": radar_cutoff},
     )
 
     return render_template(

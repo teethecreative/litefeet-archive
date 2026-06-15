@@ -7,7 +7,7 @@
     <p class="eyebrow">LiteFeet Music</p>
     <h1>Release Radar</h1>
     <p>
-        New producer releases, community ratings, and music that dancers would lab, shoot to, or battle to.
+        New releases from the last 7 days live in the Radar. Older submissions still count toward rankings and All Time releases.
     </p>
 
     {% if request.args.get("duplicate") %}
@@ -18,10 +18,8 @@
     {% endif %}
 
     <div class="hero-actions">
-        <a class="button primary" href="/releases/submit">Add Your Release</a>
-        {% if session.get("admin_logged_in") %}
-            <a class="button secondary" href="/admin/media">Manage Music Feed</a>
-        {% endif %}
+        <a class="button primary" href="/releases/submit">Submit a Release</a>
+
     </div>
 
     <div class="music-search-row">
@@ -115,7 +113,7 @@
         {% else %}
             <div class="empty-state">
                 <h3>No releases added yet.</h3>
-                <p>Producers can add new releases from the last 7 days.</p>
+                <p>No recent releases yet. Submit a new release to appear in the Radar, or add an older release for the All Time rankings.</p>
             </div>
         {% endif %}
     </div>
