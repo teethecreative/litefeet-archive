@@ -1701,6 +1701,7 @@ def create_dancer_profile():
 
 
 
+
 @app.route("/dancers/<int:dancer_id>")
 def dancer_profile_detail_by_id(dancer_id):
     ensure_person_role_columns()
@@ -1749,6 +1750,8 @@ def dancer_profile_detail(profile_slug):
 
     profile = profiles[0]
     dancer_id = profile["id"]
+    profile_name = profile["dance_name"]
+    search_term = f"%{profile_name.lower()}%"
 
     flowers = fetch_all(
         """
@@ -1772,11 +1775,59 @@ def dancer_profile_detail(profile_slug):
         {"dancer_id": dancer_id},
     )
 
+    mention_rows = fetch_all(
+        """
+        SELECT *
+        FROM submissions
+        WHERE LOWER(COALESCE(title, '')) LIKE :search_term
+           OR LOWER(COALESCE(related_to, '')) LIKE :search_term
+           OR LOWER(COALESCE(details_json, '')) LIKE :search_term
+        ORDER BY created_at DESC
+        LIMIT 75
+        """,
+        {"search_term": search_term},
+    )
+
+    ledger_mentions = []
+    lower_name = profile_name.lower()
+
+    for row in mention_rows:
+        mention = dict(row)
+        labels = []
+
+        if lower_name in (row["title"] or "").lower():
+            labels.append("Title")
+
+        if lower_name in (row["related_to"] or "").lower():
+            labels.append("Related To")
+
+        for item in from_json_filter(row["details_json"]):
+            label = item.get("label", "")
+            value = item.get("value", "")
+
+            if lower_name in value.lower():
+                labels.append(label)
+
+        if not labels:
+            continue
+
+        mention["mention_labels"] = ", ".join(sorted(set(labels)))
+
+        if row["submission_type"] == "event":
+            mention["public_url"] = event_public_url(row)
+        elif row["submission_type"] == "historical_claim":
+            mention["public_url"] = f"/verify/{row['id']}"
+        else:
+            mention["public_url"] = ""
+
+        ledger_mentions.append(mention)
+
     return render_template(
         "dancer_profile_detail.html",
         profile=profile,
         flowers=flowers,
         suggestions=suggestions,
+        ledger_mentions=ledger_mentions,
     )
 
 

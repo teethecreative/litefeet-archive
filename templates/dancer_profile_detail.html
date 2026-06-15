@@ -34,6 +34,39 @@
         </div>
     {% endif %}
 
+    <div class="review-details ledger-mentions">
+        <h3>Ledger Mentions</h3>
+
+        {% if ledger_mentions %}
+            <div class="ledger-mention-list">
+                {% for mention in ledger_mentions %}
+                    <article class="ledger-mention-card">
+                        <div class="submission-meta">
+                            <span>{{ mention["submission_type"] }}</span>
+                            <span>{{ mention["review_status"] }}</span>
+                        </div>
+
+                        <h4>{{ mention["title"] }}</h4>
+
+                        <p><strong>Mentioned in:</strong> {{ mention["mention_labels"] }}</p>
+
+                        {% if mention["related_to"] %}
+                            <p class="small-note">{{ mention["related_to"] }}</p>
+                        {% endif %}
+
+                        {% if mention["public_url"] %}
+                            <p>
+                                <a href="{{ mention['public_url'] }}" class="button secondary">View Record</a>
+                            </p>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No Ledger mentions connected yet.</p>
+        {% endif %}
+    </div>
+
     <div class="review-details">
         <h3>Flowers</h3>
 

@@ -1079,3 +1079,21 @@ h2 {
     }
 }
 
+
+.ledger-mention-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.ledger-mention-card {
+    border: 1px solid rgba(226, 177, 58, 0.25);
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: 16px;
+    padding: 1rem;
+}
+
+.ledger-mention-card h4 {
+    margin: 0.75rem 0 0.5rem;
+    color: #f5f0e8;
+}
+
