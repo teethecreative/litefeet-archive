@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Producers | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <nav class="subtle-subnav">
+        <a href="/people/dancers">Dancers</a>
+        <span>|</span>
+        <a href="/people/producers" class="is-active">Producers</a>
+        <span>|</span>
+        <a href="/people/teams">Teams</a>
+    </nav>
+
+    <h1>Producers</h1>
+    <p>
+        Producer profiles use the same person cards as dancers. If someone dances and produces,
+        their profile appears in both sections instead of being duplicated.
+    </p>
+
+    {% if producer_profiles %}
+        <div class="dancer-grid">
+            {% for producer in producer_profiles %}
+                <article class="dancer-card">
+                    <div class="submission-meta">
+                        <span>{{ producer["status"] }}</span>
+                        {% for role in producer["role_tags"] | role_list %}
+                            <span>{{ role }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <h2>{{ producer["dance_name"] }}</h2>
+
+                    {% if producer["team_affiliation"] %}
+                        <p><strong>Team/Affiliation:</strong> {{ producer["team_affiliation"] }}</p>
+                    {% endif %}
+
+                    {% if producer["borough_scene"] %}
+                        <p><strong>Scene:</strong> {{ producer["borough_scene"] }}</p>
+                    {% endif %}
+
+                    {% if producer["bio"] %}
+                        <p>{{ producer["bio"] }}</p>
+                    {% endif %}
+
+                    <p>
+                        <a href="/dancers/{{ producer['id'] }}" class="button secondary">View Profile</a>
+                    </p>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>No producer profiles listed yet</h3>
+            <p>Producer cards will appear here as event results and community submissions are added.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

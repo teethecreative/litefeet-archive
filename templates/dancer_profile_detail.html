@@ -10,7 +10,9 @@
 
     <div class="submission-meta">
         <span>{{ profile["status"] }}</span>
-        <span>Dancer Profile</span>
+        {% for role in profile["role_tags"] | role_list %}
+            <span>{{ role }}</span>
+        {% endfor %}
     </div>
 
     {% if profile["team_affiliation"] %}

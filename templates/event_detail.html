@@ -19,7 +19,6 @@
         <span>{{ event["submission_type"] }}</span>
     </div>
 
-    {% set event_name = event["details_json"] | detail_value("Event Name") %}
     {% set event_date = event["details_json"] | detail_value("Event Date") %}
     {% set event_time = event["details_json"] | detail_value("Event Time") %}
     {% set studio = event["details_json"] | detail_value("Studio") %}
@@ -31,8 +30,6 @@
     {% endif %}
     {% set borough = event["details_json"] | detail_value("Borough") %}
     {% set battle_type = event["details_json"] | detail_value("Battle Type") %}
-    {% set age_restriction = event["details_json"] | detail_value("Age Restriction") %}
-    {% set entry = event["details_json"] | detail_value("Entry") %}
     {% set host = event["details_json"] | detail_value("Host") %}
     {% set battle_list = event["details_json"] | detail_value("Battle List") %}
     {% set judges = event["details_json"] | detail_value("Judges") %}
@@ -71,24 +68,19 @@
             </div>
 
             <div>
-                <span class="detail-label">Entry</span>
-                <strong>{{ entry or "Entry TBD" }}</strong>
+                <span class="detail-label">Host</span>
+                <strong>{{ host | people_links if host else "Host TBD" }}</strong>
             </div>
         </div>
     </section>
 
     <section class="event-section event-stack">
         <article class="event-info-block">
-            <h2>Host</h2>
-            <p>{{ host or "Host TBD" }}</p>
-        </article>
-
-        <article class="event-info-block">
             <h2>Battle List</h2>
             {% if battle_list %}
                 <ul class="event-result-list">
                     {% for battle in battle_list.split("|") %}
-                        <li>{{ battle.strip() }}</li>
+                        <li>{{ battle.strip() | people_links }}</li>
                     {% endfor %}
                 </ul>
             {% else %}
@@ -98,7 +90,7 @@
 
         <article class="event-info-block">
             <h2>Judges</h2>
-            <p>{{ judges or "Judges TBD" }}</p>
+            <p>{{ judges | people_links if judges else "Judges TBD" }}</p>
         </article>
 
         <article class="event-info-block">
@@ -106,7 +98,7 @@
             {% if end_results %}
                 <ul class="event-result-list">
                     {% for result in end_results.split("|") %}
-                        <li>{{ result.strip() }}</li>
+                        <li>{{ result.strip() | people_links }}</li>
                     {% endfor %}
                 </ul>
             {% else %}

@@ -1,10 +1,12 @@
 import json
 import os
+import re
 from datetime import datetime
 
 from flask import Flask, redirect, render_template, request, session, url_for
 from sqlalchemy import create_engine, text
 from werkzeug.security import check_password_hash, generate_password_hash
+from markupsafe import Markup, escape
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-this-secret")
@@ -52,6 +54,92 @@ def detail_value_filter(details_json, label):
             return item.get("value", "")
 
     return ""
+
+
+def ensure_person_role_columns():
+    dialect = engine.dialect.name
+
+    with engine.begin() as conn:
+        if dialect == "postgresql":
+            conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN IF NOT EXISTS role_tags TEXT"))
+        else:
+            existing_columns = {
+                row[1] for row in conn.execute(text("PRAGMA table_info(dancer_profiles)")).fetchall()
+            }
+
+            if "role_tags" not in existing_columns:
+                conn.execute(text("ALTER TABLE dancer_profiles ADD COLUMN role_tags TEXT"))
+
+        conn.execute(
+            text(
+                """
+                UPDATE dancer_profiles
+                SET role_tags = 'Dancer'
+                WHERE role_tags IS NULL OR TRIM(role_tags) = ''
+                """
+            )
+        )
+
+
+def role_tags_to_list(role_tags):
+    return [
+        role.strip()
+        for role in (role_tags or "").split(",")
+        if role.strip()
+    ]
+
+
+@app.template_filter("role_list")
+def role_list_filter(role_tags):
+    return role_tags_to_list(role_tags)
+
+
+@app.template_filter("people_links")
+def people_links_filter(value):
+    text_value = str(value or "").strip()
+
+    if not text_value:
+        return ""
+
+    ensure_person_role_columns()
+
+    profiles = fetch_all(
+        """
+        SELECT id, dance_name
+        FROM dancer_profiles
+        WHERE dance_name IS NOT NULL
+        AND TRIM(dance_name) != ''
+        AND status IN (
+            'Approved',
+            'Verified',
+            'Community Supported',
+            'Needs Verification',
+            'Ghost Profile'
+        )
+        ORDER BY LENGTH(dance_name) DESC
+        """
+    )
+
+    rendered = str(escape(text_value))
+
+    for profile in profiles:
+        name = profile["dance_name"]
+
+        if not name:
+            continue
+
+        escaped_name = str(escape(name))
+        href = f"/dancers/{profile['id']}"
+        replacement = f'<a class="person-link" href="{href}">{escaped_name}</a>'
+
+        rendered = re.sub(
+            rf"(?<![\w@]){re.escape(escaped_name)}(?![\w@])",
+            replacement,
+            rendered,
+            flags=re.IGNORECASE,
+        )
+
+    return Markup(rendered)
 
 
 def ensure_portal_tables():
@@ -1365,6 +1453,35 @@ def dancers():
         "dancers.html",
         dancer_profiles=dancer_profiles,
         flowers_by_profile=flowers_by_profile,
+    )
+
+
+
+
+@app.route("/producers")
+@app.route("/people/producers")
+def producers():
+    ensure_person_role_columns()
+
+    producer_profiles = fetch_all(
+        """
+        SELECT *
+        FROM dancer_profiles
+        WHERE status IN (
+            'Approved',
+            'Verified',
+            'Community Supported',
+            'Needs Verification',
+            'Ghost Profile'
+        )
+        AND role_tags LIKE '%Producer%'
+        ORDER BY dance_name ASC
+        """
+    )
+
+    return render_template(
+        "producers.html",
+        producer_profiles=producer_profiles,
     )
 
 

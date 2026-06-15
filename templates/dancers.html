@@ -7,6 +7,8 @@
     <nav class="subtle-subnav">
         <a href="/people/dancers" class="is-active">Dancers</a>
         <span>|</span>
+        <a href="/people/producers">Producers</a>
+        <span>|</span>
         <a href="/people/teams">Teams</a>
     </nav>
 
@@ -28,7 +30,9 @@
                 <article class="dancer-card">
                     <div class="submission-meta">
                         <span>{{ dancer["status"] }}</span>
-                        <span>Dancer Profile</span>
+                        {% for role in dancer["role_tags"] | role_list %}
+                            <span>{{ role }}</span>
+                        {% endfor %}
                     </div>
 
                     <h2>{{ dancer["dance_name"] }}</h2>

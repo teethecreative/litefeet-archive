@@ -993,3 +993,15 @@ h2 {
         grid-template-columns: 1fr;
     }
 }
+
+.person-link {
+    color: #f0c84b;
+    font-weight: 800;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(240, 200, 75, 0.45);
+}
+
+.person-link:hover {
+    border-bottom-color: #f0c84b;
+}
+
