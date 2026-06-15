@@ -3317,9 +3317,3 @@ def toggle_anonymous_mode():
     return redirect(request.referrer or url_for("account_home"))
 
 
-@app.route("/account/logout")
-def account_logout():
-    session.pop("user_id", None)
-    session.pop("admin_logged_in", None)
-    session.pop("anonymous_mode", None)
-    return redirect(url_for("home"))
