@@ -4393,6 +4393,8 @@ def litefeet_music():
         """
     )
 
+    releases = [dict(item) for item in releases]
+
     release_radar = fetch_all(
         """
         SELECT
@@ -4415,6 +4417,8 @@ def litefeet_music():
         """,
         {"radar_cutoff": radar_cutoff},
     )
+
+    release_radar = [dict(item) for item in release_radar]
 
     producer_profiles = fetch_all(
         """
