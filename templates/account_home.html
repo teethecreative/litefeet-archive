@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}My Ledger Account | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section account-dashboard">
+    {% if is_admin and not user %}
+        <p class="eyebrow">Admin Session</p>
+        <h1>Admin Account</h1>
+        <p>You are logged in as an admin. Use this space to track admin actions, review records, and manage the Ledger.</p>
+    {% else %}
+        <p class="eyebrow">Ledger Account</p>
+        <h1>{{ user["display_name"] }}</h1>
+        <p>
+            Track your profile, submissions, flowers, corrections, and Ledger activity.
+        </p>
+    {% endif %}
+
+    <div class="account-grid">
+        <div class="review-details">
+            <h3>Account Status</h3>
+
+            {% if is_admin %}
+                <p><strong>Access:</strong> Admin</p>
+            {% endif %}
+
+            {% if user %}
+                <p><strong>Name:</strong> {{ user["display_name"] }}</p>
+                <p><strong>Email:</strong> {{ user["email"] }}</p>
+            {% endif %}
+
+            <p>
+                <strong>Anonymous Mode:</strong>
+                {% if anonymous_mode %}On{% else %}Off{% endif %}
+            </p>
+
+            <form method="POST" action="/account/anonymous-mode">
+                <button type="submit" class="button secondary">
+                    Turn Anonymous Mode {% if anonymous_mode %}Off{% else %}On{% endif %}
+                </button>
+            </form>
+        </div>
+
+        <div class="review-details">
+            <h3>Profile</h3>
+
+            {% if claimed_profile %}
+                <p><strong>Profile:</strong> {{ claimed_profile["dance_name"] }}</p>
+                <p><strong>Status:</strong> {{ claimed_profile["status"] }}</p>
+
+                <div class="button-row">
+                    <a class="button primary" href="{{ claimed_profile | profile_url }}">View Profile</a>
+                    <a class="button secondary" href="/admin/people/{{ claimed_profile['id'] }}/edit">Edit Profile</a>
+                </div>
+            {% else %}
+                <p>No claimed profile connected yet.</p>
+                <a class="button primary" href="/people/dancers">Find / Claim Profile</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="review-details">
+        <h3>My Contributions</h3>
+
+        {% if contributions %}
+            <div class="compact-history-list">
+                {% for item in contributions %}
+                    <div class="history-row">
+                        <div>
+                            <strong>{{ item["title"] }}</strong>
+                            <p class="small-note">
+                                {{ item["submission_type"]|replace("_", " ")|title }}
+                                {% if item["created_at"] %} · {{ item["created_at"]|ledger_date }}{% endif %}
+                                {% if item["review_status"] %} · {{ item["review_status"] }}{% endif %}
+                            </p>
+                        </div>
+
+                        {% if item["submission_type"] == "event" %}
+                            <a class="button small-button" href="{{ item | event_public_url }}">View</a>
+                        {% elif item["submission_type"] == "historical_claim" %}
+                            <a class="button small-button" href="/verify/{{ item['id'] }}">View</a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No contributions connected to this account yet.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

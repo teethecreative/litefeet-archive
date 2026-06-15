@@ -3226,3 +3226,100 @@ def admin_merge_people(primary_id, duplicate_id):
         )
 
     return redirect(profile_url(primary))
+
+
+@app.context_processor
+def inject_nav_account_context():
+    user = current_user()
+
+    claimed_profile = None
+
+    if user:
+        claimed_profile = fetch_one(
+            """
+            SELECT *
+            FROM dancer_profiles
+            WHERE user_id = :user_id
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            {"user_id": user["id"]},
+        )
+
+    return {
+        "nav_current_user": user,
+        "nav_claimed_profile": claimed_profile,
+        "nav_is_admin": bool(session.get("admin_logged_in")),
+        "nav_anonymous_mode": bool(session.get("anonymous_mode")),
+    }
+
+
+@app.route("/account")
+def account_home():
+    user = current_user()
+
+    if not user and not session.get("admin_logged_in"):
+        return redirect(url_for("account_login"))
+
+    claimed_profile = None
+    contributions = []
+
+    if user:
+        claimed_profile = fetch_one(
+            """
+            SELECT *
+            FROM dancer_profiles
+            WHERE user_id = :user_id
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            {"user_id": user["id"]},
+        )
+
+        contributions = fetch_all(
+            """
+            SELECT *
+            FROM submissions
+            WHERE lower(contact) = lower(:email)
+               OR lower(submitter_name) = lower(:display_name)
+            ORDER BY created_at DESC
+            LIMIT 50
+            """,
+            {
+                "email": user.get("email", ""),
+                "display_name": user.get("display_name", ""),
+            },
+        )
+
+    if session.get("admin_logged_in") and not contributions:
+        contributions = fetch_all(
+            """
+            SELECT *
+            FROM submissions
+            ORDER BY created_at DESC
+            LIMIT 50
+            """
+        )
+
+    return render_template(
+        "account_home.html",
+        user=user,
+        claimed_profile=claimed_profile,
+        contributions=contributions,
+        anonymous_mode=bool(session.get("anonymous_mode")),
+        is_admin=bool(session.get("admin_logged_in")),
+    )
+
+
+@app.route("/account/anonymous-mode", methods=["POST"])
+def toggle_anonymous_mode():
+    session["anonymous_mode"] = not bool(session.get("anonymous_mode"))
+    return redirect(request.referrer or url_for("account_home"))
+
+
+@app.route("/account/logout")
+def account_logout():
+    session.pop("user_id", None)
+    session.pop("admin_logged_in", None)
+    session.pop("anonymous_mode", None)
+    return redirect(url_for("home"))
