@@ -42,6 +42,10 @@
                                 <a href="/admin/submissions">Admin Dashboard</a>
                                 <a href="/admin/submissions">Submissions</a>
                                 <a href="/admin/media">Media Feed</a>
+
+                                <form method="POST" action="/admin/view-as-public">
+                                    <button type="submit">View as Public</button>
+                                </form>
                                 <a href="/releases/submit">Add Release</a>
                             {% endif %}
 
@@ -72,6 +76,15 @@
                 {% endif %}
             </nav>
         </header>
+
+        {% if session.get("admin_return_available") and not session.get("admin_logged_in") %}
+            <div class="admin-public-view-banner">
+                <span>Viewing site as public.</span>
+                <form method="POST" action="/admin/return-to-admin">
+                    <button type="submit">Return to Admin View</button>
+                </form>
+            </div>
+        {% endif %}
 
         <main>
             {% block content %}{% endblock %}

@@ -4909,3 +4909,22 @@ def admin_music_project_delete(project_id):
 
     return redirect(url_for("litefeet_music", period="all"))
 
+
+
+@app.route("/admin/view-as-public", methods=["POST"])
+def admin_view_as_public():
+    if session.get("admin_logged_in"):
+        session["admin_return_available"] = True
+        session["admin_logged_in"] = False
+
+    return redirect(request.referrer or url_for("home"))
+
+
+@app.route("/admin/return-to-admin", methods=["POST"])
+def admin_return_to_admin():
+    if session.get("admin_return_available"):
+        session["admin_logged_in"] = True
+        session.pop("admin_return_available", None)
+
+    return redirect(request.referrer or url_for("home"))
+
