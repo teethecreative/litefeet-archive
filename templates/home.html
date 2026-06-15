@@ -70,7 +70,7 @@
     {% else %}
         <div class="empty-state">
             <h3>No battle videos added yet.</h3>
-            <p>Admins can add YouTube links to build the homepage battle feed.</p>
+            <p>New battle videos will appear here as the Ledger feed grows.</p>
         </div>
     {% endif %}
 </section>
@@ -82,9 +82,7 @@
             <h2>Producer Releases</h2>
         </div>
 
-        {% if session.get("admin_logged_in") %}
-            <a class="button secondary" href="/admin/media">Add Release</a>
-        {% endif %}
+        <a class="button secondary" href="/releases/submit">Add Release</a>
     </div>
 
     <div class="music-search-row">
@@ -125,7 +123,7 @@
     {% else %}
         <div class="empty-state">
             <h3>No music releases added yet.</h3>
-            <p>Admins can add SoundCloud, Spotify, or Apple Music links.</p>
+            <p>Producers can add new SoundCloud, Spotify, or Apple Music releases from the last 7 days.</p>
         </div>
     {% endif %}
 </section>

@@ -1713,3 +1713,69 @@ h2 {
     }
 }
 
+
+/* Homepage breathing room update */
+.home-hero {
+    padding: 5rem 0 4rem;
+}
+
+.homepage-section {
+    padding: 4rem 0;
+}
+
+.homepage-section:first-of-type {
+    border-top: 0;
+}
+
+.section-heading-row {
+    margin-bottom: 2rem;
+}
+
+.video-feed-grid,
+.music-feed-list,
+.home-feature-grid {
+    max-width: 1180px;
+}
+
+.music-feed-list {
+    max-height: 680px;
+    overflow-y: auto;
+    padding-right: 0.4rem;
+}
+
+.music-feed-list::-webkit-scrollbar {
+    width: 10px;
+}
+
+.music-feed-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 999px;
+}
+
+.music-feed-list::-webkit-scrollbar-thumb {
+    background: rgba(226, 177, 58, 0.45);
+    border-radius: 999px;
+}
+
+.music-release-card {
+    min-height: 112px;
+}
+
+.empty-state h3 {
+    margin-top: 0;
+}
+
+@media (max-width: 900px) {
+    .home-hero {
+        padding: 3rem 0;
+    }
+
+    .homepage-section {
+        padding: 3rem 0;
+    }
+
+    .music-feed-list {
+        max-height: 560px;
+    }
+}
+

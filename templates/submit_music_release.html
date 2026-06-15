@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Producer Release | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <p class="eyebrow">Producer Releases</p>
+    <h1>Add a New Release</h1>
+    <p>
+        Share a new SoundCloud, Spotify, or Apple Music release with the LiteFeet community.
+        Releases must be from the last 7 days.
+    </p>
+
+    {% if error %}
+        <div class="empty-state compact-empty">
+            <h3>{{ error }}</h3>
+        </div>
+    {% endif %}
+
+    <form method="POST" class="form-card media-admin-form">
+        <label>
+            Title
+            <input type="text" name="title" placeholder="Track name or release title" required>
+        </label>
+
+        <label>
+            Producer / Artist
+            <input type="text" name="artist_or_creator" placeholder="Producer, artist, or collective name" required>
+        </label>
+
+        <label>
+            Release Link
+            <input type="url" name="url" placeholder="SoundCloud, Spotify, or Apple Music link" required>
+        </label>
+
+        <label>
+            Release Date
+            <input type="date" name="release_date" required>
+        </label>
+
+        <label>
+            Notes
+            <textarea name="description" placeholder="Optional: beat style, LiteFeet connection, featured artist, etc."></textarea>
+        </label>
+
+        <button type="submit" class="button primary">Add Release</button>
+    </form>
+</section>
+{% endblock %}

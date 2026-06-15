@@ -2,7 +2,7 @@ import json
 import os
 import re
 from urllib.parse import urlparse, parse_qs, quote
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Flask, redirect, render_template, request, session, url_for
 from sqlalchemy import create_engine, text
@@ -1697,7 +1697,7 @@ def home():
         ORDER BY
             CASE WHEN release_date IS NULL OR release_date = '' THEN created_at ELSE release_date END DESC,
             created_at DESC
-        LIMIT 24
+        LIMIT 20
         """
     )
 

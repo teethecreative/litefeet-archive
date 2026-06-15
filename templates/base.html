@@ -42,10 +42,12 @@
                                 <a href="/admin/submissions">Admin Dashboard</a>
                                 <a href="/admin/submissions">Submissions</a>
                                 <a href="/admin/media">Media Feed</a>
+                                <a href="/releases/submit">Add Release</a>
                             {% endif %}
 
                             {% if nav_current_user %}
                                 <a href="/account">My Account</a>
+                                <a href="/releases/submit">Add Producer Release</a>
 
                                 {% if nav_claimed_profile %}
                                     <a href="{{ nav_claimed_profile | profile_url }}">View My Profile</a>
