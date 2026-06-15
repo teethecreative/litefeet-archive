@@ -4192,7 +4192,7 @@ def submit_music_project():
 
         if not source_url and not title and not tracks:
             error = "Add a music link, embed link, title, or tracklist so the Ledger has something to save."
-        else:
+        elif release_date:
             try:
                 parsed_release_date = datetime.strptime(release_date, "%Y-%m-%d").date()
                 if parsed_release_date > datetime.now().date():
