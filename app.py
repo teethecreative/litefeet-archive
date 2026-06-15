@@ -1654,8 +1654,12 @@ def create_dancer_profile():
     return render_template("dancer_create.html", error=error)
 
 
+
 @app.route("/dancers/<int:dancer_id>")
 def dancer_profile_detail_by_id(dancer_id):
+    ensure_person_role_columns()
+    ensure_profile_slug_column()
+
     profiles = fetch_all(
         """
         SELECT *
@@ -1669,26 +1673,12 @@ def dancer_profile_detail_by_id(dancer_id):
     if not profiles:
         return redirect(url_for("dancers"))
 
-    profile = profiles[0]
-
-    if not profile["profile_slug"]:
-        ensure_profile_slug_column()
-        profiles = fetch_all(
-            """
-            SELECT *
-            FROM dancer_profiles
-            WHERE id = :dancer_id
-            LIMIT 1
-            """,
-            {"dancer_id": dancer_id},
-        )
-        profile = profiles[0]
-
-    return redirect(profile_url(profile))
+    return redirect(profile_url(profiles[0]))
 
 
 @app.route("/dancers/<profile_slug>")
 def dancer_profile_detail(profile_slug):
+    ensure_person_role_columns()
     ensure_profile_slug_column()
 
     profiles = fetch_all(
@@ -1696,6 +1686,13 @@ def dancer_profile_detail(profile_slug):
         SELECT *
         FROM dancer_profiles
         WHERE profile_slug = :profile_slug
+        AND status IN (
+            'Approved',
+            'Verified',
+            'Community Supported',
+            'Needs Verification',
+            'Ghost Profile'
+        )
         LIMIT 1
         """,
         {"profile_slug": profile_slug},
@@ -1705,9 +1702,7 @@ def dancer_profile_detail(profile_slug):
         return redirect(url_for("dancers"))
 
     profile = profiles[0]
-
-    if profile["status"] not in {"Approved", "Verified", "Community Supported", "Ghost Profile"} and not current_user_is_admin():
-        return redirect(url_for("dancers"))
+    dancer_id = profile["id"]
 
     flowers = fetch_all(
         """
