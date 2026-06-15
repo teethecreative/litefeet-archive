@@ -7,7 +7,7 @@ from urllib.parse import urlparse, parse_qs, quote
 from urllib.request import Request, urlopen
 from datetime import datetime, timedelta
 
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import abort, Flask, redirect, render_template, request, session, url_for
 from sqlalchemy import create_engine, text
 from werkzeug.security import check_password_hash, generate_password_hash
 from markupsafe import Markup, escape
@@ -4602,4 +4602,109 @@ def music_feedback_submit(item_id):
 
     return redirect(request.referrer or url_for("litefeet_music"))
 
+
+
+
+@app.route("/admin/music/release/<int:item_id>/edit", methods=["GET", "POST"])
+def admin_music_release_edit(item_id):
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login", next=request.path))
+
+    ensure_media_items_table()
+    ensure_media_release_key_column()
+    ensure_music_projects_table()
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM media_items
+        WHERE id = :id
+          AND media_type = 'music_release'
+        LIMIT 1
+        """,
+        {"id": item_id},
+    )
+
+    if not rows:
+        abort(404)
+
+    item = dict(rows[0])
+
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        artist_or_creator = request.form.get("artist_or_creator", "").strip()
+        url = request.form.get("url", "").strip()
+        playable_url = request.form.get("playable_url", "").strip()
+        release_date = request.form.get("release_date", "").strip()
+        platform = request.form.get("platform", "").strip() or detect_media_platform(url)
+        event_name = request.form.get("event_name", "").strip()
+        description = request.form.get("description", "").strip()
+        status = request.form.get("status", "Published").strip() or "Published"
+        track_number_raw = request.form.get("track_number", "").strip()
+
+        try:
+            track_number = int(track_number_raw) if track_number_raw else None
+        except ValueError:
+            track_number = None
+
+        canonical_release_key = music_release_key(title, artist_or_creator)
+
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    UPDATE media_items
+                    SET title = :title,
+                        artist_or_creator = :artist_or_creator,
+                        url = :url,
+                        playable_url = :playable_url,
+                        platform = :platform,
+                        release_date = :release_date,
+                        event_name = :event_name,
+                        description = :description,
+                        status = :status,
+                        track_number = :track_number,
+                        canonical_release_key = :canonical_release_key
+                    WHERE id = :id
+                    """
+                ),
+                {
+                    "id": item_id,
+                    "title": title,
+                    "artist_or_creator": artist_or_creator,
+                    "url": url,
+                    "playable_url": playable_url,
+                    "platform": platform,
+                    "release_date": release_date,
+                    "event_name": event_name,
+                    "description": description,
+                    "status": status,
+                    "track_number": track_number,
+                    "canonical_release_key": canonical_release_key,
+                },
+            )
+
+        return redirect(url_for("litefeet_music", period="all"))
+
+    return render_template("admin_music_release_edit.html", item=item)
+
+
+@app.route("/admin/music/release/<int:item_id>/delete", methods=["POST"])
+def admin_music_release_delete(item_id):
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login", next=request.path))
+
+    ensure_media_items_table()
+
+    with engine.begin() as conn:
+        conn.execute(
+            text("DELETE FROM music_feedback WHERE media_item_id = :id"),
+            {"id": item_id},
+        )
+        conn.execute(
+            text("DELETE FROM media_items WHERE id = :id AND media_type = 'music_release'"),
+            {"id": item_id},
+        )
+
+    return redirect(request.referrer or url_for("litefeet_music", period="all"))
 

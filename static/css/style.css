@@ -2418,3 +2418,81 @@ main {
         max-width: 100%;
     }
 }
+
+/* Music playback/admin controls */
+.playback-status-chip {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.72rem;
+    font-weight: 900;
+    margin-top: 0.35rem;
+    padding: 0.28rem 0.55rem;
+    width: fit-content;
+}
+
+.playable-chip {
+    background: rgba(96, 255, 160, 0.1);
+    border: 1px solid rgba(96, 255, 160, 0.3);
+    color: rgba(180, 255, 210, 0.95);
+}
+
+.not-playable-chip {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: rgba(245, 240, 232, 0.58);
+}
+
+.admin-song-actions {
+    align-items: center;
+    border-top: 1px solid rgba(226, 177, 58, 0.16);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+}
+
+.admin-song-actions form {
+    margin: 0;
+}
+
+.danger-button {
+    border-color: rgba(255, 80, 80, 0.4) !important;
+    color: rgba(255, 180, 180, 0.95) !important;
+}
+
+.danger-button:hover {
+    background: rgba(255, 80, 80, 0.1) !important;
+}
+
+.admin-playback-note {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(226, 177, 58, 0.2);
+    border-radius: 16px;
+    color: rgba(245, 240, 232, 0.78);
+    padding: 0.85rem 1rem;
+}
+
+
+/* Embedded source player inside song info */
+.song-embed-player {
+    background: #050505;
+    border: 1px solid rgba(226, 177, 58, 0.22);
+    border-radius: 16px;
+    margin: 0.75rem 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+.song-embed-player iframe {
+    border: 0;
+    display: block;
+    min-height: 180px;
+    width: 100%;
+}
+
+@media (max-width: 800px) {
+    .song-embed-player iframe {
+        min-height: 220px;
+    }
+}

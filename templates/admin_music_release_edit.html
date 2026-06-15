@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Music Release | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section music-page">
+    <p class="eyebrow">Admin</p>
+    <h1>Edit Music Release</h1>
+
+    <form method="POST" class="form-card media-admin-form">
+        <label>
+            Track / Release Title
+            <input type="text" name="title" value="{{ item['title'] or '' }}">
+        </label>
+
+        <label>
+            Producer / Artist
+            <input type="text" name="artist_or_creator" value="{{ item['artist_or_creator'] or '' }}">
+        </label>
+
+        <label>
+            Source Link
+            <input type="url" name="url" value="{{ item['url'] or '' }}" placeholder="Platform/project/source link">
+        </label>
+
+        <label>
+            Playable URL
+            <input type="url" name="playable_url" value="{{ item['playable_url'] or '' }}" placeholder="Direct playable track/audio URL">
+        </label>
+
+        <div class="admin-playback-note">
+            {% if item["playable_url"] %}
+                <strong>Playable on site:</strong> yes.
+            {% elif item["url"] %}
+                <strong>Not playable on site yet.</strong> This release has a source link, but needs a playable track URL.
+            {% else %}
+                <strong>Not playable on site yet.</strong> This release needs a source link or playable URL.
+            {% endif %}
+        </div>
+
+        <label>
+            Platform
+            <input type="text" name="platform" value="{{ item['platform'] or '' }}">
+        </label>
+
+        <label>
+            Release Date
+            <input type="date" name="release_date" value="{{ item['release_date'] or '' }}">
+        </label>
+
+        <label>
+            Project / Pack Name
+            <input type="text" name="event_name" value="{{ item['event_name'] or '' }}">
+        </label>
+
+        <label>
+            Track Number
+            <input type="number" name="track_number" value="{{ item['track_number'] or '' }}">
+        </label>
+
+        <label>
+            Status
+            <select name="status">
+                <option value="Published" {% if item["status"] == "Published" %}selected{% endif %}>Published</option>
+                <option value="Draft" {% if item["status"] == "Draft" %}selected{% endif %}>Draft</option>
+                <option value="Archived" {% if item["status"] == "Archived" %}selected{% endif %}>Archived</option>
+            </select>
+        </label>
+
+        <label>
+            Notes / Metadata
+            <textarea name="description">{{ item['description'] or '' }}</textarea>
+        </label>
+
+        <button type="submit" class="button primary">Save Release</button>
+    </form>
+</section>
+{% endblock %}
