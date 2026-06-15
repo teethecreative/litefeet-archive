@@ -2123,3 +2123,41 @@ main {
     }
 }
 
+
+/* LiteFeet Music button spacing fix */
+.music-page .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 2rem 0 1.35rem;
+}
+
+.music-page .hero-actions .button {
+    min-height: 52px;
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    padding: 0.95rem 1.45rem;
+    border-radius: 999px;
+    line-height: 1;
+}
+
+.music-page .music-search-row {
+    margin-top: 0.4rem;
+    margin-bottom: 3rem;
+}
+
+.music-page #musicFeedSearch {
+    min-height: 56px;
+}
+
+@media (max-width: 700px) {
+    .music-page .hero-actions {
+        margin: 1.5rem 0 1rem;
+    }
+
+    .music-page .hero-actions .button {
+        width: 100%;
+    }
+}
+
