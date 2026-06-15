@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}{{ organizer_name }} | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <p>
+        <a href="/events" class="small-note">← Back to Events</a>
+    </p>
+
+    <h1>{{ organizer_name }}</h1>
+
+    <div class="submission-meta">
+        <span>Organizer</span>
+        <span>Event Host</span>
+    </div>
+
+    <section class="event-section">
+        <h2>Events</h2>
+
+        {% if organizer_events %}
+            <div class="dancer-grid">
+                {% for event in organizer_events %}
+                    {% set event_date = event["details_json"] | detail_value("Event Date") %}
+                    {% set event_time = event["details_json"] | detail_value("Event Time") %}
+                    {% set studio = event["details_json"] | detail_value("Studio") %}
+                    {% if not studio %}
+                        {% set studio = event["details_json"] | detail_value("Event Location") %}
+                    {% endif %}
+                    {% set borough = event["details_json"] | detail_value("Borough") %}
+                    {% set battle_type = event["details_json"] | detail_value("Battle Type") %}
+                    {% set results = event["details_json"] | detail_value("End Results") %}
+                    {% if not results %}
+                        {% set results = event["details_json"] | detail_value("Event Results") %}
+                    {% endif %}
+
+                    <article class="dancer-card">
+                        <div class="submission-meta">
+                            <span>{{ event["review_status"] }}</span>
+                            {% if battle_type %}
+                                <span>{{ battle_type }}</span>
+                            {% endif %}
+                        </div>
+
+                        <h2>{{ event["title"] }}</h2>
+
+                        <p><strong>Date:</strong> {{ event_date or "Date TBD" }}</p>
+
+                        {% if event_time %}
+                            <p><strong>Time:</strong> {{ event_time }}</p>
+                        {% endif %}
+
+                        <p><strong>Location:</strong> {{ studio or "Location TBD" }}{% if borough %}, {{ borough }}{% endif %}</p>
+
+                        <p><strong>Results:</strong> {% if results %}Added{% else %}Not added yet{% endif %}</p>
+
+                        <p>
+                            <a href="{{ event | event_public_url }}" class="button secondary">View Event</a>
+                        </p>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h3>No events listed yet</h3>
+                <p>Events from this organizer will appear here once added to the Ledger.</p>
+            </div>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

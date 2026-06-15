@@ -21,6 +21,13 @@
 
     {% set event_date = event["details_json"] | detail_value("Event Date") %}
     {% set event_time = event["details_json"] | detail_value("Event Time") %}
+    {% set organizer = event["details_json"] | detail_value("Organizer") %}
+    {% if not organizer %}
+        {% set organizer = event["details_json"] | detail_value("Event Host") %}
+    {% endif %}
+    {% if not organizer %}
+        {% set organizer = event["details_json"] | detail_value("Organization Name") %}
+    {% endif %}
     {% set studio = event["details_json"] | detail_value("Studio") %}
     {% if not studio %}
         {% set studio = event["details_json"] | detail_value("Venue / Studio") %}
@@ -53,8 +60,14 @@
             </div>
 
             <div>
-                <span class="detail-label">Studio</span>
-                <strong>{{ studio or "Studio TBD" }}</strong>
+                <span class="detail-label">Organizer</span>
+                <strong>
+                    {% if organizer %}
+                        <a class="person-link" href="/{{ organizer | public_slug }}">{{ organizer }}</a>
+                    {% else %}
+                        Organizer TBD
+                    {% endif %}
+                </strong>
             </div>
 
             <div>
@@ -70,6 +83,11 @@
             <div>
                 <span class="detail-label">Host</span>
                 <strong>{{ host | people_links if host else "Host TBD" }}</strong>
+            </div>
+
+            <div>
+                <span class="detail-label">Studio</span>
+                <strong>{{ studio or "Studio TBD" }}</strong>
             </div>
         </div>
     </section>

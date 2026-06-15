@@ -25,7 +25,7 @@
                     {% set event_org = event["details_json"] | detail_value("Organization Name") %}
                     {% set battle_type = event["details_json"] | detail_value("Battle Type") %}
 
-                    <a href="/events/{{ event['id'] }}" class="event-square-link">
+                    <a href="{{ event | event_public_url }}" class="event-square-link">
                         <article class="event-square-card">
                             <div class="submission-meta">
                                 <span>{{ event["review_status"] }}</span>
@@ -88,7 +88,7 @@
                             {% set event_org = event["details_json"] | detail_value("Organization Name") %}
                             {% set battle_type = event["details_json"] | detail_value("Battle Type") %}
 
-                            <tr class="clickable-row" onclick="window.location.href='/events/{{ event['id'] }}'">
+                            <tr class="clickable-row" onclick="window.location.href='{{ event | event_public_url }}'">
                                 <td>{{ event_date or "Date TBD" }}</td>
                                 <td>{{ event["title"] }}</td>
                                 <td>{{ event_org or "Host TBD" }}</td>
@@ -127,7 +127,7 @@
                             {% set battle_type = event["details_json"] | detail_value("Battle Type") %}
                             {% set event_results = event["details_json"] | detail_value("Event Results") %}
 
-                            <tr class="clickable-row" onclick="window.location.href='/events/{{ event['id'] }}'">
+                            <tr class="clickable-row" onclick="window.location.href='{{ event | event_public_url }}'">
                                 <td>{{ event_date or "Date unknown" }}</td>
                                 <td>{{ event["title"] }}</td>
                                 <td>{{ event_org or "Host unknown" }}</td>

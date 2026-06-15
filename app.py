@@ -182,6 +182,52 @@ def profile_url(profile):
     return f"/dancers/{slug}"
 
 
+
+
+def make_public_slug(value):
+    slug = re.sub(r"[^A-Za-z0-9]+", "", value or "")
+    return slug or "Record"
+
+
+def normalize_public_slug(value):
+    return make_public_slug(value).lower()
+
+
+def get_detail_value(details_json, label):
+    details = from_json_filter(details_json or "[]")
+
+    for item in details:
+        if item.get("label") == label:
+            return item.get("value", "")
+
+    return ""
+
+
+def event_organizer_name(event):
+    return (
+        get_detail_value(event["details_json"], "Organizer")
+        or get_detail_value(event["details_json"], "Event Host")
+        or get_detail_value(event["details_json"], "Organization Name")
+        or "Organizer"
+    )
+
+
+def event_public_url(event):
+    organizer_slug = make_public_slug(event_organizer_name(event))
+    event_slug = make_public_slug(event["title"])
+    return f"/{organizer_slug}/{event_slug}"
+
+
+@app.template_filter("event_public_url")
+def event_public_url_filter(event):
+    return event_public_url(event)
+
+
+@app.template_filter("public_slug")
+def public_slug_filter(value):
+    return make_public_slug(value)
+
+
 @app.template_filter("profile_url")
 def profile_url_filter(profile):
     return profile_url(profile)
@@ -2313,3 +2359,81 @@ seed_litefeet_research_records()
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+
+@app.route("/<organizer_slug>")
+def organizer_detail(organizer_slug):
+    blocked_slugs = {
+        "admin",
+        "account",
+        "ask",
+        "events",
+        "people",
+        "dancers",
+        "producers",
+        "battles",
+        "awards",
+        "verify",
+        "about",
+        "submit",
+        "static",
+        "contributor",
+        "eventaffiliates",
+    }
+
+    if organizer_slug.lower() in blocked_slugs:
+        return redirect(url_for("home"))
+
+    all_events = fetch_all(
+        """
+        SELECT *
+        FROM submissions
+        WHERE submission_type = 'event'
+        AND review_status IN ('Verified', 'Community Supported')
+        ORDER BY created_at DESC
+        """
+    )
+
+    organizer_events = []
+
+    for event in all_events:
+        organizer_name = event_organizer_name(event)
+
+        if normalize_public_slug(organizer_name) == normalize_public_slug(organizer_slug):
+            organizer_events.append(event)
+
+    if not organizer_events:
+        return redirect(url_for("events"))
+
+    organizer_name = event_organizer_name(organizer_events[0])
+
+    return render_template(
+        "organizer_detail.html",
+        organizer_name=organizer_name,
+        organizer_slug=make_public_slug(organizer_name),
+        organizer_events=organizer_events,
+    )
+
+
+@app.route("/<organizer_slug>/<event_slug>")
+def organizer_event_detail(organizer_slug, event_slug):
+    all_events = fetch_all(
+        """
+        SELECT *
+        FROM submissions
+        WHERE submission_type = 'event'
+        AND review_status IN ('Verified', 'Community Supported')
+        ORDER BY created_at DESC
+        """
+    )
+
+    for event in all_events:
+        organizer_match = normalize_public_slug(event_organizer_name(event)) == normalize_public_slug(organizer_slug)
+        event_match = normalize_public_slug(event["title"]) == normalize_public_slug(event_slug)
+
+        if organizer_match and event_match:
+            return render_template("event_detail.html", event=event)
+
+    return redirect(url_for("events"))
+
