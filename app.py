@@ -2151,12 +2151,17 @@ def dancer_profile_detail(profile_slug):
 
         ledger_mentions.append(mention)
 
+    similar_profiles = find_similar_profiles(profile)
+    has_enrichment = profile_has_enrichment(profile)
+
     return render_template(
         "dancer_profile_detail.html",
         profile=profile,
         flowers=flowers,
         suggestions=suggestions,
         ledger_mentions=ledger_mentions,
+        similar_profiles=similar_profiles,
+        has_enrichment=has_enrichment,
     )
 
 
@@ -3035,3 +3040,189 @@ def claim_profile(profile_slug):
         user=user,
         error=error,
     )
+
+
+def format_ledger_date(value):
+    if not value:
+        return ""
+
+    raw = str(value).strip()
+
+    formats = [
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d",
+        "%m/%d/%Y",
+        "%m/%d/%y",
+    ]
+
+    for fmt in formats:
+        try:
+            parsed = datetime.strptime(raw[:19], fmt)
+            return parsed.strftime("%A, %d %B, %Y")
+        except ValueError:
+            continue
+
+    return raw
+
+
+@app.template_filter("ledger_date")
+def ledger_date_filter(value):
+    return format_ledger_date(value)
+
+
+def normalize_profile_match_name(value):
+    return re.sub(r"[^a-z0-9]", "", (value or "").lower())
+
+
+def profile_has_enrichment(profile):
+    fields = [
+        "team_affiliation",
+        "borough_scene",
+        "era",
+        "style_notes",
+        "signature_moves",
+        "battle_history",
+        "legacy_notes",
+    ]
+
+    return any((profile.get(field) or "").strip() for field in fields)
+
+
+def find_similar_profiles(profile):
+    if not profile:
+        return []
+
+    current_id = profile.get("id")
+    current_name = profile.get("dance_name", "")
+    current_key = normalize_profile_match_name(current_name)
+
+    if not current_key:
+        return []
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM dancer_profiles
+        WHERE id != :current_id
+        ORDER BY lower(dance_name) ASC
+        """,
+        {"current_id": current_id},
+    )
+
+    matches = []
+
+    for row in rows:
+        row_key = normalize_profile_match_name(row.get("dance_name", ""))
+
+        if not row_key:
+            continue
+
+        if current_key == row_key:
+            matches.append(row)
+            continue
+
+        if current_key in row_key or row_key in current_key:
+            matches.append(row)
+            continue
+
+    return matches[:8]
+
+
+def merge_profile_text(primary, duplicate, field):
+    primary_value = (primary.get(field) or "").strip()
+    duplicate_value = (duplicate.get(field) or "").strip()
+
+    if not duplicate_value:
+        return primary_value
+
+    if not primary_value:
+        return duplicate_value
+
+    if duplicate_value.lower() in primary_value.lower():
+        return primary_value
+
+    return primary_value + "\\n\\n" + duplicate_value
+
+
+def merge_profile_roles(primary_roles, duplicate_roles):
+    roles = []
+
+    for role_set in [primary_roles, duplicate_roles]:
+        for role in (role_set or "").replace("|", ",").split(","):
+            role = role.strip()
+            if role and role not in roles:
+                roles.append(role)
+
+    return ", ".join(roles)
+
+
+@app.route("/admin/people/<int:primary_id>/merge/<int:duplicate_id>", methods=["POST"])
+def admin_merge_people(primary_id, duplicate_id):
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login"))
+
+    primary = fetch_one(
+        "SELECT * FROM dancer_profiles WHERE id = :id",
+        {"id": primary_id},
+    )
+
+    duplicate = fetch_one(
+        "SELECT * FROM dancer_profiles WHERE id = :id",
+        {"id": duplicate_id},
+    )
+
+    if not primary or not duplicate:
+        return redirect(url_for("dancers"))
+
+    merge_fields = [
+        "aliases",
+        "team_affiliation",
+        "borough_scene",
+        "era",
+        "style_notes",
+        "signature_moves",
+        "battle_history",
+        "bio",
+        "legacy_notes",
+        "source_url",
+        "csv_source_note",
+    ]
+
+    values = {
+        "id": primary_id,
+        "role_tags": merge_profile_roles(primary.get("role_tags"), duplicate.get("role_tags")),
+    }
+
+    for field in merge_fields:
+        values[field] = merge_profile_text(primary, duplicate, field)
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE dancer_profiles
+                SET aliases = :aliases,
+                    team_affiliation = :team_affiliation,
+                    borough_scene = :borough_scene,
+                    era = :era,
+                    style_notes = :style_notes,
+                    signature_moves = :signature_moves,
+                    battle_history = :battle_history,
+                    bio = :bio,
+                    legacy_notes = :legacy_notes,
+                    source_url = :source_url,
+                    csv_source_note = :csv_source_note,
+                    role_tags = :role_tags
+                WHERE id = :id
+                """
+            ),
+            values,
+        )
+
+        conn.execute(
+            text("DELETE FROM dancer_profiles WHERE id = :duplicate_id"),
+            {"duplicate_id": duplicate_id},
+        )
+
+    return redirect(profile_url(primary))

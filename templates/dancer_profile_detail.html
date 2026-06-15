@@ -39,6 +39,34 @@
         <p><strong>Source:</strong> <a href="{{ profile['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
     {% endif %}
 
+
+    {% if similar_profiles %}
+        <div class="review-details duplicate-warning">
+            <h3>Possible Duplicate Profiles</h3>
+            <p class="small-note">
+                These profiles have similar names. Review before adding more info.
+            </p>
+
+            {% for duplicate in similar_profiles %}
+                <div class="duplicate-row">
+                    <div>
+                        <strong>{{ duplicate["dance_name"] }}</strong>
+                        <p class="small-note">
+                            {{ duplicate["status"] }}
+                            {% if duplicate["role_tags"] %} · {{ duplicate["role_tags"] }}{% endif %}
+                        </p>
+                    </div>
+
+                    {% if session.get("admin_logged_in") %}
+                        <form method="POST" action="/admin/people/{{ profile['id'] }}/merge/{{ duplicate['id'] }}">
+                            <button type="submit" class="button small-button">Merge Into This Profile</button>
+                        </form>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
     {% if profile["bio"] %}
         <div class="review-details">
             <h3>Profile</h3>
@@ -96,40 +124,41 @@
         </div>
     {% endif %}
 
-    <div class="review-details profile-snapshot">
-        <h3>Profile Snapshot</h3>
-
-        <div class="profile-fact-grid">
-            {% if profile["aliases"] %}
-                <p><strong>Aliases:</strong> {{ profile["aliases"] }}</p>
-            {% endif %}
-
-            {% if profile["era"] %}
-                <p><strong>Era:</strong> {{ profile["era"] }}</p>
-            {% endif %}
-
-            {% if profile["style_notes"] %}
-                <p><strong>Style:</strong> {{ profile["style_notes"] }}</p>
-            {% endif %}
-
-            {% if profile["signature_moves"] %}
-                <p><strong>Signature Moves:</strong> {{ profile["signature_moves"] }}</p>
-            {% endif %}
-
-            {% if profile["battle_history"] %}
-                <p><strong>Battle / Moment History:</strong> {{ profile["battle_history"] }}</p>
-            {% endif %}
-
-            {% if profile["legacy_notes"] %}
-                <p><strong>Legacy Notes:</strong> {{ profile["legacy_notes"] }}</p>
-            {% endif %}
-        </div>
-    </div>
 
     <div class="review-details">
         <h3>Flowers</h3>
 
-        {% if flowers %}
+    
+    {% if ledger_mentions %}
+        <div class="review-details ledger-history-block">
+            <h3>Created From / Ledger History</h3>
+
+            <div class="compact-history-list">
+                {% for item in ledger_mentions %}
+                    <div class="history-row">
+                        <div>
+                            <strong>{{ item["title"] }}</strong>
+                            <p class="small-note">
+                                {{ item["submission_type"]|replace("_", " ")|title }}
+                                {% if item["created_at"] %} · {{ item["created_at"]|ledger_date }}{% endif %}
+                                {% if item["review_status"] %} · {{ item["review_status"] }}{% endif %}
+                            </p>
+
+                            {% if item.get("mention_labels") %}
+                                <p class="small-note">Mentioned in: {{ item["mention_labels"]|join(", ") }}</p>
+                            {% endif %}
+                        </div>
+
+                        {% if item.get("public_url") %}
+                            <a class="button small-button" href="{{ item['public_url'] }}">View</a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if flowers %}
             {% for flower in flowers %}
                 <blockquote class="flower-quote">
                     {{ flower["flower_text"] }}

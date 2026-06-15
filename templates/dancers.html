@@ -90,7 +90,22 @@
                         <p><strong>Scene:</strong> {{ dancer["borough_scene"] }}</p>
                     {% endif %}
 
-                    {% if dancer["bio"] %}
+                    <div class="profile-card-facts">
+                    {% if dancer["team_affiliation"] %}
+                        <p><strong>Team:</strong> {{ dancer["team_affiliation"] }}</p>
+                    {% endif %}
+                    {% if dancer["borough_scene"] %}
+                        <p><strong>Location:</strong> {{ dancer["borough_scene"] }}</p>
+                    {% endif %}
+                    {% if dancer.get("era") %}
+                        <p><strong>Era:</strong> {{ dancer["era"] }}</p>
+                    {% endif %}
+                    {% if dancer.get("battle_history") %}
+                        <p><strong>Recent Battle / Moment:</strong> {{ dancer["battle_history"][:180] }}{% if dancer["battle_history"]|length > 180 %}...{% endif %}</p>
+                    {% endif %}
+                </div>
+
+                {% if dancer["bio"] %}
                         <p>{{ dancer["bio"] }}</p>
                     {% endif %}
 
