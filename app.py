@@ -1597,7 +1597,12 @@ def media_embed_url(url):
     if platform == "YouTube":
         return youtube_embed_url(url)
     if platform == "SoundCloud":
-        return "https://w.soundcloud.com/player/?url=" + quote(url or "", safe="")
+        return (
+            "https://w.soundcloud.com/player/?url="
+            + quote(url or "", safe="")
+            + "&auto_play=false&hide_related=true&show_comments=false"
+            + "&show_user=true&show_reposts=false&show_teaser=false&visual=false"
+        )
     if platform == "Spotify":
         return spotify_embed_url(url)
     if platform == "Apple Music":
