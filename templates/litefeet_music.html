@@ -59,11 +59,29 @@
                         {% if item["description"] %}
                             <p>{{ item["description"] }}</p>
                         {% endif %}
+
+                        {% if item.get("embed_url") %}
+                            <div class="music-embed-box">
+                                <iframe
+                                    class="music-embed-frame"
+                                    src="{{ item['embed_url'] }}"
+                                    loading="lazy"
+                                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                                    allowfullscreen>
+                                </iframe>
+                            </div>
+                        {% endif %}
                     </div>
 
                     <div class="music-card-actions">
                         {% if item["url"] %}
-                            <a href="{{ item['url'] }}" target="_blank" rel="noopener" class="button small-button">Listen</a>
+                            <a href="{{ item['url'] }}" target="_blank" rel="noopener" class="button small-button">
+                                {% if item["platform"] == "Untitled" %}
+                                    Open on Untitled
+                                {% else %}
+                                    Listen
+                                {% endif %}
+                            </a>
                         {% else %}
                             <span class="button small-button disabled-button">Link Needed</span>
                         {% endif %}

@@ -1532,6 +1532,8 @@ def detect_media_platform(url):
         return "Spotify"
     if "music.apple.com" in value or "itunes.apple.com" in value:
         return "Apple Music"
+    if "untitled.stream" in value:
+        return "Untitled"
 
     return "Link"
 
@@ -1622,6 +1624,8 @@ def admin_media():
         release_date = request.form.get("release_date", "").strip()
         event_name = request.form.get("event_name", "").strip()
         description = request.form.get("description", "").strip()
+        embed_code = request.form.get("embed_code", "").strip()
+        embed_url = extract_embed_src(embed_code)
         status = request.form.get("status", "Published").strip() or "Published"
         platform = detect_media_platform(url)
 
@@ -3612,6 +3616,39 @@ def toggle_anonymous_mode():
 
 
 
+
+
+def extract_embed_src(value):
+    value = (value or "").strip()
+
+    if not value:
+        return ""
+
+    # If they paste a full iframe embed code, keep only the iframe src.
+    match = re.search(r'''src=["']([^"']+)["']''', value)
+    if match:
+        return match.group(1).strip()
+
+    # If they paste a normal URL, keep the URL.
+    if value.startswith("http://") or value.startswith("https://"):
+        return value
+
+    return ""
+
+
+def ensure_media_embed_column():
+    ensure_media_items_table()
+
+    with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            conn.execute(text("ALTER TABLE media_items ADD COLUMN IF NOT EXISTS embed_url TEXT"))
+        else:
+            cols = conn.execute(text("PRAGMA table_info(media_items)")).fetchall()
+            existing = {col[1] for col in cols}
+            if "embed_url" not in existing:
+                conn.execute(text("ALTER TABLE media_items ADD COLUMN embed_url TEXT"))
+
+
 def normalize_music_text(value):
     value = (value or "").lower().strip()
     value = value.replace("&", "and")
@@ -3741,6 +3778,7 @@ def submit_music_release():
 
     ensure_media_items_table()
     ensure_media_release_key_column()
+    ensure_media_embed_column()
 
     error = ""
 
@@ -3804,6 +3842,7 @@ def submit_music_release():
                             description,
                             status,
                             canonical_release_key,
+                            embed_url,
                             created_at
                         )
                         VALUES (
@@ -3817,6 +3856,7 @@ def submit_music_release():
                             :description,
                             'Published',
                             :canonical_release_key,
+                            :embed_url,
                             :created_at
                         )
                         """
@@ -3829,6 +3869,7 @@ def submit_music_release():
                         "release_date": release_date,
                         "description": description,
                         "canonical_release_key": canonical_release_key,
+                        "embed_url": embed_url,
                         "created_at": datetime.now().isoformat(timespec="seconds"),
                     },
                 )
