@@ -872,3 +872,124 @@ h2 {
         min-height: auto;
     }
 }
+
+/* Event detail redesign */
+.event-detail-topline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.event-summary-card {
+    border: 1px solid rgba(226, 177, 58, 0.35);
+    background: rgba(255, 255, 255, 0.035);
+    border-radius: 18px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.event-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+.event-summary-grid div {
+    border-left: 2px solid rgba(226, 177, 58, 0.55);
+    padding-left: 1rem;
+}
+
+.detail-label {
+    display: block;
+    color: #e2b13a;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+}
+
+.event-stack {
+    display: grid;
+    gap: 1rem;
+}
+
+.event-info-block {
+    border: 1px solid rgba(226, 177, 58, 0.25);
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: 16px;
+    padding: 1.25rem;
+}
+
+.event-info-block h2 {
+    margin-top: 0;
+}
+
+.event-result-list {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.event-result-list li {
+    margin: 0.45rem 0;
+}
+
+.muted-block {
+    opacity: 0.88;
+}
+
+/* Admin edit form */
+.admin-edit-form {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.admin-edit-form label {
+    display: grid;
+    gap: 0.45rem;
+    font-weight: 700;
+    color: #e2b13a;
+}
+
+.admin-edit-form input,
+.admin-edit-form textarea,
+.admin-edit-form select,
+.admin-field-row input,
+.admin-field-row textarea {
+    width: 100%;
+    border: 1px solid rgba(226, 177, 58, 0.35);
+    border-radius: 12px;
+    background: #050505;
+    color: #f5f0e8;
+    padding: 0.85rem 1rem;
+    font: inherit;
+}
+
+.admin-field-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.admin-field-row {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 1rem;
+    align-items: start;
+}
+
+@media (max-width: 800px) {
+    .event-detail-topline {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .event-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-field-row {
+        grid-template-columns: 1fr;
+    }
+}

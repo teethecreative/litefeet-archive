@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ event["title"] }} | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <p>
+        <a href="/events/{{ event['id'] }}" class="small-note">← Back to Event</a>
+    </p>
+
+    <h1>Edit Event</h1>
+    <p>Update the public event page fields and verification status.</p>
+
+    <form method="POST" class="form-card admin-edit-form">
+        <label>
+            Event Title
+            <input type="text" name="title" value="{{ event['title'] }}" required>
+        </label>
+
+        <label>
+            Related To
+            <input type="text" name="related_to" value="{{ event['related_to'] or '' }}">
+        </label>
+
+        <label>
+            Source URL
+            <input type="url" name="source_url" value="{{ event['source_url'] or '' }}">
+        </label>
+
+        <label>
+            Verification Status
+            <select name="review_status">
+                {% for status in allowed_statuses %}
+                    <option value="{{ status }}" {% if event["review_status"] == status %}selected{% endif %}>
+                        {{ status }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <h2>Event Fields</h2>
+        <p class="small-note">
+            Edit labels and values here. These fields control what appears on the public event detail page.
+        </p>
+
+        <div class="admin-field-list">
+            {% for item in details %}
+                <div class="admin-field-row">
+                    <input type="text" name="detail_label" value="{{ item['label'] }}" placeholder="Field label">
+                    <textarea name="detail_value" rows="3" placeholder="Field value">{{ item['value'] }}</textarea>
+                </div>
+            {% endfor %}
+
+            {% for i in range(6) %}
+                <div class="admin-field-row">
+                    <input type="text" name="detail_label" placeholder="New field label">
+                    <textarea name="detail_value" rows="3" placeholder="New field value"></textarea>
+                </div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="button primary">Save Event</button>
+    </form>
+</section>
+{% endblock %}

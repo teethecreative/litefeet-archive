@@ -1228,16 +1228,22 @@ def people_hub():
 
 @app.route("/events/<int:event_id>")
 def event_detail(event_id):
+    public_status_filter = ""
+    params = {"event_id": event_id}
+
+    if not session.get("admin_logged_in"):
+        public_status_filter = "AND review_status IN ('Verified', 'Community Supported')"
+
     events = fetch_all(
-        """
+        f"""
         SELECT *
         FROM submissions
         WHERE id = :event_id
         AND submission_type = 'event'
-        AND review_status IN ('Verified', 'Community Supported')
+        {public_status_filter}
         LIMIT 1
         """,
-        {"event_id": event_id},
+        params,
     )
 
     if not events:
@@ -1245,6 +1251,84 @@ def event_detail(event_id):
 
     return render_template("event_detail.html", event=events[0])
 
+
+@app.route("/admin/events/<int:event_id>/edit", methods=["GET", "POST"])
+def admin_event_edit(event_id):
+    allowed_statuses = [
+        "Pending Review",
+        "Needs Verification",
+        "Community Supported",
+        "Verified",
+        "Disputed",
+        "Rejected",
+    ]
+
+    events = fetch_all(
+        """
+        SELECT *
+        FROM submissions
+        WHERE id = :event_id
+        AND submission_type = 'event'
+        LIMIT 1
+        """,
+        {"event_id": event_id},
+    )
+
+    if not events:
+        return redirect(url_for("admin_submissions"))
+
+    event = events[0]
+
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        related_to = request.form.get("related_to", "").strip()
+        source_url = request.form.get("source_url", "").strip()
+        review_status = request.form.get("review_status", "").strip()
+
+        if review_status not in allowed_statuses:
+            review_status = event["review_status"]
+
+        labels = request.form.getlist("detail_label")
+        values = request.form.getlist("detail_value")
+
+        details = []
+        for label, value in zip(labels, values):
+            label = label.strip()
+            value = value.strip()
+
+            if label or value:
+                details.append({"label": label, "value": value})
+
+        execute_query(
+            """
+            UPDATE submissions
+            SET title = :title,
+                related_to = :related_to,
+                source_url = :source_url,
+                review_status = :review_status,
+                details_json = :details_json
+            WHERE id = :event_id
+            """,
+            {
+                "title": title or event["title"],
+                "related_to": related_to,
+                "source_url": source_url,
+                "review_status": review_status,
+                "details_json": json.dumps(details, ensure_ascii=False),
+                "event_id": event_id,
+            },
+        )
+
+        return redirect(url_for("event_detail", event_id=event_id))
+
+    details = from_json_filter(event["details_json"])
+
+    return render_template(
+        "admin_event_edit.html",
+        event=event,
+        details=details,
+        allowed_statuses=allowed_statuses,
+    )
 
 @app.route("/dancers")
 @app.route("/people/dancers")
