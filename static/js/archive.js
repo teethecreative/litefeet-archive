@@ -310,3 +310,69 @@ function initGlobalMusicPlayerBehavior() {
 }
 
 document.addEventListener("DOMContentLoaded", initGlobalMusicPlayerBehavior);
+
+function initMusicPlayCounting() {
+    const playControls = Array.from(document.querySelectorAll(".ranking-play-control[data-play-item-id]"));
+    const recentPlayKeys = new Map();
+
+    if (!playControls.length) return;
+
+    function updatePlayDisplays(itemId, playCount) {
+        document.querySelectorAll(`.ranking-play-control[data-play-item-id="${itemId}"]`).forEach((control) => {
+            const display = control.querySelector("[data-play-count-display]");
+            if (display) display.textContent = playCount;
+            control.dataset.playCount = playCount;
+        });
+
+        document.querySelectorAll(`[data-play-count-inline="${itemId}"]`).forEach((display) => {
+            display.textContent = playCount;
+        });
+    }
+
+    function shouldCountPlay(itemId) {
+        const now = Date.now();
+        const last = recentPlayKeys.get(itemId) || 0;
+
+        if (now - last < 30000) {
+            return false;
+        }
+
+        recentPlayKeys.set(itemId, now);
+        return true;
+    }
+
+    function recordPlay(control) {
+        const itemId = control.dataset.playItemId;
+        if (!itemId || !shouldCountPlay(itemId)) return;
+
+        fetch(`/music/${itemId}/play`, {
+            method: "POST",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data && data.ok) {
+                    updatePlayDisplays(itemId, data.play_count);
+                }
+            })
+            .catch(() => {});
+    }
+
+    playControls.forEach((control) => {
+        control.addEventListener("toggle", () => {
+            if (control.open) {
+                recordPlay(control);
+            }
+        });
+
+        control.querySelectorAll("audio").forEach((audio) => {
+            audio.addEventListener("play", () => {
+                recordPlay(control);
+            });
+        });
+    });
+}
+
+document.addEventListener("DOMContentLoaded", initMusicPlayCounting);

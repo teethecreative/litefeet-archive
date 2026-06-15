@@ -3995,6 +3995,26 @@ def music_voter_key():
 
 
 
+
+
+def ensure_music_play_count_columns():
+    ensure_media_items_table()
+
+    with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            conn.execute(text("ALTER TABLE media_items ADD COLUMN IF NOT EXISTS play_count INTEGER DEFAULT 0"))
+            conn.execute(text("ALTER TABLE media_items ADD COLUMN IF NOT EXISTS last_played_at TEXT"))
+        else:
+            cols = conn.execute(text("PRAGMA table_info(media_items)")).fetchall()
+            existing = {col[1] for col in cols}
+
+            if "play_count" not in existing:
+                conn.execute(text("ALTER TABLE media_items ADD COLUMN play_count INTEGER DEFAULT 0"))
+
+            if "last_played_at" not in existing:
+                conn.execute(text("ALTER TABLE media_items ADD COLUMN last_played_at TEXT"))
+
+
 def ensure_music_release_status_columns():
     ensure_media_items_table()
     ensure_music_projects_table()
@@ -4585,6 +4605,50 @@ def litefeet_music():
         period=period,
         voter_feedback=voter_feedback,
     )
+
+
+
+
+@app.route("/music/<int:item_id>/play", methods=["POST"])
+def music_play_count(item_id):
+    ensure_music_play_count_columns()
+
+    now_value = datetime.now().isoformat(timespec="seconds")
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                UPDATE media_items
+                SET play_count = COALESCE(play_count, 0) + 1,
+                    last_played_at = :last_played_at
+                WHERE id = :id
+                  AND media_type = 'music_release'
+                """
+            ),
+            {
+                "id": item_id,
+                "last_played_at": now_value,
+            },
+        )
+
+        row = conn.execute(
+            text(
+                """
+                SELECT play_count
+                FROM media_items
+                WHERE id = :id
+                  AND media_type = 'music_release'
+                LIMIT 1
+                """
+            ),
+            {"id": item_id},
+        ).mappings().first()
+
+    return jsonify({
+        "ok": True,
+        "play_count": row["play_count"] if row else 0,
+    })
 
 
 @app.route("/music/<int:item_id>/feedback", methods=["POST"])
