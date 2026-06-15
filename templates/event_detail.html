@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event["title"] }} | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <p>
+        <a href="/events" class="small-note">← Back to Events</a>
+    </p>
+
+    <h1>{{ event["title"] }}</h1>
+
+    <div class="submission-meta">
+        <span>{{ event["review_status"] }}</span>
+        <span>{{ event["submission_type"] }}</span>
+    </div>
+
+    {% set details = event["details_json"] | from_json %}
+
+    <section class="event-section">
+        <h2>Event Details</h2>
+
+        <div class="detail-list">
+            {% for item in details %}
+                <div class="detail-row">
+                    <strong>{{ item["label"] }}</strong>
+                    <p>{{ item["value"] }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% set event_results = event["details_json"] | detail_value("Event Results") %}
+    {% if event_results %}
+        <section class="event-section">
+            <h2>Results</h2>
+            <div class="empty-state compact-empty">
+                {% for result in event_results.split("|") %}
+                    <p>{{ result.strip() }}</p>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+
+    {% set needs_confirmation = event["details_json"] | detail_value("Needs Confirmation") %}
+    {% if needs_confirmation %}
+        <section class="event-section">
+            <h2>Needs Confirmation</h2>
+            <div class="empty-state compact-empty">
+                <p>{{ needs_confirmation }}</p>
+            </div>
+        </section>
+    {% endif %}
+
+    {% if event["source_url"] %}
+        <p>
+            <a href="{{ event['source_url'] }}" target="_blank" rel="noopener" class="button secondary">
+                View Source
+            </a>
+        </p>
+    {% endif %}
+</section>
+{% endblock %}
