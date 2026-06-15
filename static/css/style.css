@@ -2334,3 +2334,24 @@ main {
     margin-top: 1rem;
 }
 
+
+/* Music submit pull-first form */
+.music-pull-form {
+    margin-bottom: 1.5rem;
+    border-color: rgba(226, 177, 58, 0.32);
+}
+
+.music-pull-form .button {
+    width: fit-content;
+}
+
+.media-admin-form + .media-admin-form {
+    margin-top: 1.5rem;
+}
+
+.media-admin-form .small-note {
+    color: rgba(245, 240, 232, 0.58);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+

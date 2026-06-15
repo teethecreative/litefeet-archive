@@ -4122,6 +4122,39 @@ def submit_music_release():
 
 
 
+
+
+@app.route("/litefeet-music/projects/preview", methods=["POST"])
+def preview_music_project():
+    ensure_music_projects_table()
+
+    url = request.form.get("url", "").strip()
+    embed_code = request.form.get("embed_code", "").strip()
+    embed_url = extract_embed_src(embed_code)
+    source_url = url or embed_url
+
+    if not source_url:
+        return redirect(url_for("submit_music_project", error="source_required"))
+
+    metadata = fetch_music_link_metadata(source_url)
+    pulled_tracks = metadata.get("tracks", []) or []
+
+    return render_template(
+        "submit_music_project.html",
+        error="",
+        preview_mode=True,
+        pulled_from_link=True,
+        title=metadata.get("title", ""),
+        artist_or_creator="",
+        url=source_url,
+        embed_code=embed_code,
+        release_date="",
+        description=metadata.get("description", ""),
+        tracklist="\n".join(pulled_tracks),
+        platform=metadata.get("platform", ""),
+    )
+
+
 @app.route("/litefeet-music/projects/submit", methods=["GET", "POST"])
 def submit_music_project():
     user = current_user()
@@ -4157,10 +4190,8 @@ def submit_music_project():
         if not description and metadata.get("description"):
             description = metadata.get("description", "")
 
-        if not title or not artist_or_creator or not release_date:
-            error = "Project title, producer/artist, and release date are required."
-        elif not tracks and not source_url:
-            error = "Add a project link, embed link, or at least one track in the tracklist."
+        if not source_url and not title and not tracks:
+            error = "Add a music link, embed link, title, or tracklist so the Ledger has something to save."
         else:
             try:
                 parsed_release_date = datetime.strptime(release_date, "%Y-%m-%d").date()

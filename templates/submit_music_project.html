@@ -7,8 +7,15 @@
     <p class="eyebrow">LiteFeet Music</p>
     <h1>Submit Music</h1>
     <p>
-        Submit a single release, beat pack, album, playlist, EP, or project. Drop a link or embed, and add a tracklist if the site cannot pull it automatically.
+        Drop a music link or embed first. The Ledger will try to pull the title, platform, description, and tracklist.
+        Anything it cannot read can be filled in after.
     </p>
+
+    {% if request.args.get("error") == "source_required" %}
+        <div class="empty-state compact-empty">
+            <h3>Add a link or embed first.</h3>
+        </div>
+    {% endif %}
 
     {% if error %}
         <div class="empty-state compact-empty">
@@ -16,43 +23,77 @@
         </div>
     {% endif %}
 
-    <form method="POST" class="form-card media-admin-form">
+    <form method="POST" action="/litefeet-music/projects/preview" class="form-card media-admin-form music-pull-form">
         <label>
-            Release / Project Title
-            <input type="text" name="title" placeholder="Song, project, pack, album, or playlist title" required>
+            Music Link
+            <input
+                type="url"
+                name="url"
+                value="{{ url or '' }}"
+                placeholder="Paste Untitled, SoundCloud, Spotify, Apple Music, YouTube, etc.">
         </label>
 
         <label>
-            Producer / Artist
-            <input type="text" name="artist_or_creator" placeholder="Producer, artist, or collective name" required>
+            Embed Code or Embed Link
+            <textarea name="embed_code" placeholder="Paste an embed code or embed link here">{{ embed_code or '' }}</textarea>
+        </label>
+
+        <button type="submit" class="button primary">Pull Info</button>
+    </form>
+
+    <form method="POST" class="form-card media-admin-form">
+        {% if pulled_from_link %}
+            <div class="empty-state compact-empty">
+                <h3>Info pulled from {{ platform or "the link" }}.</h3>
+                <p>Review it, fix anything missing, then submit.</p>
+            </div>
+        {% endif %}
+
+        <label>
+            Release / Project Title <span class="small-note">(optional)</span>
+            <input
+                type="text"
+                name="title"
+                value="{{ title or '' }}"
+                placeholder="Song, project, pack, album, or playlist title">
+        </label>
+
+        <label>
+            Producer / Artist <span class="small-note">(optional)</span>
+            <input
+                type="text"
+                name="artist_or_creator"
+                value="{{ artist_or_creator or '' }}"
+                placeholder="Producer, artist, or collective name">
         </label>
 
         <label>
             Music Link <span class="small-note">(optional)</span>
-            <input type="url" name="url" placeholder="Untitled, SoundCloud, Spotify, Apple Music, YouTube, etc.">
+            <input
+                type="url"
+                name="url"
+                value="{{ url or '' }}"
+                placeholder="Source link">
         </label>
 
         <label>
             Embed Code or Embed Link <span class="small-note">(optional)</span>
-            <textarea name="embed_code" placeholder="Paste an embed code or embed link here. The site will save the source link, not display the player by default."></textarea>
+            <textarea name="embed_code" placeholder="Optional source embed">{{ embed_code or '' }}</textarea>
         </label>
 
         <label>
-            Release Date
-            <input type="date" name="release_date" required>
+            Release Date <span class="small-note">(optional)</span>
+            <input type="date" name="release_date" value="{{ release_date or '' }}">
         </label>
 
         <label>
-            Tracklist <span class="small-note">(optional if the site can pull it from the link)</span>
-            <textarea name="tracklist" placeholder="Paste tracks here, one per line:
-1. Track Title
-2. Track Title
-3. Track Title"></textarea>
+            Tracklist <span class="small-note">(optional)</span>
+            <textarea name="tracklist" placeholder="One track per line">{{ tracklist or '' }}</textarea>
         </label>
 
         <label>
-            Notes
-            <textarea name="description" placeholder="Optional project notes, context, credits, etc."></textarea>
+            Notes <span class="small-note">(optional)</span>
+            <textarea name="description" placeholder="Optional project notes, context, credits, etc.">{{ description or '' }}</textarea>
         </label>
 
         <button type="submit" class="button primary">Submit Music</button>
