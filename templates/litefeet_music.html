@@ -49,7 +49,7 @@
                         {% endif %}
 
                         <p class="small-note">
-                            Rating: {{ "%.1f"|format(item["average_rating"] or 0) }}/5
+                            Rating: {{ "%.1f"|format(item["average_rating"] or 0) }}/10
                             · Feedback: {{ item["feedback_count"] or 0 }}
                             · Lab: {{ item["lab_count"] or 0 }}
                             · Video: {{ item["video_count"] or 0 }}
@@ -76,11 +76,11 @@
                                     Rating
                                     <select name="rating">
                                         <option value="">No rating</option>
-                                        <option value="5">5 - Crazy</option>
-                                        <option value="4">4 - Fire</option>
-                                        <option value="3">3 - Solid</option>
-                                        <option value="2">2 - Needs work</option>
-                                        <option value="1">1 - Not for me</option>
+                                        <option value="5">10 - Crazy</option>
+                                        <option value="4">8 - Fire</option>
+                                        <option value="3">6 - Solid</option>
+                                        <option value="2">4 - Needs work</option>
+                                        <option value="1">2 - Not for me</option>
                                     </select>
                                 </label>
 
@@ -155,11 +155,48 @@
                         </p>
                     </div>
 
-                    <div class="ranking-stats">
-                        <span>{{ "%.1f"|format(item["average_rating"] or 0) }}/5</span>
-                        <span>Lab {{ item["lab_count"] or 0 }}</span>
-                        <span>Video {{ item["video_count"] or 0 }}</span>
-                        <span>Battle {{ item["battle_count"] or 0 }}</span>
+                    <div class="ranking-stats ranking-actions">
+                        {% set my_vote = voter_feedback.get(item["id"]|string) if voter_feedback else none %}
+
+                        <details class="rating-tap-control">
+                            <summary class="ranking-action-pill {% if my_vote and my_vote.get('rating') %}voted-pill{% endif %}">
+                                {{ "%.1f"|format(item["average_rating"] or 0) }}/10
+                            </summary>
+
+                            <form method="POST" action="/music/{{ item['id'] }}/feedback" class="rating-popover">
+                                <input type="hidden" name="action" value="rating">
+                                <label>
+                                    Your rating
+                                    <select name="rating" onchange="this.form.submit()">
+                                        <option value="">Choose</option>
+                                        {% for score in range(10, 0, -1) %}
+                                            <option value="{{ score }}" {% if my_vote and my_vote.get('rating') == score %}selected{% endif %}>{{ score }}/10</option>
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                            </form>
+                        </details>
+
+                        <form method="POST" action="/music/{{ item['id'] }}/feedback">
+                            <input type="hidden" name="action" value="lab">
+                            <button type="submit" class="ranking-action-pill {% if my_vote and my_vote.get('would_lab') %}voted-pill{% endif %}">
+                                Lab {{ item["lab_count"] or 0 }}
+                            </button>
+                        </form>
+
+                        <form method="POST" action="/music/{{ item['id'] }}/feedback">
+                            <input type="hidden" name="action" value="video">
+                            <button type="submit" class="ranking-action-pill {% if my_vote and my_vote.get('would_shoot_video') %}voted-pill{% endif %}">
+                                Video {{ item["video_count"] or 0 }}
+                            </button>
+                        </form>
+
+                        <form method="POST" action="/music/{{ item['id'] }}/feedback">
+                            <input type="hidden" name="action" value="battle">
+                            <button type="submit" class="ranking-action-pill {% if my_vote and my_vote.get('would_battle') %}voted-pill{% endif %}">
+                                Battle {{ item["battle_count"] or 0 }}
+                            </button>
+                        </form>
                     </div>
                 </article>
             {% endfor %}

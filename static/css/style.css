@@ -2161,3 +2161,81 @@ main {
     }
 }
 
+
+/* Music ranking tap actions */
+.ranking-actions {
+    align-items: center;
+}
+
+.ranking-actions form {
+    margin: 0;
+}
+
+.ranking-action-pill,
+.rating-tap-control summary {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(226, 177, 58, 0.28);
+    border-radius: 999px;
+    color: #f5f0e8;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 0.55rem 0.75rem;
+    transition: 0.18s ease;
+}
+
+.ranking-action-pill:hover,
+.rating-tap-control summary:hover {
+    background: rgba(226, 177, 58, 0.12);
+    border-color: rgba(226, 177, 58, 0.55);
+    color: #f0c84b;
+}
+
+.voted-pill {
+    background: rgba(226, 177, 58, 0.22) !important;
+    border-color: rgba(226, 177, 58, 0.75) !important;
+    color: #ffd96a !important;
+}
+
+.rating-tap-control {
+    position: relative;
+}
+
+.rating-popover {
+    background: #101010;
+    border: 1px solid rgba(226, 177, 58, 0.35);
+    border-radius: 16px;
+    margin-top: 0.6rem;
+    padding: 0.85rem;
+    position: absolute;
+    right: 0;
+    width: 180px;
+    z-index: 20;
+}
+
+.rating-popover label {
+    color: #f0c84b;
+    display: grid;
+    font-size: 0.82rem;
+    font-weight: 900;
+    gap: 0.45rem;
+}
+
+.rating-popover select {
+    background: #050505;
+    border: 1px solid rgba(226, 177, 58, 0.35);
+    border-radius: 12px;
+    color: #f5f0e8;
+    padding: 0.55rem;
+}
+
+@media (max-width: 800px) {
+    .rating-popover {
+        left: 0;
+        right: auto;
+    }
+}
+

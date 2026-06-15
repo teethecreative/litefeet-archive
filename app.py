@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import secrets
 from urllib.parse import urlparse, parse_qs, quote
 from datetime import datetime, timedelta
 
@@ -3639,6 +3640,8 @@ def ensure_media_release_key_column():
                 conn.execute(text("ALTER TABLE media_items ADD COLUMN canonical_release_key TEXT"))
 
 
+
+
 def ensure_music_feedback_table():
     with engine.begin() as conn:
         if engine.dialect.name == "postgresql":
@@ -3654,11 +3657,16 @@ def ensure_music_feedback_table():
                         would_battle INTEGER DEFAULT 0,
                         feedback TEXT,
                         submitter_name TEXT,
+                        voter_key TEXT,
                         created_at TEXT
                     )
                     """
                 )
             )
+            conn.execute(text("ALTER TABLE music_feedback ADD COLUMN IF NOT EXISTS voter_key TEXT"))
+            conn.execute(text("ALTER TABLE music_feedback ADD COLUMN IF NOT EXISTS would_lab INTEGER DEFAULT 0"))
+            conn.execute(text("ALTER TABLE music_feedback ADD COLUMN IF NOT EXISTS would_shoot_video INTEGER DEFAULT 0"))
+            conn.execute(text("ALTER TABLE music_feedback ADD COLUMN IF NOT EXISTS would_battle INTEGER DEFAULT 0"))
         else:
             conn.execute(
                 text(
@@ -3672,11 +3680,35 @@ def ensure_music_feedback_table():
                         would_battle INTEGER DEFAULT 0,
                         feedback TEXT,
                         submitter_name TEXT,
+                        voter_key TEXT,
                         created_at TEXT
                     )
                     """
                 )
             )
+            cols = conn.execute(text("PRAGMA table_info(music_feedback)")).fetchall()
+            existing = {col[1] for col in cols}
+
+            if "voter_key" not in existing:
+                conn.execute(text("ALTER TABLE music_feedback ADD COLUMN voter_key TEXT"))
+            if "would_lab" not in existing:
+                conn.execute(text("ALTER TABLE music_feedback ADD COLUMN would_lab INTEGER DEFAULT 0"))
+            if "would_shoot_video" not in existing:
+                conn.execute(text("ALTER TABLE music_feedback ADD COLUMN would_shoot_video INTEGER DEFAULT 0"))
+            if "would_battle" not in existing:
+                conn.execute(text("ALTER TABLE music_feedback ADD COLUMN would_battle INTEGER DEFAULT 0"))
+
+
+def music_voter_key():
+    user = current_user()
+
+    if user:
+        return "user:" + str(user.get("id") or user.get("email") or user.get("display_name"))
+
+    if not session.get("music_voter_key"):
+        session["music_voter_key"] = "session:" + secrets.token_urlsafe(16)
+
+    return session["music_voter_key"]
 
 
 def music_period_cutoff(period):
@@ -3814,6 +3846,7 @@ def litefeet_music():
     period = request.args.get("period", "30")
     cutoff_date = music_period_cutoff(period)
     cutoff = cutoff_date.date().isoformat() if cutoff_date else ""
+    voter_key = music_voter_key()
 
     releases = fetch_all(
         """
@@ -3868,11 +3901,31 @@ def litefeet_music():
         {"radar_cutoff": radar_cutoff},
     )
 
+    voter_feedback_rows = fetch_all(
+        """
+        SELECT media_item_id, rating, would_lab, would_shoot_video, would_battle
+        FROM music_feedback
+        WHERE voter_key = :voter_key
+        """,
+        {"voter_key": voter_key},
+    )
+
+    voter_feedback = {
+        str(row["media_item_id"]): {
+            "rating": row.get("rating"),
+            "would_lab": row.get("would_lab"),
+            "would_shoot_video": row.get("would_shoot_video"),
+            "would_battle": row.get("would_battle"),
+        }
+        for row in voter_feedback_rows
+    }
+
     return render_template(
         "litefeet_music.html",
         releases=releases,
         release_radar=release_radar,
         period=period,
+        voter_feedback=voter_feedback,
     )
 
 
@@ -3880,19 +3933,24 @@ def litefeet_music():
 def music_feedback_submit(item_id):
     ensure_music_feedback_table()
 
-    rating_raw = request.form.get("rating", "").strip()
+    voter_key = music_voter_key()
+    action = request.form.get("action", "").strip()
     feedback = request.form.get("feedback", "").strip()
 
-    try:
-        rating = int(rating_raw)
-    except ValueError:
-        rating = None
+    rating = None
+    rating_raw = request.form.get("rating", "").strip()
 
-    if rating is not None:
-        if rating < 1:
+    if rating_raw:
+        try:
+            rating = int(rating_raw)
+        except ValueError:
             rating = None
-        elif rating > 5:
-            rating = 5
+
+        if rating is not None:
+            if rating < 1:
+                rating = None
+            elif rating > 10:
+                rating = 10
 
     user = current_user()
     submitter_name = "Anonymous" if session.get("anonymous_mode") else ""
@@ -3903,43 +3961,103 @@ def music_feedback_submit(item_id):
     if not submitter_name:
         submitter_name = request.form.get("submitter_name", "").strip() or "Community Member"
 
-    with engine.begin() as conn:
-        conn.execute(
-            text(
-                """
-                INSERT INTO music_feedback (
-                    media_item_id,
-                    rating,
-                    would_lab,
-                    would_shoot_video,
-                    would_battle,
-                    feedback,
-                    submitter_name,
-                    created_at
-                )
-                VALUES (
-                    :media_item_id,
-                    :rating,
-                    :would_lab,
-                    :would_shoot_video,
-                    :would_battle,
-                    :feedback,
-                    :submitter_name,
-                    :created_at
-                )
-                """
-            ),
-            {
-                "media_item_id": item_id,
-                "rating": rating,
-                "would_lab": 1 if request.form.get("would_lab") else 0,
-                "would_shoot_video": 1 if request.form.get("would_shoot_video") else 0,
-                "would_battle": 1 if request.form.get("would_battle") else 0,
-                "feedback": feedback,
-                "submitter_name": submitter_name,
-                "created_at": datetime.now().isoformat(timespec="seconds"),
-            },
-        )
+    existing_rows = fetch_all(
+        """
+        SELECT *
+        FROM music_feedback
+        WHERE media_item_id = :media_item_id
+          AND voter_key = :voter_key
+        LIMIT 1
+        """,
+        {"media_item_id": item_id, "voter_key": voter_key},
+    )
+
+    existing = existing_rows[0] if existing_rows else None
+
+    current_rating = existing.get("rating") if existing else None
+    current_lab = int(existing.get("would_lab") or 0) if existing else 0
+    current_video = int(existing.get("would_shoot_video") or 0) if existing else 0
+    current_battle = int(existing.get("would_battle") or 0) if existing else 0
+    current_feedback = existing.get("feedback") if existing else ""
+
+    if action == "lab":
+        current_lab = 0 if current_lab else 1
+    elif action == "video":
+        current_video = 0 if current_video else 1
+    elif action == "battle":
+        current_battle = 0 if current_battle else 1
+    elif action == "rating":
+        current_rating = rating
+    elif action == "feedback":
+        current_feedback = feedback
+
+    if existing:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    UPDATE music_feedback
+                    SET rating = :rating,
+                        would_lab = :would_lab,
+                        would_shoot_video = :would_shoot_video,
+                        would_battle = :would_battle,
+                        feedback = :feedback,
+                        submitter_name = :submitter_name
+                    WHERE id = :id
+                    """
+                ),
+                {
+                    "id": existing["id"],
+                    "rating": current_rating,
+                    "would_lab": current_lab,
+                    "would_shoot_video": current_video,
+                    "would_battle": current_battle,
+                    "feedback": current_feedback,
+                    "submitter_name": submitter_name,
+                },
+            )
+    else:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO music_feedback (
+                        media_item_id,
+                        rating,
+                        would_lab,
+                        would_shoot_video,
+                        would_battle,
+                        feedback,
+                        submitter_name,
+                        voter_key,
+                        created_at
+                    )
+                    VALUES (
+                        :media_item_id,
+                        :rating,
+                        :would_lab,
+                        :would_shoot_video,
+                        :would_battle,
+                        :feedback,
+                        :submitter_name,
+                        :voter_key,
+                        :created_at
+                    )
+                    """
+                ),
+                {
+                    "media_item_id": item_id,
+                    "rating": current_rating,
+                    "would_lab": current_lab,
+                    "would_shoot_video": current_video,
+                    "would_battle": current_battle,
+                    "feedback": current_feedback,
+                    "submitter_name": submitter_name,
+                    "voter_key": voter_key,
+                    "created_at": datetime.now().isoformat(timespec="seconds"),
+                },
+            )
 
     return redirect(request.referrer or url_for("litefeet_music"))
+
 
