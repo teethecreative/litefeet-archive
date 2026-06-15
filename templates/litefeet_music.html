@@ -307,7 +307,11 @@
                     <div class="ranking-stats ranking-actions">
                         {% set my_vote = voter_feedback.get(item["id"]|string) if voter_feedback else none %}
 
-                        <details class="ranking-play-control">
+                        <details
+                            class="ranking-play-control"
+                            data-now-playing-title="{{ item['title'] }}"
+                            data-now-playing-producer="{{ item['artist_or_creator'] or 'Unknown producer' }}"
+                            data-now-playing-source="{% if item.get('playable_url') %}Audio{% elif item['url'] and (item['url']|media_embed_url) %}Embed{% elif item['url'] %}Source Only{% else %}Archived Only{% endif %}">
                             <summary class="ranking-action-pill play-pill">
                                 {% if item.get("playable_url") or (item["url"] and (item["url"]|media_embed_url)) %}
                                     Play

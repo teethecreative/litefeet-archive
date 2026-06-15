@@ -234,3 +234,79 @@ function initPeopleDirectoryFilters() {
 
 document.addEventListener("DOMContentLoaded", initPeopleDirectoryFilters);
 
+
+function initGlobalMusicPlayerBehavior() {
+    const playControls = Array.from(document.querySelectorAll(".ranking-play-control"));
+    const nowPlayingBar = document.getElementById("globalNowPlayingBar");
+    const nowPlayingTitle = document.getElementById("globalNowPlayingTitle");
+    const nowPlayingMeta = document.getElementById("globalNowPlayingMeta");
+    const stopButton = document.getElementById("globalNowPlayingStop");
+
+    if (!playControls.length) return;
+
+    function pauseAllAudioExcept(exceptAudio) {
+        document.querySelectorAll("audio").forEach((audio) => {
+            if (audio !== exceptAudio) {
+                audio.pause();
+            }
+        });
+    }
+
+    function closeOtherPlayers(currentDetails) {
+        playControls.forEach((details) => {
+            if (details !== currentDetails) {
+                details.removeAttribute("open");
+            }
+        });
+    }
+
+    function updateNowPlaying(details) {
+        if (!nowPlayingBar || !nowPlayingTitle || !nowPlayingMeta) return;
+
+        const title = details.dataset.nowPlayingTitle || "Unknown track";
+        const producer = details.dataset.nowPlayingProducer || "Unknown producer";
+        const source = details.dataset.nowPlayingSource || "";
+
+        nowPlayingTitle.textContent = title;
+        nowPlayingMeta.textContent = `${producer} · ${source}`;
+        nowPlayingBar.hidden = false;
+    }
+
+    function clearNowPlaying() {
+        pauseAllAudioExcept(null);
+
+        playControls.forEach((details) => {
+            details.removeAttribute("open");
+        });
+
+        if (nowPlayingBar) nowPlayingBar.hidden = true;
+    }
+
+    playControls.forEach((details) => {
+        details.addEventListener("toggle", () => {
+            if (!details.open) return;
+
+            closeOtherPlayers(details);
+            pauseAllAudioExcept(null);
+            updateNowPlaying(details);
+        });
+
+        details.querySelectorAll("audio").forEach((audio) => {
+            audio.addEventListener("play", () => {
+                closeOtherPlayers(details);
+                pauseAllAudioExcept(audio);
+                updateNowPlaying(details);
+            });
+
+            audio.addEventListener("ended", () => {
+                if (nowPlayingBar) nowPlayingBar.hidden = true;
+            });
+        });
+    });
+
+    if (stopButton) {
+        stopButton.addEventListener("click", clearNowPlaying);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", initGlobalMusicPlayerBehavior);
