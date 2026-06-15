@@ -83,19 +83,25 @@
                     <h2>{{ dancer["dance_name"] }}</h2>
 
                     <div class="profile-card-facts">
+                    {% set has_card_fact = false %}
+
                     {% if dancer["team_affiliation"] %}
+                        {% set has_card_fact = true %}
                         <p><strong>Team:</strong> {{ dancer["team_affiliation"] }}</p>
                     {% endif %}
 
                     {% if dancer["borough_scene"] %}
+                        {% set has_card_fact = true %}
                         <p><strong>Location:</strong> {{ dancer["borough_scene"] }}</p>
                     {% endif %}
 
                     {% if dancer.get("era") %}
+                        {% set has_card_fact = true %}
                         <p><strong>Era:</strong> {{ dancer["era"] }}</p>
                     {% endif %}
 
                     {% if dancer.get("battle_history") %}
+                        {% set has_card_fact = true %}
                         <p><strong>Recent Battle / Moment:</strong> {{ dancer["battle_history"][:150] }}{% if dancer["battle_history"]|length > 150 %}...{% endif %}</p>
                     {% endif %}
 
@@ -103,10 +109,6 @@
                         <p class="small-note">Profile details need confirmation.</p>
                     {% endif %}
                 </div>
-
-                {% if dancer["bio"] %}
-                        <p>{{ dancer["bio"] }}</p>
-                    {% endif %}
 
                     {% if flowers %}
                         <div class="flowers-preview">
@@ -118,7 +120,7 @@
                     {% endif %}
 
                     <p>
-                        <a href="{{ dancer | profile_url }}" class="button secondary">View Profile / Give Flowers</a>
+                        <a href="{{ dancer | profile_url }}" class="button secondary">View Profile</a>
                     </p>
 
                     {% if dancer["status"] == "Ghost Profile" %}
