@@ -3698,6 +3698,114 @@ def music_period_cutoff(period):
     return today - timedelta(days=30)
 
 
+
+
+@app.route("/releases/submit", methods=["GET", "POST"])
+def submit_music_release():
+    user = current_user()
+
+    if not user and not session.get("admin_logged_in"):
+        return redirect(url_for("account_login", next=request.path))
+
+    ensure_media_items_table()
+    ensure_media_release_key_column()
+
+    error = ""
+
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        artist_or_creator = request.form.get("artist_or_creator", "").strip()
+        url = request.form.get("url", "").strip()
+        release_date = request.form.get("release_date", "").strip()
+        description = request.form.get("description", "").strip()
+
+        if not title or not artist_or_creator or not release_date:
+            error = "Title, producer/artist, and release date are required. The link is optional."
+        else:
+            try:
+                parsed_release_date = datetime.strptime(release_date, "%Y-%m-%d").date()
+                today = datetime.now().date()
+
+                if parsed_release_date > today:
+                    error = "Release date cannot be in the future."
+            except ValueError:
+                error = "Use a valid release date."
+
+        if not error:
+            canonical_release_key = music_release_key(title, artist_or_creator)
+            platform = detect_media_platform(url) if url else "No Link Yet"
+
+            existing_releases = fetch_all(
+                """
+                SELECT id, title, artist_or_creator, canonical_release_key
+                FROM media_items
+                WHERE media_type = 'music_release'
+                """
+            )
+
+            duplicate = None
+            for release in existing_releases:
+                existing_key = release.get("canonical_release_key") or music_release_key(
+                    release.get("title"),
+                    release.get("artist_or_creator"),
+                )
+
+                if existing_key == canonical_release_key:
+                    duplicate = release
+                    break
+
+            if duplicate:
+                return redirect(url_for("litefeet_music", duplicate="1"))
+
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        """
+                        INSERT INTO media_items (
+                            media_type,
+                            title,
+                            artist_or_creator,
+                            url,
+                            platform,
+                            release_date,
+                            event_name,
+                            description,
+                            status,
+                            canonical_release_key,
+                            created_at
+                        )
+                        VALUES (
+                            'music_release',
+                            :title,
+                            :artist_or_creator,
+                            :url,
+                            :platform,
+                            :release_date,
+                            '',
+                            :description,
+                            'Published',
+                            :canonical_release_key,
+                            :created_at
+                        )
+                        """
+                    ),
+                    {
+                        "title": title,
+                        "artist_or_creator": artist_or_creator,
+                        "url": url,
+                        "platform": platform,
+                        "release_date": release_date,
+                        "description": description,
+                        "canonical_release_key": canonical_release_key,
+                        "created_at": datetime.now().isoformat(timespec="seconds"),
+                    },
+                )
+
+            return redirect(url_for("litefeet_music"))
+
+    return render_template("submit_music_release.html", error=error)
+
+
 @app.route("/litefeet-music")
 def litefeet_music():
     ensure_media_items_table()
