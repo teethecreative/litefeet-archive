@@ -4010,6 +4010,8 @@ def music_period_cutoff(period):
 
 @app.route("/releases/submit", methods=["GET", "POST"])
 def submit_music_release():
+    return redirect(url_for("submit_music_project"))
+
     user = current_user()
 
     if not user and not session.get("admin_logged_in"):

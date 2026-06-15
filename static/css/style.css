@@ -2310,3 +2310,27 @@ main {
     border-bottom: 0;
 }
 
+
+/* LiteFeet Music cleaner section rhythm */
+.music-page .hero-actions {
+    margin: 2rem 0 1.25rem;
+}
+
+.music-projects-section {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+}
+
+.music-projects-section .section-heading-row {
+    align-items: flex-end;
+    margin-bottom: 1.25rem;
+}
+
+.music-projects-section h2 {
+    margin-bottom: 0.35rem;
+}
+
+.music-project-table-wrap {
+    margin-top: 1rem;
+}
+

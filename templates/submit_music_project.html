@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Submit Music Project | LiteFeet Ledger{% endblock %}
+{% block title %}Submit Music | LiteFeet Ledger{% endblock %}
 
 {% block content %}
 <section class="content-section music-page">
     <p class="eyebrow">LiteFeet Music</p>
-    <h1>Submit a Project</h1>
+    <h1>Submit Music</h1>
     <p>
-        Add a beat pack, album, playlist, EP, or project. The Ledger saves the project and track names even if the outside platform link changes or gets deleted.
+        Submit a single release, beat pack, album, playlist, EP, or project. Drop a link or embed, and add a tracklist if the site cannot pull it automatically.
     </p>
 
     {% if error %}
@@ -18,8 +18,8 @@
 
     <form method="POST" class="form-card media-admin-form">
         <label>
-            Project Title
-            <input type="text" name="title" placeholder="Project, pack, album, or playlist title" required>
+            Release / Project Title
+            <input type="text" name="title" placeholder="Song, project, pack, album, or playlist title" required>
         </label>
 
         <label>
@@ -28,7 +28,7 @@
         </label>
 
         <label>
-            Project Link <span class="small-note">(optional)</span>
+            Music Link <span class="small-note">(optional)</span>
             <input type="url" name="url" placeholder="Untitled, SoundCloud, Spotify, Apple Music, YouTube, etc.">
         </label>
 
@@ -55,7 +55,7 @@
             <textarea name="description" placeholder="Optional project notes, context, credits, etc."></textarea>
         </label>
 
-        <button type="submit" class="button primary">Add Project + Tracks</button>
+        <button type="submit" class="button primary">Submit Music</button>
     </form>
 </section>
 {% endblock %}
