@@ -3578,3 +3578,193 @@ def toggle_anonymous_mode():
     return redirect(request.referrer or url_for("account_home"))
 
 
+
+
+def ensure_music_feedback_table():
+    with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS music_feedback (
+                        id SERIAL PRIMARY KEY,
+                        media_item_id INTEGER NOT NULL,
+                        rating INTEGER,
+                        would_lab INTEGER DEFAULT 0,
+                        would_shoot_video INTEGER DEFAULT 0,
+                        would_battle INTEGER DEFAULT 0,
+                        feedback TEXT,
+                        submitter_name TEXT,
+                        created_at TEXT
+                    )
+                    """
+                )
+            )
+        else:
+            conn.execute(
+                text(
+                    """
+                    CREATE TABLE IF NOT EXISTS music_feedback (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        media_item_id INTEGER NOT NULL,
+                        rating INTEGER,
+                        would_lab INTEGER DEFAULT 0,
+                        would_shoot_video INTEGER DEFAULT 0,
+                        would_battle INTEGER DEFAULT 0,
+                        feedback TEXT,
+                        submitter_name TEXT,
+                        created_at TEXT
+                    )
+                    """
+                )
+            )
+
+
+def music_period_cutoff(period):
+    today = datetime.now()
+
+    if period == "week":
+        return today - timedelta(days=7)
+    if period == "30":
+        return today - timedelta(days=30)
+    if period == "60":
+        return today - timedelta(days=60)
+    if period == "6months":
+        return today - timedelta(days=183)
+    if period == "year":
+        return today - timedelta(days=365)
+
+    return today - timedelta(days=30)
+
+
+@app.route("/litefeet-music")
+def litefeet_music():
+    ensure_media_items_table()
+    ensure_music_feedback_table()
+
+    period = request.args.get("period", "30")
+    cutoff = music_period_cutoff(period).date().isoformat()
+
+    releases = fetch_all(
+        """
+        SELECT
+            m.*,
+            COALESCE(AVG(f.rating), 0) AS average_rating,
+            COUNT(f.id) AS feedback_count,
+            COALESCE(SUM(f.would_lab), 0) AS lab_count,
+            COALESCE(SUM(f.would_shoot_video), 0) AS video_count,
+            COALESCE(SUM(f.would_battle), 0) AS battle_count
+        FROM media_items m
+        LEFT JOIN music_feedback f ON f.media_item_id = m.id
+        WHERE m.media_type = 'music_release'
+          AND m.status = 'Published'
+          AND (
+                m.release_date >= :cutoff
+                OR (m.release_date IS NULL OR m.release_date = '')
+          )
+        GROUP BY m.id
+        ORDER BY
+            average_rating DESC,
+            feedback_count DESC,
+            CASE WHEN m.release_date IS NULL OR m.release_date = '' THEN m.created_at ELSE m.release_date END DESC
+        LIMIT 20
+        """,
+        {"cutoff": cutoff},
+    )
+
+    release_radar = fetch_all(
+        """
+        SELECT
+            m.*,
+            COALESCE(AVG(f.rating), 0) AS average_rating,
+            COUNT(f.id) AS feedback_count,
+            COALESCE(SUM(f.would_lab), 0) AS lab_count,
+            COALESCE(SUM(f.would_shoot_video), 0) AS video_count,
+            COALESCE(SUM(f.would_battle), 0) AS battle_count
+        FROM media_items m
+        LEFT JOIN music_feedback f ON f.media_item_id = m.id
+        WHERE m.media_type = 'music_release'
+          AND m.status = 'Published'
+        GROUP BY m.id
+        ORDER BY
+            CASE WHEN m.release_date IS NULL OR m.release_date = '' THEN m.created_at ELSE m.release_date END DESC,
+            m.created_at DESC
+        LIMIT 20
+        """
+    )
+
+    return render_template(
+        "litefeet_music.html",
+        releases=releases,
+        release_radar=release_radar,
+        period=period,
+    )
+
+
+@app.route("/music/<int:item_id>/feedback", methods=["POST"])
+def music_feedback_submit(item_id):
+    ensure_music_feedback_table()
+
+    rating_raw = request.form.get("rating", "").strip()
+    feedback = request.form.get("feedback", "").strip()
+
+    try:
+        rating = int(rating_raw)
+    except ValueError:
+        rating = None
+
+    if rating is not None:
+        if rating < 1:
+            rating = None
+        elif rating > 5:
+            rating = 5
+
+    user = current_user()
+    submitter_name = "Anonymous" if session.get("anonymous_mode") else ""
+
+    if not submitter_name and user:
+        submitter_name = user.get("display_name", "")
+
+    if not submitter_name:
+        submitter_name = request.form.get("submitter_name", "").strip() or "Community Member"
+
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                INSERT INTO music_feedback (
+                    media_item_id,
+                    rating,
+                    would_lab,
+                    would_shoot_video,
+                    would_battle,
+                    feedback,
+                    submitter_name,
+                    created_at
+                )
+                VALUES (
+                    :media_item_id,
+                    :rating,
+                    :would_lab,
+                    :would_shoot_video,
+                    :would_battle,
+                    :feedback,
+                    :submitter_name,
+                    :created_at
+                )
+                """
+            ),
+            {
+                "media_item_id": item_id,
+                "rating": rating,
+                "would_lab": 1 if request.form.get("would_lab") else 0,
+                "would_shoot_video": 1 if request.form.get("would_shoot_video") else 0,
+                "would_battle": 1 if request.form.get("would_battle") else 0,
+                "feedback": feedback,
+                "submitter_name": submitter_name,
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+            },
+        )
+
+    return redirect(request.referrer or url_for("litefeet_music"))
+
