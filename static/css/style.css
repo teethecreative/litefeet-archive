@@ -1005,3 +1005,77 @@ h2 {
     border-bottom-color: #f0c84b;
 }
 
+
+/* Collapsible profile actions */
+.collapsible-panel {
+    padding: 0;
+    overflow: hidden;
+}
+
+.collapsible-panel summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 1.25rem;
+    color: #f0c84b;
+    font-size: 1.35rem;
+    font-weight: 900;
+}
+
+.collapsible-panel summary::-webkit-details-marker {
+    display: none;
+}
+
+.collapsible-panel summary::after {
+    content: "+";
+    float: right;
+    font-size: 1.5rem;
+}
+
+.collapsible-panel[open] summary::after {
+    content: "–";
+}
+
+.collapsible-panel form {
+    padding: 0 1.25rem 1.25rem;
+}
+
+/* Profile directory controls */
+.profile-controls {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 1rem;
+    border: 1px solid rgba(226, 177, 58, 0.28);
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: 16px;
+    padding: 1rem;
+    margin: 1.5rem 0;
+}
+
+.profile-controls label {
+    display: grid;
+    gap: 0.4rem;
+    color: #f0c84b;
+    font-weight: 800;
+}
+
+.profile-controls input,
+.profile-controls select {
+    width: 100%;
+    border: 1px solid rgba(226, 177, 58, 0.35);
+    border-radius: 12px;
+    background: #050505;
+    color: #f5f0e8;
+    padding: 0.8rem 1rem;
+    font: inherit;
+}
+
+.profile-card[hidden] {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .profile-controls {
+        grid-template-columns: 1fr;
+    }
+}
+

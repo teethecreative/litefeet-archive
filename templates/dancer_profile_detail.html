@@ -67,8 +67,8 @@
         {% endif %}
     </div>
 
-    <div class="vote-box">
-        <h3>Give Flowers</h3>
+    <details class="vote-box collapsible-panel">
+        <summary>Give Flowers</summary>
 
         <form action="/dancers/{{ profile['id'] }}/flowers" method="post" class="vote-form">
             <label for="flower_text">What flowers do you want to give?</label>
@@ -85,10 +85,10 @@
 
             <button type="submit" class="button primary">Submit Flowers for Review</button>
         </form>
-    </div>
+    </details>
 
-    <div class="vote-box">
-        <h3>Suggest an Addition or Correction</h3>
+    <details class="vote-box collapsible-panel">
+        <summary>Suggest an Addition or Correction</summary>
 
         <form action="/dancers/{{ profile['id'] }}/suggest" method="post" class="vote-form">
             <label for="suggestion_text">Suggestion or correction</label>
@@ -108,6 +108,6 @@
 
             <button type="submit" class="button primary">Submit Suggestion for Review</button>
         </form>
-    </div>
+    </details>
 </section>
 {% endblock %}

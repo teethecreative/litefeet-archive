@@ -22,12 +22,56 @@
         <a href="/dancers/create" class="button primary">Create Your Dancer Profile</a>
     </p>
 
+    <div class="profile-controls" data-profile-controls>
+        <label>
+            Search
+            <input type="search" data-profile-search placeholder="Search names, teams, boroughs, bios">
+        </label>
+
+        <label>
+            Sort
+            <select data-profile-sort>
+                <option value="az">A to Z</option>
+                <option value="za">Z to A</option>
+                <option value="status">Status</option>
+            </select>
+        </label>
+
+        <label>
+            Role
+            <select data-profile-role>
+                <option value="">All Roles</option>
+                <option value="dancer">Dancer</option>
+                <option value="producer">Producer</option>
+                <option value="host">Host</option>
+                <option value="judge">Judge</option>
+            </select>
+        </label>
+
+        <label>
+            Status
+            <select data-profile-status>
+                <option value="">All Statuses</option>
+                <option value="verified">Verified</option>
+                <option value="community supported">Community Supported</option>
+                <option value="needs verification">Needs Verification</option>
+                <option value="ghost profile">Ghost Profile</option>
+                <option value="approved">Approved</option>
+            </select>
+        </label>
+    </div>
+
     {% if dancer_profiles %}
         <div class="dancer-grid">
             {% for dancer in dancer_profiles %}
                 {% set flowers = flowers_by_profile.get(dancer["id"], []) %}
 
-                <article class="dancer-card">
+                <article class="dancer-card profile-card"
+                    data-profile-card
+                    data-name="{{ dancer['dance_name'] | lower }}"
+                    data-status="{{ dancer['status'] | lower }}"
+                    data-roles="{{ dancer['role_tags'] | lower }}"
+                    data-search="{{ (dancer['dance_name'] ~ ' ' ~ (dancer['team_affiliation'] or '') ~ ' ' ~ (dancer['borough_scene'] or '') ~ ' ' ~ (dancer['bio'] or '')) | lower }}">
                     <div class="submission-meta">
                         <span>{{ dancer["status"] }}</span>
                         {% for role in dancer["role_tags"] | role_list %}

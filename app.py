@@ -1475,7 +1475,7 @@ def producers():
             'Ghost Profile'
         )
         AND role_tags LIKE '%Producer%'
-        ORDER BY dance_name ASC
+        ORDER BY lower(dance_name) ASC
         """
     )
 

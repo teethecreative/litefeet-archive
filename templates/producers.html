@@ -18,10 +18,54 @@
         their profile appears in both sections instead of being duplicated.
     </p>
 
+    <div class="profile-controls" data-profile-controls>
+        <label>
+            Search
+            <input type="search" data-profile-search placeholder="Search producers, teams, boroughs, bios">
+        </label>
+
+        <label>
+            Sort
+            <select data-profile-sort>
+                <option value="az">A to Z</option>
+                <option value="za">Z to A</option>
+                <option value="status">Status</option>
+            </select>
+        </label>
+
+        <label>
+            Role
+            <select data-profile-role>
+                <option value="">All Roles</option>
+                <option value="producer">Producer</option>
+                <option value="dancer">Dancer</option>
+                <option value="host">Host</option>
+                <option value="judge">Judge</option>
+            </select>
+        </label>
+
+        <label>
+            Status
+            <select data-profile-status>
+                <option value="">All Statuses</option>
+                <option value="verified">Verified</option>
+                <option value="community supported">Community Supported</option>
+                <option value="needs verification">Needs Verification</option>
+                <option value="ghost profile">Ghost Profile</option>
+                <option value="approved">Approved</option>
+            </select>
+        </label>
+    </div>
+
     {% if producer_profiles %}
         <div class="dancer-grid">
             {% for producer in producer_profiles %}
-                <article class="dancer-card">
+                <article class="dancer-card profile-card"
+                    data-profile-card
+                    data-name="{{ producer['dance_name'] | lower }}"
+                    data-status="{{ producer['status'] | lower }}"
+                    data-roles="{{ producer['role_tags'] | lower }}"
+                    data-search="{{ (producer['dance_name'] ~ ' ' ~ (producer['team_affiliation'] or '') ~ ' ' ~ (producer['borough_scene'] or '') ~ ' ' ~ (producer['bio'] or '')) | lower }}">
                     <div class="submission-meta">
                         <span>{{ producer["status"] }}</span>
                         {% for role in producer["role_tags"] | role_list %}
