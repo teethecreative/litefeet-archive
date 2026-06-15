@@ -3,9 +3,9 @@
 {% block title %}{{ profile["dance_name"] }} | LiteFeet Ledger{% endblock %}
 
 {% block content %}
-<section class="content-section">
-    <div class="event-detail-topline">
-        <a href="/people/dancers" class="button secondary">Back to Dancers</a>
+<section class="detail-shell profile-detail-shell">
+    <div class="detail-topbar">
+        <a href="/people/dancers" class="button secondary">Back to People</a>
 
         <div class="profile-action-row">
             {% if not profile["user_id"] %}
@@ -18,33 +18,52 @@
         </div>
     </div>
 
-    <h1>{{ profile["dance_name"] }}</h1>
+    <header class="record-hero profile-hero">
+        <p class="eyebrow">People Record</p>
+        <h1>{{ profile["dance_name"] }}</h1>
 
-    <div class="submission-meta">
-        <span>{{ profile["status"] }}</span>
-        {% for role in profile["role_tags"] | role_list %}
-            <span>{{ role }}</span>
-        {% endfor %}
-    </div>
+        <div class="status-row">
+            <span class="status-pill">{{ profile["status"] }}</span>
 
-    {% if profile["team_affiliation"] %}
-        <p><strong>Team/Affiliation:</strong> {{ profile["team_affiliation"] }}</p>
-    {% endif %}
+            {% for role in profile["role_tags"] | role_list %}
+                <span class="status-pill">{{ role }}</span>
+            {% endfor %}
+        </div>
+    </header>
 
-    {% if profile["borough_scene"] %}
-        <p><strong>Scene:</strong> {{ profile["borough_scene"] }}</p>
-    {% endif %}
+    <section class="event-detail-card profile-summary-card">
+        <div>
+            <span>Team / Affiliation</span>
+            <strong>{{ profile["team_affiliation"] or "Needs confirmation" }}</strong>
+        </div>
 
-    {% if profile["source_url"] %}
-        <p><strong>Source:</strong> <a href="{{ profile['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
-    {% endif %}
+        <div>
+            <span>Location / Scene</span>
+            <strong>{{ profile["borough_scene"] or "Needs confirmation" }}</strong>
+        </div>
 
+        <div>
+            <span>Era / Generation</span>
+            <strong>{{ profile.get("era") or "Needs confirmation" }}</strong>
+        </div>
+
+        <div>
+            <span>Recent Battle / Moment</span>
+            <strong>
+                {% if profile.get("battle_history") %}
+                    {{ profile["battle_history"][:120] }}{% if profile["battle_history"]|length > 120 %}...{% endif %}
+                {% else %}
+                    Needs confirmation
+                {% endif %}
+            </strong>
+        </div>
+    </section>
 
     {% if similar_profiles %}
-        <div class="review-details duplicate-warning">
-            <h3>Possible Duplicate Profiles</h3>
+        <section class="review-details duplicate-warning">
+            <h2>Possible Duplicate Profiles</h2>
             <p class="small-note">
-                These profiles have similar names. Review before adding more info.
+                These records have similar names. Admins can merge duplicates into this profile.
             </p>
 
             {% for duplicate in similar_profiles %}
@@ -64,74 +83,55 @@
                     {% endif %}
                 </div>
             {% endfor %}
-        </div>
+        </section>
     {% endif %}
 
-    {% if profile["bio"] %}
+    <section class="detail-section-grid">
         <div class="review-details">
-            <h3>Profile</h3>
-            <p>{{ profile["bio"] }}</p>
-        </div>
-    {% endif %}
+            <h2>Profile</h2>
 
-    {% if profile.get("aliases") or profile.get("era") or profile.get("style_notes") or profile.get("signature_moves") or profile.get("battle_history") or profile.get("legacy_notes") %}
-        <div class="review-details profile-enrichment">
-            <h3>Profile Details</h3>
-
-            <div class="profile-detail-grid">
-                {% if profile.get("aliases") %}
-                    <div>
-                        <span>Aliases</span>
-                        <p>{{ profile["aliases"] }}</p>
-                    </div>
-                {% endif %}
-
-                {% if profile.get("era") %}
-                    <div>
-                        <span>Era / Generation</span>
-                        <p>{{ profile["era"] }}</p>
-                    </div>
-                {% endif %}
-            </div>
-
-            {% if profile.get("style_notes") or profile.get("signature_moves") %}
-                <div class="profile-section-block">
-                    <h4>Style & Moves</h4>
-
-                    {% if profile.get("style_notes") %}
-                        <p><strong>Style:</strong> {{ profile["style_notes"] }}</p>
-                    {% endif %}
-
-                    {% if profile.get("signature_moves") %}
-                        <p><strong>Signature moves:</strong> {{ profile["signature_moves"] }}</p>
-                    {% endif %}
-                </div>
+            {% if profile["bio"] %}
+                <p>{{ profile["bio"] }}</p>
+            {% else %}
+                <p class="small-note">This profile needs a confirmed bio or community context.</p>
             {% endif %}
 
-            {% if profile.get("battle_history") %}
-                <div class="profile-section-block">
-                    <h4>Battle / Moment History</h4>
-                    <p>{{ profile["battle_history"] }}</p>
-                </div>
+            {% if profile.get("aliases") %}
+                <p><strong>Aliases:</strong> {{ profile["aliases"] }}</p>
             {% endif %}
 
             {% if profile.get("legacy_notes") %}
-                <div class="profile-section-block">
-                    <h4>Legacy Notes</h4>
-                    <p>{{ profile["legacy_notes"] }}</p>
-                </div>
+                <p><strong>Legacy Notes:</strong> {{ profile["legacy_notes"] }}</p>
             {% endif %}
         </div>
+
+        <div class="review-details">
+            <h2>Style & Moves</h2>
+
+            {% if profile.get("style_notes") %}
+                <p><strong>Style:</strong> {{ profile["style_notes"] }}</p>
+            {% endif %}
+
+            {% if profile.get("signature_moves") %}
+                <p><strong>Signature Moves:</strong> {{ profile["signature_moves"] }}</p>
+            {% endif %}
+
+            {% if not profile.get("style_notes") and not profile.get("signature_moves") %}
+                <p class="small-note">No style or move details confirmed yet.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if profile.get("battle_history") %}
+        <section class="review-details">
+            <h2>Battle / Moment History</h2>
+            <p>{{ profile["battle_history"] }}</p>
+        </section>
     {% endif %}
 
-
-    <div class="review-details">
-        <h3>Flowers</h3>
-
-    
     {% if ledger_mentions %}
-        <div class="review-details ledger-history-block">
-            <h3>Created From / Ledger History</h3>
+        <section class="review-details ledger-history-block">
+            <h2>Created From / Ledger History</h2>
 
             <div class="compact-history-list">
                 {% for item in ledger_mentions %}
@@ -145,7 +145,14 @@
                             </p>
 
                             {% if item.get("mention_labels") %}
-                                <p class="small-note">Mentioned in: {{ item["mention_labels"]|join(", ") }}</p>
+                                <p class="small-note">
+                                    Mentioned in:
+                                    {% if item["mention_labels"] is string %}
+                                        {{ item["mention_labels"] }}
+                                    {% else %}
+                                        {{ item["mention_labels"]|join(", ") }}
+                                    {% endif %}
+                                </p>
                             {% endif %}
                         </div>
 
@@ -155,142 +162,89 @@
                     </div>
                 {% endfor %}
             </div>
-        </div>
+        </section>
     {% endif %}
 
-    {% if flowers %}
-            {% for flower in flowers %}
-                <blockquote class="flower-quote">
-                    {{ flower["flower_text"] }}
-                    {% if flower["submitter_name"] %}
-                        <footer>— {{ flower["submitter_name"] }}</footer>
-                    {% endif %}
-                </blockquote>
-            {% endfor %}
-        {% else %}
-            <p>No approved flowers yet.</p>
-        {% endif %}
-    </div>
+    <section class="detail-section-grid">
+        <div class="review-details">
+            <h2>Flowers</h2>
 
-    <div class="review-details">
-        <h3>Community Additions</h3>
+            {% if flowers %}
+                {% for flower in flowers %}
+                    <div class="history-row">
+                        <div>
+                            <strong>{{ flower["submitter_name"] or "Community Member" }}</strong>
+                            <p>{{ flower["message"] }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No approved flowers yet.</p>
+            {% endif %}
+        </div>
 
-        {% if suggestions %}
-            {% for suggestion in suggestions %}
-                <p>{{ suggestion["suggestion_text"] }}</p>
+        <div class="review-details">
+            <h2>Community Additions</h2>
 
-                {% if suggestion["source_url"] %}
-                    <p><a href="{{ suggestion['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
-                {% endif %}
-            {% endfor %}
-        {% else %}
-            <p>No approved community additions yet.</p>
-        {% endif %}
-    </div>
+            {% if suggestions %}
+                {% for suggestion in suggestions %}
+                    <div class="history-row">
+                        <div>
+                            <strong>{{ suggestion["submitter_name"] or "Community Member" }}</strong>
+                            <p>{{ suggestion["message"] }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No approved community additions yet.</p>
+            {% endif %}
+        </div>
+    </section>
 
     <details class="vote-box collapsible-panel">
         <summary>Give Flowers</summary>
 
-        <form action="/dancers/{{ profile['id'] }}/flowers" method="post" class="vote-form">
-            <label for="flower_text">What flowers do you want to give?</label>
-            <textarea id="flower_text" name="flower_text" rows="4" placeholder="Show love, give credit, mention a moment, style, battle, impact, or contribution."></textarea>
-
-            <label for="submitter_name">Your name or alias</label>
-            <input type="text" id="submitter_name" name="submitter_name" placeholder="Optional">
-
-            <label for="submitter_role">Your role / connection</label>
-            <input type="text" id="submitter_role" name="submitter_role" placeholder="Optional: dancer, host, fan, judge, community member, etc.">
-
-            <label for="contact">Contact link or email</label>
-            <input type="text" id="contact" name="contact" placeholder="Optional">
+        <form method="POST" action="/dancers/{{ profile['id'] }}/flowers" class="stacked-form">
+            <label>
+                Your name
+                <input type="text" name="submitter_name" placeholder="Optional">
+            </label>
 
             <label class="checkbox-line">
                 <input type="checkbox" name="anonymous_submission" value="1">
                 Submit this anonymously
             </label>
 
-            <button type="submit" class="button primary">Submit Flowers for Review</button>
+            <label>
+                Message
+                <textarea name="message" required placeholder="Give flowers, appreciation, or recognition."></textarea>
+            </label>
+
+            <button type="submit" class="button primary">Submit Flowers</button>
         </form>
     </details>
 
     <details class="vote-box collapsible-panel">
-        <summary>Suggest an Addition or Correction</summary>
+        <summary>Suggest Addition or Correction</summary>
 
-        <form action="/dancers/{{ profile['id'] }}/suggest" method="post" class="vote-form">
-            <label for="suggestion_text">Suggestion or correction</label>
-            <textarea id="suggestion_text" name="suggestion_text" rows="4" placeholder="Add missing history, source context, battle info, correction, team info, or anything that should be reviewed."></textarea>
-
-            <label for="source_url">Source link</label>
-            <input type="url" id="source_url" name="source_url" placeholder="Optional: video, article, post, flyer, interview, etc.">
-
-            <label for="suggestion_submitter_name">Your name or alias</label>
-            <input type="text" id="suggestion_submitter_name" name="submitter_name" placeholder="Optional">
-
-            <label for="suggestion_submitter_role">Your role / connection</label>
-            <input type="text" id="suggestion_submitter_role" name="submitter_role" placeholder="Optional">
-
-            <label for="suggestion_contact">Contact link or email</label>
-            <input type="text" id="suggestion_contact" name="contact" placeholder="Optional">
+        <form method="POST" action="/dancers/{{ profile['id'] }}/suggestions" class="stacked-form">
+            <label>
+                Your name
+                <input type="text" name="submitter_name" placeholder="Optional">
+            </label>
 
             <label class="checkbox-line">
                 <input type="checkbox" name="anonymous_submission" value="1">
                 Submit this anonymously
             </label>
 
-            <button type="submit" class="button primary">Submit Suggestion for Review</button>
+            <label>
+                Addition / correction
+                <textarea name="message" required placeholder="Add context, correct something, or suggest a source."></textarea>
+            </label>
+
+            <button type="submit" class="button primary">Submit Addition</button>
         </form>
     </details>
-
-    <div class="review-details ledger-history-section">
-        <h3>Ledger History</h3>
-        <p class="small-note">
-            Compact history of where this profile is mentioned across the Ledger.
-        </p>
-
-        {% set mentions = ledger_mentions | default([]) %}
-
-        {% if mentions %}
-            <div class="compact-table-wrap" data-paged-table-wrap>
-                <table class="compact-history-table" data-paged-table data-page-size="8">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Record</th>
-                            <th>Mentioned In</th>
-                            <th>Status</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for mention in mentions %}
-                            <tr data-paged-row>
-                                <td>{{ mention["created_at"][:10] if mention["created_at"] else "" }}</td>
-                                <td>{{ mention["title"] }}</td>
-                                <td>{{ mention["mention_labels"] }}</td>
-                                <td>{{ mention["review_status"] }}</td>
-                                <td>
-                                    {% if mention["public_url"] %}
-                                        <a href="{{ mention['public_url'] }}">View</a>
-                                    {% endif %}
-
-                                    {% if session.get("admin_logged_in") %}
-                                        <a href="/admin/submissions/{{ mention['id'] }}/edit">Edit</a>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                <div class="table-pager">
-                    <button type="button" class="button secondary" data-page-prev>Previous</button>
-                    <span data-page-status></span>
-                    <button type="button" class="button secondary" data-page-next>Next</button>
-                </div>
-            </div>
-        {% else %}
-            <p>No Ledger mentions connected yet.</p>
-        {% endif %}
-    </div>
 </section>
 {% endblock %}

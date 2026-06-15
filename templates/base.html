@@ -27,8 +27,49 @@
             <a href="/contributor">My Account</a>
             <a href="/account/logout">Log Out</a>
         {% else %}
-            <a href="/account/login">Log In</a>
-            <a href="/account/signup">Create Account</a>
+            {% if nav_is_admin or nav_current_user %}
+                <details class="account-menu">
+                    <summary>
+                        {% if nav_is_admin %}
+                            Admin
+                        {% elif nav_current_user %}
+                            {{ nav_current_user["display_name"] }}
+                        {% endif %}
+                        {% if nav_anonymous_mode %}
+                            <span class="anon-pill">Anon</span>
+                        {% endif %}
+                    </summary>
+
+                    <div class="account-menu-panel">
+                        {% if nav_is_admin %}
+                            <a href="/admin/submissions">Admin Dashboard</a>
+                            <a href="/admin/submissions">Submissions</a>
+                        {% endif %}
+
+                        {% if nav_current_user %}
+                            <a href="/account">My Account</a>
+
+                            {% if nav_claimed_profile %}
+                                <a href="{{ nav_claimed_profile | profile_url }}">View My Profile</a>
+                                <a href="/admin/people/{{ nav_claimed_profile['id'] }}/edit">Edit My Profile</a>
+                            {% else %}
+                                <a href="/people/dancers">Claim Profile</a>
+                            {% endif %}
+                        {% endif %}
+
+                        <form method="POST" action="/account/anonymous-mode">
+                            <button type="submit">
+                                Anonymous Mode: {% if nav_anonymous_mode %}On{% else %}Off{% endif %}
+                            </button>
+                        </form>
+
+                        <a href="/account/logout">Log Out</a>
+                    </div>
+                </details>
+            {% else %}
+                <a href="/account/login">Log In</a>
+                <a href="/account/signup">Create Account</a>
+            {% endif %}
         {% endif %}
     {% if nav_is_admin or nav_current_user %}
                     <details class="account-menu">
@@ -71,8 +112,49 @@
                         </div>
                     </details>
                 {% else %}
-                    <a href="/account/login">Log In</a>
-                    <a href="/account/signup">Create Account</a>
+                    {% if nav_is_admin or nav_current_user %}
+                <details class="account-menu">
+                    <summary>
+                        {% if nav_is_admin %}
+                            Admin
+                        {% elif nav_current_user %}
+                            {{ nav_current_user["display_name"] }}
+                        {% endif %}
+                        {% if nav_anonymous_mode %}
+                            <span class="anon-pill">Anon</span>
+                        {% endif %}
+                    </summary>
+
+                    <div class="account-menu-panel">
+                        {% if nav_is_admin %}
+                            <a href="/admin/submissions">Admin Dashboard</a>
+                            <a href="/admin/submissions">Submissions</a>
+                        {% endif %}
+
+                        {% if nav_current_user %}
+                            <a href="/account">My Account</a>
+
+                            {% if nav_claimed_profile %}
+                                <a href="{{ nav_claimed_profile | profile_url }}">View My Profile</a>
+                                <a href="/admin/people/{{ nav_claimed_profile['id'] }}/edit">Edit My Profile</a>
+                            {% else %}
+                                <a href="/people/dancers">Claim Profile</a>
+                            {% endif %}
+                        {% endif %}
+
+                        <form method="POST" action="/account/anonymous-mode">
+                            <button type="submit">
+                                Anonymous Mode: {% if nav_anonymous_mode %}On{% else %}Off{% endif %}
+                            </button>
+                        </form>
+
+                        <a href="/account/logout">Log Out</a>
+                    </div>
+                </details>
+            {% else %}
+                <a href="/account/login">Log In</a>
+                <a href="/account/signup">Create Account</a>
+            {% endif %}
                 {% endif %}
             </nav>
 </header>

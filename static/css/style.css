@@ -1458,3 +1458,94 @@ h2 {
     }
 }
 
+
+.profile-detail-shell {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.detail-topbar {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.profile-hero h1 {
+    margin-bottom: 1rem;
+}
+
+.profile-summary-card {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.profile-summary-card div {
+    border: 1px solid rgba(226, 177, 58, 0.2);
+    border-radius: 16px;
+    padding: 1rem;
+}
+
+.profile-summary-card span {
+    color: #f0c84b;
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.45rem;
+    text-transform: uppercase;
+}
+
+.profile-summary-card strong {
+    color: #f5f0e8;
+    display: block;
+    font-size: 1rem;
+    line-height: 1.35;
+}
+
+.detail-section-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stacked-form {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.stacked-form label {
+    display: grid;
+    gap: 0.5rem;
+    font-weight: 800;
+}
+
+.stacked-form input,
+.stacked-form textarea {
+    border: 1px solid rgba(226, 177, 58, 0.35);
+    border-radius: 14px;
+    background: #050505;
+    color: #f5f0e8;
+    font: inherit;
+    padding: 0.9rem 1rem;
+}
+
+.stacked-form textarea {
+    min-height: 130px;
+}
+
+@media (max-width: 900px) {
+    .profile-summary-card,
+    .detail-section-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-topbar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
