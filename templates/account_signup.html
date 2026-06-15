@@ -3,39 +3,43 @@
 {% block title %}Create Account | LiteFeet Ledger{% endblock %}
 
 {% block content %}
-<section class="content-section">
-    <h1>Create Account</h1>
-
+<section class="content-section account-page">
+    <h1>Create Your Ledger Account</h1>
     <p>
-        Create an ledger account to submit events, add context, verify claims, and build your contributor history.
-        Event hosts can be upgraded to affiliate host status after review.
+        Use your account to claim a profile, submit info, give flowers, add context, and track your Ledger activity.
     </p>
 
     {% if error %}
-        <div class="form-errors">
-            <h2>Account issue</h2>
-            <ul><li>{{ error }}</li></ul>
+        <div class="empty-state compact-empty">
+            <h3>{{ error }}</h3>
         </div>
     {% endif %}
 
-    <form class="archive-form" action="/account/signup" method="post">
-        <label for="display_name">Name or alias</label>
-        <input type="text" id="display_name" name="display_name" placeholder="Example: dancer name, host name, ledger name">
+    <form method="POST" class="form-card account-form">
+        <label>
+            Display name
+            <input type="text" name="display_name" autocomplete="name" placeholder="Your name, dancer name, producer name, or ledger alias" required>
+        </label>
 
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="Used for login only">
+        <label>
+            Email
+            <input type="email" name="email" autocomplete="email" placeholder="you@example.com" required>
+        </label>
 
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="At least 8 characters">
+        <label>
+            Password
+            <input type="password" name="password" autocomplete="new-password" placeholder="Create a password" required>
+        </label>
 
-        <label for="organization_name">Organization / team / affiliation</label>
-        <input type="text" id="organization_name" name="organization_name" placeholder="Optional: crew, event brand, team, organization">
+        <label>
+            Team, crew, brand, or organization <span class="small-note">(optional)</span>
+            <input type="text" name="organization_name" placeholder="Example: Body Bag, Team Demon, 2 Live Krew">
+        </label>
 
-        <div class="form-note">
-            <h3>Affiliate host access</h3>
+        <div class="empty-state compact-empty">
+            <h3>What this account is for</h3>
             <p>
-                New accounts start as contributors. Admins can upgrade approved event hosts to affiliate host status,
-                which allows their event submissions to publish faster.
+                You can claim profiles, submit records, add corrections, give flowers, and choose when to show your name or submit anonymously.
             </p>
         </div>
 
