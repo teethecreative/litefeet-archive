@@ -46,6 +46,36 @@
         </div>
     {% endif %}
 
+    <div class="review-details profile-snapshot">
+        <h3>Profile Snapshot</h3>
+
+        <div class="profile-fact-grid">
+            {% if profile["aliases"] %}
+                <p><strong>Aliases:</strong> {{ profile["aliases"] }}</p>
+            {% endif %}
+
+            {% if profile["era"] %}
+                <p><strong>Era:</strong> {{ profile["era"] }}</p>
+            {% endif %}
+
+            {% if profile["style_notes"] %}
+                <p><strong>Style:</strong> {{ profile["style_notes"] }}</p>
+            {% endif %}
+
+            {% if profile["signature_moves"] %}
+                <p><strong>Signature Moves:</strong> {{ profile["signature_moves"] }}</p>
+            {% endif %}
+
+            {% if profile["battle_history"] %}
+                <p><strong>Battle / Moment History:</strong> {{ profile["battle_history"] }}</p>
+            {% endif %}
+
+            {% if profile["legacy_notes"] %}
+                <p><strong>Legacy Notes:</strong> {{ profile["legacy_notes"] }}</p>
+            {% endif %}
+        </div>
+    </div>
+
     <div class="review-details">
         <h3>Flowers</h3>
 

@@ -1253,3 +1253,19 @@ h2 {
     font: inherit;
 }
 
+
+.profile-fact-grid {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.profile-fact-grid p {
+    border-left: 2px solid rgba(240, 200, 75, 0.45);
+    margin: 0;
+    padding-left: 0.9rem;
+}
+
+.profile-fact-grid strong {
+    color: #f0c84b;
+}
+
