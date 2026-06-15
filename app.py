@@ -1625,6 +1625,7 @@ def admin_media():
 
     if request.method == "POST":
         media_type = request.form.get("media_type", "").strip()
+        submission_type = request.form.get("submission_type", "single").strip() or "single"
         title = request.form.get("title", "").strip()
         artist_or_creator = request.form.get("artist_or_creator", "").strip()
         url = request.form.get("url", "").strip()
@@ -4763,4 +4764,148 @@ def admin_music_release_delete(item_id):
         )
 
     return redirect(request.referrer or url_for("litefeet_music", period="all"))
+
+
+
+@app.route("/admin/music/project/<int:project_id>/edit", methods=["GET", "POST"])
+def admin_music_project_edit(project_id):
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login", next=request.path))
+
+    ensure_music_projects_table()
+    ensure_music_release_status_columns()
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM music_projects
+        WHERE id = :id
+        LIMIT 1
+        """,
+        {"id": project_id},
+    )
+
+    if not rows:
+        abort(404)
+
+    project = dict(rows[0])
+
+    tracks = fetch_all(
+        """
+        SELECT *
+        FROM media_items
+        WHERE music_project_id = :project_id
+          AND media_type = 'music_release'
+        ORDER BY track_number ASC, id ASC
+        """,
+        {"project_id": project_id},
+    )
+
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        artist_or_creator = request.form.get("artist_or_creator", "").strip()
+        url = request.form.get("url", "").strip()
+        platform = request.form.get("platform", "").strip() or detect_media_platform(url)
+        release_date = request.form.get("release_date", "").strip()
+        release_stage = request.form.get("release_stage", "released").strip() or "released"
+        description = request.form.get("description", "").strip()
+        status = request.form.get("status", "Published").strip() or "Published"
+
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    """
+                    UPDATE music_projects
+                    SET title = :title,
+                        artist_or_creator = :artist_or_creator,
+                        url = :url,
+                        platform = :platform,
+                        release_date = :release_date,
+                        release_stage = :release_stage,
+                        description = :description,
+                        status = :status
+                    WHERE id = :id
+                    """
+                ),
+                {
+                    "id": project_id,
+                    "title": title,
+                    "artist_or_creator": artist_or_creator,
+                    "url": url,
+                    "platform": platform,
+                    "release_date": release_date,
+                    "release_stage": release_stage,
+                    "description": description,
+                    "status": status,
+                },
+            )
+
+            conn.execute(
+                text(
+                    """
+                    UPDATE media_items
+                    SET artist_or_creator = :artist_or_creator,
+                        url = :url,
+                        platform = :platform,
+                        release_date = :release_date,
+                        release_stage = :release_stage,
+                        event_name = :event_name,
+                        status = :status
+                    WHERE music_project_id = :project_id
+                      AND media_type = 'music_release'
+                    """
+                ),
+                {
+                    "project_id": project_id,
+                    "artist_or_creator": artist_or_creator,
+                    "url": url,
+                    "platform": platform,
+                    "release_date": release_date,
+                    "release_stage": release_stage,
+                    "event_name": title,
+                    "status": status,
+                },
+            )
+
+        return redirect(url_for("litefeet_music", period="all"))
+
+    return render_template("admin_music_project_edit.html", project=project, tracks=tracks)
+
+
+@app.route("/admin/music/project/<int:project_id>/delete", methods=["POST"])
+def admin_music_project_delete(project_id):
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login", next=request.path))
+
+    ensure_music_projects_table()
+
+    track_rows = fetch_all(
+        """
+        SELECT id
+        FROM media_items
+        WHERE music_project_id = :project_id
+        """,
+        {"project_id": project_id},
+    )
+
+    track_ids = [row["id"] for row in track_rows]
+
+    with engine.begin() as conn:
+        for track_id in track_ids:
+            conn.execute(
+                text("DELETE FROM music_feedback WHERE media_item_id = :id"),
+                {"id": track_id},
+            )
+
+        conn.execute(
+            text("DELETE FROM media_items WHERE music_project_id = :project_id"),
+            {"project_id": project_id},
+        )
+
+        conn.execute(
+            text("DELETE FROM music_projects WHERE id = :project_id"),
+            {"project_id": project_id},
+        )
+
+    return redirect(url_for("litefeet_music", period="all"))
 

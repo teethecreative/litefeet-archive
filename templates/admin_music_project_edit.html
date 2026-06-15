@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Music Project | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section music-page">
+    <p class="eyebrow">Admin</p>
+    <h1>Edit Music Project</h1>
+
+    <form method="POST" class="form-card media-admin-form">
+        <label>
+            Project Title
+            <input type="text" name="title" value="{{ project['title'] or '' }}">
+        </label>
+
+        <label>
+            Producer / Artist
+            <input type="text" name="artist_or_creator" value="{{ project['artist_or_creator'] or '' }}">
+        </label>
+
+        <label>
+            Source Link
+            <input type="url" name="url" value="{{ project['url'] or '' }}">
+        </label>
+
+        <label>
+            Platform
+            <input type="text" name="platform" value="{{ project['platform'] or '' }}">
+        </label>
+
+        <label>
+            Release Status
+            <select name="release_stage">
+                <option value="released" {% if project["release_stage"] == "released" %}selected{% endif %}>Released</option>
+                <option value="preview" {% if project["release_stage"] == "preview" %}selected{% endif %}>Preview</option>
+                <option value="coming_soon" {% if project["release_stage"] == "coming_soon" %}selected{% endif %}>Coming Soon</option>
+            </select>
+        </label>
+
+        <label>
+            Release Date
+            <input type="date" name="release_date" value="{{ project['release_date'] or '' }}">
+        </label>
+
+        <label>
+            Status
+            <select name="status">
+                <option value="Published" {% if project["status"] == "Published" %}selected{% endif %}>Published</option>
+                <option value="Draft" {% if project["status"] == "Draft" %}selected{% endif %}>Draft</option>
+                <option value="Archived" {% if project["status"] == "Archived" %}selected{% endif %}>Archived</option>
+            </select>
+        </label>
+
+        <label>
+            Notes
+            <textarea name="description">{{ project['description'] or '' }}</textarea>
+        </label>
+
+        <button type="submit" class="button primary">Save Project</button>
+    </form>
+
+    <section class="content-section">
+        <h2>Tracks in this project</h2>
+
+        <div class="music-project-table-wrap">
+            <table class="music-project-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Track</th>
+                        <th>Playable</th>
+                        <th>Edit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for track in tracks %}
+                        {% set playback = track|music_playback_status %}
+                        <tr>
+                            <td>{{ track["track_number"] or loop.index }}</td>
+                            <td>{{ track["title"] }}</td>
+                            <td>{{ playback["label"] }}</td>
+                            <td><a href="/admin/music/release/{{ track['id'] }}/edit">Edit Track</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</section>
+{% endblock %}

@@ -150,14 +150,24 @@
                 <tbody>
                     {% for project in music_projects %}
                         <tr>
-                            <td><strong>{{ project["title"] }}</strong></td>
+                            <td>
+                                <strong>{{ project["title"] }}</strong>
+                                {% if session.get("admin_logged_in") %}
+                                    <div class="project-admin-actions">
+                                        <a href="/admin/music/project/{{ project['id'] }}/edit">Edit</a>
+                                        <form method="POST" action="/admin/music/project/{{ project['id'] }}/delete" onsubmit="return confirm('Delete this project and all its tracks/votes?');">
+                                            <button type="submit">Delete</button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </td>
                             <td>{{ project["artist_or_creator"] or "Unknown" }}</td>
                             <td>{{ project["track_count"] or 0 }}</td>
                             <td>{% if project["release_date"] %}{{ project["release_date"]|ledger_date }}{% else %}Unknown{% endif %}</td>
                             <td>{{ project["platform"] or "No Link Yet" }}</td>
                             <td>
                                 {% if project["url"] %}
-                                    <a href="{{ project['url'] }}" target="_blank" rel="noopener">Open</a>
+                                    <a href="{{ project['url'] }}" target="_blank" rel="noopener">Open Project</a>
                                 {% else %}
                                     <span class="small-note">Archived only</span>
                                 {% endif %}

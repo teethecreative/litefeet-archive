@@ -2544,3 +2544,33 @@ main {
         align-items: flex-start;
     }
 }
+
+.project-admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin-top: 0.45rem;
+}
+
+.project-admin-actions a,
+.project-admin-actions button {
+    background: transparent;
+    border: 1px solid rgba(226, 177, 58, 0.28);
+    border-radius: 999px;
+    color: #f0c84b;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 900;
+    padding: 0.32rem 0.62rem;
+    text-decoration: none;
+}
+
+.project-admin-actions button {
+    border-color: rgba(255, 90, 90, 0.42);
+    color: rgba(255, 190, 190, 0.95);
+}
+
+.project-admin-actions form {
+    margin: 0;
+}
