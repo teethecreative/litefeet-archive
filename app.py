@@ -5189,6 +5189,10 @@ def music_play_count(item_id):
 def music_feedback_submit(item_id):
     ensure_music_feedback_table()
 
+    user = current_user()
+    if not user:
+        return redirect(url_for("account_login", next=request.referrer or url_for("litefeet_music")))
+
     voter_key = music_voter_key()
     action = request.form.get("action", "").strip()
     feedback = request.form.get("feedback", "").strip()
@@ -5208,14 +5212,8 @@ def music_feedback_submit(item_id):
             elif rating > 10:
                 rating = 10
 
-    user = current_user()
-    submitter_name = "Anonymous" if session.get("anonymous_mode") else ""
-
-    if not submitter_name and user:
-        submitter_name = user.get("display_name", "")
-
-    if not submitter_name:
-        submitter_name = request.form.get("submitter_name", "").strip() or "Community Member"
+    # Public music feedback stays anonymous even though login is required.
+    submitter_name = "Anonymous"
 
     existing_rows = fetch_all(
         """
@@ -5236,7 +5234,16 @@ def music_feedback_submit(item_id):
     current_battle = int(existing.get("would_battle") or 0) if existing else 0
     current_feedback = existing.get("feedback") if existing else ""
 
-    if action == "lab":
+    # Full form submit: user can choose Lab, Video, and Battle together.
+    if not action or action == "full":
+        current_rating = rating
+        current_lab = 1 if request.form.get("would_lab") else 0
+        current_video = 1 if request.form.get("would_shoot_video") else 0
+        current_battle = 1 if request.form.get("would_battle") else 0
+        current_feedback = feedback
+
+    # Quick toggle support, if any old buttons still post action values.
+    elif action == "lab":
         current_lab = 0 if current_lab else 1
     elif action == "video":
         current_video = 0 if current_video else 1
@@ -5315,15 +5322,6 @@ def music_feedback_submit(item_id):
             )
 
     return redirect(request.referrer or url_for("litefeet_music"))
-
-
-
-
-
-
-def audio_url_is_direct_playable(url):
-    value = (url or "").lower().split("?")[0].strip()
-    return value.endswith((".mp3", ".wav", ".m4a", ".aac", ".ogg", ".oga", ".flac", ".webm"))
 
 
 def music_playback_status(item):

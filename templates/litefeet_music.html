@@ -29,6 +29,15 @@
             aria-label="Search releases">
     </div>
 
+    <div class="top-playlist-player" data-top-playlist-player hidden>
+        <div>
+            <p class="eyebrow">Now Playing</p>
+            <h3 data-player-title>Pick a release</h3>
+            <p class="small-note" data-player-meta></p>
+        </div>
+        <div class="top-playlist-player-body" data-player-body></div>
+    </div>
+
     <div class="music-feed-list release-radar-list" id="musicFeedList">
         {% if release_radar %}
             {% for item in release_radar %}
@@ -61,31 +70,36 @@
                     </div>
 
                     <div class="music-card-actions">
-                        {% if item["url"] %}
-                            <a href="{{ item['url'] }}" target="_blank" rel="noopener" class="button small-button">
-                                {% if item["platform"] == "Untitled" %}
-                                    Open on Untitled
-                                {% else %}
-                                    Listen
-                                {% endif %}
-                            </a>
-                        {% else %}
-                            <span class="button small-button disabled-button">Link Needed</span>
-                        {% endif %}
+                        {% set embed_url = item["url"]|media_embed_url if item["url"] else "" %}
+                        <button
+                            type="button"
+                            class="playlist-play-button button small-button"
+                            data-play-item-id="{{ item['id'] }}"
+                            data-play-count="{{ item['play_count'] or 0 }}"
+                            data-player-title="{{ item['title'] }}"
+                            data-player-artist="{{ item['artist_or_creator'] or 'Unknown producer' }}"
+                            data-player-platform="{{ item['platform'] or item['url']|media_platform }}"
+                            data-player-playable-url="{{ item['playable_url'] or '' }}"
+                            data-player-embed-url="{{ embed_url or '' }}"
+                            data-player-source-url="{{ item['url'] or '' }}">
+                            ▶ Play
+                        </button>
 
+                        {% if logged_in_user %}
                         <details class="mini-feedback-panel">
                             <summary>Rate / React</summary>
 
                             <form method="POST" action="/music/{{ item['id'] }}/feedback" class="music-feedback-form">
+                                <input type="hidden" name="action" value="full">
                                 <label>
                                     Rating
                                     <select name="rating">
                                         <option value="">No rating</option>
-                                        <option value="5">10 - Crazy</option>
-                                        <option value="4">8 - Fire</option>
-                                        <option value="3">6 - Solid</option>
-                                        <option value="2">4 - Needs work</option>
-                                        <option value="1">2 - Not for me</option>
+                                        <option value="10">10 - Crazy</option>
+                                        <option value="8">8 - Fire</option>
+                                        <option value="6">6 - Solid</option>
+                                        <option value="4">4 - Needs work</option>
+                                        <option value="2">2 - Not for me</option>
                                     </select>
                                 </label>
 
@@ -112,6 +126,9 @@
                                 <button type="submit" class="button primary small-button">Submit</button>
                             </form>
                         </details>
+                        {% else %}
+                            <a class="button small-button secondary" href="/account/login">Log in to rate</a>
+                        {% endif %}
                     </div>
                 </article>
             {% endfor %}
@@ -202,39 +219,24 @@
                             data-video="{{ item['video_count'] or 0 }}"
                             data-battle="{{ item['battle_count'] or 0 }}">
                             <td>
-                                <details
-                                    class="ranking-play-control table-play-control"
+                                {% set embed_url = item["url"]|media_embed_url if item["url"] else "" %}
+                                <button
+                                    type="button"
+                                    class="playlist-play-button table-play-control"
                                     data-play-item-id="{{ item['id'] }}"
                                     data-play-count="{{ item['play_count'] or 0 }}"
-                                    data-now-playing-title="{{ item['title'] }}"
-                                    data-now-playing-producer="{{ item['artist_or_creator'] or 'Unknown producer' }}"
-                                    data-now-playing-source="{% if item.get('playable_url') %}Audio{% elif item['url'] and (item['url']|media_embed_url) %}Embed{% elif item['url'] %}Source Only{% else %}Archived Only{% endif %}">
-                                    <summary class="play-button">
-                                        {% if playback["state"] in ["audio", "embed", "maybe"] %}
-                                            ▶
-                                        {% else %}
-                                            —
-                                        {% endif %}
-                                    </summary>
-
-                                    <div class="ranking-player-panel">
-                                        {% if item.get("playable_url") %}
-                                            <audio controls preload="none" src="{{ item['playable_url'] }}"></audio>
-                                        {% elif item["url"] and (item["url"]|media_embed_url) %}
-                                            <iframe
-                                                src="{{ item['url']|media_embed_url }}"
-                                                loading="lazy"
-                                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                                                allowfullscreen>
-                                            </iframe>
-                                        {% elif item["url"] %}
-                                            <p class="small-note">This source is not playable inside the site yet.</p>
-                                            <a class="button small-button" href="{{ item['url'] }}" target="_blank" rel="noopener">Open Source</a>
-                                        {% else %}
-                                            <p class="small-note">Archived only.</p>
-                                        {% endif %}
-                                    </div>
-                                </details>
+                                    data-player-title="{{ item['title'] }}"
+                                    data-player-artist="{{ item['artist_or_creator'] or 'Unknown producer' }}"
+                                    data-player-platform="{{ item['platform'] or item['url']|media_platform }}"
+                                    data-player-playable-url="{{ item['playable_url'] or '' }}"
+                                    data-player-embed-url="{{ embed_url or '' }}"
+                                    data-player-source-url="{{ item['url'] or '' }}">
+                                    {% if playback["state"] in ["audio", "embed", "maybe"] %}
+                                        ▶
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </button>
                             </td>
 
                             <td>

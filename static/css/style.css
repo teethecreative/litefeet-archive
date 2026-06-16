@@ -3104,3 +3104,106 @@ button[data-preview-url] {
     height: 16px;
     flex: 0 0 auto;
 }
+
+
+/* Top playlist player and compact release rows */
+.top-playlist-player {
+    border: 1px solid rgba(229, 174, 57, 0.45);
+    border-radius: 18px;
+    padding: 18px;
+    margin: 18px 0;
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.top-playlist-player h3 {
+    margin: 0 0 6px;
+}
+
+.top-playlist-player-body {
+    margin-top: 14px;
+}
+
+.top-playlist-player-body audio,
+.top-playlist-player-body iframe {
+    width: 100%;
+}
+
+.top-playlist-player-body iframe {
+    min-height: 180px;
+    border: 0;
+    border-radius: 14px;
+}
+
+.compact-release-list {
+    border: 1px solid rgba(229, 174, 57, 0.35);
+    border-radius: 18px;
+    overflow: visible;
+}
+
+.compact-release-row {
+    display: grid;
+    grid-template-columns: 52px minmax(220px, 1.5fr) 0.8fr 0.8fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(229, 174, 57, 0.18);
+}
+
+.compact-release-row:last-child {
+    border-bottom: 0;
+}
+
+.compact-release-title {
+    display: grid;
+    gap: 4px;
+}
+
+.compact-release-title span,
+.compact-release-meta {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.playlist-play-button,
+.table-play-control.playlist-play-button {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    padding: 0;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(229, 174, 57, 0.55);
+    background: rgba(229, 174, 57, 0.12);
+    color: var(--gold);
+    cursor: pointer;
+    font-weight: 800;
+}
+
+.playlist-play-button:hover {
+    background: rgba(229, 174, 57, 0.22);
+}
+
+.compact-release-actions {
+    position: relative;
+}
+
+.compact-feedback-form {
+    min-width: 220px;
+}
+
+.release-table .ranking-player-panel {
+    display: none !important;
+}
+
+@media (max-width: 860px) {
+    .compact-release-row {
+        grid-template-columns: 44px 1fr;
+    }
+
+    .compact-release-meta,
+    .compact-release-actions {
+        grid-column: 2;
+    }
+}
