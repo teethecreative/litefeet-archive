@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section admin-command-center">
+    <p class="eyebrow">Ledger Command Center</p>
+    <h1>Admin Dashboard</h1>
+    <p>Track site traffic, new community activity, verification issues, accounts, submissions, and music activity.</p>
+
+    <div class="dashboard-stat-grid">
+        <article>
+            <span>Visits Today</span>
+            <strong>{{ visits_today }}</strong>
+        </article>
+        <article>
+            <span>New Accounts Today</span>
+            <strong>{{ new_accounts_today }}</strong>
+        </article>
+        <article>
+            <span>Total Accounts</span>
+            <strong>{{ total_accounts }}</strong>
+        </article>
+        <article>
+            <span>Pending Submissions</span>
+            <strong>{{ pending_submissions }}</strong>
+        </article>
+        <article>
+            <span>Role Requests</span>
+            <strong>{{ pending_role_requests }}</strong>
+        </article>
+        <article>
+            <span>Verification Issues</span>
+            <strong>{{ controversy_count }}</strong>
+        </article>
+        <article>
+            <span>Music Releases</span>
+            <strong>{{ total_music_releases }}</strong>
+        </article>
+        <article>
+            <span>Ledger Plays</span>
+            <strong>{{ total_ledger_plays }}</strong>
+        </article>
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Activity</p>
+            <h2>New / Needs Action</h2>
+        </div>
+    </div>
+
+    {% if activity_feed %}
+        <div class="release-table-wrap">
+            <table class="release-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Item</th>
+                        <th>Details</th>
+                        <th>Created</th>
+                        <th>Open</th>
+                        <th>Dismiss</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in activity_feed %}
+                        <tr>
+                            <td>{{ item["activity_type"] }}</td>
+                            <td><strong>{{ item["title"] }}</strong></td>
+                            <td>{{ item["description"] }}</td>
+                            <td>{{ item["created_at"] }}</td>
+                            <td>
+                                {% if item["target_url"] %}
+                                    <a class="button small-button" href="{{ item['target_url'] }}">Open</a>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="POST" action="/admin/activity/dismiss">
+                                    <input type="hidden" name="activity_key" value="{{ item['activity_key'] }}">
+                                    <button type="submit" class="button small-button secondary">Dismiss</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>No new activity waiting</h3>
+            <p>Dismissed items stay out of this dashboard view.</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="content-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Traffic</p>
+            <h2>Visits by Hour</h2>
+        </div>
+    </div>
+
+    <div class="release-table-wrap">
+        <table class="release-table">
+            <thead>
+                <tr>
+                    <th>Hour</th>
+                    <th>Visits</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in hourly_visits %}
+                    <tr>
+                        <td>{{ row["bucket"] }}</td>
+                        <td>{{ row["count"] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Traffic</p>
+            <h2>Visits by Day</h2>
+        </div>
+    </div>
+
+    <div class="release-table-wrap">
+        <table class="release-table">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Visits</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in daily_visits %}
+                    <tr>
+                        <td>{{ row["bucket"] }}</td>
+                        <td>{{ row["count"] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Traffic</p>
+            <h2>Top Pages</h2>
+        </div>
+    </div>
+
+    <div class="release-table-wrap">
+        <table class="release-table">
+            <thead>
+                <tr>
+                    <th>Page</th>
+                    <th>Visits</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in top_pages %}
+                    <tr>
+                        <td>{{ row["path"] }}</td>
+                        <td>{{ row["count"] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Verification</p>
+            <h2>Top Controversy Queue</h2>
+        </div>
+
+        <a class="button secondary" href="/verify">Open Verify Page</a>
+    </div>
+
+    {% if controversy_queue %}
+        <div class="release-table-wrap">
+            <table class="release-table">
+                <thead>
+                    <tr>
+                        <th>Claim</th>
+                        <th>Reason</th>
+                        <th>True</th>
+                        <th>False</th>
+                        <th>Debatable</th>
+                        <th>Review</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in controversy_queue %}
+                        <tr>
+                            <td><strong>{{ item["title"] }}</strong></td>
+                            <td>{{ item["controversy_reason"] }}</td>
+                            <td>{{ item["true_count"] }}</td>
+                            <td>{{ item["false_count"] }}</td>
+                            <td>{{ item["debatable_count"] }}</td>
+                            <td><a class="button small-button" href="/verify/{{ item['id'] }}">Review</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>No active controversy queue</h3>
+            <p>Claims will appear here when votes split, users mark them debatable, or records are flagged.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

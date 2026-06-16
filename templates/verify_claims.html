@@ -7,45 +7,56 @@
     <h1>Verify Claims</h1>
 
     <p>
-        This queue is for ledger records that have been flagged as needing community review.
-        Open a claim to review the details, submit a source link, or mark it true, false, or debatable.
+        This queue is for claims that are actually controversial, disputed, debatable, or intentionally flagged for community review.
+        Incomplete ghost records are not shown here unless they have votes or have been escalated.
     </p>
 
     {% if submissions %}
-        <div class="verification-queue">
-            {% for submission in submissions %}
-                {% set counts = vote_counts[submission["id"]] %}
-
-                <article class="queue-card">
-                    <div>
-                        <div class="submission-meta">
-                            <span>{{ submission["submission_type"] or "Uncategorized" }}</span>
-                            <span>{{ submission["review_status"] }}</span>
-                        </div>
-
-                        <h2>{{ submission["title"] }}</h2>
-
-                        {% if submission["related_to"] %}
-                            <p><strong>Related to:</strong> {{ submission["related_to"] }}</p>
-                        {% endif %}
-
-                        <div class="vote-preview">
-                            <span>True: {{ counts["true"] }}</span>
-                            <span>False: {{ counts["false"] }}</span>
-                            <span>Debatable: {{ counts["debatable"] }}</span>
-                        </div>
-                    </div>
-
-                    <a href="/verify/{{ submission['id'] }}" class="button primary">Review This</a>
-                </article>
-            {% endfor %}
+        <div class="release-table-wrap verification-table-wrap">
+            <table class="release-table verification-table">
+                <thead>
+                    <tr>
+                        <th>Claim</th>
+                        <th>Type</th>
+                        <th>Reason</th>
+                        <th>True</th>
+                        <th>False</th>
+                        <th>Debatable</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Review</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for submission in submissions %}
+                        <tr>
+                            <td>
+                                <strong>{{ submission["title"] }}</strong>
+                                {% if submission["related_to"] %}
+                                    <span class="small-note">Related to: {{ submission["related_to"] }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ submission["submission_type"] or "Uncategorized" }}</td>
+                            <td>{{ submission["controversy_reason"] }}</td>
+                            <td>{{ submission["true_count"] }}</td>
+                            <td>{{ submission["false_count"] }}</td>
+                            <td>{{ submission["debatable_count"] }}</td>
+                            <td>{{ submission["total_votes"] }}</td>
+                            <td>{{ submission["review_status"] }}</td>
+                            <td>
+                                <a href="/verify/{{ submission['id'] }}" class="button small-button">Review</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     {% else %}
         <div class="empty-state">
-            <h3>No claims are waiting for verification right now</h3>
+            <h3>No controversial claims need review right now</h3>
             <p>
-                When an ledger record is flagged as needing community review, it will appear here with true,
-                false, and debatable counts.
+                Claims will appear here when they are flagged, disputed, receive debatable votes,
+                or have a close true/false split.
             </p>
         </div>
     {% endif %}

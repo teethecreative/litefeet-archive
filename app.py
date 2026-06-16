@@ -13,6 +13,7 @@ from flask import abort, Flask, redirect, render_template, request, session, url
 from sqlalchemy import create_engine, text
 from werkzeug.security import check_password_hash, generate_password_hash
 from markupsafe import Markup, escape
+import hashlib
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-this-secret")
@@ -1024,10 +1025,461 @@ def ensure_dancer_tables():
 
 
 
+
+# --- Admin analytics and controversy helpers ---
+def ensure_admin_analytics_tables():
+    with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS site_visits (
+                    id SERIAL PRIMARY KEY,
+                    path TEXT,
+                    method TEXT,
+                    user_id INTEGER,
+                    is_admin INTEGER DEFAULT 0,
+                    referrer TEXT,
+                    user_agent TEXT,
+                    ip_hash TEXT,
+                    created_at TEXT
+                )
+            """))
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS admin_activity_dismissals (
+                    id SERIAL PRIMARY KEY,
+                    activity_key TEXT UNIQUE,
+                    dismissed_at TEXT
+                )
+            """))
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS music_play_events (
+                    id SERIAL PRIMARY KEY,
+                    media_item_id INTEGER,
+                    user_id INTEGER,
+                    is_admin INTEGER DEFAULT 0,
+                    created_at TEXT
+                )
+            """))
+        else:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS site_visits (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    path TEXT,
+                    method TEXT,
+                    user_id INTEGER,
+                    is_admin INTEGER DEFAULT 0,
+                    referrer TEXT,
+                    user_agent TEXT,
+                    ip_hash TEXT,
+                    created_at TEXT
+                )
+            """))
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS admin_activity_dismissals (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    activity_key TEXT UNIQUE,
+                    dismissed_at TEXT
+                )
+            """))
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS music_play_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    media_item_id INTEGER,
+                    user_id INTEGER,
+                    is_admin INTEGER DEFAULT 0,
+                    created_at TEXT
+                )
+            """))
+
+
+def anonymous_ip_hash():
+    raw_ip = (
+        request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+        or request.headers.get("X-Real-IP", "").strip()
+        or request.remote_addr
+        or ""
+    )
+    if not raw_ip:
+        return ""
+    return hashlib.sha256(raw_ip.encode("utf-8")).hexdigest()[:24]
+
+
+def dismissed_activity_keys():
+    ensure_admin_analytics_tables()
+    rows = fetch_all("SELECT activity_key FROM admin_activity_dismissals", {})
+    return {row["activity_key"] for row in rows}
+
+
+def activity_is_visible(activity_key, dismissed_keys):
+    return activity_key not in dismissed_keys
+
+
+def build_admin_activity_feed(limit=30):
+    dismissed = dismissed_activity_keys()
+    activity = []
+
+    def add_item(activity_key, activity_type, title, description="", target_url="", created_at=""):
+        if activity_is_visible(activity_key, dismissed):
+            activity.append({
+                "activity_key": activity_key,
+                "activity_type": activity_type,
+                "title": title,
+                "description": description,
+                "target_url": target_url,
+                "created_at": created_at or "",
+            })
+
+    accounts = fetch_all("""
+        SELECT id, display_name, email, role, created_at
+        FROM archive_users
+        ORDER BY created_at DESC
+        LIMIT 20
+    """, {})
+
+    for account in accounts:
+        add_item(
+            f"account:{account['id']}",
+            "New Account",
+            account["display_name"] or account["email"] or "New account",
+            f"{account['email'] or ''} · role: {account['role'] or 'member'}",
+            "/admin/users",
+            account["created_at"],
+        )
+
+    submissions = fetch_all("""
+        SELECT id, submission_type, title, related_to, review_status, created_at
+        FROM submissions
+        ORDER BY created_at DESC
+        LIMIT 30
+    """, {})
+
+    for submission in submissions:
+        add_item(
+            f"submission:{submission['id']}",
+            "New Ledger Record",
+            submission["title"] or "Untitled ledger record",
+            f"{submission['submission_type'] or 'record'} · {submission['review_status'] or 'No status'} · {submission['related_to'] or ''}",
+            f"/admin/submissions/{submission['id']}/edit",
+            submission["created_at"],
+        )
+
+    role_requests = fetch_all("""
+        SELECT role_requests.id, role_requests.requested_role, role_requests.status, role_requests.created_at,
+               archive_users.display_name, archive_users.email
+        FROM role_requests
+        JOIN archive_users ON role_requests.user_id = archive_users.id
+        ORDER BY role_requests.created_at DESC
+        LIMIT 20
+    """, {})
+
+    for role_request in role_requests:
+        add_item(
+            f"role_request:{role_request['id']}",
+            "Role Request",
+            role_request["display_name"] or role_request["email"] or "Role request",
+            f"Requested: {role_request['requested_role']} · Status: {role_request['status']}",
+            "/admin/role-requests",
+            role_request["created_at"],
+        )
+
+    try:
+        music_rows = fetch_all("""
+            SELECT id, title, artist_or_creator, media_type, created_at
+            FROM media_items
+            ORDER BY created_at DESC
+            LIMIT 20
+        """, {})
+
+        for item in music_rows:
+            add_item(
+                f"music:{item['id']}",
+                "Music Added",
+                item["title"] or "Untitled music item",
+                f"{item['artist_or_creator'] or 'Unknown'} · {item['media_type'] or 'music'}",
+                f"/litefeet-music/release/{item['id']}",
+                item["created_at"],
+            )
+    except Exception:
+        pass
+
+    activity.sort(key=lambda item: item.get("created_at") or "", reverse=True)
+    return activity[:limit]
+
+
+def controversy_reason_and_score(record, counts):
+    true_count = int(counts.get("true") or 0)
+    false_count = int(counts.get("false") or 0)
+    debatable_count = int(counts.get("debatable") or 0)
+    total_votes = true_count + false_count + debatable_count
+
+    review_status = (record.get("review_status") or "").strip()
+    submission_type = (record.get("submission_type") or "").strip()
+    needs_verification = int(record.get("needs_verification") or 0)
+
+    reasons = []
+    score = 0
+
+    if review_status == "Disputed":
+        reasons.append("Disputed")
+        score += 100
+
+    if debatable_count > 0:
+        reasons.append("Debatable votes")
+        score += 60 + (debatable_count * 5)
+
+    if true_count > 0 and false_count > 0:
+        spread = abs(true_count - false_count)
+        if spread <= 1:
+            reasons.append("Close True/False split")
+            score += 50 + total_votes
+
+    if needs_verification == 1:
+        # Keep explicit review-worthy records, but do not flood the queue with imported
+        # dancer/move seed records that have 0 votes and no controversy yet.
+        if submission_type not in {"dancer_profile", "move_info"} or total_votes > 0 or review_status in {"Needs Verification", "Disputed"} and submission_type in {"event", "battle_result", "award_info", "historical_claim"}:
+            reasons.append("Flagged for verification")
+            score += 25
+
+    if review_status == "Needs Verification" and total_votes > 0:
+        reasons.append("Community review active")
+        score += 15
+
+    if not reasons:
+        return "", 0
+
+    return ", ".join(dict.fromkeys(reasons)), score
+
+
+def build_controversy_queue():
+    ensure_verification_tables()
+
+    submissions = fetch_all("""
+        SELECT *
+        FROM submissions
+        WHERE needs_verification = 1
+           OR review_status IN ('Needs Verification', 'Disputed')
+           OR id IN (
+                SELECT DISTINCT submission_id
+                FROM verification_votes
+           )
+        ORDER BY created_at DESC
+    """, {})
+
+    counts_map = get_vote_counts_for_submissions(submissions)
+    rows = []
+
+    for submission in submissions:
+        counts = counts_map.get(submission["id"], {"true": 0, "false": 0, "debatable": 0})
+        reason, score = controversy_reason_and_score(submission, counts)
+
+        if not reason:
+            continue
+
+        total_votes = int(counts.get("true") or 0) + int(counts.get("false") or 0) + int(counts.get("debatable") or 0)
+
+        # Avoid showing generic imported dancer/move records with no actual controversy.
+        if total_votes == 0 and submission["submission_type"] in {"dancer_profile", "move_info"}:
+            continue
+
+        item = dict(submission)
+        item["true_count"] = int(counts.get("true") or 0)
+        item["false_count"] = int(counts.get("false") or 0)
+        item["debatable_count"] = int(counts.get("debatable") or 0)
+        item["total_votes"] = total_votes
+        item["controversy_reason"] = reason
+        item["controversy_score"] = score
+        rows.append(item)
+
+    rows.sort(key=lambda item: (item["controversy_score"], item["total_votes"], item.get("created_at") or ""), reverse=True)
+    return rows
+
+
+@app.before_request
+def track_public_site_visit():
+    if request.endpoint == "static":
+        return
+
+    if request.method != "GET":
+        return
+
+    if request.path.startswith("/static"):
+        return
+
+    ensure_admin_analytics_tables()
+
+    user = current_user()
+    user_id = user.get("id") if user else None
+    is_admin = 1 if session.get("admin_logged_in") or current_user_is_admin() else 0
+
+    with engine.begin() as conn:
+        conn.execute(
+            text("""
+                INSERT INTO site_visits (
+                    path,
+                    method,
+                    user_id,
+                    is_admin,
+                    referrer,
+                    user_agent,
+                    ip_hash,
+                    created_at
+                )
+                VALUES (
+                    :path,
+                    :method,
+                    :user_id,
+                    :is_admin,
+                    :referrer,
+                    :user_agent,
+                    :ip_hash,
+                    :created_at
+                )
+            """),
+            {
+                "path": request.path,
+                "method": request.method,
+                "user_id": user_id,
+                "is_admin": is_admin,
+                "referrer": request.referrer or "",
+                "user_agent": request.headers.get("User-Agent", "")[:500],
+                "ip_hash": anonymous_ip_hash(),
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+            },
+        )
+
+
+@app.route("/admin/activity/dismiss", methods=["POST"])
+def dismiss_admin_activity():
+    if not current_user_is_admin():
+        return redirect(url_for("admin_login"))
+
+    ensure_admin_analytics_tables()
+
+    activity_key = request.form.get("activity_key", "").strip()
+    if activity_key:
+        with engine.begin() as conn:
+            try:
+                conn.execute(
+                    text("""
+                        INSERT INTO admin_activity_dismissals (
+                            activity_key,
+                            dismissed_at
+                        )
+                        VALUES (
+                            :activity_key,
+                            :dismissed_at
+                        )
+                    """),
+                    {
+                        "activity_key": activity_key,
+                        "dismissed_at": datetime.now().isoformat(timespec="seconds"),
+                    },
+                )
+            except Exception:
+                pass
+
+    return redirect(request.referrer or url_for("admin_home"))
+
+
 @app.route("/admin")
 def admin_home():
-    return redirect(url_for("admin_submissions"))
+    if not current_user_is_admin():
+        return redirect(url_for("admin_login"))
 
+    ensure_admin_analytics_tables()
+    ensure_music_play_count_columns()
+
+    if engine.dialect.name == "postgresql":
+        visits_today = fetch_all("""
+            SELECT COUNT(*) AS count
+            FROM site_visits
+            WHERE created_at >= TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')
+        """, {})[0]["count"]
+
+        hourly_visits = fetch_all("""
+            SELECT SUBSTRING(created_at, 1, 13) AS bucket, COUNT(*) AS count
+            FROM site_visits
+            WHERE created_at >= TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')
+            GROUP BY SUBSTRING(created_at, 1, 13)
+            ORDER BY bucket DESC
+            LIMIT 24
+        """, {})
+
+        daily_visits = fetch_all("""
+            SELECT SUBSTRING(created_at, 1, 10) AS bucket, COUNT(*) AS count
+            FROM site_visits
+            GROUP BY SUBSTRING(created_at, 1, 10)
+            ORDER BY bucket DESC
+            LIMIT 14
+        """, {})
+    else:
+        visits_today = fetch_all("""
+            SELECT COUNT(*) AS count
+            FROM site_visits
+            WHERE created_at >= date('now')
+        """, {})[0]["count"]
+
+        hourly_visits = fetch_all("""
+            SELECT substr(created_at, 1, 13) AS bucket, COUNT(*) AS count
+            FROM site_visits
+            WHERE created_at >= date('now')
+            GROUP BY substr(created_at, 1, 13)
+            ORDER BY bucket DESC
+            LIMIT 24
+        """, {})
+
+        daily_visits = fetch_all("""
+            SELECT substr(created_at, 1, 10) AS bucket, COUNT(*) AS count
+            FROM site_visits
+            GROUP BY substr(created_at, 1, 10)
+            ORDER BY bucket DESC
+            LIMIT 14
+        """, {})
+
+    top_pages = fetch_all("""
+        SELECT path, COUNT(*) AS count
+        FROM site_visits
+        WHERE is_admin = 0
+        GROUP BY path
+        ORDER BY count DESC
+        LIMIT 10
+    """, {})
+
+    new_accounts_today = fetch_all("""
+        SELECT COUNT(*) AS count
+        FROM archive_users
+        WHERE created_at >= :today
+    """, {"today": datetime.now().date().isoformat()})[0]["count"]
+
+    total_accounts = fetch_all("SELECT COUNT(*) AS count FROM archive_users", {})[0]["count"]
+    pending_role_requests = fetch_all("SELECT COUNT(*) AS count FROM role_requests WHERE status = 'Pending'", {})[0]["count"]
+    pending_submissions = fetch_all("SELECT COUNT(*) AS count FROM submissions WHERE review_status = 'Pending Review'", {})[0]["count"]
+
+    try:
+        total_music_releases = fetch_all("SELECT COUNT(*) AS count FROM media_items WHERE media_type = 'music_release'", {})[0]["count"]
+        total_ledger_plays = fetch_all("SELECT COALESCE(SUM(play_count), 0) AS count FROM media_items", {})[0]["count"]
+    except Exception:
+        total_music_releases = 0
+        total_ledger_plays = 0
+
+    controversy_queue = build_controversy_queue()
+    activity_feed = build_admin_activity_feed()
+
+    return render_template(
+        "admin_home.html",
+        visits_today=visits_today,
+        hourly_visits=hourly_visits,
+        daily_visits=daily_visits,
+        top_pages=top_pages,
+        new_accounts_today=new_accounts_today,
+        total_accounts=total_accounts,
+        pending_role_requests=pending_role_requests,
+        pending_submissions=pending_submissions,
+        total_music_releases=total_music_releases,
+        total_ledger_plays=total_ledger_plays,
+        controversy_count=len(controversy_queue),
+        controversy_queue=controversy_queue[:8],
+        activity_feed=activity_feed,
+    )
 
 @app.route("/admin/submissions/new", methods=["GET", "POST"])
 def admin_submission_new():
@@ -5181,6 +5633,12 @@ def music_play_count(item_id):
             "admin_ignored": True,
         }
 
+    user = current_user()
+    user_id = user.get("id") if user else None
+    now_value = datetime.now().isoformat(timespec="seconds")
+
+    ensure_admin_analytics_tables()
+
     with engine.begin() as conn:
         conn.execute(
             text(
@@ -5193,7 +5651,31 @@ def music_play_count(item_id):
             ),
             {
                 "id": item_id,
-                "last_played_at": datetime.now().isoformat(timespec="seconds"),
+                "last_played_at": now_value,
+            },
+        )
+
+        conn.execute(
+            text(
+                """
+                INSERT INTO music_play_events (
+                    media_item_id,
+                    user_id,
+                    is_admin,
+                    created_at
+                )
+                VALUES (
+                    :media_item_id,
+                    :user_id,
+                    0,
+                    :created_at
+                )
+                """
+            ),
+            {
+                "media_item_id": item_id,
+                "user_id": user_id,
+                "created_at": now_value,
             },
         )
 
