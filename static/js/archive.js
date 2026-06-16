@@ -733,3 +733,280 @@ function initLedgerPlayerHardOverride() {
 }
 
 document.addEventListener("DOMContentLoaded", initLedgerPlayerHardOverride);
+
+
+function initPeopleDirectoryUXFix() {
+    if (!window.location.pathname.includes("/people/dancers")) return;
+
+    document.body.classList.add("people-directory-ux");
+
+    const main = document.querySelector("main") || document.body;
+
+    const allArticles = Array.from(main.querySelectorAll("article"));
+    const cards = allArticles.filter((card) => {
+        const text = (card.innerText || "").toLowerCase();
+        return (
+            text.includes("view profile") ||
+            text.includes("claim this profile") ||
+            card.querySelector('a[href*="/dancers/"]') ||
+            card.querySelector('a[href*="/people/"]')
+        );
+    });
+
+    if (!cards.length) return;
+
+    const parentCounts = new Map();
+    cards.forEach((card) => {
+        const parent = card.parentElement;
+        if (!parent) return;
+        parentCounts.set(parent, (parentCounts.get(parent) || 0) + 1);
+    });
+
+    let grid = cards[0].parentElement;
+    let bestCount = 0;
+
+    parentCounts.forEach((count, parent) => {
+        if (count > bestCount) {
+            bestCount = count;
+            grid = parent;
+        }
+    });
+
+    if (!grid) return;
+
+    grid.classList.add("people-card-grid-normalized");
+
+    const roleWords = [
+        "dancer",
+        "producer",
+        "host",
+        "judge",
+        "dj",
+        "mc",
+        "artist",
+        "team",
+        "founder",
+        "organizer",
+        "choreographer"
+    ];
+
+    function clean(value) {
+        return (value || "").replace(/\s+/g, " ").trim();
+    }
+
+    function extractLine(text, labels) {
+        for (const label of labels) {
+            const regex = new RegExp(label + "\\s*:\\s*([^\\n]+)", "i");
+            const match = text.match(regex);
+            if (match && match[1]) return clean(match[1]);
+        }
+        return "";
+    }
+
+    function getHeadingName(card) {
+        const heading = card.querySelector("h1, h2, h3, h4");
+        return heading ? clean(heading.textContent) : "Needs confirmation";
+    }
+
+    function getActionLinks(card) {
+        const actions = [];
+        Array.from(card.querySelectorAll("a, button")).forEach((el) => {
+            const text = clean(el.textContent).toLowerCase();
+            if (text === "view profile" || text === "claim this profile") {
+                actions.push(el.cloneNode(true));
+            }
+        });
+        return actions;
+    }
+
+    function getKeywords(card) {
+        const found = new Set();
+        const text = clean(card.innerText).toLowerCase();
+
+        roleWords.forEach((word) => {
+            if (text.includes(word)) found.add(word);
+        });
+
+        Array.from(card.querySelectorAll("span, .tag, .badge, .pill")).forEach((el) => {
+            const value = clean(el.textContent);
+            const lower = value.toLowerCase();
+
+            if (
+                value &&
+                !lower.includes("ghost profile") &&
+                !lower.includes("claimed") &&
+                !lower.includes("view profile") &&
+                !lower.includes("claim this profile")
+            ) {
+                roleWords.forEach((word) => {
+                    if (lower === word || lower.includes(word)) found.add(word);
+                });
+            }
+        });
+
+        return Array.from(found).map((word) => word.charAt(0).toUpperCase() + word.slice(1));
+    }
+
+    function getStatus(card) {
+        const text = clean(card.innerText).toLowerCase();
+
+        if (text.includes("ghost profile")) return "ghost";
+        if (text.includes("claimed")) return "claimed";
+        if (text.includes("pending")) return "pending";
+
+        return "active";
+    }
+
+    function normalizeCard(card) {
+        if (card.dataset.peopleUxNormalized === "1") return;
+
+        const fullText = card.innerText || "";
+        const name = card.dataset.name || card.dataset.danceName || getHeadingName(card);
+        const team = card.dataset.team || extractLine(fullText, ["Team", "Affiliation", "Team Affiliation"]) || "Needs confirmation";
+        const location = card.dataset.location || extractLine(fullText, ["Location", "Borough", "Scene", "Borough / Scene"]) || "Needs confirmation";
+        const recent = card.dataset.recent || card.dataset.lastBattle || extractLine(fullText, ["Recent Activity", "Recent Battle", "Last Battle"]) || "Needs confirmation";
+        const status = card.dataset.status || getStatus(card);
+        const keywords = getKeywords(card);
+        const actions = getActionLinks(card);
+
+        card.dataset.name = name.toLowerCase();
+        card.dataset.team = team.toLowerCase();
+        card.dataset.location = location.toLowerCase();
+        card.dataset.recent = recent.toLowerCase();
+        card.dataset.roles = keywords.join(" ").toLowerCase();
+        card.dataset.status = status.toLowerCase();
+        card.dataset.peopleUxNormalized = "1";
+
+        card.classList.add("people-profile-card-normalized");
+
+        card.innerHTML = "";
+
+        const info = document.createElement("div");
+        info.className = "people-card-info";
+        info.innerHTML = `
+            <p><strong>Dancer Name:</strong> <span>${name}</span></p>
+            <p><strong>Team:</strong> <span>${team}</span></p>
+            <p><strong>Location:</strong> <span>${location}</span></p>
+            <p><strong>Recent Activity:</strong> <span>${recent}</span></p>
+        `;
+        card.appendChild(info);
+
+        if (keywords.length) {
+            const tags = document.createElement("div");
+            tags.className = "people-role-keywords";
+            keywords.forEach((keyword) => {
+                const tag = document.createElement("span");
+                tag.textContent = keyword;
+                tags.appendChild(tag);
+            });
+            card.appendChild(tags);
+        }
+
+        if (actions.length) {
+            const actionWrap = document.createElement("div");
+            actionWrap.className = "people-card-actions";
+            actions.forEach((action) => actionWrap.appendChild(action));
+            card.appendChild(actionWrap);
+        }
+    }
+
+    cards.forEach(normalizeCard);
+
+    const searchInput =
+        document.querySelector('#profileSearch, #peopleSearch, input[type="search"]') ||
+        Array.from(document.querySelectorAll("input")).find((input) => {
+            const placeholder = (input.getAttribute("placeholder") || "").toLowerCase();
+            return placeholder.includes("search");
+        });
+
+    const selects = Array.from(document.querySelectorAll("select"));
+
+    const sortSelect = selects.find((select) => {
+        return Array.from(select.options).some((option) => clean(option.textContent).toLowerCase().includes("a to z"));
+    }) || selects[0];
+
+    const roleSelect = selects.find((select) => {
+        return Array.from(select.options).some((option) => clean(option.textContent).toLowerCase().includes("all roles"));
+    }) || selects[1];
+
+    const statusSelect = selects.find((select) => {
+        return Array.from(select.options).some((option) => clean(option.textContent).toLowerCase().includes("all statuses"));
+    }) || selects[2];
+
+    function selectedText(select) {
+        if (!select) return "";
+        const option = select.options[select.selectedIndex];
+        return clean(option ? option.textContent : select.value).toLowerCase();
+    }
+
+    function cardMatches(card) {
+        const search = clean(searchInput ? searchInput.value : "").toLowerCase();
+        const role = selectedText(roleSelect);
+        const status = selectedText(statusSelect);
+
+        const haystack = [
+            card.dataset.name,
+            card.dataset.team,
+            card.dataset.location,
+            card.dataset.recent,
+            card.dataset.roles,
+            card.dataset.status
+        ].join(" ");
+
+        const searchOk = !search || haystack.includes(search);
+
+        const roleOk =
+            !role ||
+            role.includes("all roles") ||
+            card.dataset.roles.includes(role.replace("all roles", "").trim());
+
+        const statusOk =
+            !status ||
+            status.includes("all statuses") ||
+            card.dataset.status.includes(status.replace("all statuses", "").trim());
+
+        return searchOk && roleOk && statusOk;
+    }
+
+    function sortCards(list) {
+        const sort = selectedText(sortSelect);
+
+        return list.sort((a, b) => {
+            const nameA = a.dataset.name || "";
+            const nameB = b.dataset.name || "";
+
+            if (sort.includes("z to a") || sort.includes("z-a")) {
+                return nameB.localeCompare(nameA);
+            }
+
+            return nameA.localeCompare(nameB);
+        });
+    }
+
+    function applyPeopleFilters() {
+        const sorted = sortCards([...cards]);
+
+        sorted.forEach((card) => {
+            grid.appendChild(card);
+            card.hidden = !cardMatches(card);
+        });
+    }
+
+    if (sortSelect) {
+        const azOption = Array.from(sortSelect.options).find((option) => {
+            return clean(option.textContent).toLowerCase().includes("a to z");
+        });
+
+        if (azOption) sortSelect.value = azOption.value;
+    }
+
+    [searchInput, sortSelect, roleSelect, statusSelect].forEach((control) => {
+        if (!control) return;
+        control.addEventListener("input", applyPeopleFilters);
+        control.addEventListener("change", applyPeopleFilters);
+    });
+
+    applyPeopleFilters();
+}
+
+document.addEventListener("DOMContentLoaded", initPeopleDirectoryUXFix);

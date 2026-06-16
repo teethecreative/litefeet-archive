@@ -3434,3 +3434,121 @@ button[data-preview-url] {
         min-width: 900px;
     }
 }
+
+
+/* People directory desktop UX fix */
+body.people-directory-ux main,
+body.people-directory-ux .content-section {
+    max-width: min(1180px, calc(100vw - 64px)) !important;
+}
+
+body.people-directory-ux .content-section > p {
+    max-width: 850px;
+}
+
+.people-card-grid-normalized {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    gap: 22px !important;
+    width: 100% !important;
+    align-items: stretch !important;
+}
+
+.people-profile-card-normalized {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    gap: 18px !important;
+    min-height: 255px !important;
+    padding: 26px !important;
+    border: 1px solid rgba(229, 174, 57, 0.35) !important;
+    border-radius: 18px !important;
+    background: rgba(255, 255, 255, 0.035) !important;
+}
+
+.people-card-info {
+    display: grid;
+    gap: 10px;
+}
+
+.people-card-info p {
+    margin: 0;
+    line-height: 1.35;
+}
+
+.people-card-info strong {
+    color: var(--gold);
+    display: inline;
+}
+
+.people-card-info span {
+    color: var(--cream);
+}
+
+.people-role-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.people-role-keywords span {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(229, 174, 57, 0.35);
+    border-radius: 999px;
+    padding: 6px 10px;
+    color: var(--gold);
+    background: rgba(229, 174, 57, 0.08);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: default;
+    pointer-events: none;
+}
+
+.people-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.people-card-actions a,
+.people-card-actions button {
+    width: auto !important;
+}
+
+body.people-directory-ux form,
+body.people-directory-ux .filter-panel,
+body.people-directory-ux .directory-controls,
+body.people-directory-ux .profile-controls {
+    max-width: 100% !important;
+}
+
+body.people-directory-ux select,
+body.people-directory-ux input[type="search"],
+body.people-directory-ux input[type="text"] {
+    min-width: 0;
+}
+
+@media (min-width: 1200px) {
+    .people-card-grid-normalized {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .people-card-grid-normalized {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 620px) {
+    body.people-directory-ux main,
+    body.people-directory-ux .content-section {
+        max-width: calc(100vw - 28px) !important;
+    }
+
+    .people-card-grid-normalized {
+        grid-template-columns: 1fr !important;
+    }
+}
