@@ -3049,3 +3049,58 @@ body {
         min-width: 70px;
     }
 }
+
+/* LiteFeet Music table play button fix */
+.litefeet-music table tbody td:first-child,
+.litefeet-music-page table tbody td:first-child,
+.music-releases table tbody td:first-child,
+.releases-table tbody td:first-child,
+.music-table tbody td:first-child,
+.release-table tbody td:first-child {
+    width: 72px;
+    min-width: 72px;
+    max-width: 72px;
+    vertical-align: middle;
+    overflow: visible;
+}
+
+.litefeet-music table tbody td:first-child button,
+.litefeet-music-page table tbody td:first-child button,
+.music-releases table tbody td:first-child button,
+.releases-table tbody td:first-child button,
+.music-table tbody td:first-child button,
+.release-table tbody td:first-child button,
+button.music-play-button,
+button.release-play-button,
+button.track-play-button,
+button.play-track-button,
+button[data-play-url],
+button[data-audio-url],
+button[data-preview-url] {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    aspect-ratio: 1 / 1 !important;
+    flex: 0 0 44px !important;
+    white-space: nowrap !important;
+}
+
+.litefeet-music table tbody td:first-child button svg,
+.litefeet-music-page table tbody td:first-child button svg,
+.music-releases table tbody td:first-child button svg,
+.releases-table tbody td:first-child button svg,
+.music-table tbody td:first-child button svg,
+.release-table tbody td:first-child button svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+}
