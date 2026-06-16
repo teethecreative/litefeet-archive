@@ -1,7 +1,9 @@
 import json
 import os
 import re
+import requests
 import secrets
+from email.message import EmailMessage
 from html import unescape
 from urllib.parse import urlparse, parse_qs, quote
 from urllib.request import Request, urlopen
@@ -4607,6 +4609,116 @@ def litefeet_music():
     )
 
 
+
+
+
+
+ALLOWED_PROOF_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".pdf"}
+MAX_PROOF_FILE_BYTES = 8 * 1024 * 1024
+
+
+def proof_file_allowed(filename):
+    if not filename:
+        return False
+
+    value = filename.lower().strip()
+    return any(value.endswith(ext) for ext in ALLOWED_PROOF_EXTENSIONS)
+
+
+def send_play_count_proof_email(subject, body, file_storage, reply_to=""):
+    resend_api_key = os.environ.get("RESEND_API_KEY", "").strip()
+    proof_from = os.environ.get("PROOF_EMAIL_FROM", "LiteFeet Ledger <proof@thelitefeetvault.com>").strip()
+    proof_to = os.environ.get("PROOF_EMAIL_TO", "teethecreative@gmail.com").strip()
+
+    if not resend_api_key or not proof_from or not proof_to:
+        raise RuntimeError("Resend proof email settings are not configured.")
+
+    filename = secure_filename(file_storage.filename or "proof")
+    if not proof_file_allowed(filename):
+        raise ValueError("Proof must be a PNG, JPG, WEBP, or PDF file.")
+
+    file_bytes = file_storage.read()
+
+    if not file_bytes:
+        raise ValueError("Proof file was empty.")
+
+    if len(file_bytes) > MAX_PROOF_FILE_BYTES:
+        raise ValueError("Proof file is too large. Max size is 8MB.")
+
+    import base64
+    encoded_file = base64.b64encode(file_bytes).decode("utf-8")
+
+    payload = {
+        "from": proof_from,
+        "to": [proof_to],
+        "subject": subject,
+        "text": body,
+        "attachments": [
+            {
+                "filename": filename,
+                "content": encoded_file,
+            }
+        ],
+    }
+
+    if reply_to:
+        payload["reply_to"] = reply_to
+
+    response = requests.post(
+        "https://api.resend.com/emails",
+        headers={
+            "Authorization": f"Bearer {resend_api_key}",
+            "Content-Type": "application/json",
+        },
+        json=payload,
+        timeout=20,
+    )
+
+    if response.status_code >= 300:
+        raise RuntimeError(f"Resend email failed: {response.status_code} {response.text}")
+
+
+@app.route("/music/stats-proof", methods=["POST"])
+def music_stats_proof_submit():
+    track_title = request.form.get("track_title", "").strip()
+    producer = request.form.get("producer", "").strip()
+    platform = request.form.get("platform", "").strip()
+    submitter_name = request.form.get("submitter_name", "").strip()
+    submitter_email = request.form.get("submitter_email", "").strip()
+    notes = request.form.get("notes", "").strip()
+    proof_file = request.files.get("proof_file")
+
+    if not proof_file or not proof_file.filename:
+        return redirect((request.referrer or url_for("litefeet_music")) + "?proof=missing")
+
+    subject = "LiteFeet Ledger Play Count Proof"
+    if track_title:
+        subject += f" - {track_title}"
+    if producer:
+        subject += f" - {producer}"
+
+    body = f"""LiteFeet Ledger play count proof submitted.
+
+Track: {track_title or 'Not provided'}
+Producer / Artist: {producer or 'Not provided'}
+Platform: {platform or 'Not provided'}
+
+Submitted by: {submitter_name or 'Not provided'}
+Submitter email: {submitter_email or 'Not provided'}
+
+Notes:
+{notes or 'None'}
+
+This proof file was attached to the email and was not stored by the site.
+"""
+
+    try:
+        send_play_count_proof_email(subject, body, proof_file)
+    except Exception as exc:
+        print("Proof email failed:", exc)
+        return redirect((request.referrer or url_for("litefeet_music")) + "?proof=error")
+
+    return redirect((request.referrer or url_for("litefeet_music")) + "?proof=sent")
 
 
 @app.route("/music/<int:item_id>/play", methods=["POST"])

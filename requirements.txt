@@ -3,3 +3,4 @@ python-dotenv
 gunicorn
 SQLAlchemy
 pg8000
+requests>=2.31.0

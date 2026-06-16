@@ -2693,3 +2693,45 @@ body {
         width: 100%;
     }
 }
+
+/* Proof upload form */
+.proof-upload-panel {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(226, 177, 58, 0.18);
+    border-radius: 16px;
+    margin-top: 1rem;
+    padding: 0.85rem;
+}
+
+.proof-upload-panel summary {
+    color: #f0c84b;
+    cursor: pointer;
+    font-weight: 900;
+}
+
+.proof-upload-form {
+    display: grid;
+    gap: 0.8rem;
+    margin-top: 0.85rem;
+}
+
+.proof-upload-form label {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.proof-upload-form input,
+.proof-upload-form select,
+.proof-upload-form textarea {
+    background: #050505;
+    border: 1px solid rgba(226, 177, 58, 0.28);
+    border-radius: 12px;
+    color: #f5f0e8;
+    font: inherit;
+    padding: 0.7rem 0.8rem;
+}
+
+.proof-upload-form textarea {
+    min-height: 90px;
+}
+
