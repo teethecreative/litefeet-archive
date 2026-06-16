@@ -691,7 +691,7 @@ function initLedgerPlayerHardOverride() {
 
             const note = document.createElement("p");
             note.className = "small-note";
-            note.textContent = "This record has a source link, but the Ledger could not build an on-site player from it yet.";
+            note.textContent = "Missing player link. This record has a source, but the Ledger cannot play it on-site yet.";
             bodyTarget.appendChild(note);
 
             if (sourceUrl) {
@@ -700,7 +700,16 @@ function initLedgerPlayerHardOverride() {
                 link.href = sourceUrl;
                 link.target = "_blank";
                 link.rel = "noopener";
-                link.textContent = "Open Source Manually";
+                link.textContent = "Play Externally";
+
+                link.addEventListener("click", function (event) {
+                    event.preventDefault();
+
+                    recordPlay(itemId).finally(() => {
+                        window.open(sourceUrl, "_blank", "noopener");
+                    });
+                });
+
                 bodyTarget.appendChild(link);
             }
         }
