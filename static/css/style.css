@@ -3552,3 +3552,294 @@ body.people-directory-ux input[type="text"] {
         grid-template-columns: 1fr !important;
     }
 }
+
+
+/* =========================================================
+   Global desktop UI foundation
+   Makes Ledger pages responsive without page-by-page hacks
+   ========================================================= */
+
+:root {
+    --ledger-page-max: 1180px;
+    --ledger-page-pad: clamp(18px, 4vw, 56px);
+    --ledger-card-min: 280px;
+}
+
+/* Page width should breathe on desktop */
+main,
+.page-shell,
+.content-section,
+.homepage-section,
+.admin-command-center,
+.verify-page-section,
+.music-page,
+.people-page,
+.directory-page {
+    width: min(var(--ledger-page-max), calc(100vw - (var(--ledger-page-pad) * 2))) !important;
+    max-width: min(var(--ledger-page-max), calc(100vw - (var(--ledger-page-pad) * 2))) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Headings/readable copy should not stretch too far */
+.content-section > p,
+.homepage-section > p,
+.page-intro,
+.hero-copy,
+.section-intro {
+    max-width: 880px;
+}
+
+/* Global section heading rows */
+.section-heading-row,
+.page-heading-row,
+.admin-heading-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+/* Global filter/control panels */
+.filter-panel,
+.directory-controls,
+.profile-controls,
+.music-ranking-controls,
+.compact-release-controls,
+.search-filter-panel,
+.controls-panel,
+form.period-filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 14px;
+}
+
+.filter-panel label,
+.directory-controls label,
+.profile-controls label,
+.music-ranking-controls label,
+.compact-release-controls label,
+.search-filter-panel label,
+.controls-panel label {
+    display: grid;
+    gap: 6px;
+    min-width: 160px;
+    flex: 1 1 160px;
+}
+
+.filter-panel input,
+.filter-panel select,
+.directory-controls input,
+.directory-controls select,
+.profile-controls input,
+.profile-controls select,
+.music-ranking-controls input,
+.music-ranking-controls select,
+.compact-release-controls input,
+.compact-release-controls select,
+.search-filter-panel input,
+.search-filter-panel select,
+.controls-panel input,
+.controls-panel select {
+    width: 100%;
+    min-width: 0;
+}
+
+/* Any card grid should respond to screen width */
+.card-grid,
+.people-grid,
+.profile-grid,
+.dancer-grid,
+.producer-grid,
+.team-grid,
+.video-feed-grid,
+.music-feed-list,
+.event-grid,
+.battle-grid,
+.award-grid,
+.dashboard-stat-grid,
+.home-feature-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(var(--ledger-card-min), 1fr)) !important;
+    gap: 22px !important;
+    width: 100% !important;
+    align-items: stretch !important;
+}
+
+/* Cards should fill their grid cell cleanly */
+.card-grid > *,
+.people-grid > *,
+.profile-grid > *,
+.dancer-grid > *,
+.producer-grid > *,
+.team-grid > *,
+.video-feed-grid > *,
+.music-feed-list > *,
+.event-grid > *,
+.battle-grid > *,
+.award-grid > *,
+.home-feature-grid > *,
+.media-card,
+.queue-card,
+.profile-card,
+.dancer-card,
+.event-card,
+.battle-card,
+.award-card {
+    min-width: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+}
+
+/* Tables should not crush columns into vertical words */
+.release-table-wrap,
+.verify-table-wrap,
+.table-wrap,
+.admin-table-wrap,
+.ledger-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 18px;
+}
+
+.release-table,
+.verify-claims-table,
+.ledger-table,
+.admin-table,
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.release-table th,
+.release-table td,
+.verify-claims-table th,
+.verify-claims-table td,
+.ledger-table th,
+.ledger-table td,
+.admin-table th,
+.admin-table td {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+/* Text-heavy table cells can wrap, but not every column */
+.release-table td:first-child,
+.verify-claims-table .verify-claim-cell,
+.ledger-table .text-cell,
+.admin-table .text-cell {
+    white-space: normal;
+}
+
+/* Buttons inside tables/cards should stay compact */
+table .button,
+.release-table .button,
+.verify-claims-table .button,
+.admin-table .button,
+.card-actions .button,
+.people-card-actions .button {
+    width: auto !important;
+    max-width: max-content;
+    white-space: nowrap;
+}
+
+/* Pills/tags are keywords unless explicitly interactive */
+.tag,
+.badge,
+.pill,
+.keyword-pill,
+.role-keyword,
+.people-role-keywords span,
+.submission-meta span,
+.release-stat-line span,
+.vote-preview span {
+    cursor: default;
+}
+
+/* Nav should not force cramped page widths */
+.site-header,
+header,
+.nav-shell {
+    width: min(var(--ledger-page-max), calc(100vw - (var(--ledger-page-pad) * 2))) !important;
+    max-width: min(var(--ledger-page-max), calc(100vw - (var(--ledger-page-pad) * 2))) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(10px, 1.6vw, 22px);
+    flex-wrap: wrap;
+}
+
+/* Desktop should use more columns when there is room */
+@media (min-width: 1280px) {
+    :root {
+        --ledger-page-max: 1320px;
+        --ledger-card-min: 290px;
+    }
+
+    .people-grid,
+    .profile-grid,
+    .dancer-grid,
+    .producer-grid,
+    .team-grid,
+    .people-card-grid-normalized {
+        grid-template-columns: repeat(auto-fit, minmax(285px, 1fr)) !important;
+    }
+}
+
+/* Medium screens */
+@media (max-width: 980px) {
+    :root {
+        --ledger-card-min: 260px;
+    }
+
+    .section-heading-row,
+    .page-heading-row,
+    .admin-heading-row {
+        align-items: flex-start;
+    }
+}
+
+/* Mobile */
+@media (max-width: 680px) {
+    :root {
+        --ledger-page-pad: 16px;
+        --ledger-card-min: 100%;
+    }
+
+    main,
+    .page-shell,
+    .content-section,
+    .homepage-section,
+    .admin-command-center,
+    .verify-page-section,
+    .music-page,
+    .people-page,
+    .directory-page {
+        width: calc(100vw - 32px) !important;
+        max-width: calc(100vw - 32px) !important;
+    }
+
+    .filter-panel,
+    .directory-controls,
+    .profile-controls,
+    .music-ranking-controls,
+    .compact-release-controls,
+    .search-filter-panel,
+    .controls-panel {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .release-table,
+    .verify-claims-table,
+    .ledger-table,
+    .admin-table {
+        min-width: 820px;
+    }
+}
