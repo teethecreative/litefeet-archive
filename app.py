@@ -16,6 +16,53 @@ from markupsafe import Markup, escape
 import hashlib
 
 app = Flask(__name__)
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    return Response(
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Sitemap: https://thelitefeetvault.com/sitemap.xml\n",
+        mimetype="text/plain",
+    )
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    pages = [
+        "",
+        "ask",
+        "events",
+        "people/dancers",
+        "people/teams",
+        "litefeet-music",
+        "battles",
+        "awards",
+        "verify",
+        "about",
+        "submit",
+        "submit/event",
+        "submit/music",
+    ]
+
+    urls = []
+    for page in pages:
+        loc = f"https://thelitefeetvault.com/{page}".rstrip("/")
+        urls.append(f"""
+    <url>
+        <loc>{loc}</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>""")
+
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{''.join(urls)}
+</urlset>
+"""
+
+    return Response(xml, mimetype="application/xml")
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-this-secret")
 
 
