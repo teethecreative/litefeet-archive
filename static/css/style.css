@@ -2854,3 +2854,39 @@ body {
     }
 }
 
+
+/* Hard fix: keep navbar logo image small */
+.site-header .logo.brand-with-logo {
+    align-items: center !important;
+    display: inline-flex !important;
+    gap: 0.6rem !important;
+    max-width: max-content !important;
+}
+
+.site-header .logo.brand-with-logo img {
+    display: block !important;
+    height: 38px !important;
+    max-height: 38px !important;
+    max-width: 38px !important;
+    min-height: 38px !important;
+    min-width: 38px !important;
+    object-fit: cover !important;
+    width: 38px !important;
+}
+
+.site-header .logo.brand-with-logo span {
+    display: inline-block !important;
+    white-space: nowrap !important;
+}
+
+@media (max-width: 700px) {
+    .site-header .logo.brand-with-logo img {
+        height: 32px !important;
+        max-height: 32px !important;
+        max-width: 32px !important;
+        min-height: 32px !important;
+        min-width: 32px !important;
+        width: 32px !important;
+    }
+}
+
