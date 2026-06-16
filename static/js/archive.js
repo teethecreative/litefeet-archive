@@ -402,6 +402,8 @@ function initTopPlaylistPlayerBehavior() {
     }
 
     function shouldCountPlay(itemId) {
+        if (window.LITEFEET_LEDGER_IS_ADMIN) return false;
+
         const now = Date.now();
         const last = recentPlayKeys.get(itemId) || 0;
 
@@ -412,9 +414,9 @@ function initTopPlaylistPlayerBehavior() {
     }
 
     function recordPlay(itemId) {
-        if (!itemId || !shouldCountPlay(itemId)) return;
+        if (!itemId || !shouldCountPlay(itemId)) return Promise.resolve();
 
-        fetch(`/music/${itemId}/play`, {
+        return fetch(`/music/${itemId}/play`, {
             method: "POST",
             headers: {
                 "X-Requested-With": "XMLHttpRequest"
@@ -422,7 +424,7 @@ function initTopPlaylistPlayerBehavior() {
         })
             .then((response) => response.json())
             .then((data) => {
-                if (data && data.ok) {
+                if (data && data.ok && !data.admin_ignored) {
                     updatePlayDisplays(itemId, data.play_count);
                 }
             })
@@ -435,14 +437,7 @@ function initTopPlaylistPlayerBehavior() {
         }
     }
 
-    function appendSmallNote(bodyTarget, text) {
-        const note = document.createElement("p");
-        note.className = "small-note";
-        note.textContent = text;
-        bodyTarget.appendChild(note);
-    }
-
-    function renderPlayer(button) {
+    function renderLedgerAudioPlayer(button) {
         const player = findPlayer(button);
         if (!player) return;
 
@@ -451,7 +446,6 @@ function initTopPlaylistPlayerBehavior() {
         const artist = button.dataset.playerArtist || "Unknown producer";
         const platform = button.dataset.playerPlatform || "";
         const playableUrl = button.dataset.playerPlayableUrl || "";
-        const sourceUrl = button.dataset.playerSourceUrl || "";
 
         const titleTarget = player.querySelector("[data-player-title]");
         const metaTarget = player.querySelector("[data-player-meta]");
@@ -463,49 +457,61 @@ function initTopPlaylistPlayerBehavior() {
         if (bodyTarget) {
             clearPlayerBody(bodyTarget);
 
-            if (playableUrl) {
-                const audio = document.createElement("audio");
-                audio.controls = true;
-                audio.autoplay = true;
-                audio.preload = "none";
-                audio.src = playableUrl;
+            const audio = document.createElement("audio");
+            audio.controls = true;
+            audio.autoplay = true;
+            audio.preload = "none";
+            audio.src = playableUrl;
 
-                audio.addEventListener("play", () => recordPlay(itemId));
+            audio.addEventListener("play", () => recordPlay(itemId));
 
-                bodyTarget.appendChild(audio);
+            bodyTarget.appendChild(audio);
 
-                audio.play().catch(() => {
-                    appendSmallNote(bodyTarget, "Tap play on the audio controls to start the track.");
-                });
-            } else {
-                appendSmallNote(
-                    bodyTarget,
-                    "Source Only: add a direct playable URL in the admin editor for this track to play inside the Ledger player."
-                );
-
-                if (sourceUrl) {
-                    const link = document.createElement("a");
-                    link.className = "button small-button";
-                    link.href = sourceUrl;
-                    link.target = "_blank";
-                    link.rel = "noopener";
-                    link.textContent = "Open Source";
-                    bodyTarget.appendChild(link);
-                }
-            }
+            audio.play().catch(() => {});
         }
 
         document.querySelectorAll(".playlist-play-button.is-playing").forEach((activeButton) => {
             activeButton.classList.remove("is-playing");
         });
+
         button.classList.add("is-playing");
 
         player.hidden = false;
         player.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
+    function openExternalSource(button) {
+        const itemId = button.dataset.playItemId || "";
+        const sourceUrl = button.dataset.playerSourceUrl || "";
+
+        recordPlay(itemId).finally(() => {
+            if (sourceUrl) {
+                window.open(sourceUrl, "_blank", "noopener");
+            }
+        });
+    }
+
+    function handlePlay(button) {
+        const playableUrl = button.dataset.playerPlayableUrl || "";
+
+        if (playableUrl) {
+            renderLedgerAudioPlayer(button);
+            return;
+        }
+
+        openExternalSource(button);
+    }
+
     playButtons.forEach((button) => {
-        button.addEventListener("click", () => renderPlayer(button));
+        const playableUrl = button.dataset.playerPlayableUrl || "";
+        const sourceUrl = button.dataset.playerSourceUrl || "";
+
+        if (!playableUrl && sourceUrl) {
+            button.classList.add("external-source-play-button");
+            button.setAttribute("title", "Open source and count Ledger Play");
+        }
+
+        button.addEventListener("click", () => handlePlay(button));
     });
 }
 

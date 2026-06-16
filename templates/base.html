@@ -114,6 +114,9 @@
         <button type="button" id="globalNowPlayingStop">Stop</button>
     </div>
 
+    <script>
+        window.LITEFEET_LEDGER_IS_ADMIN = {{ "true" if session.get("admin_logged_in") or nav_is_admin else "false" }};
+    </script>
     <script src="/static/js/archive.js"></script>
 </body>
 </html>

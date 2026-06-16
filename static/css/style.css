@@ -3288,3 +3288,13 @@ button[data-preview-url] {
         min-width: 820px;
     }
 }
+
+
+/* External source play buttons still count as Ledger Plays */
+.playlist-play-button.external-source-play-button {
+    opacity: 1;
+}
+
+.playlist-play-button.external-source-play-button::after {
+    content: "";
+}

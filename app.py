@@ -5147,7 +5147,25 @@ This proof file was attached to the email and was not stored by the site.
 def music_play_count(item_id):
     ensure_music_play_count_columns()
 
-    now_value = datetime.now().isoformat(timespec="seconds")
+    # Admin/testing plays should not affect public Ledger Plays.
+    if session.get("admin_logged_in") or current_user_is_admin():
+        rows = fetch_all(
+            """
+            SELECT play_count
+            FROM media_items
+            WHERE id = :id
+            LIMIT 1
+            """,
+            {"id": item_id},
+        )
+
+        row = rows[0] if rows else None
+
+        return {
+            "ok": True,
+            "play_count": row["play_count"] if row else 0,
+            "admin_ignored": True,
+        }
 
     with engine.begin() as conn:
         conn.execute(
@@ -5157,35 +5175,32 @@ def music_play_count(item_id):
                 SET play_count = COALESCE(play_count, 0) + 1,
                     last_played_at = :last_played_at
                 WHERE id = :id
-                  AND media_type = 'music_release'
                 """
             ),
             {
                 "id": item_id,
-                "last_played_at": now_value,
+                "last_played_at": datetime.now().isoformat(timespec="seconds"),
             },
         )
 
-        row = conn.execute(
-            text(
-                """
-                SELECT play_count
-                FROM media_items
-                WHERE id = :id
-                  AND media_type = 'music_release'
-                LIMIT 1
-                """
-            ),
-            {"id": item_id},
-        ).mappings().first()
+    rows = fetch_all(
+        """
+        SELECT play_count
+        FROM media_items
+        WHERE id = :id
+        LIMIT 1
+        """,
+        {"id": item_id},
+    )
 
-    return jsonify({
+    row = rows[0] if rows else None
+
+    return {
         "ok": True,
         "play_count": row["play_count"] if row else 0,
-    })
+    }
 
 
-@app.route("/music/<int:item_id>/feedback", methods=["POST"])
 def music_feedback_submit(item_id):
     ensure_music_feedback_table()
 
