@@ -867,7 +867,8 @@ function initPeopleDirectoryUXFix() {
             text.includes("ghost profile") ||
             text.includes("needs confirmation") ||
             text.includes("needs verification") ||
-            text.includes("pending review")
+            text.includes("pending review") ||
+            text.includes("rejected")
         ) {
             return "inactive";
         }
@@ -1041,3 +1042,43 @@ function initPeopleDirectoryUXFix() {
 }
 
 document.addEventListener("DOMContentLoaded", initPeopleDirectoryUXFix);
+
+
+function initPeopleProfileStatusSimplifier() {
+    if (!window.location.pathname.includes("/admin/people/")) return;
+    if (!window.location.pathname.includes("/edit")) return;
+
+    const headings = Array.from(document.querySelectorAll("h1, h2")).map((h) => h.textContent.toLowerCase());
+    if (!headings.some((text) => text.includes("edit person profile"))) return;
+
+    const statusSelect = Array.from(document.querySelectorAll("select")).find((select) => {
+        return Array.from(select.options).some((option) => {
+            const value = option.textContent.toLowerCase();
+            return (
+                value.includes("ghost profile") ||
+                value.includes("pending review") ||
+                value.includes("community supported") ||
+                value.includes("needs verification") ||
+                value.includes("verified")
+            );
+        });
+    });
+
+    if (!statusSelect) return;
+
+    const oldText = statusSelect.options[statusSelect.selectedIndex]
+        ? statusSelect.options[statusSelect.selectedIndex].textContent.trim().toLowerCase()
+        : "";
+
+    const activeValues = ["active", "approved", "verified", "community supported", "claimed"];
+    const selectedValue = activeValues.includes(oldText) ? "Active" : "Inactive";
+
+    statusSelect.innerHTML = `
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+    `;
+
+    statusSelect.value = selectedValue;
+}
+
+document.addEventListener("DOMContentLoaded", initPeopleProfileStatusSimplifier);

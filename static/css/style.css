@@ -3890,3 +3890,9 @@ nav {
         grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     }
 }
+
+
+/* People profile admin status simplification */
+body:has(select[name="status"]) select[name="status"] {
+    max-width: 100%;
+}

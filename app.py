@@ -540,7 +540,7 @@ def admin_role_requests():
 
 @app.route("/admin/role-requests/<int:request_id>/status", methods=["POST"])
 def update_role_request_status(request_id):
-    new_status = request.form.get("status", "").strip()
+    new_status = normalize_people_profile_status(request.form.get("status", "").strip())
 
     allowed_statuses = {"Pending Review", "Approved", "Rejected"}
 
@@ -1766,7 +1766,7 @@ def admin_person_edit(dancer_id):
         borough_scene = request.form.get("borough_scene", "").strip()
         bio = request.form.get("bio", "").strip()
         source_url = request.form.get("source_url", "").strip()
-        status = request.form.get("status", "").strip()
+        status = normalize_people_profile_status(request.form.get("status", "").strip())
 
         if status not in allowed_statuses:
             status = profile["status"]
@@ -1797,7 +1797,7 @@ def admin_person_edit(dancer_id):
                 "borough_scene": borough_scene,
                 "bio": bio,
                 "source_url": source_url,
-                "status": status,
+                "status": normalize_people_profile_status(status),
                 "dancer_id": dancer_id,
             },
         )
@@ -2219,7 +2219,7 @@ def admin_media():
                         "release_date": release_date,
                         "event_name": event_name,
                         "description": description,
-                        "status": status,
+                        "status": normalize_people_profile_status(status),
                         "created_at": datetime.now().isoformat(timespec="seconds"),
                     },
                 )
@@ -3264,7 +3264,7 @@ def admin_dancer_profiles():
 
 @app.route("/admin/dancer-profiles/<int:dancer_id>/status", methods=["POST"])
 def update_dancer_profile_status(dancer_id):
-    new_status = request.form.get("status", "").strip()
+    new_status = normalize_people_profile_status(request.form.get("status", "").strip())
 
     allowed_statuses = {
         "Pending Review",
@@ -3323,7 +3323,7 @@ def admin_dancer_feedback():
 
 @app.route("/admin/dancer-suggestions/<int:suggestion_id>/status", methods=["POST"])
 def update_dancer_suggestion_status(suggestion_id):
-    new_status = request.form.get("status", "").strip()
+    new_status = normalize_people_profile_status(request.form.get("status", "").strip())
 
     if new_status not in {"Pending Review", "Approved", "Rejected"}:
         return redirect(url_for("admin_dancer_feedback"))
@@ -3345,7 +3345,7 @@ def update_dancer_suggestion_status(suggestion_id):
 
 @app.route("/admin/dancer-flowers/<int:flower_id>/status", methods=["POST"])
 def update_dancer_flower_status(flower_id):
-    new_status = request.form.get("status", "").strip()
+    new_status = normalize_people_profile_status(request.form.get("status", "").strip())
 
     if new_status not in {"Pending Review", "Approved", "Rejected"}:
         return redirect(url_for("admin_dancer_feedback"))
@@ -6040,7 +6040,7 @@ def admin_music_release_edit(item_id):
                     "release_date": release_date,
                     "event_name": event_name,
                     "description": description,
-                    "status": status,
+                    "status": normalize_people_profile_status(status),
                     "track_number": track_number,
                     "canonical_release_key": canonical_release_key,
                 },
@@ -6141,7 +6141,7 @@ def admin_music_project_edit(project_id):
                     "release_date": release_date,
                     "release_stage": release_stage,
                     "description": description,
-                    "status": status,
+                    "status": normalize_people_profile_status(status),
                 },
             )
 
@@ -6168,7 +6168,7 @@ def admin_music_project_edit(project_id):
                     "release_date": release_date,
                     "release_stage": release_stage,
                     "event_name": title,
-                    "status": status,
+                    "status": normalize_people_profile_status(status),
                 },
             )
 
@@ -6791,4 +6791,20 @@ try:
     app.jinja_env.filters["event_public_url"] = event_public_url
 except Exception:
     pass
+
+
+# --- People profile status simplification ---
+def normalize_people_profile_status(status):
+    value = (status or "").strip().lower()
+
+    if value in {
+        "active",
+        "approved",
+        "verified",
+        "community supported",
+        "claimed",
+    }:
+        return "Active"
+
+    return "Inactive"
 

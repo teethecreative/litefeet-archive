@@ -40,11 +40,8 @@
         <label>
             Status
             <select name="status">
-                {% for status in allowed_statuses %}
-                    <option value="{{ status }}" {% if profile["status"] == status %}selected{% endif %}>
-                        {{ status }}
-                    </option>
-                {% endfor %}
+                <option value="Active" {% if profile["status"] == "Active" or profile["status"] in ["Approved", "Verified", "Community Supported"] %}selected{% endif %}>Active</option>
+                <option value="Inactive" {% if profile["status"] == "Inactive" or profile["status"] in ["Ghost Profile", "Pending Review", "Needs Verification", "Rejected"] %}selected{% endif %}>Inactive</option>
             </select>
         </label>
 
