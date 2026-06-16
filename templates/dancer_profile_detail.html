@@ -1,6 +1,49 @@
 {% extends "base.html" %}
 
-{% block title %}{{ profile["dance_name"] }} | LiteFeet Ledger{% endblock %}
+{% block title %}{{ profile["dance_name"] }} | LiteFeet Ledger
+{% if profile_releases %}
+<section class="content-section profile-releases-section">
+    <p class="eyebrow">Music</p>
+    <h2>Releases</h2>
+
+    <div class="release-table-wrap">
+        <table class="release-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Date</th>
+                    <th>Platform</th>
+                    <th>Stats</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for release in profile_releases %}
+                    <tr>
+                        <td>
+                            <a class="release-title-link" href="/litefeet-music/release/{{ release['id'] }}">
+                                {{ release["title"] }}
+                            </a>
+                        </td>
+                        <td>{{ release["release_date"]|music_release_date }}</td>
+                        <td>{{ release["platform"] or "Unknown" }}</td>
+                        <td>
+                            <div class="release-stat-line">
+                                <span>Ledger {{ release["play_count"] or 0 }}</span>
+                                <span>Spotify {{ release["spotify_streams"] or 0 }}</span>
+                                <span>Apple {{ release["apple_music_plays"] or 0 }}</span>
+                                <span>SoundCloud {{ release["soundcloud_plays"] or 0 }}</span>
+                                <span>YouTube {{ release["youtube_views"] or 0 }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}
 
 {% block content %}
 <section class="detail-shell profile-detail-shell">

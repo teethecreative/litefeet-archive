@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Behind the Music | {{ item["title"] }}{% endblock %}
+
+{% block content %}
+<section class="content-section music-page behind-music-page">
+    <p class="eyebrow">Behind the Music</p>
+    <h1>{{ item["title"] }}</h1>
+
+    <div class="behind-music-grid">
+        <div class="behind-music-main">
+            <div class="behind-music-card">
+                <h2>Release Information</h2>
+
+                <dl class="release-info-list">
+                    <div>
+                        <dt>Title</dt>
+                        <dd>{{ item["title"] }}</dd>
+                    </div>
+
+                    <div>
+                        <dt>Artist(s) / Producer</dt>
+                        <dd>
+                            {% if item.get("producer_profile") %}
+                                <a href="/dancers/{{ item['producer_profile']['id'] }}">{{ item["artist_or_creator"] }}</a>
+                            {% else %}
+                                {{ item["artist_or_creator"] or "Unknown" }}
+                            {% endif %}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>Date</dt>
+                        <dd>{{ item["release_date"]|music_release_date }}</dd>
+                    </div>
+
+                    <div>
+                        <dt>Platform</dt>
+                        <dd>{{ item["platform"] or "Unknown" }}</dd>
+                    </div>
+
+                    <div>
+                        <dt>Source</dt>
+                        <dd>
+                            {% if item["url"] %}
+                                <a href="{{ item['url'] }}" target="_blank" rel="noopener">Open source</a>
+                            {% else %}
+                                Archived only
+                            {% endif %}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="behind-music-card">
+                <h2>Stats</h2>
+
+                <div class="platform-stat-grid">
+                    <div><span>Ledger Plays</span><strong>{{ item["play_count"] or 0 }}</strong></div>
+                    <div><span>Spotify</span><strong>{{ item["spotify_streams"] or 0 }}</strong></div>
+                    <div><span>Apple Music</span><strong>{{ item["apple_music_plays"] or 0 }}</strong></div>
+                    <div><span>SoundCloud</span><strong>{{ item["soundcloud_plays"] or 0 }}</strong></div>
+                    <div><span>YouTube</span><strong>{{ item["youtube_views"] or 0 }}</strong></div>
+                    <div><span>Rating</span><strong>{{ "%.1f"|format(item["average_rating"] or 0) }}/10</strong></div>
+                    <div><span>Lab</span><strong>{{ item["lab_count"] or 0 }}</strong></div>
+                    <div><span>Video</span><strong>{{ item["video_count"] or 0 }}</strong></div>
+                    <div><span>Battle</span><strong>{{ item["battle_count"] or 0 }}</strong></div>
+                </div>
+
+                <p class="small-note">
+                    Platform stats are manually updated from screenshot proof.
+                    {% if item["platform_stats_verified"] %}
+                        Verified.
+                    {% else %}
+                        Not yet verified.
+                    {% endif %}
+                </p>
+            </div>
+
+            {% if item["description"] %}
+                <div class="behind-music-card">
+                    <h2>Notes</h2>
+                    <p>{{ item["description"] }}</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <aside class="behind-music-side">
+            <div class="behind-music-card">
+                <h2>Play</h2>
+
+                {% if item.get("playable_url") %}
+                    <audio controls preload="none" src="{{ item['playable_url'] }}"></audio>
+                {% elif item["url"] and (item["url"]|media_embed_url) %}
+                    <iframe
+                        src="{{ item['url']|media_embed_url }}"
+                        loading="lazy"
+                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                        allowfullscreen>
+                    </iframe>
+                {% elif item["url"] %}
+                    <a class="button small-button" href="{{ item['url'] }}" target="_blank" rel="noopener">Open Source</a>
+                {% else %}
+                    <p class="small-note">No playable source yet.</p>
+                {% endif %}
+            </div>
+
+            {% if session.get("admin_logged_in") %}
+                <div class="behind-music-card">
+                    <h2>Admin</h2>
+                    <a class="button small-button" href="/admin/music/release/{{ item['id'] }}/edit">Edit Release</a>
+                </div>
+            {% endif %}
+        </aside>
+    </div>
+</section>
+{% endblock %}

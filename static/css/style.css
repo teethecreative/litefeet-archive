@@ -2890,3 +2890,162 @@ body {
     }
 }
 
+
+/* All Time Releases table */
+.release-table-wrap {
+    border: 1px solid rgba(226, 177, 58, 0.28);
+    border-radius: 18px;
+    overflow-x: auto;
+}
+
+.release-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.release-table th,
+.release-table td {
+    border-bottom: 1px solid rgba(226, 177, 58, 0.16);
+    padding: 0.9rem 0.85rem;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.release-table th {
+    color: #f0c84b;
+    font-size: 0.74rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.release-table tr:last-child td {
+    border-bottom: 0;
+}
+
+.release-title-link,
+.producer-link {
+    color: #f5f0e8;
+    font-weight: 900;
+    text-decoration: none;
+}
+
+.release-title-link:hover,
+.producer-link:hover {
+    color: #f0c84b;
+    text-decoration: underline;
+}
+
+.play-button {
+    align-items: center;
+    background: rgba(226, 177, 58, 0.14);
+    border: 1px solid rgba(226, 177, 58, 0.45);
+    border-radius: 999px;
+    color: #f0c84b;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.85rem;
+    font-weight: 900;
+    height: 34px;
+    justify-content: center;
+    list-style: none;
+    width: 44px;
+}
+
+.play-button::-webkit-details-marker {
+    display: none;
+}
+
+.table-play-control {
+    position: relative;
+}
+
+.release-stat-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.release-stat-line span {
+    border: 1px solid rgba(226, 177, 58, 0.22);
+    border-radius: 999px;
+    color: rgba(245, 240, 232, 0.82);
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.25rem 0.5rem;
+    white-space: nowrap;
+}
+
+.compact-release-controls {
+    max-width: 620px;
+}
+
+.behind-music-grid {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+}
+
+.behind-music-main,
+.behind-music-side {
+    display: grid;
+    gap: 1rem;
+}
+
+.behind-music-card {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(226, 177, 58, 0.18);
+    border-radius: 18px;
+    padding: 1.2rem;
+}
+
+.release-info-list {
+    display: grid;
+    gap: 0.85rem;
+    margin: 0;
+}
+
+.release-info-list div {
+    display: grid;
+    gap: 0.2rem;
+}
+
+.release-info-list dt {
+    color: #f0c84b;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.release-info-list dd {
+    margin: 0;
+}
+
+.behind-music-side iframe {
+    border: 0;
+    border-radius: 14px;
+    min-height: 220px;
+    width: 100%;
+}
+
+.behind-music-side audio {
+    width: 100%;
+}
+
+@media (max-width: 950px) {
+    .behind-music-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .release-table th,
+    .release-table td {
+        min-width: 140px;
+    }
+
+    .release-table th:first-child,
+    .release-table td:first-child {
+        min-width: 70px;
+    }
+}

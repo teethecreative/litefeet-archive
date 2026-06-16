@@ -2332,6 +2332,31 @@ def producers():
     )
 
 
+
+
+def fetch_music_releases_for_profile_name(profile_name):
+    if not profile_name:
+        return []
+
+    ensure_media_items_table()
+    ensure_music_play_count_columns()
+    ensure_music_platform_stat_columns()
+
+    return fetch_all(
+        """
+        SELECT *
+        FROM media_items
+        WHERE media_type = 'music_release'
+          AND status = 'Published'
+          AND LOWER(COALESCE(artist_or_creator, '')) = LOWER(:profile_name)
+        ORDER BY
+            CASE WHEN release_date IS NULL OR release_date = '' THEN created_at ELSE release_date END DESC
+        LIMIT 20
+        """,
+        {"profile_name": profile_name},
+    )
+
+
 @app.route("/dancers/create", methods=["GET", "POST"])
 def create_dancer_profile():
     user = current_user()
@@ -2520,6 +2545,7 @@ def dancer_profile_detail(profile_slug):
 
     similar_profiles = find_similar_profiles(profile)
     has_enrichment = profile_has_enrichment(profile)
+    profile_releases = fetch_music_releases_for_profile_name(profile_name)
 
     return render_template(
         "dancer_profile_detail.html",
@@ -2529,6 +2555,7 @@ def dancer_profile_detail(profile_slug):
         ledger_mentions=ledger_mentions,
         similar_profiles=similar_profiles,
         has_enrichment=has_enrichment,
+        profile_releases=profile_releases,
     )
 
 
@@ -3431,6 +3458,39 @@ def format_ledger_date(value):
             continue
 
     return raw
+
+
+
+
+def parse_ledger_date_value(value):
+    if not value:
+        return None
+
+    value = str(value).strip()
+    for fmt in ("%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(value[:19], fmt).date()
+        except ValueError:
+            continue
+
+    return None
+
+
+@app.template_filter("music_release_date")
+def music_release_date_filter(value):
+    date_value = parse_ledger_date_value(value)
+    if not date_value:
+        return "Unknown"
+
+    today = datetime.now().date()
+    days_old = (today - date_value).days
+
+    # Last two weeks gets weekday.
+    if 0 <= days_old <= 14:
+        return date_value.strftime("%A, %B %-d, %Y")
+
+    # Older dates stay cleaner.
+    return date_value.strftime("%B %-d, %Y")
 
 
 @app.template_filter("ledger_date")
@@ -4556,6 +4616,60 @@ def submit_music_project():
 
     return render_template("submit_music_project.html", error=error)
 
+
+
+
+
+@app.route("/litefeet-music/release/<int:item_id>")
+def music_release_detail(item_id):
+    ensure_media_items_table()
+    ensure_music_feedback_table()
+    ensure_music_play_count_columns()
+    ensure_music_platform_stat_columns()
+
+    rows = fetch_all(
+        """
+        SELECT
+            m.*,
+            COALESCE(AVG(f.rating), 0) AS average_rating,
+            COUNT(f.id) AS feedback_count,
+            COALESCE(SUM(f.would_lab), 0) AS lab_count,
+            COALESCE(SUM(f.would_shoot_video), 0) AS video_count,
+            COALESCE(SUM(f.would_battle), 0) AS battle_count
+        FROM media_items m
+        LEFT JOIN music_feedback f ON f.media_item_id = m.id
+        WHERE m.id = :id
+          AND m.media_type = 'music_release'
+        GROUP BY m.id
+        LIMIT 1
+        """,
+        {"id": item_id},
+    )
+
+    if not rows:
+        abort(404)
+
+    item = dict(rows[0])
+
+    producer_profiles = fetch_all(
+        """
+        SELECT id, dance_name
+        FROM dancer_profiles
+        WHERE dance_name IS NOT NULL
+        """
+    )
+
+    producer_profile_map = {
+        normalize_name(row["dance_name"]): dict(row)
+        for row in producer_profiles
+        if row["dance_name"]
+    }
+
+    item["producer_profile"] = producer_profile_map.get(
+        normalize_name(item.get("artist_or_creator") or "")
+    )
+
+    return render_template("music_release_detail.html", item=item)
 
 
 @app.route("/litefeet-music")
