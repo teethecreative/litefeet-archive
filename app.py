@@ -1380,6 +1380,29 @@ def dismiss_admin_activity():
     return redirect(request.referrer or url_for("admin_home"))
 
 
+
+# --- Safe return-to-admin route override ---
+@app.before_request
+def safe_return_to_admin_override():
+    if request.path != "/admin/return-to-admin":
+        return
+
+    if not session.get("admin_logged_in") and not current_user_is_admin():
+        return redirect(url_for("admin_login"))
+
+    # Clear any public-view/admin-preview flags that may exist.
+    for key in [
+        "view_site_as_public",
+        "viewing_site_as_public",
+        "admin_public_view",
+        "public_view",
+        "force_public_view",
+    ]:
+        session.pop(key, None)
+
+    return redirect(url_for("admin_home"))
+
+
 @app.route("/admin")
 def admin_home():
     if not current_user_is_admin():
