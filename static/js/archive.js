@@ -548,12 +548,15 @@ function initLedgerPlayerHardOverride() {
             display.textContent = playCount;
         });
 
-        document.querySelectorAll(".release-stat-line span").forEach((span) => {
-            if (span.textContent && span.textContent.trim().startsWith("Ledger Plays")) {
-                const row = span.closest("[data-release-row]");
-                const button = row ? row.querySelector(`[data-play-item-id="${itemId}"]`) : null;
-                if (button) span.textContent = `Ledger Plays ${playCount}`;
-            }
+        document.querySelectorAll("[data-release-row]").forEach((row) => {
+            const button = row.querySelector(`[data-play-item-id="${itemId}"]`);
+            if (!button) return;
+
+            row.querySelectorAll(".release-stat-line span").forEach((span) => {
+                if (span.textContent && span.textContent.trim().startsWith("Ledger Plays")) {
+                    span.textContent = `Ledger Plays ${playCount}`;
+                }
+            });
         });
     }
 
@@ -586,24 +589,54 @@ function initLedgerPlayerHardOverride() {
         }
     }
 
-    function setActiveButton(button) {
-        document.querySelectorAll(".playlist-play-button.is-playing").forEach((activeButton) => {
-            activeButton.classList.remove("is-playing");
-        });
+    function inferEmbedUrl(sourceUrl) {
+        if (!sourceUrl) return "";
 
-        button.classList.add("is-playing");
+        try {
+            const url = new URL(sourceUrl);
+            const host = url.hostname.replace(/^www\./, "").toLowerCase();
+
+            if (host.includes("soundcloud.com")) {
+                return "https://w.soundcloud.com/player/?url=" + encodeURIComponent(sourceUrl) + "&auto_play=true&visual=false";
+            }
+
+            if (host.includes("youtube.com")) {
+                const videoId = url.searchParams.get("v");
+                if (videoId) {
+                    return "https://www.youtube.com/embed/" + encodeURIComponent(videoId) + "?autoplay=1";
+                }
+            }
+
+            if (host.includes("youtu.be")) {
+                const videoId = url.pathname.replace("/", "");
+                if (videoId) {
+                    return "https://www.youtube.com/embed/" + encodeURIComponent(videoId) + "?autoplay=1";
+                }
+            }
+        } catch (error) {
+            return "";
+        }
+
+        return "";
     }
 
-    function addMiniPlayerShell(player, title, artist, platform, modeLabel) {
+    function setMiniPlayerText(player, title, artist, platform, modeLabel) {
         const titleTarget = player.querySelector("[data-player-title]");
         const metaTarget = player.querySelector("[data-player-meta]");
 
         if (titleTarget) titleTarget.textContent = title;
 
         if (metaTarget) {
-            const parts = [artist, platform, modeLabel].filter(Boolean);
-            metaTarget.textContent = parts.join(" · ");
+            metaTarget.textContent = [artist, platform, modeLabel].filter(Boolean).join(" · ");
         }
+    }
+
+    function setActiveButton(button) {
+        document.querySelectorAll(".playlist-play-button.is-playing").forEach((activeButton) => {
+            activeButton.classList.remove("is-playing");
+        });
+
+        button.classList.add("is-playing");
     }
 
     function loadLedgerMiniPlayer(button) {
@@ -615,28 +648,30 @@ function initLedgerPlayerHardOverride() {
         const artist = button.dataset.playerArtist || "Unknown producer";
         const platform = button.dataset.playerPlatform || "";
         const playableUrl = button.dataset.playerPlayableUrl || "";
-        const embedUrl = button.dataset.playerEmbedUrl || "";
         const sourceUrl = button.dataset.playerSourceUrl || "";
-        const bodyTarget = player.querySelector("[data-player-body]");
+        const savedEmbedUrl = button.dataset.playerEmbedUrl || "";
+        const embedUrl = savedEmbedUrl || inferEmbedUrl(sourceUrl);
 
+        const bodyTarget = player.querySelector("[data-player-body]");
         if (!bodyTarget) return;
 
         clearPlayerBody(bodyTarget);
 
         if (playableUrl) {
-            addMiniPlayerShell(player, title, artist, platform, "Ledger Audio");
+            setMiniPlayerText(player, title, artist, platform, "Ledger Audio");
 
             const audio = document.createElement("audio");
             audio.controls = true;
             audio.autoplay = true;
             audio.preload = "none";
             audio.src = playableUrl;
+
             audio.addEventListener("play", () => recordPlay(itemId));
 
             bodyTarget.appendChild(audio);
             audio.play().catch(() => {});
         } else if (embedUrl) {
-            addMiniPlayerShell(player, title, artist, platform, "Embedded Source");
+            setMiniPlayerText(player, title, artist, platform, "Ledger Embed");
 
             const iframe = document.createElement("iframe");
             iframe.src = embedUrl;
@@ -648,22 +683,26 @@ function initLedgerPlayerHardOverride() {
 
             bodyTarget.appendChild(iframe);
 
-            // Count the click as the Ledger play. We cannot detect actual playback
-            // inside third-party iframes reliably because of browser security.
+            // Browser security prevents us from detecting actual play inside SoundCloud/YouTube iframes.
+            // The Ledger Play is counted on the play-button click that loads the mini player.
             recordPlay(itemId);
-        } else if (sourceUrl) {
-            // No embed and no direct audio: count click and open source.
-            recordPlay(itemId).finally(() => {
-                window.open(sourceUrl, "_blank", "noopener");
-            });
-            return;
         } else {
-            addMiniPlayerShell(player, title, artist, platform, "Archived Only");
+            setMiniPlayerText(player, title, artist, platform, "Player Link Missing");
 
             const note = document.createElement("p");
             note.className = "small-note";
-            note.textContent = "No playable source has been added yet.";
+            note.textContent = "This record has a source link, but the Ledger could not build an on-site player from it yet.";
             bodyTarget.appendChild(note);
+
+            if (sourceUrl) {
+                const link = document.createElement("a");
+                link.className = "button small-button";
+                link.href = sourceUrl;
+                link.target = "_blank";
+                link.rel = "noopener";
+                link.textContent = "Open Source Manually";
+                bodyTarget.appendChild(link);
+            }
         }
 
         setActiveButton(button);
@@ -675,6 +714,7 @@ function initLedgerPlayerHardOverride() {
         const button = event.target.closest(".playlist-play-button[data-play-item-id]");
         if (!button) return;
 
+        // Full hard stop: play buttons should never auto-open external tabs.
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
