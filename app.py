@@ -6526,3 +6526,269 @@ def event_public_url(event):
         return f"/events/{event_id}"
     return "/events"
 
+
+# --- Runtime helper compatibility patch v2 ---
+def ensure_music_platform_stat_columns():
+    """
+    Compatibility shim for profile/music routes that still call the older
+    platform-stat setup name.
+    """
+    for fn_name in [
+        "ensure_media_items_table",
+        "ensure_music_feedback_table",
+        "ensure_music_play_count_columns",
+        "ensure_music_release_status_columns",
+    ]:
+        fn = globals().get(fn_name)
+        if callable(fn):
+            try:
+                fn()
+            except Exception:
+                pass
+
+
+def ensure_verification_tables():
+    """
+    Compatibility shim for Verify routes.
+    Keeps the verification_votes table available across SQLite/Postgres.
+    """
+    fn = globals().get("ensure_verification_flag_column")
+    if callable(fn):
+        try:
+            fn()
+        except Exception:
+            pass
+
+    with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS verification_votes (
+                    id SERIAL PRIMARY KEY,
+                    submission_id INTEGER,
+                    vote_type TEXT,
+                    voter_name TEXT,
+                    contact TEXT,
+                    source_url TEXT,
+                    created_at TEXT
+                )
+            """))
+            for col_sql in [
+                "ALTER TABLE verification_votes ADD COLUMN IF NOT EXISTS contact TEXT",
+                "ALTER TABLE verification_votes ADD COLUMN IF NOT EXISTS source_url TEXT",
+                "ALTER TABLE verification_votes ADD COLUMN IF NOT EXISTS voter_name TEXT",
+                "ALTER TABLE verification_votes ADD COLUMN IF NOT EXISTS created_at TEXT",
+            ]:
+                try:
+                    conn.execute(text(col_sql))
+                except Exception:
+                    pass
+        else:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS verification_votes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    submission_id INTEGER,
+                    vote_type TEXT,
+                    voter_name TEXT,
+                    contact TEXT,
+                    source_url TEXT,
+                    created_at TEXT
+                )
+            """))
+
+            cols = conn.execute(text("PRAGMA table_info(verification_votes)")).fetchall()
+            existing = {col[1] for col in cols}
+
+            for col_name, col_type in [
+                ("contact", "TEXT"),
+                ("source_url", "TEXT"),
+                ("voter_name", "TEXT"),
+                ("created_at", "TEXT"),
+            ]:
+                if col_name not in existing:
+                    conn.execute(text(f"ALTER TABLE verification_votes ADD COLUMN {col_name} {col_type}"))
+
+
+def parse_submission_details(record_or_details):
+    import json
+
+    if record_or_details is None:
+        return {}
+
+    raw = record_or_details
+
+    try:
+        if hasattr(record_or_details, "get") and record_or_details.get("details_json") is not None:
+            raw = record_or_details.get("details_json")
+    except Exception:
+        pass
+
+    try:
+        if not isinstance(raw, (str, list, dict)) and raw["details_json"] is not None:
+            raw = raw["details_json"]
+    except Exception:
+        pass
+
+    if raw is None:
+        return {}
+
+    if isinstance(raw, (list, dict)):
+        return raw
+
+    if isinstance(raw, str):
+        raw = raw.strip()
+        if not raw:
+            return {}
+
+        try:
+            return json.loads(raw)
+        except Exception:
+            return {}
+
+    return {}
+
+
+def get_detail_value(record_or_details, label):
+    details = parse_submission_details(record_or_details)
+
+    def clean_value(value):
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            return value
+        if isinstance(value, (int, float)):
+            return str(value)
+
+        if isinstance(value, list):
+            output = []
+            for item in value:
+                if isinstance(item, dict):
+                    name = item.get("name") or item.get("title") or item.get("value")
+                    note = item.get("note")
+                    featuring = item.get("featuring")
+
+                    if name and note:
+                        output.append(f"{name} ({note})")
+                    elif name:
+                        output.append(str(name))
+                    elif featuring:
+                        output.append(", ".join(str(x) for x in featuring))
+                    else:
+                        output.append(str(item))
+                else:
+                    output.append(str(item))
+
+            return " | ".join(output)
+
+        if isinstance(value, dict):
+            name = value.get("name") or value.get("title") or value.get("value")
+            note = value.get("note")
+
+            if name and note:
+                return f"{name} ({note})"
+            if name:
+                return str(name)
+
+            return ", ".join(f"{k}: {v}" for k, v in value.items())
+
+        return str(value)
+
+    def record_value(key):
+        try:
+            if hasattr(record_or_details, "get"):
+                return record_or_details.get(key)
+        except Exception:
+            pass
+
+        try:
+            return record_or_details[key]
+        except Exception:
+            return None
+
+    # Legacy format:
+    # [{"label": "Event Date", "value": "2026-06-06"}, ...]
+    if isinstance(details, list):
+        for item in details:
+            if isinstance(item, dict) and item.get("label") == label:
+                return clean_value(item.get("value"))
+        return ""
+
+    # Structured format:
+    # {"event_date": "2026-06-06", "time": "..."}
+    if isinstance(details, dict):
+        label_key_map = {
+            "Event Name": ["event_name", "title"],
+            "Organization Name": ["organization_name", "organizer", "series", "presented_by"],
+            "Event Date": ["event_date", "date"],
+            "Event Time": ["event_time", "time"],
+            "Event Location": ["event_location", "location", "venue"],
+            "Venue Notes": ["venue_notes", "note", "message"],
+            "Battle Type": ["battle_type", "type"],
+            "Age Restriction": ["age_restriction", "requirement"],
+            "Entry": ["entry"],
+            "Host": ["host", "hosted_by"],
+            "Judges": ["judges", "special_guest_judges"],
+            "Event Results": ["event_results", "results"],
+            "Results Status": ["results_status"],
+            "Needs Confirmation": ["needs_confirmation", "confirmation_needed"],
+            "Archive Note": ["archive_note", "notes"],
+            "Battle List": ["battle_list", "battles"],
+            "Studio": ["studio", "venue"],
+            "Borough": ["borough"],
+            "End Results": ["end_results", "results"],
+            "Organizer": ["organizer", "presented_by", "series", "related_to"],
+            "Event Host": ["event_host", "host", "hosted_by"],
+        }
+
+        possible_keys = label_key_map.get(label, [])
+        possible_keys.extend([
+            label,
+            label.lower(),
+            label.lower().replace(" ", "_"),
+        ])
+
+        for key in possible_keys:
+            if key in details and details.get(key) not in (None, ""):
+                return clean_value(details.get(key))
+
+        if label == "Event Name":
+            return clean_value(record_value("title"))
+
+        if label in ["Organization Name", "Organizer"]:
+            return clean_value(record_value("related_to"))
+
+    return ""
+
+
+def detail_value_filter(record_or_details, label):
+    return get_detail_value(record_or_details, label)
+
+
+def event_organizer_name(event):
+    return (
+        get_detail_value(event, "Organizer")
+        or get_detail_value(event, "Organization Name")
+        or get_detail_value(event, "Event Host")
+        or (event.get("related_to") if hasattr(event, "get") else "")
+        or "LiteFeet Ledger"
+    )
+
+
+def event_public_url(event):
+    try:
+        event_id = event.get("id") if hasattr(event, "get") else event["id"]
+    except Exception:
+        event_id = ""
+
+    if event_id:
+        return f"/events/{event_id}"
+
+    return "/events"
+
+
+# Re-register filters so templates stop using the old list-only filter from line 60.
+try:
+    app.jinja_env.filters["detail_value"] = detail_value_filter
+    app.jinja_env.filters["event_public_url"] = event_public_url
+except Exception:
+    pass
+
