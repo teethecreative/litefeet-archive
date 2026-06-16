@@ -429,15 +429,28 @@ function initTopPlaylistPlayerBehavior() {
             .catch(() => {});
     }
 
+    function clearPlayerBody(bodyTarget) {
+        while (bodyTarget.firstChild) {
+            bodyTarget.removeChild(bodyTarget.firstChild);
+        }
+    }
+
+    function appendSmallNote(bodyTarget, text) {
+        const note = document.createElement("p");
+        note.className = "small-note";
+        note.textContent = text;
+        bodyTarget.appendChild(note);
+    }
+
     function renderPlayer(button) {
         const player = findPlayer(button);
         if (!player) return;
 
+        const itemId = button.dataset.playItemId || "";
         const title = button.dataset.playerTitle || "Untitled release";
         const artist = button.dataset.playerArtist || "Unknown producer";
         const platform = button.dataset.playerPlatform || "";
         const playableUrl = button.dataset.playerPlayableUrl || "";
-        const embedUrl = button.dataset.playerEmbedUrl || "";
         const sourceUrl = button.dataset.playerSourceUrl || "";
 
         const titleTarget = player.querySelector("[data-player-title]");
@@ -448,22 +461,47 @@ function initTopPlaylistPlayerBehavior() {
         if (metaTarget) metaTarget.textContent = [artist, platform].filter(Boolean).join(" · ");
 
         if (bodyTarget) {
+            clearPlayerBody(bodyTarget);
+
             if (playableUrl) {
-                bodyTarget.innerHTML = `<audio controls autoplay preload="none" src="${playableUrl}"></audio>`;
-            } else if (embedUrl) {
-                bodyTarget.innerHTML = `<iframe src="${embedUrl}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
-            } else if (sourceUrl) {
-                bodyTarget.innerHTML = `<a class="button small-button" href="${sourceUrl}" target="_blank" rel="noopener">Open Source</a>`;
+                const audio = document.createElement("audio");
+                audio.controls = true;
+                audio.autoplay = true;
+                audio.preload = "none";
+                audio.src = playableUrl;
+
+                audio.addEventListener("play", () => recordPlay(itemId));
+
+                bodyTarget.appendChild(audio);
+
+                audio.play().catch(() => {
+                    appendSmallNote(bodyTarget, "Tap play on the audio controls to start the track.");
+                });
             } else {
-                bodyTarget.innerHTML = `<p class="small-note">Archived only. No playable source has been added yet.</p>`;
+                appendSmallNote(
+                    bodyTarget,
+                    "Source Only: add a direct playable URL in the admin editor for this track to play inside the Ledger player."
+                );
+
+                if (sourceUrl) {
+                    const link = document.createElement("a");
+                    link.className = "button small-button";
+                    link.href = sourceUrl;
+                    link.target = "_blank";
+                    link.rel = "noopener";
+                    link.textContent = "Open Source";
+                    bodyTarget.appendChild(link);
+                }
             }
         }
 
+        document.querySelectorAll(".playlist-play-button.is-playing").forEach((activeButton) => {
+            activeButton.classList.remove("is-playing");
+        });
+        button.classList.add("is-playing");
+
         player.hidden = false;
         player.scrollIntoView({ behavior: "smooth", block: "nearest" });
-
-        const itemId = button.dataset.playItemId;
-        recordPlay(itemId);
     }
 
     playButtons.forEach((button) => {

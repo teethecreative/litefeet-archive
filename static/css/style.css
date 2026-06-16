@@ -3207,3 +3207,84 @@ button[data-preview-url] {
         grid-column: 2;
     }
 }
+
+
+/* Ledger music tables and top player unified */
+.release-radar-table-section .release-table-wrap,
+.release-radar-table-wrap {
+    margin-top: 18px;
+}
+
+.release-radar-table th,
+.release-radar-table td {
+    vertical-align: middle;
+}
+
+.release-action-cell {
+    min-width: 145px;
+    position: relative;
+}
+
+.top-playlist-player {
+    border: 1px solid rgba(229, 174, 57, 0.45);
+    border-radius: 18px;
+    padding: 18px;
+    margin: 18px 0 28px;
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.top-playlist-player h3 {
+    margin: 0 0 6px;
+}
+
+.top-playlist-player-body {
+    margin-top: 14px;
+    display: grid;
+    gap: 10px;
+}
+
+.top-playlist-player-body audio {
+    width: 100%;
+}
+
+.playlist-play-button,
+.table-play-control.playlist-play-button {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    max-width: 42px !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid rgba(229, 174, 57, 0.55);
+    background: rgba(229, 174, 57, 0.12);
+    color: var(--gold);
+    cursor: pointer;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.playlist-play-button:hover,
+.playlist-play-button.is-playing {
+    background: rgba(229, 174, 57, 0.25);
+}
+
+.release-table .ranking-player-panel {
+    display: none !important;
+}
+
+.compact-feedback-form {
+    min-width: 240px;
+}
+
+@media (max-width: 860px) {
+    .release-radar-table-wrap {
+        overflow-x: auto;
+    }
+
+    .release-radar-table {
+        min-width: 820px;
+    }
+}

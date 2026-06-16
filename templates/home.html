@@ -75,7 +75,7 @@
     {% endif %}
 </section>
 
-<section class="homepage-section homepage-release-radar">
+<section class="homepage-section homepage-release-radar release-radar-table-section">
     <div class="section-heading-row">
         <div>
             <p class="eyebrow">Listen</p>
@@ -85,93 +85,107 @@
         <a class="button secondary" href="/litefeet-music">Open Music Page</a>
     </div>
 
-    <div class="top-playlist-player" data-top-playlist-player hidden>
+    <div class="top-playlist-player" data-top-playlist-player>
         <div>
             <p class="eyebrow">Now Playing</p>
             <h3 data-player-title>Pick a release</h3>
-            <p class="small-note" data-player-meta></p>
+            <p class="small-note" data-player-meta>The Ledger player will play tracks on-site when a direct playable URL is saved.</p>
         </div>
-        <div class="top-playlist-player-body" data-player-body></div>
+        <div class="top-playlist-player-body" data-player-body>
+            <p class="small-note">Tap a play button to load a track here.</p>
+        </div>
     </div>
 
     {% if latest_music_releases %}
-        <div class="compact-release-list" id="musicFeedList">
-            {% for item in latest_music_releases %}
-                {% set embed_url = item["url"]|media_embed_url if item["url"] else "" %}
-                <article
-                    class="compact-release-row"
-                    data-search="{{ item['title'] }} {{ item['artist_or_creator'] }} {{ item['platform'] }} {{ item['event_name'] }} {{ item['description'] }}">
-                    <button
-                        type="button"
-                        class="playlist-play-button"
-                        data-play-item-id="{{ item['id'] }}"
-                        data-play-count="{{ item['play_count'] or 0 }}"
-                        data-player-title="{{ item['title'] }}"
-                        data-player-artist="{{ item['artist_or_creator'] or 'Unknown producer' }}"
-                        data-player-platform="{{ item['platform'] or item['url']|media_platform }}"
-                        data-player-playable-url="{{ item['playable_url'] or '' }}"
-                        data-player-embed-url="{{ embed_url or '' }}"
-                        data-player-source-url="{{ item['url'] or '' }}"
-                        aria-label="Play {{ item['title'] }}">
-                        ▶
-                    </button>
+        <div class="release-table-wrap release-radar-table-wrap">
+            <table class="release-table release-radar-table">
+                <thead>
+                    <tr>
+                        <th>Play</th>
+                        <th>Title</th>
+                        <th>Artist(s)</th>
+                        <th>Date</th>
+                        <th>Platform</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="musicFeedList">
+                    {% for item in latest_music_releases %}
+                        <tr
+                            data-release-row
+                            data-search="{{ item['title'] }} {{ item['artist_or_creator'] }} {{ item['platform'] }} {{ item['event_name'] }} {{ item['description'] }}">
+                            <td>
+                                <button
+                                    type="button"
+                                    class="playlist-play-button table-play-control"
+                                    data-play-item-id="{{ item['id'] }}"
+                                    data-play-count="{{ item['play_count'] or 0 }}"
+                                    data-player-title="{{ item['title'] }}"
+                                    data-player-artist="{{ item['artist_or_creator'] or 'Unknown producer' }}"
+                                    data-player-platform="{{ item['platform'] or item['url']|media_platform }}"
+                                    data-player-playable-url="{{ item['playable_url'] or '' }}"
+                                    data-player-source-url="{{ item['url'] or '' }}"
+                                    aria-label="Play {{ item['title'] }}">
+                                    ▶
+                                </button>
+                            </td>
 
-                    <div class="compact-release-title">
-                        <strong>{{ item["title"] }}</strong>
-                        <span>{{ item["artist_or_creator"] or "Unknown" }}</span>
-                    </div>
+                            <td>
+                                <a class="release-title-link" href="/litefeet-music/release/{{ item['id'] }}">
+                                    {{ item["title"] }}
+                                </a>
+                            </td>
 
-                    <div class="compact-release-meta">
-                        {% if item["release_date"] %}{{ item["release_date"]|music_release_date }}{% else %}Date unknown{% endif %}
-                    </div>
+                            <td>{{ item["artist_or_creator"] or "Unknown" }}</td>
+                            <td>{% if item["release_date"] %}{{ item["release_date"]|music_release_date }}{% else %}Date unknown{% endif %}</td>
+                            <td>{{ item["platform"] or item["url"]|media_platform }}</td>
 
-                    <div class="compact-release-meta">
-                        {{ item["platform"] or item["url"]|media_platform }}
-                    </div>
+                            <td class="release-action-cell">
+                                {% if logged_in_user %}
+                                    <details class="mini-feedback-panel">
+                                        <summary>Rate / React</summary>
 
-                    <div class="compact-release-actions">
-                        {% if logged_in_user %}
-                            <details class="mini-feedback-panel">
-                                <summary>Rate / React</summary>
-                                <form method="POST" action="/music/{{ item['id'] }}/feedback" class="music-feedback-form compact-feedback-form">
-                                    <input type="hidden" name="action" value="full">
+                                        <form method="POST" action="/music/{{ item['id'] }}/feedback" class="music-feedback-form compact-feedback-form">
+                                            <input type="hidden" name="action" value="full">
 
-                                    <label>
-                                        Rating
-                                        <select name="rating">
-                                            <option value="">No rating</option>
-                                            <option value="10">10 - Crazy</option>
-                                            <option value="8">8 - Fire</option>
-                                            <option value="6">6 - Solid</option>
-                                            <option value="4">4 - Needs work</option>
-                                            <option value="2">2 - Not for me</option>
-                                        </select>
-                                    </label>
+                                            <label>
+                                                Rating
+                                                <select name="rating">
+                                                    <option value="">No rating</option>
+                                                    <option value="10">10 - Crazy</option>
+                                                    <option value="8">8 - Fire</option>
+                                                    <option value="6">6 - Solid</option>
+                                                    <option value="4">4 - Needs work</option>
+                                                    <option value="2">2 - Not for me</option>
+                                                </select>
+                                            </label>
 
-                                    <label class="checkbox-line">
-                                        <input type="checkbox" name="would_lab" value="1">
-                                        Lab
-                                    </label>
+                                            <label class="checkbox-line">
+                                                <input type="checkbox" name="would_lab" value="1">
+                                                Lab
+                                            </label>
 
-                                    <label class="checkbox-line">
-                                        <input type="checkbox" name="would_shoot_video" value="1">
-                                        Shoot Video
-                                    </label>
+                                            <label class="checkbox-line">
+                                                <input type="checkbox" name="would_shoot_video" value="1">
+                                                Shoot Video
+                                            </label>
 
-                                    <label class="checkbox-line">
-                                        <input type="checkbox" name="would_battle" value="1">
-                                        Battle
-                                    </label>
+                                            <label class="checkbox-line">
+                                                <input type="checkbox" name="would_battle" value="1">
+                                                Battle
+                                            </label>
 
-                                    <button type="submit" class="button primary small-button">Save</button>
-                                </form>
-                            </details>
-                        {% else %}
-                            <a class="button small-button secondary" href="/account/login">Log in to rate</a>
-                        {% endif %}
-                    </div>
-                </article>
-            {% endfor %}
+                                            <button type="submit" class="button primary small-button">Save</button>
+                                        </form>
+                                    </details>
+                                {% else %}
+                                    <a class="button small-button secondary" href="/account/login">Log in to rate</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     {% else %}
         <div class="empty-state">
