@@ -2915,23 +2915,63 @@ def ask_archive():
     results = []
     searched = False
 
+    def normalize_result_rows(rows):
+        normalized = []
+        for row in rows:
+            item = dict(row)
+            item.setdefault("source_kind", "submission")
+            item.setdefault("submission_type", "")
+            item.setdefault("related_to", "")
+            item.setdefault("source_url", "")
+            item.setdefault("review_status", "")
+            item.setdefault("details_json", "")
+            item.setdefault("created_at", "")
+            normalized.append(item)
+        return normalized
+
+    def review_rank(item):
+        status = item.get("review_status") or ""
+        return {
+            "Verified": 1,
+            "Community Supported": 2,
+            "Needs Verification": 3,
+            "Disputed": 4,
+        }.get(status, 5)
+
     if request.method == "POST":
         query = request.form.get("query", "").strip()
         searched = True
 
         if query:
+            ensure_media_items_table()
+            ensure_music_projects_table()
+            ensure_music_release_status_columns()
+
             search_term = f"%{query.lower()}%"
 
-            results = fetch_all(
+            submission_results = fetch_all(
                 """
-                SELECT *
+                SELECT
+                    id,
+                    'submission' AS source_kind,
+                    submission_type,
+                    title,
+                    related_to,
+                    source_url,
+                    submitter_name,
+                    submitter_role,
+                    contact,
+                    needs_verification,
+                    review_status,
+                    details_json,
+                    created_at
                 FROM submissions
                 WHERE
-                    LOWER(title) LIKE :search_term
-                    OR LOWER(related_to) LIKE :search_term
-                    OR LOWER(source_url) LIKE :search_term
-                    OR LOWER(details_json) LIKE :search_term
-                    OR LOWER(submission_type) LIKE :search_term
+                    LOWER(COALESCE(title, '')) LIKE :search_term
+                    OR LOWER(COALESCE(related_to, '')) LIKE :search_term
+                    OR LOWER(COALESCE(source_url, '')) LIKE :search_term
+                    OR LOWER(COALESCE(details_json, '')) LIKE :search_term
+                    OR LOWER(COALESCE(submission_type, '')) LIKE :search_term
                 ORDER BY
                     CASE
                         WHEN review_status = 'Verified' THEN 1
@@ -2945,6 +2985,79 @@ def ask_archive():
                 """,
                 {"search_term": search_term},
             )
+
+            music_release_results = fetch_all(
+                """
+                SELECT
+                    id,
+                    'music_release' AS source_kind,
+                    'music_release' AS submission_type,
+                    title,
+                    artist_or_creator AS related_to,
+                    url AS source_url,
+                    '' AS submitter_name,
+                    'LiteFeet Music' AS submitter_role,
+                    '' AS contact,
+                    0 AS needs_verification,
+                    COALESCE(status, release_stage, 'Released') AS review_status,
+                    description AS details_json,
+                    created_at
+                FROM media_items
+                WHERE
+                    LOWER(COALESCE(title, '')) LIKE :search_term
+                    OR LOWER(COALESCE(artist_or_creator, '')) LIKE :search_term
+                    OR LOWER(COALESCE(url, '')) LIKE :search_term
+                    OR LOWER(COALESCE(platform, '')) LIKE :search_term
+                    OR LOWER(COALESCE(release_date, '')) LIKE :search_term
+                    OR LOWER(COALESCE(description, '')) LIKE :search_term
+                    OR LOWER(COALESCE(media_type, '')) LIKE :search_term
+                    OR LOWER(COALESCE(release_stage, '')) LIKE :search_term
+                ORDER BY created_at DESC
+                LIMIT 12
+                """,
+                {"search_term": search_term},
+            )
+
+            music_project_results = fetch_all(
+                """
+                SELECT
+                    id,
+                    'music_project' AS source_kind,
+                    'music_project' AS submission_type,
+                    title,
+                    artist_or_creator AS related_to,
+                    url AS source_url,
+                    '' AS submitter_name,
+                    'LiteFeet Music Project' AS submitter_role,
+                    '' AS contact,
+                    0 AS needs_verification,
+                    COALESCE(status, release_stage, 'Released') AS review_status,
+                    description AS details_json,
+                    created_at
+                FROM music_projects
+                WHERE
+                    LOWER(COALESCE(title, '')) LIKE :search_term
+                    OR LOWER(COALESCE(artist_or_creator, '')) LIKE :search_term
+                    OR LOWER(COALESCE(url, '')) LIKE :search_term
+                    OR LOWER(COALESCE(platform, '')) LIKE :search_term
+                    OR LOWER(COALESCE(release_date, '')) LIKE :search_term
+                    OR LOWER(COALESCE(description, '')) LIKE :search_term
+                    OR LOWER(COALESCE(release_stage, '')) LIKE :search_term
+                ORDER BY created_at DESC
+                LIMIT 12
+                """,
+                {"search_term": search_term},
+            )
+
+            combined_results = []
+            combined_results.extend(normalize_result_rows(submission_results))
+            combined_results.extend(normalize_result_rows(music_release_results))
+            combined_results.extend(normalize_result_rows(music_project_results))
+
+            combined_results.sort(key=lambda item: item.get("created_at") or "", reverse=True)
+            combined_results.sort(key=review_rank)
+
+            results = combined_results[:18]
 
     return render_template(
         "ask_archive.html",
