@@ -3020,6 +3020,20 @@ def vote_on_claim(submission_id):
     return redirect(url_for("verify_claim_detail", submission_id=submission_id))
 
 
+
+# --- Temporary admin-only gates for unfinished public sections ---
+@app.before_request
+def gate_unfinished_public_sections():
+    gated_paths = {
+        "/ask",
+        "/battles",
+        "/awards",
+    }
+
+    if request.path in gated_paths and not current_user_is_admin():
+        return redirect(url_for("home"))
+
+
 @app.route("/ask", methods=["GET", "POST"])
 def ask_archive():
     query = ""

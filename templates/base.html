@@ -17,12 +17,12 @@
 
             <nav class="nav-links">
                 <a href="/">Home</a>
-                <a href="/ask">Ask</a>
+                {% if nav_is_admin %}<a href="/ask">Ask</a>{% endif %}
                 <a href="/events">Events</a>
                 <a href="/people/dancers">People & Teams</a>
                 <a href="/litefeet-music">LiteFeet Music</a>
-                <a href="/battles">Battles</a>
-                <a href="/awards">Awards</a>
+                {% if nav_is_admin %}<a href="/battles">Battles</a>{% endif %}
+                {% if nav_is_admin %}<a href="/awards">Awards</a>{% endif %}
                 <a href="/verify">Verify</a>
                 <a href="/about">About</a>
                 <a href="/submit">Submit Info</a>

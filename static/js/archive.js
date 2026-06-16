@@ -516,3 +516,130 @@ function initTopPlaylistPlayerBehavior() {
 }
 
 document.addEventListener("DOMContentLoaded", initTopPlaylistPlayerBehavior);
+
+
+function initLedgerPlayerHardOverride() {
+    const recentPlayKeys = new Map();
+
+    function shouldCountPlay(itemId) {
+        if (window.LITEFEET_LEDGER_IS_ADMIN) return false;
+
+        const now = Date.now();
+        const last = recentPlayKeys.get(itemId) || 0;
+
+        if (now - last < 30000) return false;
+
+        recentPlayKeys.set(itemId, now);
+        return true;
+    }
+
+    function updatePlayDisplays(itemId, playCount) {
+        document.querySelectorAll(`[data-play-item-id="${itemId}"]`).forEach((control) => {
+            control.dataset.playCount = playCount;
+            const display = control.querySelector("[data-play-count-display]");
+            if (display) display.textContent = playCount;
+        });
+
+        document.querySelectorAll(`[data-play-count-inline="${itemId}"]`).forEach((display) => {
+            display.textContent = playCount;
+        });
+    }
+
+    function recordPlay(itemId) {
+        if (!itemId || !shouldCountPlay(itemId)) return Promise.resolve();
+
+        return fetch(`/music/${itemId}/play`, {
+            method: "POST",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data && data.ok && !data.admin_ignored) {
+                    updatePlayDisplays(itemId, data.play_count);
+                }
+            })
+            .catch(() => {});
+    }
+
+    function findPlayer(button) {
+        const section = button.closest("section");
+        return (section && section.querySelector("[data-top-playlist-player]")) || document.querySelector("[data-top-playlist-player]");
+    }
+
+    function clearPlayerBody(bodyTarget) {
+        while (bodyTarget.firstChild) {
+            bodyTarget.removeChild(bodyTarget.firstChild);
+        }
+    }
+
+    function loadLedgerPlayer(button) {
+        const player = findPlayer(button);
+        if (!player) return;
+
+        const itemId = button.dataset.playItemId || "";
+        const title = button.dataset.playerTitle || "Untitled release";
+        const artist = button.dataset.playerArtist || "Unknown producer";
+        const platform = button.dataset.playerPlatform || "";
+        const playableUrl = button.dataset.playerPlayableUrl || "";
+
+        const titleTarget = player.querySelector("[data-player-title]");
+        const metaTarget = player.querySelector("[data-player-meta]");
+        const bodyTarget = player.querySelector("[data-player-body]");
+
+        if (titleTarget) titleTarget.textContent = title;
+        if (metaTarget) metaTarget.textContent = [artist, platform].filter(Boolean).join(" · ");
+
+        if (bodyTarget) {
+            clearPlayerBody(bodyTarget);
+
+            const audio = document.createElement("audio");
+            audio.controls = true;
+            audio.autoplay = true;
+            audio.preload = "none";
+            audio.src = playableUrl;
+            audio.addEventListener("play", () => recordPlay(itemId));
+
+            bodyTarget.appendChild(audio);
+            audio.play().catch(() => {});
+        }
+
+        document.querySelectorAll(".playlist-play-button.is-playing").forEach((activeButton) => {
+            activeButton.classList.remove("is-playing");
+        });
+
+        button.classList.add("is-playing");
+        player.hidden = false;
+        player.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    document.addEventListener("click", function (event) {
+        const button = event.target.closest(".playlist-play-button[data-play-item-id]");
+        if (!button) return;
+
+        // Stop the older source-only / embed player handlers from firing.
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+        const playableUrl = button.dataset.playerPlayableUrl || "";
+        const sourceUrl = button.dataset.playerSourceUrl || "";
+        const itemId = button.dataset.playItemId || "";
+
+        if (playableUrl) {
+            loadLedgerPlayer(button);
+            return;
+        }
+
+        // Source-only: count the Ledger Play, then open externally.
+        // Do NOT change the Now Playing box.
+        recordPlay(itemId).finally(() => {
+            if (sourceUrl) {
+                window.open(sourceUrl, "_blank", "noopener");
+            }
+        });
+    }, true);
+}
+
+document.addEventListener("DOMContentLoaded", initLedgerPlayerHardOverride);

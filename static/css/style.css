@@ -3298,3 +3298,9 @@ button[data-preview-url] {
 .playlist-play-button.external-source-play-button::after {
     content: "";
 }
+
+
+/* External source play buttons use Ledger Play count but open source externally */
+.playlist-play-button[data-player-playable-url=""] {
+    opacity: 1;
+}
