@@ -2735,3 +2735,122 @@ body {
     min-height: 90px;
 }
 
+
+/* Desktop density pass */
+@media (min-width: 1000px) {
+    main {
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
+
+    .hero,
+    .page-hero,
+    .content-hero,
+    .music-page.hero,
+    .music-page .hero {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    h1 {
+        font-size: clamp(3.2rem, 5vw, 5.5rem);
+        line-height: 0.95;
+        margin-bottom: 1rem;
+    }
+
+    h2 {
+        font-size: clamp(2rem, 3vw, 3.4rem);
+        line-height: 1;
+    }
+
+    .content-section {
+        margin-top: 2.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .form-card,
+    .media-admin-form {
+        display: grid;
+        gap: 1rem 1.25rem;
+    }
+
+    .media-admin-form label {
+        margin: 0;
+    }
+
+    .media-admin-form input,
+    .media-admin-form select,
+    .media-admin-form textarea {
+        min-height: 48px;
+        padding: 0.75rem 1rem;
+    }
+
+    .media-admin-form textarea {
+        min-height: 110px;
+    }
+
+    .media-admin-form .button,
+    .media-admin-form button[type="submit"] {
+        min-height: 48px;
+        padding: 0.8rem 1.2rem;
+    }
+
+    .submit-music-preview-card,
+    .info-card,
+    .empty-state {
+        padding: 1.2rem 1.4rem;
+    }
+}
+
+/* Submit Music desktop form should not be one giant vertical stack */
+@media (min-width: 1100px) {
+    .submit-music-form,
+    form[action="/litefeet-music/projects/submit"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+    }
+
+    form[action="/litefeet-music/projects/submit"] label:has(textarea),
+    form[action="/litefeet-music/projects/submit"] .admin-playback-note,
+    form[action="/litefeet-music/projects/submit"] button[type="submit"] {
+        grid-column: 1 / -1;
+    }
+
+    form[action="/litefeet-music/projects/submit"] label:has(input[name="title"]),
+    form[action="/litefeet-music/projects/submit"] label:has(input[name="artist_or_creator"]),
+    form[action="/litefeet-music/projects/submit"] label:has(input[name="url"]),
+    form[action="/litefeet-music/projects/submit"] label:has(input[name="playable_url"]),
+    form[action="/litefeet-music/projects/submit"] label:has(select[name="submission_type"]),
+    form[action="/litefeet-music/projects/submit"] label:has(select[name="release_stage"]),
+    form[action="/litefeet-music/projects/submit"] label:has(input[name="release_date"]) {
+        grid-column: span 1;
+    }
+
+    form[action="/litefeet-music/projects/submit"] label:has(textarea[name="embed_code"]),
+    form[action="/litefeet-music/projects/submit"] label:has(textarea[name="tracklist"]),
+    form[action="/litefeet-music/projects/submit"] label:has(textarea[name="description"]) {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Tighter desktop table/list sections */
+@media (min-width: 1000px) {
+    .ranking-row,
+    .music-release-row {
+        padding: 1.15rem 1.35rem;
+    }
+
+    .ranking-list,
+    .music-project-table-wrap {
+        margin-top: 1rem;
+    }
+
+    .section-heading-row {
+        margin-bottom: 1rem;
+    }
+
+    .eyebrow {
+        margin-bottom: 0.45rem;
+    }
+}
+
