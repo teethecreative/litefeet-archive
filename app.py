@@ -2131,6 +2131,117 @@ def submit_event():
     return render_template("event_submit.html", errors=[])
 
 
+
+# --- Event details compatibility patch for legacy list + structured dict details ---
+def get_detail_value(record, label):
+    details = parse_submission_details(record)
+
+    def clean_value(value):
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            return value
+        if isinstance(value, (int, float)):
+            return str(value)
+
+        if isinstance(value, list):
+            cleaned_items = []
+            for item in value:
+                if isinstance(item, dict):
+                    name = item.get("name") or item.get("title") or item.get("value")
+                    note = item.get("note")
+                    featuring = item.get("featuring")
+
+                    if name and note:
+                        cleaned_items.append(f"{name} ({note})")
+                    elif name:
+                        cleaned_items.append(str(name))
+                    elif featuring:
+                        cleaned_items.append(", ".join(str(x) for x in featuring))
+                    else:
+                        cleaned_items.append(str(item))
+                else:
+                    cleaned_items.append(str(item))
+
+            return " | ".join(cleaned_items)
+
+        if isinstance(value, dict):
+            name = value.get("name") or value.get("title") or value.get("value")
+            note = value.get("note")
+
+            if name and note:
+                return f"{name} ({note})"
+            if name:
+                return str(name)
+
+            return ", ".join(f"{k}: {v}" for k, v in value.items())
+
+        return str(value)
+
+    def record_value(key):
+        try:
+            return record.get(key)
+        except AttributeError:
+            try:
+                return record[key]
+            except Exception:
+                return None
+
+    # Legacy details_json format:
+    # [{"label": "Event Date", "value": "2026-06-06"}, ...]
+    if isinstance(details, list):
+        for item in details:
+            if isinstance(item, dict) and item.get("label") == label:
+                return clean_value(item.get("value"))
+        return ""
+
+    # New structured details_json format:
+    # {"event_date": "2026-06-06", "time": "...", "battles": [...]}
+    if isinstance(details, dict):
+        label_key_map = {
+            "Event Name": ["event_name", "title"],
+            "Organization Name": ["organization_name", "organizer", "series", "presented_by"],
+            "Event Date": ["event_date", "date"],
+            "Event Time": ["event_time", "time"],
+            "Event Location": ["event_location", "location", "venue"],
+            "Venue Notes": ["venue_notes", "note", "message"],
+            "Battle Type": ["battle_type", "type"],
+            "Age Restriction": ["age_restriction", "requirement"],
+            "Entry": ["entry"],
+            "Host": ["host", "hosted_by"],
+            "Judges": ["judges", "special_guest_judges"],
+            "Event Results": ["event_results", "results"],
+            "Results Status": ["results_status"],
+            "Needs Confirmation": ["needs_confirmation", "confirmation_needed"],
+            "Archive Note": ["archive_note", "notes"],
+            "Battle List": ["battle_list", "battles"],
+            "Studio": ["studio", "venue"],
+            "Borough": ["borough"],
+            "End Results": ["end_results", "results"],
+            "Organizer": ["organizer", "presented_by", "series"],
+            "Event Host": ["event_host", "host", "hosted_by"],
+        }
+
+        possible_keys = label_key_map.get(label, [])
+        possible_keys.extend([
+            label,
+            label.lower(),
+            label.lower().replace(" ", "_"),
+        ])
+
+        for key in possible_keys:
+            if key in details and details.get(key) not in (None, ""):
+                return clean_value(details.get(key))
+
+        if label == "Event Name":
+            return clean_value(record_value("title"))
+
+        if label == "Organization Name":
+            return clean_value(record_value("related_to"))
+
+    return ""
+
+
 @app.route("/events")
 def events():
     approved_events = fetch_all(
