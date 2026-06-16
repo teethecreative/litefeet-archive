@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}{{ profile["dance_name"] }} | LiteFeet Ledger
+{% block title %}{{ profile["dance_name"] }} | LiteFeet Dancer Profile | LiteFeet Ledger{% endblock %}
+{% block meta_description %}View {{ profile["dance_name"] }}'s LiteFeet dancer profile, affiliations, releases, community records, and documented contributions in the LiteFeet Ledger.{% endblock %}
+
 {% if profile_releases %}
 <section class="content-section profile-releases-section">
     <p class="eyebrow">Music</p>
