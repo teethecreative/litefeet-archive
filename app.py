@@ -6386,3 +6386,143 @@ def get_detail_value(record_or_details, label):
 
     return ""
 
+
+# --- Dancer profile safe event/detail helper overrides ---
+def _safe_row_get(row, key, default=""):
+    try:
+        if hasattr(row, "get"):
+            value = row.get(key, default)
+        else:
+            value = row[key]
+    except Exception:
+        value = default
+
+    return default if value is None else value
+
+
+def parse_submission_details(record_or_details):
+    import json
+
+    if record_or_details is None:
+        return {}
+
+    raw = record_or_details
+
+    try:
+        if hasattr(record_or_details, "get") and record_or_details.get("details_json") is not None:
+            raw = record_or_details.get("details_json")
+    except Exception:
+        pass
+
+    try:
+        if not isinstance(raw, (str, list, dict)) and raw["details_json"] is not None:
+            raw = raw["details_json"]
+    except Exception:
+        pass
+
+    if raw is None:
+        return {}
+
+    if isinstance(raw, (list, dict)):
+        return raw
+
+    if isinstance(raw, str):
+        raw = raw.strip()
+        if not raw:
+            return {}
+
+        try:
+            return json.loads(raw)
+        except Exception:
+            return {}
+
+    return {}
+
+
+def get_detail_value(record_or_details, label):
+    details = parse_submission_details(record_or_details)
+
+    def clean_value(value):
+        if value is None:
+            return ""
+        if isinstance(value, str):
+            return value
+        if isinstance(value, (int, float)):
+            return str(value)
+        if isinstance(value, list):
+            output = []
+            for item in value:
+                if isinstance(item, dict):
+                    name = item.get("name") or item.get("title") or item.get("value")
+                    note = item.get("note")
+                    if name and note:
+                        output.append(f"{name} ({note})")
+                    elif name:
+                        output.append(str(name))
+                    else:
+                        output.append(str(item))
+                else:
+                    output.append(str(item))
+            return " | ".join(output)
+        if isinstance(value, dict):
+            name = value.get("name") or value.get("title") or value.get("value")
+            note = value.get("note")
+            if name and note:
+                return f"{name} ({note})"
+            if name:
+                return str(name)
+            return ", ".join(f"{k}: {v}" for k, v in value.items())
+        return str(value)
+
+    if isinstance(details, list):
+        for item in details:
+            if isinstance(item, dict) and item.get("label") == label:
+                return clean_value(item.get("value"))
+        return ""
+
+    if isinstance(details, dict):
+        label_key_map = {
+            "Event Name": ["event_name", "title"],
+            "Organization Name": ["organization_name", "organizer", "series", "presented_by"],
+            "Event Date": ["event_date", "date"],
+            "Event Time": ["event_time", "time"],
+            "Event Location": ["event_location", "location", "venue"],
+            "Venue Notes": ["venue_notes", "note", "message"],
+            "Entry": ["entry"],
+            "Host": ["host", "hosted_by"],
+            "Judges": ["judges", "special_guest_judges"],
+            "Battle List": ["battle_list", "battles"],
+            "Organizer": ["organizer", "presented_by", "series", "related_to"],
+            "Event Host": ["event_host", "host", "hosted_by"],
+        }
+
+        possible_keys = label_key_map.get(label, [])
+        possible_keys.extend([
+            label,
+            label.lower(),
+            label.lower().replace(" ", "_"),
+        ])
+
+        for key in possible_keys:
+            if key in details and details.get(key) not in (None, ""):
+                return clean_value(details.get(key))
+
+    return ""
+
+
+def event_organizer_name(event):
+    organizer = (
+        get_detail_value(event, "Organizer")
+        or get_detail_value(event, "Organization Name")
+        or get_detail_value(event, "Event Host")
+        or _safe_row_get(event, "related_to", "")
+    )
+    return organizer or "LiteFeet Ledger"
+
+
+def event_public_url(event):
+    event_id = _safe_row_get(event, "id", "")
+    if event_id:
+        return f"/events/{event_id}"
+    return "/events"
+
