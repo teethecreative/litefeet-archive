@@ -1528,7 +1528,7 @@ def ensure_media_items_table():
 def detect_media_platform(url):
     value = (url or "").lower()
 
-    if "youtube.com" in value or "youtu.be" in value:
+    if "youtube.com" in value or "youtu.be" in value or "music.youtube.com" in value:
         return "YouTube"
     if "soundcloud.com" in value:
         return "SoundCloud"
@@ -1541,33 +1541,6 @@ def detect_media_platform(url):
 
     return "Link"
 
-
-def youtube_embed_url(url):
-    parsed = urlparse(url or "")
-    host = parsed.netloc.lower()
-    path_value = parsed.path.strip("/")
-    video_id = ""
-
-    if "youtu.be" in host:
-        video_id = path_value.split("/")[0]
-    elif "youtube.com" in host:
-        query = parse_qs(parsed.query)
-        video_id = (query.get("v") or [""])[0]
-
-        if not video_id and path_value.startswith("shorts/"):
-            parts = path_value.split("/")
-            if len(parts) > 1:
-                video_id = parts[1]
-
-        if not video_id and path_value.startswith("embed/"):
-            parts = path_value.split("/")
-            if len(parts) > 1:
-                video_id = parts[1]
-
-    if video_id:
-        return f"https://www.youtube.com/embed/{video_id}"
-
-    return ""
 
 
 def spotify_embed_url(url):
@@ -1593,6 +1566,98 @@ def apple_music_embed_url(url):
 
 
 @app.template_filter("media_embed_url")
+
+
+def extract_youtube_video_id(url):
+    value = (url or "").strip()
+    if not value:
+        return ""
+
+    parsed = urlparse(value)
+    host = parsed.netloc.lower().replace("www.", "")
+    path_parts = [part for part in parsed.path.split("/") if part]
+
+    if host in {"youtube.com", "music.youtube.com", "m.youtube.com"}:
+        query = parse_qs(parsed.query)
+        if query.get("v"):
+            return query["v"][0]
+
+        if path_parts and path_parts[0] in {"shorts", "live", "embed"} and len(path_parts) > 1:
+            return path_parts[1]
+
+    if host == "youtu.be" and path_parts:
+        return path_parts[0]
+
+    return ""
+
+
+def clean_youtube_watch_url(url):
+    video_id = extract_youtube_video_id(url)
+    if not video_id:
+        return url or ""
+
+    return f"https://www.youtube.com/watch?v={video_id}"
+
+
+def youtube_embed_url(url):
+    video_id = extract_youtube_video_id(url)
+    if not video_id:
+        return ""
+
+    return f"https://www.youtube.com/embed/{video_id}"
+
+
+def fetch_youtube_metadata(url):
+    video_id = extract_youtube_video_id(url)
+    if not video_id:
+        return {}
+
+    watch_url = clean_youtube_watch_url(url)
+    oembed_url = "https://www.youtube.com/oembed?url=" + quote(watch_url, safe="") + "&format=json"
+
+    try:
+        response = requests.get(
+            oembed_url,
+            timeout=10,
+            headers={"User-Agent": "LiteFeetLedger/1.0"},
+        )
+
+        if response.status_code >= 300:
+            return {
+                "title": "",
+                "artist_or_creator": "",
+                "platform": "YouTube",
+                "url": watch_url,
+                "embed_url": youtube_embed_url(watch_url),
+                "description": "Imported from YouTube.",
+                "tracks": [],
+            }
+
+        data = response.json()
+
+        return {
+            "title": (data.get("title") or "").strip(),
+            "artist_or_creator": (data.get("author_name") or "").strip(),
+            "platform": "YouTube",
+            "url": watch_url,
+            "embed_url": youtube_embed_url(watch_url),
+            "description": "Imported from YouTube.",
+            "tracks": [],
+        }
+
+    except Exception as exc:
+        print("YouTube metadata pull failed:", exc)
+        return {
+            "title": "",
+            "artist_or_creator": "",
+            "platform": "YouTube",
+            "url": watch_url,
+            "embed_url": youtube_embed_url(watch_url),
+            "description": "Imported from YouTube.",
+            "tracks": [],
+        }
+
+
 def media_embed_url(url):
     platform = detect_media_platform(url)
 
@@ -3836,21 +3901,40 @@ def infer_project_title_from_link(url, html):
 
 
 def fetch_music_link_metadata(url):
-    url = (url or "").strip()
-    html = fetch_public_page_html(url)
-    platform = detect_media_platform(url) if url else "No Link Yet"
+    platform = detect_media_platform(url)
 
-    title = infer_project_title_from_link(url, html) if url else ""
-    description = extract_meta_content(html, "og:description") or extract_meta_content(html, "description")
-    tracks = extract_possible_track_titles(html)
+    # YouTube pages contain a lot of interface text like Like, Dislike, Save,
+    # comments, recommendations, and generic site descriptions.
+    # Do not use the generic scraper for YouTube.
+    if platform == "YouTube":
+        return fetch_youtube_metadata(url)
+
+    html = fetch_public_page_html(url)
+    if not html:
+        return {
+            "title": "",
+            "artist_or_creator": "",
+            "platform": platform or detect_media_platform(url),
+            "url": url,
+            "description": "",
+            "tracks": [],
+        }
+
+    title = infer_project_title_from_link(url, html)
+    description = (
+        extract_meta_content(html, "og:description")
+        or extract_meta_content(html, "description")
+        or ""
+    )
 
     return {
-        "platform": platform,
         "title": title,
+        "artist_or_creator": "",
+        "platform": platform or detect_media_platform(url),
+        "url": url,
         "description": description,
-        "tracks": tracks,
+        "tracks": extract_possible_track_titles(html),
     }
-
 
 def ensure_music_projects_table():
     ensure_media_items_table()
@@ -4238,7 +4322,7 @@ def submit_music_project():
         tracks = parse_project_tracklist(tracklist)
 
         if not tracks and metadata.get("tracks"):
-            tracks = metadata.get("tracks", [])
+            tracks = [] if detect_media_platform(source_url) == "YouTube" else metadata.get("tracks", [])
 
         if not title and metadata.get("title"):
             title = metadata.get("title", "")
