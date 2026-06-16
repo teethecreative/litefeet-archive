@@ -521,8 +521,12 @@ document.addEventListener("DOMContentLoaded", initTopPlaylistPlayerBehavior);
 function initLedgerPlayerHardOverride() {
     const recentPlayKeys = new Map();
 
+    function isAdmin() {
+        return Boolean(window.LITEFEET_LEDGER_IS_ADMIN);
+    }
+
     function shouldCountPlay(itemId) {
-        if (window.LITEFEET_LEDGER_IS_ADMIN) return false;
+        if (isAdmin()) return false;
 
         const now = Date.now();
         const last = recentPlayKeys.get(itemId) || 0;
@@ -542,6 +546,14 @@ function initLedgerPlayerHardOverride() {
 
         document.querySelectorAll(`[data-play-count-inline="${itemId}"]`).forEach((display) => {
             display.textContent = playCount;
+        });
+
+        document.querySelectorAll(".release-stat-line span").forEach((span) => {
+            if (span.textContent && span.textContent.trim().startsWith("Ledger Plays")) {
+                const row = span.closest("[data-release-row]");
+                const button = row ? row.querySelector(`[data-play-item-id="${itemId}"]`) : null;
+                if (button) span.textContent = `Ledger Plays ${playCount}`;
+            }
         });
     }
 
@@ -574,7 +586,27 @@ function initLedgerPlayerHardOverride() {
         }
     }
 
-    function loadLedgerPlayer(button) {
+    function setActiveButton(button) {
+        document.querySelectorAll(".playlist-play-button.is-playing").forEach((activeButton) => {
+            activeButton.classList.remove("is-playing");
+        });
+
+        button.classList.add("is-playing");
+    }
+
+    function addMiniPlayerShell(player, title, artist, platform, modeLabel) {
+        const titleTarget = player.querySelector("[data-player-title]");
+        const metaTarget = player.querySelector("[data-player-meta]");
+
+        if (titleTarget) titleTarget.textContent = title;
+
+        if (metaTarget) {
+            const parts = [artist, platform, modeLabel].filter(Boolean);
+            metaTarget.textContent = parts.join(" · ");
+        }
+    }
+
+    function loadLedgerMiniPlayer(button) {
         const player = findPlayer(button);
         if (!player) return;
 
@@ -583,16 +615,16 @@ function initLedgerPlayerHardOverride() {
         const artist = button.dataset.playerArtist || "Unknown producer";
         const platform = button.dataset.playerPlatform || "";
         const playableUrl = button.dataset.playerPlayableUrl || "";
-
-        const titleTarget = player.querySelector("[data-player-title]");
-        const metaTarget = player.querySelector("[data-player-meta]");
+        const embedUrl = button.dataset.playerEmbedUrl || "";
+        const sourceUrl = button.dataset.playerSourceUrl || "";
         const bodyTarget = player.querySelector("[data-player-body]");
 
-        if (titleTarget) titleTarget.textContent = title;
-        if (metaTarget) metaTarget.textContent = [artist, platform].filter(Boolean).join(" · ");
+        if (!bodyTarget) return;
 
-        if (bodyTarget) {
-            clearPlayerBody(bodyTarget);
+        clearPlayerBody(bodyTarget);
+
+        if (playableUrl) {
+            addMiniPlayerShell(player, title, artist, platform, "Ledger Audio");
 
             const audio = document.createElement("audio");
             audio.controls = true;
@@ -603,13 +635,38 @@ function initLedgerPlayerHardOverride() {
 
             bodyTarget.appendChild(audio);
             audio.play().catch(() => {});
+        } else if (embedUrl) {
+            addMiniPlayerShell(player, title, artist, platform, "Embedded Source");
+
+            const iframe = document.createElement("iframe");
+            iframe.src = embedUrl;
+            iframe.loading = "lazy";
+            iframe.allow = "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+            iframe.allowFullscreen = true;
+            iframe.className = "ledger-mini-embed-player";
+            iframe.title = `${title} player`;
+
+            bodyTarget.appendChild(iframe);
+
+            // Count the click as the Ledger play. We cannot detect actual playback
+            // inside third-party iframes reliably because of browser security.
+            recordPlay(itemId);
+        } else if (sourceUrl) {
+            // No embed and no direct audio: count click and open source.
+            recordPlay(itemId).finally(() => {
+                window.open(sourceUrl, "_blank", "noopener");
+            });
+            return;
+        } else {
+            addMiniPlayerShell(player, title, artist, platform, "Archived Only");
+
+            const note = document.createElement("p");
+            note.className = "small-note";
+            note.textContent = "No playable source has been added yet.";
+            bodyTarget.appendChild(note);
         }
 
-        document.querySelectorAll(".playlist-play-button.is-playing").forEach((activeButton) => {
-            activeButton.classList.remove("is-playing");
-        });
-
-        button.classList.add("is-playing");
+        setActiveButton(button);
         player.hidden = false;
         player.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
@@ -618,27 +675,11 @@ function initLedgerPlayerHardOverride() {
         const button = event.target.closest(".playlist-play-button[data-play-item-id]");
         if (!button) return;
 
-        // Stop the older source-only / embed player handlers from firing.
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
 
-        const playableUrl = button.dataset.playerPlayableUrl || "";
-        const sourceUrl = button.dataset.playerSourceUrl || "";
-        const itemId = button.dataset.playItemId || "";
-
-        if (playableUrl) {
-            loadLedgerPlayer(button);
-            return;
-        }
-
-        // Source-only: count the Ledger Play, then open externally.
-        // Do NOT change the Now Playing box.
-        recordPlay(itemId).finally(() => {
-            if (sourceUrl) {
-                window.open(sourceUrl, "_blank", "noopener");
-            }
-        });
+        loadLedgerMiniPlayer(button);
     }, true);
 }
 

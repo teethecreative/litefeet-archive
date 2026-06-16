@@ -3304,3 +3304,61 @@ button[data-preview-url] {
 .playlist-play-button[data-player-playable-url=""] {
     opacity: 1;
 }
+
+
+/* Ledger mini now playing player */
+.top-playlist-player {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.8fr) minmax(320px, 1.2fr);
+    gap: 18px;
+    align-items: center;
+    padding: 14px 16px !important;
+    min-height: 112px;
+}
+
+.top-playlist-player h3 {
+    font-size: 1.05rem;
+    margin: 0 0 4px;
+}
+
+.top-playlist-player .eyebrow {
+    margin-bottom: 6px;
+}
+
+.top-playlist-player .small-note {
+    margin: 0;
+    font-size: 0.88rem;
+}
+
+.top-playlist-player-body {
+    margin-top: 0 !important;
+}
+
+.top-playlist-player-body audio {
+    width: 100%;
+    height: 42px;
+}
+
+.ledger-mini-embed-player {
+    width: 100%;
+    height: 92px;
+    max-height: 92px;
+    border: 0;
+    border-radius: 14px;
+    background: #000;
+}
+
+.playlist-play-button.is-playing {
+    box-shadow: 0 0 0 3px rgba(229, 174, 57, 0.18);
+}
+
+@media (max-width: 760px) {
+    .top-playlist-player {
+        grid-template-columns: 1fr;
+    }
+
+    .ledger-mini-embed-player {
+        height: 120px;
+        max-height: 120px;
+    }
+}

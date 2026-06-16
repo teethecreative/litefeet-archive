@@ -56,6 +56,7 @@
                 </thead>
                 <tbody id="musicFeedList">
                     {% for item in release_radar %}
+                        {% set embed_url = item["embed_url"] or (item["url"]|media_embed_url if item["url"] else "") %}
                         <tr
                             data-release-row
                             data-search="{{ item['title'] }} {{ item['artist_or_creator'] }} {{ item['platform'] }} {{ item['description'] }}">
@@ -69,6 +70,7 @@
                                     data-player-artist="{{ item['artist_or_creator'] or 'Unknown producer' }}"
                                     data-player-platform="{{ item['platform'] or item['url']|media_platform }}"
                                     data-player-playable-url="{{ item['playable_url'] or '' }}"
+                                    data-player-embed-url="{{ embed_url or "" }}"
                                     data-player-source-url="{{ item['url'] or '' }}"
                                     aria-label="Play {{ item['title'] }}">
                                     ▶
@@ -230,6 +232,7 @@
                 <tbody>
                     {% for item in releases %}
                         {% set playback = item|music_playback_status %}
+                        {% set embed_url = item["embed_url"] or (item["url"]|media_embed_url if item["url"] else "") %}
                         <tr
                             data-release-row
                             data-title="{{ item['title']|lower }}"
