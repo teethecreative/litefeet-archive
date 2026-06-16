@@ -3896,3 +3896,150 @@ nav {
 body:has(select[name="status"]) select[name="status"] {
     max-width: 100%;
 }
+
+
+/* Clean People directory grid/list system */
+.people-directory-page {
+    max-width: min(1220px, calc(100vw - 64px)) !important;
+}
+
+.people-directory-controls {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.5fr) minmax(150px, 0.7fr) minmax(150px, 0.7fr) minmax(150px, 0.7fr) auto;
+    gap: 14px;
+    align-items: end;
+    border: 1px solid rgba(229, 174, 57, 0.35);
+    border-radius: 18px;
+    padding: 16px;
+    margin: 24px 0;
+}
+
+.people-directory-controls label {
+    display: grid;
+    gap: 7px;
+    color: var(--gold);
+    font-weight: 800;
+}
+
+.people-view-toggle {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.people-view-toggle .is-active {
+    background: var(--gold);
+    color: #000;
+}
+
+.people-directory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
+    gap: 16px;
+}
+
+.people-directory-grid[data-view="list"] {
+    grid-template-columns: 1fr;
+}
+
+.people-directory-card {
+    display: grid;
+    gap: 13px;
+    min-height: 195px;
+    padding: 18px;
+    border: 1px solid rgba(229, 174, 57, 0.35);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.people-directory-grid[data-view="list"] .people-directory-card {
+    grid-template-columns: 1.4fr 1fr auto;
+    align-items: center;
+    min-height: unset;
+}
+
+.people-card-fields {
+    display: grid;
+    gap: 6px;
+}
+
+.people-card-fields p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.35;
+}
+
+.people-card-fields strong {
+    color: var(--gold);
+}
+
+.people-card-fields span {
+    color: var(--cream);
+}
+
+.people-role-keywords {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.people-role-keywords span,
+.people-status-pill {
+    display: inline-flex;
+    width: max-content;
+    align-items: center;
+    border: 1px solid rgba(229, 174, 57, 0.35);
+    border-radius: 999px;
+    padding: 4px 8px;
+    color: var(--gold);
+    background: rgba(229, 174, 57, 0.08);
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: default;
+}
+
+.people-status-pill {
+    color: var(--cream);
+}
+
+.people-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: auto;
+}
+
+@media (min-width: 1280px) {
+    .people-directory-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 900px) {
+    .people-directory-controls {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .people-view-toggle {
+        grid-column: 1 / -1;
+    }
+
+    .people-directory-grid[data-view="list"] .people-directory-card {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 620px) {
+    .people-directory-page {
+        max-width: calc(100vw - 32px) !important;
+    }
+
+    .people-directory-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .people-directory-grid {
+        grid-template-columns: 1fr;
+    }
+}

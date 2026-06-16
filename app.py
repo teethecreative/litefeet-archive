@@ -2854,41 +2854,56 @@ def admin_event_edit(event_id):
 @app.route("/dancers")
 @app.route("/people/dancers")
 def dancers():
-    dancer_profiles = fetch_all(
+    for fn_name in [
+        "ensure_person_role_columns",
+        "ensure_profile_slug_column",
+        "ensure_profile_alias_columns",
+    ]:
+        fn = globals().get(fn_name)
+        if callable(fn):
+            try:
+                fn()
+            except Exception:
+                pass
+
+    rows = fetch_all(
         """
-        SELECT *
+        SELECT
+            id,
+            user_id,
+            dance_name,
+            real_name,
+            team_affiliation,
+            borough_scene,
+            bio,
+            source_url,
+            status,
+            created_at,
+            role_tags,
+            profile_slug,
+            recent_battle,
+            aliases,
+            era,
+            style_notes,
+            signature_moves,
+            battle_history,
+            legacy_notes
         FROM dancer_profiles
-        WHERE status IN ('Approved', 'Verified', 'Community Supported', 'Ghost Profile')
-        ORDER BY created_at DESC
-        """
+        ORDER BY LOWER(COALESCE(dance_name, '')) ASC
+        """,
+        {},
     )
 
-    approved_flowers = fetch_all(
-        """
-        SELECT *
-        FROM dancer_flowers
-        WHERE status = 'Approved'
-        ORDER BY created_at DESC
-        """
-    )
-
-    flowers_by_profile = {}
-
-    for flower in approved_flowers:
-        profile_id = flower["dancer_profile_id"]
-
-        if profile_id not in flowers_by_profile:
-            flowers_by_profile[profile_id] = []
-
-        flowers_by_profile[profile_id].append(flower)
+    profiles = []
+    for row in rows:
+        item = dict(row)
+        item["directory_status"] = normalize_people_profile_status(item.get("status"))
+        profiles.append(item)
 
     return render_template(
         "dancers.html",
-        dancer_profiles=dancer_profiles,
-        flowers_by_profile=flowers_by_profile,
+        profiles=profiles,
     )
-
-
 
 
 @app.route("/producers")
