@@ -3,17 +3,17 @@
 {% block title %}Verify Claims | LiteFeet Ledger{% endblock %}
 
 {% block content %}
-<section class="content-section">
+<section class="content-section verify-page-section">
     <h1>Verify Claims</h1>
 
     <p>
-        This queue is for claims that are actually controversial, disputed, debatable, or intentionally flagged for community review.
-        Incomplete ghost records are not shown here unless they have votes or have been escalated.
+        This queue is for claims that are controversial, disputed, debatable, or intentionally flagged for community review.
+        Incomplete ghost records stay out of this page unless they have votes or have been escalated.
     </p>
 
     {% if submissions %}
-        <div class="release-table-wrap verification-table-wrap">
-            <table class="release-table verification-table">
+        <div class="verify-table-wrap">
+            <table class="verify-claims-table">
                 <thead>
                     <tr>
                         <th>Claim</th>
@@ -30,18 +30,18 @@
                 <tbody>
                     {% for submission in submissions %}
                         <tr>
-                            <td>
+                            <td class="verify-claim-cell">
                                 <strong>{{ submission["title"] }}</strong>
                                 {% if submission["related_to"] %}
-                                    <span class="small-note">Related to: {{ submission["related_to"] }}</span>
+                                    <span>Related to: {{ submission["related_to"] }}</span>
                                 {% endif %}
                             </td>
                             <td>{{ submission["submission_type"] or "Uncategorized" }}</td>
-                            <td>{{ submission["controversy_reason"] }}</td>
-                            <td>{{ submission["true_count"] }}</td>
-                            <td>{{ submission["false_count"] }}</td>
-                            <td>{{ submission["debatable_count"] }}</td>
-                            <td>{{ submission["total_votes"] }}</td>
+                            <td>{{ submission["controversy_reason"] or "Flagged for verification" }}</td>
+                            <td>{{ submission["true_count"] or 0 }}</td>
+                            <td>{{ submission["false_count"] or 0 }}</td>
+                            <td>{{ submission["debatable_count"] or 0 }}</td>
+                            <td>{{ submission["total_votes"] or 0 }}</td>
                             <td>{{ submission["review_status"] }}</td>
                             <td>
                                 <a href="/verify/{{ submission['id'] }}" class="button small-button">Review</a>
@@ -55,7 +55,7 @@
         <div class="empty-state">
             <h3>No controversial claims need review right now</h3>
             <p>
-                Claims will appear here when they are flagged, disputed, receive debatable votes,
+                Claims will appear here when they are flagged, disputed, marked debatable,
                 or have a close true/false split.
             </p>
         </div>

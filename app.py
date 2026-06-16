@@ -3380,20 +3380,85 @@ def awards():
 
 @app.route("/verify")
 def verify_claims():
-    submissions = fetch_all(
-        """
-        SELECT *
-        FROM submissions
-        WHERE needs_verification = 1
-        AND review_status IN ('Needs Verification', 'Disputed')
-        ORDER BY created_at DESC
-        """
-    )
+    ensure_verification_tables()
+
+    if "build_controversy_queue" in globals():
+        submissions = build_controversy_queue()
+    else:
+        raw_submissions = fetch_all(
+            """
+            SELECT *
+            FROM submissions
+            WHERE needs_verification = 1
+               OR review_status IN ('Needs Verification', 'Disputed')
+               OR id IN (
+                    SELECT DISTINCT submission_id
+                    FROM verification_votes
+               )
+            ORDER BY created_at DESC
+            """,
+            {},
+        )
+
+        vote_counts = get_vote_counts_for_submissions(raw_submissions)
+        submissions = []
+
+        for submission in raw_submissions:
+            counts = vote_counts.get(submission["id"], {"true": 0, "false": 0, "debatable": 0})
+            true_count = int(counts.get("true") or 0)
+            false_count = int(counts.get("false") or 0)
+            debatable_count = int(counts.get("debatable") or 0)
+            total_votes = true_count + false_count + debatable_count
+
+            reasons = []
+            score = 0
+
+            if submission["review_status"] == "Disputed":
+                reasons.append("Disputed")
+                score += 100
+
+            if debatable_count > 0:
+                reasons.append("Debatable votes")
+                score += 60 + debatable_count
+
+            if true_count > 0 and false_count > 0 and abs(true_count - false_count) <= 1:
+                reasons.append("Close True/False split")
+                score += 50 + total_votes
+
+            if int(submission["needs_verification"] or 0) == 1:
+                # Keep explicit event/battle/award/claim flags, but do not flood with
+                # imported dancer/move ghost records that have no votes yet.
+                if submission["submission_type"] not in {"dancer_profile", "move_info"} or total_votes > 0:
+                    reasons.append("Flagged for verification")
+                    score += 25
+
+            if not reasons:
+                continue
+
+            if total_votes == 0 and submission["submission_type"] in {"dancer_profile", "move_info"}:
+                continue
+
+            row = dict(submission)
+            row["true_count"] = true_count
+            row["false_count"] = false_count
+            row["debatable_count"] = debatable_count
+            row["total_votes"] = total_votes
+            row["controversy_reason"] = ", ".join(dict.fromkeys(reasons))
+            row["controversy_score"] = score
+            submissions.append(row)
+
+        submissions.sort(
+            key=lambda item: (
+                item.get("controversy_score") or 0,
+                item.get("total_votes") or 0,
+                item.get("created_at") or "",
+            ),
+            reverse=True,
+        )
 
     return render_template(
         "verify_claims.html",
         submissions=submissions,
-        vote_counts=get_vote_counts_for_submissions(submissions),
     )
 
 
