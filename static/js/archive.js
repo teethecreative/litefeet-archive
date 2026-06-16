@@ -794,6 +794,15 @@ function initPeopleDirectoryUXFix() {
         return (value || "").replace(/\s+/g, " ").trim();
     }
 
+    function escapeHtml(value) {
+        return clean(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
     function extractLine(text, labels) {
         for (const label of labels) {
             const regex = new RegExp(label + "\\s*:\\s*([^\\n]+)", "i");
@@ -821,27 +830,31 @@ function initPeopleDirectoryUXFix() {
 
     function getKeywords(card) {
         const found = new Set();
-        const text = clean(card.innerText).toLowerCase();
-
-        roleWords.forEach((word) => {
-            if (text.includes(word)) found.add(word);
-        });
 
         Array.from(card.querySelectorAll("span, .tag, .badge, .pill")).forEach((el) => {
             const value = clean(el.textContent);
             const lower = value.toLowerCase();
 
             if (
-                value &&
-                !lower.includes("ghost profile") &&
-                !lower.includes("claimed") &&
-                !lower.includes("view profile") &&
-                !lower.includes("claim this profile")
+                !value ||
+                lower.includes("ghost profile") ||
+                lower.includes("claimed") ||
+                lower.includes("verified") ||
+                lower.includes("approved") ||
+                lower.includes("needs verification") ||
+                lower.includes("view profile") ||
+                lower.includes("claim this profile")
             ) {
-                roleWords.forEach((word) => {
-                    if (lower === word || lower.includes(word)) found.add(word);
-                });
+                return;
             }
+
+            roleWords.forEach((word) => {
+                // Exact word matching. This prevents "ghost" from becoming "host".
+                const wordRegex = new RegExp(`(^|[^a-z])${word}([^a-z]|$)`, "i");
+                if (wordRegex.test(lower)) {
+                    found.add(word);
+                }
+            });
         });
 
         return Array.from(found).map((word) => word.charAt(0).toUpperCase() + word.slice(1));
@@ -850,9 +863,14 @@ function initPeopleDirectoryUXFix() {
     function getStatus(card) {
         const text = clean(card.innerText).toLowerCase();
 
-        if (text.includes("ghost profile")) return "ghost";
-        if (text.includes("claimed")) return "claimed";
-        if (text.includes("pending")) return "pending";
+        if (
+            text.includes("ghost profile") ||
+            text.includes("needs confirmation") ||
+            text.includes("needs verification") ||
+            text.includes("pending review")
+        ) {
+            return "inactive";
+        }
 
         return "active";
     }
@@ -884,10 +902,10 @@ function initPeopleDirectoryUXFix() {
         const info = document.createElement("div");
         info.className = "people-card-info";
         info.innerHTML = `
-            <p><strong>Dancer Name:</strong> <span>${name}</span></p>
-            <p><strong>Team:</strong> <span>${team}</span></p>
-            <p><strong>Location:</strong> <span>${location}</span></p>
-            <p><strong>Recent Activity:</strong> <span>${recent}</span></p>
+            <p><strong>Dancer Name:</strong> <span>${escapeHtml(name)}</span></p>
+            <p><strong>Team:</strong> <span>${escapeHtml(team)}</span></p>
+            <p><strong>Location:</strong> <span>${escapeHtml(location)}</span></p>
+            <p><strong>Recent Activity:</strong> <span>${escapeHtml(recent)}</span></p>
         `;
         card.appendChild(info);
 
@@ -933,6 +951,19 @@ function initPeopleDirectoryUXFix() {
         return Array.from(select.options).some((option) => clean(option.textContent).toLowerCase().includes("all statuses"));
     }) || selects[2];
 
+    if (statusSelect) {
+        statusSelect.innerHTML = `
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+        `;
+    }
+
+    function selectedValue(select) {
+        if (!select) return "";
+        return clean(select.value || "").toLowerCase();
+    }
+
     function selectedText(select) {
         if (!select) return "";
         const option = select.options[select.selectedIndex];
@@ -942,7 +973,7 @@ function initPeopleDirectoryUXFix() {
     function cardMatches(card) {
         const search = clean(searchInput ? searchInput.value : "").toLowerCase();
         const role = selectedText(roleSelect);
-        const status = selectedText(statusSelect);
+        const status = selectedValue(statusSelect);
 
         const haystack = [
             card.dataset.name,
@@ -958,12 +989,12 @@ function initPeopleDirectoryUXFix() {
         const roleOk =
             !role ||
             role.includes("all roles") ||
-            card.dataset.roles.includes(role.replace("all roles", "").trim());
+            card.dataset.roles.split(" ").includes(role) ||
+            card.dataset.roles.includes(role);
 
         const statusOk =
             !status ||
-            status.includes("all statuses") ||
-            card.dataset.status.includes(status.replace("all statuses", "").trim());
+            card.dataset.status === status;
 
         return searchOk && roleOk && statusOk;
     }

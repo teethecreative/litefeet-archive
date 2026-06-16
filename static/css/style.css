@@ -3843,3 +3843,50 @@ nav {
         min-width: 820px;
     }
 }
+
+
+/* People directory compact card correction */
+.people-card-grid-normalized {
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+    gap: 16px !important;
+}
+
+.people-profile-card-normalized {
+    min-height: 205px !important;
+    padding: 18px !important;
+    gap: 12px !important;
+}
+
+.people-card-info {
+    gap: 7px !important;
+}
+
+.people-card-info p {
+    font-size: 0.88rem !important;
+}
+
+.people-role-keywords {
+    gap: 6px !important;
+}
+
+.people-role-keywords span {
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important;
+}
+
+.people-card-actions {
+    gap: 8px !important;
+}
+
+.people-card-actions .button,
+.people-card-actions a,
+.people-card-actions button {
+    padding: 7px 10px !important;
+    font-size: 0.78rem !important;
+}
+
+@media (min-width: 1180px) {
+    .people-card-grid-normalized {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
