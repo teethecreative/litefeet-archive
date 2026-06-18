@@ -3,6 +3,31 @@
 {% block title %}Admin Users | LiteFeet Ledger{% endblock %}
 
 {% block content %}
+    <style>
+        .flash-stack {
+            margin: 1rem 0;
+        }
+
+        .flash-message {
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+
+        .flash-success {
+            border: 1px solid rgba(40, 130, 70, 0.3);
+            background: rgba(40, 130, 70, 0.08);
+            color: #276b3f;
+        }
+
+        .flash-error {
+            border: 1px solid rgba(160, 40, 40, 0.3);
+            background: rgba(160, 40, 40, 0.08);
+            color: #8a2525;
+        }
+    </style>
+
 <section class="content-section">
     <h1>User Review</h1>
 
@@ -14,39 +39,141 @@
         <a href="/admin/submissions" class="button secondary">Back to Submissions</a>
     </p>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-stack">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <style>
+        .admin-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 1.5rem;
+        }
+
+        .admin-users-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border: 1px solid rgba(160, 135, 70, 0.25);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .admin-users-table th,
+        .admin-users-table td {
+            padding: 0.85rem 0.9rem;
+            border-bottom: 1px solid rgba(160, 135, 70, 0.18);
+            text-align: left;
+            vertical-align: middle;
+            font-size: 0.95rem;
+        }
+
+        .admin-users-table th {
+            color: #8a7437;
+            background: rgba(160, 135, 70, 0.08);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .admin-users-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .role-pill {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border: 1px solid rgba(160, 135, 70, 0.25);
+            border-radius: 999px;
+            color: #8a7437;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: capitalize;
+            white-space: nowrap;
+        }
+
+        .inline-role-form {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            min-width: 260px;
+        }
+
+        .inline-role-form select {
+            min-width: 145px;
+            padding: 0.5rem 0.65rem;
+        }
+
+        .inline-role-form .button {
+            padding: 0.5rem 0.85rem;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 760px) {
+            .admin-users-table th,
+            .admin-users-table td {
+                padding: 0.75rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+
     {% if users %}
-        <div class="submission-list">
-            {% for user in users %}
-                <article class="submission-card">
-                    <div class="submission-meta">
-                        <span>{{ user["role"] }}</span>
-                        {% if user["organization_name"] %}
-                            <span>{{ user["organization_name"] }}</span>
-                        {% endif %}
-                    </div>
+        <div class="admin-table-wrap">
+            <table class="admin-users-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Organization</th>
+                        <th>Current Role</th>
+                        <th>Created</th>
+                        <th>Update Role</th>
+                    </tr>
+                </thead>
 
-                    <h2>{{ user["display_name"] }}</h2>
-                    <p><strong>Email:</strong> {{ user["email"] }}</p>
-                    <p><strong>Organization:</strong> {{ user["organization_name"] or "Not provided" }}</p>
-                    <p><strong>Created:</strong> {{ user["created_at"] }}</p>
+                <tbody>
+                    {% for user in users %}
+                        <tr>
+                            <td>
+                                <strong>{{ user["display_name"] or "Unnamed user" }}</strong>
+                            </td>
 
-                    <div class="review-actions">
-                        <h3>Account Role</h3>
+                            <td>{{ user["email"] or "—" }}</td>
 
-                        <form action="/admin/users/{{ user['id'] }}/role" method="post">
-                            <label for="role_{{ user['id'] }}">Update role</label>
-                            <select id="role_{{ user['id'] }}" name="role">
-                                <option value="contributor" {% if user["role"] == "contributor" %}selected{% endif %}>Contributor</option>
-                                <option value="affiliate_host" {% if user["role"] == "affiliate_host" %}selected{% endif %}>Affiliate Host</option>
-                                <option value="admin" {% if user["role"] == "admin" %}selected{% endif %}>Admin</option>
-                                <option value="suspended" {% if user["role"] == "suspended" %}selected{% endif %}>Suspended</option>
-                            </select>
+                            <td>{{ user["organization_name"] or "Not provided" }}</td>
 
-                            <button type="submit" class="button primary">Save Role</button>
-                        </form>
-                    </div>
-                </article>
-            {% endfor %}
+                            <td>
+                                <span class="role-pill">
+                                    {{ (user["role"] or "contributor").replace("_", " ") }}
+                                </span>
+                            </td>
+
+                            <td>{{ user["created_at"] or "—" }}</td>
+
+                            <td>
+                                <form class="inline-role-form" action="/admin/users/{{ user['id'] }}/role" method="post">
+                                    <select id="role_{{ user['id'] }}" name="role" required>
+                                        <option value="contributor" {% if user["role"] == "contributor" %}selected{% endif %}>Contributor</option>
+                                        <option value="affiliate_host" {% if user["role"] == "affiliate_host" %}selected{% endif %}>Affiliate Host</option>
+                                        <option value="admin" {% if user["role"] == "admin" %}selected{% endif %}>Admin</option>
+                                        <option value="suspended" {% if user["role"] == "suspended" %}selected{% endif %}>Suspended</option>
+                                    </select>
+
+                                    <button type="submit" class="button primary">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     {% else %}
         <div class="empty-state">

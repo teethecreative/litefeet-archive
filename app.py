@@ -9,7 +9,7 @@ from urllib.parse import urlparse, parse_qs, quote
 from urllib.request import Request, urlopen
 from datetime import datetime, timedelta
 
-from flask import abort, Flask, redirect, render_template, request, session, url_for, Response
+from flask import abort, Flask, flash, redirect, render_template, request, session, url_for, Response
 from sqlalchemy import create_engine, text
 from werkzeug.security import check_password_hash, generate_password_hash
 from markupsafe import Markup, escape
@@ -2467,6 +2467,21 @@ def update_user_role(user_id):
     }
 
     if new_role not in allowed_roles:
+        flash("Invalid role selected.", "error")
+        return redirect(url_for("admin_users"))
+
+    user_rows = fetch_all(
+        """
+        SELECT id, display_name, email, role
+        FROM archive_users
+        WHERE id = :user_id
+        LIMIT 1
+        """,
+        {"user_id": user_id},
+    )
+
+    if not user_rows:
+        flash("User account not found.", "error")
         return redirect(url_for("admin_users"))
 
     execute_query(
@@ -2480,6 +2495,21 @@ def update_user_role(user_id):
             "user_id": user_id,
         },
     )
+
+    updated_rows = fetch_all(
+        """
+        SELECT role
+        FROM archive_users
+        WHERE id = :user_id
+        LIMIT 1
+        """,
+        {"user_id": user_id},
+    )
+
+    if updated_rows and updated_rows[0]["role"] == new_role:
+        flash("User role updated.", "success")
+    else:
+        flash("Role update did not save.", "error")
 
     return redirect(url_for("admin_users"))
 
