@@ -1,0 +1,57 @@
+200 / -> 
+302 /people -> /people/dancers
+
+EXCEPTION on /people/dancers: (sqlite3.OperationalError) no such column: recent_battle
+[SQL: 
+        SELECT
+            id,
+            user_id,
+            dance_name,
+            real_name,
+            team_affiliation,
+            borough_scene,
+            bio,
+            source_url,
+            status,
+            created_at,
+            role_tags,
+            profile_slug,
+            recent_battle,
+            aliases,
+            era,
+            style_notes,
+            signature_moves,
+            battle_history,
+            legacy_notes
+        FROM dancer_profiles
+        ORDER BY LOWER(COALESCE(dance_name, '')) ASC
+        ]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+200 /people/producers -> 
+200 /people/teams -> 
+302 /dancers -> /people/dancers
+302 /dancers/create -> /account/login
+302 /people/dancers/create -> /dancers/create
+200 /events -> 
+200 /events/submit -> 
+200 /litefeet-music -> 
+302 /litefeet-music/projects/submit -> /account/login?next=/litefeet-music/projects/submit
+200 /account/login -> 
+200 /account/signup -> 
+
+EXCEPTION on /account/profile-link: name 'get_current_user' is not defined
+
+EXCEPTION on /account/profile-visibility: name 'get_current_user' is not defined
+200 /admin/login -> 
+302 /admin -> /admin/login?next=/admin
+302 /admin/users -> /admin/login?next=/admin/users
+302 /admin/profile-links -> /admin/login?next=/admin/profile-links
+302 /admin/profile-visibility-requests -> /admin/login?next=/admin/profile-visibility-requests
+302 /admin/submissions -> /admin/login?next=/admin/submissions
+200 /verify -> 
+200 /submit -> 
+
+=== FAILURES ===
+('/people/dancers', 'EXCEPTION', '', "(sqlite3.OperationalError) no such column: recent_battle\n[SQL: \n        SELECT\n            id,\n            user_id,\n            dance_name,\n            real_name,\n            team_affiliation,\n            borough_scene,\n            bio,\n            source_url,\n            status,\n            created_at,\n            role_tags,\n            profile_slug,\n            recent_battle,\n            aliases,\n            era,\n            style_notes,\n            signature_moves,\n            battle_history,\n            legacy_notes\n        FROM dancer_profiles\n        ORDER BY LOWER(COALESCE(dance_name, '')) ASC\n        ]\n(Background on this error at: https://sqlalche.me/e/20/e3q8)")
+('/account/profile-link', 'EXCEPTION', '', "name 'get_current_user' is not defined")
+('/account/profile-visibility', 'EXCEPTION', '', "name 'get_current_user' is not defined")
