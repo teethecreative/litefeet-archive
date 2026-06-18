@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block title %}Account Detail | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section admin-user-detail-page">
+    <p>
+        <a href="/admin/users" class="button secondary">Back to Users</a>
+        <a href="/admin/profile-links" class="button secondary">Profile Link Queue</a>
+    </p>
+
+    <h1>{{ user["display_name"] or "Unnamed Account" }}</h1>
+
+    <p class="muted-small">
+        {{ user["email"] or "No email" }}
+        {% if user["organization_name"] %}
+            · {{ user["organization_name"] }}
+        {% endif %}
+    </p>
+
+    <style>
+        .admin-user-detail-page {
+            color: #f3ead2;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .detail-panel,
+        .profile-card-match {
+            border: 1px solid rgba(220, 180, 68, 0.22);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 1rem;
+        }
+
+        .detail-panel h2,
+        .profile-card-match h3 {
+            margin-top: 0;
+            color: #f5d86f;
+        }
+
+        .profile-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .profile-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin: 0.65rem 0;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 0.22rem 0.6rem;
+            border-radius: 999px;
+            border: 1px solid rgba(220, 180, 68, 0.28);
+            color: #f5d86f;
+            background: rgba(220, 180, 68, 0.08);
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: capitalize;
+            white-space: nowrap;
+        }
+
+        .status-pill.approved {
+            border-color: rgba(93, 193, 118, 0.35);
+            color: #baf3c7;
+            background: rgba(93, 193, 118, 0.1);
+        }
+
+        .status-pill.rejected {
+            border-color: rgba(217, 91, 91, 0.35);
+            color: #ffc4c4;
+            background: rgba(217, 91, 91, 0.1);
+        }
+
+        .admin-mini-form {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+        }
+
+        .admin-mini-form select,
+        .admin-mini-form input {
+            border: 1px solid rgba(220, 180, 68, 0.28);
+            background: rgba(0, 0, 0, 0.45);
+            color: #f3ead2;
+            border-radius: 10px;
+            padding: 0.48rem 0.55rem;
+            min-height: 38px;
+        }
+
+        .admin-mini-form input {
+            min-width: 170px;
+        }
+
+        .muted-small {
+            color: rgba(243, 234, 210, 0.68);
+            font-size: 0.9rem;
+        }
+
+        .flash-stack {
+            margin: 1rem 0;
+        }
+
+        .flash-message {
+            padding: 0.85rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+
+        .flash-success {
+            border: 1px solid rgba(93, 193, 118, 0.45);
+            background: rgba(93, 193, 118, 0.12);
+            color: #baf3c7;
+        }
+
+        .flash-error {
+            border: 1px solid rgba(217, 91, 91, 0.45);
+            background: rgba(217, 91, 91, 0.12);
+            color: #ffc4c4;
+        }
+
+        .empty-state {
+            border: 1px dashed rgba(220, 180, 68, 0.24);
+            border-radius: 14px;
+            padding: 1rem;
+            color: rgba(243, 234, 210, 0.7);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .admin-link {
+            color: #f5d86f;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .admin-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-stack">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="detail-grid">
+        <div class="detail-panel">
+            <h2>Account</h2>
+            <p><strong>Email:</strong> {{ user["email"] or "—" }}</p>
+            <p><strong>Organization:</strong> {{ user["organization_name"] or "Not provided" }}</p>
+            <p><strong>Created:</strong> {{ user["created_at"] or "—" }}</p>
+        </div>
+
+        <div class="detail-panel">
+            <h2>Role</h2>
+            {% set role_value = user["role"] or "contributor" %}
+            <p><span class="status-pill {{ role_value }}">{{ role_value.replace("_", " ") }}</span></p>
+
+            <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/role" method="post">
+                <select name="role" required>
+                    <option value="contributor" {% if role_value == "contributor" %}selected{% endif %}>Contributor</option>
+                    <option value="affiliate_host" {% if role_value == "affiliate_host" %}selected{% endif %}>Affiliate Host</option>
+                    <option value="admin" {% if role_value == "admin" %}selected{% endif %}>Admin</option>
+                    <option value="suspended" {% if role_value == "suspended" %}selected{% endif %}>Suspended</option>
+                </select>
+
+                <button type="submit" class="button primary">Save Role</button>
+            </form>
+        </div>
+
+        <div class="detail-panel">
+            <h2>Review Status</h2>
+            {% set status_value = user["account_status"] or "pending" %}
+            <p><span class="status-pill {{ status_value }}">{{ status_value.replace("_", " ") }}</span></p>
+
+            <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/status" method="post">
+                <select name="account_status" required>
+                    <option value="pending" {% if status_value == "pending" %}selected{% endif %}>Needs Approval</option>
+                    <option value="approved" {% if status_value == "approved" %}selected{% endif %}>Approved</option>
+                    <option value="rejected" {% if status_value == "rejected" %}selected{% endif %}>Rejected</option>
+                </select>
+
+                <input
+                    type="text"
+                    name="account_status_note"
+                    value="{{ user['account_status_note'] or '' }}"
+                    placeholder="Optional note"
+                >
+
+                <button type="submit" class="button primary">Save Status</button>
+            </form>
+        </div>
+    </div>
+
+    <section class="detail-panel">
+        <h2>Attached Profile Cards</h2>
+
+        {% if profile_links %}
+            <div class="profile-card-grid">
+                {% for link in profile_links %}
+                    <article class="profile-card-match">
+                        <div class="profile-meta">
+                            <span class="status-pill {{ link['status'] }}">{{ link["status"] }}</span>
+                            <span class="status-pill">Dancer</span>
+                        </div>
+
+                        <h3>{{ link["dance_name"] or link["real_name"] or ("Profile #" ~ link["profile_id"]) }}</h3>
+
+                        {% if link["team_affiliation"] %}
+                            <p class="muted-small">{{ link["team_affiliation"] }}</p>
+                        {% endif %}
+
+                        <p>
+                            <a class="admin-link" href="/dancers/{{ link['profile_id'] }}" target="_blank" rel="noopener">
+                                Open public card
+                            </a>
+                        </p>
+
+                        <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/profile-links/{{ link['id'] }}/status" method="post">
+                            <select name="status" required>
+                                <option value="pending" {% if link["status"] == "pending" %}selected{% endif %}>Pending</option>
+                                <option value="approved" {% if link["status"] == "approved" %}selected{% endif %}>Approved / Attached</option>
+                                <option value="rejected" {% if link["status"] == "rejected" %}selected{% endif %}>Rejected / Detached</option>
+                            </select>
+
+                            <input name="admin_note" value="{{ link['admin_note'] or '' }}" placeholder="Admin note">
+
+                            <button type="submit" class="button primary">Save Link</button>
+                        </form>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No profile cards attached yet.</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="detail-panel" style="margin-top: 1.5rem;">
+        <h2>Suggested Profile Cards to Attach</h2>
+        <p class="muted-small">
+            These suggestions are based on similar names from the account and existing dancer profile cards.
+        </p>
+
+        {% if suggested_profiles %}
+            <div class="profile-card-grid">
+                {% for item in suggested_profiles %}
+                    {% set profile = item.profile %}
+
+                    <article class="profile-card-match">
+                        <div class="profile-meta">
+                            <span class="status-pill">{{ item.score }}% match</span>
+                            <span class="status-pill">Dancer</span>
+                            {% if profile["id"] in linked_profile_ids %}
+                                <span class="status-pill approved">Already linked</span>
+                            {% endif %}
+                        </div>
+
+                        <h3>{{ profile["dance_name"] or profile["real_name"] or "Unnamed Profile" }}</h3>
+
+                        {% if profile["real_name"] %}
+                            <p><strong>Real name:</strong> {{ profile["real_name"] }}</p>
+                        {% endif %}
+
+                        {% if profile["team_affiliation"] %}
+                            <p class="muted-small">{{ profile["team_affiliation"] }}</p>
+                        {% endif %}
+
+                        <p>
+                            <a class="admin-link" href="/dancers/{{ profile['id'] }}" target="_blank" rel="noopener">
+                                View public card
+                            </a>
+                        </p>
+
+                        <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/profile-links/{{ profile['id'] }}/attach" method="post">
+                            <input name="admin_note" value="Attached by admin after profile match review." placeholder="Admin note">
+                            <button type="submit" class="button primary">
+                                Attach Card
+                            </button>
+                        </form>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No suggested profile cards found for this account yet.</p>
+            </div>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

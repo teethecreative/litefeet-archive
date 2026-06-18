@@ -721,6 +721,21 @@ def init_db():
         )
 
 
+
+
+def database_is_postgres():
+    try:
+        return engine.url.get_backend_name().startswith("postgres")
+    except Exception:
+        return False
+
+
+def ledger_primary_key_sql():
+    if database_is_postgres():
+        return "id SERIAL PRIMARY KEY"
+    return "id INTEGER PRIMARY KEY AUTOINCREMENT"
+
+
 def fetch_all(query, params=None):
     with engine.connect() as conn:
         result = conn.execute(text(query), params or {})
@@ -785,26 +800,27 @@ def name_similarity(a, b):
 
 
 def ensure_profile_link_tables():
+    id_column = ledger_primary_key_sql()
+
     execute_query(
-        """
+        f"""
         CREATE TABLE IF NOT EXISTS profile_account_links (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            {id_column},
             user_id INTEGER NOT NULL,
             profile_type TEXT NOT NULL DEFAULT 'dancer',
             profile_id INTEGER NOT NULL,
             status TEXT NOT NULL DEFAULT 'pending',
             requested_at TEXT NOT NULL,
             reviewed_at TEXT,
-            admin_note TEXT,
-            UNIQUE(user_id, profile_type, profile_id)
+            admin_note TEXT
         )
         """
     )
 
     execute_query(
-        """
+        f"""
         CREATE TABLE IF NOT EXISTS profile_visibility_requests (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            {id_column},
             user_id INTEGER NOT NULL,
             profile_type TEXT NOT NULL DEFAULT 'dancer',
             profile_id INTEGER NOT NULL,
@@ -819,7 +835,6 @@ def ensure_profile_link_tables():
         )
         """
     )
-
 
 def find_similar_dancer_profiles_for_user(user, limit=8):
     ensure_profile_link_tables()
@@ -2613,6 +2628,199 @@ def admin_users():
         users=users,
         grouped_users=grouped_users,
     )
+
+
+
+
+@app.route("/admin/users/<int:user_id>")
+def admin_user_detail(user_id):
+    ensure_account_review_columns()
+    ensure_profile_link_tables()
+
+    user_rows = fetch_all(
+        """
+        SELECT *
+        FROM archive_users
+        WHERE id = :user_id
+        LIMIT 1
+        """,
+        {"user_id": user_id},
+    )
+
+    if not user_rows:
+        flash("User account not found.", "error")
+        return redirect(url_for("admin_users"))
+
+    user = user_rows[0]
+
+    suggested_profiles = find_similar_dancer_profiles_for_user(user, limit=12)
+
+    profile_links = fetch_all(
+        """
+        SELECT profile_account_links.*,
+               dancer_profiles.dance_name,
+               dancer_profiles.real_name,
+               dancer_profiles.team_affiliation,
+               dancer_profiles.profile_slug
+        FROM profile_account_links
+        JOIN dancer_profiles ON profile_account_links.profile_id = dancer_profiles.id
+        WHERE profile_account_links.user_id = :user_id
+        AND profile_account_links.profile_type = 'dancer'
+        ORDER BY
+            CASE profile_account_links.status
+                WHEN 'approved' THEN 1
+                WHEN 'pending' THEN 2
+                WHEN 'rejected' THEN 3
+                ELSE 4
+            END,
+            profile_account_links.requested_at DESC
+        """,
+        {"user_id": user_id},
+    )
+
+    linked_profile_ids = {link["profile_id"] for link in profile_links}
+
+    return render_template(
+        "admin_user_detail.html",
+        user=user,
+        suggested_profiles=suggested_profiles,
+        profile_links=profile_links,
+        linked_profile_ids=linked_profile_ids,
+    )
+
+
+@app.route("/admin/users/<int:user_id>/profile-links/<int:profile_id>/attach", methods=["POST"])
+def admin_attach_profile_to_user(user_id, profile_id):
+    ensure_account_review_columns()
+    ensure_profile_link_tables()
+
+    user_rows = fetch_all(
+        """
+        SELECT id, display_name, email
+        FROM archive_users
+        WHERE id = :user_id
+        LIMIT 1
+        """,
+        {"user_id": user_id},
+    )
+
+    if not user_rows:
+        flash("User account not found.", "error")
+        return redirect(url_for("admin_users"))
+
+    profile_rows = fetch_all(
+        """
+        SELECT id, dance_name, real_name
+        FROM dancer_profiles
+        WHERE id = :profile_id
+        LIMIT 1
+        """,
+        {"profile_id": profile_id},
+    )
+
+    if not profile_rows:
+        flash("Profile card not found.", "error")
+        return redirect(url_for("admin_user_detail", user_id=user_id))
+
+    existing = fetch_all(
+        """
+        SELECT id
+        FROM profile_account_links
+        WHERE user_id = :user_id
+        AND profile_type = 'dancer'
+        AND profile_id = :profile_id
+        LIMIT 1
+        """,
+        {
+            "user_id": user_id,
+            "profile_id": profile_id,
+        },
+    )
+
+    now_value = datetime.now().isoformat(timespec="seconds")
+    admin_note = request.form.get("admin_note", "").strip() or "Attached by admin."
+
+    if existing:
+        execute_query(
+            """
+            UPDATE profile_account_links
+            SET status = 'approved',
+                reviewed_at = :reviewed_at,
+                admin_note = :admin_note
+            WHERE id = :link_id
+            """,
+            {
+                "reviewed_at": now_value,
+                "admin_note": admin_note,
+                "link_id": existing[0]["id"],
+            },
+        )
+    else:
+        execute_query(
+            """
+            INSERT INTO profile_account_links (
+                user_id,
+                profile_type,
+                profile_id,
+                status,
+                requested_at,
+                reviewed_at,
+                admin_note
+            )
+            VALUES (
+                :user_id,
+                'dancer',
+                :profile_id,
+                'approved',
+                :requested_at,
+                :reviewed_at,
+                :admin_note
+            )
+            """,
+            {
+                "user_id": user_id,
+                "profile_id": profile_id,
+                "requested_at": now_value,
+                "reviewed_at": now_value,
+                "admin_note": admin_note,
+            },
+        )
+
+    flash("Profile card attached to account.", "success")
+    return redirect(url_for("admin_user_detail", user_id=user_id))
+
+
+@app.route("/admin/users/<int:user_id>/profile-links/<int:link_id>/status", methods=["POST"])
+def admin_update_user_profile_link_status(user_id, link_id):
+    ensure_profile_link_tables()
+
+    status = request.form.get("status", "").strip()
+    admin_note = request.form.get("admin_note", "").strip()
+
+    if status not in {"pending", "approved", "rejected"}:
+        flash("Invalid profile link status.", "error")
+        return redirect(url_for("admin_user_detail", user_id=user_id))
+
+    execute_query(
+        """
+        UPDATE profile_account_links
+        SET status = :status,
+            reviewed_at = :reviewed_at,
+            admin_note = :admin_note
+        WHERE id = :link_id
+        AND user_id = :user_id
+        """,
+        {
+            "status": status,
+            "reviewed_at": datetime.now().isoformat(timespec="seconds"),
+            "admin_note": admin_note,
+            "link_id": link_id,
+            "user_id": user_id,
+        },
+    )
+
+    flash("Profile link status updated.", "success")
+    return redirect(url_for("admin_user_detail", user_id=user_id))
 
 
 @app.route("/admin/users/<int:user_id>/role", methods=["POST"])
