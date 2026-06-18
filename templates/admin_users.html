@@ -117,6 +117,18 @@
             min-width: 160px;
         }
 
+
+        .admin-account-link {
+            color: #fff3c4;
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+        .admin-account-link:hover {
+            color: #f5d86f;
+            text-decoration: underline;
+        }
+
         .admin-email-cell {
             min-width: 210px;
             color: rgba(243, 234, 210, 0.74);
@@ -271,7 +283,11 @@
 
                                 <tr>
                                     <td class="admin-account-cell">
-                                        <strong>{{ user["display_name"] or "Unnamed user" }}</strong>
+                                        <a class="admin-account-link" href="/admin/users/{{ user['id'] }}">
+                                            {{ user["display_name"] or "Unnamed user" }}
+                                        </a>
+                                        <br>
+                                        <span class="muted-small">Open account + profile cards</span>
                                     </td>
 
                                     <td class="admin-email-cell">{{ user["email"] or "—" }}</td>
