@@ -10,11 +10,24 @@
         Review accounts, approve or reject access, and assign contributor or affiliate host roles.
     </p>
 
-    <p>
+    <div class="admin-user-actions">
         <a href="/admin/submissions" class="button secondary">Back to Submissions</a>
-    </p>
+        <a href="/admin/profile-links" class="button secondary">Profile Links</a>
+        <a href="/admin/profile-visibility-requests" class="button secondary">Visibility Requests</a>
+    </div>
 
     <style>
+        .admin-users-page {
+            color: #f3ead2;
+        }
+
+        .admin-user-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin: 1.25rem 0 2rem;
+        }
+
         .flash-stack {
             margin: 1rem 0;
         }
@@ -27,53 +40,64 @@
         }
 
         .flash-success {
-            border: 1px solid rgba(40, 130, 70, 0.3);
-            background: rgba(40, 130, 70, 0.08);
-            color: #276b3f;
+            border: 1px solid rgba(93, 193, 118, 0.45);
+            background: rgba(93, 193, 118, 0.12);
+            color: #baf3c7;
         }
 
         .flash-error {
-            border: 1px solid rgba(160, 40, 40, 0.3);
-            background: rgba(160, 40, 40, 0.08);
-            color: #8a2525;
+            border: 1px solid rgba(217, 91, 91, 0.45);
+            background: rgba(217, 91, 91, 0.12);
+            color: #ffc4c4;
         }
 
         .admin-user-section {
             margin-top: 2rem;
+            padding: 1rem;
+            border: 1px solid rgba(220, 180, 68, 0.22);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.035);
         }
 
         .admin-user-section h2 {
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.15rem;
+            color: #f5d86f;
+        }
+
+        .admin-user-section .section-desc {
+            margin-top: 0;
+            color: rgba(243, 234, 210, 0.72);
         }
 
         .admin-table-wrap {
             width: 100%;
             overflow-x: auto;
             margin-top: 1rem;
+            border-radius: 16px;
+            border: 1px solid rgba(220, 180, 68, 0.2);
+            background: rgba(0, 0, 0, 0.28);
         }
 
         .admin-users-table {
             width: 100%;
             border-collapse: collapse;
-            background: #fff;
-            border: 1px solid rgba(160, 135, 70, 0.25);
-            border-radius: 14px;
-            overflow: hidden;
+            background: transparent;
+            color: #f3ead2;
         }
 
         .admin-users-table th,
         .admin-users-table td {
-            padding: 0.8rem 0.85rem;
-            border-bottom: 1px solid rgba(160, 135, 70, 0.18);
+            padding: 0.85rem 0.9rem;
+            border-bottom: 1px solid rgba(220, 180, 68, 0.14);
             text-align: left;
-            vertical-align: top;
+            vertical-align: middle;
             font-size: 0.92rem;
         }
 
         .admin-users-table th {
-            color: #8a7437;
-            background: rgba(160, 135, 70, 0.08);
-            font-weight: 700;
+            color: #f5d86f;
+            background: rgba(220, 180, 68, 0.09);
+            font-weight: 800;
             white-space: nowrap;
         }
 
@@ -81,43 +105,123 @@
             border-bottom: none;
         }
 
+        .admin-users-table td {
+            color: rgba(243, 234, 210, 0.9);
+        }
+
+        .admin-users-table strong {
+            color: #fff3c4;
+        }
+
+        .admin-account-cell {
+            min-width: 160px;
+        }
+
+        .admin-email-cell {
+            min-width: 210px;
+            color: rgba(243, 234, 210, 0.74);
+        }
+
+        .admin-org-cell {
+            min-width: 190px;
+            color: rgba(243, 234, 210, 0.74);
+        }
+
+        .admin-date-cell {
+            min-width: 125px;
+            color: rgba(243, 234, 210, 0.66);
+            font-size: 0.82rem;
+        }
+
+        .admin-control-cell {
+            min-width: 245px;
+        }
+
+        .admin-review-cell {
+            min-width: 310px;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 0.22rem 0.6rem;
+            border-radius: 999px;
+            border: 1px solid rgba(220, 180, 68, 0.28);
+            color: #f5d86f;
+            background: rgba(220, 180, 68, 0.08);
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: capitalize;
+            white-space: nowrap;
+        }
+
+        .status-pill.approved {
+            border-color: rgba(93, 193, 118, 0.35);
+            color: #baf3c7;
+            background: rgba(93, 193, 118, 0.1);
+        }
+
+        .status-pill.rejected,
+        .status-pill.suspended {
+            border-color: rgba(217, 91, 91, 0.35);
+            color: #ffc4c4;
+            background: rgba(217, 91, 91, 0.1);
+        }
+
         .admin-mini-form {
             display: flex;
             gap: 0.5rem;
             align-items: center;
             flex-wrap: wrap;
+            margin-top: 0.55rem;
         }
 
         .admin-mini-form select,
         .admin-mini-form input {
-            padding: 0.45rem 0.55rem;
+            border: 1px solid rgba(220, 180, 68, 0.28);
+            background: rgba(0, 0, 0, 0.45);
+            color: #f3ead2;
+            border-radius: 10px;
+            padding: 0.48rem 0.55rem;
+            min-height: 38px;
+        }
+
+        .admin-mini-form select {
             min-width: 135px;
         }
 
         .admin-mini-form input {
-            min-width: 180px;
+            min-width: 160px;
         }
 
         .admin-mini-form .button {
-            padding: 0.45rem 0.75rem;
-            white-space: nowrap;
-        }
-
-        .status-pill {
-            display: inline-block;
-            padding: 0.2rem 0.55rem;
+            padding: 0.48rem 0.75rem;
             border-radius: 999px;
-            border: 1px solid rgba(160, 135, 70, 0.25);
-            color: #8a7437;
-            font-size: 0.78rem;
-            font-weight: 700;
-            text-transform: capitalize;
             white-space: nowrap;
         }
 
         .muted-small {
-            color: #777;
+            color: rgba(243, 234, 210, 0.62);
             font-size: 0.82rem;
+        }
+
+        .empty-state {
+            border: 1px dashed rgba(220, 180, 68, 0.24);
+            border-radius: 14px;
+            padding: 1rem;
+            color: rgba(243, 234, 210, 0.7);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 800px) {
+            .admin-user-section {
+                padding: 0.75rem;
+            }
+
+            .admin-users-table th,
+            .admin-users-table td {
+                padding: 0.75rem;
+                font-size: 0.86rem;
+            }
         }
     </style>
 
@@ -144,64 +248,63 @@
 
         <section class="admin-user-section">
             <h2>{{ section_title }} <span class="muted-small">({{ section_users|length }})</span></h2>
-            <p class="muted-small">{{ section_description }}</p>
+            <p class="section-desc">{{ section_description }}</p>
 
             {% if section_users %}
                 <div class="admin-table-wrap">
                     <table class="admin-users-table">
                         <thead>
                             <tr>
-                                <th>Name</th>
+                                <th>Account</th>
                                 <th>Email</th>
                                 <th>Organization</th>
                                 <th>Role</th>
-                                <th>Account Status</th>
+                                <th>Review</th>
                                 <th>Created</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             {% for user in section_users %}
+                                {% set role_value = user["role"] or "contributor" %}
+                                {% set status_value = user["account_status"] or "pending" %}
+
                                 <tr>
-                                    <td>
+                                    <td class="admin-account-cell">
                                         <strong>{{ user["display_name"] or "Unnamed user" }}</strong>
                                     </td>
 
-                                    <td>{{ user["email"] or "—" }}</td>
+                                    <td class="admin-email-cell">{{ user["email"] or "—" }}</td>
 
-                                    <td>{{ user["organization_name"] or "Not provided" }}</td>
+                                    <td class="admin-org-cell">{{ user["organization_name"] or "Not provided" }}</td>
 
-                                    <td>
-                                        <p>
-                                            <span class="status-pill">
-                                                {{ (user["role"] or "contributor").replace("_", " ") }}
-                                            </span>
-                                        </p>
+                                    <td class="admin-control-cell">
+                                        <span class="status-pill {{ role_value }}">
+                                            {{ role_value.replace("_", " ") }}
+                                        </span>
 
                                         <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/role" method="post">
                                             <select name="role" required>
-                                                <option value="contributor" {% if user["role"] == "contributor" %}selected{% endif %}>Contributor</option>
-                                                <option value="affiliate_host" {% if user["role"] == "affiliate_host" %}selected{% endif %}>Affiliate Host</option>
-                                                <option value="admin" {% if user["role"] == "admin" %}selected{% endif %}>Admin</option>
-                                                <option value="suspended" {% if user["role"] == "suspended" %}selected{% endif %}>Suspended</option>
+                                                <option value="contributor" {% if role_value == "contributor" %}selected{% endif %}>Contributor</option>
+                                                <option value="affiliate_host" {% if role_value == "affiliate_host" %}selected{% endif %}>Affiliate Host</option>
+                                                <option value="admin" {% if role_value == "admin" %}selected{% endif %}>Admin</option>
+                                                <option value="suspended" {% if role_value == "suspended" %}selected{% endif %}>Suspended</option>
                                             </select>
 
                                             <button type="submit" class="button primary">Save Role</button>
                                         </form>
                                     </td>
 
-                                    <td>
-                                        <p>
-                                            <span class="status-pill">
-                                                {{ (user["account_status"] or "pending").replace("_", " ") }}
-                                            </span>
-                                        </p>
+                                    <td class="admin-review-cell">
+                                        <span class="status-pill {{ status_value }}">
+                                            {{ status_value.replace("_", " ") }}
+                                        </span>
 
                                         <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/status" method="post">
                                             <select name="account_status" required>
-                                                <option value="pending" {% if user["account_status"] == "pending" %}selected{% endif %}>Needs Approval</option>
-                                                <option value="approved" {% if user["account_status"] == "approved" %}selected{% endif %}>Approved</option>
-                                                <option value="rejected" {% if user["account_status"] == "rejected" %}selected{% endif %}>Rejected</option>
+                                                <option value="pending" {% if status_value == "pending" %}selected{% endif %}>Needs Approval</option>
+                                                <option value="approved" {% if status_value == "approved" %}selected{% endif %}>Approved</option>
+                                                <option value="rejected" {% if status_value == "rejected" %}selected{% endif %}>Rejected</option>
                                             </select>
 
                                             <input
@@ -215,7 +318,7 @@
                                         </form>
                                     </td>
 
-                                    <td>{{ user["created_at"] or "—" }}</td>
+                                    <td class="admin-date-cell">{{ user["created_at"] or "—" }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

@@ -2648,6 +2648,74 @@ def update_user_role(user_id):
     return redirect(url_for("admin_users"))
 
 
+
+
+def send_account_approval_email(user):
+    resend_api_key = os.environ.get("RESEND_API_KEY", "").strip()
+
+    if not resend_api_key:
+        print("Account approval email skipped: RESEND_API_KEY is not configured.")
+        return False
+
+    recipient = (user["email"] or "").strip()
+
+    if not recipient or "@" not in recipient:
+        print("Account approval email skipped: user email missing.")
+        return False
+
+    sender = (
+        os.environ.get("ACCOUNT_APPROVAL_EMAIL_FROM", "").strip()
+        or os.environ.get("PROFILE_SUGGESTION_EMAIL_FROM", "").strip()
+        or os.environ.get("PROOF_EMAIL_FROM", "LiteFeet Ledger <proof@thelitefeetvault.com>").strip()
+    )
+
+    if not sender:
+        print("Account approval email skipped: sender missing.")
+        return False
+
+    display_name = user["display_name"] or "there"
+    role = (user["role"] or "contributor").replace("_", " ").title()
+    site_url = get_public_site_url()
+    account_url = f"{site_url}/account" if site_url else "/account"
+
+    subject = "Your LiteFeet Ledger account was approved"
+
+    body = f"""Hi {display_name},
+
+Your LiteFeet Ledger account has been approved.
+
+Account role: {role}
+
+You can now log in and use your approved account features here:
+{account_url}
+
+If you believe your account should be connected to an existing dancer or producer profile, use the profile connection option inside your account.
+
+- LiteFeet Ledger
+"""
+
+    response = requests.post(
+        "https://api.resend.com/emails",
+        headers={
+            "Authorization": f"Bearer {resend_api_key}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "from": sender,
+            "to": [recipient],
+            "subject": subject,
+            "text": body,
+        },
+        timeout=20,
+    )
+
+    if response.status_code >= 300:
+        print(f"Account approval email failed: {response.status_code} {response.text}")
+        return False
+
+    return True
+
+
 @app.route("/admin/users/<int:user_id>/status", methods=["POST"])
 def update_user_status(user_id):
     ensure_account_review_columns()
@@ -2665,6 +2733,23 @@ def update_user_status(user_id):
         flash("Invalid account status selected.", "error")
         return redirect(url_for("admin_users"))
 
+    user_rows = fetch_all(
+        """
+        SELECT id, display_name, email, role, account_status
+        FROM archive_users
+        WHERE id = :user_id
+        LIMIT 1
+        """,
+        {"user_id": user_id},
+    )
+
+    if not user_rows:
+        flash("User account not found.", "error")
+        return redirect(url_for("admin_users"))
+
+    user_before = user_rows[0]
+    old_status = user_before["account_status"] or "pending"
+
     execute_query(
         """
         UPDATE archive_users
@@ -2680,317 +2765,20 @@ def update_user_status(user_id):
     )
 
     flash("Account status updated.", "success")
+
+    if old_status != "approved" and new_status == "approved":
+        try:
+            sent = send_account_approval_email(user_before)
+            if sent:
+                flash("Approval email sent.", "success")
+            else:
+                flash("Account approved, but approval email was skipped. Check email settings.", "error")
+        except Exception as exc:
+            print("Account approval email failed:", exc)
+            flash("Account approved, but the approval email failed.", "error")
+
     return redirect(url_for("admin_users"))
 
-
-
-
-@app.route("/account/profile-link")
-def account_profile_link():
-    user = current_user_required()
-    if not user:
-        return redirect(url_for("contributor_login"))
-
-    ensure_profile_link_tables()
-
-    existing_links = fetch_all(
-        """
-        SELECT *
-        FROM profile_account_links
-        WHERE user_id = :user_id
-        ORDER BY requested_at DESC
-        """,
-        {"user_id": user["id"]},
-    )
-
-    suggested_profiles = find_similar_dancer_profiles_for_user(user)
-
-    return render_template(
-        "account_profile_link.html",
-        user=user,
-        suggested_profiles=suggested_profiles,
-        existing_links=existing_links,
-    )
-
-
-@app.route("/account/profile-link/<int:profile_id>/request", methods=["POST"])
-def request_profile_link(profile_id):
-    user = current_user_required()
-    if not user:
-        return redirect(url_for("contributor_login"))
-
-    ensure_profile_link_tables()
-
-    profile_rows = fetch_all(
-        """
-        SELECT id, dance_name, real_name
-        FROM dancer_profiles
-        WHERE id = :profile_id
-        LIMIT 1
-        """,
-        {"profile_id": profile_id},
-    )
-
-    if not profile_rows:
-        flash("Profile not found.", "error")
-        return redirect(url_for("account_profile_link"))
-
-    existing = fetch_all(
-        """
-        SELECT id, status
-        FROM profile_account_links
-        WHERE user_id = :user_id
-        AND profile_type = 'dancer'
-        AND profile_id = :profile_id
-        LIMIT 1
-        """,
-        {
-            "user_id": user["id"],
-            "profile_id": profile_id,
-        },
-    )
-
-    if existing:
-        flash("You already requested to connect this profile.", "success")
-        return redirect(url_for("account_profile_link"))
-
-    execute_query(
-        """
-        INSERT INTO profile_account_links (
-            user_id,
-            profile_type,
-            profile_id,
-            status,
-            requested_at
-        )
-        VALUES (
-            :user_id,
-            'dancer',
-            :profile_id,
-            'pending',
-            :requested_at
-        )
-        """,
-        {
-            "user_id": user["id"],
-            "profile_id": profile_id,
-            "requested_at": datetime.now().isoformat(timespec="seconds"),
-        },
-    )
-
-    flash("Profile connection request submitted.", "success")
-    return redirect(url_for("account_profile_link"))
-
-
-@app.route("/account/profile-visibility", methods=["GET", "POST"])
-def account_profile_visibility():
-    user = current_user_required()
-    if not user:
-        return redirect(url_for("contributor_login"))
-
-    ensure_profile_link_tables()
-
-    approved_links = fetch_all(
-        """
-        SELECT profile_account_links.*, dancer_profiles.dance_name, dancer_profiles.real_name
-        FROM profile_account_links
-        JOIN dancer_profiles ON profile_account_links.profile_id = dancer_profiles.id
-        WHERE profile_account_links.user_id = :user_id
-        AND profile_account_links.profile_type = 'dancer'
-        AND profile_account_links.status = 'approved'
-        ORDER BY dancer_profiles.dance_name ASC
-        """,
-        {"user_id": user["id"]},
-    )
-
-    if request.method == "POST":
-        profile_id = request.form.get("profile_id", "").strip()
-        field_name = request.form.get("field_name", "").strip()
-        reason = request.form.get("reason", "").strip()
-
-        valid_profile_ids = {str(link["profile_id"]) for link in approved_links}
-
-        if profile_id not in valid_profile_ids:
-            flash("You can only request visibility changes for approved linked profiles.", "error")
-            return redirect(url_for("account_profile_visibility"))
-
-        if not field_name:
-            flash("Tell us what profile detail you want reviewed.", "error")
-            return redirect(url_for("account_profile_visibility"))
-
-        execute_query(
-            """
-            INSERT INTO profile_visibility_requests (
-                user_id,
-                profile_type,
-                profile_id,
-                field_name,
-                requested_action,
-                reason,
-                public_profile_status,
-                ledger_record_status,
-                created_at
-            )
-            VALUES (
-                :user_id,
-                'dancer',
-                :profile_id,
-                :field_name,
-                'hide_from_public_profile',
-                :reason,
-                'pending',
-                'retained',
-                :created_at
-            )
-            """,
-            {
-                "user_id": user["id"],
-                "profile_id": int(profile_id),
-                "field_name": field_name,
-                "reason": reason,
-                "created_at": datetime.now().isoformat(timespec="seconds"),
-            },
-        )
-
-        flash("Visibility request submitted for review. Ledger records are retained unless separately corrected or disputed.", "success")
-        return redirect(url_for("account_profile_visibility"))
-
-    requests = fetch_all(
-        """
-        SELECT profile_visibility_requests.*, dancer_profiles.dance_name
-        FROM profile_visibility_requests
-        JOIN dancer_profiles ON profile_visibility_requests.profile_id = dancer_profiles.id
-        WHERE profile_visibility_requests.user_id = :user_id
-        ORDER BY profile_visibility_requests.created_at DESC
-        """,
-        {"user_id": user["id"]},
-    )
-
-    return render_template(
-        "account_profile_visibility.html",
-        user=user,
-        approved_links=approved_links,
-        requests=requests,
-    )
-
-
-@app.route("/admin/profile-links")
-def admin_profile_links():
-    ensure_profile_link_tables()
-
-    links = fetch_all(
-        """
-        SELECT profile_account_links.*,
-               archive_users.display_name,
-               archive_users.email,
-               archive_users.organization_name,
-               dancer_profiles.dance_name,
-               dancer_profiles.real_name,
-               dancer_profiles.team_affiliation
-        FROM profile_account_links
-        JOIN archive_users ON profile_account_links.user_id = archive_users.id
-        JOIN dancer_profiles ON profile_account_links.profile_id = dancer_profiles.id
-        ORDER BY profile_account_links.requested_at DESC
-        """
-    )
-
-    grouped_links = {
-        "pending": [],
-        "approved": [],
-        "rejected": [],
-    }
-
-    for link in links:
-        status = link["status"] or "pending"
-        if status not in grouped_links:
-            status = "pending"
-        grouped_links[status].append(link)
-
-    return render_template("admin_profile_links.html", grouped_links=grouped_links)
-
-
-@app.route("/admin/profile-links/<int:link_id>/status", methods=["POST"])
-def admin_update_profile_link_status(link_id):
-    ensure_profile_link_tables()
-
-    status = request.form.get("status", "").strip()
-    admin_note = request.form.get("admin_note", "").strip()
-
-    if status not in {"pending", "approved", "rejected"}:
-        flash("Invalid profile link status.", "error")
-        return redirect(url_for("admin_profile_links"))
-
-    execute_query(
-        """
-        UPDATE profile_account_links
-        SET status = :status,
-            reviewed_at = :reviewed_at,
-            admin_note = :admin_note
-        WHERE id = :link_id
-        """,
-        {
-            "status": status,
-            "reviewed_at": datetime.now().isoformat(timespec="seconds"),
-            "admin_note": admin_note,
-            "link_id": link_id,
-        },
-    )
-
-    flash("Profile link request updated.", "success")
-    return redirect(url_for("admin_profile_links"))
-
-
-@app.route("/admin/profile-visibility-requests")
-def admin_profile_visibility_requests():
-    ensure_profile_link_tables()
-
-    requests = fetch_all(
-        """
-        SELECT profile_visibility_requests.*,
-               archive_users.display_name,
-               archive_users.email,
-               dancer_profiles.dance_name,
-               dancer_profiles.real_name
-        FROM profile_visibility_requests
-        JOIN archive_users ON profile_visibility_requests.user_id = archive_users.id
-        JOIN dancer_profiles ON profile_visibility_requests.profile_id = dancer_profiles.id
-        ORDER BY profile_visibility_requests.created_at DESC
-        """
-    )
-
-    return render_template("admin_profile_visibility_requests.html", requests=requests)
-
-
-@app.route("/admin/profile-visibility-requests/<int:request_id>/status", methods=["POST"])
-def admin_update_profile_visibility_request(request_id):
-    ensure_profile_link_tables()
-
-    public_profile_status = request.form.get("public_profile_status", "").strip()
-    admin_note = request.form.get("admin_note", "").strip()
-
-    if public_profile_status not in {"pending", "approved", "rejected"}:
-        flash("Invalid visibility request status.", "error")
-        return redirect(url_for("admin_profile_visibility_requests"))
-
-    execute_query(
-        """
-        UPDATE profile_visibility_requests
-        SET public_profile_status = :public_profile_status,
-            ledger_record_status = 'retained',
-            reviewed_at = :reviewed_at,
-            admin_note = :admin_note
-        WHERE id = :request_id
-        """,
-        {
-            "public_profile_status": public_profile_status,
-            "reviewed_at": datetime.now().isoformat(timespec="seconds"),
-            "admin_note": admin_note,
-            "request_id": request_id,
-        },
-    )
-
-    flash("Visibility request updated. Ledger record status remains retained.", "success")
-    return redirect(url_for("admin_profile_visibility_requests"))
 
 
 @app.route("/submit", methods=["GET", "POST"])
