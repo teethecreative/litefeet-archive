@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Connect Profile | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Connect Your Ledger Profile</h1>
+
+    <p>
+        If the Ledger already has a dancer profile that looks like yours, request to connect it to your account.
+        Admin approval is required before the account and profile are linked.
+    </p>
+
+    <p>
+        <a href="/account/profile-visibility" class="button secondary">Request Profile Visibility Change</a>
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-stack">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <h2>Suggested Profile Matches</h2>
+
+    {% if suggested_profiles %}
+        <div class="submission-list">
+            {% for item in suggested_profiles %}
+                {% set profile = item.profile %}
+                <article class="submission-card">
+                    <div class="submission-meta">
+                        <span>{{ item.score }}% match</span>
+                        {% if profile["team_affiliation"] %}
+                            <span>{{ profile["team_affiliation"] }}</span>
+                        {% endif %}
+                    </div>
+
+                    <h3>{{ profile["dance_name"] or profile["real_name"] or "Unnamed Profile" }}</h3>
+
+                    {% if profile["real_name"] %}
+                        <p><strong>Real name:</strong> {{ profile["real_name"] }}</p>
+                    {% endif %}
+
+                    <form action="/account/profile-link/{{ profile['id'] }}/request" method="post">
+                        <button type="submit" class="button primary">Request to Connect</button>
+                    </form>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No close profile matches found yet.</p>
+        </div>
+    {% endif %}
+
+    <h2>Your Profile Connection Requests</h2>
+
+    {% if existing_links %}
+        <div class="table-wrap">
+            <table class="admin-users-table">
+                <thead>
+                    <tr>
+                        <th>Profile Type</th>
+                        <th>Profile ID</th>
+                        <th>Status</th>
+                        <th>Requested</th>
+                        <th>Admin Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for link in existing_links %}
+                        <tr>
+                            <td>{{ link["profile_type"] }}</td>
+                            <td>{{ link["profile_id"] }}</td>
+                            <td>{{ link["status"] }}</td>
+                            <td>{{ link["requested_at"] }}</td>
+                            <td>{{ link["admin_note"] or "—" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No connection requests yet.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

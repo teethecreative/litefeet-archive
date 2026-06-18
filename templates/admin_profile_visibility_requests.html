@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Visibility Requests | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Profile Visibility Requests</h1>
+
+    <p>
+        Review requests to hide details from public profiles. Ledger records remain retained unless a separate correction or dispute is approved.
+    </p>
+
+    <p>
+        <a href="/admin/profile-links" class="button secondary">Profile Link Requests</a>
+        <a href="/admin/users" class="button secondary">Back to Users</a>
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-stack">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% if requests %}
+        <div class="table-wrap">
+            <table class="admin-users-table">
+                <thead>
+                    <tr>
+                        <th>Account</th>
+                        <th>Email</th>
+                        <th>Profile</th>
+                        <th>Detail</th>
+                        <th>Reason</th>
+                        <th>Public Profile Status</th>
+                        <th>Ledger Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for request in requests %}
+                        <tr>
+                            <td>{{ request["display_name"] }}</td>
+                            <td>{{ request["email"] }}</td>
+                            <td>{{ request["dance_name"] or request["real_name"] }}</td>
+                            <td>{{ request["field_name"] }}</td>
+                            <td>{{ request["reason"] or "—" }}</td>
+                            <td>
+                                <form method="post" action="/admin/profile-visibility-requests/{{ request['id'] }}/status" class="admin-mini-form">
+                                    <select name="public_profile_status">
+                                        <option value="pending" {% if request["public_profile_status"] == "pending" %}selected{% endif %}>Pending</option>
+                                        <option value="approved" {% if request["public_profile_status"] == "approved" %}selected{% endif %}>Approved to Hide</option>
+                                        <option value="rejected" {% if request["public_profile_status"] == "rejected" %}selected{% endif %}>Rejected</option>
+                                    </select>
+
+                                    <input name="admin_note" value="{{ request['admin_note'] or '' }}" placeholder="Optional note">
+
+                                    <button class="button primary" type="submit">Save</button>
+                                </form>
+                            </td>
+                            <td>
+                                <strong>{{ request["ledger_record_status"] }}</strong>
+                                <br>
+                                <span class="muted-small">Public profile only</span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No visibility requests yet.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

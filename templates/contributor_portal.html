@@ -1,6 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Contributor Portal | LiteFeet Ledger{% endblock %}
+{% block title %}Contributor Portal | LiteFeet Ledger
+<section class="content-section">
+    <h2>Your Ledger Profile</h2>
+    <p>
+        Connect your login account to your existing Ledger profile, or request a public profile visibility review.
+    </p>
+    <p>
+        <a href="/account/profile-link" class="button primary">Connect Profile</a>
+        <a href="/account/profile-visibility" class="button secondary">Profile Visibility Request</a>
+    </p>
+</section>
+
+{% endblock %}
 
 {% block content %}
 <section class="content-section">

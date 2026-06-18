@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Link Requests | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Profile Link Requests</h1>
+
+    <p>
+        Review requests from account holders who want to connect their login account with an existing Ledger profile.
+    </p>
+
+    <p>
+        <a href="/admin/users" class="button secondary">Back to Users</a>
+        <a href="/admin/profile-visibility-requests" class="button secondary">Visibility Requests</a>
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-stack">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% set sections = [
+        ("pending", "Needs Review"),
+        ("approved", "Approved Links"),
+        ("rejected", "Rejected Links")
+    ] %}
+
+    {% for section_key, section_title in sections %}
+        {% set links = grouped_links.get(section_key, []) %}
+
+        <h2>{{ section_title }} ({{ links|length }})</h2>
+
+        {% if links %}
+            <div class="table-wrap">
+                <table class="admin-users-table">
+                    <thead>
+                        <tr>
+                            <th>Account</th>
+                            <th>Email</th>
+                            <th>Organization</th>
+                            <th>Profile</th>
+                            <th>Requested</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for link in links %}
+                            <tr>
+                                <td>{{ link["display_name"] }}</td>
+                                <td>{{ link["email"] }}</td>
+                                <td>{{ link["organization_name"] or "—" }}</td>
+                                <td>
+                                    <strong>{{ link["dance_name"] or link["real_name"] or ("Profile #" ~ link["profile_id"]) }}</strong>
+                                    {% if link["team_affiliation"] %}
+                                        <br><span class="muted-small">{{ link["team_affiliation"] }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ link["requested_at"] }}</td>
+                                <td>
+                                    <form method="post" action="/admin/profile-links/{{ link['id'] }}/status" class="admin-mini-form">
+                                        <select name="status">
+                                            <option value="pending" {% if link["status"] == "pending" %}selected{% endif %}>Pending</option>
+                                            <option value="approved" {% if link["status"] == "approved" %}selected{% endif %}>Approved</option>
+                                            <option value="rejected" {% if link["status"] == "rejected" %}selected{% endif %}>Rejected</option>
+                                        </select>
+
+                                        <input name="admin_note" value="{{ link['admin_note'] or '' }}" placeholder="Optional note">
+
+                                        <button class="button primary" type="submit">Save</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No requests in this section.</p>
+            </div>
+        {% endif %}
+    {% endfor %}
+</section>
+{% endblock %}

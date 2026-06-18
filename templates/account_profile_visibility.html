@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Visibility Request | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section">
+    <h1>Profile Visibility Request</h1>
+
+    <p>
+        You can request for something not to show on your public profile.
+        This does not automatically remove it from the Ledger, archive records, event records, battle records, or verification history.
+    </p>
+
+    <p>
+        <a href="/account/profile-link" class="button secondary">Back to Profile Connection</a>
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-stack">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% if approved_links %}
+        <form method="post" class="ledger-form">
+            <label for="profile_id">Profile</label>
+            <select id="profile_id" name="profile_id" required>
+                {% for link in approved_links %}
+                    <option value="{{ link['profile_id'] }}">
+                        {{ link["dance_name"] or link["real_name"] or ("Profile #" ~ link["profile_id"]) }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="field_name">What should be reviewed?</label>
+            <input id="field_name" name="field_name" placeholder="Example: real name, team, bio detail, photo, etc." required>
+
+            <label for="reason">Reason / context</label>
+            <textarea id="reason" name="reason" rows="5" placeholder="Explain what you want hidden from the public profile and why."></textarea>
+
+            <button type="submit" class="button primary">Submit Visibility Request</button>
+        </form>
+    {% else %}
+        <div class="empty-state">
+            <p>You need an approved profile connection before requesting visibility changes.</p>
+        </div>
+    {% endif %}
+
+    <h2>Your Visibility Requests</h2>
+
+    {% if requests %}
+        <div class="table-wrap">
+            <table class="admin-users-table">
+                <thead>
+                    <tr>
+                        <th>Profile</th>
+                        <th>Requested Detail</th>
+                        <th>Public Profile Status</th>
+                        <th>Ledger Record Status</th>
+                        <th>Created</th>
+                        <th>Admin Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in requests %}
+                        <tr>
+                            <td>{{ request["dance_name"] }}</td>
+                            <td>{{ request["field_name"] }}</td>
+                            <td>{{ request["public_profile_status"] }}</td>
+                            <td>{{ request["ledger_record_status"] }}</td>
+                            <td>{{ request["created_at"] }}</td>
+                            <td>{{ request["admin_note"] or "—" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No visibility requests yet.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
