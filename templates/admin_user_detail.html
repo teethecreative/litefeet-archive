@@ -5,8 +5,8 @@
 {% block content %}
 <section class="content-section admin-user-detail-page">
     <p>
-        <a href="/admin/users" class="button secondary">Back to Users</a>
-        <a href="/admin/profile-links" class="button secondary">Profile Link Queue</a>
+        <a href="{{ url_for('admin_users') }}" class="button secondary">Back to Users</a>
+        <a href="{{ url_for('admin_profile_links') }}" class="button secondary">Profile Link Queue</a>
     </p>
 
     <h1>{{ user["display_name"] or "Unnamed Account" }}</h1>

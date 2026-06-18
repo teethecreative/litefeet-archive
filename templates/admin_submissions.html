@@ -11,11 +11,11 @@
     </p>
 
     <p>
-        <a href="/admin/users" class="button secondary">Review Users</a>
-        <a href="/admin/role-requests" class="button secondary">Role Requests</a>
-        <a href="/admin/dancer-profiles" class="button secondary">Review Dancer Profiles</a>
-        <a href="/admin/dancer-feedback" class="button secondary">Review Flowers & Suggestions</a>
-        <a href="/admin/logout" class="button secondary">Log Out</a>
+        <a href="{{ url_for('admin_users') }}" class="button secondary">Review Users</a>
+        <a href="{{ url_for('admin_role_requests') }}" class="button secondary">Role Requests</a>
+        <a href="{{ url_for('admin_dancer_profiles') }}" class="button secondary">Review Dancer Profiles</a>
+        <a href="{{ url_for('admin_dancer_feedback') }}" class="button secondary">Review Flowers & Suggestions</a>
+        <a href="{{ url_for('admin_logout') }}" class="button secondary">Log Out</a>
     </p>
 
     {% if submissions %}

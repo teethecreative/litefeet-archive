@@ -4,7 +4,7 @@
 
 {% block content %}
 <section class="content-section">
-    <p><a href="/dancers" class="button secondary">Back to Dancers</a></p>
+    <p><a href="{{ url_for('dancers') }}" class="button secondary">Back to Dancers</a></p>
 
     <h1>Create Your Dancer Profile</h1>
 
@@ -19,7 +19,7 @@
         </div>
     {% endif %}
 
-    <form class="archive-form" action="/dancers/create" method="post">
+    <form class="archive-form" action="{{ url_for('create_dancer_profile') }}" method="post">
         <label for="dance_name">Dancer name / alias</label>
         <input type="text" id="dance_name" name="dance_name" value="{{ request.args.get('ghost_name', '') }}" placeholder="Example: your dance name or public alias">
 

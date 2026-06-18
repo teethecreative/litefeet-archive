@@ -11,8 +11,8 @@
     </p>
 
     <p>
-        <a href="/admin/submissions" class="button secondary">Back to Submissions</a>
-        <a href="/admin/dancer-feedback" class="button secondary">Review Flowers & Suggestions</a>
+        <a href="{{ url_for('admin_submissions') }}" class="button secondary">Back to Submissions</a>
+        <a href="{{ url_for('admin_dancer_feedback') }}" class="button secondary">Review Flowers & Suggestions</a>
     </p>
 
     {% if profiles %}

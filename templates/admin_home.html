@@ -80,7 +80,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <form method="POST" action="/admin/activity/dismiss">
+                                <form method="POST" action="{{ url_for('dismiss_admin_activity') }}">
                                     <input type="hidden" name="activity_key" value="{{ item['activity_key'] }}">
                                     <button type="submit" class="button small-button secondary">Dismiss</button>
                                 </form>
@@ -189,7 +189,7 @@
             <h2>Top Controversy Queue</h2>
         </div>
 
-        <a class="button secondary" href="/verify">Open Verify Page</a>
+        <a class="button secondary" href="{{ url_for('verify_claims') }}">Open Verify Page</a>
     </div>
 
     {% if controversy_queue %}

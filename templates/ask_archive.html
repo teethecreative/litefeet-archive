@@ -20,7 +20,7 @@
             </p>
         </div>
 
-        <form action="/ask" method="post" class="ask-form">
+        <form action="{{ url_for('ask_archive') }}" method="post" class="ask-form">
             <input
                 type="text"
                 name="query"
@@ -93,7 +93,7 @@
                         The ledger does not have enough saved information to answer that yet. You can submit a source,
                         event result, correction, dancer profile, or historical claim for review.
                     </p>
-                    <a href="/submit" class="button primary">Submit Info</a>
+                    <a href="{{ url_for('submit_info') }}" class="button primary">Submit Info</a>
                 </div>
             {% endif %}
         </div>

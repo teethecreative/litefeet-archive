@@ -3783,6 +3783,18 @@ def events():
     )
 
 
+
+
+@app.route("/dancers")
+def dancers_index_redirect():
+    return redirect(url_for("dancers"), code=302)
+
+
+@app.route("/people/dancers/create")
+def people_dancers_create_redirect():
+    return redirect(url_for("create_dancer_profile"), code=302)
+
+
 @app.route("/people")
 def people_hub():
     return redirect(url_for("dancers"))

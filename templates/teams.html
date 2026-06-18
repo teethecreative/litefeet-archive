@@ -6,9 +6,9 @@
 {% block content %}
 <section class="content-section">
     <nav class="subtle-subnav">
-        <a href="/people/dancers">Dancers</a>
+        <a href="{{ url_for('dancers') }}">Dancers</a>
         <span>|</span>
-        <a href="/people/teams" class="is-active">Teams</a>
+        <a href="{{ url_for('teams') }}" class="is-active">Teams</a>
     </nav>
 
     <h1>Teams</h1>

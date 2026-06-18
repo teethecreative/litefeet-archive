@@ -20,15 +20,15 @@
 
             <nav class="nav-links">
                 <a href="/">Home</a>
-                {% if nav_is_admin %}<a href="/ask">Ask</a>{% endif %}
-                <a href="/events">Events</a>
-                <a href="/people/dancers">People & Teams</a>
-                <a href="/litefeet-music">LiteFeet Music</a>
-                {% if nav_is_admin %}<a href="/battles">Battles</a>{% endif %}
-                {% if nav_is_admin %}<a href="/awards">Awards</a>{% endif %}
-                <a href="/verify">Verify</a>
-                <a href="/about">About</a>
-                <a href="/submit">Submit Info</a>
+                {% if nav_is_admin %}<a href="{{ url_for('ask_archive') }}">Ask</a>{% endif %}
+                <a href="{{ url_for('events') }}">Events</a>
+                <a href="{{ url_for('dancers') }}">People & Teams</a>
+                <a href="{{ url_for('litefeet_music') }}">LiteFeet Music</a>
+                {% if nav_is_admin %}<a href="{{ url_for('battles') }}">Battles</a>{% endif %}
+                {% if nav_is_admin %}<a href="{{ url_for('awards') }}">Awards</a>{% endif %}
+                <a href="{{ url_for('verify_claims') }}">Verify</a>
+                <a href="{{ url_for('about') }}">About</a>
+                <a href="{{ url_for('submit_info') }}">Submit Info</a>
 
                 {% if nav_is_admin or nav_current_user %}
                     <details class="account-menu">
@@ -46,40 +46,40 @@
 
                         <div class="account-menu-panel">
                             {% if nav_is_admin %}
-                                <a href="/admin">Admin Dashboard</a>
-                                <a href="/admin/submissions">Submissions</a>
-                                <a href="/admin/media">Media Feed</a>
+                                <a href="{{ url_for('admin_home') }}">Admin Dashboard</a>
+                                <a href="{{ url_for('admin_submissions') }}">Submissions</a>
+                                <a href="{{ url_for('admin_media') }}">Media Feed</a>
 
-                                <form method="POST" action="/admin/view-as-public">
+                                <form method="POST" action="{{ url_for('admin_view_as_public') }}">
                                     <button type="submit">View as Public</button>
                                 </form>
-                                <a href="/releases/submit">Add Release</a>
+                                <a href="{{ url_for('submit_music_release') }}">Add Release</a>
                             {% endif %}
 
                             {% if nav_current_user %}
-                                <a href="/account">My Account</a>
-                                <a href="/releases/submit">Add Producer Release</a>
+                                <a href="{{ url_for('account_home') }}">My Account</a>
+                                <a href="{{ url_for('submit_music_release') }}">Add Producer Release</a>
 
                                 {% if nav_claimed_profile %}
                                     <a href="{{ nav_claimed_profile | profile_url }}">View My Profile</a>
-                                    <a href="/admin/people/{{ nav_claimed_profile['id'] }}/edit">Edit My Profile</a>
+                                    <a href="{{ url_for('admin_person_edit', dancer_id=nav_claimed_profile['id']) }}">Edit My Profile</a>
                                 {% else %}
-                                    <a href="/people/dancers">Claim Profile</a>
+                                    <a href="{{ url_for('dancers') }}">Claim Profile</a>
                                 {% endif %}
                             {% endif %}
 
-                            <form method="POST" action="/account/anonymous-mode">
+                            <form method="POST" action="{{ url_for('toggle_anonymous_mode') }}">
                                 <button type="submit">
                                     Anonymous Mode: {% if nav_anonymous_mode %}On{% else %}Off{% endif %}
                                 </button>
                             </form>
 
-                            <a href="/account/logout">Log Out</a>
+                            <a href="{{ url_for('account_logout') }}">Log Out</a>
                         </div>
                     </details>
                 {% else %}
-                    <a href="/account/login">Log In</a>
-                    <a href="/account/signup">Create Account</a>
+                    <a href="{{ url_for('account_login') }}">Log In</a>
+                    <a href="{{ url_for('account_signup') }}">Create Account</a>
                 {% endif %}
             </nav>
         </header>
@@ -87,7 +87,7 @@
         {% if session.get("admin_return_available") and not session.get("admin_logged_in") %}
             <div class="admin-public-view-banner">
                 <span>Viewing site as public.</span>
-                <form method="POST" action="/admin/return-to-admin">
+                <form method="POST" action="{{ url_for('admin_return_to_admin') }}">
                     <button type="submit">Return to Admin View</button>
                 </form>
             </div>
@@ -100,9 +100,9 @@
         <footer class="site-footer">
             <p>The LiteFeet Ledger is being built with the community, for the community.</p>
             <div class="footer-links">
-                <a href="/admin/login">Admin</a>
-                <a href="/account/login">Contributor Login</a>
-                <a href="/event-affiliates">Event Affiliates</a>
+                <a href="{{ url_for('admin_login') }}">Admin</a>
+                <a href="{{ url_for('account_login') }}">Contributor Login</a>
+                <a href="{{ url_for('event_affiliates_portal') }}">Event Affiliates</a>
             </div>
         </footer>
     </div>

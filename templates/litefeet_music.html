@@ -19,7 +19,7 @@
     {% endif %}
 
     <div class="hero-actions">
-        <a class="button primary" href="/litefeet-music/projects/submit">Submit Music</a>
+        <a class="button primary" href="{{ url_for('submit_music_project') }}">Submit Music</a>
     </div>
 
     <div class="music-search-row">
@@ -149,7 +149,7 @@
                                         </form>
                                     </details>
                                 {% else %}
-                                    <a class="button small-button secondary" href="/account/login">Log in to rate</a>
+                                    <a class="button small-button secondary" href="{{ url_for('account_login') }}">Log in to rate</a>
                                 {% endif %}
                             </td>
                         </tr>
@@ -175,7 +175,7 @@
         </div>
 
         <div class="music-ranking-controls compact-release-controls">
-            <form method="GET" action="/litefeet-music" class="period-filter-form">
+            <form method="GET" action="{{ url_for('litefeet_music') }}" class="period-filter-form">
                 <label>
                     Time Period
                     <select name="period" onchange="this.form.submit()">

@@ -4,7 +4,7 @@
 
 {% block content %}
 <section class="content-section">
-    <p><a href="/events" class="button secondary">Back to Events</a></p>
+    <p><a href="{{ url_for('events') }}" class="button secondary">Back to Events</a></p>
 
     <h1>Submit an Event</h1>
 
@@ -23,7 +23,7 @@
         </div>
     {% endif %}
 
-    <form class="archive-form" action="/events/submit" method="post">
+    <form class="archive-form" action="{{ url_for('submit_event') }}" method="post">
         <label for="event_timing">Is this event upcoming, past, or on the spot?</label>
         <select id="event_timing" name="event_timing">
             <option value="">Choose one</option>

@@ -50,7 +50,7 @@
 {% block content %}
 <section class="detail-shell profile-detail-shell">
     <div class="detail-topbar">
-        <a href="/people/dancers" class="button secondary">Back to People</a>
+        <a href="{{ url_for('dancers') }}" class="button secondary">Back to People</a>
 
         <div class="profile-action-row">
             {% if not profile["user_id"] %}

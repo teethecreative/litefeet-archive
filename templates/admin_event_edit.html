@@ -5,7 +5,7 @@
 {% block content %}
 <section class="content-section">
     <p>
-        <a href="/events/{{ event['id'] }}" class="small-note">← Back to Event</a>
+        <a href="{{ url_for('event_detail', event_id=event['id']) }}" class="small-note">← Back to Event</a>
     </p>
 
     <h1>Edit Event</h1>

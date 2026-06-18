@@ -19,7 +19,7 @@
         </div>
     {% endif %}
 
-    <form class="archive-form login-form" action="/admin/login" method="post">
+    <form class="archive-form login-form" action="{{ url_for('admin_login') }}" method="post">
         <input type="hidden" name="next_url" value="{{ next_url }}">
 
         <label for="username">Username</label>

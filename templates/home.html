@@ -12,9 +12,9 @@
     </p>
 
     <div class="hero-actions">
-        <a href="/submit" class="button primary">Submit Info</a>
-        <a href="/people/dancers" class="button secondary">Explore People</a>
-        <a href="/events" class="button secondary">Latest Events</a>
+        <a href="{{ url_for('submit_info') }}" class="button primary">Submit Info</a>
+        <a href="{{ url_for('dancers') }}" class="button secondary">Explore People</a>
+        <a href="{{ url_for('events') }}" class="button secondary">Latest Events</a>
     </div>
 </section>
 
@@ -26,7 +26,7 @@
         </div>
 
         {% if session.get("admin_logged_in") %}
-            <a class="button secondary" href="/admin/media">Add Video</a>
+            <a class="button secondary" href="{{ url_for('admin_media') }}">Add Video</a>
         {% endif %}
     </div>
 
@@ -83,7 +83,7 @@
             <h2>Release Radar</h2>
         </div>
 
-        <a class="button secondary" href="/litefeet-music">Open Music Page</a>
+        <a class="button secondary" href="{{ url_for('litefeet_music') }}">Open Music Page</a>
     </div>
 
     <div class="top-playlist-player" data-top-playlist-player>
@@ -182,7 +182,7 @@
                                         </form>
                                     </details>
                                 {% else %}
-                                    <a class="button small-button secondary" href="/account/login">Log in to rate</a>
+                                    <a class="button small-button secondary" href="{{ url_for('account_login') }}">Log in to rate</a>
                                 {% endif %}
                             </td>
                         </tr>

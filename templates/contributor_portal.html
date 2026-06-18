@@ -7,8 +7,8 @@
         Connect your login account to your existing Ledger profile, or request a public profile visibility review.
     </p>
     <p>
-        <a href="/account/profile-link" class="button primary">Connect Profile</a>
-        <a href="/account/profile-visibility" class="button secondary">Profile Visibility Request</a>
+        <a href="{{ url_for('account_profile_link') }}" class="button primary">Connect Profile</a>
+        <a href="{{ url_for('account_profile_visibility') }}" class="button secondary">Profile Visibility Request</a>
     </p>
 </section>
 
@@ -44,7 +44,7 @@
             Request Event Affiliate access if you host or represent events. Request Admin access only if you are part of the Ledger review team.
         </p>
 
-        <form action="/contributor/request-role" method="post" class="vote-form">
+        <form action="{{ url_for('contributor_request_role') }}" method="post" class="vote-form">
             <label for="requested_role">Access type</label>
             <select id="requested_role" name="requested_role">
                 <option value="affiliate_host">Event Affiliate</option>

@@ -11,9 +11,9 @@
     </p>
 
     <div class="admin-user-actions">
-        <a href="/admin/submissions" class="button secondary">Back to Submissions</a>
-        <a href="/admin/profile-links" class="button secondary">Profile Links</a>
-        <a href="/admin/profile-visibility-requests" class="button secondary">Visibility Requests</a>
+        <a href="{{ url_for('admin_submissions') }}" class="button secondary">Back to Submissions</a>
+        <a href="{{ url_for('admin_profile_links') }}" class="button secondary">Profile Links</a>
+        <a href="{{ url_for('admin_profile_visibility_requests') }}" class="button secondary">Visibility Requests</a>
     </div>
 
     <style>

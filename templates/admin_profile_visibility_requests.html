@@ -11,8 +11,8 @@
     </p>
 
     <p>
-        <a href="/admin/profile-links" class="button secondary">Profile Link Requests</a>
-        <a href="/admin/users" class="button secondary">Back to Users</a>
+        <a href="{{ url_for('admin_profile_links') }}" class="button secondary">Profile Link Requests</a>
+        <a href="{{ url_for('admin_users') }}" class="button secondary">Back to Users</a>
     </p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}

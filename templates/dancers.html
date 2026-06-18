@@ -6,11 +6,11 @@
 {% block content %}
 <section class="content-section people-directory-page">
     <div class="subnav-inline">
-        <a href="/people/dancers">People</a>
+        <a href="{{ url_for('dancers') }}">People</a>
         <span>|</span>
-        <a href="/people/producers">Producers</a>
+        <a href="{{ url_for('producers') }}">Producers</a>
         <span>|</span>
-        <a href="/people/teams">Teams</a>
+        <a href="{{ url_for('teams') }}">Teams</a>
     </div>
 
     <div class="section-heading-row">
@@ -22,7 +22,7 @@
             </p>
         </div>
 
-        <a href="/people/dancers/create" class="button secondary">Create Your Profile</a>
+        <a href="{{ url_for('create_dancer_profile') }}" class="button secondary">Create Your Profile</a>
     </div>
 
     <div class="people-directory-controls">

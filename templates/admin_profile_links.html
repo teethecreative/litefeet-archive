@@ -11,8 +11,8 @@
     </p>
 
     <p>
-        <a href="/admin/users" class="button secondary">Back to Users</a>
-        <a href="/admin/profile-visibility-requests" class="button secondary">Visibility Requests</a>
+        <a href="{{ url_for('admin_users') }}" class="button secondary">Back to Users</a>
+        <a href="{{ url_for('admin_profile_visibility_requests') }}" class="button secondary">Visibility Requests</a>
     </p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}

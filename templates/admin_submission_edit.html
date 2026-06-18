@@ -7,7 +7,7 @@
 {% block content %}
 <section class="content-section">
     <p>
-        <a href="/admin/submissions" class="small-note">← Back to Admin Submissions</a>
+        <a href="{{ url_for('admin_submissions') }}" class="small-note">← Back to Admin Submissions</a>
     </p>
 
     <h1>{% if mode == "new" %}New Ledger Record{% else %}Edit Ledger Record{% endif %}</h1>
