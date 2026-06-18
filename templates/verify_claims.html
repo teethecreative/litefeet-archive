@@ -45,7 +45,7 @@
                             <td>{{ submission["total_votes"] or 0 }}</td>
                             <td>{{ submission["review_status"] }}</td>
                             <td>
-                                <a href="/verify/{{ submission['id'] }}" class="button small-button">Review</a>
+                                <a href="{{ url_for('verify_claim_detail', submission_id=submission['id']) }}" class="button small-button">Review</a>
                             </td>
                         </tr>
                     {% endfor %}

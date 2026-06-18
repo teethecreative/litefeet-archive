@@ -30,7 +30,7 @@
                     <p><strong>Role:</strong> {{ flower["submitter_role"] or "Not provided" }}</p>
                     <p><strong>Contact:</strong> {{ flower["contact"] or "Not provided" }}</p>
 
-                    <form action="/admin/dancer-flowers/{{ flower['id'] }}/status" method="post" class="vote-form">
+                    <form action="{{ url_for('update_dancer_flower_status', flower_id=flower['id']) }}" method="post" class="vote-form">
                         <label for="flower_status_{{ flower['id'] }}">Status</label>
                         <select id="flower_status_{{ flower['id'] }}" name="status">
                             <option value="Pending Review" {% if flower["status"] == "Pending Review" %}selected{% endif %}>Pending Review</option>
@@ -70,7 +70,7 @@
                     <p><strong>Role:</strong> {{ suggestion["submitter_role"] or "Not provided" }}</p>
                     <p><strong>Contact:</strong> {{ suggestion["contact"] or "Not provided" }}</p>
 
-                    <form action="/admin/dancer-suggestions/{{ suggestion['id'] }}/status" method="post" class="vote-form">
+                    <form action="{{ url_for('update_dancer_suggestion_status', suggestion_id=suggestion['id']) }}" method="post" class="vote-form">
                         <label for="suggestion_status_{{ suggestion['id'] }}">Status</label>
                         <select id="suggestion_status_{{ suggestion['id'] }}" name="status">
                             <option value="Pending Review" {% if suggestion["status"] == "Pending Review" %}selected{% endif %}>Pending Review</option>

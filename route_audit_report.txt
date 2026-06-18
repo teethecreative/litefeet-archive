@@ -1,0 +1,304 @@
+Using app file: /Users/teethecreative/litefeet-archive/app.py
+Using templates: /Users/teethecreative/litefeet-archive/templates
+
+=== FLASK ROUTES FOUND IN APP.PY ===
+/                                                            -> home                                          [GET]
+/<organizer_slug>                                            -> organizer_detail                              [GET]
+/<organizer_slug>/<event_slug>                               -> organizer_event_detail                        [GET]
+/about                                                       -> about                                         [GET]
+/account                                                     -> account_home                                  [GET]
+/account/anonymous-mode                                      -> toggle_anonymous_mode                         [POST]
+/account/login                                               -> account_login                                 [GET, POST]
+/account/logout                                              -> account_logout                                [GET]
+/account/signup                                              -> account_signup                                [GET, POST]
+/admin                                                       -> admin_home                                    [GET]
+/admin/activity/dismiss                                      -> dismiss_admin_activity                        [POST]
+/admin/dancer-feedback                                       -> admin_dancer_feedback                         [GET]
+/admin/dancer-flowers/<int:flower_id>/status                 -> update_dancer_flower_status                   [POST]
+/admin/dancer-profiles                                       -> admin_dancer_profiles                         [GET]
+/admin/dancer-profiles/<int:dancer_id>/status                -> update_dancer_profile_status                  [POST]
+/admin/dancer-suggestions/<int:suggestion_id>/status         -> update_dancer_suggestion_status               [POST]
+/admin/events/<int:event_id>/edit                            -> admin_event_edit                              [GET, POST]
+/admin/login                                                 -> admin_login                                   [GET, POST]
+/admin/logout                                                -> admin_logout                                  [GET]
+/admin/media                                                 -> admin_media                                   [GET, POST]
+/admin/media/<int:item_id>/delete                            -> admin_media_delete                            [POST]
+/admin/music/project/<int:project_id>/delete                 -> admin_music_project_delete                    [POST]
+/admin/music/project/<int:project_id>/edit                   -> admin_music_project_edit                      [GET, POST]
+/admin/music/release/<int:item_id>/delete                    -> admin_music_release_delete                    [POST]
+/admin/music/release/<int:item_id>/edit                      -> admin_music_release_edit                      [GET, POST]
+/admin/people/<int:dancer_id>/edit                           -> admin_person_edit                             [GET, POST]
+/admin/people/<int:primary_id>/merge/<int:duplicate_id>      -> admin_merge_people                            [POST]
+/admin/return-to-admin                                       -> admin_return_to_admin                         [POST]
+/admin/role-requests                                         -> admin_role_requests                           [GET]
+/admin/role-requests/<int:request_id>/status                 -> update_role_request_status                    [POST]
+/admin/submissions                                           -> admin_submissions                             [GET]
+/admin/submissions/<int:submission_id>/edit                  -> admin_submission_edit                         [GET, POST]
+/admin/submissions/<int:submission_id>/status                -> update_submission_status                      [POST]
+/admin/submissions/new                                       -> admin_submission_new                          [GET, POST]
+/admin/users                                                 -> admin_users                                   [GET]
+/admin/users/<int:user_id>                                   -> admin_user_detail                             [GET]
+/admin/users/<int:user_id>/profile-links/<int:link_id>/status -> admin_update_user_profile_link_status         [POST]
+/admin/users/<int:user_id>/profile-links/<int:profile_id>/attach -> admin_attach_profile_to_user                  [POST]
+/admin/users/<int:user_id>/profile-links/<int:profile_id>/dismiss -> admin_dismiss_profile_suggestion              [POST]
+/admin/users/<int:user_id>/role                              -> update_user_role                              [POST]
+/admin/users/<int:user_id>/status                            -> update_user_status                            [POST]
+/admin/view-as-public                                        -> admin_view_as_public                          [POST]
+/ask                                                         -> ask_archive                                   [GET, POST]
+/awards                                                      -> awards                                        [GET]
+/battles                                                     -> battles                                       [GET]
+/contributor                                                 -> contributor_portal                            [GET]
+/contributor/request-role                                    -> contributor_request_role                      [POST]
+/dancers/<int:dancer_id>                                     -> dancer_profile_detail_by_id                   [GET]
+/dancers/<int:dancer_id>/flowers                             -> give_dancer_flowers                           [POST]
+/dancers/<int:dancer_id>/suggestions                         -> suggest_dancer_update                         [POST]
+/dancers/<profile_slug>                                      -> dancer_profile_detail                         [GET]
+/dancers/<profile_slug>/claim                                -> claim_profile                                 [GET, POST]
+/dancers/create                                              -> create_dancer_profile                         [GET, POST]
+/event-affiliates                                            -> event_affiliates_portal                       [GET]
+/events                                                      -> events                                        [GET]
+/events/<int:event_id>                                       -> event_detail                                  [GET]
+/events/submit                                               -> submit_event                                  [GET, POST]
+/litefeet-music                                              -> litefeet_music                                [GET]
+/litefeet-music/projects/preview                             -> preview_music_project                         [POST]
+/litefeet-music/projects/submit                              -> submit_music_project                          [GET, POST]
+/litefeet-music/release/<int:item_id>                        -> music_release_detail                          [GET]
+/music/<int:item_id>/play                                    -> music_play_count                              [POST]
+/music/stats-proof                                           -> music_stats_proof_submit                      [POST]
+/people                                                      -> people_hub                                    [GET]
+/people/dancers                                              -> dancers                                       [GET]
+/people/producers                                            -> producers                                     [GET]
+/people/teams                                                -> teams                                         [GET]
+/releases/submit                                             -> submit_music_release                          [GET, POST]
+/robots.txt                                                  -> robots_txt                                    [GET]
+/sitemap.xml                                                 -> sitemap_xml                                   [GET]
+/submit                                                      -> submit_info                                   [GET, POST]
+/submit/success                                              -> submit_success                                [GET]
+/verify                                                      -> verify_claims                                 [GET]
+/verify/<int:submission_id>                                  -> verify_claim_detail                           [GET]
+/verify/<int:submission_id>/vote                             -> vote_on_claim                                 [POST]
+
+=== HARDCODED TEMPLATE LINKS / FORMS ===
+/Users/teethecreative/litefeet-archive/templates/account_home.html:37: action=/account/anonymous-mode
+/Users/teethecreative/litefeet-archive/templates/account_home.html:53: href=/admin/people/{{ claimed_profile[
+/Users/teethecreative/litefeet-archive/templates/account_home.html:57: href=/people/dancers
+/Users/teethecreative/litefeet-archive/templates/account_home.html:81: href=/verify/{{ item[
+/Users/teethecreative/litefeet-archive/templates/account_login.html:33: href=/account/signup
+/Users/teethecreative/litefeet-archive/templates/account_profile_link.html:15: href=/account/profile-visibility
+/Users/teethecreative/litefeet-archive/templates/account_profile_link.html:48: action=/account/profile-link/{{ profile[
+/Users/teethecreative/litefeet-archive/templates/account_profile_visibility.html:15: href=/account/profile-link
+/Users/teethecreative/litefeet-archive/templates/admin_dancer_feedback.html:14: href=/admin/dancer-profiles
+/Users/teethecreative/litefeet-archive/templates/admin_dancer_feedback.html:33: action=/admin/dancer-flowers/{{ flower[
+/Users/teethecreative/litefeet-archive/templates/admin_dancer_feedback.html:73: action=/admin/dancer-suggestions/{{ suggestion[
+/Users/teethecreative/litefeet-archive/templates/admin_dancer_profiles.html:14: href=/admin/submissions
+/Users/teethecreative/litefeet-archive/templates/admin_dancer_profiles.html:15: href=/admin/dancer-feedback
+/Users/teethecreative/litefeet-archive/templates/admin_dancer_profiles.html:38: action=/admin/dancer-profiles/{{ profile[
+/Users/teethecreative/litefeet-archive/templates/admin_event_edit.html:8: href=/events/{{ event[
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:83: action=/admin/activity/dismiss
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:192: href=/verify
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:216: href=/verify/{{ item[
+/Users/teethecreative/litefeet-archive/templates/admin_login.html:22: action=/admin/login
+/Users/teethecreative/litefeet-archive/templates/admin_media.html:83: action=/admin/media/{{ item[
+/Users/teethecreative/litefeet-archive/templates/admin_music_project_edit.html:82: href=/admin/music/release/{{ track[
+/Users/teethecreative/litefeet-archive/templates/admin_profile_links.html:14: href=/admin/users
+/Users/teethecreative/litefeet-archive/templates/admin_profile_links.html:15: href=/admin/profile-visibility-requests
+/Users/teethecreative/litefeet-archive/templates/admin_profile_links.html:67: action=/admin/profile-links/{{ link[
+/Users/teethecreative/litefeet-archive/templates/admin_profile_visibility_requests.html:14: href=/admin/profile-links
+/Users/teethecreative/litefeet-archive/templates/admin_profile_visibility_requests.html:15: href=/admin/users
+/Users/teethecreative/litefeet-archive/templates/admin_profile_visibility_requests.html:52: action=/admin/profile-visibility-requests/{{ request[
+/Users/teethecreative/litefeet-archive/templates/admin_role_requests.html:14: href=/admin/submissions
+/Users/teethecreative/litefeet-archive/templates/admin_role_requests.html:33: action=/admin/role-requests/{{ request_item[
+/Users/teethecreative/litefeet-archive/templates/admin_submission_edit.html:10: href=/admin/submissions
+/Users/teethecreative/litefeet-archive/templates/admin_submissions.html:14: href=/admin/users
+/Users/teethecreative/litefeet-archive/templates/admin_submissions.html:15: href=/admin/role-requests
+/Users/teethecreative/litefeet-archive/templates/admin_submissions.html:16: href=/admin/dancer-profiles
+/Users/teethecreative/litefeet-archive/templates/admin_submissions.html:17: href=/admin/dancer-feedback
+/Users/teethecreative/litefeet-archive/templates/admin_submissions.html:18: href=/admin/logout
+/Users/teethecreative/litefeet-archive/templates/admin_submissions.html:75: action=/admin/submissions/{{ submission[
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:8: href=/admin/users
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:9: href=/admin/profile-links
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:193: action=/admin/users/{{ user[
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:210: action=/admin/users/{{ user[
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:248: href=/dancers/{{ link[
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:253: action=/admin/users/{{ user[
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:305: href=/dancers/{{ profile[
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:311: action=/admin/users/{{ user[
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:318: action=/admin/users/{{ user[
+/Users/teethecreative/litefeet-archive/templates/admin_users.html:14: href=/admin/submissions
+/Users/teethecreative/litefeet-archive/templates/admin_users.html:15: href=/admin/profile-links
+/Users/teethecreative/litefeet-archive/templates/admin_users.html:16: href=/admin/profile-visibility-requests
+/Users/teethecreative/litefeet-archive/templates/admin_users.html:276: href=/admin/users/{{ user[
+/Users/teethecreative/litefeet-archive/templates/admin_users.html:292: action=/admin/users/{{ user[
+/Users/teethecreative/litefeet-archive/templates/admin_users.html:312: action=/admin/users/{{ user[
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:23: action=/ask
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:83: href=/verify/{{ result[
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:96: href=/submit
+/Users/teethecreative/litefeet-archive/templates/awards.html:53: href=/submit
+/Users/teethecreative/litefeet-archive/templates/base.html:23: href=/ask
+/Users/teethecreative/litefeet-archive/templates/base.html:24: href=/events
+/Users/teethecreative/litefeet-archive/templates/base.html:25: href=/people/dancers
+/Users/teethecreative/litefeet-archive/templates/base.html:26: href=/litefeet-music
+/Users/teethecreative/litefeet-archive/templates/base.html:27: href=/battles
+/Users/teethecreative/litefeet-archive/templates/base.html:28: href=/awards
+/Users/teethecreative/litefeet-archive/templates/base.html:29: href=/verify
+/Users/teethecreative/litefeet-archive/templates/base.html:30: href=/about
+/Users/teethecreative/litefeet-archive/templates/base.html:31: href=/submit
+/Users/teethecreative/litefeet-archive/templates/base.html:49: href=/admin
+/Users/teethecreative/litefeet-archive/templates/base.html:50: href=/admin/submissions
+/Users/teethecreative/litefeet-archive/templates/base.html:51: href=/admin/media
+/Users/teethecreative/litefeet-archive/templates/base.html:53: action=/admin/view-as-public
+/Users/teethecreative/litefeet-archive/templates/base.html:56: href=/releases/submit
+/Users/teethecreative/litefeet-archive/templates/base.html:60: href=/account
+/Users/teethecreative/litefeet-archive/templates/base.html:61: href=/releases/submit
+/Users/teethecreative/litefeet-archive/templates/base.html:65: href=/admin/people/{{ nav_claimed_profile[
+/Users/teethecreative/litefeet-archive/templates/base.html:67: href=/people/dancers
+/Users/teethecreative/litefeet-archive/templates/base.html:71: action=/account/anonymous-mode
+/Users/teethecreative/litefeet-archive/templates/base.html:77: href=/account/logout
+/Users/teethecreative/litefeet-archive/templates/base.html:81: href=/account/login
+/Users/teethecreative/litefeet-archive/templates/base.html:82: href=/account/signup
+/Users/teethecreative/litefeet-archive/templates/base.html:90: action=/admin/return-to-admin
+/Users/teethecreative/litefeet-archive/templates/base.html:103: href=/admin/login
+/Users/teethecreative/litefeet-archive/templates/base.html:104: href=/account/login
+/Users/teethecreative/litefeet-archive/templates/base.html:105: href=/event-affiliates
+/Users/teethecreative/litefeet-archive/templates/battles.html:52: href=/submit
+/Users/teethecreative/litefeet-archive/templates/contributor_portal.html:10: href=/account/profile-link
+/Users/teethecreative/litefeet-archive/templates/contributor_portal.html:11: href=/account/profile-visibility
+/Users/teethecreative/litefeet-archive/templates/contributor_portal.html:47: action=/contributor/request-role
+/Users/teethecreative/litefeet-archive/templates/dancer_create.html:7: href=/dancers
+/Users/teethecreative/litefeet-archive/templates/dancer_create.html:22: action=/dancers/create
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:25: href=/litefeet-music/release/{{ release[
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:53: href=/people/dancers
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:61: href=/admin/people/{{ profile[
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:125: action=/admin/people/{{ profile[
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:252: action=/dancers/{{ profile[
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:275: action=/dancers/{{ profile[
+/Users/teethecreative/litefeet-archive/templates/dancers.html:9: href=/people/dancers
+/Users/teethecreative/litefeet-archive/templates/dancers.html:11: href=/people/producers
+/Users/teethecreative/litefeet-archive/templates/dancers.html:13: href=/people/teams
+/Users/teethecreative/litefeet-archive/templates/dancers.html:25: href=/people/dancers/create
+/Users/teethecreative/litefeet-archive/templates/dancers.html:110: href=/dancers/{{ slug }}
+/Users/teethecreative/litefeet-archive/templates/event_affiliate_portal.html:14: href=/events/submit
+/Users/teethecreative/litefeet-archive/templates/event_affiliate_request.html:16: action=/contributor/request-role
+/Users/teethecreative/litefeet-archive/templates/event_detail.html:8: href=/events
+/Users/teethecreative/litefeet-archive/templates/event_detail.html:11: href=/admin/submissions/{{ event[
+/Users/teethecreative/litefeet-archive/templates/event_submit.html:7: href=/events
+/Users/teethecreative/litefeet-archive/templates/event_submit.html:26: action=/events/submit
+/Users/teethecreative/litefeet-archive/templates/events.html:14: href=/events/submit
+/Users/teethecreative/litefeet-archive/templates/home.html:15: href=/submit
+/Users/teethecreative/litefeet-archive/templates/home.html:16: href=/people/dancers
+/Users/teethecreative/litefeet-archive/templates/home.html:17: href=/events
+/Users/teethecreative/litefeet-archive/templates/home.html:29: href=/admin/media
+/Users/teethecreative/litefeet-archive/templates/home.html:86: href=/litefeet-music
+/Users/teethecreative/litefeet-archive/templates/home.html:137: href=/litefeet-music/release/{{ item[
+/Users/teethecreative/litefeet-archive/templates/home.html:151: action=/music/{{ item[
+/Users/teethecreative/litefeet-archive/templates/home.html:185: href=/account/login
+/Users/teethecreative/litefeet-archive/templates/litefeet_music.html:22: href=/litefeet-music/projects/submit
+/Users/teethecreative/litefeet-archive/templates/litefeet_music.html:82: href=/litefeet-music/release/{{ item[
+/Users/teethecreative/litefeet-archive/templates/litefeet_music.html:89: href=/dancers/{{ item[
+/Users/teethecreative/litefeet-archive/templates/litefeet_music.html:113: action=/music/{{ item[
+/Users/teethecreative/litefeet-archive/templates/litefeet_music.html:152: href=/account/login
+/Users/teethecreative/litefeet-archive/templates/litefeet_music.html:178: action=/litefeet-music
+/Users/teethecreative/litefeet-archive/templates/litefeet_music.html:268: href=/litefeet-music/release/{{ item[
+/Users/teethecreative/litefeet-archive/templates/litefeet_music.html:275: href=/dancers/{{ item[
+/Users/teethecreative/litefeet-archive/templates/music_release_detail.html:25: href=/dancers/{{ item[
+/Users/teethecreative/litefeet-archive/templates/music_release_detail.html:111: href=/admin/music/release/{{ item[
+/Users/teethecreative/litefeet-archive/templates/organizer_detail.html:8: href=/events
+/Users/teethecreative/litefeet-archive/templates/organizer_detail.html:60: href=/admin/submissions/{{ event[
+/Users/teethecreative/litefeet-archive/templates/portal_gate.html:15: href=/account/login
+/Users/teethecreative/litefeet-archive/templates/portal_gate.html:21: href=/account/signup
+/Users/teethecreative/litefeet-archive/templates/producers.html:9: href=/people/dancers
+/Users/teethecreative/litefeet-archive/templates/producers.html:11: href=/people/producers
+/Users/teethecreative/litefeet-archive/templates/producers.html:13: href=/people/teams
+/Users/teethecreative/litefeet-archive/templates/submit_music_project.html:26: action=/litefeet-music/projects/preview
+/Users/teethecreative/litefeet-archive/templates/submit_music_project.html:44: action=/litefeet-music/projects/submit
+/Users/teethecreative/litefeet-archive/templates/submit_success.html:15: href=/submit
+/Users/teethecreative/litefeet-archive/templates/teams.html:9: href=/people/dancers
+/Users/teethecreative/litefeet-archive/templates/teams.html:11: href=/people/teams
+/Users/teethecreative/litefeet-archive/templates/verify_claim_detail.html:7: href=/verify
+/Users/teethecreative/litefeet-archive/templates/verify_claim_detail.html:56: action=/verify/{{ submission[
+/Users/teethecreative/litefeet-archive/templates/verify_claims.html:48: href=/verify/{{ submission[
+
+=== POSSIBLE BAD EVENT ROUTE REFERENCES OUTSIDE EVENT TEMPLATES ===
+/Users/teethecreative/litefeet-archive/templates/account_home.html:79: <a class="button small-button" href="{{ item | event_public_url }}">View</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:24: <a href="/events">Events</a>
+/Users/teethecreative/litefeet-archive/templates/home.html:17: <a href="/events" class="button secondary">Latest Events</a>
+/Users/teethecreative/litefeet-archive/templates/organizer_detail.html:8: <a href="/events" class="small-note">← Back to Events</a>
+/Users/teethecreative/litefeet-archive/templates/organizer_detail.html:58: <a href="{{ event | event_public_url }}" class="button secondary">View Event</a>
+/Users/teethecreative/litefeet-archive/templates/submit.html:62: <label for="event_details">Event details</label>
+/Users/teethecreative/litefeet-archive/templates/submit.html:63: <textarea id="event_details" name="event_details" rows="4" placeholder="Add battle categories, performers, judges, DJ, flyer details, or anything people should know."></textarea>
+
+=== DYNAMIC ROUTE-LIKE TEMPLATE LINES TO MANUALLY CHECK ===
+/Users/teethecreative/litefeet-archive/templates/account_home.html:52: <a class="button primary" href="{{ claimed_profile | profile_url }}">View Profile</a>
+/Users/teethecreative/litefeet-archive/templates/account_home.html:53: <a class="button secondary" href="/admin/people/{{ claimed_profile['id'] }}/edit">Edit Profile</a>
+/Users/teethecreative/litefeet-archive/templates/account_home.html:79: <a class="button small-button" href="{{ item | event_public_url }}">View</a>
+/Users/teethecreative/litefeet-archive/templates/account_home.html:81: <a class="button small-button" href="/verify/{{ item['id'] }}">View</a>
+/Users/teethecreative/litefeet-archive/templates/account_profile_link.html:48: <form action="/account/profile-link/{{ profile['id'] }}/request" method="post">
+/Users/teethecreative/litefeet-archive/templates/admin_dancer_feedback.html:33: <form action="/admin/dancer-flowers/{{ flower['id'] }}/status" method="post" class="vote-form">
+/Users/teethecreative/litefeet-archive/templates/admin_dancer_feedback.html:66: <p><strong>Source:</strong> <a href="{{ suggestion['source_url'] }}" target="_blank" rel="noopener">Open source</a></p>
+/Users/teethecreative/litefeet-archive/templates/admin_dancer_feedback.html:73: <form action="/admin/dancer-suggestions/{{ suggestion['id'] }}/status" method="post" class="vote-form">
+/Users/teethecreative/litefeet-archive/templates/admin_dancer_profiles.html:35: <p><strong>Source:</strong> <a href="{{ profile['source_url'] }}" target="_blank" rel="noopener">Open source</a></p>
+/Users/teethecreative/litefeet-archive/templates/admin_dancer_profiles.html:38: <form action="/admin/dancer-profiles/{{ profile['id'] }}/status" method="post" class="vote-form">
+/Users/teethecreative/litefeet-archive/templates/admin_event_edit.html:8: <a href="/events/{{ event['id'] }}" class="small-note">← Back to Event</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:77: <a class="button small-button" href="{{ item['target_url'] }}">Open</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:216: <td><a class="button small-button" href="/verify/{{ item['id'] }}">Review</a></td>
+/Users/teethecreative/litefeet-archive/templates/admin_media.html:82: <a href="{{ item['url'] }}" target="_blank" rel="noopener" class="button small-button">Open</a>
+/Users/teethecreative/litefeet-archive/templates/admin_media.html:83: <form method="POST" action="/admin/media/{{ item['id'] }}/delete">
+/Users/teethecreative/litefeet-archive/templates/admin_music_project_edit.html:82: <td><a href="/admin/music/release/{{ track['id'] }}/edit">Edit Track</a></td>
+/Users/teethecreative/litefeet-archive/templates/admin_person_edit.html:8: <a href="{{ profile | profile_url }}" class="small-note">← Back to Profile</a>
+/Users/teethecreative/litefeet-archive/templates/admin_profile_links.html:67: <form method="post" action="/admin/profile-links/{{ link['id'] }}/status" class="admin-mini-form">
+/Users/teethecreative/litefeet-archive/templates/admin_profile_visibility_requests.html:52: <form method="post" action="/admin/profile-visibility-requests/{{ request['id'] }}/status" class="admin-mini-form">
+/Users/teethecreative/litefeet-archive/templates/admin_role_requests.html:33: <form action="/admin/role-requests/{{ request_item['id'] }}/status" method="post" class="vote-form">
+/Users/teethecreative/litefeet-archive/templates/admin_submissions.html:40: <a href="{{ submission['source_url'] }}" target="_blank" rel="noopener">Open source link</a>
+/Users/teethecreative/litefeet-archive/templates/admin_submissions.html:75: <form action="/admin/submissions/{{ submission['id'] }}/status" method="post">
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:193: <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/role" method="post">
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:210: <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/status" method="post">
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:248: <a class="admin-link" href="/dancers/{{ link['profile_id'] }}" target="_blank" rel="noopener">
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:253: <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/profile-links/{{ link['id'] }}/status" method="post">
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:305: <a class="admin-link" href="/dancers/{{ profile['id'] }}" target="_blank" rel="noopener">
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:311: <form action="/admin/users/{{ user['id'] }}/profile-links/{{ profile['id'] }}/attach" method="post">
+/Users/teethecreative/litefeet-archive/templates/admin_user_detail.html:318: <form action="/admin/users/{{ user['id'] }}/profile-links/{{ profile['id'] }}/dismiss" method="post">
+/Users/teethecreative/litefeet-archive/templates/admin_users.html:276: <a class="admin-account-link" href="/admin/users/{{ user['id'] }}">
+/Users/teethecreative/litefeet-archive/templates/admin_users.html:292: <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/role" method="post">
+/Users/teethecreative/litefeet-archive/templates/admin_users.html:312: <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/status" method="post">
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:62: <a href="{{ result['source_url'] }}" target="_blank" rel="noopener">Open source link</a>
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:83: <a href="/verify/{{ result['id'] }}" class="button secondary">Review / Verify This</a>
+/Users/teethecreative/litefeet-archive/templates/awards.html:26: <p><strong>Source:</strong> <a href="{{ award['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
+/Users/teethecreative/litefeet-archive/templates/base.html:8: <link rel="canonical" href="{% block canonical_url %}https://thelitefeetvault.com{{ request.path }}{% endblock %}">
+/Users/teethecreative/litefeet-archive/templates/base.html:64: <a href="{{ nav_claimed_profile | profile_url }}">View My Profile</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:65: <a href="/admin/people/{{ nav_claimed_profile['id'] }}/edit">Edit My Profile</a>
+/Users/teethecreative/litefeet-archive/templates/battles.html:25: <p><strong>Source:</strong> <a href="{{ battle['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:25: <a class="release-title-link" href="/litefeet-music/release/{{ release['id'] }}">
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:57: <a href="{{ profile | profile_url }}/claim" class="button primary">Claim This Profile</a>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:61: <a href="/admin/people/{{ profile['id'] }}/edit" class="button secondary">Edit Profile</a>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:125: <form method="POST" action="/admin/people/{{ profile['id'] }}/merge/{{ duplicate['id'] }}">
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:205: <a class="button small-button" href="{{ item['public_url'] }}">View</a>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:252: <form method="POST" action="/dancers/{{ profile['id'] }}/flowers" class="stacked-form">
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:275: <form method="POST" action="/dancers/{{ profile['id'] }}/suggest" class="stacked-form">
+/Users/teethecreative/litefeet-archive/templates/dancers.html:110: <a class="button small-button" href="/dancers/{{ slug }}">View Profile</a>
+/Users/teethecreative/litefeet-archive/templates/event_detail.html:11: <a href="/admin/submissions/{{ event['id'] }}/edit" class="button primary">Edit Event</a>
+/Users/teethecreative/litefeet-archive/templates/event_detail.html:66: <a class="person-link" href="/{{ organizer | public_slug }}">{{ organizer }}</a>
+/Users/teethecreative/litefeet-archive/templates/events.html:29: <a href="{{ event | event_public_url }}" class="event-square-link">
+/Users/teethecreative/litefeet-archive/templates/events.html:92: <tr class="clickable-row" onclick="window.location.href='{{ event | event_public_url }}'">
+/Users/teethecreative/litefeet-archive/templates/events.html:131: <tr class="clickable-row" onclick="window.location.href='{{ event | event_public_url }}'">
+/Users/teethecreative/litefeet-archive/templates/home.html:49: <a href="{{ item['url'] }}" target="_blank" rel="noopener">Open Video</a>
+/Users/teethecreative/litefeet-archive/templates/home.html:137: <a class="release-title-link" href="/litefeet-music/release/{{ item['id'] }}">
+/Users/teethecreative/litefeet-archive/templates/home.html:151: <form method="POST" action="/music/{{ item['id'] }}/feedback" class="music-feedback-form compact-feedback-form">
+/Users/teethecreative/litefeet-archive/templates/litefeet_music.html:82: <a class="release-title-link" href="/litefeet-music/release/{{ item['id'] }}">
+/Users/teethecreative/litefeet-archive/templates/litefeet_music.html:89: <a class="producer-link" href="/dancers/{{ item['producer_profile']['id'] }}">{{ item["artist_or_creator"] }}</a>
+/Users/teethecreative/litefeet-archive/templates/litefeet_music.html:113: <form method="POST" action="/music/{{ item['id'] }}/feedback" class="music-feedback-form compact-feedback-form">
+/Users/teethecreative/litefeet-archive/templates/litefeet_music.html:268: <a class="release-title-link" href="/litefeet-music/release/{{ item['id'] }}">
+/Users/teethecreative/litefeet-archive/templates/litefeet_music.html:275: <a class="producer-link" href="/dancers/{{ item['producer_profile']['id'] }}">{{ item["artist_or_creator"] }}</a>
+/Users/teethecreative/litefeet-archive/templates/music_release_detail.html:25: <a href="/dancers/{{ item['producer_profile']['id'] }}">{{ item["artist_or_creator"] }}</a>
+/Users/teethecreative/litefeet-archive/templates/music_release_detail.html:46: <a href="{{ item['url'] }}" target="_blank" rel="noopener">Open source</a>
+/Users/teethecreative/litefeet-archive/templates/music_release_detail.html:102: <a class="button small-button" href="{{ item['url'] }}" target="_blank" rel="noopener">Open Source</a>
+/Users/teethecreative/litefeet-archive/templates/music_release_detail.html:111: <a class="button small-button" href="/admin/music/release/{{ item['id'] }}/edit">Edit Release</a>
+/Users/teethecreative/litefeet-archive/templates/organizer_detail.html:58: <a href="{{ event | event_public_url }}" class="button secondary">View Event</a>
+/Users/teethecreative/litefeet-archive/templates/organizer_detail.html:60: <a href="/admin/submissions/{{ event['id'] }}/edit" class="button primary">Edit Event</a>
+/Users/teethecreative/litefeet-archive/templates/producers.html:89: <a href="{{ producer | profile_url }}" class="button secondary">View Profile</a>
+/Users/teethecreative/litefeet-archive/templates/producers.html:94: <a href="{{ producer | profile_url }}/claim" class="button primary">Claim This Profile</a>
+/Users/teethecreative/litefeet-archive/templates/profile_claim.html:8: <a href="{{ profile | profile_url }}" class="small-note">← Back to Profile</a>
+/Users/teethecreative/litefeet-archive/templates/verify_claim_detail.html:23: <a href="{{ submission['source_url'] }}" target="_blank" rel="noopener">Open source link</a>
+/Users/teethecreative/litefeet-archive/templates/verify_claim_detail.html:56: <form action="/verify/{{ submission['id'] }}/vote" method="post" class="vote-form">
+/Users/teethecreative/litefeet-archive/templates/verify_claims.html:48: <a href="/verify/{{ submission['id'] }}" class="button small-button">Review</a>
+
+Audit complete.

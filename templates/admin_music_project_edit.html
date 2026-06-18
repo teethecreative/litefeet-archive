@@ -79,7 +79,7 @@
                             <td>{{ track["track_number"] or loop.index }}</td>
                             <td>{{ track["title"] }}</td>
                             <td>{{ playback["label"] }}</td>
-                            <td><a href="/admin/music/release/{{ track['id'] }}/edit">Edit Track</a></td>
+                            <td><a href="{{ url_for('admin_music_release_edit', item_id=track['id']) }}">Edit Track</a></td>
                         </tr>
                     {% endfor %}
                 </tbody>

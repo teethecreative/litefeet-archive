@@ -22,7 +22,7 @@
                 {% for release in profile_releases %}
                     <tr>
                         <td>
-                            <a class="release-title-link" href="/litefeet-music/release/{{ release['id'] }}">
+                            <a class="release-title-link" href="{{ url_for('music_release_detail', item_id=release['id']) }}">
                                 {{ release["title"] }}
                             </a>
                         </td>
@@ -58,7 +58,7 @@
             {% endif %}
 
             {% if session.get("admin_logged_in") %}
-                <a href="/admin/people/{{ profile['id'] }}/edit" class="button secondary">Edit Profile</a>
+                <a href="{{ url_for('admin_person_edit', dancer_id=profile['id']) }}" class="button secondary">Edit Profile</a>
             {% endif %}
         </div>
     </div>
@@ -122,7 +122,7 @@
                     </div>
 
                     {% if session.get("admin_logged_in") %}
-                        <form method="POST" action="/admin/people/{{ profile['id'] }}/merge/{{ duplicate['id'] }}">
+                        <form method="POST" action="{{ url_for('admin_merge_people', primary_id=profile['id'], duplicate_id=duplicate['id']) }}">
                             <button type="submit" class="button small-button">Merge Into This Profile</button>
                         </form>
                     {% endif %}
@@ -249,7 +249,7 @@
     <details class="vote-box collapsible-panel">
         <summary>Give Flowers</summary>
 
-        <form method="POST" action="/dancers/{{ profile['id'] }}/flowers" class="stacked-form">
+        <form method="POST" action="{{ url_for('give_dancer_flowers', dancer_id=profile['id']) }}" class="stacked-form">
             <label>
                 Your name
                 <input type="text" name="submitter_name" placeholder="Optional">
@@ -272,7 +272,7 @@
     <details class="vote-box collapsible-panel">
         <summary>Suggest Addition or Correction</summary>
 
-        <form method="POST" action="/dancers/{{ profile['id'] }}/suggest" class="stacked-form">
+        <form method="POST" action="{{ url_for('suggest_dancer_update', dancer_id=profile['id']) }}" class="stacked-form">
             <label>
                 Your name
                 <input type="text" name="submitter_name" placeholder="Optional">

@@ -190,7 +190,7 @@
             {% set role_value = user["role"] or "contributor" %}
             <p><span class="status-pill {{ role_value }}">{{ role_value.replace("_", " ") }}</span></p>
 
-            <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/role" method="post">
+            <form class="admin-mini-form" action="{{ url_for('update_user_role', user_id=user['id']) }}" method="post">
                 <select name="role" required>
                     <option value="contributor" {% if role_value == "contributor" %}selected{% endif %}>Contributor</option>
                     <option value="affiliate_host" {% if role_value == "affiliate_host" %}selected{% endif %}>Affiliate Host</option>
@@ -207,7 +207,7 @@
             {% set status_value = user["account_status"] or "pending" %}
             <p><span class="status-pill {{ status_value }}">{{ status_value.replace("_", " ") }}</span></p>
 
-            <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/status" method="post">
+            <form class="admin-mini-form" action="{{ url_for('update_user_status', user_id=user['id']) }}" method="post">
                 <select name="account_status" required>
                     <option value="pending" {% if status_value == "pending" %}selected{% endif %}>Needs Approval</option>
                     <option value="approved" {% if status_value == "approved" %}selected{% endif %}>Approved</option>
@@ -245,12 +245,12 @@
                         {% endif %}
 
                         <p>
-                            <a class="admin-link" href="/dancers/{{ link['profile_id'] }}" target="_blank" rel="noopener">
+                            <a class="admin-link" href="{{ url_for('dancer_profile_detail_by_id', dancer_id=link['profile_id']) }}" target="_blank" rel="noopener">
                                 Open public card
                             </a>
                         </p>
 
-                        <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/profile-links/{{ link['id'] }}/status" method="post">
+                        <form class="admin-mini-form" action="{{ url_for('admin_update_user_profile_link_status', user_id=user['id'], link_id=link['id']) }}" method="post">
                             <select name="status" required>
                                 <option value="pending" {% if link["status"] == "pending" %}selected{% endif %}>Pending</option>
                                 <option value="approved" {% if link["status"] == "approved" %}selected{% endif %}>Approved / Attached</option>
@@ -302,20 +302,20 @@
                         {% endif %}
 
                         <p>
-                            <a class="admin-link" href="/dancers/{{ profile['id'] }}" target="_blank" rel="noopener">
+                            <a class="admin-link" href="{{ url_for('dancer_profile_detail_by_id', dancer_id=profile['id']) }}" target="_blank" rel="noopener">
                                 View public card
                             </a>
                         </p>
 
                         <div class="profile-card-actions">
-                            <form action="/admin/users/{{ user['id'] }}/profile-links/{{ profile['id'] }}/attach" method="post">
+                            <form action="{{ url_for('admin_attach_profile_to_user', user_id=user['id'], profile_id=profile['id']) }}" method="post">
                                 <input type="hidden" name="admin_note" value="Attached by admin after profile match review.">
                                 <button type="submit" class="button primary">
                                     Attach
                                 </button>
                             </form>
 
-                            <form action="/admin/users/{{ user['id'] }}/profile-links/{{ profile['id'] }}/dismiss" method="post">
+                            <form action="{{ url_for('admin_dismiss_profile_suggestion', user_id=user['id'], profile_id=profile['id']) }}" method="post">
                                 <input type="hidden" name="admin_note" value="Dismissed by admin during profile match review.">
                                 <button type="submit" class="button secondary">
                                     Dismiss

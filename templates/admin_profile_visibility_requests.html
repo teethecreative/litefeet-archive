@@ -49,7 +49,7 @@
                             <td>{{ request["field_name"] }}</td>
                             <td>{{ request["reason"] or "—" }}</td>
                             <td>
-                                <form method="post" action="/admin/profile-visibility-requests/{{ request['id'] }}/status" class="admin-mini-form">
+                                <form method="post" action="{{ url_for('admin_update_profile_visibility_request', request_id=request['id']) }}" class="admin-mini-form">
                                     <select name="public_profile_status">
                                         <option value="pending" {% if request["public_profile_status"] == "pending" %}selected{% endif %}>Pending</option>
                                         <option value="approved" {% if request["public_profile_status"] == "approved" %}selected{% endif %}>Approved to Hide</option>

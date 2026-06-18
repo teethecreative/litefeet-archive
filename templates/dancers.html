@@ -107,7 +107,7 @@
 
                     <div class="people-card-footer">
                         <span class="people-status-pill">{{ status }}</span>
-                        <a class="button small-button" href="/dancers/{{ slug }}">View Profile</a>
+                        <a class="button small-button" href="{{ url_for('dancer_profile_detail', profile_slug=slug) }}">View Profile</a>
                     </div>
                 </article>
             {% endfor %}

@@ -45,7 +45,7 @@
                         <p><strong>Real name:</strong> {{ profile["real_name"] }}</p>
                     {% endif %}
 
-                    <form action="/account/profile-link/{{ profile['id'] }}/request" method="post">
+                    <form action="{{ url_for('request_profile_link', profile_id=profile['id']) }}" method="post">
                         <button type="submit" class="button primary">Request to Connect</button>
                     </form>
                 </article>

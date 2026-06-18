@@ -80,7 +80,7 @@
 
                             {% if result["review_status"] in ["Needs Verification", "Disputed"] %}
                                 <p>
-                                    <a href="/verify/{{ result['id'] }}" class="button secondary">Review / Verify This</a>
+                                    <a href="{{ url_for('verify_claim_detail', submission_id=result['id']) }}" class="button secondary">Review / Verify This</a>
                                 </p>
                             {% endif %}
                         </article>

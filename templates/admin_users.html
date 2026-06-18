@@ -273,7 +273,7 @@
 
                                 <tr>
                                     <td class="admin-account-cell">
-                                        <a class="admin-account-link" href="/admin/users/{{ user['id'] }}">
+                                        <a class="admin-account-link" href="{{ url_for('admin_user_detail', user_id=user['id']) }}">
                                             {{ user["display_name"] or "Unnamed user" }}
                                         </a>
                                     </td>
@@ -289,7 +289,7 @@
 
                                         <details class="admin-edit-details">
                                             <summary>Edit</summary>
-                                            <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/role" method="post">
+                                            <form class="admin-mini-form" action="{{ url_for('update_user_role', user_id=user['id']) }}" method="post">
                                                 <select name="role" required>
                                                     <option value="contributor" {% if role_value == "contributor" %}selected{% endif %}>Contributor</option>
                                                     <option value="affiliate_host" {% if role_value == "affiliate_host" %}selected{% endif %}>Affiliate Host</option>
@@ -309,7 +309,7 @@
 
                                         <details class="admin-edit-details">
                                             <summary>Edit</summary>
-                                            <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/status" method="post">
+                                            <form class="admin-mini-form" action="{{ url_for('update_user_status', user_id=user['id']) }}" method="post">
                                                 <select name="account_status" required>
                                                     <option value="pending" {% if status_value == "pending" %}selected{% endif %}>Needs Approval</option>
                                                     <option value="approved" {% if status_value == "approved" %}selected{% endif %}>Approved</option>

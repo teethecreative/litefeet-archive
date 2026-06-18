@@ -3154,6 +3154,330 @@ def update_user_status(user_id):
 
 
 
+
+
+@app.route("/account/profile-link")
+def account_profile_link():
+    user = current_user_required()
+    if not user:
+        return redirect(url_for("account_login"))
+
+    ensure_profile_link_tables()
+
+    existing_links = fetch_all(
+        """
+        SELECT profile_account_links.*,
+               dancer_profiles.dance_name,
+               dancer_profiles.real_name,
+               dancer_profiles.team_affiliation
+        FROM profile_account_links
+        LEFT JOIN dancer_profiles ON profile_account_links.profile_id = dancer_profiles.id
+        WHERE profile_account_links.user_id = :user_id
+        AND profile_account_links.profile_type = 'dancer'
+        ORDER BY profile_account_links.requested_at DESC
+        """,
+        {"user_id": user["id"]},
+    )
+
+    suggested_profiles = find_similar_dancer_profiles_for_user(user)
+    suggested_profiles = filter_available_profile_suggestions(user["id"], suggested_profiles)
+
+    return render_template(
+        "account_profile_link.html",
+        user=user,
+        suggested_profiles=suggested_profiles,
+        existing_links=existing_links,
+    )
+
+
+@app.route("/account/profile-link/<int:profile_id>/request", methods=["POST"])
+def request_profile_link(profile_id):
+    user = current_user_required()
+    if not user:
+        return redirect(url_for("account_login"))
+
+    ensure_profile_link_tables()
+
+    profile_rows = fetch_all(
+        """
+        SELECT id
+        FROM dancer_profiles
+        WHERE id = :profile_id
+        LIMIT 1
+        """,
+        {"profile_id": profile_id},
+    )
+
+    if not profile_rows:
+        flash("Profile card not found.", "error")
+        return redirect(url_for("account_profile_link"))
+
+    existing = fetch_all(
+        """
+        SELECT id
+        FROM profile_account_links
+        WHERE user_id = :user_id
+        AND profile_type = 'dancer'
+        AND profile_id = :profile_id
+        LIMIT 1
+        """,
+        {
+            "user_id": user["id"],
+            "profile_id": profile_id,
+        },
+    )
+
+    if existing:
+        flash("This profile connection is already in review.", "success")
+        return redirect(url_for("account_profile_link"))
+
+    execute_query(
+        """
+        INSERT INTO profile_account_links (
+            user_id,
+            profile_type,
+            profile_id,
+            status,
+            requested_at,
+            admin_note
+        )
+        VALUES (
+            :user_id,
+            'dancer',
+            :profile_id,
+            'pending',
+            :requested_at,
+            :admin_note
+        )
+        """,
+        {
+            "user_id": user["id"],
+            "profile_id": profile_id,
+            "requested_at": datetime.now().isoformat(timespec="seconds"),
+            "admin_note": "Requested by account holder.",
+        },
+    )
+
+    flash("Profile connection request submitted.", "success")
+    return redirect(url_for("account_profile_link"))
+
+
+@app.route("/account/profile-visibility", methods=["GET", "POST"])
+def account_profile_visibility():
+    user = current_user_required()
+    if not user:
+        return redirect(url_for("account_login"))
+
+    ensure_profile_link_tables()
+
+    approved_links = fetch_all(
+        """
+        SELECT profile_account_links.*,
+               dancer_profiles.dance_name,
+               dancer_profiles.real_name
+        FROM profile_account_links
+        JOIN dancer_profiles ON profile_account_links.profile_id = dancer_profiles.id
+        WHERE profile_account_links.user_id = :user_id
+        AND profile_account_links.profile_type = 'dancer'
+        AND profile_account_links.status = 'approved'
+        ORDER BY dancer_profiles.dance_name ASC
+        """,
+        {"user_id": user["id"]},
+    )
+
+    if request.method == "POST":
+        profile_id = request.form.get("profile_id", "").strip()
+        field_name = request.form.get("field_name", "").strip()
+        reason = request.form.get("reason", "").strip()
+
+        approved_profile_ids = {str(link["profile_id"]) for link in approved_links}
+
+        if profile_id not in approved_profile_ids:
+            flash("You can only request changes for an approved linked profile.", "error")
+            return redirect(url_for("account_profile_visibility"))
+
+        if not field_name:
+            flash("Add the profile detail you want reviewed.", "error")
+            return redirect(url_for("account_profile_visibility"))
+
+        execute_query(
+            """
+            INSERT INTO profile_visibility_requests (
+                user_id,
+                profile_type,
+                profile_id,
+                field_name,
+                requested_action,
+                reason,
+                public_profile_status,
+                ledger_record_status,
+                created_at
+            )
+            VALUES (
+                :user_id,
+                'dancer',
+                :profile_id,
+                :field_name,
+                'hide_from_public_profile',
+                :reason,
+                'pending',
+                'retained',
+                :created_at
+            )
+            """,
+            {
+                "user_id": user["id"],
+                "profile_id": int(profile_id),
+                "field_name": field_name,
+                "reason": reason,
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+            },
+        )
+
+        flash("Visibility request submitted. Ledger records remain retained unless separately corrected or disputed.", "success")
+        return redirect(url_for("account_profile_visibility"))
+
+    requests = fetch_all(
+        """
+        SELECT profile_visibility_requests.*,
+               dancer_profiles.dance_name,
+               dancer_profiles.real_name
+        FROM profile_visibility_requests
+        JOIN dancer_profiles ON profile_visibility_requests.profile_id = dancer_profiles.id
+        WHERE profile_visibility_requests.user_id = :user_id
+        ORDER BY profile_visibility_requests.created_at DESC
+        """,
+        {"user_id": user["id"]},
+    )
+
+    return render_template(
+        "account_profile_visibility.html",
+        user=user,
+        approved_links=approved_links,
+        requests=requests,
+    )
+
+
+@app.route("/admin/profile-links")
+def admin_profile_links():
+    ensure_profile_link_tables()
+
+    links = fetch_all(
+        """
+        SELECT profile_account_links.*,
+               archive_users.display_name,
+               archive_users.email,
+               archive_users.organization_name,
+               dancer_profiles.dance_name,
+               dancer_profiles.real_name,
+               dancer_profiles.team_affiliation
+        FROM profile_account_links
+        JOIN archive_users ON profile_account_links.user_id = archive_users.id
+        JOIN dancer_profiles ON profile_account_links.profile_id = dancer_profiles.id
+        WHERE profile_account_links.profile_type = 'dancer'
+        ORDER BY profile_account_links.requested_at DESC
+        """
+    )
+
+    grouped_links = {
+        "pending": [],
+        "approved": [],
+        "rejected": [],
+    }
+
+    for link in links:
+        status = link["status"] or "pending"
+        if status not in grouped_links:
+            status = "pending"
+        grouped_links[status].append(link)
+
+    return render_template("admin_profile_links.html", grouped_links=grouped_links)
+
+
+@app.route("/admin/profile-links/<int:link_id>/status", methods=["POST"])
+def admin_update_profile_link_status(link_id):
+    ensure_profile_link_tables()
+
+    status = request.form.get("status", "").strip()
+    admin_note = request.form.get("admin_note", "").strip()
+
+    if status not in {"pending", "approved", "rejected"}:
+        flash("Invalid profile link status.", "error")
+        return redirect(url_for("admin_profile_links"))
+
+    execute_query(
+        """
+        UPDATE profile_account_links
+        SET status = :status,
+            reviewed_at = :reviewed_at,
+            admin_note = :admin_note
+        WHERE id = :link_id
+        """,
+        {
+            "status": status,
+            "reviewed_at": datetime.now().isoformat(timespec="seconds"),
+            "admin_note": admin_note,
+            "link_id": link_id,
+        },
+    )
+
+    flash("Profile link request updated.", "success")
+    return redirect(url_for("admin_profile_links"))
+
+
+@app.route("/admin/profile-visibility-requests")
+def admin_profile_visibility_requests():
+    ensure_profile_link_tables()
+
+    requests = fetch_all(
+        """
+        SELECT profile_visibility_requests.*,
+               archive_users.display_name,
+               archive_users.email,
+               dancer_profiles.dance_name,
+               dancer_profiles.real_name
+        FROM profile_visibility_requests
+        JOIN archive_users ON profile_visibility_requests.user_id = archive_users.id
+        JOIN dancer_profiles ON profile_visibility_requests.profile_id = dancer_profiles.id
+        ORDER BY profile_visibility_requests.created_at DESC
+        """
+    )
+
+    return render_template("admin_profile_visibility_requests.html", requests=requests)
+
+
+@app.route("/admin/profile-visibility-requests/<int:request_id>/status", methods=["POST"])
+def admin_update_profile_visibility_request(request_id):
+    ensure_profile_link_tables()
+
+    public_profile_status = request.form.get("public_profile_status", "").strip()
+    admin_note = request.form.get("admin_note", "").strip()
+
+    if public_profile_status not in {"pending", "approved", "rejected"}:
+        flash("Invalid visibility request status.", "error")
+        return redirect(url_for("admin_profile_visibility_requests"))
+
+    execute_query(
+        """
+        UPDATE profile_visibility_requests
+        SET public_profile_status = :public_profile_status,
+            ledger_record_status = 'retained',
+            reviewed_at = :reviewed_at,
+            admin_note = :admin_note
+        WHERE id = :request_id
+        """,
+        {
+            "public_profile_status": public_profile_status,
+            "reviewed_at": datetime.now().isoformat(timespec="seconds"),
+            "admin_note": admin_note,
+            "request_id": request_id,
+        },
+    )
+
+    flash("Visibility request updated. Ledger record status remains retained.", "success")
+    return redirect(url_for("admin_profile_visibility_requests"))
+
+
 @app.route("/submit", methods=["GET", "POST"])
 def submit_info():
     if request.method == "POST":
@@ -4849,8 +5173,43 @@ ensure_portal_tables()
 
 
 
+
+
+RESERVED_PUBLIC_SLUGS = {
+    "admin",
+    "account",
+    "ask",
+    "awards",
+    "battles",
+    "contributor",
+    "dancer",
+    "dancers",
+    "event",
+    "event-affiliates",
+    "events",
+    "litefeet-music",
+    "music",
+    "people",
+    "producers",
+    "releases",
+    "robots.txt",
+    "sitemap.xml",
+    "static",
+    "submit",
+    "teams",
+    "verify",
+}
+
+
+def is_reserved_public_slug(value):
+    return (value or "").strip().lower() in RESERVED_PUBLIC_SLUGS
+
+
 @app.route("/<organizer_slug>")
 def organizer_detail(organizer_slug):
+    if is_reserved_public_slug(organizer_slug):
+        abort(404)
+
     blocked_slugs = {
         "admin",
         "account",
@@ -4905,6 +5264,9 @@ def organizer_detail(organizer_slug):
 
 @app.route("/<organizer_slug>/<event_slug>")
 def organizer_event_detail(organizer_slug, event_slug):
+    if is_reserved_public_slug(organizer_slug):
+        abort(404)
+
     all_events = fetch_all(
         """
         SELECT *

@@ -64,7 +64,7 @@
                                 </td>
                                 <td>{{ link["requested_at"] }}</td>
                                 <td>
-                                    <form method="post" action="/admin/profile-links/{{ link['id'] }}/status" class="admin-mini-form">
+                                    <form method="post" action="{{ url_for('admin_update_profile_link_status', link_id=link['id']) }}" class="admin-mini-form">
                                         <select name="status">
                                             <option value="pending" {% if link["status"] == "pending" %}selected{% endif %}>Pending</option>
                                             <option value="approved" {% if link["status"] == "approved" %}selected{% endif %}>Approved</option>

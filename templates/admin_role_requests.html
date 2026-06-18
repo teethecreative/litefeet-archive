@@ -30,7 +30,7 @@
                     <p><strong>Reason:</strong> {{ request_item["reason"] or "No reason provided" }}</p>
                     <p><strong>Requested:</strong> {{ request_item["created_at"] }}</p>
 
-                    <form action="/admin/role-requests/{{ request_item['id'] }}/status" method="post" class="vote-form">
+                    <form action="{{ url_for('update_role_request_status', request_id=request_item['id']) }}" method="post" class="vote-form">
                         <label for="status_{{ request_item['id'] }}">Status</label>
                         <select id="status_{{ request_item['id'] }}" name="status">
                             <option value="Pending Review" {% if request_item["status"] == "Pending Review" %}selected{% endif %}>Pending Review</option>

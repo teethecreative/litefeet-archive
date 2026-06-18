@@ -134,7 +134,7 @@
                             </td>
 
                             <td>
-                                <a class="release-title-link" href="/litefeet-music/release/{{ item['id'] }}">
+                                <a class="release-title-link" href="{{ url_for('music_release_detail', item_id=item['id']) }}">
                                     {{ item["title"] }}
                                 </a>
                             </td>
@@ -148,7 +148,7 @@
                                     <details class="mini-feedback-panel">
                                         <summary>Rate / React</summary>
 
-                                        <form method="POST" action="/music/{{ item['id'] }}/feedback" class="music-feedback-form compact-feedback-form">
+                                        <form method="POST" action="{{ url_for('music_feedback_submit', item_id=item['id']) }}" class="music-feedback-form compact-feedback-form">
                                             <input type="hidden" name="action" value="full">
 
                                             <label>

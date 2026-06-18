@@ -57,7 +57,7 @@
                         <p>
                             <a href="{{ event | event_public_url }}" class="button secondary">View Event</a>
                             {% if session.get("admin_logged_in") %}
-                                <a href="/admin/submissions/{{ event['id'] }}/edit" class="button primary">Edit Event</a>
+                                <a href="{{ url_for('admin_event_edit', event_id=event['id']) }}" class="button primary">Edit Event</a>
                             {% endif %}
                         </p>
                     </article>

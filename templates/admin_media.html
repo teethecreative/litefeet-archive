@@ -80,7 +80,7 @@
 
                         <div class="button-row">
                             <a href="{{ item['url'] }}" target="_blank" rel="noopener" class="button small-button">Open</a>
-                            <form method="POST" action="/admin/media/{{ item['id'] }}/delete">
+                            <form method="POST" action="{{ url_for('admin_media_delete', item_id=item['id']) }}">
                                 <button type="submit" class="button small-button danger-button">Delete</button>
                             </form>
                         </div>

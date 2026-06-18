@@ -213,7 +213,7 @@
                             <td>{{ item["true_count"] }}</td>
                             <td>{{ item["false_count"] }}</td>
                             <td>{{ item["debatable_count"] }}</td>
-                            <td><a class="button small-button" href="/verify/{{ item['id'] }}">Review</a></td>
+                            <td><a class="button small-button" href="{{ url_for('verify_claim_detail', submission_id=item['id']) }}">Review</a></td>
                         </tr>
                     {% endfor %}
                 </tbody>

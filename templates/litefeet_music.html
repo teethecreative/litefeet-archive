@@ -79,14 +79,14 @@
                             </td>
 
                             <td>
-                                <a class="release-title-link" href="/litefeet-music/release/{{ item['id'] }}">
+                                <a class="release-title-link" href="{{ url_for('music_release_detail', item_id=item['id']) }}">
                                     {{ item["title"] }}
                                 </a>
                             </td>
 
                             <td>
                                 {% if item.get("producer_profile") %}
-                                    <a class="producer-link" href="/dancers/{{ item['producer_profile']['id'] }}">{{ item["artist_or_creator"] }}</a>
+                                    <a class="producer-link" href="{{ url_for('dancer_profile_detail_by_id', dancer_id=item['producer_profile']['id']) }}">{{ item["artist_or_creator"] }}</a>
                                 {% else %}
                                     {{ item["artist_or_creator"] or "Unknown" }}
                                 {% endif %}
@@ -110,7 +110,7 @@
                                     <details class="mini-feedback-panel">
                                         <summary>Rate / React</summary>
 
-                                        <form method="POST" action="/music/{{ item['id'] }}/feedback" class="music-feedback-form compact-feedback-form">
+                                        <form method="POST" action="{{ url_for('music_feedback_submit', item_id=item['id']) }}" class="music-feedback-form compact-feedback-form">
                                             <input type="hidden" name="action" value="full">
 
                                             <label>
@@ -265,14 +265,14 @@
                             </td>
 
                             <td>
-                                <a class="release-title-link" href="/litefeet-music/release/{{ item['id'] }}">
+                                <a class="release-title-link" href="{{ url_for('music_release_detail', item_id=item['id']) }}">
                                     {{ item["title"] }}
                                 </a>
                             </td>
 
                             <td>
                                 {% if item.get("producer_profile") %}
-                                    <a class="producer-link" href="/dancers/{{ item['producer_profile']['id'] }}">{{ item["artist_or_creator"] }}</a>
+                                    <a class="producer-link" href="{{ url_for('dancer_profile_detail_by_id', dancer_id=item['producer_profile']['id']) }}">{{ item["artist_or_creator"] }}</a>
                                 {% else %}
                                     {{ item["artist_or_creator"] or "Unknown" }}
                                 {% endif %}

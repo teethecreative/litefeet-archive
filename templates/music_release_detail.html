@@ -22,7 +22,7 @@
                         <dt>Artist(s) / Producer</dt>
                         <dd>
                             {% if item.get("producer_profile") %}
-                                <a href="/dancers/{{ item['producer_profile']['id'] }}">{{ item["artist_or_creator"] }}</a>
+                                <a href="{{ url_for('dancer_profile_detail_by_id', dancer_id=item['producer_profile']['id']) }}">{{ item["artist_or_creator"] }}</a>
                             {% else %}
                                 {{ item["artist_or_creator"] or "Unknown" }}
                             {% endif %}
@@ -108,7 +108,7 @@
             {% if session.get("admin_logged_in") %}
                 <div class="behind-music-card">
                     <h2>Admin</h2>
-                    <a class="button small-button" href="/admin/music/release/{{ item['id'] }}/edit">Edit Release</a>
+                    <a class="button small-button" href="{{ url_for('admin_music_release_edit', item_id=item['id']) }}">Edit Release</a>
                 </div>
             {% endif %}
         </aside>

@@ -53,7 +53,7 @@
             <span>Debatable: {{ counts["debatable"] }}</span>
         </div>
 
-        <form action="/verify/{{ submission['id'] }}/vote" method="post" class="vote-form">
+        <form action="{{ url_for('vote_on_claim', submission_id=submission['id']) }}" method="post" class="vote-form">
             <label for="vote_type">Is this accurate?</label>
             <select id="vote_type" name="vote_type" required>
                 <option value="">Choose one</option>

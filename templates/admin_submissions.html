@@ -72,7 +72,7 @@
                     <div class="review-actions">
                         <h3>Review Status</h3>
 
-                        <form action="/admin/submissions/{{ submission['id'] }}/status" method="post">
+                        <form action="{{ url_for('update_submission_status', submission_id=submission['id']) }}" method="post">
                             <label for="review_status_{{ submission['id'] }}">Update status</label>
                             <select id="review_status_{{ submission['id'] }}" name="review_status">
                                 <option value="Pending Review" {% if submission["review_status"] == "Pending Review" %}selected{% endif %}>Pending Review</option>

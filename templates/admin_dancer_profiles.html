@@ -35,7 +35,7 @@
                         <p><strong>Source:</strong> <a href="{{ profile['source_url'] }}" target="_blank" rel="noopener">Open source</a></p>
                     {% endif %}
 
-                    <form action="/admin/dancer-profiles/{{ profile['id'] }}/status" method="post" class="vote-form">
+                    <form action="{{ url_for('update_dancer_profile_status', dancer_id=profile['id']) }}" method="post" class="vote-form">
                         <label for="status_{{ profile['id'] }}">Status</label>
                         <select id="status_{{ profile['id'] }}" name="status">
                             <option value="Pending Review" {% if profile["status"] == "Pending Review" %}selected{% endif %}>Pending Review</option>
