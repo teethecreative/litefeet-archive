@@ -3,6 +3,17 @@
 {% block title %}Admin Users | LiteFeet Ledger{% endblock %}
 
 {% block content %}
+<section class="content-section admin-users-page">
+    <h1>User Review</h1>
+
+    <p>
+        Review accounts, approve or reject access, and assign contributor or affiliate host roles.
+    </p>
+
+    <p>
+        <a href="/admin/submissions" class="button secondary">Back to Submissions</a>
+    </p>
+
     <style>
         .flash-stack {
             margin: 1rem 0;
@@ -26,36 +37,19 @@
             background: rgba(160, 40, 40, 0.08);
             color: #8a2525;
         }
-    </style>
 
-<section class="content-section">
-    <h1>User Review</h1>
+        .admin-user-section {
+            margin-top: 2rem;
+        }
 
-    <p>
-        Review contributor accounts and upgrade approved event hosts to affiliate host status.
-    </p>
+        .admin-user-section h2 {
+            margin-bottom: 0.25rem;
+        }
 
-    <p>
-        <a href="/admin/submissions" class="button secondary">Back to Submissions</a>
-    </p>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-stack">
-                {% for category, message in messages %}
-                    <div class="flash-message flash-{{ category }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-
-    <style>
         .admin-table-wrap {
             width: 100%;
             overflow-x: auto;
-            margin-top: 1.5rem;
+            margin-top: 1rem;
         }
 
         .admin-users-table {
@@ -69,11 +63,11 @@
 
         .admin-users-table th,
         .admin-users-table td {
-            padding: 0.85rem 0.9rem;
+            padding: 0.8rem 0.85rem;
             border-bottom: 1px solid rgba(160, 135, 70, 0.18);
             text-align: left;
-            vertical-align: middle;
-            font-size: 0.95rem;
+            vertical-align: top;
+            font-size: 0.92rem;
         }
 
         .admin-users-table th {
@@ -87,101 +81,152 @@
             border-bottom: none;
         }
 
-        .role-pill {
+        .admin-mini-form {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .admin-mini-form select,
+        .admin-mini-form input {
+            padding: 0.45rem 0.55rem;
+            min-width: 135px;
+        }
+
+        .admin-mini-form input {
+            min-width: 180px;
+        }
+
+        .admin-mini-form .button {
+            padding: 0.45rem 0.75rem;
+            white-space: nowrap;
+        }
+
+        .status-pill {
             display: inline-block;
-            padding: 0.25rem 0.6rem;
-            border: 1px solid rgba(160, 135, 70, 0.25);
+            padding: 0.2rem 0.55rem;
             border-radius: 999px;
+            border: 1px solid rgba(160, 135, 70, 0.25);
             color: #8a7437;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 700;
             text-transform: capitalize;
             white-space: nowrap;
         }
 
-        .inline-role-form {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            min-width: 260px;
-        }
-
-        .inline-role-form select {
-            min-width: 145px;
-            padding: 0.5rem 0.65rem;
-        }
-
-        .inline-role-form .button {
-            padding: 0.5rem 0.85rem;
-            white-space: nowrap;
-        }
-
-        @media (max-width: 760px) {
-            .admin-users-table th,
-            .admin-users-table td {
-                padding: 0.75rem;
-                font-size: 0.9rem;
-            }
+        .muted-small {
+            color: #777;
+            font-size: 0.82rem;
         }
     </style>
 
-    {% if users %}
-        <div class="admin-table-wrap">
-            <table class="admin-users-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Organization</th>
-                        <th>Current Role</th>
-                        <th>Created</th>
-                        <th>Update Role</th>
-                    </tr>
-                </thead>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-stack">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 
-                <tbody>
-                    {% for user in users %}
-                        <tr>
-                            <td>
-                                <strong>{{ user["display_name"] or "Unnamed user" }}</strong>
-                            </td>
+    {% set sections = [
+        ("pending", "Needs Approval", "Accounts waiting for review."),
+        ("approved", "Approved Accounts", "Accounts approved to participate in the Ledger."),
+        ("rejected", "Rejected Accounts", "Accounts rejected or held from participation.")
+    ] %}
 
-                            <td>{{ user["email"] or "—" }}</td>
+    {% for section_key, section_title, section_description in sections %}
+        {% set section_users = grouped_users.get(section_key, []) %}
 
-                            <td>{{ user["organization_name"] or "Not provided" }}</td>
+        <section class="admin-user-section">
+            <h2>{{ section_title }} <span class="muted-small">({{ section_users|length }})</span></h2>
+            <p class="muted-small">{{ section_description }}</p>
 
-                            <td>
-                                <span class="role-pill">
-                                    {{ (user["role"] or "contributor").replace("_", " ") }}
-                                </span>
-                            </td>
+            {% if section_users %}
+                <div class="admin-table-wrap">
+                    <table class="admin-users-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Organization</th>
+                                <th>Role</th>
+                                <th>Account Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
 
-                            <td>{{ user["created_at"] or "—" }}</td>
+                        <tbody>
+                            {% for user in section_users %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ user["display_name"] or "Unnamed user" }}</strong>
+                                    </td>
 
-                            <td>
-                                <form class="inline-role-form" action="/admin/users/{{ user['id'] }}/role" method="post">
-                                    <select id="role_{{ user['id'] }}" name="role" required>
-                                        <option value="contributor" {% if user["role"] == "contributor" %}selected{% endif %}>Contributor</option>
-                                        <option value="affiliate_host" {% if user["role"] == "affiliate_host" %}selected{% endif %}>Affiliate Host</option>
-                                        <option value="admin" {% if user["role"] == "admin" %}selected{% endif %}>Admin</option>
-                                        <option value="suspended" {% if user["role"] == "suspended" %}selected{% endif %}>Suspended</option>
-                                    </select>
+                                    <td>{{ user["email"] or "—" }}</td>
 
-                                    <button type="submit" class="button primary">Save</button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <div class="empty-state">
-            <h3>No user accounts yet</h3>
-            <p>
-                When contributors or event hosts create accounts, they will appear here for review.
-            </p>
-        </div>
-    {% endif %}
+                                    <td>{{ user["organization_name"] or "Not provided" }}</td>
+
+                                    <td>
+                                        <p>
+                                            <span class="status-pill">
+                                                {{ (user["role"] or "contributor").replace("_", " ") }}
+                                            </span>
+                                        </p>
+
+                                        <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/role" method="post">
+                                            <select name="role" required>
+                                                <option value="contributor" {% if user["role"] == "contributor" %}selected{% endif %}>Contributor</option>
+                                                <option value="affiliate_host" {% if user["role"] == "affiliate_host" %}selected{% endif %}>Affiliate Host</option>
+                                                <option value="admin" {% if user["role"] == "admin" %}selected{% endif %}>Admin</option>
+                                                <option value="suspended" {% if user["role"] == "suspended" %}selected{% endif %}>Suspended</option>
+                                            </select>
+
+                                            <button type="submit" class="button primary">Save Role</button>
+                                        </form>
+                                    </td>
+
+                                    <td>
+                                        <p>
+                                            <span class="status-pill">
+                                                {{ (user["account_status"] or "pending").replace("_", " ") }}
+                                            </span>
+                                        </p>
+
+                                        <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/status" method="post">
+                                            <select name="account_status" required>
+                                                <option value="pending" {% if user["account_status"] == "pending" %}selected{% endif %}>Needs Approval</option>
+                                                <option value="approved" {% if user["account_status"] == "approved" %}selected{% endif %}>Approved</option>
+                                                <option value="rejected" {% if user["account_status"] == "rejected" %}selected{% endif %}>Rejected</option>
+                                            </select>
+
+                                            <input
+                                                type="text"
+                                                name="account_status_note"
+                                                value="{{ user['account_status_note'] or '' }}"
+                                                placeholder="Optional note"
+                                            >
+
+                                            <button type="submit" class="button primary">Save Status</button>
+                                        </form>
+                                    </td>
+
+                                    <td>{{ user["created_at"] or "—" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <p>No accounts in this section.</p>
+                </div>
+            {% endif %}
+        </section>
+    {% endfor %}
 </section>
 {% endblock %}

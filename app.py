@@ -10,7 +10,7 @@ from urllib.request import Request, urlopen
 from datetime import datetime, timedelta
 
 from flask import abort, Flask, flash, redirect, render_template, request, session, url_for, Response
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, inspect, text
 from werkzeug.security import check_password_hash, generate_password_hash
 from markupsafe import Markup, escape
 import hashlib
@@ -729,6 +729,32 @@ def fetch_all(query, params=None):
 def execute_query(query, params=None):
     with engine.begin() as conn:
         conn.execute(text(query), params or {})
+
+
+
+def ensure_account_review_columns():
+    inspector = inspect(engine)
+    columns = {column["name"] for column in inspector.get_columns("archive_users")}
+
+    if "account_status" not in columns:
+        execute_query(
+            "ALTER TABLE archive_users ADD COLUMN account_status TEXT NOT NULL DEFAULT 'pending'"
+        )
+
+    if "account_status_note" not in columns:
+        execute_query(
+            "ALTER TABLE archive_users ADD COLUMN account_status_note TEXT"
+        )
+
+    # Admin accounts should not get trapped in the pending queue.
+    execute_query(
+        """
+        UPDATE archive_users
+        SET account_status = 'approved'
+        WHERE role = 'admin'
+        AND account_status = 'pending'
+        """
+    )
 
 
 def check_admin_login(username, password):
@@ -2444,6 +2470,8 @@ def account_logout():
 
 @app.route("/admin/users")
 def admin_users():
+    ensure_account_review_columns()
+
     users = fetch_all(
         """
         SELECT *
@@ -2452,11 +2480,29 @@ def admin_users():
         """
     )
 
-    return render_template("admin_users.html", users=users)
+    grouped_users = {
+        "pending": [],
+        "approved": [],
+        "rejected": [],
+    }
+
+    for user in users:
+        status = user["account_status"] or "pending"
+        if status not in grouped_users:
+            status = "pending"
+        grouped_users[status].append(user)
+
+    return render_template(
+        "admin_users.html",
+        users=users,
+        grouped_users=grouped_users,
+    )
 
 
 @app.route("/admin/users/<int:user_id>/role", methods=["POST"])
 def update_user_role(user_id):
+    ensure_account_review_columns()
+
     new_role = request.form.get("role", "").strip()
 
     allowed_roles = {
@@ -2468,20 +2514,6 @@ def update_user_role(user_id):
 
     if new_role not in allowed_roles:
         flash("Invalid role selected.", "error")
-        return redirect(url_for("admin_users"))
-
-    user_rows = fetch_all(
-        """
-        SELECT id, display_name, email, role
-        FROM archive_users
-        WHERE id = :user_id
-        LIMIT 1
-        """,
-        {"user_id": user_id},
-    )
-
-    if not user_rows:
-        flash("User account not found.", "error")
         return redirect(url_for("admin_users"))
 
     execute_query(
@@ -2496,22 +2528,44 @@ def update_user_role(user_id):
         },
     )
 
-    updated_rows = fetch_all(
+    flash("User role updated.", "success")
+    return redirect(url_for("admin_users"))
+
+
+@app.route("/admin/users/<int:user_id>/status", methods=["POST"])
+def update_user_status(user_id):
+    ensure_account_review_columns()
+
+    new_status = request.form.get("account_status", "").strip()
+    note = request.form.get("account_status_note", "").strip()
+
+    allowed_statuses = {
+        "pending",
+        "approved",
+        "rejected",
+    }
+
+    if new_status not in allowed_statuses:
+        flash("Invalid account status selected.", "error")
+        return redirect(url_for("admin_users"))
+
+    execute_query(
         """
-        SELECT role
-        FROM archive_users
+        UPDATE archive_users
+        SET account_status = :account_status,
+            account_status_note = :account_status_note
         WHERE id = :user_id
-        LIMIT 1
         """,
-        {"user_id": user_id},
+        {
+            "account_status": new_status,
+            "account_status_note": note,
+            "user_id": user_id,
+        },
     )
 
-    if updated_rows and updated_rows[0]["role"] == new_role:
-        flash("User role updated.", "success")
-    else:
-        flash("Role update did not save.", "error")
-
+    flash("Account status updated.", "success")
     return redirect(url_for("admin_users"))
+
 
 @app.route("/submit", methods=["GET", "POST"])
 def submit_info():
