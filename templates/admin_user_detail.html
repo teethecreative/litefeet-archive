@@ -150,6 +150,19 @@
         .admin-link:hover {
             text-decoration: underline;
         }
+
+
+        .profile-card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+            align-items: center;
+            margin-top: 0.85rem;
+        }
+
+        .profile-card-actions form {
+            margin: 0;
+        }
     </style>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -294,12 +307,21 @@
                             </a>
                         </p>
 
-                        <form class="admin-mini-form" action="/admin/users/{{ user['id'] }}/profile-links/{{ profile['id'] }}/attach" method="post">
-                            <input name="admin_note" value="Attached by admin after profile match review." placeholder="Admin note">
-                            <button type="submit" class="button primary">
-                                Attach Card
-                            </button>
-                        </form>
+                        <div class="profile-card-actions">
+                            <form action="/admin/users/{{ user['id'] }}/profile-links/{{ profile['id'] }}/attach" method="post">
+                                <input type="hidden" name="admin_note" value="Attached by admin after profile match review.">
+                                <button type="submit" class="button primary">
+                                    Attach
+                                </button>
+                            </form>
+
+                            <form action="/admin/users/{{ user['id'] }}/profile-links/{{ profile['id'] }}/dismiss" method="post">
+                                <input type="hidden" name="admin_note" value="Dismissed by admin during profile match review.">
+                                <button type="submit" class="button secondary">
+                                    Dismiss
+                                </button>
+                            </form>
+                        </div>
                     </article>
                 {% endfor %}
             </div>

@@ -881,6 +881,88 @@ def find_similar_dancer_profiles_for_user(user, limit=8):
     return matches[:limit]
 
 
+
+
+def ensure_profile_match_dismissals_table():
+    id_column = ledger_primary_key_sql() if "ledger_primary_key_sql" in globals() else "id INTEGER PRIMARY KEY AUTOINCREMENT"
+
+    execute_query(
+        f"""
+        CREATE TABLE IF NOT EXISTS profile_match_dismissals (
+            {id_column},
+            user_id INTEGER NOT NULL,
+            profile_type TEXT NOT NULL DEFAULT 'dancer',
+            profile_id INTEGER NOT NULL,
+            dismissed_at TEXT NOT NULL,
+            dismissed_by TEXT,
+            admin_note TEXT
+        )
+        """
+    )
+
+
+def get_dismissed_profile_ids_for_user(user_id, profile_type="dancer"):
+    ensure_profile_match_dismissals_table()
+
+    rows = fetch_all(
+        """
+        SELECT profile_id
+        FROM profile_match_dismissals
+        WHERE user_id = :user_id
+        AND profile_type = :profile_type
+        """,
+        {
+            "user_id": user_id,
+            "profile_type": profile_type,
+        },
+    )
+
+    return {row["profile_id"] for row in rows}
+
+
+def get_existing_profile_link_ids_for_user(user_id, profile_type="dancer"):
+    ensure_profile_link_tables()
+
+    rows = fetch_all(
+        """
+        SELECT profile_id
+        FROM profile_account_links
+        WHERE user_id = :user_id
+        AND profile_type = :profile_type
+        """,
+        {
+            "user_id": user_id,
+            "profile_type": profile_type,
+        },
+    )
+
+    return {row["profile_id"] for row in rows}
+
+
+def filter_available_profile_suggestions(user_id, suggested_profiles, profile_type="dancer"):
+    dismissed_ids = get_dismissed_profile_ids_for_user(user_id, profile_type)
+    existing_link_ids = get_existing_profile_link_ids_for_user(user_id, profile_type)
+
+    filtered = []
+
+    for item in suggested_profiles:
+        profile = item.get("profile") if isinstance(item, dict) else None
+        if not profile:
+            continue
+
+        profile_id = profile["id"]
+
+        if profile_id in dismissed_ids:
+            continue
+
+        if profile_id in existing_link_ids:
+            continue
+
+        filtered.append(item)
+
+    return filtered
+
+
 def current_user_required():
     user = get_current_user()
     if not user:
@@ -2654,6 +2736,7 @@ def admin_user_detail(user_id):
     user = user_rows[0]
 
     suggested_profiles = find_similar_dancer_profiles_for_user(user, limit=12)
+    suggested_profiles = filter_available_profile_suggestions(user_id, suggested_profiles)
 
     profile_links = fetch_all(
         """
@@ -2787,6 +2870,88 @@ def admin_attach_profile_to_user(user_id, profile_id):
         )
 
     flash("Profile card attached to account.", "success")
+    return redirect(url_for("admin_user_detail", user_id=user_id))
+
+
+
+
+@app.route("/admin/users/<int:user_id>/profile-links/<int:profile_id>/dismiss", methods=["POST"])
+def admin_dismiss_profile_suggestion(user_id, profile_id):
+    ensure_profile_link_tables()
+    ensure_profile_match_dismissals_table()
+
+    user_rows = fetch_all(
+        """
+        SELECT id
+        FROM archive_users
+        WHERE id = :user_id
+        LIMIT 1
+        """,
+        {"user_id": user_id},
+    )
+
+    if not user_rows:
+        flash("User account not found.", "error")
+        return redirect(url_for("admin_users"))
+
+    profile_rows = fetch_all(
+        """
+        SELECT id
+        FROM dancer_profiles
+        WHERE id = :profile_id
+        LIMIT 1
+        """,
+        {"profile_id": profile_id},
+    )
+
+    if not profile_rows:
+        flash("Profile card not found.", "error")
+        return redirect(url_for("admin_user_detail", user_id=user_id))
+
+    existing = fetch_all(
+        """
+        SELECT id
+        FROM profile_match_dismissals
+        WHERE user_id = :user_id
+        AND profile_type = 'dancer'
+        AND profile_id = :profile_id
+        LIMIT 1
+        """,
+        {
+            "user_id": user_id,
+            "profile_id": profile_id,
+        },
+    )
+
+    if not existing:
+        execute_query(
+            """
+            INSERT INTO profile_match_dismissals (
+                user_id,
+                profile_type,
+                profile_id,
+                dismissed_at,
+                dismissed_by,
+                admin_note
+            )
+            VALUES (
+                :user_id,
+                'dancer',
+                :profile_id,
+                :dismissed_at,
+                'admin',
+                :admin_note
+            )
+            """,
+            {
+                "user_id": user_id,
+                "profile_id": profile_id,
+                "dismissed_at": datetime.now().isoformat(timespec="seconds"),
+                "admin_note": request.form.get("admin_note", "").strip(),
+            },
+        )
+
+    flash("Suggested profile card dismissed for this account.", "success")
     return redirect(url_for("admin_user_detail", user_id=user_id))
 
 
