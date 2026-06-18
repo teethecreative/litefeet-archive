@@ -272,7 +272,7 @@
     <details class="vote-box collapsible-panel">
         <summary>Suggest Addition or Correction</summary>
 
-        <form method="POST" action="/dancers/{{ profile['id'] }}/suggestions" class="stacked-form">
+        <form method="POST" action="/dancers/{{ profile['id'] }}/suggest" class="stacked-form">
             <label>
                 Your name
                 <input type="text" name="submitter_name" placeholder="Optional">
@@ -285,7 +285,7 @@
 
             <label>
                 Addition / correction
-                <textarea name="message" required placeholder="Add context, correct something, or suggest a source."></textarea>
+                <textarea name="suggestion_text" required placeholder="Add context, correct something, or suggest a source."></textarea>
             </label>
 
             <button type="submit" class="button primary">Submit Addition</button>

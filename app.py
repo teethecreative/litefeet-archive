@@ -3767,58 +3767,245 @@ def give_dancer_flowers(dancer_id):
     return redirect(url_for("dancer_profile_detail", dancer_id=dancer_id))
 
 
+
+
+def split_email_list(value):
+    emails = []
+    seen = set()
+
+    for raw_email in (value or "").replace(";", ",").split(","):
+        email = raw_email.strip()
+        if not email or "@" not in email:
+            continue
+
+        lowered = email.lower()
+        if lowered not in seen:
+            emails.append(email)
+            seen.add(lowered)
+
+    return emails
+
+
+def get_public_site_url():
+    configured_url = os.environ.get("PUBLIC_SITE_URL", "").strip().rstrip("/")
+    if configured_url:
+        return configured_url
+
+    try:
+        return request.url_root.rstrip("/")
+    except RuntimeError:
+        return ""
+
+
+def get_dancer_profile_notification_recipients(dancer_id):
+    ensure_profile_link_tables()
+
+    rows = fetch_all(
+        """
+        SELECT archive_users.email
+        FROM profile_account_links
+        JOIN archive_users ON profile_account_links.user_id = archive_users.id
+        WHERE profile_account_links.profile_type = 'dancer'
+        AND profile_account_links.profile_id = :dancer_id
+        AND profile_account_links.status = 'approved'
+        AND archive_users.email IS NOT NULL
+        AND archive_users.email != ''
+        """,
+        {"dancer_id": dancer_id},
+    )
+
+    recipients = []
+    seen = set()
+
+    for row in rows:
+        email = (row["email"] or "").strip()
+        if not email or "@" not in email:
+            continue
+
+        lowered = email.lower()
+        if lowered not in seen:
+            recipients.append(email)
+            seen.add(lowered)
+
+    # Fallback keeps unclaimed profiles from losing notifications completely.
+    fallback_to = (
+        os.environ.get("PROFILE_SUGGESTION_EMAIL_TO", "").strip()
+        or os.environ.get("PROOF_EMAIL_TO", "").strip()
+    )
+
+    for email in split_email_list(fallback_to):
+        lowered = email.lower()
+        if lowered not in seen:
+            recipients.append(email)
+            seen.add(lowered)
+
+    return recipients
+
+
+def send_profile_suggestion_email(dancer_id, suggestion_text, submitter_name="", submitter_role="", contact="", source_url=""):
+    resend_api_key = os.environ.get("RESEND_API_KEY", "").strip()
+    if not resend_api_key:
+        print("Profile suggestion email skipped: RESEND_API_KEY is not configured.")
+        return False
+
+    sender = (
+        os.environ.get("PROFILE_SUGGESTION_EMAIL_FROM", "").strip()
+        or os.environ.get("PROOF_EMAIL_FROM", "LiteFeet Ledger <proof@thelitefeetvault.com>").strip()
+    )
+
+    recipients = get_dancer_profile_notification_recipients(dancer_id)
+
+    if not sender or not recipients:
+        print("Profile suggestion email skipped: sender or recipients missing.")
+        return False
+
+    profile_rows = fetch_all(
+        """
+        SELECT id, dance_name, real_name, profile_slug
+        FROM dancer_profiles
+        WHERE id = :dancer_id
+        LIMIT 1
+        """,
+        {"dancer_id": dancer_id},
+    )
+
+    if profile_rows:
+        profile = profile_rows[0]
+        profile_name = profile["dance_name"] or profile["real_name"] or f"Profile #{dancer_id}"
+    else:
+        profile_name = f"Profile #{dancer_id}"
+
+    site_url = get_public_site_url()
+    profile_url = f"{site_url}/dancers/{dancer_id}" if site_url else f"/dancers/{dancer_id}"
+    admin_url = f"{site_url}/admin/dancer-feedback" if site_url else "/admin/dancer-feedback"
+
+    subject = f"New suggestion on your LiteFeet Ledger profile: {profile_name}"
+
+    body = f"""A new community suggestion was submitted for this LiteFeet Ledger profile.
+
+Profile: {profile_name}
+Profile link: {profile_url}
+
+Suggestion:
+{suggestion_text}
+
+Submitted by: {submitter_name or 'Not provided'}
+Submitter role: {submitter_role or 'Not provided'}
+Contact: {contact or 'Not provided'}
+Source: {source_url or 'Not provided'}
+
+This suggestion is pending admin review before it appears publicly.
+
+Admin review:
+{admin_url}
+"""
+
+    payload = {
+        "from": sender,
+        "to": recipients,
+        "subject": subject,
+        "text": body,
+    }
+
+    if contact and "@" in contact:
+        payload["reply_to"] = contact
+
+    response = requests.post(
+        "https://api.resend.com/emails",
+        headers={
+            "Authorization": f"Bearer {resend_api_key}",
+            "Content-Type": "application/json",
+        },
+        json=payload,
+        timeout=20,
+    )
+
+    if response.status_code >= 300:
+        print(f"Profile suggestion email failed: {response.status_code} {response.text}")
+        return False
+
+    return True
+
+
 @app.route("/dancers/<int:dancer_id>/suggest", methods=["POST"])
+@app.route("/dancers/<int:dancer_id>/suggestions", methods=["POST"])
 def suggest_dancer_update(dancer_id):
-    suggestion_text = request.form.get("suggestion_text", "").strip()
-    source_url = request.form.get("source_url", "").strip()
+    suggestion_text = (
+        request.form.get("suggestion_text", "").strip()
+        or request.form.get("message", "").strip()
+    )
     submitter_name = request.form.get("submitter_name", "").strip()
     submitter_role = request.form.get("submitter_role", "").strip()
     contact = request.form.get("contact", "").strip()
-    anonymous_submission = request.form.get("anonymous_submission") == "1"
-    user = current_user()
+    source_url = request.form.get("source_url", "").strip()
 
-    if anonymous_submission:
-        submitter_name = "Anonymous"
-    elif user and not submitter_name:
-        submitter_name = user["display_name"]
+    if not suggestion_text:
+        flash("Add a suggestion before submitting.", "error")
+        return redirect(url_for("dancer_profile_detail_by_id", dancer_id=dancer_id))
 
-    if suggestion_text:
-        execute_query(
-            """
-            INSERT INTO dancer_suggestions (
-                dancer_profile_id,
-                suggestion_text,
-                source_url,
-                submitter_name,
-                submitter_role,
-                contact,
-                status,
-                created_at
-            )
-            VALUES (
-                :dancer_profile_id,
-                :suggestion_text,
-                :source_url,
-                :submitter_name,
-                :submitter_role,
-                :contact,
-                :status,
-                :created_at
-            )
-            """,
-            {
-                "dancer_profile_id": dancer_id,
-                "suggestion_text": suggestion_text,
-                "source_url": source_url,
-                "submitter_name": submitter_name,
-                "submitter_role": submitter_role,
-                "contact": contact,
-                "status": "Pending Review",
-                "created_at": datetime.now().isoformat(timespec="seconds"),
-            },
+    profile_rows = fetch_all(
+        """
+        SELECT id
+        FROM dancer_profiles
+        WHERE id = :dancer_id
+        LIMIT 1
+        """,
+        {"dancer_id": dancer_id},
+    )
+
+    if not profile_rows:
+        flash("Dancer profile not found.", "error")
+        return redirect(url_for("dancers"))
+
+    execute_query(
+        """
+        INSERT INTO dancer_suggestions (
+            dancer_profile_id,
+            suggestion_text,
+            submitter_name,
+            submitter_role,
+            contact,
+            source_url,
+            status,
+            created_at
         )
+        VALUES (
+            :dancer_profile_id,
+            :suggestion_text,
+            :submitter_name,
+            :submitter_role,
+            :contact,
+            :source_url,
+            'Pending Review',
+            :created_at
+        )
+        """,
+        {
+            "dancer_profile_id": dancer_id,
+            "suggestion_text": suggestion_text,
+            "submitter_name": submitter_name,
+            "submitter_role": submitter_role,
+            "contact": contact,
+            "source_url": source_url,
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+        },
+    )
 
-    return redirect(url_for("dancer_profile_detail", dancer_id=dancer_id))
+    try:
+        send_profile_suggestion_email(
+            dancer_id=dancer_id,
+            suggestion_text=suggestion_text,
+            submitter_name=submitter_name,
+            submitter_role=submitter_role,
+            contact=contact,
+            source_url=source_url,
+        )
+    except Exception as exc:
+        print("Profile suggestion email failed:", exc)
+
+    flash("Suggestion submitted for review.", "success")
+    return redirect(url_for("dancer_profile_detail_by_id", dancer_id=dancer_id))
+
 
 
 @app.route("/admin/dancer-profiles")
