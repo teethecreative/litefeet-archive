@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Maintenance Mode | The LiteFeet Ledger Admin{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <p class="eyebrow">Admin</p>
+    <h1>Maintenance Mode</h1>
+    <p>
+        Toggle whether public visitors see the maintenance page. Admins can still access the site while maintenance mode is on.
+    </p>
+</section>
+
+<section class="panel">
+    <h2>Current status</h2>
+
+    {% if maintenance_mode %}
+        <p><strong>Maintenance mode is ON.</strong> Public visitors see the maintenance page.</p>
+    {% else %}
+        <p><strong>Maintenance mode is OFF.</strong> Public visitors can browse the site.</p>
+    {% endif %}
+
+    <form method="post">
+        <label for="maintenance_mode">Maintenance mode</label>
+        <select id="maintenance_mode" name="maintenance_mode">
+            <option value="on" {% if maintenance_mode %}selected{% endif %}>On</option>
+            <option value="off" {% if not maintenance_mode %}selected{% endif %}>Off</option>
+        </select>
+
+        <button class="button primary" type="submit">Save Maintenance Setting</button>
+    </form>
+</section>
+{% endblock %}

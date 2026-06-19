@@ -47,7 +47,16 @@ with app.test_client() as client:
             location = response.headers.get("Location", "")
 
             if status >= 500:
-                failures.append((route, status, location, "500 error"))
+                body = response.get_data(as_text=True)
+                maintenance_expected = (
+                    status == 503
+                    and "The Ledger is being updated" in body
+                )
+
+                if maintenance_expected:
+                    print(f"OK maintenance {status} {route}")
+                else:
+                    failures.append((route, status, location, "500 error"))
 
             print(f"{status:3} {route} -> {location}")
 

@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>The LiteFeet Ledger is being updated</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="The LiteFeet Ledger is a community-powered archive for LiteFeet history, music, battles, events, dancers, teams, producers, hosts, DJs, organizers, and culture.">
+    <style>
+        :root {
+            --bg: #080808;
+            --panel: #111;
+            --panel-2: #171717;
+            --text: #f4f4f4;
+            --muted: #b8b8b8;
+            --line: #2a2a2a;
+            --accent: #ffffff;
+            --danger: #ffb3b3;
+            --success: #b7ffbf;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(255,255,255,0.08), transparent 28rem),
+                linear-gradient(135deg, #050505, #111);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .page {
+            width: min(100%, 980px);
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+        }
+
+        .backend-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--text);
+            text-decoration: none;
+            background: rgba(255,255,255,0.04);
+            font-size: 18px;
+        }
+
+        .backend-link:hover {
+            background: rgba(255,255,255,0.10);
+        }
+
+        .panel {
+            display: grid;
+            grid-template-columns: 1fr 0.92fr;
+            gap: 18px;
+            background: rgba(17,17,17,0.94);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+        }
+
+        .copy,
+        .form-card {
+            background: var(--panel-2);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 18px;
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: clamp(2rem, 4vw, 3.35rem);
+            line-height: 0.96;
+            letter-spacing: -0.055em;
+        }
+
+        p {
+            color: var(--muted);
+            line-height: 1.5;
+            margin: 0 0 12px;
+            font-size: 0.97rem;
+        }
+
+        .preserve {
+            color: var(--text);
+            border-left: 3px solid var(--accent);
+            padding-left: 12px;
+            margin-top: 14px;
+        }
+
+        .mini-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 16px;
+        }
+
+        .mini-list span {
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--muted);
+            padding: 6px 9px;
+            font-size: 0.78rem;
+            background: rgba(255,255,255,0.03);
+        }
+
+        h2 {
+            margin: 0 0 10px;
+            font-size: 1.25rem;
+            letter-spacing: -0.03em;
+        }
+
+        label {
+            display: block;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin: 10px 0 5px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            border: 1px solid var(--line);
+            background: #0c0c0c;
+            color: var(--text);
+            border-radius: 10px;
+            padding: 10px 11px;
+            font: inherit;
+            font-size: 0.92rem;
+        }
+
+        textarea {
+            min-height: 112px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 14px;
+            border: 0;
+            border-radius: 999px;
+            padding: 11px 16px;
+            background: var(--accent);
+            color: #050505;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .notice {
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        .notice.success {
+            background: rgba(183,255,191,0.08);
+            border: 1px solid rgba(183,255,191,0.35);
+            color: var(--success);
+        }
+
+        .notice.error {
+            background: rgba(255,179,179,0.08);
+            border: 1px solid rgba(255,179,179,0.35);
+            color: var(--danger);
+        }
+
+        @media (max-width: 780px) {
+            body {
+                align-items: flex-start;
+                padding: 16px;
+            }
+
+            .panel {
+                grid-template-columns: 1fr;
+                padding: 14px;
+            }
+
+            .copy,
+            .form-card {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 2.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="page">
+        <div class="topbar">
+            <a class="backend-link" href="{{ url_for('admin_login') }}" aria-label="Backend access" title="Backend access">⚙</a>
+        </div>
+
+        <section class="panel">
+            <div class="copy">
+                <p class="eyebrow">The LiteFeet Ledger</p>
+                <h1>The Ledger is being updated.</h1>
+
+                <p>
+                    The LiteFeet Ledger is a community-powered archive for LiteFeet history, music, battles,
+                    events, dancers, teams, producers, hosts, DJs, organizers, and the people who keep the culture moving.
+                </p>
+
+                <p class="preserve">
+                    The site is under maintenance while the structure is being cleaned up and rebuilt.
+                    Existing accounts, submissions, music records, event records, and profile information are being preserved.
+                </p>
+
+                <div class="mini-list" aria-label="Ledger categories">
+                    <span>Dancers</span>
+                    <span>Teams</span>
+                    <span>Battles</span>
+                    <span>Music</span>
+                    <span>Events</span>
+                    <span>Awards</span>
+                    <span>Corrections</span>
+                    <span>Feedback</span>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <h2>Add to the Ledger</h2>
+                <p>
+                    Submit a person, team, event, battle, song, producer, host, DJ, organizer, award,
+                    correction, feedback, issue, or question.
+                </p>
+
+                {% if maintenance_success %}
+                    <div class="notice success">Received. Thank you for helping build The LiteFeet Ledger.</div>
+                {% endif %}
+
+                {% if maintenance_error %}
+                    <div class="notice error">{{ maintenance_error }}</div>
+                {% endif %}
+
+                <form method="post" action="{{ url_for('maintenance_submit') }}">
+                    <label for="name">Name / Alias</label>
+                    <input id="name" name="name" autocomplete="name">
+
+                    <label for="contact">Email or IG</label>
+                    <input id="contact" name="contact" autocomplete="email">
+
+                    <label for="category">What are you submitting?</label>
+                    <select id="category" name="category">
+                        <option value="General">General</option>
+                        <option value="Person">Person</option>
+                        <option value="Team">Team</option>
+                        <option value="Event">Event</option>
+                        <option value="Battle">Battle</option>
+                        <option value="Music">Music</option>
+                        <option value="Award">Award</option>
+                        <option value="Correction">Correction</option>
+                        <option value="Feedback">Feedback</option>
+                        <option value="Issue">Issue</option>
+                        <option value="Question">Question</option>
+                        <option value="Other">Other</option>
+                    </select>
+
+                    <label for="details">Message / Details</label>
+                    <textarea id="details" name="details" required></textarea>
+
+                    <label for="links">Links or proof</label>
+                    <textarea id="links" name="links"></textarea>
+
+                    <label for="follow_up">Can we contact you for follow-up?</label>
+                    <select id="follow_up" name="follow_up">
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+
+                    <button type="submit">Add to the Ledger</button>
+                </form>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

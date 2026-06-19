@@ -91,6 +91,226 @@ def protect_admin_routes():
             return redirect(url_for("admin_login", next=request.path))
 
 
+# --- Maintenance mode / Phase 0 rebuild guard ---
+
+MAINTENANCE_ALLOWED_PATHS = {
+    "/admin/login",
+    "/account/login",
+    "/login",
+    "/maintenance-submit",
+    "/static",
+    "/favicon.ico",
+}
+
+
+def maintenance_uses_postgres():
+    try:
+        return engine.dialect.name.startswith("postgres")
+    except Exception:
+        return os.environ.get("DATABASE_URL", "").lower().startswith("postgres")
+
+
+def ensure_site_settings_table():
+    """Small key/value table for site-wide switches like maintenance mode."""
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS site_settings (
+                    key TEXT PRIMARY KEY,
+                    value TEXT,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+        else:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS site_settings (
+                    key TEXT PRIMARY KEY,
+                    value TEXT,
+                    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+
+
+def get_site_setting(key, default=None):
+    ensure_site_settings_table()
+    with engine.connect() as conn:
+        row = conn.execute(
+            text("SELECT value FROM site_settings WHERE key = :key LIMIT 1"),
+            {"key": key},
+        ).mappings().first()
+    if not row:
+        return default
+    return row["value"]
+
+
+def set_site_setting(key, value):
+    ensure_site_settings_table()
+    if maintenance_uses_postgres():
+        execute_query("""
+            INSERT INTO site_settings (key, value, updated_at)
+            VALUES (:key, :value, CURRENT_TIMESTAMP)
+            ON CONFLICT (key)
+            DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP
+        """, {"key": key, "value": value})
+    else:
+        execute_query("""
+            INSERT OR REPLACE INTO site_settings (key, value, updated_at)
+            VALUES (:key, :value, CURRENT_TIMESTAMP)
+        """, {"key": key, "value": value})
+
+
+def maintenance_mode_enabled():
+    return get_site_setting("maintenance_mode", "on") == "on"
+
+
+def current_request_is_admin_bypass():
+    return bool(session.get("admin_logged_in") or current_user_is_admin())
+
+
+def maintenance_path_allowed():
+    path = request.path or "/"
+
+    if path.startswith("/static/"):
+        return True
+
+    if path.startswith("/admin"):
+        return True
+
+    if path in MAINTENANCE_ALLOWED_PATHS:
+        return True
+
+    return False
+
+
+@app.before_request
+def maintenance_mode_guard():
+    if not maintenance_mode_enabled():
+        return None
+
+    if current_request_is_admin_bypass():
+        return None
+
+    if maintenance_path_allowed():
+        return None
+
+    return render_template("maintenance.html"), 503
+
+
+@app.route("/maintenance-submit", methods=["POST"])
+def maintenance_submit():
+    ensure_verification_tables()
+
+    name = request.form.get("name", "").strip()
+    contact = request.form.get("contact", "").strip()
+    category = request.form.get("category", "").strip()
+    details = request.form.get("details", "").strip()
+    links = request.form.get("links", "").strip()
+    follow_up = request.form.get("follow_up", "").strip()
+
+    if not details:
+        return render_template(
+            "maintenance.html",
+            maintenance_error="Please add a few details before submitting.",
+        ), 400
+
+    title = f"Maintenance submission: {category or 'General'}"
+    description_parts = [
+        f"Name / Alias: {name or 'Not provided'}",
+        f"Email or IG: {contact or 'Not provided'}",
+        f"Category: {category or 'General'}",
+        "",
+        "Details:",
+        details,
+    ]
+
+    if links:
+        description_parts.extend(["", "Links / Proof:", links])
+
+    if follow_up:
+        description_parts.extend(["", f"Can contact for follow-up: {follow_up}"])
+
+    description = "\n".join(description_parts)
+
+    # Insert only into columns that exist in the current submissions table.
+    # This keeps maintenance submissions safe across older local SQLite schemas
+    # and production Postgres schemas without dropping or rewriting data.
+    with engine.connect() as conn:
+        if maintenance_uses_postgres():
+            column_rows = conn.execute(text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = 'submissions'
+            """)).fetchall()
+            existing_columns = {row[0] for row in column_rows}
+        else:
+            column_rows = conn.execute(text("PRAGMA table_info(submissions)")).fetchall()
+            existing_columns = {row[1] for row in column_rows}
+
+    now_value = datetime.now().isoformat(timespec="seconds")
+
+    candidate_values = {
+        "title": title,
+        "category": category or "Maintenance",
+        "submission_type": category or "Maintenance",
+        "description": description,
+        "details": description,
+        "body": description,
+        "notes": description,
+        "status": "Pending Review",
+        "submitter_name": name,
+        "submitter_contact": contact,
+        "submitter_email": contact,
+        "submitter_role": "Maintenance Page",
+        "source": "maintenance_page",
+        "source_url": links,
+        "anonymous_submission": 0,
+        "created_at": now_value,
+        "updated_at": now_value,
+        "submitted_at": now_value,
+    }
+
+    insert_values = {
+        column: value
+        for column, value in candidate_values.items()
+        if column in existing_columns
+    }
+
+    if not insert_values:
+        return render_template(
+            "maintenance.html",
+            maintenance_error="The Ledger received this, but the submission table needs admin setup before it can save.",
+        ), 500
+
+    columns_sql = ", ".join(insert_values.keys())
+    values_sql = ", ".join(f":{column}" for column in insert_values.keys())
+
+    execute_query(
+        f"INSERT INTO submissions ({columns_sql}) VALUES ({values_sql})",
+        insert_values,
+    )
+
+    return render_template("maintenance.html", maintenance_success=True)
+
+
+@app.route("/admin/maintenance", methods=["GET", "POST"])
+def admin_maintenance():
+    if not current_user_is_admin() and not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login", next=request.path))
+
+    if request.method == "POST":
+        mode = request.form.get("maintenance_mode", "off")
+        set_site_setting("maintenance_mode", "on" if mode == "on" else "off")
+        flash("Maintenance mode updated.", "success")
+        return redirect(url_for("admin_maintenance"))
+
+    return render_template(
+        "admin_maintenance.html",
+        maintenance_mode=maintenance_mode_enabled(),
+    )
+
+# --- End maintenance mode / Phase 0 rebuild guard ---
+
+
 @app.template_filter("from_json")
 def from_json_filter(value):
     try:

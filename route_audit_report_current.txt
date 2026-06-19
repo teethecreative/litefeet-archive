@@ -24,6 +24,7 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /admin/events/<int:event_id>/edit                            -> admin_event_edit                              [GET, POST]
 /admin/login                                                 -> admin_login                                   [GET, POST]
 /admin/logout                                                -> admin_logout                                  [GET]
+/admin/maintenance                                           -> admin_maintenance                             [GET, POST]
 /admin/media                                                 -> admin_media                                   [GET, POST]
 /admin/media/<int:item_id>/delete                            -> admin_media_delete                            [POST]
 /admin/music/project/<int:project_id>/delete                 -> admin_music_project_delete                    [POST]
@@ -71,6 +72,7 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /litefeet-music/projects/preview                             -> preview_music_project                         [POST]
 /litefeet-music/projects/submit                              -> submit_music_project                          [GET, POST]
 /litefeet-music/release/<int:item_id>                        -> music_release_detail                          [GET]
+/maintenance-submit                                          -> maintenance_submit                            [POST]
 /music/<int:item_id>/play                                    -> music_play_count                              [POST]
 /music/stats-proof                                           -> music_stats_proof_submit                      [POST]
 /people                                                      -> people_hub                                    [GET]
@@ -115,10 +117,11 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/admin_dancer_profiles.html:35: <p><strong>Source:</strong> <a href="{{ profile['source_url'] }}" target="_blank" rel="noopener">Open source</a></p>
 /Users/teethecreative/litefeet-archive/templates/admin_dancer_profiles.html:38: <form action="{{ url_for('update_dancer_profile_status', dancer_id=profile['id']) }}" method="post" class="vote-form">
 /Users/teethecreative/litefeet-archive/templates/admin_event_edit.html:8: <a href="{{ url_for('event_detail', event_id=event['id']) }}" class="small-note">← Back to Event</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:77: <a class="button small-button" href="{{ item['target_url'] }}">Open</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:83: <form method="POST" action="{{ url_for('dismiss_admin_activity') }}">
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:192: <a class="button secondary" href="{{ url_for('verify_claims') }}">Open Verify Page</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:216: <td><a class="button small-button" href="{{ url_for('verify_claim_detail', submission_id=item['id']) }}">Review</a></td>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:7: <a class="button secondary" href="{{ url_for('admin_maintenance') }}">Maintenance Mode</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:80: <a class="button small-button" href="{{ item['target_url'] }}">Open</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:86: <form method="POST" action="{{ url_for('dismiss_admin_activity') }}">
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:195: <a class="button secondary" href="{{ url_for('verify_claims') }}">Open Verify Page</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:219: <td><a class="button small-button" href="{{ url_for('verify_claim_detail', submission_id=item['id']) }}">Review</a></td>
 /Users/teethecreative/litefeet-archive/templates/admin_login.html:22: <form class="archive-form login-form" action="{{ url_for('admin_login') }}" method="post">
 /Users/teethecreative/litefeet-archive/templates/admin_media.html:82: <a href="{{ item['url'] }}" target="_blank" rel="noopener" class="button small-button">Open</a>
 /Users/teethecreative/litefeet-archive/templates/admin_media.html:83: <form method="POST" action="{{ url_for('admin_media_delete', item_id=item['id']) }}">
@@ -237,6 +240,8 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/litefeet_music.html:178: <form method="GET" action="{{ url_for('litefeet_music') }}" class="period-filter-form">
 /Users/teethecreative/litefeet-archive/templates/litefeet_music.html:268: <a class="release-title-link" href="{{ url_for('music_release_detail', item_id=item['id']) }}">
 /Users/teethecreative/litefeet-archive/templates/litefeet_music.html:275: <a class="producer-link" href="{{ url_for('dancer_profile_detail_by_id', dancer_id=item['producer_profile']['id']) }}">{{ item["artist_or_creator"] }}</a>
+/Users/teethecreative/litefeet-archive/templates/maintenance.html:220: <a class="backend-link" href="{{ url_for('admin_login') }}" aria-label="Backend access" title="Backend access">⚙</a>
+/Users/teethecreative/litefeet-archive/templates/maintenance.html:265: <form method="post" action="{{ url_for('maintenance_submit') }}">
 /Users/teethecreative/litefeet-archive/templates/music_release_detail.html:25: <a href="{{ url_for('dancer_profile_detail_by_id', dancer_id=item['producer_profile']['id']) }}">{{ item["artist_or_creator"] }}</a>
 /Users/teethecreative/litefeet-archive/templates/music_release_detail.html:46: <a href="{{ item['url'] }}" target="_blank" rel="noopener">Open source</a>
 /Users/teethecreative/litefeet-archive/templates/music_release_detail.html:102: <a class="button small-button" href="{{ item['url'] }}" target="_blank" rel="noopener">Open Source</a>
