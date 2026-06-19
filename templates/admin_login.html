@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Login | LiteFeet Ledger{% endblock %}
+{% block title %}Backend Access | The LiteFeet Ledger{% endblock %}
 
 {% block content %}
 <section class="content-section">
-    <h1>Admin Login</h1>
+    <h1>Backend Access</h1>
 
     <p>
-        Sign in to review submissions, update ledger statuses, and manage community-submitted records.
+        Sign in to review submissions, update Ledger statuses, manage community-submitted records, and access admin tools.
     </p>
 
     {% if error %}
@@ -30,6 +30,10 @@
             autocomplete="username"
             placeholder="Enter admin username"
         >
+
+        <p class="small-note login-note">
+            Admin usernames may be separate from contributor emails.
+        </p>
 
         <label for="password">Password</label>
         <input

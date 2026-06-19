@@ -104,7 +104,7 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/account_home.html:57: <a class="button primary" href="{{ url_for('dancers') }}">Find / Claim Profile</a>
 /Users/teethecreative/litefeet-archive/templates/account_home.html:79: <a class="button small-button" href="{{ item | event_public_url }}">View</a>
 /Users/teethecreative/litefeet-archive/templates/account_home.html:81: <a class="button small-button" href="{{ url_for('verify_claim_detail', submission_id=item['id']) }}">View</a>
-/Users/teethecreative/litefeet-archive/templates/account_login.html:33: New here? <a href="{{ url_for('account_signup') }}">Create an account</a>.
+/Users/teethecreative/litefeet-archive/templates/account_login.html:37: New here? <a href="{{ url_for('account_signup') }}">Create an account</a>.
 /Users/teethecreative/litefeet-archive/templates/account_profile_link.html:15: <a href="{{ url_for('account_profile_visibility') }}" class="button secondary">Request Profile Visibility Change</a>
 /Users/teethecreative/litefeet-archive/templates/account_profile_link.html:48: <form action="{{ url_for('request_profile_link', profile_id=profile['id']) }}" method="post">
 /Users/teethecreative/litefeet-archive/templates/account_profile_visibility.html:15: <a href="{{ url_for('account_profile_link') }}" class="button secondary">Back to Profile Connection</a>
