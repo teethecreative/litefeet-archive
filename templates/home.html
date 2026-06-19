@@ -32,32 +32,83 @@
     </div>
 
     <div class="home-calendar-grid">
-        <article class="calendar-main-card">
-            <p class="eyebrow">Next Calendar Item</p>
-            <h3>Calendar rebuild in progress</h3>
-            <p>
-                The Calendar section is being rebuilt to show battles, classes, link-ups, performances,
-                cyphers, workshops, and community events in month, week, day, and list views.
-            </p>
-            <a class="button small-button primary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
-        </article>
+        {% if next_calendar_item %}
+            <article class="calendar-main-card">
+                <p class="eyebrow">Next Calendar Item</p>
 
-        <article class="calendar-mini-card">
-            <p class="eyebrow">This Week</p>
-            <h3>Coming soon</h3>
-            <p>
-                Smaller upcoming items within the next seven days will sit here once the calendar data is wired in.
-            </p>
-        </article>
+                <h3>
+                    <a href="{{ next_calendar_item | event_public_url }}">
+                        {{ next_calendar_item["title"] }}
+                    </a>
+                </h3>
 
-        <article class="calendar-mini-card">
-            <p class="eyebrow">Community</p>
-            <h3>Submit what is missing</h3>
-            <p>
-                If there is a battle, class, link-up, cypher, or performance people should know about,
-                add it to the Ledger.
-            </p>
-        </article>
+                <p>
+                    {% set next_date = next_calendar_item | detail_value("Event Date") %}
+                    {% set next_time = next_calendar_item | detail_value("Event Time") %}
+                    {% set next_location = next_calendar_item | detail_value("Event Location") %}
+
+                    {% if next_date %}<strong>{{ next_date }}</strong>{% endif %}
+                    {% if next_time %} · {{ next_time }}{% endif %}
+                    {% if next_location %}<br>{{ next_location }}{% endif %}
+                </p>
+
+                {% if next_calendar_item["related_to"] %}
+                    <p><strong>Organizer:</strong> {{ next_calendar_item["related_to"] }}</p>
+                {% endif %}
+
+                <a class="button small-button primary" href="{{ next_calendar_item | event_public_url }}">View Details</a>
+            </article>
+        {% else %}
+            <article class="calendar-main-card">
+                <p class="eyebrow">Next Calendar Item</p>
+                <h3>No upcoming calendar items yet</h3>
+                <p>
+                    Upcoming battles, classes, link-ups, performances, cyphers, workshops, and community events
+                    will appear here once they are added and supported by the Ledger.
+                </p>
+                <a class="button small-button primary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
+            </article>
+        {% endif %}
+
+        {% if homepage_calendar_items %}
+            {% for item in homepage_calendar_items %}
+                <article class="calendar-mini-card">
+                    <p class="eyebrow">
+                        {% set item_date = item | detail_value("Event Date") %}
+                        {{ item_date or "Upcoming" }}
+                    </p>
+
+                    <h3>
+                        <a href="{{ item | event_public_url }}">{{ item["title"] }}</a>
+                    </h3>
+
+                    {% set item_time = item | detail_value("Event Time") %}
+                    {% set item_location = item | detail_value("Event Location") %}
+
+                    <p>
+                        {% if item_time %}{{ item_time }}{% endif %}
+                        {% if item_location %}{% if item_time %}<br>{% endif %}{{ item_location }}{% endif %}
+                        {% if not item_time and not item_location %}Details coming soon.{% endif %}
+                    </p>
+                </article>
+            {% endfor %}
+        {% else %}
+            <article class="calendar-mini-card">
+                <p class="eyebrow">This Week</p>
+                <h3>More items coming soon</h3>
+                <p>
+                    Smaller upcoming items will sit here once the calendar has more active records.
+                </p>
+            </article>
+
+            <article class="calendar-mini-card">
+                <p class="eyebrow">Community</p>
+                <h3>Submit what is missing</h3>
+                <p>
+                    Add battles, classes, link-ups, cyphers, workshops, performances, and community events.
+                </p>
+            </article>
+        {% endif %}
     </div>
 </section>
 

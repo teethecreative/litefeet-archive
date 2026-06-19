@@ -2791,10 +2791,28 @@ def home():
         """
     )
 
+    approved_events = fetch_all(
+        """
+        SELECT *
+        FROM submissions
+        WHERE submission_type = 'event'
+        AND review_status IN ('Verified', 'Community Supported')
+        ORDER BY created_at DESC
+        """
+    )
+
+    upcoming_soon, upcoming_later, past_events, undated_events = split_event_records(approved_events)
+
+    upcoming_calendar_items = list(upcoming_soon or []) + list(upcoming_later or [])
+    next_calendar_item = upcoming_calendar_items[0] if upcoming_calendar_items else None
+    homepage_calendar_items = upcoming_calendar_items[1:4] if len(upcoming_calendar_items) > 1 else []
+
     return render_template(
         "home.html",
         latest_battle_videos=latest_battle_videos,
         latest_music_releases=latest_music_releases,
+        next_calendar_item=next_calendar_item,
+        homepage_calendar_items=homepage_calendar_items,
     )
 
 
