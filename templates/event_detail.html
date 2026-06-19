@@ -5,10 +5,10 @@
 {% block content %}
 <section class="content-section event-detail-page">
     <div class="event-detail-topline">
-        <a href="{{ url_for('events') }}" class="small-note">← Back to Events</a>
+        <a href="{{ url_for('events') }}" class="small-note">← Back to Calendar</a>
 
         {% if session.get("admin_logged_in") %}
-            <a href="{{ url_for('admin_event_edit', event_id=event['id']) }}" class="button primary">Edit Event</a>
+            <a href="{{ url_for('admin_event_edit', event_id=event['id']) }}" class="button primary">Edit Calendar Item</a>
         {% endif %}
     </div>
 

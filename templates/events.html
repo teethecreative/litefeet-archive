@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}LiteFeet Events & Battle Results | LiteFeet Ledger{% endblock %}
+{% block title %}LiteFeet Calendar & Battle Results | LiteFeet Ledger{% endblock %}
 {% block meta_description %}Browse LiteFeet events, battle results, event archives, organizers, dates, locations, judges, winners, and verified community-submitted event history.{% endblock %}
 
 {% block content %}
 <section class="content-section">
-    <h1>Events</h1>
+    <h1>Calendar</h1>
     <p>
-        Browse verified LiteFeet events, host updates, battle cards, flyers, results, and recap links.
+        Browse LiteFeet battles, events, classes, link-ups, performances, cyphers, flyers, results, and recap links.
     </p>
 
     <p>
-        <a href="{{ url_for('submit_event') }}" class="button primary">Submit an Event</a>
+        <a href="{{ url_for('submit_event') }}" class="button primary">Add to Calendar</a>
     </p>
 
     <section class="event-section">
@@ -105,7 +105,7 @@
     {% endif %}
 
     <section class="event-section">
-        <h2>Past Events</h2>
+        <h2>Past Calendar Items</h2>
 
         {% if past_events %}
             <div class="event-table-wrap">

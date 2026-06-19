@@ -3979,6 +3979,7 @@ def get_detail_value(record, label):
     return ""
 
 
+@app.route("/calendar")
 @app.route("/events")
 def events():
     approved_events = fetch_all(
@@ -4877,6 +4878,7 @@ def awards():
     return render_template("awards.html", approved_awards=approved_awards)
 
 
+@app.route("/ledger-review")
 @app.route("/verify")
 def verify_claims():
     ensure_verification_tables()

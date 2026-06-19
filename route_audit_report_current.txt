@@ -165,33 +165,31 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/awards.html:26: <p><strong>Source:</strong> <a href="{{ award['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
 /Users/teethecreative/litefeet-archive/templates/awards.html:53: <a href="{{ url_for('submit_info') }}" class="button primary">Submit Awards Info</a>
 /Users/teethecreative/litefeet-archive/templates/base.html:8: <link rel="canonical" href="{% block canonical_url %}https://thelitefeetvault.com{{ request.path }}{% endblock %}">
-/Users/teethecreative/litefeet-archive/templates/base.html:23: {% if nav_is_admin %}<a href="{{ url_for('ask_archive') }}">Ask</a>{% endif %}
-/Users/teethecreative/litefeet-archive/templates/base.html:24: <a href="{{ url_for('events') }}">Events</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:25: <a href="{{ url_for('dancers') }}">People & Teams</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:26: <a href="{{ url_for('litefeet_music') }}">LiteFeet Music</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:27: {% if nav_is_admin %}<a href="{{ url_for('battles') }}">Battles</a>{% endif %}
-/Users/teethecreative/litefeet-archive/templates/base.html:28: {% if nav_is_admin %}<a href="{{ url_for('awards') }}">Awards</a>{% endif %}
-/Users/teethecreative/litefeet-archive/templates/base.html:29: <a href="{{ url_for('verify_claims') }}">Verify</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:30: <a href="{{ url_for('about') }}">About</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:31: <a href="{{ url_for('submit_info') }}">Submit Info</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:49: <a href="{{ url_for('admin_home') }}">Admin Dashboard</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:50: <a href="{{ url_for('admin_submissions') }}">Submissions</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:51: <a href="{{ url_for('admin_media') }}">Media Feed</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:53: <form method="POST" action="{{ url_for('admin_view_as_public') }}">
-/Users/teethecreative/litefeet-archive/templates/base.html:56: <a href="{{ url_for('submit_music_release') }}">Add Release</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:60: <a href="{{ url_for('account_home') }}">My Account</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:61: <a href="{{ url_for('submit_music_release') }}">Add Producer Release</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:64: <a href="{{ nav_claimed_profile | profile_url }}">View My Profile</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:65: <a href="{{ url_for('admin_person_edit', dancer_id=nav_claimed_profile['id']) }}">Edit My Profile</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:67: <a href="{{ url_for('dancers') }}">Claim Profile</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:71: <form method="POST" action="{{ url_for('toggle_anonymous_mode') }}">
-/Users/teethecreative/litefeet-archive/templates/base.html:77: <a href="{{ url_for('account_logout') }}">Log Out</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:81: <a href="{{ url_for('account_login') }}">Log In</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:82: <a href="{{ url_for('account_signup') }}">Create Account</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:90: <form method="POST" action="{{ url_for('admin_return_to_admin') }}">
-/Users/teethecreative/litefeet-archive/templates/base.html:103: <a href="{{ url_for('admin_login') }}">Admin</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:104: <a href="{{ url_for('account_login') }}">Contributor Login</a>
-/Users/teethecreative/litefeet-archive/templates/base.html:105: <a href="{{ url_for('event_affiliates_portal') }}">Event Affiliates</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:111: <a href="{{ url_for('home') }}">Home</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:112: <a href="{{ url_for('ask_archive') }}">Ask</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:113: <a href="{{ url_for('events') }}">Calendar</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:114: <a href="{{ url_for('dancers') }}">People & Teams</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:115: <a href="{{ url_for('litefeet_music') }}">LiteFeet Music</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:116: <a href="{{ url_for('battles') }}">Battles</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:117: <a href="{{ url_for('awards') }}">Awards</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:118: <a href="{{ url_for('about') }}">About</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:119: <a href="{{ url_for('account_home') }}">Account</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:137: <a href="{{ url_for('admin_home') }}">Admin Dashboard</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:138: <a href="{{ url_for('admin_submissions') }}">Submissions</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:139: <a href="{{ url_for('admin_media') }}">Media Feed</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:141: <form method="POST" action="{{ url_for('admin_view_as_public') }}">
+/Users/teethecreative/litefeet-archive/templates/base.html:144: <a href="{{ url_for('submit_music_release') }}">Add Release</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:148: <a href="{{ url_for('account_home') }}">My Account</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:149: <a href="{{ url_for('submit_music_release') }}">Add Producer Release</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:152: <a href="{{ nav_claimed_profile | profile_url }}">View My Profile</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:153: <a href="{{ url_for('admin_person_edit', dancer_id=nav_claimed_profile['id']) }}">Edit My Profile</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:155: <a href="{{ url_for('dancers') }}">Claim Profile</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:159: <form method="POST" action="{{ url_for('toggle_anonymous_mode') }}">
+/Users/teethecreative/litefeet-archive/templates/base.html:165: <a href="{{ url_for('account_logout') }}">Log Out</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:169: <a href="{{ url_for('account_login') }}">Log In</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:170: <a href="{{ url_for('account_signup') }}">Create Account</a>
+/Users/teethecreative/litefeet-archive/templates/base.html:178: <form method="POST" action="{{ url_for('admin_return_to_admin') }}">
+/Users/teethecreative/litefeet-archive/templates/base.html:192: <a href="{{ url_for('account_login') }}">Account Login</a>
 /Users/teethecreative/litefeet-archive/templates/battles.html:25: <p><strong>Source:</strong> <a href="{{ battle['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
 /Users/teethecreative/litefeet-archive/templates/battles.html:52: <a href="{{ url_for('submit_info') }}" class="button primary">Submit Battle Result</a>
 /Users/teethecreative/litefeet-archive/templates/contributor_portal.html:10: <a href="{{ url_for('account_profile_link') }}" class="button primary">Connect Profile</a>
@@ -214,12 +212,12 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/dancers.html:110: <a class="button small-button" href="{{ url_for('dancer_profile_detail', profile_slug=slug) }}">View Profile</a>
 /Users/teethecreative/litefeet-archive/templates/event_affiliate_portal.html:14: <a href="{{ url_for('submit_event') }}" class="button primary">Submit New Event</a>
 /Users/teethecreative/litefeet-archive/templates/event_affiliate_request.html:16: <form action="{{ url_for('contributor_request_role') }}" method="post" class="vote-form">
-/Users/teethecreative/litefeet-archive/templates/event_detail.html:8: <a href="{{ url_for('events') }}" class="small-note">← Back to Events</a>
-/Users/teethecreative/litefeet-archive/templates/event_detail.html:11: <a href="{{ url_for('admin_event_edit', event_id=event['id']) }}" class="button primary">Edit Event</a>
+/Users/teethecreative/litefeet-archive/templates/event_detail.html:8: <a href="{{ url_for('events') }}" class="small-note">← Back to Calendar</a>
+/Users/teethecreative/litefeet-archive/templates/event_detail.html:11: <a href="{{ url_for('admin_event_edit', event_id=event['id']) }}" class="button primary">Edit Calendar Item</a>
 /Users/teethecreative/litefeet-archive/templates/event_detail.html:66: <a class="person-link" href="/{{ organizer | public_slug }}">{{ organizer }}</a>
-/Users/teethecreative/litefeet-archive/templates/event_submit.html:7: <p><a href="{{ url_for('events') }}" class="button secondary">Back to Events</a></p>
+/Users/teethecreative/litefeet-archive/templates/event_submit.html:7: <p><a href="{{ url_for('events') }}" class="button secondary">Back to Calendar</a></p>
 /Users/teethecreative/litefeet-archive/templates/event_submit.html:26: <form class="archive-form" action="{{ url_for('submit_event') }}" method="post">
-/Users/teethecreative/litefeet-archive/templates/events.html:14: <a href="{{ url_for('submit_event') }}" class="button primary">Submit an Event</a>
+/Users/teethecreative/litefeet-archive/templates/events.html:14: <a href="{{ url_for('submit_event') }}" class="button primary">Add to Calendar</a>
 /Users/teethecreative/litefeet-archive/templates/events.html:29: <a href="{{ event | event_public_url }}" class="event-square-link">
 /Users/teethecreative/litefeet-archive/templates/events.html:92: <tr class="clickable-row" onclick="window.location.href='{{ event | event_public_url }}'">
 /Users/teethecreative/litefeet-archive/templates/events.html:131: <tr class="clickable-row" onclick="window.location.href='{{ event | event_public_url }}'">

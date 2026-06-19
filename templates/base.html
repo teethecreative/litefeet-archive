@@ -9,6 +9,94 @@
     <meta name="google-site-verification" content="8w8AbHhkZ2rx2Dqquv94WjpyqjJbWOI8jhT_khqv1jo" />
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="icon" type="image/png" href="/static/images/litefeet-ledger-logo.png">
+
+<style id="ledger-compact-desktop-css">
+@media (min-width: 900px) {
+    body {
+        font-size: 15px;
+    }
+
+    main,
+    .container,
+    .page,
+    .site-main {
+        max-width: 1180px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    section,
+    .section,
+    .panel,
+    .card,
+    .archive-card,
+    .form-card {
+        margin-top: 14px;
+        margin-bottom: 14px;
+    }
+
+    .page-header,
+    .hero,
+    .archive-hero {
+        padding-top: 22px;
+        padding-bottom: 18px;
+    }
+
+    .page-header h1,
+    .hero h1,
+    h1 {
+        line-height: 1;
+        margin-bottom: 10px;
+    }
+
+    h2 {
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+
+    p {
+        line-height: 1.45;
+    }
+
+    .card,
+    .panel,
+    .archive-card,
+    .form-card,
+    .table-card {
+        padding: 14px;
+    }
+
+    table {
+        font-size: 0.92rem;
+    }
+
+    th,
+    td {
+        padding: 8px 10px;
+        vertical-align: top;
+    }
+
+    .button,
+    button,
+    input,
+    select,
+    textarea {
+        font-size: 0.92rem;
+    }
+
+    .button,
+    button {
+        padding: 8px 12px;
+    }
+
+    .grid,
+    .card-grid,
+    .archive-grid {
+        gap: 14px;
+    }
+}
+</style>
+
 </head>
 <body>
     <div class="site-shell">
@@ -20,15 +108,15 @@
 
             <nav class="nav-links">
                 <a href="/">Home</a>
-                {% if nav_is_admin %}<a href="{{ url_for('ask_archive') }}">Ask</a>{% endif %}
-                <a href="{{ url_for('events') }}">Events</a>
+                <a href="{{ url_for('home') }}">Home</a>
+                <a href="{{ url_for('ask_archive') }}">Ask</a>
+                <a href="{{ url_for('events') }}">Calendar</a>
                 <a href="{{ url_for('dancers') }}">People & Teams</a>
                 <a href="{{ url_for('litefeet_music') }}">LiteFeet Music</a>
-                {% if nav_is_admin %}<a href="{{ url_for('battles') }}">Battles</a>{% endif %}
-                {% if nav_is_admin %}<a href="{{ url_for('awards') }}">Awards</a>{% endif %}
-                <a href="{{ url_for('verify_claims') }}">Verify</a>
+                <a href="{{ url_for('battles') }}">Battles</a>
+                <a href="{{ url_for('awards') }}">Awards</a>
                 <a href="{{ url_for('about') }}">About</a>
-                <a href="{{ url_for('submit_info') }}">Submit Info</a>
+                <a href="{{ url_for('account_home') }}">Account</a>
 
                 {% if nav_is_admin or nav_current_user %}
                     <details class="account-menu">
@@ -100,9 +188,9 @@
         <footer class="site-footer">
             <p>The LiteFeet Ledger is being built with the community, for the community.</p>
             <div class="footer-links">
-                <a href="{{ url_for('admin_login') }}">Admin</a>
-                <a href="{{ url_for('account_login') }}">Contributor Login</a>
-                <a href="{{ url_for('event_affiliates_portal') }}">Event Affiliates</a>
+                
+                <a href="{{ url_for('account_login') }}">Account Login</a>
+                
             </div>
         </footer>
     </div>

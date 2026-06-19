@@ -4,12 +4,12 @@
 
 {% block content %}
 <section class="content-section">
-    <p><a href="{{ url_for('events') }}" class="button secondary">Back to Events</a></p>
+    <p><a href="{{ url_for('events') }}" class="button secondary">Back to Calendar</a></p>
 
-    <h1>Submit an Event</h1>
+    <h1>Add to Calendar</h1>
 
     <p>
-        Add an upcoming, past, or on-the-spot LiteFeet event for ledger review. Events are reviewed before they appear publicly.
+        Add an upcoming, past, recurring, or on-the-spot LiteFeet calendar item for Ledger review. Events are reviewed before they appear publicly.
     </p>
 
     {% if errors %}
