@@ -94,8 +94,8 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 === POSSIBLE BAD EVENT ROUTE REFERENCES OUTSIDE EVENT TEMPLATES ===
 /Users/teethecreative/litefeet-archive/templates/account_home.html:79: <a class="button small-button" href="{{ item | event_public_url }}">View</a>
 /Users/teethecreative/litefeet-archive/templates/home.html:40: <a href="{{ next_calendar_item | event_public_url }}">
-/Users/teethecreative/litefeet-archive/templates/home.html:59: <a class="button small-button primary" href="{{ next_calendar_item | event_public_url }}">View Details</a>
-/Users/teethecreative/litefeet-archive/templates/home.html:82: <a href="{{ item | event_public_url }}">{{ item["title"] }}</a>
+/Users/teethecreative/litefeet-archive/templates/home.html:60: <a class="button small-button primary" href="{{ next_calendar_item | event_public_url }}">View Details</a>
+/Users/teethecreative/litefeet-archive/templates/home.html:84: <a href="{{ item | event_public_url }}">{{ item["title"] }}</a>
 /Users/teethecreative/litefeet-archive/templates/organizer_detail.html:58: <a href="{{ event | event_public_url }}" class="button secondary">View Event</a>
 /Users/teethecreative/litefeet-archive/templates/submit.html:62: <label for="event_details">Event details</label>
 /Users/teethecreative/litefeet-archive/templates/submit.html:63: <textarea id="event_details" name="event_details" rows="4" placeholder="Add battle categories, performers, judges, DJ, flyer details, or anything people should know."></textarea>
@@ -229,17 +229,17 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/home.html:20: <a href="{{ url_for('litefeet_music') }}" class="button secondary">LiteFeet Music</a>
 /Users/teethecreative/litefeet-archive/templates/home.html:31: <a class="button secondary" href="{{ url_for('events') }}">Open Calendar</a>
 /Users/teethecreative/litefeet-archive/templates/home.html:40: <a href="{{ next_calendar_item | event_public_url }}">
-/Users/teethecreative/litefeet-archive/templates/home.html:59: <a class="button small-button primary" href="{{ next_calendar_item | event_public_url }}">View Details</a>
-/Users/teethecreative/litefeet-archive/templates/home.html:69: <a class="button small-button primary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
-/Users/teethecreative/litefeet-archive/templates/home.html:82: <a href="{{ item | event_public_url }}">{{ item["title"] }}</a>
-/Users/teethecreative/litefeet-archive/templates/home.html:123: <a class="button secondary" href="{{ url_for('admin_media') }}">Add Video</a>
-/Users/teethecreative/litefeet-archive/templates/home.html:147: <a href="{{ item['url'] }}" target="_blank" rel="noopener">Open Video</a>
-/Users/teethecreative/litefeet-archive/templates/home.html:185: <a class="button secondary" href="{{ url_for('litefeet_music') }}">Open Music Page</a>
-/Users/teethecreative/litefeet-archive/templates/home.html:241: <a class="release-title-link" href="{{ url_for('music_release_detail', item_id=item['id']) }}">
-/Users/teethecreative/litefeet-archive/templates/home.html:255: <form method="POST" action="{{ url_for('music_feedback_submit', item_id=item['id']) }}" class="music-feedback-form compact-feedback-form">
-/Users/teethecreative/litefeet-archive/templates/home.html:289: <a class="button small-button secondary" href="{{ url_for('account_login') }}">Log in</a>
-/Users/teethecreative/litefeet-archive/templates/home.html:316: <a href="{{ url_for('submit_info') }}" class="button primary">Add to the Ledger</a>
-/Users/teethecreative/litefeet-archive/templates/home.html:317: <a href="{{ url_for('ask_archive') }}" class="button secondary">Ask the Ledger</a>
+/Users/teethecreative/litefeet-archive/templates/home.html:60: <a class="button small-button primary" href="{{ next_calendar_item | event_public_url }}">View Details</a>
+/Users/teethecreative/litefeet-archive/templates/home.html:70: <a class="button small-button primary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
+/Users/teethecreative/litefeet-archive/templates/home.html:84: <a href="{{ item | event_public_url }}">{{ item["title"] }}</a>
+/Users/teethecreative/litefeet-archive/templates/home.html:122: <a class="button secondary" href="{{ url_for('admin_media') }}">Add Video</a>
+/Users/teethecreative/litefeet-archive/templates/home.html:146: <a href="{{ item['url'] }}" target="_blank" rel="noopener">Open Video</a>
+/Users/teethecreative/litefeet-archive/templates/home.html:184: <a class="button secondary" href="{{ url_for('litefeet_music') }}">Open Music Page</a>
+/Users/teethecreative/litefeet-archive/templates/home.html:240: <a class="release-title-link" href="{{ url_for('music_release_detail', item_id=item['id']) }}">
+/Users/teethecreative/litefeet-archive/templates/home.html:254: <form method="POST" action="{{ url_for('music_feedback_submit', item_id=item['id']) }}" class="music-feedback-form compact-feedback-form">
+/Users/teethecreative/litefeet-archive/templates/home.html:288: <a class="button small-button secondary" href="{{ url_for('account_login') }}">Log in</a>
+/Users/teethecreative/litefeet-archive/templates/home.html:315: <a href="{{ url_for('submit_info') }}" class="button primary">Add to the Ledger</a>
+/Users/teethecreative/litefeet-archive/templates/home.html:316: <a href="{{ url_for('ask_archive') }}" class="button secondary">Ask the Ledger</a>
 /Users/teethecreative/litefeet-archive/templates/litefeet_music.html:22: <a class="button primary" href="{{ url_for('submit_music_project') }}">Submit Music</a>
 /Users/teethecreative/litefeet-archive/templates/litefeet_music.html:82: <a class="release-title-link" href="{{ url_for('music_release_detail', item_id=item['id']) }}">
 /Users/teethecreative/litefeet-archive/templates/litefeet_music.html:89: <a class="producer-link" href="{{ url_for('dancer_profile_detail_by_id', dancer_id=item['producer_profile']['id']) }}">{{ item["artist_or_creator"] }}</a>

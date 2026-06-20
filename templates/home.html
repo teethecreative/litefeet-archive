@@ -42,14 +42,15 @@
                     </a>
                 </h3>
 
-                <p>
-                    {% set next_date = next_calendar_item | detail_value("Event Date") %}
-                    {% set next_time = next_calendar_item | detail_value("Event Time") %}
-                    {% set next_location = next_calendar_item | detail_value("Event Location") %}
+                {% set next_date = next_calendar_item | detail_value("Event Date") %}
+                {% set next_time = next_calendar_item | detail_value("Event Time") %}
+                {% set next_location = next_calendar_item | detail_value("Event Location") %}
 
+                <p>
                     {% if next_date %}<strong>{{ next_date }}</strong>{% endif %}
                     {% if next_time %} · {{ next_time }}{% endif %}
                     {% if next_location %}<br>{{ next_location }}{% endif %}
+                    {% if not next_date and not next_time and not next_location %}Details coming soon.{% endif %}
                 </p>
 
                 {% if next_calendar_item["related_to"] %}
@@ -73,17 +74,15 @@
         {% if homepage_calendar_items %}
             {% for item in homepage_calendar_items %}
                 <article class="calendar-mini-card">
-                    <p class="eyebrow">
-                        {% set item_date = item | detail_value("Event Date") %}
-                        {{ item_date or "Upcoming" }}
-                    </p>
+                    {% set item_date = item | detail_value("Event Date") %}
+                    {% set item_time = item | detail_value("Event Time") %}
+                    {% set item_location = item | detail_value("Event Location") %}
+
+                    <p class="eyebrow">{{ item_date or "Upcoming" }}</p>
 
                     <h3>
                         <a href="{{ item | event_public_url }}">{{ item["title"] }}</a>
                     </h3>
-
-                    {% set item_time = item | detail_value("Event Time") %}
-                    {% set item_location = item | detail_value("Event Location") %}
 
                     <p>
                         {% if item_time %}{{ item_time }}{% endif %}
