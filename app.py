@@ -16063,3 +16063,347 @@ try:
     ensure_phase11_account_tables()
 except Exception as exc:
     print(f"Phase 11 account setup skipped: {exc}")
+
+
+# --- Phase 12A + 12B + 12C admin command center batch ---
+def phase12_admin_required():
+    if not current_user_is_admin():
+        return redirect(url_for("admin_login"))
+    return None
+
+
+def phase12_table_exists(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+    rows = conn.execute(
+        text("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = :table_name
+            LIMIT 1
+        """),
+        {"table_name": table_name},
+    ).fetchall()
+    return bool(rows)
+
+
+def phase12_count_table(table_name):
+    try:
+        with engine.connect() as conn:
+            if not phase12_table_exists(conn, table_name):
+                return 0
+
+            result = conn.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
+            return int(result.scalar() or 0)
+    except Exception:
+        return 0
+
+
+def phase12_count_where(table_name, where_sql="", params=None):
+    params = params or {}
+
+    try:
+        with engine.connect() as conn:
+            if not phase12_table_exists(conn, table_name):
+                return 0
+
+            query = f"SELECT COUNT(*) FROM {table_name}"
+            if where_sql:
+                query += f" WHERE {where_sql}"
+
+            result = conn.execute(text(query), params)
+            return int(result.scalar() or 0)
+    except Exception:
+        return 0
+
+
+def phase12_recent_rows(table_name, limit=8):
+    try:
+        with engine.connect() as conn:
+            if not phase12_table_exists(conn, table_name):
+                return []
+
+        return fetch_all(
+            f"""
+            SELECT *
+            FROM {table_name}
+            ORDER BY id DESC
+            LIMIT :limit
+            """,
+            {"limit": limit},
+        )
+    except Exception:
+        return []
+
+
+def phase12_endpoint_exists(endpoint_name):
+    try:
+        return endpoint_name in app.view_functions
+    except Exception:
+        return False
+
+
+def phase12_url_for(endpoint_name, fallback="#"):
+    if phase12_endpoint_exists(endpoint_name):
+        try:
+            return url_for(endpoint_name)
+        except Exception:
+            return fallback
+
+    return fallback
+
+
+def phase12_site_status():
+    maintenance_value = "unknown"
+
+    try:
+        maintenance_value = get_site_setting("maintenance_mode", "off")
+    except Exception:
+        try:
+            maintenance_value = get_site_setting("maintenance_mode")
+        except Exception:
+            maintenance_value = "unknown"
+
+    db_label = "Postgres" if maintenance_uses_postgres() else "SQLite/local"
+
+    return {
+        "maintenance_mode": maintenance_value,
+        "database": db_label,
+        "submissions": phase12_count_table("submissions"),
+        "profiles": phase12_count_table("dancer_profiles"),
+        "users": phase12_count_table("archive_users"),
+        "ask_conversations": phase12_count_table("ask_conversations"),
+        "music_items": phase12_count_table("media_items"),
+        "battle_records": phase12_count_table("battle_records"),
+        "award_records": phase12_count_table("award_records"),
+        "team_records": phase12_count_table("team_records"),
+    }
+
+
+def phase12_review_queue_cards():
+    cards = [
+        {
+            "label": "General Submissions",
+            "count": phase12_count_where(
+                "submissions",
+                "COALESCE(review_status, 'Pending Review') IN ('Pending Review', 'Needs Verification', 'Needs Review')",
+            ),
+            "total": phase12_count_table("submissions"),
+            "endpoint": "admin_submissions",
+            "fallback": "/admin/submissions",
+            "description": "New records, corrections, and general info.",
+        },
+        {
+            "label": "Ledger Review / Context",
+            "count": phase12_count_where(
+                "community_perspectives",
+                "COALESCE(perspective_status, 'Pending Review') IN ('Pending Review', 'Needs Review')",
+            ),
+            "total": phase12_count_table("community_perspectives"),
+            "endpoint": "admin_phase2_moderation",
+            "fallback": "/admin/phase2",
+            "description": "Community context, disputes, corrections, and memory.",
+        },
+        {
+            "label": "Profile Claims",
+            "count": phase12_count_where(
+                "profile_claims",
+                "COALESCE(claim_status, 'Pending Review') IN ('Pending Review', 'Needs Review')",
+            ),
+            "total": phase12_count_table("profile_claims"),
+            "endpoint": "admin_phase2_moderation",
+            "fallback": "/admin/phase2",
+            "description": "People claiming or linking Ledger profiles.",
+        },
+        {
+            "label": "Profile Edits",
+            "count": phase12_count_where(
+                "profile_edit_logs",
+                "COALESCE(edit_status, 'Logged') IN ('Logged', 'Needs Follow-up')",
+            ),
+            "total": phase12_count_table("profile_edit_logs"),
+            "endpoint": "admin_profile_corrections_phase4e",
+            "fallback": "/admin/profile-corrections",
+            "description": "Updates made by approved profile owners.",
+        },
+        {
+            "label": "Ask Feedback",
+            "count": phase12_count_where(
+                "ask_feedback",
+                "COALESCE(feedback_status, 'New') IN ('New', 'Needs Fix', 'Needs Context')",
+            ),
+            "total": phase12_count_table("ask_feedback"),
+            "endpoint": "admin_ask_feedback_phase3f",
+            "fallback": "/admin/ask-feedback",
+            "description": "Feedback on Ask the Ledger answers.",
+        },
+        {
+            "label": "Calendar Review",
+            "count": phase12_count_where(
+                "calendar_item_metadata",
+                "COALESCE(visibility_status, 'Needs Review') IN ('Needs Review', 'Draft') OR COALESCE(review_status, 'Pending Review') IN ('Pending Review', 'Needs Verification')",
+            ),
+            "total": phase12_count_table("calendar_item_metadata"),
+            "endpoint": "admin_calendar_review_phase5c",
+            "fallback": "/admin/calendar-review",
+            "description": "Event metadata, visibility, and calendar details.",
+        },
+        {
+            "label": "Music Feedback",
+            "count": phase12_count_where(
+                "music_feedback",
+                "COALESCE(feedback_status, 'New') IN ('New', 'Needs Follow-up', 'Needs Source')",
+            ),
+            "total": phase12_count_table("music_feedback"),
+            "endpoint": "admin_music_feedback_phase6c",
+            "fallback": "/admin/music-feedback",
+            "description": "Reactions, corrections, ratings, and music context.",
+        },
+        {
+            "label": "Battle Records",
+            "count": phase12_count_where(
+                "battle_records",
+                "COALESCE(review_status, 'Pending Review') IN ('Pending Review', 'Needs Verification', 'Disputed')",
+            ),
+            "total": phase12_count_table("battle_records"),
+            "endpoint": "battles",
+            "fallback": "/battles",
+            "description": "Matchups, winners, source links, and disputed results.",
+        },
+        {
+            "label": "Awards",
+            "count": phase12_count_where(
+                "award_records",
+                "COALESCE(review_status, 'Pending Review') IN ('Pending Review', 'Needs Verification', 'Disputed')",
+            ),
+            "total": phase12_count_table("award_records"),
+            "endpoint": "awards",
+            "fallback": "/awards",
+            "description": "Award winners, nominees, categories, and sources.",
+        },
+        {
+            "label": "Teams",
+            "count": phase12_count_where(
+                "team_records",
+                "COALESCE(review_status, 'Pending Review') IN ('Pending Review', 'Needs Verification', 'Disputed')",
+            ),
+            "total": phase12_count_table("team_records"),
+            "endpoint": "teams",
+            "fallback": "/people/teams",
+            "description": "Team history, founders, members, and source links.",
+        },
+    ]
+
+    return cards
+
+
+def phase12_public_quick_links():
+    return [
+        {"label": "Home", "endpoint": "index", "fallback": "/"},
+        {"label": "Ask", "endpoint": "ask_archive", "fallback": "/ask"},
+        {"label": "Submission Hub", "endpoint": "submit_start_phase10a", "fallback": "/submit/start"},
+        {"label": "People & Teams", "endpoint": "dancers", "fallback": "/people/dancers"},
+        {"label": "Calendar", "endpoint": "events", "fallback": "/events"},
+        {"label": "LiteFeet Music", "endpoint": "litefeet_music", "fallback": "/litefeet-music"},
+        {"label": "Battles", "endpoint": "battles", "fallback": "/battles"},
+        {"label": "Awards", "endpoint": "awards", "fallback": "/awards"},
+        {"label": "Teams", "endpoint": "teams", "fallback": "/people/teams"},
+        {"label": "Ledger Review", "endpoint": "ledger_review", "fallback": "/ledger-review"},
+    ]
+
+
+def phase12_admin_quick_links():
+    return [
+        {"label": "Deploy Status", "endpoint": "admin_deploy_status_phase2i", "fallback": "/admin/deploy-status"},
+        {"label": "Maintenance", "endpoint": "admin_maintenance", "fallback": "/admin/maintenance"},
+        {"label": "Phase 2 Review", "endpoint": "admin_phase2_moderation", "fallback": "/admin/phase2"},
+        {"label": "Ask Feedback", "endpoint": "admin_ask_feedback_phase3f", "fallback": "/admin/ask-feedback"},
+        {"label": "Profile Corrections", "endpoint": "admin_profile_corrections_phase4e", "fallback": "/admin/profile-corrections"},
+        {"label": "Calendar Review", "endpoint": "admin_calendar_review_phase5c", "fallback": "/admin/calendar-review"},
+        {"label": "Music Feedback", "endpoint": "admin_music_feedback_phase6c", "fallback": "/admin/music-feedback"},
+    ]
+
+
+def phase12_recent_activity():
+    activity = []
+
+    for table_name, label, title_keys, endpoint, fallback in [
+        ("submissions", "Submission", ["title", "submission_type"], "admin_submissions", "/admin/submissions"),
+        ("community_perspectives", "Context", ["review_label", "related_type"], "admin_phase2_moderation", "/admin/phase2"),
+        ("ask_feedback", "Ask Feedback", ["rating_label", "feedback_text"], "admin_ask_feedback_phase3f", "/admin/ask-feedback"),
+        ("music_feedback", "Music Feedback", ["reaction_label", "feedback_text"], "admin_music_feedback_phase6c", "/admin/music-feedback"),
+        ("profile_edit_logs", "Profile Edit", ["edit_action", "edit_status"], "admin_profile_corrections_phase4e", "/admin/profile-corrections"),
+    ]:
+        rows = phase12_recent_rows(table_name, limit=5)
+
+        for row in rows:
+            title = ""
+
+            for key in title_keys:
+                try:
+                    if key in row.keys() and row[key]:
+                        title = str(row[key])
+                        break
+                except Exception:
+                    pass
+
+            if not title:
+                title = f"{label} #{row['id'] if 'id' in row.keys() else ''}"
+
+            created = ""
+
+            for key in ["created_at", "updated_at"]:
+                try:
+                    if key in row.keys() and row[key]:
+                        created = row[key]
+                        break
+                except Exception:
+                    pass
+
+            activity.append(
+                {
+                    "label": label,
+                    "title": title,
+                    "created_at": created,
+                    "url": phase12_url_for(endpoint, fallback),
+                }
+            )
+
+    activity.sort(key=lambda item: str(item.get("created_at") or ""), reverse=True)
+    return activity[:12]
+
+
+@app.context_processor
+def inject_phase12_admin_helpers():
+    return {
+        "phase12_site_status": phase12_site_status,
+        "phase12_review_queue_cards": phase12_review_queue_cards,
+        "phase12_public_quick_links": phase12_public_quick_links,
+        "phase12_admin_quick_links": phase12_admin_quick_links,
+        "phase12_recent_activity": phase12_recent_activity,
+        "phase12_endpoint_exists": phase12_endpoint_exists,
+        "phase12_url_for": phase12_url_for,
+        "phase12_count_table": phase12_count_table,
+        "phase12_count_where": phase12_count_where,
+    }
+
+
+@app.route("/admin/command-center")
+def admin_command_center_phase12():
+    gate = phase12_admin_required()
+    if gate:
+        return gate
+
+    return render_template("admin_home.html")

@@ -1,140 +1,248 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard | The LiteFeet Ledger{% endblock %}
+{% block title %}Admin Command Center | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Backend command center for The LiteFeet Ledger.{% endblock %}
 
 {% block content %}
-<section class="content-section admin-dashboard">
+{% set site = phase12_site_status() %}
+{% set review_cards = phase12_review_queue_cards() %}
+{% set public_links = phase12_public_quick_links() %}
+{% set admin_links = phase12_admin_quick_links() %}
+{% set recent_activity = phase12_recent_activity() %}
+
+<section class="content-section admin-command-center-page">
     <div class="section-heading-row">
         <div>
             <p class="eyebrow">Backend</p>
-            <h1>Admin Dashboard</h1>
+            <h1>Command Center</h1>
             <p>
-                Review submissions, accounts, moderation, site status, flagged records, errors,
-                recent activity, music, media, profiles, calendar items, and Ledger Review topics.
+                Main control screen for review queues, site status, quick links, and recent Ledger activity.
             </p>
         </div>
 
         <div class="hero-actions">
-            <a class="button primary" href="{{ url_for('admin_submissions') }}">Review Submissions</a>
-            <a class="button secondary" href="{{ url_for('admin_phase2_moderation') }}">Phase 2 Moderation</a>
-            <a class="button secondary" href="{{ url_for('admin_ask_feedback_phase3f') }}">Ask Feedback</a>
-            <a class="button secondary" href="{{ url_for('admin_profile_corrections_phase4e') }}">Profile Corrections</a>
-            <a class="button secondary" href="{{ url_for('admin_calendar_review_phase5c') }}">Calendar Review</a>
-            <a class="button secondary" href="{{ url_for('admin_music_feedback_phase6c') }}">Music Feedback</a>
-            <a class="button secondary" href="{{ url_for('admin_deploy_status_phase2i') }}">Deploy Status</a>
-            <a class="button secondary" href="{{ url_for('admin_maintenance') }}">Maintenance Mode</a>
+            <a class="button primary" href="{{ phase12_url_for('admin_deploy_status_phase2i', '/admin/deploy-status') }}">Deploy Status</a>
+            <a class="button secondary" href="{{ phase12_url_for('admin_maintenance', '/admin/maintenance') }}">Maintenance</a>
+            <a class="button secondary" href="{{ url_for('index') }}">View Site</a>
         </div>
     </div>
 </section>
 
-<section class="admin-dashboard-grid">
-    <article class="admin-card admin-status-card">
-        <p class="eyebrow">Site Status</p>
-        <h2>Maintenance / Launch Control</h2>
-        <p>
-            Use this before major rebuild pushes, data migrations, or public-facing changes.
-        </p>
-        <a class="button small-button primary" href="{{ url_for('admin_maintenance') }}">Open Maintenance</a>
+<section class="admin-status-grid">
+    <article>
+        <p class="eyebrow">Maintenance</p>
+        <h2>{{ site.maintenance_mode }}</h2>
+        <p>Current public site status.</p>
     </article>
 
-    <article class="admin-card">
-        <p class="eyebrow">Queue</p>
-        <h2>Submissions</h2>
-        <p>
-            Approve, reject, request follow-up, mark verified, mark community-supported,
-            flag debated, or merge duplicates.
-        </p>
-        <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Open Queue</a>
+    <article>
+        <p class="eyebrow">Database</p>
+        <h2>{{ site.database }}</h2>
+        <p>Current database environment.</p>
     </article>
 
-    <article class="admin-card">
-        <p class="eyebrow">Media</p>
-        <h2>Music / Videos</h2>
-        <p>
-            Add or edit LiteFeet Music records, battle videos, recaps, producer releases, and media embeds.
-        </p>
-        <a class="button small-button secondary" href="{{ url_for('admin_media') }}">Open Media</a>
+    <article>
+        <p class="eyebrow">Users</p>
+        <h2>{{ site.users }}</h2>
+        <p>Ledger accounts.</p>
     </article>
 
-    <article class="admin-card">
-        <p class="eyebrow">Accounts</p>
-        <h2>Users / Roles</h2>
-        <p>
-            Contributor accounts, profile owners, affiliate hosts, CEOs, teams, role requests,
-            and beta access will be managed from this area.
-        </p>
-        <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Review Role Requests</a>
+    <article>
+        <p class="eyebrow">Profiles</p>
+        <h2>{{ site.profiles }}</h2>
+        <p>Dancer/profile records.</p>
     </article>
 
-    <article class="admin-card">
-        <p class="eyebrow">Moderation</p>
-        <h2>Comments / Flowers</h2>
-        <p>
-            Review community flowers, comments, corrections, profile claims, and owner-approved items.
-        </p>
-        <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Open Moderation</a>
+    <article>
+        <p class="eyebrow">Submissions</p>
+        <h2>{{ site.submissions }}</h2>
+        <p>Total submitted records.</p>
     </article>
 
-    <article class="admin-card">
-        <p class="eyebrow">Ledger Review</p>
-        <h2>Flagged / Debated</h2>
-        <p>
-            Track records where the community disagrees, proof is missing, or context needs review.
-        </p>
-        <a class="button small-button secondary" href="{{ url_for('verify_claims') }}">Open Ledger Review</a>
+    <article>
+        <p class="eyebrow">Ask</p>
+        <h2>{{ site.ask_conversations }}</h2>
+        <p>Ask conversations.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Music</p>
+        <h2>{{ site.music_items }}</h2>
+        <p>Music/media records.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Records</p>
+        <h2>{{ site.battle_records + site.award_records + site.team_records }}</h2>
+        <p>Battles, awards, and team records.</p>
     </article>
 </section>
 
 <section class="homepage-section">
     <div class="section-heading-row">
         <div>
-            <p class="eyebrow">Quick Actions</p>
-            <h2>Admin workflow</h2>
+            <p class="eyebrow">Review</p>
+            <h2>Review Queues</h2>
+            <p>Grouped by what needs checking, correction, verification, or follow-up.</p>
         </div>
     </div>
 
-    <div class="admin-quick-actions">
-        <a class="button secondary" href="{{ url_for('submit_info') }}">Add Public Submission</a>
-        <a class="button secondary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
-        <a class="button secondary" href="{{ url_for('litefeet_music') }}">View Music</a>
-        <a class="button secondary" href="{{ url_for('events') }}">View Calendar</a>
-        <a class="button secondary" href="{{ url_for('dancers') }}">View People</a>
+    <div class="admin-review-grid">
+        {% for card in review_cards %}
+            <article class="admin-review-card {% if card.count > 0 %}needs-attention{% endif %}">
+                <div class="review-card-topline">
+                    <p class="eyebrow">{{ card.label }}</p>
+                    <span>{{ card.count }} open</span>
+                </div>
+
+                <h3>{{ card.total }} total</h3>
+                <p>{{ card.description }}</p>
+
+                <a class="button small-button secondary" href="{{ phase12_url_for(card.endpoint, card.fallback) }}">Open</a>
+            </article>
+        {% endfor %}
     </div>
 </section>
 
+<section class="admin-command-grid">
+    <article class="admin-command-card">
+        <div class="section-heading-row">
+            <div>
+                <p class="eyebrow">Backend</p>
+                <h2>Admin Quick Links</h2>
+            </div>
+        </div>
+
+        <div class="quick-link-grid">
+            {% for item in admin_links %}
+                <a href="{{ phase12_url_for(item.endpoint, item.fallback) }}">{{ item.label }}</a>
+            {% endfor %}
+        </div>
+    </article>
+
+    <article class="admin-command-card">
+        <div class="section-heading-row">
+            <div>
+                <p class="eyebrow">Public</p>
+                <h2>Public Quick Links</h2>
+            </div>
+        </div>
+
+        <div class="quick-link-grid">
+            {% for item in public_links %}
+                <a href="{{ phase12_url_for(item.endpoint, item.fallback) }}">{{ item.label }}</a>
+            {% endfor %}
+        </div>
+    </article>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Recent</p>
+            <h2>Recent Ledger Activity</h2>
+        </div>
+    </div>
+
+    {% if recent_activity %}
+        <div class="recent-admin-activity">
+            {% for item in recent_activity %}
+                <article>
+                    <p class="eyebrow">{{ item.label }}</p>
+                    <h3>{{ item.title }}</h3>
+                    {% if item.created_at %}
+                        <p class="small-note">{{ item.created_at }}</p>
+                    {% endif %}
+                    <a class="button small-button secondary" href="{{ item.url }}">Open Queue</a>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No recent activity found.</h3>
+            <p>New submissions, feedback, claims, and review items will appear here.</p>
+        </div>
+    {% endif %}
+</section>
+
 <style>
-    .admin-dashboard-grid {
+    .admin-status-grid,
+    .admin-review-grid,
+    .admin-command-grid,
+    .recent-admin-activity {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
         margin-top: 18px;
     }
 
-    .admin-card {
+    .admin-status-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .admin-review-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .admin-command-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .recent-admin-activity {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .admin-status-grid article,
+    .admin-review-card,
+    .admin-command-card,
+    .recent-admin-activity article {
         border: 1px solid var(--border-color, rgba(255,255,255,0.12));
         border-radius: 16px;
         padding: 16px;
         background: var(--card-bg, rgba(255,255,255,0.04));
+        display: grid;
+        gap: 10px;
     }
 
-    .admin-status-card {
-        border-style: dashed;
+    .admin-review-card.needs-attention {
+        border-color: rgba(255,255,255,0.28);
     }
 
-    .admin-quick-actions {
+    .review-card-topline {
         display: flex;
-        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
         gap: 8px;
     }
 
-    @media (max-width: 1000px) {
-        .admin-dashboard-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
+    .review-card-topline span {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.16));
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 0.78rem;
     }
 
-    @media (max-width: 700px) {
-        .admin-dashboard-grid {
+    .quick-link-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .quick-link-grid a {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 12px;
+        padding: 10px;
+        text-decoration: none;
+    }
+
+    @media (max-width: 1100px) {
+        .admin-status-grid,
+        .admin-review-grid,
+        .admin-command-grid,
+        .recent-admin-activity {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-link-grid {
             grid-template-columns: 1fr;
         }
     }
