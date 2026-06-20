@@ -150,6 +150,14 @@
 
                                     <button class="button small-button secondary" type="submit">Save</button>
                                 </form>
+
+                                {% if (item["rating_label"] or "") in ["Wrong", "Missing Context", "Needs Review"] and (item["feedback_status"] or "New") != "Converted to Review" %}
+                                    <form method="POST" action="{{ url_for('admin_ask_feedback_convert_phase3g', feedback_id=item['id']) }}" class="inline-admin-form convert-review-form">
+                                        <input type="hidden" name="review_label" value="Ask Feedback: {{ item['rating_label'] or 'Needs Review' }}">
+                                        <input type="hidden" name="admin_note" value="{{ item['admin_note'] or '' }}">
+                                        <button class="button small-button primary" type="submit">Convert to Review</button>
+                                    </form>
+                                {% endif %}
                             </td>
                         </tr>
                     {% endfor %}

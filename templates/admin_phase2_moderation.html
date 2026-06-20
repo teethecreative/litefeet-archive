@@ -76,6 +76,12 @@
                                     </select>
                                     <button class="button small-button secondary" type="submit">Save</button>
                                 </form>
+
+                                {% if claim["user_id"] and claim["profile_id"] and (claim["claim_status"] or "Pending Review") != "Approved" %}
+                                    <form method="POST" action="{{ url_for('admin_phase4_approve_profile_claim_link', claim_id=claim['id']) }}" class="inline-admin-form approve-link-form">
+                                        <button class="button small-button primary" type="submit">Approve + Link</button>
+                                    </form>
+                                {% endif %}
                             </td>
                         </tr>
                     {% endfor %}

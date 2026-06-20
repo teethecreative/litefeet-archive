@@ -11689,3 +11689,294 @@ try:
     ensure_phase3f_ask_feedback_admin_columns()
 except Exception as exc:
     print(f"Phase 3F Ask feedback admin setup skipped: {exc}")
+
+
+# --- Phase 3G + 4A + 4B batch ---
+def phase3g4_admin_required():
+    if not current_user_is_admin():
+        return redirect(url_for("admin_login"))
+    return None
+
+
+def phase3g4_table_exists(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+    rows = conn.execute(
+        text("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type='table'
+              AND name = :table_name
+            LIMIT 1
+        """),
+        {"table_name": table_name},
+    ).fetchall()
+    return bool(rows)
+
+
+def phase3g4_table_columns(conn, table_name):
+    if "ledger_table_columns" in globals():
+        return ledger_table_columns(conn, table_name)
+
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def phase3g4_add_column_if_missing(conn, table_name, column_name, column_sql):
+    if not phase3g4_table_exists(conn, table_name):
+        return
+
+    columns = phase3g4_table_columns(conn, table_name)
+
+    if column_name in columns:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+
+
+def ensure_phase4a_profile_claim_link_columns():
+    ensure_phase2_ledger_tables()
+
+    with engine.begin() as conn:
+        if phase3g4_table_exists(conn, "archive_users"):
+            phase3g4_add_column_if_missing(conn, "archive_users", "linked_profile_type", "TEXT")
+            phase3g4_add_column_if_missing(conn, "archive_users", "linked_profile_id", "INTEGER")
+            phase3g4_add_column_if_missing(conn, "archive_users", "profile_claim_status", "TEXT")
+            phase3g4_add_column_if_missing(conn, "archive_users", "profile_claimed_at", "TEXT")
+            phase3g4_add_column_if_missing(conn, "archive_users", "profile_edit_status", "TEXT")
+
+        if phase3g4_table_exists(conn, "dancer_profiles"):
+            phase3g4_add_column_if_missing(conn, "dancer_profiles", "claimed_by_user_id", "INTEGER")
+            phase3g4_add_column_if_missing(conn, "dancer_profiles", "claimed_at", "TEXT")
+            phase3g4_add_column_if_missing(conn, "dancer_profiles", "edit_access_status", "TEXT")
+
+
+def phase3g4_insert_dynamic(table_name, values):
+    with engine.begin() as conn:
+        columns = phase3g4_table_columns(conn, table_name)
+        clean_values = {key: value for key, value in values.items() if key in columns}
+
+        if not clean_values:
+            return None
+
+        columns_sql = ", ".join(clean_values.keys())
+        values_sql = ", ".join(f":{key}" for key in clean_values.keys())
+
+        if maintenance_uses_postgres():
+            result = conn.execute(
+                text(f"INSERT INTO {table_name} ({columns_sql}) VALUES ({values_sql}) RETURNING id"),
+                clean_values,
+            )
+            return result.scalar()
+
+        result = conn.execute(
+            text(f"INSERT INTO {table_name} ({columns_sql}) VALUES ({values_sql})"),
+            clean_values,
+        )
+        return result.lastrowid
+
+
+def phase3g4_update_dynamic(table_name, values, where_clause, where_params):
+    with engine.begin() as conn:
+        columns = phase3g4_table_columns(conn, table_name)
+        clean_values = {key: value for key, value in values.items() if key in columns}
+
+        if not clean_values:
+            return
+
+        set_sql = ", ".join(f"{key} = :{key}" for key in clean_values.keys())
+        params = dict(clean_values)
+        params.update(where_params)
+
+        conn.execute(
+            text(f"UPDATE {table_name} SET {set_sql} WHERE {where_clause}"),
+            params,
+        )
+
+
+@app.route("/admin/ask-feedback/<int:feedback_id>/convert-to-review", methods=["POST"])
+def admin_ask_feedback_convert_phase3g(feedback_id):
+    gate = phase3g4_admin_required()
+    if gate:
+        return gate
+
+    ensure_phase3f_ask_feedback_admin_columns()
+    ensure_phase2g_community_perspective_columns()
+
+    rows = fetch_all(
+        """
+        SELECT ask_feedback.*,
+               ask_conversations.title AS conversation_title,
+               ask_conversations.status AS conversation_status
+        FROM ask_feedback
+        LEFT JOIN ask_conversations
+          ON ask_feedback.conversation_id = ask_conversations.id
+        WHERE ask_feedback.id = :feedback_id
+        LIMIT 1
+        """,
+        {"feedback_id": feedback_id},
+    )
+
+    if not rows:
+        return redirect(url_for("admin_ask_feedback_phase3f"))
+
+    feedback = rows[0]
+    now_value = datetime.now().isoformat(timespec="seconds")
+
+    review_label = request.form.get("review_label", "").strip()
+    if not review_label:
+        review_label = f"Ask Feedback: {feedback['rating_label'] or 'Needs Review'}"
+
+    perspective_text = "\n".join(
+        part for part in [
+            f"Ask feedback rating: {feedback['rating_label'] or 'Needs Review'}",
+            f"Conversation: {feedback['conversation_title'] or 'Untitled Ask conversation'}",
+            f"Feedback: {feedback['feedback_text'] or 'No extra note provided.'}",
+            f"Admin note: {request.form.get('admin_note', '').strip()}",
+        ]
+        if part
+    )
+
+    perspective_id = phase3g4_insert_dynamic(
+        "community_perspectives",
+        {
+            "related_type": "ask_feedback",
+            "related_id": feedback_id,
+            "submission_id": None,
+            "user_id": feedback["user_id"],
+            "perspective_text": perspective_text,
+            "source_url": "",
+            "perspective_status": "Pending Review",
+            "review_label": review_label,
+            "submitter_name": "Ask Feedback",
+            "submitter_contact": "",
+            "anonymous_input": 0,
+            "created_at": now_value,
+            "updated_at": now_value,
+        },
+    )
+
+    phase3g4_update_dynamic(
+        "ask_feedback",
+        {
+            "feedback_status": "Converted to Review",
+            "admin_note": f"Converted to community perspective #{perspective_id}" if perspective_id else "Converted to community perspective",
+            "updated_at": now_value,
+        },
+        "id = :feedback_id",
+        {"feedback_id": feedback_id},
+    )
+
+    return redirect(url_for("admin_ask_feedback_phase3f"))
+
+
+@app.route("/admin/phase4/profile-claims/<int:claim_id>/approve-link", methods=["POST"])
+def admin_phase4_approve_profile_claim_link(claim_id):
+    gate = phase3g4_admin_required()
+    if gate:
+        return gate
+
+    ensure_phase4a_profile_claim_link_columns()
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM profile_claims
+        WHERE id = :claim_id
+        LIMIT 1
+        """,
+        {"claim_id": claim_id},
+    )
+
+    if not rows:
+        return redirect(url_for("admin_phase2_moderation"))
+
+    claim = rows[0]
+    now_value = datetime.now().isoformat(timespec="seconds")
+
+    user_id = claim["user_id"]
+    profile_id = claim["profile_id"]
+    profile_type = claim["profile_type"] or "dancer"
+
+    if not user_id or not profile_id:
+        return redirect(url_for("admin_phase2_moderation"))
+
+    phase3g4_update_dynamic(
+        "profile_claims",
+        {
+            "claim_status": "Approved",
+            "reviewed_at": now_value,
+            "updated_at": now_value,
+        },
+        "id = :claim_id",
+        {"claim_id": claim_id},
+    )
+
+    if profile_type == "dancer":
+        phase3g4_update_dynamic(
+            "dancer_profiles",
+            {
+                "user_id": user_id,
+                "claimed_by_user_id": user_id,
+                "claimed_at": now_value,
+                "edit_access_status": "Approved",
+            },
+            "id = :profile_id",
+            {"profile_id": profile_id},
+        )
+
+    phase3g4_update_dynamic(
+        "archive_users",
+        {
+            "linked_profile_type": profile_type,
+            "linked_profile_id": profile_id,
+            "profile_claim_status": "Approved",
+            "profile_claimed_at": now_value,
+            "profile_edit_status": "Approved",
+        },
+        "id = :user_id",
+        {"user_id": user_id},
+    )
+
+    return redirect(url_for("admin_phase2_moderation"))
+
+
+@app.route("/producers")
+def producers_legacy_alias_phase4b():
+    return redirect(url_for("producers"))
+
+
+@app.route("/teams")
+def teams_legacy_alias_phase4b():
+    return redirect(url_for("teams"))
+
+
+try:
+    ensure_phase4a_profile_claim_link_columns()
+except Exception as exc:
+    print(f"Phase 4A profile claim link setup skipped: {exc}")

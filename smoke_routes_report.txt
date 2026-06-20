@@ -1,43 +1,26 @@
-OK maintenance 503 /
-503 / -> 
-OK maintenance 503 /people
-503 /people -> 
-OK maintenance 503 /people/dancers
-503 /people/dancers -> 
-OK maintenance 503 /people/producers
-503 /people/producers -> 
-OK maintenance 503 /people/teams
-503 /people/teams -> 
-OK maintenance 503 /dancers
-503 /dancers -> 
-OK maintenance 503 /dancers/create
-503 /dancers/create -> 
-OK maintenance 503 /people/dancers/create
-503 /people/dancers/create -> 
-OK maintenance 503 /events
-503 /events -> 
-OK maintenance 503 /events/submit
-503 /events/submit -> 
-OK maintenance 503 /litefeet-music
-503 /litefeet-music -> 
-OK maintenance 503 /litefeet-music/projects/submit
-503 /litefeet-music/projects/submit -> 
+200 / -> 
+302 /people -> /people/dancers
+200 /people/dancers -> 
+200 /people/producers -> 
+200 /people/teams -> 
+302 /dancers -> /people/dancers
+302 /dancers/create -> /account/login
+302 /people/dancers/create -> /dancers/create
+200 /events -> 
+200 /events/submit -> 
+200 /litefeet-music -> 
+302 /litefeet-music/projects/submit -> /account/login?next=/litefeet-music/projects/submit
 200 /account/login -> 
-OK maintenance 503 /account/signup
-503 /account/signup -> 
-OK maintenance 503 /account/profile-link
-503 /account/profile-link -> 
-OK maintenance 503 /account/profile-visibility
-503 /account/profile-visibility -> 
+200 /account/signup -> 
+302 /account/profile-link -> /account/login
+302 /account/profile-visibility -> /account/login
 200 /admin/login -> 
 302 /admin -> /admin/login?next=/admin
 302 /admin/users -> /admin/login?next=/admin/users
 302 /admin/profile-links -> /admin/login?next=/admin/profile-links
 302 /admin/profile-visibility-requests -> /admin/login?next=/admin/profile-visibility-requests
 302 /admin/submissions -> /admin/login?next=/admin/submissions
-OK maintenance 503 /verify
-503 /verify -> 
-OK maintenance 503 /submit
-503 /submit -> 
+200 /verify -> 
+200 /submit -> 
 
 Smoke test passed without 500 errors.

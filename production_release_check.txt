@@ -1,8 +1,8 @@
 === Phase 2I Production Release Check ===
 branch: main
-commit: cfe1ede
+commit: 34a79c9
 database: sqlite
-original maintenance_mode: on
+original maintenance_mode: off
 ---- table checks ----
 submissions: OK
 archive_users: OK
@@ -48,6 +48,6 @@ team_access_grants: OK
 /admin 302 /admin/login
 /admin/deploy-status 302 /admin/login
 /admin/phase2 302 /admin/login
-restored maintenance_mode: on
+restored maintenance_mode: off
 ---- FAILURES ----
 ('missing_tables', 'media_items,music_feedback', 'all expected tables present')

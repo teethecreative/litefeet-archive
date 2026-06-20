@@ -20,6 +20,7 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /admin                                                       -> admin_home                                    [GET]
 /admin/activity/dismiss                                      -> dismiss_admin_activity                        [POST]
 /admin/ask-feedback                                          -> admin_ask_feedback_phase3f                    [GET]
+/admin/ask-feedback/<int:feedback_id>/convert-to-review      -> admin_ask_feedback_convert_phase3g            [POST]
 /admin/ask-feedback/<int:feedback_id>/status                 -> admin_ask_feedback_status_phase3f             [POST]
 /admin/dancer-feedback                                       -> admin_dancer_feedback                         [GET]
 /admin/dancer-flowers/<int:flower_id>/status                 -> update_dancer_flower_status                   [POST]
@@ -45,6 +46,7 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /admin/phase2/calendar-metadata/<int:metadata_id>/visibility -> admin_phase2_calendar_metadata_visibility     [POST]
 /admin/phase2/community-perspectives/<int:perspective_id>/status -> admin_phase2_community_perspective_status     [POST]
 /admin/phase2/profile-claims/<int:claim_id>/status           -> admin_phase2_profile_claim_status             [POST]
+/admin/phase4/profile-claims/<int:claim_id>/approve-link     -> admin_phase4_approve_profile_claim_link       [POST]
 /admin/profile-links                                         -> admin_profile_links                           [GET]
 /admin/profile-links/<int:link_id>/status                    -> admin_update_profile_link_status              [POST]
 /admin/profile-visibility-requests                           -> admin_profile_visibility_requests             [GET]
@@ -102,21 +104,21 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /people/dancers/create                                       -> people_dancers_create_redirect                [GET]
 /people/producers                                            -> producers                                     [GET]
 /people/teams                                                -> teams                                         [GET]
+/producers                                                   -> producers_legacy_alias_phase4b                [GET]
 /releases/submit                                             -> submit_music_release                          [GET, POST]
 /robots.txt                                                  -> robots_txt                                    [GET]
 /sitemap.xml                                                 -> sitemap_xml                                   [GET]
 /submit                                                      -> submit_info                                   [GET, POST]
 /submit/success                                              -> submit_success                                [GET]
+/teams                                                       -> teams_legacy_alias_phase4b                    [GET]
 /verify                                                      -> verify_claims                                 [GET]
 /verify/<int:submission_id>                                  -> verify_claim_detail                           [GET]
 /verify/<int:submission_id>/vote                             -> vote_on_claim                                 [POST]
 
 === HARDCODED TEMPLATE LINKS / FORMS ===
-/Users/teethecreative/litefeet-archive/templates/dancers.html:28: href=/producers
-/Users/teethecreative/litefeet-archive/templates/dancers.html:29: href=/teams
 
 === POSSIBLE BAD EVENT ROUTE REFERENCES OUTSIDE EVENT TEMPLATES ===
-/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:307: <a href="{{ url_for('event_detail', event_id=item['submission_id']) }}">
+/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:313: <a href="{{ url_for('event_detail', event_id=item['submission_id']) }}">
 /Users/teethecreative/litefeet-archive/templates/home.html:38: <h3><a href="{{ next_calendar_item | event_public_url }}">{{ next_calendar_item["title"] }}</a></h3>
 /Users/teethecreative/litefeet-archive/templates/home.html:55: <a class="button small-button primary" href="{{ next_calendar_item | event_public_url }}">View Details</a>
 /Users/teethecreative/litefeet-archive/templates/home.html:77: <h3><a href="{{ item | event_public_url }}">{{ item["title"] }}</a></h3>
@@ -142,6 +144,7 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/admin_ask_feedback.html:20: <a class="button primary" href="{{ url_for('ask_archive') }}">Open Ask</a>
 /Users/teethecreative/litefeet-archive/templates/admin_ask_feedback.html:104: <a href="{{ url_for('ask_conversation_detail', conversation_id=item['conversation_id']) }}">
 /Users/teethecreative/litefeet-archive/templates/admin_ask_feedback.html:134: <form method="POST" action="{{ url_for('admin_ask_feedback_status_phase3f', feedback_id=item['id']) }}" class="inline-admin-form">
+/Users/teethecreative/litefeet-archive/templates/admin_ask_feedback.html:155: <form method="POST" action="{{ url_for('admin_ask_feedback_convert_phase3g', feedback_id=item['id']) }}" class="inline-admin-form convert-review-form">
 /Users/teethecreative/litefeet-archive/templates/admin_dancer_feedback.html:14: <a href="{{ url_for('admin_dancer_profiles') }}" class="button secondary">Back to Dancer Profiles</a>
 /Users/teethecreative/litefeet-archive/templates/admin_dancer_feedback.html:33: <form action="{{ url_for('update_dancer_flower_status', flower_id=flower['id']) }}" method="post" class="vote-form">
 /Users/teethecreative/litefeet-archive/templates/admin_dancer_feedback.html:66: <p><strong>Source:</strong> <a href="{{ suggestion['source_url'] }}" target="_blank" rel="noopener">Open source</a></p>
@@ -181,14 +184,15 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:19: <a class="button primary" href="{{ url_for('verify_claims') }}">Ledger Review</a>
 /Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:64: <a href="{{ claim['proof_url'] }}" target="_blank" rel="noopener">Proof</a>
 /Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:71: <form method="POST" action="{{ url_for('admin_phase2_profile_claim_status', claim_id=claim['id']) }}" class="inline-admin-form">
-/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:128: <a href="{{ item['source_url'] }}" target="_blank" rel="noopener">Source</a>
-/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:136: <form method="POST" action="{{ url_for('admin_phase2_community_perspective_status', perspective_id=item['id']) }}" class="inline-admin-form">
-/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:186: <a href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">
-/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:196: <form method="POST" action="{{ url_for('admin_phase2_battle_record_status', battle_id=battle['id']) }}" class="inline-admin-form">
-/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:251: <a href="{{ url_for('ask_conversation_detail', conversation_id=conversation['id']) }}">
-/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:259: <form method="POST" action="{{ url_for('admin_phase2_ask_conversation_status', conversation_id=conversation['id']) }}" class="inline-admin-form">
-/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:307: <a href="{{ url_for('event_detail', event_id=item['submission_id']) }}">
-/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:320: <form method="POST" action="{{ url_for('admin_phase2_calendar_metadata_visibility', metadata_id=item['id']) }}" class="inline-admin-form">
+/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:81: <form method="POST" action="{{ url_for('admin_phase4_approve_profile_claim_link', claim_id=claim['id']) }}" class="inline-admin-form approve-link-form">
+/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:134: <a href="{{ item['source_url'] }}" target="_blank" rel="noopener">Source</a>
+/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:142: <form method="POST" action="{{ url_for('admin_phase2_community_perspective_status', perspective_id=item['id']) }}" class="inline-admin-form">
+/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:192: <a href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">
+/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:202: <form method="POST" action="{{ url_for('admin_phase2_battle_record_status', battle_id=battle['id']) }}" class="inline-admin-form">
+/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:257: <a href="{{ url_for('ask_conversation_detail', conversation_id=conversation['id']) }}">
+/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:265: <form method="POST" action="{{ url_for('admin_phase2_ask_conversation_status', conversation_id=conversation['id']) }}" class="inline-admin-form">
+/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:313: <a href="{{ url_for('event_detail', event_id=item['submission_id']) }}">
+/Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:326: <form method="POST" action="{{ url_for('admin_phase2_calendar_metadata_visibility', metadata_id=item['id']) }}" class="inline-admin-form">
 /Users/teethecreative/litefeet-archive/templates/admin_profile_links.html:14: <a href="{{ url_for('admin_users') }}" class="button secondary">Back to Users</a>
 /Users/teethecreative/litefeet-archive/templates/admin_profile_links.html:15: <a href="{{ url_for('admin_profile_visibility_requests') }}" class="button secondary">Visibility Requests</a>
 /Users/teethecreative/litefeet-archive/templates/admin_profile_links.html:67: <form method="post" action="{{ url_for('admin_update_profile_link_status', link_id=link['id']) }}" class="admin-mini-form">
@@ -293,6 +297,8 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:240: <h3><a href="{{ item | profile_url }}">{{ item["dance_name"] }}</a></h3>
 /Users/teethecreative/litefeet-archive/templates/dancers.html:21: <a class="button primary" href="{{ url_for('submit_info') }}">Add / Correct Profile</a>
 /Users/teethecreative/litefeet-archive/templates/dancers.html:27: <a class="button small-button primary" href="{{ url_for('dancers') }}">All People</a>
+/Users/teethecreative/litefeet-archive/templates/dancers.html:28: <a class="button small-button secondary" href="{{ url_for('producers') }}">Producers</a>
+/Users/teethecreative/litefeet-archive/templates/dancers.html:29: <a class="button small-button secondary" href="{{ url_for('teams') }}">Teams</a>
 /Users/teethecreative/litefeet-archive/templates/dancers.html:30: <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Submit Missing Info</a>
 /Users/teethecreative/litefeet-archive/templates/dancers.html:52: <a href="{{ person | profile_url }}">
 /Users/teethecreative/litefeet-archive/templates/dancers.html:84: <a class="button small-button secondary" href="{{ person | profile_url }}">Open Profile</a>
