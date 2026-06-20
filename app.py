@@ -18543,3 +18543,72 @@ try:
         print("Redirected legacy Add Release route to Submit Music.")
 except Exception as exc:
     print(f"Legacy release redirect setup skipped: {exc}")
+
+
+# --- Unified admin/account login bypass ---
+# /account/login accepts either:
+# - admin username/password from env
+# - regular user email/password from archive_users
+try:
+    _ledger_previous_account_login_view = app.view_functions.get("account_login")
+except Exception:
+    _ledger_previous_account_login_view = None
+
+
+def ledger_mark_admin_logged_in(username):
+    session["admin_logged_in"] = True
+    session["is_admin"] = True
+    session["admin"] = True
+    session["admin_username"] = username
+    session.permanent = True
+
+
+def account_login_unified_admin_bypass():
+    if request.method == "POST":
+        identifier = (
+            request.form.get("email")
+            or request.form.get("username")
+            or request.form.get("login")
+            or ""
+        ).strip()
+        password = (request.form.get("password") or "").strip()
+
+        # Admin bypass comes first, so Admin does not need to be an email address.
+        try:
+            if identifier and password and check_admin_login(identifier, password):
+                ledger_mark_admin_logged_in(identifier)
+
+                next_url = request.args.get("next") or "/admin"
+                if not next_url.startswith("/") or next_url.startswith("//"):
+                    next_url = "/admin"
+
+                return redirect(next_url)
+        except Exception as exc:
+            print(f"Unified admin login check failed: {exc}")
+
+    # Fall back to normal account/contributor login.
+    if callable(_ledger_previous_account_login_view):
+        return _ledger_previous_account_login_view()
+
+    return render_template("account_login.html", error=None)
+
+
+try:
+    app.view_functions["account_login"] = account_login_unified_admin_bypass
+    print("Patched /account/login for unified admin/account login.")
+except Exception as exc:
+    print(f"Could not patch account_login: {exc}")
+
+
+# Keep /admin/login from becoming a separate login experience.
+def admin_login_unified_redirect():
+    next_url = request.args.get("next") or "/admin"
+    return redirect(url_for("account_login", next=next_url))
+
+
+try:
+    if "admin_login" in app.view_functions:
+        app.view_functions["admin_login"] = admin_login_unified_redirect
+        print("Redirected /admin/login to unified account login.")
+except Exception as exc:
+    print(f"Could not redirect admin_login: {exc}")
