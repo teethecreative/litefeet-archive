@@ -18136,3 +18136,110 @@ def ledger_override_people_music_fast(paths, view_function):
 
 ledger_override_people_music_fast({"/people/dancers", "/dancers"}, people_dancers_fast_table)
 ledger_override_people_music_fast({"/litefeet-music"}, litefeet_music_fast_table)
+
+
+# --- Fix LiteFeet Music fast table source ---
+# Live music records are stored in media_items with media_type='music_release'.
+# This overrides the earlier fast table that skipped music_release records.
+
+def litefeet_music_media_items_fast_table():
+    try:
+        records = fetch_all(
+            """
+            SELECT *
+            FROM media_items
+            WHERE media_type = 'music_release'
+            ORDER BY
+                CASE
+                    WHEN release_date IS NULL OR release_date = '' THEN created_at
+                    ELSE release_date
+                END DESC,
+                id DESC
+            LIMIT 800
+            """,
+            {},
+        ) or []
+    except Exception as exc:
+        print(f"LiteFeet Music media_items fast fetch failed: {exc}")
+        records = []
+
+    rows_html = ""
+
+    for record in records:
+        title = ledger_row_value(record, "title", "name", default="Untitled")
+        artist = ledger_row_value(record, "artist_or_creator", "artist", "artists", "artist_name", default="")
+        release_date = ledger_row_value(record, "release_date", "date", "created_at", default="")
+        platform = ledger_row_value(record, "platform", default="")
+        status = ledger_row_value(record, "status", "review_status", default="")
+        play_count = ledger_row_value(record, "play_count", default="0")
+        url = ledger_row_value(record, "url", "source_url", "link", default="")
+        item_id = ledger_row_value(record, "id", default="")
+
+        if item_id:
+            title_link = f"/litefeet-music/release/{ledger_escape(item_id)}"
+            title_html = f'<a href="{title_link}" style="color:#f0d56b;text-decoration:none;font-weight:800;">{ledger_escape(title)}</a>'
+        elif url:
+            title_html = f'<a href="{ledger_escape(url)}" target="_blank" rel="noopener" style="color:#f0d56b;text-decoration:none;font-weight:800;">{ledger_escape(title)}</a>'
+        else:
+            title_html = ledger_escape(title)
+
+        source_html = ""
+        if url:
+            source_html = f'<a href="{ledger_escape(url)}" target="_blank" rel="noopener" style="color:#f0d56b;">Source</a>'
+
+        rows_html += f"""
+<tr>
+<td>{title_html}</td>
+<td>{ledger_escape(artist)}</td>
+<td>{ledger_escape(release_date)}</td>
+<td>{ledger_escape(platform)}</td>
+<td>{ledger_escape(play_count)}</td>
+<td><span class="badge">{ledger_escape(status or "Published")}</span></td>
+<td>{source_html}</td>
+</tr>
+"""
+
+    if rows_html:
+        body = f"""
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Title</th>
+<th>Artist / Creator</th>
+<th>Date</th>
+<th>Platform</th>
+<th>Ledger Plays</th>
+<th>Status</th>
+<th>Link</th>
+</tr>
+</thead>
+<tbody>
+{rows_html}
+</tbody>
+</table>
+</div>
+<p><small>{len(records)} LiteFeet Music records loaded from media_items.</small></p>
+"""
+    else:
+        body = """
+<div class="empty">
+<h2>No music records loaded yet.</h2>
+<p>The live database returned zero records from media_items where media_type is music_release.</p>
+</div>
+"""
+
+    return ledger_fast_shell(
+        "LiteFeet Music",
+        "Release table is active. Music records are loading from the live release archive.",
+        body,
+    )
+
+
+try:
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/litefeet-music":
+            app.view_functions[rule.endpoint] = litefeet_music_media_items_fast_table
+            print(f"Fixed /litefeet-music endpoint {rule.endpoint} to use media_items music_release records.")
+except Exception as exc:
+    print(f"Could not override LiteFeet Music fast table source: {exc}")
