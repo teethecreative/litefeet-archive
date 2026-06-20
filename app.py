@@ -9288,3 +9288,253 @@ def update_calendar_metadata_phase2(event_id):
     upsert_calendar_metadata(event_id, request.form)
 
     return redirect(url_for("event_detail", event_id=event_id))
+
+
+# --- Phase 2G community perspective records ---
+def phase2g_add_column_if_missing(conn, table_name, column_name, column_sql):
+    if "ledger_table_columns" in globals():
+        existing_columns = ledger_table_columns(conn, table_name)
+    elif maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        existing_columns = {row[0] for row in rows}
+    else:
+        rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+        existing_columns = {row[1] for row in rows}
+
+    if column_name in existing_columns:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+
+
+def ensure_phase2g_community_perspective_columns():
+    ensure_phase2_ledger_tables()
+
+    with engine.begin() as conn:
+        phase2g_add_column_if_missing(conn, "community_perspectives", "submitter_name", "TEXT")
+        phase2g_add_column_if_missing(conn, "community_perspectives", "submitter_contact", "TEXT")
+        phase2g_add_column_if_missing(conn, "community_perspectives", "anonymous_input", "INTEGER DEFAULT 0")
+
+
+def phase2g_insert_and_get_id(table_name, values):
+    helper = (
+        globals().get("phase2_safe_insert_and_get_id")
+        or globals().get("phase2_insert_and_get_id")
+        or globals().get("ledger_insert_and_get_id")
+    )
+
+    if callable(helper):
+        return helper(table_name, values)
+
+    columns = list(values.keys())
+    columns_sql = ", ".join(columns)
+    values_sql = ", ".join(f":{column}" for column in columns)
+
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            result = conn.execute(
+                text(f"INSERT INTO {table_name} ({columns_sql}) VALUES ({values_sql}) RETURNING id"),
+                values,
+            )
+            return result.scalar()
+
+        result = conn.execute(
+            text(f"INSERT INTO {table_name} ({columns_sql}) VALUES ({values_sql})"),
+            values,
+        )
+        return result.lastrowid
+
+
+def phase2g_optional_int(value):
+    value = str(value or "").strip()
+
+    if not value:
+        return None
+
+    try:
+        return int(value)
+    except Exception:
+        return None
+
+
+def fetch_community_perspectives_for(related_type=None, related_id=None, submission_id=None, limit=25):
+    ensure_phase2g_community_perspective_columns()
+
+    clauses = ["COALESCE(perspective_status, '') != 'Rejected'"]
+    params = {"limit": limit}
+
+    if related_type:
+        clauses.append("related_type = :related_type")
+        params["related_type"] = related_type
+
+    if related_id not in (None, ""):
+        clauses.append("related_id = :related_id")
+        params["related_id"] = int(related_id)
+
+    if submission_id not in (None, ""):
+        clauses.append("submission_id = :submission_id")
+        params["submission_id"] = int(submission_id)
+
+    where_sql = "WHERE " + " AND ".join(clauses) if clauses else ""
+
+    return fetch_all(
+        f"""
+        SELECT *
+        FROM community_perspectives
+        {where_sql}
+        ORDER BY created_at DESC, id DESC
+        LIMIT :limit
+        """,
+        params,
+    )
+
+
+def fetch_community_perspective(perspective_id):
+    ensure_phase2g_community_perspective_columns()
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM community_perspectives
+        WHERE id = :perspective_id
+        LIMIT 1
+        """,
+        {"perspective_id": perspective_id},
+    )
+
+    return rows[0] if rows else None
+
+
+def community_perspective_related_url(record):
+    if not record:
+        return url_for("verify_claims")
+
+    related_type = record["related_type"] or ""
+    related_id = record["related_id"]
+
+    if related_type in {"event", "calendar", "submission"} and related_id:
+        return f"/events/{related_id}"
+
+    if related_type in {"battle", "battle_record"} and related_id:
+        return f"/battle-records/{related_id}"
+
+    if related_type in {"profile", "dancer"} and related_id:
+        rows = fetch_all(
+            """
+            SELECT *
+            FROM dancer_profiles
+            WHERE id = :profile_id
+            LIMIT 1
+            """,
+            {"profile_id": related_id},
+        )
+        if rows:
+            return profile_url(rows[0])
+        return f"/dancers/{related_id}"
+
+    if related_type in {"music", "music_release"} and related_id:
+        try:
+            return url_for("music_release_detail", item_id=related_id)
+        except Exception:
+            return url_for("litefeet_music")
+
+    return url_for("verify_claims")
+
+
+@app.context_processor
+def inject_phase2g_community_perspectives():
+    try:
+        ensure_phase2g_community_perspective_columns()
+
+        recent = fetch_community_perspectives_for(limit=12)
+
+        return {
+            "recent_community_perspectives": recent,
+            "community_perspectives_for": fetch_community_perspectives_for,
+            "community_perspective_related_url": community_perspective_related_url,
+        }
+    except Exception:
+        return {
+            "recent_community_perspectives": [],
+            "community_perspectives_for": lambda *args, **kwargs: [],
+            "community_perspective_related_url": lambda record: url_for("verify_claims"),
+        }
+
+
+@app.route("/community-perspectives", methods=["POST"])
+def submit_community_perspective_phase2g():
+    ensure_phase2g_community_perspective_columns()
+
+    related_type = request.form.get("related_type", "general").strip() or "general"
+    related_id = phase2g_optional_int(request.form.get("related_id"))
+    submission_id = phase2g_optional_int(request.form.get("submission_id"))
+    perspective_text = request.form.get("perspective_text", "").strip()
+    source_url = request.form.get("source_url", "").strip()
+    review_label = request.form.get("review_label", "Community Perspective").strip() or "Community Perspective"
+    submitter_name = request.form.get("submitter_name", "").strip()
+    submitter_contact = request.form.get("submitter_contact", "").strip()
+    anonymous_input = 1 if request.form.get("anonymous_input") == "yes" else 0
+    return_to = request.form.get("return_to", "").strip()
+
+    user = current_user()
+
+    if user and not submitter_name:
+        submitter_name = user["display_name"] or ""
+
+    if user and not submitter_contact:
+        submitter_contact = user["email"] or ""
+
+    if len(perspective_text) < 3:
+        if return_to.startswith("/"):
+            return redirect(return_to)
+        return redirect(url_for("verify_claims"))
+
+    now_value = datetime.now().isoformat(timespec="seconds")
+
+    perspective_id = phase2g_insert_and_get_id(
+        "community_perspectives",
+        {
+            "related_type": related_type,
+            "related_id": related_id,
+            "submission_id": submission_id,
+            "user_id": user["id"] if user else None,
+            "perspective_text": perspective_text,
+            "source_url": source_url,
+            "perspective_status": "Pending Review",
+            "review_label": review_label,
+            "submitter_name": submitter_name,
+            "submitter_contact": submitter_contact,
+            "anonymous_input": anonymous_input,
+            "created_at": now_value,
+            "updated_at": now_value,
+        },
+    )
+
+    if return_to.startswith("/"):
+        return redirect(return_to)
+
+    return redirect(url_for("community_perspective_detail_phase2g", perspective_id=perspective_id))
+
+
+@app.route("/community-perspectives/<int:perspective_id>")
+def community_perspective_detail_phase2g(perspective_id):
+    perspective = fetch_community_perspective(perspective_id)
+
+    if not perspective:
+        return redirect(url_for("verify_claims"))
+
+    return render_template(
+        "community_perspective_detail.html",
+        perspective=perspective,
+        related_url=community_perspective_related_url(perspective),
+    )

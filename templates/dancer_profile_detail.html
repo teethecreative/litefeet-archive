@@ -188,6 +188,47 @@
         {% endif %}
     </article>
 
+
+    <article class="profile-panel community-perspectives-profile-section">
+        <p class="eyebrow">Community Context</p>
+        <h2>Perspectives</h2>
+
+        {% set profile_perspectives = community_perspectives_for("profile", profile["id"]) %}
+
+        {% if profile_perspectives %}
+            <div class="profile-mini-list">
+                {% for item in profile_perspectives %}
+                    <div class="profile-mini-item">
+                        <p>{{ item["perspective_text"]|truncate(160) }}</p>
+                        <p class="small-note">{{ item["review_label"] or "Community Perspective" }} · {{ item["perspective_status"] or "Pending Review" }}</p>
+                        <a class="button small-button secondary" href="{{ url_for('community_perspective_detail_phase2g', perspective_id=item['id']) }}">Open</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="small-note">No community perspectives have been added yet.</p>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('submit_community_perspective_phase2g') }}" class="profile-claim-form">
+            <input type="hidden" name="return_to" value="{{ request.path }}">
+            <input type="hidden" name="related_type" value="profile">
+            <input type="hidden" name="related_id" value="{{ profile['id'] }}">
+            <input type="hidden" name="review_label" value="Profile Context">
+
+            <label>
+                Add Context
+                <textarea name="perspective_text" rows="4" placeholder="Add profile context, correction, source, or community memory."></textarea>
+            </label>
+
+            <label>
+                Source / Proof Link <span class="small-note">(optional)</span>
+                <input type="url" name="source_url">
+            </label>
+
+            <button class="button small-button primary" type="submit">Submit Context</button>
+        </form>
+    </article>
+
     <article class="profile-panel">
         <p class="eyebrow">Related</p>
         <h2>Similar Profiles</h2>

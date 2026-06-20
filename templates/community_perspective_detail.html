@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Community Perspective | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Community perspective, correction, source, or context record in The LiteFeet Ledger.{% endblock %}
+
+{% block content %}
+<section class="content-section community-perspective-detail-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">{{ perspective["review_label"] or "Community Perspective" }}</p>
+            <h1>Community Perspective</h1>
+            <p class="small-note">
+                {{ perspective["perspective_status"] or "Pending Review" }}
+                {% if perspective["related_type"] %} · {{ perspective["related_type"] }}{% endif %}
+                {% if perspective["created_at"] %} · {{ perspective["created_at"] }}{% endif %}
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('verify_claims') }}">Ledger Review</a>
+            <a class="button primary" href="{{ related_url }}">Open Related Record</a>
+        </div>
+    </div>
+</section>
+
+<section class="community-perspective-detail-grid">
+    <article>
+        <p class="eyebrow">Context</p>
+        <h2>Submitted Perspective</h2>
+        <p>{{ perspective["perspective_text"] }}</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Source</p>
+        <h2>Proof / Reference</h2>
+
+        {% if perspective["source_url"] %}
+            <p><a href="{{ perspective['source_url'] }}" target="_blank" rel="noopener">Open source</a></p>
+        {% else %}
+            <p class="small-note">No source link was included.</p>
+        {% endif %}
+    </article>
+
+    <article>
+        <p class="eyebrow">Submitted By</p>
+        <h2>Contributor</h2>
+
+        {% if perspective["anonymous_input"] %}
+            <p>Anonymous</p>
+        {% else %}
+            <p>{{ perspective["submitter_name"] or "Not listed" }}</p>
+        {% endif %}
+    </article>
+
+    <article>
+        <p class="eyebrow">Related</p>
+        <h2>Record Link</h2>
+        <p>
+            <strong>Type:</strong> {{ perspective["related_type"] or "general" }}<br>
+            <strong>Related ID:</strong> {{ perspective["related_id"] or "—" }}<br>
+            <strong>Submission ID:</strong> {{ perspective["submission_id"] or "—" }}
+        </p>
+    </article>
+</section>
+
+<style>
+    .community-perspective-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .community-perspective-detail-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    @media (max-width: 800px) {
+        .community-perspective-detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

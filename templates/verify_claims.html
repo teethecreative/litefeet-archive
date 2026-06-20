@@ -41,6 +41,118 @@
 <section class="homepage-section">
     <div class="section-heading-row">
         <div>
+            <p class="eyebrow">Community Perspective</p>
+            <h2>Add Context</h2>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('submit_community_perspective_phase2g') }}" class="form-card community-perspective-form">
+        <input type="hidden" name="return_to" value="{{ request.path }}">
+
+        <div class="form-grid">
+            <label>
+                Related Type
+                <select name="related_type">
+                    <option value="general">General</option>
+                    <option value="event">Event / Calendar</option>
+                    <option value="battle_record">Battle Record</option>
+                    <option value="profile">Profile</option>
+                    <option value="music_release">Music Release</option>
+                    <option value="submission">Submission</option>
+                </select>
+            </label>
+
+            <label>
+                Related ID <span class="small-note">(optional)</span>
+                <input type="number" name="related_id" placeholder="Record ID if known">
+            </label>
+
+            <label>
+                Submission ID <span class="small-note">(optional)</span>
+                <input type="number" name="submission_id" placeholder="Submission ID if known">
+            </label>
+
+            <label>
+                Review Label
+                <select name="review_label">
+                    <option value="Community Perspective">Community Perspective</option>
+                    <option value="Correction">Correction</option>
+                    <option value="Debated">Debated</option>
+                    <option value="Source Added">Source Added</option>
+                    <option value="Firsthand Context">Firsthand Context</option>
+                    <option value="Needs Verification">Needs Verification</option>
+                </select>
+            </label>
+        </div>
+
+        <label>
+            Context
+            <textarea name="perspective_text" rows="5" placeholder="Add context, correction, memory, disagreement, source explanation, or missing details." required></textarea>
+        </label>
+
+        <label>
+            Source / Proof Link <span class="small-note">(optional)</span>
+            <input type="url" name="source_url" placeholder="Flyer, video, post, song, source, or reference link">
+        </label>
+
+        <div class="form-grid">
+            <label>
+                Name / Alias <span class="small-note">(optional)</span>
+                <input type="text" name="submitter_name" placeholder="Name, dancer name, producer name, or alias">
+            </label>
+
+            <label>
+                Contact <span class="small-note">(optional)</span>
+                <input type="text" name="submitter_contact" placeholder="Email or IG if follow-up is needed">
+            </label>
+
+            <label class="checkbox-line">
+                <input type="checkbox" name="anonymous_input" value="yes">
+                Display as anonymous
+            </label>
+        </div>
+
+        <button class="button primary" type="submit">Submit Context</button>
+    </form>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Recent</p>
+            <h2>Community Perspectives</h2>
+        </div>
+    </div>
+
+    {% if recent_community_perspectives %}
+        <div class="community-perspective-grid">
+            {% for item in recent_community_perspectives %}
+                <article class="community-perspective-card">
+                    <p class="eyebrow">{{ item["review_label"] or "Community Perspective" }}</p>
+                    <h3>{{ item["related_type"] or "general" }}</h3>
+                    <p>{{ item["perspective_text"]|truncate(180) }}</p>
+                    <p class="small-note">
+                        {{ item["perspective_status"] or "Pending Review" }}
+                        {% if item["created_at"] %} · {{ item["created_at"] }}{% endif %}
+                    </p>
+                    <div class="hero-actions">
+                        <a class="button small-button secondary" href="{{ url_for('community_perspective_detail_phase2g', perspective_id=item['id']) }}">Open</a>
+                        <a class="button small-button secondary" href="{{ community_perspective_related_url(item) }}">Related</a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No community perspectives yet.</h3>
+            <p>Community context, corrections, debates, and source-backed notes will appear here.</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
             <p class="eyebrow">Queue</p>
             <h2>Records Needing Review</h2>
         </div>
@@ -106,45 +218,26 @@
     {% endif %}
 </section>
 
-<section class="homepage-section">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Community Input</p>
-            <h2>How review should work</h2>
-        </div>
-    </div>
-
-    <div class="review-status-grid">
-        <article>
-            <h3>Agree</h3>
-            <p>Support a record without rewriting the official version.</p>
-        </article>
-
-        <article>
-            <h3>Add Context</h3>
-            <p>Add memories, links, flyers, clips, dates, names, or missing details.</p>
-        </article>
-
-        <article>
-            <h3>Submit Correction</h3>
-            <p>Flag wrong names, dates, winners, locations, roles, or missing credits.</p>
-        </article>
-    </div>
-</section>
-
 <style>
-    .review-status-grid {
+    .review-status-grid,
+    .community-perspective-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
         margin-top: 18px;
     }
 
-    .review-status-grid article {
+    .review-status-grid article,
+    .community-perspective-card {
         border: 1px solid var(--border-color, rgba(255,255,255,0.12));
         border-radius: 16px;
         padding: 16px;
         background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .community-perspective-form {
+        display: grid;
+        gap: 12px;
     }
 
     .review-pill {
@@ -162,7 +255,8 @@
     }
 
     @media (max-width: 900px) {
-        .review-status-grid {
+        .review-status-grid,
+        .community-perspective-grid {
             grid-template-columns: 1fr;
         }
     }

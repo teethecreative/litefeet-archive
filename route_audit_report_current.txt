@@ -63,6 +63,8 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /battles                                                     -> battles                                       [GET]
 /battles/add                                                 -> battle_submit_phase2                          [GET, POST]
 /calendar/items/<int:event_id>/metadata                      -> update_calendar_metadata_phase2               [POST]
+/community-perspectives                                      -> submit_community_perspective_phase2g          [POST]
+/community-perspectives/<int:perspective_id>                 -> community_perspective_detail_phase2g          [GET]
 /contributor                                                 -> contributor_portal                            [GET]
 /contributor/request-role                                    -> contributor_request_role                      [POST]
 /dancers                                                     -> dancers_index_redirect                        [GET]
@@ -220,12 +222,17 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:23: <a class="button secondary" href="{{ url_for('battles') }}">Back to Battles</a>
 /Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:24: <a class="button primary" href="{{ url_for('submit_info') }}">Add Context</a>
 /Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:64: <p><a href="{{ battle['video_url'] }}" target="_blank" rel="noopener">Open video or proof link</a></p>
+/Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:97: <a class="button small-button secondary" href="{{ url_for('community_perspective_detail_phase2g', perspective_id=item['id']) }}">Open</a>
+/Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:107: <form method="POST" action="{{ url_for('submit_community_perspective_phase2g') }}" class="form-card community-perspective-form">
 /Users/teethecreative/litefeet-archive/templates/battle_submit.html:115: <a class="button secondary" href="{{ url_for('battles') }}">Back to Battles</a>
 /Users/teethecreative/litefeet-archive/templates/battles.html:22: <a class="button primary" href="{{ url_for('battle_submit_phase2') }}">Add Battle Record</a>
 /Users/teethecreative/litefeet-archive/templates/battles.html:23: <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Battle Info</a>
 /Users/teethecreative/litefeet-archive/templates/battles.html:77: <a class="button small-button secondary" href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">
 /Users/teethecreative/litefeet-archive/templates/battles.html:93: <a class="button primary" href="{{ url_for('battle_submit_phase2') }}">Add Battle Record</a>
 /Users/teethecreative/litefeet-archive/templates/battles.html:122: <a href="{{ item['url'] }}" target="_blank" rel="noopener">Open Video</a>
+/Users/teethecreative/litefeet-archive/templates/community_perspective_detail.html:20: <a class="button secondary" href="{{ url_for('verify_claims') }}">Ledger Review</a>
+/Users/teethecreative/litefeet-archive/templates/community_perspective_detail.html:21: <a class="button primary" href="{{ related_url }}">Open Related Record</a>
+/Users/teethecreative/litefeet-archive/templates/community_perspective_detail.html:38: <p><a href="{{ perspective['source_url'] }}" target="_blank" rel="noopener">Open source</a></p>
 /Users/teethecreative/litefeet-archive/templates/contributor_portal.html:10: <a href="{{ url_for('account_profile_link') }}" class="button primary">Connect Profile</a>
 /Users/teethecreative/litefeet-archive/templates/contributor_portal.html:11: <a href="{{ url_for('account_profile_visibility') }}" class="button secondary">Profile Visibility Request</a>
 /Users/teethecreative/litefeet-archive/templates/contributor_portal.html:47: <form action="{{ url_for('contributor_request_role') }}" method="post" class="vote-form">
@@ -241,7 +248,9 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:160: <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Submit Context</a>
 /Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:169: <form method="POST" action="{{ url_for('submit_profile_claim_phase2') }}" class="profile-claim-form">
 /Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:187: <a class="button small-button secondary" href="{{ url_for('account_login') }}">Account Login</a>
-/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:199: <h3><a href="{{ item | profile_url }}">{{ item["dance_name"] }}</a></h3>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:204: <a class="button small-button secondary" href="{{ url_for('community_perspective_detail_phase2g', perspective_id=item['id']) }}">Open</a>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:212: <form method="POST" action="{{ url_for('submit_community_perspective_phase2g') }}" class="profile-claim-form">
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:240: <h3><a href="{{ item | profile_url }}">{{ item["dance_name"] }}</a></h3>
 /Users/teethecreative/litefeet-archive/templates/dancers.html:21: <a class="button primary" href="{{ url_for('submit_info') }}">Add / Correct Profile</a>
 /Users/teethecreative/litefeet-archive/templates/dancers.html:27: <a class="button small-button primary" href="{{ url_for('dancers') }}">All People</a>
 /Users/teethecreative/litefeet-archive/templates/dancers.html:30: <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Submit Missing Info</a>
@@ -307,7 +316,10 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/verify_claim_detail.html:23: <a href="{{ submission['source_url'] }}" target="_blank" rel="noopener">Open source link</a>
 /Users/teethecreative/litefeet-archive/templates/verify_claim_detail.html:56: <form action="{{ url_for('vote_on_claim', submission_id=submission['id']) }}" method="post" class="vote-form">
 /Users/teethecreative/litefeet-archive/templates/verify_claims.html:20: <a class="button primary" href="{{ url_for('submit_info') }}">Submit Correction</a>
-/Users/teethecreative/litefeet-archive/templates/verify_claims.html:87: <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Add Context</a>
-/Users/teethecreative/litefeet-archive/templates/verify_claims.html:89: <a class="button small-button secondary" href="{{ record['source_url'] }}" target="_blank" rel="noopener">Source</a>
+/Users/teethecreative/litefeet-archive/templates/verify_claims.html:49: <form method="POST" action="{{ url_for('submit_community_perspective_phase2g') }}" class="form-card community-perspective-form">
+/Users/teethecreative/litefeet-archive/templates/verify_claims.html:139: <a class="button small-button secondary" href="{{ url_for('community_perspective_detail_phase2g', perspective_id=item['id']) }}">Open</a>
+/Users/teethecreative/litefeet-archive/templates/verify_claims.html:140: <a class="button small-button secondary" href="{{ community_perspective_related_url(item) }}">Related</a>
+/Users/teethecreative/litefeet-archive/templates/verify_claims.html:199: <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Add Context</a>
+/Users/teethecreative/litefeet-archive/templates/verify_claims.html:201: <a class="button small-button secondary" href="{{ record['source_url'] }}" target="_blank" rel="noopener">Source</a>
 
 Audit complete.
