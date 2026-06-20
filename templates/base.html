@@ -254,7 +254,7 @@
             <nav class="nav-links">
             <a href="{{ phase13_url_for('index', '/') if phase13_url_for is defined else url_for('home') }}">Home</a>
             <a href="{{ phase13_url_for('ask_archive', '/ask') if phase13_url_for is defined else url_for('ask_archive') }}">Ask</a>
-            <a href="{{ phase13_url_for('events', '/events') if phase13_url_for is defined else url_for('events') }}">Calendar</a>
+            <a href="/calendar">Calendar</a>
             <a href="{{ phase13_url_for('dancers', '/people/dancers') if phase13_url_for is defined else url_for('dancers') }}">People & Teams</a>
             <a href="{{ phase13_url_for('litefeet_music', '/litefeet-music') if phase13_url_for is defined else url_for('litefeet_music') }}">LiteFeet Music</a>
             <a href="{{ phase13_url_for('battles', '/battles') if phase13_url_for is defined else url_for('battles') }}">Battles</a>

@@ -16968,3 +16968,20 @@ def healthz_db_phase14d():
     except Exception as exc:
         db_ms = round((time.perf_counter() - started) * 1000, 2)
         return f"db_error db_ms={db_ms} {exc}", 500
+
+
+# --- Calendar public route hotfix ---
+def phase_calendar_public_path():
+    return "/calendar"
+
+
+# Make /calendar the public-facing calendar URL if it is not already registered.
+try:
+    _calendar_route_exists = any(str(rule.rule) == "/calendar" for rule in app.url_map.iter_rules())
+except Exception:
+    _calendar_route_exists = False
+
+if not _calendar_route_exists:
+    @app.route("/calendar")
+    def calendar_public_hotfix():
+        return events()
