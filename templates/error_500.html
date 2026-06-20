@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Internal Error | The LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="ledger-error-page">
+    <div class="error-card">
+        <p class="eyebrow">500 Internal Error</p>
+        <h1>The Ledger hit a problem.</h1>
+        <p>Something broke while loading this page. The issue has been logged for review.</p>
+        <div class="error-actions">
+            <a class="button" href="/">Back Home</a>
+            <a class="button secondary" href="/submit/start">Submit Info</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

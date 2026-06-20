@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Error Logs | The LiteFeet Ledger Admin{% endblock %}
+
+{% block content %}
+<section class="admin-panel">
+    <div class="admin-header">
+        <p class="eyebrow">Admin</p>
+        <h1>Error Logs</h1>
+        <p>Recent 404 and 500 errors from public visitors and logged-in users.</p>
+    </div>
+
+    {% if errors %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Path</th>
+                        <th>Error</th>
+                        <th>User</th>
+                        <th>Visitor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for error in errors %}
+                    <tr>
+                        <td>{{ error.created_at }}</td>
+                        <td>{{ error.status_code }}</td>
+                        <td>
+                            <code>{{ error.method }} {{ error.path }}</code>
+                            {% if error.referrer %}
+                                <br><small>from {{ error.referrer }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ error.error_type or "Unknown" }}</strong>
+                            {% if error.error_message %}
+                                <br><small>{{ error.error_message }}</small>
+                            {% endif %}
+                            {% if error.traceback_text %}
+                                <details>
+                                    <summary>Traceback</summary>
+                                    <pre>{{ error.traceback_text }}</pre>
+                                </details>
+                            {% endif %}
+                        </td>
+                        <td>{{ error.user_id or "Public" }}</td>
+                        <td>
+                            <small>{{ error.remote_addr }}</small>
+                            {% if error.user_agent %}
+                                <br><small>{{ error.user_agent[:120] }}</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h2>No errors logged yet.</h2>
+            <p>When visitors hit 404 or 500 pages, they will show up here.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

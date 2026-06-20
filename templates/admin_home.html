@@ -88,6 +88,23 @@
     </div>
 
     <div class="admin-review-grid">
+
+<!-- Error Logs Dashboard Card -->
+<a class="admin-card error-log-card" href="/admin/error-logs">
+    <p class="eyebrow">Site Health</p>
+    <h2>Error Logs</h2>
+    <p>
+        {{ admin_error_log_summary.recent_count or 0 }} errors in the last 24 hours.
+        {{ admin_error_log_summary.recent_500_count or 0 }} internal errors /
+        {{ admin_error_log_summary.recent_404_count or 0 }} missing pages.
+    </p>
+    {% if admin_error_log_summary.latest_path %}
+        <small>Latest: {{ admin_error_log_summary.latest_path }}</small>
+    {% else %}
+        <small>No recent errors logged.</small>
+    {% endif %}
+</a>
+
         {% for card in review_cards %}
             <article class="admin-review-card {% if card.count > 0 %}needs-attention{% endif %}">
                 <div class="review-card-topline">

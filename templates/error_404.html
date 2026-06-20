@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found | The LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="ledger-error-page">
+    <div class="error-card">
+        <p class="eyebrow">404 Not Found</p>
+        <h1>This page is not in the Ledger yet.</h1>
+        <p>The link may have moved, the page may still be under rebuild, or the record may not exist yet.</p>
+        <div class="error-actions">
+            <a class="button" href="/">Back Home</a>
+            <a class="button secondary" href="/submit/start">Add to the Ledger</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

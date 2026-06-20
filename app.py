@@ -17103,3 +17103,229 @@ def set_site_setting_network_safe(key, value):
 ensure_site_settings_table = ensure_site_settings_table_network_safe
 get_site_setting = get_site_setting_network_safe
 set_site_setting = set_site_setting_network_safe
+
+
+# --- Error pages, logging, and admin dashboard card ---
+def ensure_error_events_table():
+    try:
+        if engine.dialect.name == "postgresql":
+            execute_query("""
+                CREATE TABLE IF NOT EXISTS error_events (
+                    id SERIAL PRIMARY KEY,
+                    status_code INTEGER,
+                    path TEXT,
+                    method TEXT,
+                    referrer TEXT,
+                    user_agent TEXT,
+                    remote_addr TEXT,
+                    user_id TEXT,
+                    error_type TEXT,
+                    error_message TEXT,
+                    traceback_text TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        else:
+            execute_query("""
+                CREATE TABLE IF NOT EXISTS error_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    status_code INTEGER,
+                    path TEXT,
+                    method TEXT,
+                    referrer TEXT,
+                    user_agent TEXT,
+                    remote_addr TEXT,
+                    user_id TEXT,
+                    error_type TEXT,
+                    error_message TEXT,
+                    traceback_text TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        return True
+    except Exception as exc:
+        print(f"error_events table check skipped: {exc}")
+        return False
+
+
+def log_error_event(status_code, error=None):
+    # Never let error logging cause a second error.
+    try:
+        import traceback as traceback_module
+
+        if not ensure_error_events_table():
+            return False
+
+        active_user = None
+        try:
+            active_user = current_user()
+        except Exception:
+            active_user = None
+
+        original_error = getattr(error, "original_exception", None) or error
+
+        error_type = type(original_error).__name__ if original_error else ""
+        error_message = str(original_error)[:2000] if original_error else ""
+
+        traceback_text = ""
+        if original_error:
+            try:
+                traceback_text = "".join(
+                    traceback_module.format_exception(
+                        type(original_error),
+                        original_error,
+                        original_error.__traceback__,
+                    )
+                )[-12000:]
+            except Exception:
+                traceback_text = ""
+
+        execute_query(
+            """
+            INSERT INTO error_events (
+                status_code, path, method, referrer, user_agent, remote_addr,
+                user_id, error_type, error_message, traceback_text
+            )
+            VALUES (
+                :status_code, :path, :method, :referrer, :user_agent, :remote_addr,
+                :user_id, :error_type, :error_message, :traceback_text
+            )
+            """,
+            {
+                "status_code": status_code,
+                "path": request.path,
+                "method": request.method,
+                "referrer": request.referrer or "",
+                "user_agent": request.headers.get("User-Agent", ""),
+                "remote_addr": request.headers.get("X-Forwarded-For", request.remote_addr or ""),
+                "user_id": str(active_user.get("id", "")) if active_user else "",
+                "error_type": error_type,
+                "error_message": error_message,
+                "traceback_text": traceback_text,
+            },
+        )
+        return True
+    except Exception as exc:
+        print(f"error logging skipped: {exc}")
+        return False
+
+
+def get_admin_error_log_summary():
+    summary = {
+        "recent_count": 0,
+        "recent_500_count": 0,
+        "recent_404_count": 0,
+        "latest_path": "",
+        "latest_created_at": "",
+    }
+
+    try:
+        if not ensure_error_events_table():
+            return summary
+
+        row = fetch_one("""
+            SELECT
+                COUNT(*) AS recent_count,
+                SUM(CASE WHEN status_code = 500 THEN 1 ELSE 0 END) AS recent_500_count,
+                SUM(CASE WHEN status_code = 404 THEN 1 ELSE 0 END) AS recent_404_count
+            FROM error_events
+            WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '24 hours'
+        """) if engine.dialect.name == "postgresql" else fetch_one("""
+            SELECT
+                COUNT(*) AS recent_count,
+                SUM(CASE WHEN status_code = 500 THEN 1 ELSE 0 END) AS recent_500_count,
+                SUM(CASE WHEN status_code = 404 THEN 1 ELSE 0 END) AS recent_404_count
+            FROM error_events
+            WHERE created_at >= datetime('now', '-1 day')
+        """)
+
+        latest = fetch_one("""
+            SELECT path, created_at
+            FROM error_events
+            ORDER BY created_at DESC
+            LIMIT 1
+        """)
+
+        if row:
+            summary["recent_count"] = row.get("recent_count") or 0
+            summary["recent_500_count"] = row.get("recent_500_count") or 0
+            summary["recent_404_count"] = row.get("recent_404_count") or 0
+
+        if latest:
+            summary["latest_path"] = latest.get("path") or ""
+            summary["latest_created_at"] = latest.get("created_at") or ""
+
+        return summary
+    except Exception as exc:
+        print(f"Could not build error log summary: {exc}")
+        return summary
+
+
+@app.context_processor
+def inject_admin_error_log_summary():
+    try:
+        if request.path.startswith("/admin"):
+            return {"admin_error_log_summary": get_admin_error_log_summary()}
+    except Exception:
+        pass
+    return {"admin_error_log_summary": {
+        "recent_count": 0,
+        "recent_500_count": 0,
+        "recent_404_count": 0,
+        "latest_path": "",
+        "latest_created_at": "",
+    }}
+
+
+@app.errorhandler(404)
+def custom_404_page(error):
+    try:
+        log_error_event(404, error)
+        return render_template("error_404.html"), 404
+    except Exception:
+        return "Page not found.", 404
+
+
+@app.errorhandler(500)
+def custom_500_page(error):
+    try:
+        log_error_event(500, error)
+        return render_template("error_500.html"), 500
+    except Exception:
+        return "The Ledger hit an internal error. Please try again shortly.", 500
+
+
+@app.route("/admin/error-logs")
+def admin_error_logs():
+    try:
+        if not current_user_is_admin():
+            return redirect(url_for("admin_login", next=request.path))
+    except Exception:
+        return redirect(url_for("admin_login", next=request.path))
+
+    ensure_error_events_table()
+
+    try:
+        errors = fetch_all("""
+            SELECT
+                id,
+                status_code,
+                path,
+                method,
+                referrer,
+                user_agent,
+                remote_addr,
+                user_id,
+                error_type,
+                error_message,
+                traceback_text,
+                created_at
+            FROM error_events
+            ORDER BY created_at DESC
+            LIMIT 100
+        """)
+    except Exception as exc:
+        errors = []
+        print(f"Could not fetch error logs: {exc}")
+
+    return render_template("admin_error_logs.html", errors=errors)
