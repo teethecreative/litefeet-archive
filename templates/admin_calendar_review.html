@@ -161,6 +161,24 @@
 
                                     <button class="button small-button secondary" type="submit">Save</button>
                                 </form>
+
+                                <form method="POST" action="{{ url_for('admin_calendar_recurrence_phase5d', metadata_id=item['id']) }}" class="inline-admin-form recurrence-admin-form">
+                                    <label>
+                                        Recurrence
+                                        <select name="recurrence_rule">
+                                            {% for option in phase5d_recurrence_options() %}
+                                                <option value="{{ option.value }}" {% if (item["recurrence_rule"] or "") == option.value %}selected{% endif %}>{{ option.label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+
+                                    <label>
+                                        Label
+                                        <input type="text" name="recurrence_label" value="{{ item['recurrence_label'] or '' }}" placeholder="Every Sunday, monthly...">
+                                    </label>
+
+                                    <button class="button small-button secondary" type="submit">Save Recurrence</button>
+                                </form>
                             </td>
                         </tr>
                     {% endfor %}

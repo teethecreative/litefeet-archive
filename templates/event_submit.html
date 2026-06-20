@@ -1,167 +1,170 @@
 {% extends "base.html" %}
 
 {% block title %}Add Calendar Item | The LiteFeet Ledger{% endblock %}
-{% block meta_description %}Submit a LiteFeet battle, class, cypher, link-up, performance, workshop, release, team event, or community event to The LiteFeet Ledger Calendar.{% endblock %}
+{% block meta_description %}Submit a LiteFeet battle, class, cypher, workshop, performance, music release, practice, or community event to The LiteFeet Ledger calendar.{% endblock %}
 
 {% block content %}
-<section class="content-section event-submit-page">
-    <p class="eyebrow">Calendar</p>
-    <h1>Add Calendar Item</h1>
-    <p>
-        Add an upcoming, past, recurring, or on-the-spot LiteFeet calendar item for Ledger review.
-        This can be a battle, class, link-up, cypher, workshop, performance, music release,
-        team event, or other community event.
-    </p>
+<section class="content-section calendar-submit-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Calendar</p>
+            <h1>Add Calendar Item</h1>
+            <p>
+                Submit battles, classes, cyphers, workshops, practices, performances, team events, music releases,
+                and community dates. Items can be reviewed and upgraded with metadata later.
+            </p>
+        </div>
 
-    {% if errors %}
-        <div class="form-errors">
-            <h2>Fix this first</h2>
-            <ul>
-                {% for error in errors %}
-                    <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('events') }}">Back to Calendar</a>
+            <a class="button secondary" href="{{ url_for('submit_info') }}">General Submission</a>
+        </div>
+    </div>
+</section>
+
+<section class="homepage-section">
+    {% if error %}
+        <div class="empty-state compact-empty error-state">
+            <h3>Something needs fixing</h3>
+            <p>{{ error }}</p>
         </div>
     {% endif %}
 
-    <form method="POST" class="archive-form event-form">
-        <div class="form-grid">
+    <form method="POST" action="{{ url_for('submit_event') }}" class="form-card calendar-submit-form">
+        <div class="form-grid two-column-form-grid">
             <label>
-                Host / Organization
-                <input type="text" name="event_org" placeholder="Example: Body Bag, Team Demon, Small Room Sundays" required>
+                Calendar item title
+                <input type="text" name="title" placeholder="Body Bag 10, LiteFeet Class, Cypher, Release Party..." required>
             </label>
 
             <label>
-                Calendar Item Name
-                <input type="text" name="event_name" placeholder="Example: Body Bag 10, LiteFeet class, cypher night" required>
-            </label>
-
-            <label>
-                Date
-                <input type="date" name="event_date" required>
-            </label>
-
-            <label>
-                Time
-                <input type="text" name="event_time" placeholder="Example: 6 PM, 6–10 PM, TBD" required>
-            </label>
-
-            <label>
-                Location
-                <input type="text" name="event_location" placeholder="Studio, park, venue, borough, or online" required>
-            </label>
-
-            <label>
-                Calendar Type
-                <select name="event_timing">
-                    <option value="">Choose one</option>
-                    <option value="Battle">Battle</option>
-                    <option value="Class">Class</option>
-                    <option value="Cypher">Cypher</option>
-                    <option value="Link-up">Link-up</option>
-                    <option value="Performance">Performance</option>
-                    <option value="Workshop">Workshop</option>
-                    <option value="Practice">Practice</option>
-                    <option value="Music Release">Music Release</option>
-                    <option value="Team Event">Team Event</option>
-                    <option value="Community Event">Community Event</option>
-                    <option value="Other">Other</option>
+                Calendar type
+                <select name="calendar_type">
+                    {% for option in phase5_calendar_filter_options() %}
+                        {% if option.value != "all" %}
+                            <option value="{{ option.value }}">{{ option.label }}</option>
+                        {% endif %}
+                    {% endfor %}
                 </select>
             </label>
 
             <label>
-                Battle Type <span class="small-note">(optional)</span>
-                <input type="text" name="event_battle_type" placeholder="1v1, 2v2, team battle, royal rumble, etc.">
+                Event date
+                <input type="text" name="event_date" placeholder="MM/DD/YYYY or known date">
             </label>
 
             <label>
-                Source / Flyer / Link <span class="small-note">(optional)</span>
-                <input type="url" name="source_url" placeholder="Instagram flyer, YouTube recap, post, ticket link">
+                Event time
+                <input type="text" name="event_time" placeholder="6 PM, 6–10 PM, TBA">
+            </label>
+
+            <label>
+                Start datetime <span class="small-note">(optional structured field)</span>
+                <input type="datetime-local" name="start_datetime">
+            </label>
+
+            <label>
+                End datetime <span class="small-note">(optional structured field)</span>
+                <input type="datetime-local" name="end_datetime">
+            </label>
+
+            <label>
+                Venue name
+                <input type="text" name="venue_name" placeholder="Pearl Studios, Sakura Park, New Heat Studios...">
+            </label>
+
+            <label>
+                Borough / city
+                <input type="text" name="borough" placeholder="Harlem, Bronx, Brooklyn, Queens, NYC...">
+            </label>
+
+            <label>
+                Event location
+                <input type="text" name="event_location" placeholder="Full location or general area">
+            </label>
+
+            <label>
+                Related to
+                <input type="text" name="related_to" placeholder="Body Bag, LiteFeet Music, Team event, etc.">
+            </label>
+
+            <label>
+                Recurrence
+                <select name="recurrence_rule">
+                    {% for option in phase5d_recurrence_options() %}
+                        <option value="{{ option.value }}">{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            <label>
+                Custom recurrence label
+                <input type="text" name="recurrence_label" placeholder="Every Sunday, first Friday monthly...">
+            </label>
+
+            <label>
+                Ticket link
+                <input type="url" name="ticket_url" placeholder="https://">
+            </label>
+
+            <label>
+                RSVP link
+                <input type="url" name="rsvp_url" placeholder="https://">
+            </label>
+
+            <label>
+                Flyer link
+                <input type="url" name="flyer_url" placeholder="https://">
+            </label>
+
+            <label>
+                Source / proof link
+                <input type="url" name="source_url" placeholder="Flyer, IG post, video, listing...">
+            </label>
+
+            <label>
+                Your name
+                <input type="text" name="submitter_name" placeholder="Optional">
+            </label>
+
+            <label>
+                Contact
+                <input type="text" name="contact" placeholder="Optional email or IG">
             </label>
         </div>
 
         <label>
-            Planned Battle List <span class="small-note">(optional)</span>
-            <textarea name="event_battle_list" rows="4" placeholder="List the battles or matchups if known."></textarea>
+            Event details
+            <textarea name="event_details" rows="6" placeholder="Battles, DJs, judges, hosts, categories, admission, notes, lineup, context, corrections needed..."></textarea>
         </label>
 
-        <label>
-            Judges / DJs / Hosts <span class="small-note">(optional)</span>
-            <textarea name="event_judges" rows="3" placeholder="Judges, DJ, host, special guests, etc."></textarea>
-        </label>
+        <input type="hidden" name="visibility_status" value="Needs Review">
+        <input type="hidden" name="review_status" value="Pending Review">
 
-        <label>
-            Details
-            <textarea name="event_details" rows="5" placeholder="What should people know about this calendar item?"></textarea>
-        </label>
+        <button class="button primary" type="submit">Submit Calendar Item</button>
 
-        <label>
-            Results / Recap <span class="small-note">(optional for past events)</span>
-            <textarea name="event_results" rows="5" placeholder="Winners, outcomes, links, controversy, notes, recap, etc."></textarea>
-        </label>
-
-        <label>
-            Planned Battles Status <span class="small-note">(optional)</span>
-            <select name="planned_battles_status">
-                <option value="">No status</option>
-                <option value="Confirmed">Confirmed</option>
-                <option value="Partially confirmed">Partially confirmed</option>
-                <option value="Needs verification">Needs verification</option>
-                <option value="Changed">Changed</option>
-                <option value="Cancelled">Cancelled</option>
-            </select>
-        </label>
-
-        <fieldset class="form-card compact-fieldset">
-            <legend>Battle issue flags</legend>
-
-            <label class="checkbox-line">
-                <input type="checkbox" name="battle_issue_rescheduled" value="yes">
-                Battle was rescheduled
-            </label>
-
-            <label class="checkbox-line">
-                <input type="checkbox" name="battle_issue_cancelled" value="yes">
-                Battle was cancelled
-            </label>
-
-            <label class="checkbox-line">
-                <input type="checkbox" name="battle_issue_one_milk_carton" value="yes">
-                One dancer was on milk carton
-            </label>
-
-            <label class="checkbox-line">
-                <input type="checkbox" name="battle_issue_both_milk_carton" value="yes">
-                Both dancers were on milk carton
-            </label>
-
-            <label>
-                Battle Issue Details
-                <textarea name="battle_issue_details" rows="3" placeholder="Explain any cancellation, reschedule, no-show, or disputed details."></textarea>
-            </label>
-        </fieldset>
-
-        <div class="form-grid">
-            <label>
-                Your Name / Alias <span class="small-note">(optional)</span>
-                <input type="text" name="submitter_name" placeholder="Name, dancer name, producer name, or alias">
-            </label>
-
-            <label>
-                Your Role <span class="small-note">(optional)</span>
-                <input type="text" name="submitter_role" placeholder="Host, dancer, organizer, producer, supporter, etc.">
-            </label>
-
-            <label>
-                Contact <span class="small-note">(optional)</span>
-                <input type="text" name="contact" placeholder="Email or IG if follow-up is needed">
-            </label>
-        </div>
-
-        <div class="hero-actions">
-            <button type="submit" class="button primary">Submit Calendar Item</button>
-            <a href="{{ url_for('events') }}" class="button secondary">Back to Calendar</a>
-        </div>
+        <p class="small-note">
+            Submitted items can appear as community records while details are reviewed. Verified details can be updated later by admins or community context.
+        </p>
     </form>
 </section>
+
+<style>
+    .calendar-submit-form {
+        display: grid;
+        gap: 16px;
+    }
+
+    .two-column-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+        .two-column-form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}

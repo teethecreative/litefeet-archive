@@ -1,6 +1,50 @@
 {% extends "base.html" %}
 
-{% block title %}{{ event["title"] }} | LiteFeet Ledger{% endblock %}
+{% block title %}{{ event["title"] }} | LiteFeet Ledger
+<section class="homepage-section phase5f-community-context-panel">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Community Context</p>
+            <h2>Add context, correction, or memory</h2>
+            <p>
+                Use this when an event detail is missing, disputed, or needs confirmation from someone who was there.
+            </p>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('submit_community_perspective_phase2g') }}" class="form-card community-perspective-form">
+        <input type="hidden" name="related_type" value="event">
+        <input type="hidden" name="related_id" value="{{ event['id'] }}">
+        <input type="hidden" name="submission_id" value="{{ event['id'] }}">
+        <input type="hidden" name="review_label" value="Calendar/Event Context">
+
+        <label>
+            Context / correction
+            <textarea name="perspective_text" rows="5" placeholder="Add what happened, what needs correction, who hosted, who battled, date/location confirmation, or any missing details."></textarea>
+        </label>
+
+        <div class="form-grid two-column-form-grid">
+            <label>
+                Source link
+                <input type="url" name="source_url" placeholder="Flyer, video, post, article, etc.">
+            </label>
+
+            <label>
+                Name / handle
+                <input type="text" name="submitter_name" placeholder="Optional">
+            </label>
+        </div>
+
+        <label>
+            Contact
+            <input type="text" name="submitter_contact" placeholder="Optional">
+        </label>
+
+        <button class="button secondary" type="submit">Submit Context</button>
+    </form>
+</section>
+
+{% endblock %}
 
 {% block content %}
 <section class="content-section event-detail-page">
@@ -177,6 +221,13 @@
                 <p class="eyebrow">Location</p>
                 <h3>{{ phase5_metadata["venue_name"] or "Venue TBA" }}</h3>
                 <p>{{ phase5_metadata["borough"] }}</p>
+            </article>
+        {% endif %}
+
+        {% if phase5_metadata["recurrence_label"] or phase5_metadata["recurrence_rule"] %}
+            <article>
+                <p class="eyebrow">Recurrence</p>
+                <h3>{{ phase5_metadata["recurrence_label"] or phase5d_recurrence_label(phase5_metadata["recurrence_rule"]) }}</h3>
             </article>
         {% endif %}
     </div>

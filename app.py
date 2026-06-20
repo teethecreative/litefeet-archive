@@ -12970,3 +12970,190 @@ try:
     ensure_phase5_calendar_tables()
 except Exception as exc:
     print(f"Phase 5 calendar setup skipped: {exc}")
+
+
+# --- Phase 5D + 5E + 5F calendar finish batch ---
+def phase5d_recurrence_options():
+    return [
+        {"value": "", "label": "One-time event"},
+        {"value": "weekly", "label": "Weekly"},
+        {"value": "biweekly", "label": "Every 2 weeks"},
+        {"value": "monthly", "label": "Monthly"},
+        {"value": "custom", "label": "Custom / needs review"},
+    ]
+
+
+def phase5d_recurrence_label(value):
+    labels = {
+        "": "One-time event",
+        "weekly": "Weekly",
+        "biweekly": "Every 2 weeks",
+        "monthly": "Monthly",
+        "custom": "Custom / needs review",
+    }
+
+    return labels.get(str(value or "").strip().lower(), str(value or "").strip())
+
+
+def phase5d_calendar_metadata_summary(event):
+    metadata = phase5_calendar_metadata_for_event(event["id"])
+
+    if not metadata:
+        return {
+            "calendar_type": phase5_calendar_type_for_event(event),
+            "visibility_status": "",
+            "review_status": event["review_status"] if "review_status" in event.keys() else "",
+            "start_datetime": phase5_get_event_detail(event, "Event Date"),
+            "end_datetime": phase5_get_event_detail(event, "Event Time"),
+            "venue_name": phase5_get_event_detail(event, "Event Location"),
+            "borough": "",
+            "ticket_url": "",
+            "rsvp_url": "",
+            "flyer_url": "",
+            "recurrence_rule": "",
+            "recurrence_label": "",
+            "admin_note": "",
+        }
+
+    return {
+        "calendar_type": metadata["calendar_type"] if "calendar_type" in metadata.keys() else "",
+        "visibility_status": metadata["visibility_status"] if "visibility_status" in metadata.keys() else "",
+        "review_status": metadata["review_status"] if "review_status" in metadata.keys() else "",
+        "start_datetime": metadata["start_datetime"] if "start_datetime" in metadata.keys() else "",
+        "end_datetime": metadata["end_datetime"] if "end_datetime" in metadata.keys() else "",
+        "venue_name": metadata["venue_name"] if "venue_name" in metadata.keys() else "",
+        "borough": metadata["borough"] if "borough" in metadata.keys() else "",
+        "ticket_url": metadata["ticket_url"] if "ticket_url" in metadata.keys() else "",
+        "rsvp_url": metadata["rsvp_url"] if "rsvp_url" in metadata.keys() else "",
+        "flyer_url": metadata["flyer_url"] if "flyer_url" in metadata.keys() else "",
+        "recurrence_rule": metadata["recurrence_rule"] if "recurrence_rule" in metadata.keys() else "",
+        "recurrence_label": metadata["recurrence_label"] if "recurrence_label" in metadata.keys() else "",
+        "admin_note": metadata["admin_note"] if "admin_note" in metadata.keys() else "",
+    }
+
+
+@app.context_processor
+def inject_phase5d_calendar_finish_helpers():
+    return {
+        "phase5d_recurrence_options": phase5d_recurrence_options,
+        "phase5d_recurrence_label": phase5d_recurrence_label,
+        "phase5d_calendar_metadata_summary": phase5d_calendar_metadata_summary,
+    }
+
+
+def phase5d_upsert_calendar_metadata_for_submission(submission_id, form):
+    ensure_phase5_calendar_tables()
+
+    now_value = datetime.now().isoformat(timespec="seconds")
+
+    calendar_type = form.get("calendar_type", "").strip()
+    recurrence_rule = form.get("recurrence_rule", "").strip()
+    recurrence_label = form.get("recurrence_label", "").strip()
+
+    if not recurrence_label:
+        recurrence_label = phase5d_recurrence_label(recurrence_rule)
+
+    values = {
+        "submission_id": submission_id,
+        "calendar_type": calendar_type,
+        "item_type": calendar_type,
+        "visibility_status": form.get("visibility_status", "Needs Review").strip() or "Needs Review",
+        "review_status": form.get("review_status", "Pending Review").strip() or "Pending Review",
+        "start_datetime": form.get("start_datetime", "").strip(),
+        "end_datetime": form.get("end_datetime", "").strip(),
+        "venue_name": form.get("venue_name", "").strip(),
+        "borough": form.get("borough", "").strip(),
+        "ticket_url": form.get("ticket_url", "").strip(),
+        "rsvp_url": form.get("rsvp_url", "").strip(),
+        "flyer_url": form.get("flyer_url", "").strip(),
+        "recurrence_rule": recurrence_rule,
+        "recurrence_label": recurrence_label,
+        "admin_note": form.get("admin_note", "").strip(),
+        "updated_at": now_value,
+    }
+
+    existing = fetch_all(
+        """
+        SELECT id
+        FROM calendar_item_metadata
+        WHERE submission_id = :submission_id
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        {"submission_id": submission_id},
+    )
+
+    if existing:
+        metadata_id = existing[0]["id"]
+
+        allowed_keys = list(values.keys())
+        set_sql = ", ".join(f"{key} = :{key}" for key in allowed_keys if key != "submission_id")
+
+        execute_query(
+            f"""
+            UPDATE calendar_item_metadata
+            SET {set_sql}
+            WHERE id = :metadata_id
+            """,
+            {
+                **values,
+                "metadata_id": metadata_id,
+            },
+        )
+
+        return metadata_id
+
+    values["created_at"] = now_value
+
+    with engine.begin() as conn:
+        columns = phase5_table_columns(conn, "calendar_item_metadata")
+        clean_values = {key: value for key, value in values.items() if key in columns}
+
+        columns_sql = ", ".join(clean_values.keys())
+        values_sql = ", ".join(f":{key}" for key in clean_values.keys())
+
+        if maintenance_uses_postgres():
+            result = conn.execute(
+                text(f"INSERT INTO calendar_item_metadata ({columns_sql}) VALUES ({values_sql}) RETURNING id"),
+                clean_values,
+            )
+            return result.scalar()
+
+        result = conn.execute(
+            text(f"INSERT INTO calendar_item_metadata ({columns_sql}) VALUES ({values_sql})"),
+            clean_values,
+        )
+        return result.lastrowid
+
+
+@app.route("/admin/calendar-review/<int:metadata_id>/recurrence", methods=["POST"])
+def admin_calendar_recurrence_phase5d(metadata_id):
+    gate = phase5_admin_required()
+    if gate:
+        return gate
+
+    ensure_phase5_calendar_tables()
+
+    recurrence_rule = request.form.get("recurrence_rule", "").strip()
+    recurrence_label = request.form.get("recurrence_label", "").strip()
+
+    if not recurrence_label:
+        recurrence_label = phase5d_recurrence_label(recurrence_rule)
+
+    execute_query(
+        """
+        UPDATE calendar_item_metadata
+        SET recurrence_rule = :recurrence_rule,
+            recurrence_label = :recurrence_label,
+            updated_at = :updated_at
+        WHERE id = :metadata_id
+        """,
+        {
+            "recurrence_rule": recurrence_rule,
+            "recurrence_label": recurrence_label,
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+            "metadata_id": metadata_id,
+        },
+    )
+
+    return redirect(url_for("admin_calendar_review_phase5c"))
