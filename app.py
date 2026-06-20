@@ -19119,3 +19119,31 @@ def final_real_404_page(error):
         return render_template("error_404.html"), 404
     except Exception:
         return "This page is not in the Ledger yet.", 404
+
+
+# --- Stop favicon from redirecting to Events ---
+# Browser favicon requests should never hit /events or any heavy page.
+def ledger_favicon_no_redirect():
+    response = app.response_class("", status=204)
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
+
+
+try:
+    _favicon_found = False
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/favicon.ico":
+            app.view_functions[rule.endpoint] = ledger_favicon_no_redirect
+            _favicon_found = True
+            print(f"Fixed existing favicon endpoint: {rule.endpoint}")
+
+    if not _favicon_found:
+        app.add_url_rule(
+            "/favicon.ico",
+            "ledger_favicon_no_redirect",
+            ledger_favicon_no_redirect,
+            methods=["GET"],
+        )
+        print("Added favicon endpoint.")
+except Exception as exc:
+    print(f"Could not set favicon endpoint: {exc}")
