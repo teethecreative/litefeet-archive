@@ -17599,3 +17599,228 @@ ledger_override_public_rules({"/ask"}, ask_archive_live_safe)
 ledger_override_public_rules({"/battles"}, battles_live_safe)
 ledger_override_public_rules({"/awards"}, awards_live_safe)
 ledger_override_public_rules({"/calendar", "/events"}, calendar_live_safe)
+
+
+# --- EMERGENCY FAST MODE HOTFIX ---
+# Temporary production stabilization:
+# - no DB-dependent nav context
+# - no DB-dependent site_settings checks
+# - standalone fast pages for unstable public routes
+# - standalone 500/404 behavior
+
+_LEDGER_FAST_SETTINGS = {
+    "maintenance_mode": "off",
+    "maintenance_message": "",
+    "allow_public_submissions": "on",
+}
+
+
+def get_site_setting(key, default=None):
+    return _LEDGER_FAST_SETTINGS.get(key, default)
+
+
+def set_site_setting(key, value):
+    _LEDGER_FAST_SETTINGS[key] = value
+    return True
+
+
+def fetch_one(query=None, params=None):
+    if not query:
+        return {}
+    try:
+        rows = fetch_all(query, params or {})
+        return rows[0] if rows else None
+    except Exception as exc:
+        print(f"fetch_one emergency fallback failed: {exc}")
+        return None
+
+
+try:
+    _remove_context_processors = {
+        "fetch_one",
+        "inject_nav_account_context",
+        "inject_admin_error_log_summary",
+    }
+
+    for _processor_key, _processors in app.template_context_processors.items():
+        app.template_context_processors[_processor_key] = [
+            _processor for _processor in _processors
+            if getattr(_processor, "__name__", "") not in _remove_context_processors
+        ]
+
+    print("Emergency fast mode removed unsafe context processors.")
+except Exception as exc:
+    print(f"Emergency context processor cleanup skipped: {exc}")
+
+
+@app.context_processor
+def emergency_fast_nav_context():
+    try:
+        logged_in = bool(session.get("user_id") or session.get("account_user_id"))
+    except Exception:
+        logged_in = False
+
+    def phase13_account_nav_url():
+        return "/account" if logged_in else "/account/login"
+
+    def phase13_account_nav_label():
+        return "Account" if logged_in else "Log In"
+
+    return {
+        "phase13_account_nav_url": phase13_account_nav_url,
+        "phase13_account_nav_label": phase13_account_nav_label,
+        "claimed_profile": None,
+        "nav_claimed_profile": None,
+        "admin_error_log_summary": {
+            "recent_count": 0,
+            "recent_500_count": 0,
+            "recent_404_count": 0,
+            "latest_path": "",
+            "latest_created_at": "",
+        },
+    }
+
+
+def emergency_fast_html(title, message, status_code=200):
+    import html as html_module
+
+    title_safe = html_module.escape(title or "The LiteFeet Ledger")
+    message_safe = html_module.escape(message or "")
+
+    html = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>%%TITLE%% | The LiteFeet Ledger</title>
+<style>
+body{margin:0;background:#030303;color:#f4f1e8;font-family:Arial,sans-serif;}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 22px 70px;}
+.nav{display:flex;gap:18px;flex-wrap:wrap;align-items:center;border-bottom:1px solid rgba(216,184,76,.25);padding-bottom:18px;margin-bottom:42px;}
+.brand{color:#d8b84c;font-weight:800;letter-spacing:.08em;margin-right:12px;}
+.nav a{color:#e7e0d0;text-decoration:none;font-weight:700;}
+.nav a:hover{color:#f0d56b;}
+.eyebrow{color:#d8b84c;text-transform:uppercase;letter-spacing:.18em;font-size:12px;font-weight:800;}
+h1{font-size:clamp(42px,8vw,82px);line-height:.94;margin:16px 0 18px;}
+p{color:#d7d1c4;font-size:18px;line-height:1.55;max-width:760px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:28px;}
+.card{border:1px solid rgba(216,184,76,.18);border-radius:18px;padding:18px;background:rgba(255,255,255,.025);}
+.card h2{margin:0 0 8px;font-size:20px;}
+.card a{color:#f0d56b;text-decoration:none;font-weight:800;}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px;}
+.button{border:1px solid rgba(240,213,107,.45);border-radius:999px;padding:12px 16px;color:#f0d56b;text-decoration:none;font-weight:800;}
+small{color:#9f978a;}
+</style>
+</head>
+<body>
+<main class="wrap">
+<nav class="nav">
+<span class="brand">LiteFeet Ledger</span>
+<a href="/">Home</a>
+<a href="/ask">Ask</a>
+<a href="/calendar">Calendar</a>
+<a href="/people/dancers">People & Teams</a>
+<a href="/litefeet-music">LiteFeet Music</a>
+<a href="/battles">Battles</a>
+<a href="/awards">Awards</a>
+<a href="/about">About</a>
+<a href="/account/login">Log In</a>
+</nav>
+
+<p class="eyebrow">The LiteFeet Ledger</p>
+<h1>%%TITLE%%</h1>
+<p>%%MESSAGE%%</p>
+
+<div class="grid">
+<div class="card"><h2>People & Teams</h2><a href="/people/dancers">Open section</a></div>
+<div class="card"><h2>LiteFeet Music</h2><a href="/litefeet-music">Open section</a></div>
+<div class="card"><h2>Calendar</h2><a href="/calendar">Open section</a></div>
+<div class="card"><h2>Submit Info</h2><a href="/submit/start">Add to the Ledger</a></div>
+</div>
+
+<div class="actions">
+<a class="button" href="/">Back Home</a>
+<a class="button" href="/submit/start">Submit Info</a>
+</div>
+
+<p><small>Fast mode is active while this section is being stabilized.</small></p>
+</main>
+</body>
+</html>"""
+
+    html = html.replace("%%TITLE%%", title_safe).replace("%%MESSAGE%%", message_safe)
+    return html, status_code
+
+
+def emergency_home():
+    return emergency_fast_html(
+        "The Ledger is being stabilized.",
+        "The main sections are being brought back online one at a time so the site stays fast and usable."
+    )
+
+
+def emergency_ask():
+    return emergency_fast_html(
+        "Ask the Ledger is temporarily paused.",
+        "Ask is being stabilized so it does not hang during searches. Use Submit Info if you need to add or correct something right now."
+    )
+
+
+def emergency_calendar():
+    return emergency_fast_html(
+        "Calendar is being stabilized.",
+        "The event archive is still here, but this page is in fast mode while the live calendar route is fixed."
+    )
+
+
+def emergency_battles():
+    return emergency_fast_html(
+        "Battles are being stabilized.",
+        "This section is being brought back online without redirecting visitors away from the page."
+    )
+
+
+def emergency_awards():
+    return emergency_fast_html(
+        "Awards are being stabilized.",
+        "This section is being brought back online without redirecting visitors away from the page."
+    )
+
+
+def emergency_override_routes(paths, view_function):
+    try:
+        for rule in list(app.url_map.iter_rules()):
+            if str(rule.rule) in paths:
+                app.view_functions[rule.endpoint] = view_function
+                print(f"Emergency fast mode overrode {rule.rule} -> {view_function.__name__}")
+    except Exception as exc:
+        print(f"Emergency route override failed for {paths}: {exc}")
+
+
+emergency_override_routes({"/"}, emergency_home)
+emergency_override_routes({"/ask"}, emergency_ask)
+emergency_override_routes({"/calendar", "/events"}, emergency_calendar)
+emergency_override_routes({"/battles"}, emergency_battles)
+emergency_override_routes({"/awards"}, emergency_awards)
+
+
+@app.errorhandler(500)
+def emergency_500(error):
+    try:
+        print(f"500 error: {error}")
+    except Exception:
+        pass
+    return emergency_fast_html(
+        "The Ledger hit a problem.",
+        "Something broke while loading this page. The issue is visible in Render logs and will be reviewed.",
+        500,
+    )
+
+
+@app.errorhandler(404)
+def emergency_404(error):
+    return emergency_fast_html(
+        "This page is not in the Ledger yet.",
+        "The link may have moved, the page may still be under rebuild, or the record may not exist yet.",
+        404,
+    )
