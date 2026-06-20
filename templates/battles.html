@@ -4,7 +4,7 @@
 {% block meta_description %}Browse LiteFeet battle records, videos, official winners, judges, events, debated battles, and community input in The LiteFeet Ledger.{% endblock %}
 
 {% block content %}
-{% set battle_records = battles if battles is defined else battle_rows if battle_rows is defined else records if records is defined else [] %}
+{% set battle_records = structured_battle_records if structured_battle_records is defined else battles if battles is defined else battle_rows if battle_rows is defined else records if records is defined else [] %}
 {% set video_records = latest_battle_videos if latest_battle_videos is defined else battle_videos if battle_videos is defined else media_items if media_items is defined else [] %}
 
 <section class="content-section battles-page">
@@ -13,13 +13,86 @@
             <p class="eyebrow">Battles</p>
             <h1>LiteFeet Battles</h1>
             <p>
-                Battle records should separate official event results, video proof, judge decisions,
+                Battle records separate official event results, video proof, judge decisions,
                 community context, debated outcomes, and missing details.
             </p>
         </div>
 
-        <a class="button primary" href="{{ url_for('submit_info') }}">Submit Battle Info</a>
+        <div class="hero-actions">
+            <a class="button primary" href="{{ url_for('battle_submit_phase2') }}">Add Battle Record</a>
+            <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Battle Info</a>
+        </div>
     </div>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Records</p>
+            <h2>Structured Battle Records</h2>
+        </div>
+    </div>
+
+    {% if battle_records %}
+        <div class="release-table-wrap">
+            <table class="release-table battle-table">
+                <thead>
+                    <tr>
+                        <th>Battle</th>
+                        <th>Type</th>
+                        <th>Official Winner</th>
+                        <th>Judges</th>
+                        <th>Community</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for battle in battle_records %}
+                        <tr>
+                            <td>
+                                <strong>
+                                    {{ battle["competitor_one"] or "Competitor 1" }}
+                                    vs
+                                    {{ battle["competitor_two"] or "Competitor 2" }}
+                                </strong>
+
+                                {% if battle["competitor_one_team"] or battle["competitor_two_team"] %}
+                                    <br>
+                                    <span class="small-note">
+                                        {{ battle["competitor_one_team"] or "No team" }}
+                                        vs
+                                        {{ battle["competitor_two_team"] or "No team" }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ battle["battle_type"] or "Battle" }}</td>
+                            <td>{{ battle["official_winner"] or battle["winner"] or "Needs result" }}</td>
+                            <td>{{ battle["judges_text"] or "—" }}</td>
+                            <td>{{ battle["community_input_status"] or "None" }}</td>
+                            <td>{{ battle["review_status"] or "Needs Review" }}</td>
+                            <td>
+                                <a class="button small-button secondary" href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">
+                                    Open
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No structured battle records yet.</h3>
+            <p>
+                Add a battle record to start tracking competitors, teams, winner, official winner,
+                judges, video proof, debate status, and review status.
+            </p>
+            <a class="button primary" href="{{ url_for('battle_submit_phase2') }}">Add Battle Record</a>
+        </div>
+    {% endif %}
 </section>
 
 <section class="homepage-section">
@@ -74,53 +147,6 @@
     {% endif %}
 </section>
 
-<section class="homepage-section">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Records</p>
-            <h2>All-Time Battle Table</h2>
-        </div>
-    </div>
-
-    {% if battle_records %}
-        <div class="release-table-wrap">
-            <table class="release-table battle-table">
-                <thead>
-                    <tr>
-                        <th>Battle</th>
-                        <th>Winner</th>
-                        <th>Date</th>
-                        <th>Event</th>
-                        <th>Judges</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for battle in battle_records %}
-                        <tr>
-                            <td>{{ battle["battle_name"] or battle["title"] or battle["matchup"] or "Battle record" }}</td>
-                            <td>{{ battle["winner"] or battle["official_winner"] or "Needs result" }}</td>
-                            <td>{{ battle["event_date"] or battle["date"] or battle["release_date"] or "Date TBD" }}</td>
-                            <td>{{ battle["event_name"] or battle["event"] or "—" }}</td>
-                            <td>{{ battle["judges"] or "—" }}</td>
-                            <td>{{ battle["review_status"] or battle["status"] or "Needs Review" }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <div class="empty-state compact-empty">
-            <h3>Structured battle records are coming next.</h3>
-            <p>
-                This table is ready for who battled, official winner, date, event, organizer,
-                judges, video, controversy score, and community input.
-            </p>
-        </div>
-    {% endif %}
-</section>
-
 <section class="homepage-section battles-info-grid">
     <article>
         <p class="eyebrow">Official Winner</p>
@@ -144,7 +170,7 @@
         <p class="eyebrow">Battle Types</p>
         <h2>1v1 / 2v2 / Team</h2>
         <p>
-            Battle display should support solo battles, 2v2 battles, team battles, royal rumbles,
+            Battle display supports solo battles, 2v2 battles, team battles, royal rumbles,
             elimination formats, and special event formats.
         </p>
     </article>

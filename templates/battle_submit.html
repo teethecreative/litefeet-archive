@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Add Battle Record | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Add a structured LiteFeet battle record with competitors, teams, winner, judges, video proof, event context, and review status.{% endblock %}
+
+{% block content %}
+<section class="content-section battle-submit-page">
+    <p class="eyebrow">Battles</p>
+    <h1>Add Battle Record</h1>
+    <p>
+        Add a structured battle record. This also creates a reviewable Ledger submission so the battle
+        can be checked, corrected, verified, disputed, or community-supported later.
+    </p>
+
+    <form method="POST" class="archive-form battle-form">
+        <div class="form-grid">
+            <label>
+                Battle Type
+                <select name="battle_type">
+                    <option value="1v1">1v1</option>
+                    <option value="2v2">2v2</option>
+                    <option value="Team Battle">Team Battle</option>
+                    <option value="Royal Rumble">Royal Rumble</option>
+                    <option value="Elimination">Elimination</option>
+                    <option value="Other">Other</option>
+                </select>
+            </label>
+
+            <label>
+                Competitor One
+                <input type="text" name="competitor_one" placeholder="Dancer, duo, team, or side one" required>
+            </label>
+
+            <label>
+                Competitor Two
+                <input type="text" name="competitor_two" placeholder="Dancer, duo, team, or side two" required>
+            </label>
+
+            <label>
+                Competitor One Team <span class="small-note">(optional)</span>
+                <input type="text" name="competitor_one_team" placeholder="Team / crew / affiliation">
+            </label>
+
+            <label>
+                Competitor Two Team <span class="small-note">(optional)</span>
+                <input type="text" name="competitor_two_team" placeholder="Team / crew / affiliation">
+            </label>
+
+            <label>
+                Winner <span class="small-note">(if known)</span>
+                <input type="text" name="winner" placeholder="Winner or result">
+            </label>
+
+            <label>
+                Official Winner <span class="small-note">(judge decision)</span>
+                <input type="text" name="official_winner" placeholder="Official event result">
+            </label>
+
+            <label>
+                Event Name <span class="small-note">(optional)</span>
+                <input type="text" name="event_name" placeholder="Example: Body Bag 10">
+            </label>
+
+            <label>
+                Event Date <span class="small-note">(optional)</span>
+                <input type="date" name="event_date">
+            </label>
+
+            <label>
+                Video / Proof Link <span class="small-note">(optional)</span>
+                <input type="url" name="video_url" placeholder="YouTube, IG, recap, post, or source link">
+            </label>
+        </div>
+
+        <label>
+            Judges <span class="small-note">(optional)</span>
+            <textarea name="judges_text" rows="3" placeholder="List judges, host notes, panel, or decision context."></textarea>
+        </label>
+
+        <label>
+            Community Input Status
+            <select name="community_input_status">
+                <option value="None">None</option>
+                <option value="Community Supported">Community Supported</option>
+                <option value="Debated">Debated</option>
+                <option value="Needs Context">Needs Context</option>
+                <option value="Disputed">Disputed</option>
+            </select>
+        </label>
+
+        <label>
+            Context Note <span class="small-note">(optional)</span>
+            <textarea name="context_note" rows="5" placeholder="Add details, controversy, round notes, missing names, score context, or what needs to be verified."></textarea>
+        </label>
+
+        <div class="form-grid">
+            <label>
+                Your Name / Alias <span class="small-note">(optional)</span>
+                <input type="text" name="submitter_name" placeholder="Name, dancer name, host name, or alias">
+            </label>
+
+            <label>
+                Your Role <span class="small-note">(optional)</span>
+                <input type="text" name="submitter_role" placeholder="Dancer, host, judge, organizer, supporter, etc.">
+            </label>
+
+            <label>
+                Contact <span class="small-note">(optional)</span>
+                <input type="text" name="contact" placeholder="Email or IG if follow-up is needed">
+            </label>
+        </div>
+
+        <div class="hero-actions">
+            <button type="submit" class="button primary">Save Battle Record</button>
+            <a class="button secondary" href="{{ url_for('battles') }}">Back to Battles</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

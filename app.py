@@ -9074,3 +9074,187 @@ def delete_saved_ledger_item(saved_item_id):
     )
 
     return redirect(request.referrer or url_for("account_home"))
+
+
+# --- Phase 2E structured battle records ---
+def phase2_insert_and_get_id(table_name, values):
+    helper = globals().get("ledger_insert_and_get_id")
+    if callable(helper):
+        return helper(table_name, values)
+
+    columns = list(values.keys())
+    columns_sql = ", ".join(columns)
+    values_sql = ", ".join(f":{column}" for column in columns)
+
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            result = conn.execute(
+                text(f"INSERT INTO {table_name} ({columns_sql}) VALUES ({values_sql}) RETURNING id"),
+                values,
+            )
+            return result.scalar()
+
+        result = conn.execute(
+            text(f"INSERT INTO {table_name} ({columns_sql}) VALUES ({values_sql})"),
+            values,
+        )
+        return result.lastrowid
+
+
+@app.context_processor
+def inject_phase2_battle_records():
+    try:
+        ensure_phase2_ledger_tables()
+
+        structured_battle_records = fetch_all(
+            """
+            SELECT *
+            FROM battle_records
+            ORDER BY
+                CASE WHEN updated_at IS NULL OR updated_at = '' THEN created_at ELSE updated_at END DESC,
+                id DESC
+            LIMIT 200
+            """,
+            {},
+        )
+
+        return {"structured_battle_records": structured_battle_records}
+    except Exception:
+        return {"structured_battle_records": []}
+
+
+@app.route("/battles/add", methods=["GET", "POST"])
+def battle_submit_phase2():
+    ensure_phase2_ledger_tables()
+
+    if request.method == "GET":
+        return render_template("battle_submit.html")
+
+    battle_type = request.form.get("battle_type", "").strip()
+    competitor_one = request.form.get("competitor_one", "").strip()
+    competitor_two = request.form.get("competitor_two", "").strip()
+    competitor_one_team = request.form.get("competitor_one_team", "").strip()
+    competitor_two_team = request.form.get("competitor_two_team", "").strip()
+    winner = request.form.get("winner", "").strip()
+    official_winner = request.form.get("official_winner", "").strip()
+    event_name = request.form.get("event_name", "").strip()
+    event_date = request.form.get("event_date", "").strip()
+    judges_text = request.form.get("judges_text", "").strip()
+    video_url = request.form.get("video_url", "").strip()
+    community_input_status = request.form.get("community_input_status", "").strip() or "None"
+    context_note = request.form.get("context_note", "").strip()
+    submitter_name = request.form.get("submitter_name", "").strip()
+    submitter_role = request.form.get("submitter_role", "").strip()
+    contact = request.form.get("contact", "").strip()
+
+    user = current_user()
+    now_value = datetime.now().isoformat(timespec="seconds")
+
+    if user:
+        submitter_name = submitter_name or user["display_name"] or ""
+        contact = contact or user["email"] or ""
+
+    title_parts = [part for part in [competitor_one, "vs", competitor_two] if part]
+    title = " ".join(title_parts).strip() or "Battle record"
+
+    related_to = event_name or "Battle Records"
+
+    details = [
+        {"label": "Battle Type", "value": battle_type},
+        {"label": "Competitor One", "value": competitor_one},
+        {"label": "Competitor Two", "value": competitor_two},
+        {"label": "Competitor One Team", "value": competitor_one_team},
+        {"label": "Competitor Two Team", "value": competitor_two_team},
+        {"label": "Winner", "value": winner},
+        {"label": "Official Winner", "value": official_winner},
+        {"label": "Event Name", "value": event_name},
+        {"label": "Event Date", "value": event_date},
+        {"label": "Judges", "value": judges_text},
+        {"label": "Video URL", "value": video_url},
+        {"label": "Community Input Status", "value": community_input_status},
+        {"label": "Context Note", "value": context_note},
+    ]
+
+    details = [item for item in details if item["value"]]
+
+    submission_id = phase2_insert_and_get_id(
+        "submissions",
+        {
+            "submission_type": "battle_record",
+            "title": title,
+            "related_to": related_to,
+            "source_url": video_url,
+            "submitter_name": submitter_name,
+            "submitter_role": submitter_role,
+            "contact": contact,
+            "needs_verification": 1,
+            "review_status": "Pending Review",
+            "details_json": json.dumps(details, ensure_ascii=False),
+            "created_at": now_value,
+            "contributor_user_id": user["id"] if user else None,
+            "anonymous_submission": 0,
+        },
+    )
+
+    battle_id = phase2_insert_and_get_id(
+        "battle_records",
+        {
+            "submission_id": submission_id,
+            "event_submission_id": None,
+            "battle_type": battle_type,
+            "competitor_one": competitor_one,
+            "competitor_two": competitor_two,
+            "competitor_one_team": competitor_one_team,
+            "competitor_two_team": competitor_two_team,
+            "winner": winner,
+            "official_winner": official_winner,
+            "judges_text": judges_text,
+            "video_url": video_url,
+            "controversy_score": 0,
+            "community_input_status": community_input_status,
+            "review_status": "Needs Review",
+            "created_at": now_value,
+            "updated_at": now_value,
+        },
+    )
+
+    return redirect(url_for("battle_record_detail_phase2", battle_id=battle_id))
+
+
+@app.route("/battle-records/<int:battle_id>")
+def battle_record_detail_phase2(battle_id):
+    ensure_phase2_ledger_tables()
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM battle_records
+        WHERE id = :battle_id
+        LIMIT 1
+        """,
+        {"battle_id": battle_id},
+    )
+
+    if not rows:
+        return redirect(url_for("battles"))
+
+    battle = rows[0]
+    submission = None
+
+    if battle["submission_id"]:
+        submission_rows = fetch_all(
+            """
+            SELECT *
+            FROM submissions
+            WHERE id = :submission_id
+            LIMIT 1
+            """,
+            {"submission_id": battle["submission_id"]},
+        )
+        submission = submission_rows[0] if submission_rows else None
+
+    return render_template(
+        "battle_record_detail.html",
+        battle=battle,
+        submission=submission,
+    )

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Battle Record | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Structured LiteFeet battle record with competitors, teams, winner, official winner, judges, video proof, and review status.{% endblock %}
+
+{% block content %}
+<section class="content-section battle-record-detail">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Battle Record</p>
+            <h1>
+                {{ battle["competitor_one"] or "Competitor 1" }}
+                vs
+                {{ battle["competitor_two"] or "Competitor 2" }}
+            </h1>
+            <p class="small-note">
+                {{ battle["battle_type"] or "Battle" }}
+                · {{ battle["review_status"] or "Needs Review" }}
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('battles') }}">Back to Battles</a>
+            <a class="button primary" href="{{ url_for('submit_info') }}">Add Context</a>
+        </div>
+    </div>
+</section>
+
+<section class="battle-detail-grid">
+    <article>
+        <p class="eyebrow">Result</p>
+        <h2>Winner</h2>
+        <p><strong>Winner:</strong> {{ battle["winner"] or "Needs result" }}</p>
+        <p><strong>Official Winner:</strong> {{ battle["official_winner"] or "Needs official result" }}</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Competitors</p>
+        <h2>Matchup</h2>
+        <p><strong>One:</strong> {{ battle["competitor_one"] or "—" }}</p>
+        <p><strong>Two:</strong> {{ battle["competitor_two"] or "—" }}</p>
+        {% if battle["competitor_one_team"] or battle["competitor_two_team"] %}
+            <p><strong>Teams:</strong> {{ battle["competitor_one_team"] or "—" }} vs {{ battle["competitor_two_team"] or "—" }}</p>
+        {% endif %}
+    </article>
+
+    <article>
+        <p class="eyebrow">Judges</p>
+        <h2>Decision Context</h2>
+        <p>{{ battle["judges_text"] or "Judges/context not added yet." }}</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Community</p>
+        <h2>Input Status</h2>
+        <p>{{ battle["community_input_status"] or "None" }}</p>
+        <p class="small-note">Controversy score: {{ battle["controversy_score"] or 0 }}</p>
+    </article>
+
+    {% if battle["video_url"] %}
+        <article class="battle-video-card">
+            <p class="eyebrow">Proof</p>
+            <h2>Video / Source</h2>
+            <p><a href="{{ battle['video_url'] }}" target="_blank" rel="noopener">Open video or proof link</a></p>
+        </article>
+    {% endif %}
+
+    {% if submission %}
+        <article class="battle-submission-card">
+            <p class="eyebrow">Linked Submission</p>
+            <h2>{{ submission["title"] }}</h2>
+            <p>
+                {{ submission["review_status"] or "Pending Review" }}
+                {% if submission["created_at"] %} · {{ submission["created_at"] }}{% endif %}
+            </p>
+        </article>
+    {% endif %}
+</section>
+
+<style>
+    .battle-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .battle-detail-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    @media (max-width: 800px) {
+        .battle-detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
