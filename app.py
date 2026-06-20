@@ -184,6 +184,15 @@ def maintenance_path_allowed():
 
 @app.before_request
 def maintenance_mode_guard():
+    # Render health check bypass.
+    # Render probes HEAD / while deciding whether the service is healthy.
+    # Maintenance mode should not make Render think the service is down.
+    if request.path == "/healthz":
+        return None
+
+    if request.method == "HEAD" and request.path == "/":
+        return "", 200
+
     if not maintenance_mode_enabled():
         return None
 
@@ -9981,3 +9990,9 @@ def admin_deploy_status_phase2i():
         table_status=table_status,
         recent_submissions=recent_submissions,
     )
+
+
+# --- Render health check hotfix ---
+@app.route("/healthz")
+def healthz():
+    return "ok", 200
