@@ -16902,3 +16902,69 @@ def phase12_admin_quick_links():
         {"label": "Calendar Review", "endpoint": "admin_calendar_review_phase5c", "fallback": "/admin/calendar-review"},
         {"label": "Music Feedback", "endpoint": "admin_music_feedback_phase6c", "fallback": "/admin/music-feedback"},
     ]
+
+
+# --- Phase 14D live speed hotfix: cached site settings ---
+_PHASE14D_SITE_SETTING_CACHE = {}
+_PHASE14D_SITE_SETTING_TTL_SECONDS = 30
+
+try:
+    _phase14d_original_get_site_setting = get_site_setting
+except Exception:
+    _phase14d_original_get_site_setting = None
+
+try:
+    _phase14d_original_set_site_setting = set_site_setting
+except Exception:
+    _phase14d_original_set_site_setting = None
+
+
+def get_site_setting(key, default=None):
+    import time
+
+    cache_key = str(key)
+    now = time.time()
+    cached = _PHASE14D_SITE_SETTING_CACHE.get(cache_key)
+
+    if cached:
+        cached_at, cached_value = cached
+        if now - cached_at <= _PHASE14D_SITE_SETTING_TTL_SECONDS:
+            return cached_value
+
+    if callable(_phase14d_original_get_site_setting):
+        value = _phase14d_original_get_site_setting(key, default)
+    else:
+        value = default
+
+    _PHASE14D_SITE_SETTING_CACHE[cache_key] = (now, value)
+    return value
+
+
+def set_site_setting(key, value):
+    if callable(_phase14d_original_set_site_setting):
+        result = _phase14d_original_set_site_setting(key, value)
+    else:
+        result = None
+
+    try:
+        _PHASE14D_SITE_SETTING_CACHE.pop(str(key), None)
+    except Exception:
+        pass
+
+    return result
+
+
+@app.route("/healthz/db")
+def healthz_db_phase14d():
+    import time
+
+    started = time.perf_counter()
+
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        db_ms = round((time.perf_counter() - started) * 1000, 2)
+        return f"ok db_ms={db_ms}", 200
+    except Exception as exc:
+        db_ms = round((time.perf_counter() - started) * 1000, 2)
+        return f"db_error db_ms={db_ms} {exc}", 500
