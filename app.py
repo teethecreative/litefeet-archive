@@ -16985,3 +16985,121 @@ if not _calendar_route_exists:
     @app.route("/calendar")
     def calendar_public_hotfix():
         return events()
+
+
+# --- Site settings network-safe hotfix ---
+# Prevent temporary Render/Postgres network errors in site_settings from crashing public pages.
+_SITE_SETTINGS_CACHE = {}
+_SITE_SETTINGS_CACHE_TTL_SECONDS = 30
+_SITE_SETTINGS_TABLE_READY = False
+
+
+def _site_setting_default_value(key, default=None):
+    defaults = {
+        "maintenance_mode": "off",
+        "maintenance_message": "",
+        "allow_public_submissions": "on",
+    }
+    return defaults.get(key, default)
+
+
+def ensure_site_settings_table_network_safe():
+    global _SITE_SETTINGS_TABLE_READY
+
+    if _SITE_SETTINGS_TABLE_READY:
+        return True
+
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS site_settings (
+                    key TEXT PRIMARY KEY,
+                    value TEXT,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+        _SITE_SETTINGS_TABLE_READY = True
+        return True
+    except Exception as exc:
+        print(f"site_settings table check skipped because database was unavailable: {exc}")
+        return False
+
+
+def get_site_setting_network_safe(key, default=None):
+    import time
+
+    now = time.time()
+    cached = _SITE_SETTINGS_CACHE.get(key)
+
+    if cached:
+        value, expires_at = cached
+        if now < expires_at:
+            return value
+
+    fallback = _site_setting_default_value(key, default)
+
+    # Do not let a Postgres/network issue break public pages.
+    try:
+        table_ready = ensure_site_settings_table_network_safe()
+        if not table_ready:
+            _SITE_SETTINGS_CACHE[key] = (fallback, now + _SITE_SETTINGS_CACHE_TTL_SECONDS)
+            return fallback
+
+        row = fetch_one(
+            "SELECT value FROM site_settings WHERE key = :key",
+            {"key": key},
+        )
+
+        if row and row.get("value") is not None:
+            value = row.get("value")
+        else:
+            value = fallback
+
+        _SITE_SETTINGS_CACHE[key] = (value, now + _SITE_SETTINGS_CACHE_TTL_SECONDS)
+        return value
+    except Exception as exc:
+        print(f"site_settings get failed for {key}; using fallback: {exc}")
+        _SITE_SETTINGS_CACHE[key] = (fallback, now + _SITE_SETTINGS_CACHE_TTL_SECONDS)
+        return fallback
+
+
+def set_site_setting_network_safe(key, value):
+    global _SITE_SETTINGS_TABLE_READY
+
+    _SITE_SETTINGS_CACHE.pop(key, None)
+
+    try:
+        table_ready = ensure_site_settings_table_network_safe()
+        if not table_ready:
+            raise RuntimeError("site_settings table unavailable")
+
+        if engine.dialect.name == "postgresql":
+            execute_query(
+                """
+                INSERT INTO site_settings (key, value, updated_at)
+                VALUES (:key, :value, CURRENT_TIMESTAMP)
+                ON CONFLICT (key)
+                DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP
+                """,
+                {"key": key, "value": value},
+            )
+        else:
+            execute_query(
+                """
+                INSERT OR REPLACE INTO site_settings (key, value, updated_at)
+                VALUES (:key, :value, CURRENT_TIMESTAMP)
+                """,
+                {"key": key, "value": value},
+            )
+
+        _SITE_SETTINGS_CACHE[key] = (value, 0)
+        return True
+    except Exception as exc:
+        print(f"site_settings set failed for {key}: {exc}")
+        raise
+
+
+# Override older site setting helpers globally.
+ensure_site_settings_table = ensure_site_settings_table_network_safe
+get_site_setting = get_site_setting_network_safe
+set_site_setting = set_site_setting_network_safe
