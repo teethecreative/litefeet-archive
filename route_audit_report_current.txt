@@ -64,6 +64,7 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /admin/view-as-public                                        -> admin_view_as_public                          [POST]
 /ask                                                         -> ask_archive                                   [GET, POST]
 /ask/conversations/<int:conversation_id>                     -> ask_conversation_detail                       [GET]
+/ask/search                                                  -> ask_ledger_search_phase3a                     [POST]
 /ask/submit                                                  -> ask_beta_submit                               [POST]
 /awards                                                      -> awards                                        [GET]
 /battle-records/<int:battle_id>                              -> battle_record_detail_phase2                   [GET]
@@ -85,6 +86,7 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /events                                                      -> events                                        [GET]
 /events/<int:event_id>                                       -> event_detail                                  [GET]
 /events/submit                                               -> submit_event                                  [GET, POST]
+/healthz                                                     -> healthz                                       [GET]
 /litefeet-music                                              -> litefeet_music                                [GET]
 /litefeet-music/projects/preview                             -> preview_music_project                         [POST]
 /litefeet-music/projects/submit                              -> submit_music_project                          [GET, POST]
@@ -209,14 +211,15 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/admin_users.html:276: <a class="admin-account-link" href="{{ url_for('admin_user_detail', user_id=user['id']) }}">
 /Users/teethecreative/litefeet-archive/templates/admin_users.html:292: <form class="admin-mini-form" action="{{ url_for('update_user_role', user_id=user['id']) }}" method="post">
 /Users/teethecreative/litefeet-archive/templates/admin_users.html:312: <form class="admin-mini-form" action="{{ url_for('update_user_status', user_id=user['id']) }}" method="post">
-/Users/teethecreative/litefeet-archive/templates/ask_archive.html:20: <form method="POST" action="{{ url_for('ask_beta_submit') }}" class="form-card ask-beta-form">
-/Users/teethecreative/litefeet-archive/templates/ask_archive.html:73: <a href="{{ url_for('ask_conversation_detail', conversation_id=conversation['id']) }}">
-/Users/teethecreative/litefeet-archive/templates/ask_archive.html:101: <a class="button primary" href="{{ url_for('submit_info') }}">Add Context</a>
-/Users/teethecreative/litefeet-archive/templates/ask_archive.html:102: <a class="button secondary" href="{{ url_for('account_login') }}">Account Login</a>
-/Users/teethecreative/litefeet-archive/templates/ask_archive.html:103: <a class="button secondary" href="{{ url_for('events') }}">Open Calendar</a>
-/Users/teethecreative/litefeet-archive/templates/ask_conversation.html:19: <a class="button secondary" href="{{ url_for('ask_archive') }}">Back to Ask</a>
-/Users/teethecreative/litefeet-archive/templates/ask_conversation.html:20: <a class="button primary" href="{{ url_for('submit_info') }}">Add Context</a>
-/Users/teethecreative/litefeet-archive/templates/ask_conversation.html:48: <p><a href="{{ message['source_url'] }}" target="_blank" rel="noopener">Source / Proof Link</a></p>
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:22: <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Info</a>
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:23: <a class="button secondary" href="{{ url_for('verify_claims') }}">Ledger Review</a>
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:30: <form method="POST" action="{{ url_for('ask_ledger_search_phase3a') }}" class="ask-ledger-form form-card">
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:60: <a class="button primary" href="{{ url_for('account_login') }}">Account Login</a>
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:61: <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Info</a>
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:84: <a class="button small-button secondary" href="{{ url_for('ask_conversation_detail', conversation_id=conversation.id if conversation.id is defined else conversation['id']) }}">Open</a>
+/Users/teethecreative/litefeet-archive/templates/ask_conversation.html:20: <a class="button secondary" href="{{ url_for('ask_archive') }}">Back to Ask</a>
+/Users/teethecreative/litefeet-archive/templates/ask_conversation.html:21: <a class="button primary" href="{{ url_for('verify_claims') }}">Ledger Review</a>
+/Users/teethecreative/litefeet-archive/templates/ask_conversation.html:50: <form method="POST" action="{{ url_for('ask_ledger_search_phase3a') }}" class="form-card ask-followup-form">
 /Users/teethecreative/litefeet-archive/templates/awards.html:20: <a class="button primary" href="{{ url_for('submit_info') }}">Submit Award Info</a>
 /Users/teethecreative/litefeet-archive/templates/base.html:8: <link rel="canonical" href="{% block canonical_url %}https://thelitefeetvault.com{{ request.path }}{% endblock %}">
 /Users/teethecreative/litefeet-archive/templates/base.html:111: <a href="{{ url_for('home') }}">Home</a>

@@ -1,0 +1,51 @@
+=== Phase 2I Production Release Check ===
+branch: main
+commit: 12682df
+database: sqlite
+original maintenance_mode: on
+---- table checks ----
+submissions: OK
+archive_users: OK
+dancer_profiles: OK
+media_items: OK
+music_feedback: OK
+music_play_events: OK
+verification_votes: OK
+role_requests: OK
+ask_conversations: OK
+ask_messages: OK
+profile_claims: OK
+saved_items: OK
+calendar_item_metadata: OK
+battle_records: OK
+community_perspectives: OK
+team_access_grants: OK
+---- public mode routes ----
+/ 200 
+/ask 302 /
+/calendar 200 
+/people-teams 200 
+/litefeet-music 200 
+/battles 302 /
+/awards 302 /
+/ledger-review 200 
+/account/login 200 
+/admin/login 200 
+---- maintenance mode public routes ----
+/ 503 
+/ask 503 
+/calendar 503 
+/people-teams 503 
+/litefeet-music 503 
+/battles 503 
+/awards 503 
+/ledger-review 503 
+---- maintenance mode auth routes ----
+/account/login 200 
+/admin/login 200 
+---- admin backend routes during maintenance ----
+/admin 302 /admin/login
+/admin/deploy-status 302 /admin/login
+/admin/phase2 302 /admin/login
+restored maintenance_mode: on
+Production release check passed.

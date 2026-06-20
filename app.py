@@ -4970,159 +4970,32 @@ def gate_unfinished_public_sections():
 @app.route("/ask")
 @app.route("/ask", methods=["GET", "POST"])
 def ask_archive():
-    query = ""
-    results = []
-    searched = False
-
-    def normalize_result_rows(rows):
-        normalized = []
-        for row in rows:
-            item = dict(row)
-            item.setdefault("source_kind", "submission")
-            item.setdefault("submission_type", "")
-            item.setdefault("related_to", "")
-            item.setdefault("source_url", "")
-            item.setdefault("review_status", "")
-            item.setdefault("details_json", "")
-            item.setdefault("created_at", "")
-            normalized.append(item)
-        return normalized
-
-    def review_rank(item):
-        status = item.get("review_status") or ""
-        return {
-            "Verified": 1,
-            "Community Supported": 2,
-            "Needs Verification": 3,
-            "Disputed": 4,
-        }.get(status, 5)
+    ensure_phase2_ledger_tables()
 
     if request.method == "POST":
-        query = request.form.get("query", "").strip()
-        searched = True
+        return ask_ledger_search_phase3a()
 
-        if query:
-            ensure_media_items_table()
-            ensure_music_projects_table()
-            ensure_music_release_status_columns()
+    conversations = []
+    user = current_user()
+    is_admin = bool(session.get("admin_logged_in"))
 
-            search_term = f"%{query.lower()}%"
-
-            submission_results = fetch_all(
+    if user or is_admin:
+        try:
+            conversations = fetch_all(
                 """
-                SELECT
-                    id,
-                    'submission' AS source_kind,
-                    submission_type,
-                    title,
-                    related_to,
-                    source_url,
-                    submitter_name,
-                    submitter_role,
-                    contact,
-                    needs_verification,
-                    review_status,
-                    details_json,
-                    created_at
-                FROM submissions
-                WHERE
-                    LOWER(COALESCE(title, '')) LIKE :search_term
-                    OR LOWER(COALESCE(related_to, '')) LIKE :search_term
-                    OR LOWER(COALESCE(source_url, '')) LIKE :search_term
-                    OR LOWER(COALESCE(details_json, '')) LIKE :search_term
-                    OR LOWER(COALESCE(submission_type, '')) LIKE :search_term
-                ORDER BY
-                    CASE
-                        WHEN review_status = 'Verified' THEN 1
-                        WHEN review_status = 'Community Supported' THEN 2
-                        WHEN review_status = 'Needs Verification' THEN 3
-                        WHEN review_status = 'Disputed' THEN 4
-                        ELSE 5
-                    END,
-                    created_at DESC
+                SELECT *
+                FROM ask_conversations
+                ORDER BY updated_at DESC, created_at DESC, id DESC
                 LIMIT 12
                 """,
-                {"search_term": search_term},
+                {},
             )
-
-            music_release_results = fetch_all(
-                """
-                SELECT
-                    id,
-                    'music_release' AS source_kind,
-                    'music_release' AS submission_type,
-                    title,
-                    artist_or_creator AS related_to,
-                    url AS source_url,
-                    '' AS submitter_name,
-                    'LiteFeet Music' AS submitter_role,
-                    '' AS contact,
-                    0 AS needs_verification,
-                    COALESCE(status, release_stage, 'Released') AS review_status,
-                    description AS details_json,
-                    created_at
-                FROM media_items
-                WHERE
-                    LOWER(COALESCE(title, '')) LIKE :search_term
-                    OR LOWER(COALESCE(artist_or_creator, '')) LIKE :search_term
-                    OR LOWER(COALESCE(url, '')) LIKE :search_term
-                    OR LOWER(COALESCE(platform, '')) LIKE :search_term
-                    OR LOWER(COALESCE(release_date, '')) LIKE :search_term
-                    OR LOWER(COALESCE(description, '')) LIKE :search_term
-                    OR LOWER(COALESCE(media_type, '')) LIKE :search_term
-                    OR LOWER(COALESCE(release_stage, '')) LIKE :search_term
-                ORDER BY created_at DESC
-                LIMIT 12
-                """,
-                {"search_term": search_term},
-            )
-
-            music_project_results = fetch_all(
-                """
-                SELECT
-                    id,
-                    'music_project' AS source_kind,
-                    'music_project' AS submission_type,
-                    title,
-                    artist_or_creator AS related_to,
-                    url AS source_url,
-                    '' AS submitter_name,
-                    'LiteFeet Music Project' AS submitter_role,
-                    '' AS contact,
-                    0 AS needs_verification,
-                    COALESCE(status, release_stage, 'Released') AS review_status,
-                    description AS details_json,
-                    created_at
-                FROM music_projects
-                WHERE
-                    LOWER(COALESCE(title, '')) LIKE :search_term
-                    OR LOWER(COALESCE(artist_or_creator, '')) LIKE :search_term
-                    OR LOWER(COALESCE(url, '')) LIKE :search_term
-                    OR LOWER(COALESCE(platform, '')) LIKE :search_term
-                    OR LOWER(COALESCE(release_date, '')) LIKE :search_term
-                    OR LOWER(COALESCE(description, '')) LIKE :search_term
-                    OR LOWER(COALESCE(release_stage, '')) LIKE :search_term
-                ORDER BY created_at DESC
-                LIMIT 12
-                """,
-                {"search_term": search_term},
-            )
-
-            combined_results = []
-            combined_results.extend(normalize_result_rows(submission_results))
-            combined_results.extend(normalize_result_rows(music_release_results))
-            combined_results.extend(normalize_result_rows(music_project_results))
-
-            combined_results.sort(key=lambda item: item.get("created_at") or "", reverse=True)
-            combined_results.sort(key=review_rank)
-
-            results = combined_results[:18]
+        except Exception:
+            conversations = []
 
     return render_template(
         "ask_archive.html",
-        query=query,
-        results=results,
-        searched=searched,
+        recent_ask_conversations=conversations,
     )
 
 
@@ -9996,3 +9869,601 @@ def admin_deploy_status_phase2i():
 @app.route("/healthz")
 def healthz():
     return "ok", 200
+
+
+# --- Phase 3A Ask Ledger search ---
+def phase3a_table_columns(table_name):
+    with engine.connect() as conn:
+        if maintenance_uses_postgres():
+            rows = conn.execute(
+                text("""
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_name = :table_name
+                """),
+                {"table_name": table_name},
+            ).fetchall()
+            return {row[0] for row in rows}
+
+        rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+        return {row[1] for row in rows}
+
+
+def phase3a_table_exists(table_name):
+    with engine.connect() as conn:
+        if maintenance_uses_postgres():
+            rows = conn.execute(
+                text("""
+                    SELECT table_name
+                    FROM information_schema.tables
+                    WHERE table_schema = 'public'
+                      AND table_name = :table_name
+                    LIMIT 1
+                """),
+                {"table_name": table_name},
+            ).fetchall()
+            return bool(rows)
+
+        rows = conn.execute(
+            text("""
+                SELECT name
+                FROM sqlite_master
+                WHERE type = 'table'
+                  AND name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+
+def phase3a_row_to_dict(row):
+    try:
+        return dict(row._mapping)
+    except Exception:
+        return dict(row)
+
+
+def phase3a_fetch_recent_rows(table_name, limit=350):
+    allowed = {
+        "submissions",
+        "dancer_profiles",
+        "battle_records",
+        "calendar_item_metadata",
+        "music_projects",
+        "media_items",
+        "community_perspectives",
+    }
+
+    if table_name not in allowed or not phase3a_table_exists(table_name):
+        return []
+
+    columns = phase3a_table_columns(table_name)
+
+    if "updated_at" in columns:
+        order_sql = "updated_at DESC"
+    elif "created_at" in columns:
+        order_sql = "created_at DESC"
+    elif "id" in columns:
+        order_sql = "id DESC"
+    else:
+        order_sql = "1"
+
+    try:
+        rows = fetch_all(
+            f"""
+            SELECT *
+            FROM {table_name}
+            ORDER BY {order_sql}
+            LIMIT :limit
+            """,
+            {"limit": limit},
+        )
+        return [phase3a_row_to_dict(row) for row in rows]
+    except Exception:
+        return []
+
+
+def phase3a_tokens(text_value):
+    import re
+
+    stop_words = {
+        "the", "and", "for", "with", "from", "that", "this", "what", "who",
+        "where", "when", "why", "how", "was", "were", "are", "is", "did",
+        "does", "do", "a", "an", "to", "of", "in", "on", "at", "it", "as",
+        "about", "tell", "me", "show", "list", "give", "ledger", "litefeet",
+    }
+
+    words = re.findall(r"[a-z0-9']{2,}", (text_value or "").lower())
+    return [word for word in words if word not in stop_words]
+
+
+def phase3a_compact_text(value, max_length=260):
+    value = str(value or "").strip()
+
+    if len(value) <= max_length:
+        return value
+
+    return value[: max_length - 3].rstrip() + "..."
+
+
+def phase3a_record_title(table_name, row):
+    if table_name == "dancer_profiles":
+        return row.get("dance_name") or row.get("real_name") or f"Profile #{row.get('id')}"
+
+    if table_name == "battle_records":
+        one = row.get("competitor_one") or "Competitor 1"
+        two = row.get("competitor_two") or "Competitor 2"
+        return f"{one} vs {two}"
+
+    if table_name == "calendar_item_metadata":
+        submission_id = row.get("submission_id")
+        if submission_id:
+            event_rows = fetch_all(
+                """
+                SELECT title
+                FROM submissions
+                WHERE id = :submission_id
+                LIMIT 1
+                """,
+                {"submission_id": submission_id},
+            )
+            if event_rows:
+                return event_rows[0]["title"] or f"Calendar item #{submission_id}"
+        return f"Calendar metadata #{row.get('id')}"
+
+    if table_name == "community_perspectives":
+        return row.get("review_label") or f"Community perspective #{row.get('id')}"
+
+    return (
+        row.get("title")
+        or row.get("name")
+        or row.get("track_title")
+        or row.get("project_title")
+        or f"{table_name} #{row.get('id')}"
+    )
+
+
+def phase3a_record_status(table_name, row):
+    raw_status = (
+        row.get("review_status")
+        or row.get("perspective_status")
+        or row.get("status")
+        or row.get("community_input_status")
+        or ""
+    )
+
+    status = str(raw_status or "").strip()
+
+    lowered = status.lower()
+
+    if "verified" in lowered:
+        return "Verified"
+
+    if "community supported" in lowered:
+        return "Community Supported"
+
+    if "debated" in lowered or "disputed" in lowered:
+        return "Debated"
+
+    if "needs" in lowered or "pending" in lowered:
+        return "Needs Verification"
+
+    if status:
+        return status
+
+    if table_name in {"submissions", "battle_records", "community_perspectives"}:
+        return "Pending Review"
+
+    return "Unknown"
+
+
+def phase3a_record_type_label(table_name, row):
+    labels = {
+        "submissions": row.get("submission_type") or "Ledger Submission",
+        "dancer_profiles": "Profile",
+        "battle_records": "Battle Record",
+        "calendar_item_metadata": "Calendar Metadata",
+        "music_projects": "Music Project",
+        "media_items": "Media Item",
+        "community_perspectives": "Community Perspective",
+    }
+
+    return labels.get(table_name, "Ledger Record")
+
+
+def phase3a_record_snippet(table_name, row):
+    priority_fields = [
+        "bio",
+        "details_json",
+        "perspective_text",
+        "description",
+        "event_details",
+        "judges_text",
+        "winner",
+        "official_winner",
+        "related_to",
+        "team_affiliation",
+        "borough",
+        "venue_name",
+        "calendar_type",
+        "artist_name",
+        "platform",
+        "source_url",
+        "url",
+    ]
+
+    parts = []
+
+    for field in priority_fields:
+        value = row.get(field)
+        if value:
+            parts.append(str(value))
+
+    if not parts:
+        for key, value in row.items():
+            if key == "id" or value in (None, ""):
+                continue
+            parts.append(str(value))
+            if len(parts) >= 4:
+                break
+
+    return phase3a_compact_text(" | ".join(parts), 320)
+
+
+def phase3a_record_url(table_name, row):
+    try:
+        if table_name == "submissions":
+            if row.get("submission_type") == "event":
+                return url_for("event_detail", event_id=row.get("id"))
+            return url_for("verify_submission", submission_id=row.get("id"))
+
+        if table_name == "dancer_profiles":
+            if row.get("profile_slug"):
+                return url_for("dancer_profile_detail", profile_slug=row.get("profile_slug"))
+            return f"/dancers/{row.get('id')}"
+
+        if table_name == "battle_records":
+            return url_for("battle_record_detail_phase2", battle_id=row.get("id"))
+
+        if table_name == "calendar_item_metadata" and row.get("submission_id"):
+            return url_for("event_detail", event_id=row.get("submission_id"))
+
+        if table_name == "community_perspectives":
+            return url_for("community_perspective_detail_phase2g", perspective_id=row.get("id"))
+
+        if table_name in {"music_projects", "media_items"}:
+            return url_for("litefeet_music")
+    except Exception:
+        pass
+
+    return ""
+
+
+def phase3a_record_source_url(row):
+    return row.get("source_url") or row.get("url") or row.get("video_url") or row.get("flyer_url") or ""
+
+
+def phase3a_search_ledger(question, limit=8):
+    ensure_phase2_ledger_tables()
+
+    phase2g_helper = globals().get("ensure_phase2g_community_perspective_columns")
+    if callable(phase2g_helper):
+        try:
+            phase2g_helper()
+        except Exception:
+            pass
+
+    tokens = phase3a_tokens(question)
+    if not tokens:
+        return []
+
+    search_tables = [
+        "submissions",
+        "dancer_profiles",
+        "battle_records",
+        "calendar_item_metadata",
+        "music_projects",
+        "media_items",
+        "community_perspectives",
+    ]
+
+    scored = []
+
+    for table_name in search_tables:
+        for row in phase3a_fetch_recent_rows(table_name):
+            title = phase3a_record_title(table_name, row)
+            snippet = phase3a_record_snippet(table_name, row)
+
+            title_text = title.lower()
+            full_text = " ".join(str(value or "") for value in row.values()).lower()
+
+            score = 0
+
+            for token in tokens:
+                if token in title_text:
+                    score += 8
+                if token in full_text:
+                    score += 2
+
+            if score <= 0:
+                continue
+
+            status = phase3a_record_status(table_name, row)
+
+            if status in {"Verified", "Community Supported"}:
+                score += 2
+
+            if status in {"Debated", "Needs Verification", "Pending Review"}:
+                score += 1
+
+            scored.append(
+                {
+                    "score": score,
+                    "table": table_name,
+                    "id": row.get("id"),
+                    "title": title,
+                    "type_label": phase3a_record_type_label(table_name, row),
+                    "status": status,
+                    "snippet": snippet,
+                    "url": phase3a_record_url(table_name, row),
+                    "source_url": phase3a_record_source_url(row),
+                }
+            )
+
+    scored.sort(key=lambda item: item["score"], reverse=True)
+
+    unique = []
+    seen = set()
+
+    for item in scored:
+        key = (item["table"], item["id"])
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(item)
+
+        if len(unique) >= limit:
+            break
+
+    return unique
+
+
+def phase3a_build_ask_answer(question, results):
+    if not results:
+        return (
+            "I do not have a strong Ledger match for that yet.\n\n"
+            "Status: Unknown / Needs Verification\n\n"
+            "What this means: the Ledger does not currently have enough structured records, source links, "
+            "or community perspectives connected to answer this confidently. This should be treated as an open research item."
+        )
+
+    verified_count = sum(1 for item in results if item["status"] in {"Verified", "Community Supported"})
+    debated_count = sum(1 for item in results if item["status"] in {"Debated", "Needs Verification", "Pending Review"})
+
+    lines = [
+        "Here is what I found in the Ledger:",
+        "",
+        f"Question: {question}",
+        "",
+        f"Strong / supported matches: {verified_count}",
+        f"Needs context / review matches: {debated_count}",
+        "",
+    ]
+
+    for index, item in enumerate(results, start=1):
+        lines.append(f"{index}. {item['title']}")
+        lines.append(f"   Type: {item['type_label']}")
+        lines.append(f"   Ledger status: {item['status']}")
+
+        if item["snippet"]:
+            lines.append(f"   Context: {item['snippet']}")
+
+        if item["url"]:
+            lines.append(f"   Ledger link: {item['url']}")
+
+        if item["source_url"]:
+            lines.append(f"   Source/proof: {item['source_url']}")
+
+        lines.append("")
+
+    lines.append(
+        "Read this as a Ledger search summary, not a final historical ruling. "
+        "Verified and Community Supported records carry more weight. Debated, Pending Review, "
+        "or Needs Verification records should be checked with sources or community confirmation."
+    )
+
+    return "\n".join(lines)
+
+
+def phase3a_insert_dynamic(table_name, values):
+    columns = phase3a_table_columns(table_name)
+    clean_values = {key: value for key, value in values.items() if key in columns}
+
+    if not clean_values:
+        return None
+
+    helper = (
+        globals().get("phase2g_insert_and_get_id")
+        or globals().get("phase2_safe_insert_and_get_id")
+        or globals().get("phase2_insert_and_get_id")
+        or globals().get("ledger_insert_and_get_id")
+    )
+
+    if callable(helper):
+        return helper(table_name, clean_values)
+
+    columns_sql = ", ".join(clean_values.keys())
+    values_sql = ", ".join(f":{key}" for key in clean_values.keys())
+
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            result = conn.execute(
+                text(f"INSERT INTO {table_name} ({columns_sql}) VALUES ({values_sql}) RETURNING id"),
+                clean_values,
+            )
+            return result.scalar()
+
+        result = conn.execute(
+            text(f"INSERT INTO {table_name} ({columns_sql}) VALUES ({values_sql})"),
+            clean_values,
+        )
+        return result.lastrowid
+
+
+def phase3a_insert_ask_message(conversation_id, role, message_text, source_summary=""):
+    now_value = datetime.now().isoformat(timespec="seconds")
+
+    return phase3a_insert_dynamic(
+        "ask_messages",
+        {
+            "conversation_id": conversation_id,
+            "sender": role,
+            "role": role,
+            "message_role": role,
+            "sender_type": role,
+            "message_text": message_text,
+            "content": message_text,
+            "body": message_text,
+            "source_summary": source_summary,
+            "created_at": now_value,
+            "updated_at": now_value,
+        },
+    )
+
+
+@app.route("/ask/search", methods=["POST"])
+def ask_ledger_search_phase3a():
+    ensure_phase2_ledger_tables()
+
+    user = current_user()
+    is_admin = bool(session.get("admin_logged_in"))
+
+    if not user and not is_admin:
+        return redirect(url_for("account_login", next=url_for("ask_archive")))
+
+    question = request.form.get("question", "").strip()
+
+    if len(question) < 2:
+        return redirect(url_for("ask_archive"))
+
+    results = phase3a_search_ledger(question)
+    answer = phase3a_build_ask_answer(question, results)
+
+    now_value = datetime.now().isoformat(timespec="seconds")
+    visitor_key = ""
+
+    try:
+        visitor_key = ask_beta_user_key()
+    except Exception:
+        visitor_key = session.get("visitor_key", "")
+
+    if isinstance(visitor_key, (tuple, list)):
+        visitor_key = next((str(item) for item in visitor_key if item), "")
+
+    visitor_key = str(visitor_key or "")
+
+    conversation_id = phase3a_insert_dynamic(
+        "ask_conversations",
+        {
+            "user_id": user["id"] if user else None,
+            "visitor_key": visitor_key,
+            "title": phase3a_compact_text(question, 120),
+            "status": "answered" if results else "needs_review",
+            "created_at": now_value,
+            "updated_at": now_value,
+        },
+    )
+
+    source_summary = json.dumps(results, ensure_ascii=False)
+
+    phase3a_insert_ask_message(conversation_id, "user", question)
+    phase3a_insert_ask_message(conversation_id, "assistant", answer, source_summary)
+
+    return redirect(url_for("ask_conversation_detail", conversation_id=conversation_id))
+
+
+# --- Compatibility alias for older account routes ---
+def get_current_user():
+    return current_user()
+
+
+# --- Phase 3A hotfix: dancer profile schema compatibility ---
+def phase3a_hotfix_table_columns(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def phase3a_hotfix_table_exists(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+    rows = conn.execute(
+        text("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = :table_name
+            LIMIT 1
+        """),
+        {"table_name": table_name},
+    ).fetchall()
+    return bool(rows)
+
+
+def phase3a_hotfix_add_column(conn, table_name, column_name, column_type="TEXT"):
+    existing = phase3a_hotfix_table_columns(conn, table_name)
+
+    if column_name in existing:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_type}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}"))
+
+
+def ensure_phase3a_profile_columns():
+    with engine.begin() as conn:
+        if not phase3a_hotfix_table_exists(conn, "dancer_profiles"):
+            return
+
+        for column_name in [
+            "role_tags",
+            "profile_slug",
+            "recent_battle",
+            "aliases",
+            "era",
+            "style_notes",
+            "signature_moves",
+            "battle_history",
+            "legacy_notes",
+        ]:
+            phase3a_hotfix_add_column(conn, "dancer_profiles", column_name, "TEXT")
+
+
+try:
+    ensure_phase3a_profile_columns()
+except Exception as exc:
+    print(f"Phase 3A profile schema hotfix skipped: {exc}")
