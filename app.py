@@ -18612,3 +18612,106 @@ try:
         print("Redirected /admin/login to unified account login.")
 except Exception as exc:
     print(f"Could not redirect admin_login: {exc}")
+
+
+# --- FINAL LiteFeet Music normal records override ---
+# Force normal /litefeet-music to use live records from media_items where media_type='music_release'.
+def litefeet_music_final_live_records():
+    selected_platform = (request.args.get("platform") or "all").strip()
+    selected_type = (request.args.get("type") or "all").strip()
+    selected_period = (request.args.get("period") or "all").strip()
+    search_query = (request.args.get("q") or "").strip().lower()
+
+    try:
+        records = fetch_all(
+            """
+            SELECT *
+            FROM media_items
+            WHERE media_type = 'music_release'
+            ORDER BY
+                CASE
+                    WHEN release_date IS NULL OR release_date = '' THEN created_at
+                    ELSE release_date
+                END DESC,
+                id DESC
+            LIMIT 800
+            """,
+            {},
+        ) or []
+    except Exception as exc:
+        print(f"Final LiteFeet Music fetch failed: {exc}")
+        records = []
+
+    releases = []
+    for row in records:
+        item = dict(row)
+
+        title = str(item.get("title") or "").lower()
+        artist = str(item.get("artist_or_creator") or item.get("artist_name") or "").lower()
+        producer = str(item.get("producer_name") or "").lower()
+        platform = str(item.get("platform") or "").strip()
+
+        if selected_platform and selected_platform.lower() not in {"all", "all platforms"}:
+            if platform.lower() != selected_platform.lower():
+                continue
+
+        if search_query and search_query not in title and search_query not in artist and search_query not in producer:
+            continue
+
+        item["feedback_counts"] = item.get("feedback_counts") or {}
+        item["reaction_counts"] = item.get("reaction_counts") or {}
+        item["rating_average"] = item.get("rating_average") or None
+        item["release_stage"] = item.get("release_stage") or "released"
+        item["play_count"] = item.get("play_count") or 0
+
+        releases.append(item)
+
+    release_radar = releases[:12]
+    music_records = releases
+    music_projects = []
+
+    platform_options = []
+    seen = set()
+    for row in records:
+        item = dict(row)
+        platform = (item.get("platform") or "").strip()
+        if platform and platform.lower() not in seen:
+            platform_options.append(platform)
+            seen.add(platform.lower())
+
+    try:
+        return render_template(
+            "litefeet_music.html",
+            releases=releases,
+            music_releases=releases,
+            music_records=music_records,
+            release_radar=release_radar,
+            latest_music_releases=releases,
+            media_items=releases,
+            music_projects=music_projects,
+            platform_options=platform_options,
+            selected_platform=selected_platform,
+            selected_type=selected_type,
+            selected_music_type=selected_type,
+            selected_period=selected_period,
+            period=selected_period,
+            query=request.args.get("q", ""),
+            search_query=request.args.get("q", ""),
+            feedback_counts={},
+            reaction_counts={},
+        )
+    except Exception as exc:
+        print(f"Final LiteFeet Music template failed: {exc}")
+        fallback = globals().get("litefeet_music_media_items_fast_table") or globals().get("litefeet_music_fast_table")
+        if callable(fallback):
+            return fallback()
+        return emergency_fast_html("LiteFeet Music", "Music records were found, but the page template needs another fix.", 200)
+
+
+try:
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/litefeet-music":
+            app.view_functions[rule.endpoint] = litefeet_music_final_live_records
+            print(f"FINAL override active for /litefeet-music endpoint: {rule.endpoint}")
+except Exception as exc:
+    print(f"Final LiteFeet Music route override failed: {exc}")
