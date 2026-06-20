@@ -17824,3 +17824,315 @@ def emergency_404(error):
         "The link may have moved, the page may still be under rebuild, or the record may not exist yet.",
         404,
     )
+
+
+# --- Restore People and Music fast table pages ---
+# Restores useful records while keeping pages fast and template-light.
+
+def ledger_row_value(row, *keys, default=""):
+    for key in keys:
+        try:
+            value = row.get(key)
+        except Exception:
+            try:
+                value = row[key]
+            except Exception:
+                value = None
+        if value not in (None, ""):
+            return value
+    return default
+
+
+def ledger_escape(value):
+    import html
+    return html.escape(str(value or ""))
+
+
+def ledger_table_exists_fast(table_name):
+    try:
+        if engine.dialect.name == "postgresql":
+            row = fetch_one(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                LIMIT 1
+                """,
+                {"table_name": table_name},
+            )
+            return bool(row)
+        row = fetch_one(
+            """
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = :table_name
+            LIMIT 1
+            """,
+            {"table_name": table_name},
+        )
+        return bool(row)
+    except Exception as exc:
+        print(f"table exists check failed for {table_name}: {exc}")
+        return False
+
+
+def ledger_table_columns_fast(table_name):
+    try:
+        if engine.dialect.name == "postgresql":
+            rows = fetch_all(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                ORDER BY ordinal_position
+                """,
+                {"table_name": table_name},
+            )
+            return [ledger_row_value(row, "column_name") for row in rows]
+        rows = fetch_all(f"PRAGMA table_info({table_name})", {})
+        return [ledger_row_value(row, "name") for row in rows]
+    except Exception as exc:
+        print(f"column check failed for {table_name}: {exc}")
+        return []
+
+
+def ledger_fetch_table_fast(table_name, limit=500):
+    try:
+        if not ledger_table_exists_fast(table_name):
+            return []
+
+        columns = ledger_table_columns_fast(table_name)
+        order_candidates = [
+            "updated_at",
+            "created_at",
+            "release_date",
+            "event_date",
+            "date",
+            "id",
+        ]
+        order_col = next((column for column in order_candidates if column in columns), None)
+
+        order_sql = f" ORDER BY {order_col} DESC" if order_col else ""
+        query = f"SELECT * FROM {table_name}{order_sql} LIMIT :limit"
+        return fetch_all(query, {"limit": limit}) or []
+    except Exception as exc:
+        print(f"fetch table failed for {table_name}: {exc}")
+        return []
+
+
+def ledger_fast_shell(title, subtitle, body_html):
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{ledger_escape(title)} | The LiteFeet Ledger</title>
+<style>
+body{{margin:0;background:#030303;color:#f4f1e8;font-family:Arial,sans-serif;}}
+.wrap{{max-width:1180px;margin:0 auto;padding:28px 22px 70px;}}
+.nav{{display:flex;gap:18px;flex-wrap:wrap;align-items:center;border-bottom:1px solid rgba(216,184,76,.25);padding-bottom:18px;margin-bottom:34px;}}
+.brand{{color:#d8b84c;font-weight:800;letter-spacing:.08em;margin-right:12px;}}
+.nav a{{color:#e7e0d0;text-decoration:none;font-weight:700;}}
+.nav a:hover{{color:#f0d56b;}}
+.eyebrow{{color:#d8b84c;text-transform:uppercase;letter-spacing:.18em;font-size:12px;font-weight:800;}}
+h1{{font-size:clamp(38px,7vw,76px);line-height:.94;margin:14px 0 12px;}}
+p{{color:#d7d1c4;font-size:17px;line-height:1.5;}}
+.table-wrap{{overflow-x:auto;border:1px solid rgba(216,184,76,.18);border-radius:18px;margin-top:26px;}}
+table{{width:100%;border-collapse:collapse;min-width:820px;}}
+th,td{{padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;vertical-align:top;}}
+th{{color:#d8b84c;text-transform:uppercase;letter-spacing:.08em;font-size:12px;background:rgba(216,184,76,.06);}}
+td{{color:#eee7d9;font-size:15px;}}
+small{{color:#a9a194;}}
+.badge{{display:inline-block;border:1px solid rgba(216,184,76,.35);border-radius:999px;padding:4px 8px;color:#f0d56b;font-size:12px;}}
+.empty{{border:1px solid rgba(216,184,76,.18);border-radius:18px;padding:20px;margin-top:24px;background:rgba(255,255,255,.025);}}
+.actions{{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;}}
+.button{{border:1px solid rgba(240,213,107,.45);border-radius:999px;padding:10px 14px;color:#f0d56b;text-decoration:none;font-weight:800;}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<nav class="nav">
+<span class="brand">LiteFeet Ledger</span>
+<a href="/">Home</a>
+<a href="/ask">Ask</a>
+<a href="/calendar">Calendar</a>
+<a href="/people/dancers">People & Teams</a>
+<a href="/litefeet-music">LiteFeet Music</a>
+<a href="/battles">Battles</a>
+<a href="/awards">Awards</a>
+<a href="/about">About</a>
+<a href="/account/login">Log In</a>
+</nav>
+
+<p class="eyebrow">The LiteFeet Ledger</p>
+<h1>{ledger_escape(title)}</h1>
+<p>{ledger_escape(subtitle)}</p>
+
+{body_html}
+
+<div class="actions">
+<a class="button" href="/submit/start">Add to the Ledger</a>
+<a class="button" href="/">Back Home</a>
+</div>
+</main>
+</body>
+</html>"""
+
+
+def people_dancers_fast_table():
+    records = ledger_fetch_table_fast("dancer_profiles", 800)
+
+    rows_html = ""
+    for record in records:
+        name = ledger_row_value(record, "dance_name", "name", "display_name", "real_name", default="Unnamed")
+        team = ledger_row_value(record, "team_affiliation", "team", "crew", "affiliation", default="")
+        borough = ledger_row_value(record, "borough_scene", "borough", "scene", "location", default="")
+        role = ledger_row_value(record, "role", "primary_role", "profile_type", default="Dancer")
+        status = ledger_row_value(record, "status", "account_status", "profile_status", default="")
+        slug = ledger_row_value(record, "slug", "profile_slug", default="")
+        record_id = ledger_row_value(record, "id", default="")
+
+        if slug:
+            link = f"/people/dancers/{ledger_escape(slug)}"
+        elif record_id:
+            link = f"/dancers/{ledger_escape(record_id)}"
+        else:
+            link = ""
+
+        name_html = f'<a href="{link}" style="color:#f0d56b;text-decoration:none;font-weight:800;">{ledger_escape(name)}</a>' if link else ledger_escape(name)
+
+        rows_html += f"""
+<tr>
+<td>{name_html}</td>
+<td>{ledger_escape(team)}</td>
+<td>{ledger_escape(borough)}</td>
+<td>{ledger_escape(role)}</td>
+<td><span class="badge">{ledger_escape(status or "Listed")}</span></td>
+</tr>
+"""
+
+    if rows_html:
+        body = f"""
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Team / Affiliation</th>
+<th>Borough / Scene</th>
+<th>Role</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+{rows_html}
+</tbody>
+</table>
+</div>
+<p><small>{len(records)} people records loaded.</small></p>
+"""
+    else:
+        body = """
+<div class="empty">
+<h2>No people records loaded yet.</h2>
+<p>The table is working, but no dancer profile records were returned from the live database.</p>
+</div>
+"""
+
+    return ledger_fast_shell(
+        "People & Teams",
+        "List view is active. Grid view is paused while the public pages are stabilized.",
+        body,
+    )
+
+
+def litefeet_music_fast_table():
+    records = ledger_fetch_table_fast("music_projects", 800)
+
+    # If the newer table is empty, try older/general media storage as fallback.
+    fallback_note = ""
+    if not records and ledger_table_exists_fast("media_items"):
+        media = ledger_fetch_table_fast("media_items", 800)
+        records = [
+            row for row in media
+            if str(ledger_row_value(row, "category", "type", "media_type", default="")).lower() in {
+                "music", "song", "track", "release", "litefeet music"
+            }
+        ]
+        if records:
+            fallback_note = "Loaded from media_items fallback."
+
+    rows_html = ""
+    for record in records:
+        title = ledger_row_value(record, "title", "name", "project_title", "track_title", default="Untitled")
+        artist = ledger_row_value(record, "artist", "artists", "artist_name", "primary_artist", default="")
+        producer = ledger_row_value(record, "producer", "producer_name", "producers", default="")
+        release_date = ledger_row_value(record, "release_date", "date", "created_at", default="")
+        platform = ledger_row_value(record, "platform", "source_platform", "streaming_platform", default="")
+        status = ledger_row_value(record, "status", "verification_status", default="")
+        url = ledger_row_value(record, "url", "source_url", "link", "platform_url", default="")
+
+        title_html = f'<a href="{ledger_escape(url)}" target="_blank" rel="noopener" style="color:#f0d56b;text-decoration:none;font-weight:800;">{ledger_escape(title)}</a>' if url else ledger_escape(title)
+
+        rows_html += f"""
+<tr>
+<td>{title_html}</td>
+<td>{ledger_escape(artist)}</td>
+<td>{ledger_escape(producer)}</td>
+<td>{ledger_escape(release_date)}</td>
+<td>{ledger_escape(platform)}</td>
+<td><span class="badge">{ledger_escape(status or "Listed")}</span></td>
+</tr>
+"""
+
+    if rows_html:
+        body = f"""
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Title</th>
+<th>Artist(s)</th>
+<th>Producer(s)</th>
+<th>Date</th>
+<th>Platform</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+{rows_html}
+</tbody>
+</table>
+</div>
+<p><small>{len(records)} music records loaded. {ledger_escape(fallback_note)}</small></p>
+"""
+    else:
+        body = """
+<div class="empty">
+<h2>No music records loaded yet.</h2>
+<p>The music page is working, but the live database did not return records from music_projects or the fallback media table.</p>
+</div>
+"""
+
+    return ledger_fast_shell(
+        "LiteFeet Music",
+        "Release table is active. Heavy music cards are paused while the public pages are stabilized.",
+        body,
+    )
+
+
+def ledger_override_people_music_fast(paths, view_function):
+    try:
+        for rule in list(app.url_map.iter_rules()):
+            if str(rule.rule) in paths:
+                app.view_functions[rule.endpoint] = view_function
+                print(f"Restored fast table route {rule.rule} -> {view_function.__name__}")
+    except Exception as exc:
+        print(f"People/Music route override failed for {paths}: {exc}")
+
+
+ledger_override_people_music_fast({"/people/dancers", "/dancers"}, people_dancers_fast_table)
+ledger_override_people_music_fast({"/litefeet-music"}, litefeet_music_fast_table)
