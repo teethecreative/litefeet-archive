@@ -1,66 +1,84 @@
 {% extends "base.html" %}
 
-{% block title %}LiteFeet Music, Producers & Release Radar | LiteFeet Ledger{% endblock %}
-{% block meta_description %}Explore LiteFeet music, producer releases, Release Radar, projects, playlists, credits, platforms, and music connected to LiteFeet culture.{% endblock %}
+{% block title %}LiteFeet Music | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Browse LiteFeet music releases, producer drops, Release Radar, all-time releases, Ledger plays, ratings, reactions, and community feedback.{% endblock %}
 
 {% block content %}
+{% set music_records = releases if releases is defined else music_releases if music_releases is defined else latest_music_releases if latest_music_releases is defined else media_items if media_items is defined else [] %}
+
 <section class="content-section music-page">
-    <p class="eyebrow">LiteFeet Music</p>
-    <h1>Release Radar</h1>
-    <p>
-        New releases from the last 7 days live in the Radar. Older submissions still count toward rankings and All Time releases.
-    </p>
-
-    {% if request.args.get("duplicate") %}
-        <div class="empty-state compact-empty">
-            <h3>That release already looks like it is in the Radar.</h3>
-            <p>The site matched it by producer/artist and title to prevent duplicate entries.</p>
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">LiteFeet Music</p>
+            <h1>LiteFeet Music</h1>
+            <p>
+                A Ledger for LiteFeet-connected songs, producer drops, projects, beats, battle tracks,
+                videos, ratings, reactions, and community listening activity.
+            </p>
         </div>
-    {% endif %}
 
-    <div class="hero-actions">
-        <a class="button primary" href="{{ url_for('submit_music_project') }}">Submit Music</a>
+        <div class="hero-actions">
+            <a class="button primary" href="{{ url_for('submit_info') }}">Submit Music</a>
+            {% if session.get("admin_logged_in") %}
+                <a class="button secondary" href="{{ url_for('admin_media') }}">Add Release</a>
+            {% endif %}
+        </div>
     </div>
 
-    <div class="music-search-row">
-        <input
-            type="search"
-            id="musicFeedSearch"
-            placeholder="Search releases, producers, platforms..."
-            aria-label="Search releases">
+    <div class="music-filter-row">
+        <span class="filter-pill">Release Radar</span>
+        <span class="filter-pill">All-Time Releases</span>
+        <span class="filter-pill">Producers</span>
+        <span class="filter-pill">Artists</span>
+        <span class="filter-pill">Lab</span>
+        <span class="filter-pill">Battle</span>
+        <span class="filter-pill">Video</span>
     </div>
+</section>
+
+<section class="homepage-section release-radar-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Release Radar</p>
+            <h2>Recent Drops</h2>
+        </div>
+    </div>
+
+    <p class="section-intro">
+        Release Radar should focus on recent LiteFeet-connected releases. If the release date is missing,
+        the Ledger can fall back to the date it was submitted or added.
+    </p>
 
     <div class="top-playlist-player" data-top-playlist-player>
         <div>
             <p class="eyebrow">Now Playing</p>
             <h3 data-player-title>Pick a release</h3>
-            <p class="small-note" data-player-meta>The Ledger player will play tracks on-site when a direct playable URL is saved.</p>
+            <p class="small-note" data-player-meta>Playable links load here when a direct or embeddable source is saved.</p>
         </div>
         <div class="top-playlist-player-body" data-player-body>
             <p class="small-note">Tap a play button to load a track here.</p>
         </div>
     </div>
 
-    <div class="release-table-wrap release-radar-table-wrap">
-        {% if release_radar %}
-            <table class="release-table release-radar-table">
+    {% if music_records %}
+        <div class="release-table-wrap">
+            <table class="release-table music-release-table">
                 <thead>
                     <tr>
                         <th>Play</th>
                         <th>Title</th>
-                        <th>Artist(s)</th>
+                        <th>Artist / Producer</th>
                         <th>Date</th>
                         <th>Platform</th>
-                        <th>Stats</th>
+                        <th>Use</th>
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody id="musicFeedList">
-                    {% for item in release_radar %}
-                        {% set embed_url = item["embed_url"] or (item["url"]|media_embed_url if item["url"] else "") %}
-                        <tr
-                            data-release-row
-                            data-search="{{ item['title'] }} {{ item['artist_or_creator'] }} {{ item['platform'] }} {{ item['description'] }}">
+
+                <tbody>
+                    {% for item in music_records %}
+                        {% set embed_url = item["url"]|media_embed_url if item["url"] else "" %}
+                        <tr>
                             <td>
                                 <button
                                     type="button"
@@ -68,10 +86,10 @@
                                     data-play-item-id="{{ item['id'] }}"
                                     data-play-count="{{ item['play_count'] or 0 }}"
                                     data-player-title="{{ item['title'] }}"
-                                    data-player-artist="{{ item['artist_or_creator'] or 'Unknown producer' }}"
+                                    data-player-artist="{{ item['artist_or_creator'] or 'Unknown' }}"
                                     data-player-platform="{{ item['platform'] or item['url']|media_platform }}"
                                     data-player-playable-url="{{ item['playable_url'] or '' }}"
-                                    data-player-embed-url="{{ embed_url or "" }}"
+                                    data-player-embed-url="{{ embed_url or '' }}"
                                     data-player-source-url="{{ item['url'] or '' }}"
                                     aria-label="Play {{ item['title'] }}">
                                     ▶
@@ -79,216 +97,31 @@
                             </td>
 
                             <td>
-                                <a class="release-title-link" href="{{ url_for('music_release_detail', item_id=item['id']) }}">
-                                    {{ item["title"] }}
-                                </a>
-                            </td>
-
-                            <td>
-                                {% if item.get("producer_profile") %}
-                                    <a class="producer-link" href="{{ url_for('dancer_profile_detail_by_id', dancer_id=item['producer_profile']['id']) }}">{{ item["artist_or_creator"] }}</a>
+                                {% if item["id"] %}
+                                    <a href="{{ url_for('music_release_detail', item_id=item['id']) }}">{{ item["title"] }}</a>
                                 {% else %}
-                                    {{ item["artist_or_creator"] or "Unknown" }}
+                                    {{ item["title"] or "Untitled release" }}
                                 {% endif %}
                             </td>
 
+                            <td>{{ item["artist_or_creator"] or item["artist"] or item["producer"] or "Unknown" }}</td>
                             <td>{% if item["release_date"] %}{{ item["release_date"]|music_release_date }}{% else %}Date unknown{% endif %}</td>
-                            <td>{{ item["platform"] or item["url"]|media_platform }}</td>
+                            <td>{{ item["platform"] or item["url"]|media_platform or "—" }}</td>
 
                             <td>
-                                <div class="release-stat-line">
-                                    <span>Ledger Plays {{ item["play_count"] or 0 }}</span>
-                                    <span>Rating {{ "%.1f"|format(item["average_rating"] or 0) }}/10</span>
-                                    <span>Lab {{ item["lab_count"] or 0 }}</span>
-                                    <span>Video {{ item["video_count"] or 0 }}</span>
-                                    <span>Battle {{ item["battle_count"] or 0 }}</span>
-                                </div>
+                                <span class="music-use-pill">Lab</span>
+                                <span class="music-use-pill">Battle</span>
+                                <span class="music-use-pill">Video</span>
                             </td>
 
-                            <td class="release-action-cell">
-                                {% if logged_in_user %}
-                                    <details class="mini-feedback-panel">
-                                        <summary>Rate / React</summary>
-
-                                        <form method="POST" action="{{ url_for('music_feedback_submit', item_id=item['id']) }}" class="music-feedback-form compact-feedback-form">
-                                            <input type="hidden" name="action" value="full">
-
-                                            <label>
-                                                Rating
-                                                <select name="rating">
-                                                    <option value="">No rating</option>
-                                                    <option value="10">10 - Crazy</option>
-                                                    <option value="8">8 - Fire</option>
-                                                    <option value="6">6 - Solid</option>
-                                                    <option value="4">4 - Needs work</option>
-                                                    <option value="2">2 - Not for me</option>
-                                                </select>
-                                            </label>
-
-                                            <label class="checkbox-line">
-                                                <input type="checkbox" name="would_lab" value="1">
-                                                Lab
-                                            </label>
-
-                                            <label class="checkbox-line">
-                                                <input type="checkbox" name="would_shoot_video" value="1">
-                                                Shoot Video
-                                            </label>
-
-                                            <label class="checkbox-line">
-                                                <input type="checkbox" name="would_battle" value="1">
-                                                Battle
-                                            </label>
-
-                                            <label>
-                                                Feedback
-                                                <textarea name="feedback" placeholder="Optional feedback"></textarea>
-                                            </label>
-
-                                            <button type="submit" class="button primary small-button">Save</button>
-                                        </form>
-                                    </details>
+                            <td>
+                                {% if item["id"] %}
+                                    <a class="button small-button secondary" href="{{ url_for('music_release_detail', item_id=item['id']) }}">Open</a>
+                                {% elif item["url"] %}
+                                    <a class="button small-button secondary" href="{{ item['url'] }}" target="_blank" rel="noopener">Open</a>
                                 {% else %}
-                                    <a class="button small-button secondary" href="{{ url_for('account_login') }}">Log in to rate</a>
+                                    <span class="small-note">No link</span>
                                 {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <div class="empty-state">
-                <h3>No releases added yet.</h3>
-                <p>No recent releases yet. Submit a new release to appear in the Radar, or add an older release for the All Time rankings.</p>
-            </div>
-        {% endif %}
-    </div>
-</section>
-
-
-
-<section class="content-section music-page all-time-releases-section">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Community Releases</p>
-            <h2>All Time Releases <span class="small-note">(Songs Only)</span></h2>
-        </div>
-
-        <div class="music-ranking-controls compact-release-controls">
-            <form method="GET" action="{{ url_for('litefeet_music') }}" class="period-filter-form">
-                <label>
-                    Time Period
-                    <select name="period" onchange="this.form.submit()">
-                        <option value="all" {% if period == "all" %}selected{% endif %}>All Time</option>
-                        <option value="week" {% if period == "week" %}selected{% endif %}>Last Week</option>
-                        <option value="30" {% if period == "30" %}selected{% endif %}>Last 30 Days</option>
-                        <option value="60" {% if period == "60" %}selected{% endif %}>Last 60 Days</option>
-                        <option value="6months" {% if period == "6months" %}selected{% endif %}>Last 6 Months</option>
-                        <option value="year" {% if period == "year" %}selected{% endif %}>Last Year</option>
-                    </select>
-                </label>
-            </form>
-
-            <label>
-                Producer
-                <input type="search" id="releaseProducerFilter" placeholder="Filter producer">
-            </label>
-
-            <label>
-                Track Type
-                <select id="releaseTypeFilter">
-                    <option value="">All Tracks</option>
-                    <option value="battle">Battle Track</option>
-                    <option value="video">Video Track</option>
-                    <option value="lab">Lab Track</option>
-                </select>
-            </label>
-
-            <label>
-                Sort
-                <select id="releaseSort">
-                    <option value="popularity">Popularity</option>
-                    <option value="release_date_desc">Release Date Newest</option>
-                    <option value="release_date_asc">Release Date Oldest</option>
-                    <option value="az">A-Z</option>
-                    <option value="za">Z-A</option>
-                </select>
-            </label>
-        </div>
-    </div>
-
-    {% if releases %}
-        <div class="release-table-wrap">
-            <table class="release-table">
-                <thead>
-                    <tr>
-                        <th>Play</th>
-                        <th>Title</th>
-                        <th>Artist(s)</th>
-                        <th>Date</th>
-                        <th>Platform</th>
-                        <th>Stats</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in releases %}
-                        {% set playback = item|music_playback_status %}
-                        {% set embed_url = item["embed_url"] or (item["url"]|media_embed_url if item["url"] else "") %}
-                        <tr
-                            data-release-row
-                            data-title="{{ item['title']|lower }}"
-                            data-producer="{{ (item['artist_or_creator'] or '')|lower }}"
-                            data-date="{{ item['release_date'] or '' }}"
-                            data-popularity="{{ (item['average_rating'] or 0) + (item['feedback_count'] or 0) + (item['lab_count'] or 0) + (item['video_count'] or 0) + (item['battle_count'] or 0) + (item['play_count'] or 0) }}"
-                            data-lab="{{ item['lab_count'] or 0 }}"
-                            data-video="{{ item['video_count'] or 0 }}"
-                            data-battle="{{ item['battle_count'] or 0 }}">
-                            <td>
-                                {% set embed_url = item["url"]|media_embed_url if item["url"] else "" %}
-                                <button
-                                    type="button"
-                                    class="playlist-play-button table-play-control"
-                                    data-play-item-id="{{ item['id'] }}"
-                                    data-play-count="{{ item['play_count'] or 0 }}"
-                                    data-player-title="{{ item['title'] }}"
-                                    data-player-artist="{{ item['artist_or_creator'] or 'Unknown producer' }}"
-                                    data-player-platform="{{ item['platform'] or item['url']|media_platform }}"
-                                    data-player-playable-url="{{ item['playable_url'] or '' }}"
-                                    data-player-embed-url="{{ embed_url or '' }}"
-                                    data-player-source-url="{{ item['url'] or '' }}">
-                                    {% if playback["state"] in ["audio", "embed", "maybe"] %}
-                                        ▶
-                                    {% else %}
-                                        —
-                                    {% endif %}
-                                </button>
-                            </td>
-
-                            <td>
-                                <a class="release-title-link" href="{{ url_for('music_release_detail', item_id=item['id']) }}">
-                                    {{ item["title"] }}
-                                </a>
-                            </td>
-
-                            <td>
-                                {% if item.get("producer_profile") %}
-                                    <a class="producer-link" href="{{ url_for('dancer_profile_detail_by_id', dancer_id=item['producer_profile']['id']) }}">{{ item["artist_or_creator"] }}</a>
-                                {% else %}
-                                    {{ item["artist_or_creator"] or "Unknown" }}
-                                {% endif %}
-                            </td>
-
-                            <td>{{ item["release_date"]|music_release_date }}</td>
-                            <td>{{ item["platform"] or "Unknown" }}</td>
-
-                            <td>
-                                <div class="release-stat-line">
-                                    <span>Ledger Plays {{ item["play_count"] or 0 }}</span>
-                                    <span>Rating {{ "%.1f"|format(item["average_rating"] or 0) }}/10</span>
-                                    <span>Lab {{ item["lab_count"] or 0 }}</span>
-                                    <span>Video {{ item["video_count"] or 0 }}</span>
-                                    <span>Battle {{ item["battle_count"] or 0 }}</span>
-                                </div>
                             </td>
                         </tr>
                     {% endfor %}
@@ -296,11 +129,77 @@
             </table>
         </div>
     {% else %}
-        <div class="empty-state">
-            <h3>No releases added yet.</h3>
-            <p>Add a song to start building the All Time Releases table.</p>
+        <div class="empty-state compact-empty">
+            <h3>No music records are loaded here yet.</h3>
+            <p>Producer drops, projects, battle tracks, and releases will appear here once they are added.</p>
         </div>
     {% endif %}
 </section>
 
+<section class="homepage-section music-sections-grid">
+    <article>
+        <p class="eyebrow">All-Time Releases</p>
+        <h2>Full Catalog</h2>
+        <p>
+            The all-time catalog will support filters by time period, producer, artist, platform,
+            rating, use type, most played, newest, oldest, and highest rated.
+        </p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Ledger Plays</p>
+        <h2>On-site activity</h2>
+        <p>
+            Ledger plays should track on-site listening separately from original platform stats.
+            Platform activity can be shown only where it is supported or manually verified.
+        </p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Community Reactions</p>
+        <h2>Lab / Battle / Video</h2>
+        <p>
+            Dancers can eventually mark whether they would lab to it, battle to it, shoot a video to it,
+            and rate the release from 1–10.
+        </p>
+    </article>
+</section>
+
+<style>
+    .music-filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .filter-pill,
+    .music-use-pill {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.14));
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-size: 0.82rem;
+        display: inline-block;
+        margin: 2px;
+    }
+
+    .music-sections-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .music-sections-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    @media (max-width: 900px) {
+        .music-sections-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}

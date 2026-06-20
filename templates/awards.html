@@ -1,57 +1,150 @@
 {% extends "base.html" %}
 
-{% block title %}LiteFeet Awards, Honors & Community Records | LiteFeet Ledger{% endblock %}
-{% block meta_description %}Browse LiteFeet awards, honors, community records, recognition, winners, and documented achievements across LiteFeet culture.{% endblock %}
+{% block title %}Awards | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Browse LiteFeet awards, nominees, winners, award organizers, yearly categories, community accolades, and Ledger-calculated recognition.{% endblock %}
 
 {% block content %}
-<section class="content-section">
-    <h1>LiteFeet Awards</h1>
-    <p>
-        This section preserves LiteFeet Awards history, past winners, nominees, Hall of Fame records,
-        ceremony updates, clips, and source links.
-    </p>
+{% set award_records = awards if awards is defined else award_rows if award_rows is defined else records if records is defined else [] %}
 
-    {% if approved_awards %}
-        <div class="submission-list">
-            {% for award in approved_awards %}
-                <article class="submission-card">
-                    <div class="submission-meta">
-                        <span>{{ award["review_status"] }}</span>
-                        <span>LiteFeet Awards</span>
-                    </div>
+<section class="content-section awards-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Awards</p>
+            <h1>LiteFeet Awards</h1>
+            <p>
+                A structured space for yearly awards, award organizers, categories, nominees, winners,
+                outside accolades, community votes, and Ledger-calculated recognition.
+            </p>
+        </div>
 
-                    <h2>{{ award["title"] }}</h2>
+        <a class="button primary" href="{{ url_for('submit_info') }}">Submit Award Info</a>
+    </div>
 
-                    {% if award["source_url"] %}
-                        <p><strong>Source:</strong> <a href="{{ award['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
-                    {% endif %}
+    <div class="award-org-row">
+        <span class="award-org-pill">LiteFeet Awards</span>
+        <span class="award-org-pill">Dancer’s Choice Awards</span>
+        <span class="award-org-pill">Ledger-calculated Awards</span>
+        <span class="award-org-pill">Other</span>
+    </div>
+</section>
 
-                    {% set details = award["details_json"] | from_json %}
-                    {% if details %}
-                        <div class="review-details">
-                            <h3>Award Details</h3>
-                            <dl>
-                                {% for item in details %}
-                                    <div class="detail-row">
-                                        <dt>{{ item["label"] }}</dt>
-                                        <dd>{{ item["value"] }}</dd>
-                                    </div>
-                                {% endfor %}
-                            </dl>
-                        </div>
-                    {% endif %}
-                </article>
-            {% endfor %}
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Structure</p>
+            <h2>Year → Organizer → Category → Nominees → Winner</h2>
+        </div>
+    </div>
+
+    {% if award_records %}
+        <div class="release-table-wrap">
+            <table class="release-table awards-table">
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Organizer</th>
+                        <th>Category</th>
+                        <th>Nominees</th>
+                        <th>Winner</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for award in award_records %}
+                        <tr>
+                            <td>{{ award["year"] or award["award_year"] or "Year TBD" }}</td>
+                            <td>{{ award["organizer"] or award["award_organizer"] or award["related_to"] or "—" }}</td>
+                            <td>{{ award["category"] or award["award_category"] or award["title"] or "Award category" }}</td>
+                            <td>{{ award["nominees"] or "Nominees TBD" }}</td>
+                            <td>{{ award["winner"] or "Winner hidden / TBD" }}</td>
+                            <td>{{ award["review_status"] or award["status"] or "Needs Review" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     {% else %}
-        <div class="empty-state">
-            <h3>Help complete the awards ledger</h3>
+        <div class="empty-state compact-empty">
+            <h3>No structured awards loaded yet.</h3>
             <p>
-                We’re still collecting verified nominees, winners, clips, flyers, ceremony details, and source links
-                from past LiteFeet Awards years.
+                Awards will be organized by year, award organizer, category, nominees, and winner
+                once those records are added.
             </p>
-            <a href="{{ url_for('submit_info') }}" class="button primary">Submit Awards Info</a>
         </div>
     {% endif %}
 </section>
+
+<section class="homepage-section awards-grid">
+    <article>
+        <p class="eyebrow">LiteFeet Awards</p>
+        <h2>Historical awards</h2>
+        <p>Track existing LiteFeet awards, yearly categories, nominees, winners, hosts, and proof sources.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Dancer’s Choice</p>
+        <h2>Community voting</h2>
+        <p>Future Dancer’s Choice awards can combine Ledger data with community voting and review rules.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Ledger-calculated</p>
+        <h2>Data-backed recognition</h2>
+        <p>
+            The Ledger can eventually calculate recognition from battles, music activity, events,
+            verified records, and community participation.
+        </p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Outside Accolades</p>
+        <h2>Profile-submitted</h2>
+        <p>
+            Dancers, producers, hosts, teams, and organizers should be able to submit outside accolades
+            from their own profile.
+        </p>
+    </article>
+</section>
+
+<style>
+    .award-org-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .award-org-pill {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.14));
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-size: 0.82rem;
+    }
+
+    .awards-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .awards-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    @media (max-width: 1000px) {
+        .awards-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 700px) {
+        .awards-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}

@@ -1,56 +1,173 @@
 {% extends "base.html" %}
 
-{% block title %}LiteFeet Battle Results & Matchups | LiteFeet Ledger{% endblock %}
-{% block meta_description %}Browse LiteFeet battle results, matchups, winners, brackets, events, and verified battle history documented by the community.{% endblock %}
+{% block title %}Battles | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Browse LiteFeet battle records, videos, official winners, judges, events, debated battles, and community input in The LiteFeet Ledger.{% endblock %}
 
 {% block content %}
-<section class="content-section">
-    <h1>Battle Results</h1>
-    <p>
-        Battle results track recorded matchups, winners, dates, events, categories, judges, and source links.
-    </p>
+{% set battle_records = battles if battles is defined else battle_rows if battle_rows is defined else records if records is defined else [] %}
+{% set video_records = latest_battle_videos if latest_battle_videos is defined else battle_videos if battle_videos is defined else media_items if media_items is defined else [] %}
 
-    {% if approved_battles %}
-        <div class="submission-list">
-            {% for battle in approved_battles %}
-                <article class="submission-card">
-                    <div class="submission-meta">
-                        <span>{{ battle["review_status"] }}</span>
-                        <span>Battle Result</span>
-                    </div>
+<section class="content-section battles-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Battles</p>
+            <h1>LiteFeet Battles</h1>
+            <p>
+                Battle records should separate official event results, video proof, judge decisions,
+                community context, debated outcomes, and missing details.
+            </p>
+        </div>
 
-                    <h2>{{ battle["title"] }}</h2>
+        <a class="button primary" href="{{ url_for('submit_info') }}">Submit Battle Info</a>
+    </div>
+</section>
 
-                    {% if battle["source_url"] %}
-                        <p><strong>Source:</strong> <a href="{{ battle['source_url'] }}" target="_blank" rel="noopener">Open source link</a></p>
-                    {% endif %}
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Watch</p>
+            <h2>Battle Video Playlist</h2>
+        </div>
+    </div>
 
-                    {% set details = battle["details_json"] | from_json %}
-                    {% if details %}
-                        <div class="review-details">
-                            <h3>Battle Details</h3>
-                            <dl>
-                                {% for item in details %}
-                                    <div class="detail-row">
-                                        <dt>{{ item["label"] }}</dt>
-                                        <dd>{{ item["value"] }}</dd>
-                                    </div>
-                                {% endfor %}
-                            </dl>
+    {% if video_records %}
+        <div class="video-feed-grid compact-video-playlist">
+            {% for item in video_records %}
+                <article class="media-card video-card">
+                    {% set embed_url = item["url"] | media_embed_url if item["url"] else "" %}
+
+                    {% if embed_url %}
+                        <iframe
+                            src="{{ embed_url }}"
+                            title="{{ item['title'] }}"
+                            loading="lazy"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen>
+                        </iframe>
+                    {% elif item["url"] %}
+                        <div class="media-placeholder">
+                            <a href="{{ item['url'] }}" target="_blank" rel="noopener">Open Video</a>
                         </div>
+                    {% else %}
+                        <div class="media-placeholder">Video link needed</div>
                     {% endif %}
+
+                    <div class="media-card-body">
+                        <p class="media-meta">
+                            {{ item["platform"] or item["url"]|media_platform }}
+                            {% if item["release_date"] %} · {{ item["release_date"]|ledger_date }}{% endif %}
+                        </p>
+                        <h3>{{ item["title"] or "Untitled battle video" }}</h3>
+
+                        {% if item["event_name"] %}
+                            <p><strong>Event:</strong> {{ item["event_name"] }}</p>
+                        {% endif %}
+                    </div>
                 </article>
             {% endfor %}
         </div>
     {% else %}
-        <div class="empty-state">
-            <h3>Battle results are still being collected</h3>
-            <p>
-                This section will hold verified and community-reviewed LiteFeet battle records. Help build the record by
-                submitting result links, battle videos, flyers, or host recaps.
-            </p>
-            <a href="{{ url_for('submit_info') }}" class="button primary">Submit Battle Result</a>
+        <div class="empty-state compact-empty">
+            <h3>No battle videos loaded here yet.</h3>
+            <p>Battle videos, recaps, and proof links will appear here once they are connected.</p>
         </div>
     {% endif %}
 </section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Records</p>
+            <h2>All-Time Battle Table</h2>
+        </div>
+    </div>
+
+    {% if battle_records %}
+        <div class="release-table-wrap">
+            <table class="release-table battle-table">
+                <thead>
+                    <tr>
+                        <th>Battle</th>
+                        <th>Winner</th>
+                        <th>Date</th>
+                        <th>Event</th>
+                        <th>Judges</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for battle in battle_records %}
+                        <tr>
+                            <td>{{ battle["battle_name"] or battle["title"] or battle["matchup"] or "Battle record" }}</td>
+                            <td>{{ battle["winner"] or battle["official_winner"] or "Needs result" }}</td>
+                            <td>{{ battle["event_date"] or battle["date"] or battle["release_date"] or "Date TBD" }}</td>
+                            <td>{{ battle["event_name"] or battle["event"] or "—" }}</td>
+                            <td>{{ battle["judges"] or "—" }}</td>
+                            <td>{{ battle["review_status"] or battle["status"] or "Needs Review" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>Structured battle records are coming next.</h3>
+            <p>
+                This table is ready for who battled, official winner, date, event, organizer,
+                judges, video, controversy score, and community input.
+            </p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="homepage-section battles-info-grid">
+    <article>
+        <p class="eyebrow">Official Winner</p>
+        <h2>Event result first</h2>
+        <p>
+            The official winner should reflect what the event judges decided, even if community discussion
+            later adds disagreement or context.
+        </p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Debated Battles</p>
+        <h2>Not erased</h2>
+        <p>
+            Debated outcomes should be marked clearly with community context, disagreement, comments,
+            corrections, and proof links.
+        </p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Battle Types</p>
+        <h2>1v1 / 2v2 / Team</h2>
+        <p>
+            Battle display should support solo battles, 2v2 battles, team battles, royal rumbles,
+            elimination formats, and special event formats.
+        </p>
+    </article>
+</section>
+
+<style>
+    .battles-info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .battles-info-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    @media (max-width: 900px) {
+        .battles-info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}
