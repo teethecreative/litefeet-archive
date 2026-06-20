@@ -27,6 +27,7 @@ EXPECTED_TABLES = [
     "calendar_item_metadata",
     "battle_records",
     "award_records",
+    "team_records",
     "community_perspectives",
     "team_access_grants",
 ]

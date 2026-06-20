@@ -14925,3 +14925,500 @@ try:
     ensure_phase8_awards_tables()
 except Exception as exc:
     print(f"Phase 8 award setup skipped: {exc}")
+
+
+# --- Phase 9A + 9B + 9C teams batch ---
+def phase9_table_exists(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+    rows = conn.execute(
+        text("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = :table_name
+            LIMIT 1
+        """),
+        {"table_name": table_name},
+    ).fetchall()
+    return bool(rows)
+
+
+def phase9_table_columns(conn, table_name):
+    if "ledger_table_columns" in globals():
+        return ledger_table_columns(conn, table_name)
+
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def phase9_add_column_if_missing(conn, table_name, column_name, column_sql):
+    if not phase9_table_exists(conn, table_name):
+        return
+
+    columns = phase9_table_columns(conn, table_name)
+
+    if column_name in columns:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+
+
+def ensure_phase9_team_tables():
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS team_records (
+                    id SERIAL PRIMARY KEY,
+                    team_name TEXT,
+                    aka_names TEXT,
+                    founder_names TEXT,
+                    current_leads TEXT,
+                    borough_scene TEXT,
+                    era TEXT,
+                    status TEXT,
+                    known_for TEXT,
+                    bio TEXT,
+                    source_url TEXT,
+                    review_status TEXT,
+                    submitter_name TEXT,
+                    submitter_contact TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+        else:
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS team_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    team_name TEXT,
+                    aka_names TEXT,
+                    founder_names TEXT,
+                    current_leads TEXT,
+                    borough_scene TEXT,
+                    era TEXT,
+                    status TEXT,
+                    known_for TEXT,
+                    bio TEXT,
+                    source_url TEXT,
+                    review_status TEXT,
+                    submitter_name TEXT,
+                    submitter_contact TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+
+        for column_name, column_sql in [
+            ("team_name", "TEXT"),
+            ("aka_names", "TEXT"),
+            ("founder_names", "TEXT"),
+            ("current_leads", "TEXT"),
+            ("borough_scene", "TEXT"),
+            ("era", "TEXT"),
+            ("status", "TEXT"),
+            ("known_for", "TEXT"),
+            ("bio", "TEXT"),
+            ("source_url", "TEXT"),
+            ("review_status", "TEXT"),
+            ("submitter_name", "TEXT"),
+            ("submitter_contact", "TEXT"),
+            ("created_at", "TEXT"),
+            ("updated_at", "TEXT"),
+        ]:
+            phase9_add_column_if_missing(conn, "team_records", column_name, column_sql)
+
+
+def phase9_value(row, *keys, default=""):
+    if not row:
+        return default
+
+    for key in keys:
+        try:
+            if key in row.keys() and row[key] not in (None, ""):
+                return row[key]
+        except Exception:
+            pass
+
+        try:
+            value = row.get(key)
+            if value not in (None, ""):
+                return value
+        except Exception:
+            pass
+
+    return default
+
+
+def phase9_fetch_team_records(limit=300):
+    ensure_phase9_team_tables()
+
+    try:
+        rows = fetch_all(
+            """
+            SELECT *
+            FROM team_records
+            ORDER BY
+                LOWER(COALESCE(team_name, '')) ASC,
+                id DESC
+            LIMIT :limit
+            """,
+            {"limit": limit},
+        )
+    except Exception:
+        rows = []
+
+    if rows:
+        return rows
+
+    # Fallback: build team-like cards from dancer profile affiliations if no team_records exist yet.
+    try:
+        with engine.connect() as conn:
+            if not phase9_table_exists(conn, "dancer_profiles"):
+                return []
+
+        profile_rows = fetch_all(
+            """
+            SELECT team_affiliation,
+                   COUNT(*) AS member_count,
+                   MIN(created_at) AS created_at
+            FROM dancer_profiles
+            WHERE team_affiliation IS NOT NULL
+              AND TRIM(team_affiliation) != ''
+            GROUP BY team_affiliation
+            ORDER BY LOWER(team_affiliation) ASC
+            LIMIT :limit
+            """,
+            {"limit": limit},
+        )
+
+        fallback = []
+
+        for index, item in enumerate(profile_rows, start=1):
+            fallback.append(
+                {
+                    "id": 0 - index,
+                    "team_name": item["team_affiliation"],
+                    "aka_names": "",
+                    "founder_names": "",
+                    "current_leads": "",
+                    "borough_scene": "",
+                    "era": "",
+                    "status": "Community Mentioned",
+                    "known_for": f"{item['member_count']} linked profile(s)",
+                    "bio": "This team is currently showing from profile affiliations. Submit team info to build a full team record.",
+                    "source_url": "",
+                    "review_status": "Needs Verification",
+                    "submitter_name": "",
+                    "submitter_contact": "",
+                    "created_at": item["created_at"],
+                    "updated_at": "",
+                }
+            )
+
+        return fallback
+    except Exception:
+        return []
+
+
+def phase9_fetch_team_record(team_id):
+    ensure_phase9_team_tables()
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM team_records
+        WHERE id = :team_id
+        LIMIT 1
+        """,
+        {"team_id": team_id},
+    )
+
+    return rows[0] if rows else None
+
+
+def phase9_team_name(team):
+    return phase9_value(team, "team_name", "name", "title", default="Unnamed Team")
+
+
+def phase9_team_status(team):
+    status = phase9_value(team, "status", "review_status", default="")
+
+    if status:
+        return status
+
+    return "Needs Verification"
+
+
+def phase9_team_review_status(team):
+    return phase9_value(team, "review_status", "status", default="Needs Verification")
+
+
+def phase9_team_location(team):
+    return phase9_value(team, "borough_scene", "borough", "scene", default="")
+
+
+def phase9_team_summary(team):
+    return phase9_value(team, "bio", "known_for", "notes", default="")
+
+
+def phase9_team_filter_options():
+    return [
+        {"value": "all", "label": "All Teams"},
+        {"value": "active", "label": "Active"},
+        {"value": "inactive", "label": "Inactive"},
+        {"value": "historical", "label": "Historical"},
+        {"value": "community mentioned", "label": "Community Mentioned"},
+        {"value": "needs verification", "label": "Needs Verification"},
+        {"value": "verified", "label": "Verified / Supported"},
+    ]
+
+
+def phase9_team_view_options():
+    return [
+        {"value": "cards", "label": "Cards"},
+        {"value": "list", "label": "List"},
+        {"value": "compact", "label": "Compact"},
+    ]
+
+
+def phase9_selected_team_filter():
+    selected = request.args.get("type", "all").strip().lower()
+    allowed = {item["value"] for item in phase9_team_filter_options()}
+
+    if selected not in allowed:
+        selected = "all"
+
+    return selected
+
+
+def phase9_selected_team_view():
+    selected = request.args.get("view", "cards").strip().lower()
+    allowed = {item["value"] for item in phase9_team_view_options()}
+
+    if selected not in allowed:
+        selected = "cards"
+
+    return selected
+
+
+def phase9_team_search_query():
+    return request.args.get("q", "").strip()
+
+
+def phase9_team_matches_filter(team, selected_type=None, query=None):
+    selected_type = selected_type or phase9_selected_team_filter()
+    query = query if query is not None else phase9_team_search_query()
+
+    status = phase9_team_status(team).lower()
+    review_status = phase9_team_review_status(team).lower()
+
+    if selected_type != "all":
+        if selected_type == "needs verification":
+            if "needs" not in review_status and "pending" not in review_status:
+                return False
+        elif selected_type == "verified":
+            if "verified" not in review_status and "community supported" not in review_status:
+                return False
+        elif selected_type not in status and selected_type not in review_status:
+            return False
+
+    if query:
+        merged = " ".join(
+            str(value or "")
+            for value in [
+                phase9_team_name(team),
+                phase9_value(team, "aka_names"),
+                phase9_value(team, "founder_names"),
+                phase9_value(team, "current_leads"),
+                phase9_value(team, "borough_scene"),
+                phase9_value(team, "era"),
+                phase9_value(team, "known_for"),
+                phase9_value(team, "bio"),
+                phase9_value(team, "source_url"),
+            ]
+        ).lower()
+
+        if query.lower() not in merged:
+            return False
+
+    return True
+
+
+def phase9_team_badges(team):
+    badges = [
+        phase9_team_status(team),
+        phase9_team_review_status(team),
+        phase9_value(team, "era"),
+        phase9_team_location(team),
+    ]
+
+    clean = []
+    seen = set()
+
+    for badge in badges:
+        badge = str(badge or "").strip()
+        if not badge:
+            continue
+
+        key = badge.lower()
+        if key in seen:
+            continue
+
+        seen.add(key)
+        clean.append(badge)
+
+    return clean[:5]
+
+
+def phase9_team_members(team):
+    team_name = phase9_team_name(team)
+
+    if not team_name or team["id"] < 0:
+        return []
+
+    try:
+        return fetch_all(
+            """
+            SELECT *
+            FROM dancer_profiles
+            WHERE LOWER(COALESCE(team_affiliation, '')) LIKE :team_like
+            ORDER BY LOWER(COALESCE(dance_name, real_name, '')) ASC
+            LIMIT 80
+            """,
+            {"team_like": f"%{team_name.lower()}%"},
+        )
+    except Exception:
+        return []
+
+
+@app.context_processor
+def inject_phase9_team_helpers():
+    return {
+        "phase9_fetch_team_records": phase9_fetch_team_records,
+        "phase9_fetch_team_record": phase9_fetch_team_record,
+        "phase9_team_name": phase9_team_name,
+        "phase9_team_status": phase9_team_status,
+        "phase9_team_review_status": phase9_team_review_status,
+        "phase9_team_location": phase9_team_location,
+        "phase9_team_summary": phase9_team_summary,
+        "phase9_team_filter_options": phase9_team_filter_options,
+        "phase9_team_view_options": phase9_team_view_options,
+        "phase9_selected_team_filter": phase9_selected_team_filter,
+        "phase9_selected_team_view": phase9_selected_team_view,
+        "phase9_team_search_query": phase9_team_search_query,
+        "phase9_team_matches_filter": phase9_team_matches_filter,
+        "phase9_team_badges": phase9_team_badges,
+        "phase9_team_members": phase9_team_members,
+        "phase9_value": phase9_value,
+    }
+
+
+@app.route("/teams/<int:team_id>")
+def team_record_detail_phase9b(team_id):
+    ensure_phase9_team_tables()
+
+    team = phase9_fetch_team_record(team_id)
+
+    if not team:
+        return redirect(url_for("teams"))
+
+    members = phase9_team_members(team)
+
+    return render_template(
+        "team_record_detail.html",
+        team=team,
+        members=members,
+    )
+
+
+@app.route("/teams/submit", methods=["GET", "POST"])
+def team_submit_phase9c():
+    ensure_phase9_team_tables()
+
+    error = ""
+
+    if request.method == "POST":
+        team_name = request.form.get("team_name", "").strip()
+
+        if not team_name:
+            error = "Add a team name."
+        else:
+            now_value = datetime.now().isoformat(timespec="seconds")
+
+            values = {
+                "team_name": team_name,
+                "aka_names": request.form.get("aka_names", "").strip(),
+                "founder_names": request.form.get("founder_names", "").strip(),
+                "current_leads": request.form.get("current_leads", "").strip(),
+                "borough_scene": request.form.get("borough_scene", "").strip(),
+                "era": request.form.get("era", "").strip(),
+                "status": request.form.get("status", "").strip() or "Needs Verification",
+                "known_for": request.form.get("known_for", "").strip(),
+                "bio": request.form.get("bio", "").strip(),
+                "source_url": request.form.get("source_url", "").strip(),
+                "review_status": request.form.get("review_status", "").strip() or "Pending Review",
+                "submitter_name": request.form.get("submitter_name", "").strip(),
+                "submitter_contact": request.form.get("submitter_contact", "").strip(),
+                "created_at": now_value,
+                "updated_at": now_value,
+            }
+
+            with engine.begin() as conn:
+                columns = phase9_table_columns(conn, "team_records")
+                clean_values = {key: value for key, value in values.items() if key in columns}
+
+                columns_sql = ", ".join(clean_values.keys())
+                values_sql = ", ".join(f":{key}" for key in clean_values.keys())
+
+                if maintenance_uses_postgres():
+                    result = conn.execute(
+                        text(f"INSERT INTO team_records ({columns_sql}) VALUES ({values_sql}) RETURNING id"),
+                        clean_values,
+                    )
+                    team_id = result.scalar()
+                else:
+                    result = conn.execute(
+                        text(f"INSERT INTO team_records ({columns_sql}) VALUES ({values_sql})"),
+                        clean_values,
+                    )
+                    team_id = result.lastrowid
+
+            return redirect(url_for("team_record_detail_phase9b", team_id=team_id))
+
+    return render_template("team_submit.html", error=error)
+
+
+try:
+    ensure_phase9_team_tables()
+except Exception as exc:
+    print(f"Phase 9 team setup skipped: {exc}")

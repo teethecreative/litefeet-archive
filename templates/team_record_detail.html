@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}{{ phase9_team_name(team) }} | Teams{% endblock %}
+{% block meta_description %}LiteFeet team record with founders, members, scene, era, source links, and community context.{% endblock %}
+
+{% block content %}
+<section class="content-section team-detail-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Team Record</p>
+            <h1>{{ phase9_team_name(team) }}</h1>
+            <p>Status: {{ phase9_team_review_status(team) }}</p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('teams') }}">Back to Teams</a>
+            <a class="button primary" href="{{ url_for('team_submit_phase9c') }}">Submit Team Info</a>
+        </div>
+    </div>
+</section>
+
+<section class="homepage-section team-detail-grid">
+    <article>
+        <p class="eyebrow">Founders / Leads</p>
+
+        {% if phase9_value(team, "founder_names") %}
+            <h2>{{ phase9_value(team, "founder_names") }}</h2>
+            <p>Founder(s)</p>
+        {% else %}
+            <h2>Needs confirmation</h2>
+            <p>Founder information has not been confirmed yet.</p>
+        {% endif %}
+
+        {% if phase9_value(team, "current_leads") %}
+            <p><strong>Current lead(s):</strong> {{ phase9_value(team, "current_leads") }}</p>
+        {% endif %}
+    </article>
+
+    <article>
+        <p class="eyebrow">Scene / Era</p>
+        <h2>{{ phase9_team_location(team) or "Scene needs confirmation" }}</h2>
+
+        {% if phase9_value(team, "era") %}
+            <p>{{ phase9_value(team, "era") }}</p>
+        {% endif %}
+    </article>
+
+    <article>
+        <p class="eyebrow">Known For</p>
+        <h2>{{ phase9_value(team, "known_for", default="Needs more context") }}</h2>
+        <p>{{ phase9_team_status(team) }}</p>
+    </article>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">History</p>
+            <h2>Team Notes</h2>
+        </div>
+    </div>
+
+    <div class="team-detail-notes-grid">
+        <article>
+            <p class="eyebrow">Bio / Context</p>
+            <p>{{ phase9_value(team, "bio", default="No team history added yet.") }}</p>
+        </article>
+
+        <article>
+            <p class="eyebrow">Aliases</p>
+            <p>{{ phase9_value(team, "aka_names", default="No aliases added yet.") }}</p>
+        </article>
+
+        <article>
+            <p class="eyebrow">Source</p>
+            {% if phase9_value(team, "source_url") %}
+                <p><a href="{{ phase9_value(team, 'source_url') }}" target="_blank" rel="noopener">Open source</a></p>
+            {% else %}
+                <p>No source link added yet.</p>
+            {% endif %}
+        </article>
+    </div>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Members</p>
+            <h2>Linked Profiles</h2>
+        </div>
+    </div>
+
+    {% if members %}
+        <div class="team-member-grid">
+            {% for member in members %}
+                <article>
+                    <h3><a href="{{ member | profile_url }}">{{ member["dance_name"] or member["real_name"] }}</a></h3>
+                    {% if member["role_tags"] %}
+                        <p>{{ member["role_tags"] }}</p>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No linked profiles yet.</h3>
+            <p>Members can appear here once profiles are connected to this team.</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="homepage-section team-context-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Community Context</p>
+            <h2>Add correction or team history</h2>
+            <p>
+                Use this to add founders, members, era, borough, lineage, source links, or corrections.
+            </p>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('submit_community_perspective_phase2g') }}" class="form-card community-perspective-form">
+        <input type="hidden" name="related_type" value="team">
+        <input type="hidden" name="related_id" value="{{ team['id'] }}">
+        <input type="hidden" name="review_label" value="Team Context">
+
+        <label>
+            Context / correction
+            <textarea name="perspective_text" rows="5" placeholder="Add team history, founders, members, corrections, source links, or missing context."></textarea>
+        </label>
+
+        <div class="form-grid two-column-form-grid">
+            <label>
+                Source link
+                <input type="url" name="source_url" placeholder="Video, flyer, post, interview, etc.">
+            </label>
+
+            <label>
+                Name / handle
+                <input type="text" name="submitter_name" placeholder="Optional">
+            </label>
+        </div>
+
+        <label>
+            Contact
+            <input type="text" name="submitter_contact" placeholder="Optional">
+        </label>
+
+        <button class="button secondary" type="submit">Submit Context</button>
+    </form>
+</section>
+
+<style>
+    .team-detail-grid,
+    .team-detail-notes-grid,
+    .team-member-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .team-detail-grid article,
+    .team-detail-notes-grid article,
+    .team-member-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .two-column-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+        .team-detail-grid,
+        .team-detail-notes-grid,
+        .team-member-grid,
+        .two-column-form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

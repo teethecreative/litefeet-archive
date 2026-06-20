@@ -123,6 +123,8 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /submit                                                      -> submit_info                                   [GET, POST]
 /submit/success                                              -> submit_success                                [GET]
 /teams                                                       -> teams_legacy_alias_phase4b                    [GET]
+/teams/<int:team_id>                                         -> team_record_detail_phase9b                    [GET]
+/teams/submit                                                -> team_submit_phase9c                           [GET, POST]
 /verify                                                      -> verify_claims                                 [GET]
 /verify/<int:submission_id>                                  -> verify_claim_detail                           [GET]
 /verify/<int:submission_id>/vote                             -> vote_on_claim                                 [POST]
@@ -458,8 +460,26 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/submit_music_project.html:19: <a class="button secondary" href="{{ url_for('submit_info') }}">General Submission</a>
 /Users/teethecreative/litefeet-archive/templates/submit_music_project.html:32: <form method="POST" action="{{ url_for('submit_music_project') }}" class="form-card submit-music-project-form">
 /Users/teethecreative/litefeet-archive/templates/submit_success.html:15: <a href="{{ url_for('submit_info') }}" class="button primary">Submit Another</a>
-/Users/teethecreative/litefeet-archive/templates/teams.html:9: <a href="{{ url_for('dancers') }}">Dancers</a>
-/Users/teethecreative/litefeet-archive/templates/teams.html:11: <a href="{{ url_for('teams') }}" class="is-active">Teams</a>
+/Users/teethecreative/litefeet-archive/templates/team_record_detail.html:16: <a class="button secondary" href="{{ url_for('teams') }}">Back to Teams</a>
+/Users/teethecreative/litefeet-archive/templates/team_record_detail.html:17: <a class="button primary" href="{{ url_for('team_submit_phase9c') }}">Submit Team Info</a>
+/Users/teethecreative/litefeet-archive/templates/team_record_detail.html:77: <p><a href="{{ phase9_value(team, 'source_url') }}" target="_blank" rel="noopener">Open source</a></p>
+/Users/teethecreative/litefeet-archive/templates/team_record_detail.html:97: <h3><a href="{{ member | profile_url }}">{{ member["dance_name"] or member["real_name"] }}</a></h3>
+/Users/teethecreative/litefeet-archive/templates/team_record_detail.html:123: <form method="POST" action="{{ url_for('submit_community_perspective_phase2g') }}" class="form-card community-perspective-form">
+/Users/teethecreative/litefeet-archive/templates/team_submit.html:18: <a class="button secondary" href="{{ url_for('teams') }}">Back to Teams</a>
+/Users/teethecreative/litefeet-archive/templates/team_submit.html:19: <a class="button secondary" href="{{ url_for('submit_info') }}">General Submission</a>
+/Users/teethecreative/litefeet-archive/templates/team_submit.html:32: <form method="POST" action="{{ url_for('team_submit_phase9c') }}" class="form-card team-submit-form">
+/Users/teethecreative/litefeet-archive/templates/teams.html:23: <a class="button secondary" href="{{ url_for('dancers') }}">Dancers</a>
+/Users/teethecreative/litefeet-archive/templates/teams.html:24: <a class="button secondary" href="{{ url_for('producers') }}">Producers</a>
+/Users/teethecreative/litefeet-archive/templates/teams.html:25: <a class="button primary" href="{{ url_for('team_submit_phase9c') }}">Submit Team Info</a>
+/Users/teethecreative/litefeet-archive/templates/teams.html:31: <form method="GET" action="{{ url_for('teams') }}" class="team-filter-form">
+/Users/teethecreative/litefeet-archive/templates/teams.html:60: <a class="button secondary" href="{{ url_for('teams') }}">Reset</a>
+/Users/teethecreative/litefeet-archive/templates/teams.html:98: <a class="button small-button secondary" href="{{ url_for('team_record_detail_phase9b', team_id=team['id']) }}">Open</a>
+/Users/teethecreative/litefeet-archive/templates/teams.html:100: <a class="button small-button secondary" href="{{ url_for('team_submit_phase9c') }}">Build Record</a>
+/Users/teethecreative/litefeet-archive/templates/teams.html:123: <a href="{{ url_for('team_record_detail_phase9b', team_id=team['id']) }}">{{ phase9_team_name(team) }}</a>
+/Users/teethecreative/litefeet-archive/templates/teams.html:155: <a class="button small-button secondary" href="{{ url_for('team_record_detail_phase9b', team_id=team['id']) }}">Details</a>
+/Users/teethecreative/litefeet-archive/templates/teams.html:157: <a class="button small-button secondary" href="{{ url_for('team_submit_phase9c') }}">Build Record</a>
+/Users/teethecreative/litefeet-archive/templates/teams.html:161: <a class="button small-button secondary" href="{{ phase9_value(team, 'source_url') }}" target="_blank" rel="noopener">Source</a>
+/Users/teethecreative/litefeet-archive/templates/teams.html:173: <a class="button primary" href="{{ url_for('team_submit_phase9c') }}">Submit Team Info</a>
 /Users/teethecreative/litefeet-archive/templates/verify_claim_detail.html:7: <p><a href="{{ url_for('verify_claims') }}" class="button secondary">Back to Verify Claims</a></p>
 /Users/teethecreative/litefeet-archive/templates/verify_claim_detail.html:23: <a href="{{ submission['source_url'] }}" target="_blank" rel="noopener">Open source link</a>
 /Users/teethecreative/litefeet-archive/templates/verify_claim_detail.html:56: <form action="{{ url_for('vote_on_claim', submission_id=submission['id']) }}" method="post" class="vote-form">

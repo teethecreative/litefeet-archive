@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Team Info | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Submit LiteFeet team, crew, founder, member, lineage, scene, and history information to The LiteFeet Ledger.{% endblock %}
+
+{% block content %}
+<section class="content-section team-submit-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Teams</p>
+            <h1>Submit Team Info</h1>
+            <p>
+                Add a LiteFeet team, crew, founders, members, scene, era, lineage, source links, or corrections.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('teams') }}">Back to Teams</a>
+            <a class="button secondary" href="{{ url_for('submit_info') }}">General Submission</a>
+        </div>
+    </div>
+</section>
+
+<section class="homepage-section">
+    {% if error %}
+        <div class="empty-state compact-empty error-state">
+            <h3>Something needs fixing</h3>
+            <p>{{ error }}</p>
+        </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('team_submit_phase9c') }}" class="form-card team-submit-form">
+        <div class="form-grid two-column-form-grid">
+            <label>
+                Team name
+                <input type="text" name="team_name" placeholder="Team / crew name" required>
+            </label>
+
+            <label>
+                Also known as
+                <input type="text" name="aka_names" placeholder="Aliases, abbreviations, older names">
+            </label>
+
+            <label>
+                Founder(s)
+                <input type="text" name="founder_names" placeholder="Founder names">
+            </label>
+
+            <label>
+                Current lead(s)
+                <input type="text" name="current_leads" placeholder="Current leaders / captains">
+            </label>
+
+            <label>
+                Borough / scene
+                <input type="text" name="borough_scene" placeholder="Harlem, Bronx, Brooklyn, Queens, Uptown...">
+            </label>
+
+            <label>
+                Era
+                <input type="text" name="era" placeholder="2000s, 2010s, current, original era...">
+            </label>
+
+            <label>
+                Status
+                <select name="status">
+                    <option value="Needs Verification">Needs Verification</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                    <option value="Historical">Historical</option>
+                    <option value="Community Mentioned">Community Mentioned</option>
+                </select>
+            </label>
+
+            <label>
+                Review status
+                <select name="review_status">
+                    <option value="Pending Review">Pending Review</option>
+                    <option value="Needs Verification">Needs Verification</option>
+                    <option value="Community Supported">Community Supported</option>
+                    <option value="Verified">Verified</option>
+                    <option value="Disputed">Disputed</option>
+                </select>
+            </label>
+
+            <label>
+                Known for
+                <input type="text" name="known_for" placeholder="Signature moves, battles, lineage, members...">
+            </label>
+
+            <label>
+                Source / proof link
+                <input type="url" name="source_url" placeholder="Video, flyer, post, interview, etc.">
+            </label>
+
+            <label>
+                Submitter name
+                <input type="text" name="submitter_name" placeholder="Optional">
+            </label>
+
+            <label>
+                Contact
+                <input type="text" name="submitter_contact" placeholder="Optional email or IG">
+            </label>
+        </div>
+
+        <label>
+            Team history / notes
+            <textarea name="bio" rows="6" placeholder="Add history, members, founders, lineage, corrections, what needs verification, or community context."></textarea>
+        </label>
+
+        <button class="button primary" type="submit">Submit Team Info</button>
+    </form>
+</section>
+
+<style>
+    .team-submit-form {
+        display: grid;
+        gap: 16px;
+    }
+
+    .two-column-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+        .two-column-form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

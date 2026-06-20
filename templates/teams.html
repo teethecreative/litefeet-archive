@@ -1,28 +1,241 @@
 {% extends "base.html" %}
 
-{% block title %}LiteFeet Teams & Crews | LiteFeet Ledger{% endblock %}
-{% block meta_description %}Browse LiteFeet teams, crews, affiliations, founders, members, history, and community-submitted team records in the LiteFeet Ledger.{% endblock %}
+{% block title %}Teams | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Browse LiteFeet teams, crews, lineages, founders, members, borough scenes, and team history in The LiteFeet Ledger.{% endblock %}
 
 {% block content %}
-<section class="content-section">
-    <nav class="subtle-subnav">
-        <a href="{{ url_for('dancers') }}">Dancers</a>
-        <span>|</span>
-        <a href="{{ url_for('teams') }}" class="is-active">Teams</a>
-    </nav>
+{% set selected_type = phase9_selected_team_filter() %}
+{% set selected_view = phase9_selected_team_view() %}
+{% set search_query = phase9_team_search_query() %}
+{% set team_rows = teams if teams is defined and teams else phase9_fetch_team_records() %}
 
-    <h1>Teams</h1>
+<section class="content-section teams-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">People & Teams</p>
+            <h1>Teams</h1>
+            <p>
+                LiteFeet teams, crews, founders, lineages, borough scenes, and team histories connected to the Ledger.
+            </p>
+        </div>
 
-    <p>
-        This page will hold LiteFeet teams, crews, affiliations, eras, connected dancers, battles, events, and source links.
-    </p>
-
-    <div class="empty-state">
-        <h3>Team records are not public yet</h3>
-        <p>
-            Community-mentioned teams will be reviewed before they appear here. This section will stay separate
-            from dancer profiles so individual dancers and group histories can each have their own space.
-        </p>
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('dancers') }}">Dancers</a>
+            <a class="button secondary" href="{{ url_for('producers') }}">Producers</a>
+            <a class="button primary" href="{{ url_for('team_submit_phase9c') }}">Submit Team Info</a>
+        </div>
     </div>
 </section>
+
+<section class="homepage-section team-filter-section">
+    <form method="GET" action="{{ url_for('teams') }}" class="team-filter-form">
+        <label>
+            Search
+            <input type="search" name="q" value="{{ search_query }}" placeholder="Team, founder, borough, era, member...">
+        </label>
+
+        <label>
+            Type
+            <select name="type">
+                {% for option in phase9_team_filter_options() %}
+                    <option value="{{ option.value }}" {% if selected_type == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>
+            View
+            <select name="view">
+                {% for option in phase9_team_view_options() %}
+                    <option value="{{ option.value }}" {% if selected_view == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <button class="button secondary" type="submit">Apply</button>
+        <a class="button secondary" href="{{ url_for('teams') }}">Reset</a>
+    </form>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Records</p>
+            <h2>Team Directory</h2>
+        </div>
+    </div>
+
+    {% if team_rows %}
+        {% if selected_view == "list" %}
+            <div class="release-table-wrap">
+                <table class="release-table team-list-table">
+                    <thead>
+                        <tr>
+                            <th>Team</th>
+                            <th>Scene</th>
+                            <th>Era</th>
+                            <th>Known For</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for team in team_rows %}
+                            {% if phase9_team_matches_filter(team, selected_type, search_query) %}
+                                <tr>
+                                    <td>{{ phase9_team_name(team) }}</td>
+                                    <td>{{ phase9_team_location(team) }}</td>
+                                    <td>{{ phase9_value(team, "era") }}</td>
+                                    <td>{{ phase9_value(team, "known_for") }}</td>
+                                    <td>{{ phase9_team_review_status(team) }}</td>
+                                    <td>
+                                        {% if team["id"] > 0 %}
+                                            <a class="button small-button secondary" href="{{ url_for('team_record_detail_phase9b', team_id=team['id']) }}">Open</a>
+                                        {% else %}
+                                            <a class="button small-button secondary" href="{{ url_for('team_submit_phase9c') }}">Build Record</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="team-card-grid {{ 'compact-team-grid' if selected_view == 'compact' else '' }}">
+                {% for team in team_rows %}
+                    {% if phase9_team_matches_filter(team, selected_type, search_query) %}
+                        {% set badges = phase9_team_badges(team) %}
+
+                        <article class="team-card">
+                            <div class="team-card-topline">
+                                <p class="eyebrow">Team</p>
+                                <span class="team-status-pill">{{ phase9_team_review_status(team) }}</span>
+                            </div>
+
+                            <h3>
+                                {% if team["id"] > 0 %}
+                                    <a href="{{ url_for('team_record_detail_phase9b', team_id=team['id']) }}">{{ phase9_team_name(team) }}</a>
+                                {% else %}
+                                    {{ phase9_team_name(team) }}
+                                {% endif %}
+                            </h3>
+
+                            {% if phase9_value(team, "aka_names") %}
+                                <p class="small-note">Also known as: {{ phase9_value(team, "aka_names") }}</p>
+                            {% endif %}
+
+                            {% if phase9_value(team, "founder_names") %}
+                                <p><strong>Founder(s):</strong> {{ phase9_value(team, "founder_names") }}</p>
+                            {% endif %}
+
+                            {% if phase9_team_location(team) %}
+                                <p><strong>Scene:</strong> {{ phase9_team_location(team) }}</p>
+                            {% endif %}
+
+                            {% if phase9_team_summary(team) and selected_view != "compact" %}
+                                <p>{{ phase9_team_summary(team)[:260] }}{% if phase9_team_summary(team)|length > 260 %}...{% endif %}</p>
+                            {% endif %}
+
+                            {% if badges %}
+                                <div class="team-badge-row">
+                                    {% for badge in badges %}
+                                        <span>{{ badge }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <div class="hero-actions">
+                                {% if team["id"] > 0 %}
+                                    <a class="button small-button secondary" href="{{ url_for('team_record_detail_phase9b', team_id=team['id']) }}">Details</a>
+                                {% else %}
+                                    <a class="button small-button secondary" href="{{ url_for('team_submit_phase9c') }}">Build Record</a>
+                                {% endif %}
+
+                                {% if phase9_value(team, "source_url") %}
+                                    <a class="button small-button secondary" href="{{ phase9_value(team, 'source_url') }}" target="_blank" rel="noopener">Source</a>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No team records yet.</h3>
+            <p>Add teams, founders, lineages, members, history, and source links.</p>
+            <a class="button primary" href="{{ url_for('team_submit_phase9c') }}">Submit Team Info</a>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .team-filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: end;
+    }
+
+    .team-filter-form label {
+        min-width: 190px;
+    }
+
+    .team-card-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .compact-team-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .team-card {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+        display: grid;
+        gap: 10px;
+    }
+
+    .team-card-topline,
+    .team-badge-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .team-badge-row {
+        justify-content: flex-start;
+    }
+
+    .team-status-pill,
+    .team-badge-row span {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.16));
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 0.78rem;
+    }
+
+    @media (max-width: 1000px) {
+        .team-card-grid,
+        .compact-team-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .team-filter-form {
+            display: grid;
+        }
+    }
+</style>
 {% endblock %}

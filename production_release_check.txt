@@ -1,6 +1,6 @@
 === Phase 2I Production Release Check ===
 branch: main
-commit: 9b88c36
+commit: 933b0ac
 database: sqlite
 original maintenance_mode: on
 ---- table checks ----
@@ -21,6 +21,7 @@ saved_items: OK
 calendar_item_metadata: OK
 battle_records: OK
 award_records: OK
+team_records: OK
 community_perspectives: OK
 team_access_grants: OK
 ---- public mode routes ----
