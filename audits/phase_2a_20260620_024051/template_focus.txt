@@ -1,0 +1,238 @@
+
+=== templates/account_home.html ===
+4: {% block meta_description %}Manage your LiteFeet Ledger submissions, profile claims, comments, flowers, ratings, saved items, and Ask beta access.{% endblock %}
+7: {% set dashboard_user = user if user is defined else logged_in_user if logged_in_user is defined else none %}
+8: {% set account_submissions = submissions if submissions is defined else user_submissions if user_submissions is defined else [] %}
+9: {% set account_claims = claims if claims is defined else profile_claims if profile_claims is defined else [] %}
+18:                 Track your Ledger submissions, profile claims, corrections, flowers, ratings,
+24:             <a class="button primary" href="{{ url_for('submit_info') }}">Add to the Ledger</a>
+25:             <a class="button secondary" href="{{ url_for('ask_archive') }}">Ask Beta</a>
+33:                 <strong>Role:</strong> {{ dashboard_user["role"] or session.get("user_role") or "contributor" }}
+47:         {% if account_submissions %}
+49:                 {% for item in account_submissions[:5] %}
+61:                 Submitted events, corrections, music, profiles, battles, awards, and context will appear here.
+70:         {% if account_claims %}
+72:                 {% for claim in account_claims[:5] %}
+74:                         <h3>{{ claim["profile_name"] or claim["title"] or "Profile claim" }}</h3>
+81:                 Claimed profiles and profile access requests will sit here once connected.
+85:         <a class="button small-button secondary" href="{{ url_for('dancers') }}">Find Profile</a>
+96:                         <h3>{{ item["title"] or item["profile_name"] or "Community note" }}</h3>
+112:             Your Lab, Battle, Video, thumbs, and 1–10 music feedback will appear here once the account dashboard is wired to music activity.
+114:         <a class="button small-button secondary" href="{{ url_for('litefeet_music') }}">Open Music</a>
+121:             Saved dancers, teams, battles, songs, events, and review topics will appear here in a later data pass.
+131:         <a class="button small-button secondary" href="{{ url_for('ask_archive') }}">Open Ask</a>
+
+=== templates/admin_home.html ===
+12:                 Review submissions, accounts, moderation, site status, flagged records, errors,
+13:                 recent activity, music, media, profiles, calendar items, and Ledger Review topics.
+18:             <a class="button primary" href="{{ url_for('admin_submissions') }}">Review Submissions</a>
+19:             <a class="button secondary" href="{{ url_for('admin_maintenance') }}">Maintenance Mode</a>
+31:         <a class="button small-button primary" href="{{ url_for('admin_maintenance') }}">Open Maintenance</a>
+41:         <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Open Queue</a>
+48:             Add or edit LiteFeet Music records, battle videos, recaps, producer releases, and media embeds.
+50:         <a class="button small-button secondary" href="{{ url_for('admin_media') }}">Open Media</a>
+57:             Contributor accounts, profile owners, affiliate hosts, CEOs, teams, role requests,
+60:         <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Review Role Requests</a>
+67:             Review community flowers, comments, corrections, profile claims, and owner-approved items.
+69:         <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Open Moderation</a>
+76:             Track records where the community disagrees, proof is missing, or context needs review.
+78:         <a class="button small-button secondary" href="{{ url_for('verify_claims') }}">Open Ledger Review</a>
+91:         <a class="button secondary" href="{{ url_for('submit_info') }}">Add Public Submission</a>
+92:         <a class="button secondary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
+93:         <a class="button secondary" href="{{ url_for('litefeet_music') }}">View Music</a>
+94:         <a class="button secondary" href="{{ url_for('events') }}">View Calendar</a>
+95:         <a class="button secondary" href="{{ url_for('dancers') }}">View People</a>
+
+=== templates/ask_archive.html ===
+4: {% block meta_description %}Ask the LiteFeet Ledger about dancers, battles, music, events, awards, teams, and community records. The public Ask system is being rebuilt with community verification in mind.{% endblock %}
+11:     {% if logged_in_user or session.get("admin_logged_in") %}
+15:                 Contributors and admins will use this space to ask questions against real Ledger records,
+24:                     Ask about LiteFeet dancers, teams, battles, events, music, awards, organizers,
+25:                     producers, and historical claims.
+40:                     Disagreements should become community perspective records with links, context, and review status.
+48:                 The Ledger is being rebuilt so questions can be answered with records, sources,
+55:         <a class="button primary" href="{{ url_for('submit_info') }}">Add Context</a>
+56:         <a class="button secondary" href="{{ url_for('account_login') }}">Account Login</a>
+57:         <a class="button secondary" href="{{ url_for('events') }}">Open Calendar</a>
+
+=== templates/verify_claims.html ===
+4: {% block meta_description %}Review LiteFeet Ledger claims, corrections, debated records, community context, and source-backed submissions.{% endblock %}
+7: {% set review_records = submissions if submissions is defined else claims if claims is defined else records if records is defined else [] %}
+15:                 This is where community records, claims, corrections, disputed details, and source-backed
+20:         <a class="button primary" href="{{ url_for('submit_info') }}">Submit Correction</a>
+26:             <p>Confirmed through strong sources, direct records, or trusted community confirmation.</p>
+31:             <p>Supported by community knowledge, event records, flyers, videos, or repeated testimony.</p>
+49:     {% if review_records %}
+63:                     {% for record in review_records %}
+87:                                     <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Add Context</a>
+100:             <h3>No active review records are loaded here yet.</h3>
+102:                 Once claims, corrections, debated records, and context submissions are connected,
+
+=== templates/dancers.html ===
+4: {% block meta_description %}Browse LiteFeet dancers, producers, teams, hosts, DJs, organizers, supporters, and community profiles in The LiteFeet Ledger.{% endblock %}
+7: {% set people_records = profiles if profiles is defined else dancer_profiles if dancer_profiles is defined else [] %}
+21:             <a class="button primary" href="{{ url_for('submit_info') }}">Add / Correct Profile</a>
+27:         <a class="button small-button primary" href="{{ url_for('dancers') }}">All People</a>
+30:         <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Submit Missing Info</a>
+42:     {% if people_records %}
+44:             {% for person in people_records %}
+52:                                     <a href="{{ person | profile_url }}">
+53:                                         {{ person["dance_name"] or person["display_name"] or person["name"] or "Unnamed profile" }}
+81:                             <p class="small-note">This profile can still be expanded with history, roles, media, battles, music, and community context.</p>
+84:                         <a class="button small-button secondary" href="{{ person | profile_url }}">Open Profile</a>
+91:             <h3>No profiles are loaded here yet.</h3>
+92:             <p>Profiles will appear once dancer/person records are available to this route.</p>
+105:     {% if people_records %}
+119:                     {% for person in people_records %}
+123:                                 <td>{{ person["dance_name"] or person["display_name"] or person["name"] or "Unnamed profile" }}</td>
+131:                                 <td><a class="button small-button secondary" href="{{ person | profile_url }}">Open</a></td>
+140:             <h3>No table records yet.</h3>
+
+=== templates/dancer_profile_detail.html ===
+3: {% block title %}{{ profile["dance_name"] or "Profile" }} | The LiteFeet Ledger{% endblock %}
+4: {% block meta_description %}LiteFeet Ledger profile for {{ profile["dance_name"] or "community profile" }} with roles, affiliations, music, battles, mentions, flowers, corrections, and community context.{% endblock %}
+7: <section class="content-section profile-page">
+8:     <div class="profile-hero-card">
+10:             <p class="eyebrow">{{ profile["status"] or "Profile" }}</p>
+11:             <h1>{{ profile["dance_name"] or "Unnamed Profile" }}</h1>
+14:                 {% set roles = profile["role_tags"]|role_list %}
+24:             {% if profile["team_affiliation"] %}
+25:                 <p><strong>Team / Affiliation:</strong> {{ profile["team_affiliation"] }}</p>
+28:             {% if profile["borough_scene"] %}
+29:                 <p><strong>Scene:</strong> {{ profile["borough_scene"] }}</p>
+33:         <div class="profile-actions">
+34:             <a class="button primary" href="{{ url_for('submit_info') }}">Submit Correction</a>
+35:             {% if session.get("admin_logged_in") %}
+36:                 <a class="button secondary" href="{{ url_for('admin_person_edit', dancer_id=profile['id']) }}">Edit Profile</a>
+42: <section class="profile-layout-grid">
+43:     <article class="profile-panel profile-about-panel">
+47:         {% if profile["bio"] %}
+48:             <p>{{ profile["bio"] }}</p>
+51:                 This profile still needs a fuller bio, role history, affiliations, battle history,
+52:                 music connections, and source-backed context.
+56:         {% if profile["source_url"] %}
+57:             <p><a href="{{ profile['source_url'] }}" target="_blank" rel="noopener">Source / Reference</a></p>
+61:     <article class="profile-panel">
+66:             <div class="profile-mini-list">
+68:                     <div class="profile-mini-item">
+85:     <article class="profile-panel">
+89:         {% if profile_releases %}
+90:             <div class="profile-mini-list">
+91:                 {% for item in profile_releases %}
+92:                     <div class="profile-mini-item">
+94:                             <a href="{{ url_for('music_release_detail', item_id=item['id']) }}">{{ item["title"] }}</a>
+104:             <p class="small-note">No music records are connected yet.</p>
+108:     <article class="profile-panel">
+113:             <div class="profile-mini-list">
+115:                     <div class="profile-mini-item">
+129:     <article class="profile-panel">
+134:             <div class="profile-mini-list">
+136:                     <div class="profile-mini-item">
+144:                 Corrections, profile claims, and added context will appear here for review.
+148:         <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Submit Context</a>
+151:     <article class="profile-panel">
+155:         {% if similar_profiles %}
+156:             <div class="profile-mini-list">
+157:                 {% for item in similar_profiles %}
+158:                     <div class="profile-mini-item">
+159:                         <h3><a href="{{ item | profile_url }}">{{ item["dance_name"] }}</a></h3>
+165:             <p class="small-note">No similar profiles are connected yet.</p>
+171:     .profile-hero-card,
+172:     .profile-panel {
+179:     .profile-hero-card {
+186:     .profile-layout-grid {
+193:     .profile-about-panel {
+197:     .profile-mini-list {
+202:     .profile-mini-item {
+
+=== templates/litefeet_music.html ===
+4: {% block meta_description %}Browse LiteFeet music releases, producer drops, Release Radar, all-time releases, Ledger plays, ratings, reactions, and community feedback.{% endblock %}
+7: {% set music_records = releases if releases is defined else music_releases if music_releases is defined else latest_music_releases if latest_music_releases is defined else media_items if media_items is defined else [] %}
+9: <section class="content-section music-page">
+21:             <a class="button primary" href="{{ url_for('submit_info') }}">Submit Music</a>
+22:             {% if session.get("admin_logged_in") %}
+23:                 <a class="button secondary" href="{{ url_for('admin_media') }}">Add Release</a>
+28:     <div class="music-filter-row">
+63:     {% if music_records %}
+65:             <table class="release-table music-release-table">
+79:                     {% for item in music_records %}
+101:                                     <a href="{{ url_for('music_release_detail', item_id=item['id']) }}">{{ item["title"] }}</a>
+108:                             <td>{% if item["release_date"] %}{{ item["release_date"]|music_release_date }}{% else %}Date unknown{% endif %}</td>
+112:                                 <span class="music-use-pill">Lab</span>
+113:                                 <span class="music-use-pill">Battle</span>
+114:                                 <span class="music-use-pill">Video</span>
+119:                                     <a class="button small-button secondary" href="{{ url_for('music_release_detail', item_id=item['id']) }}">Open</a>
+133:             <h3>No music records are loaded here yet.</h3>
+139: <section class="homepage-section music-sections-grid">
+162:             Dancers can eventually mark whether they would lab to it, battle to it, shoot a video to it,
+169:     .music-filter-row {
+177:     .music-use-pill {
+186:     .music-sections-grid {
+192:     .music-sections-grid article {
+200:         .music-sections-grid {
+
+=== templates/events.html ===
+4: {% block meta_description %}Browse LiteFeet battles, classes, cyphers, performances, link-ups, workshops, releases, and community events in The LiteFeet Ledger Calendar.{% endblock %}
+13:                 Battles, classes, link-ups, performances, cyphers, workshops, music releases,
+14:                 team events, and community records connected to LiteFeet.
+18:         <a class="button primary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
+39:             {% for event in upcoming_soon %}
+41:                     {% set event_date = event | detail_value("Event Date") %}
+42:                     {% set event_time = event | detail_value("Event Time") %}
+43:                     {% set event_location = event | detail_value("Event Location") %}
+44:                     {% set event_type = event | detail_value("Battle Type") %}
+46:                     <p class="eyebrow">{{ event_date or "Upcoming" }}{% if event_time %} · {{ event_time }}{% endif %}</p>
+47:                     <h3><a href="{{ event | event_public_url }}">{{ event["title"] }}</a></h3>
+49:                     {% if event["related_to"] %}<p><strong>Organizer:</strong> {{ event["related_to"] }}</p>{% endif %}
+50:                     {% if event_location %}<p><strong>Location:</strong> {{ event_location }}</p>{% endif %}
+51:                     {% if event_type %}<p><strong>Type:</strong> {{ event_type }}</p>{% endif %}
+53:                     <a class="button small-button secondary" href="{{ event | event_public_url }}">Details</a>
+60:             <p>Add battles, classes, link-ups, performances, cyphers, workshops, and community events as they come in.</p>
+86:                     {% for event in upcoming_later %}
+88:                             <td>{{ event | detail_value("Event Date") or "Date TBD" }}</td>
+89:                             <td>{{ event["title"] }}</td>
+90:                             <td>{{ event["related_to"] or "—" }}</td>
+91:                             <td>{{ event | detail_value("Event Location") or "—" }}</td>
+92:                             <td><a class="button small-button secondary" href="{{ event | event_public_url }}">Open</a></td>
+113:     {% if past_events %}
+126:                     {% for event in past_events %}
+128:                             <td>{{ event | detail_value("Event Date") or "Date TBD" }}</td>
+129:                             <td>{{ event["title"] }}</td>
+130:                             <td>{{ event["related_to"] or "—" }}</td>
+131:                             <td>{{ event | detail_value("Event Location") or "—" }}</td>
+132:                             <td><a class="button small-button secondary" href="{{ event | event_public_url }}">Open</a></td>
+140:             <h3>No past calendar records yet.</h3>
+153:     {% if undated_events %}
+155:             {% for event in undated_events %}
+157:                     <h3><a href="{{ event | event_public_url }}">{{ event["title"] }}</a></h3>
+158:                     {% if event["related_to"] %}<p><strong>Organizer:</strong> {{ event["related_to"] }}</p>{% endif %}
+165:             <h3>No undated calendar records.</h3>
+
+=== templates/battles.html ===
+4: {% block meta_description %}Browse LiteFeet battle records, videos, official winners, judges, events, debated battles, and community input in The LiteFeet Ledger.{% endblock %}
+7: {% set battle_records = battles if battles is defined else battle_rows if battle_rows is defined else records if records is defined else [] %}
+8: {% set video_records = latest_battle_videos if latest_battle_videos is defined else battle_videos if battle_videos is defined else media_items if media_items is defined else [] %}
+16:                 Battle records should separate official event results, video proof, judge decisions,
+21:         <a class="button primary" href="{{ url_for('submit_info') }}">Submit Battle Info</a>
+33:     {% if video_records %}
+35:             {% for item in video_records %}
+62:                         {% if item["event_name"] %}
+63:                             <p><strong>Event:</strong> {{ item["event_name"] }}</p>
+85:     {% if battle_records %}
+100:                     {% for battle in battle_records %}
+104:                             <td>{{ battle["event_date"] or battle["date"] or battle["release_date"] or "Date TBD" }}</td>
+105:                             <td>{{ battle["event_name"] or battle["event"] or "—" }}</td>
+115:             <h3>Structured battle records are coming next.</h3>
+117:                 This table is ready for who battled, official winner, date, event, organizer,
+129:             The official winner should reflect what the event judges decided, even if community discussion
+148:             elimination formats, and special event formats.
+
+=== templates/awards.html ===
+7: {% set award_records = awards if awards is defined else award_rows if award_rows is defined else records if records is defined else [] %}
+20:         <a class="button primary" href="{{ url_for('submit_info') }}">Submit Award Info</a>
+39:     {% if award_records %}
+54:                     {% for award in award_records %}
+72:                 once those records are added.
+95:             The Ledger can eventually calculate recognition from battles, music activity, events,
+96:             verified records, and community participation.
+105:             from their own profile.

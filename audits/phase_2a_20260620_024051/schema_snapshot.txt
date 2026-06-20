@@ -1,0 +1,152 @@
+=== DATABASE DIALECT ===
+sqlite
+
+=== TABLE: admin_activity_dismissals ===
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'activity_key', 'TEXT', 0, None, 0)
+(2, 'dismissed_at', 'TEXT', 0, None, 0)
+
+=== TABLE: archive_users ===
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'display_name', 'TEXT', 0, None, 0)
+(2, 'email', 'TEXT', 0, None, 0)
+(3, 'password_hash', 'TEXT', 0, None, 0)
+(4, 'role', 'TEXT', 0, "'contributor'", 0)
+(5, 'organization_name', 'TEXT', 0, None, 0)
+(6, 'created_at', 'TEXT', 1, None, 0)
+
+=== TABLE: dancer_flowers ===
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'dancer_profile_id', 'INTEGER', 1, None, 0)
+(2, 'flower_text', 'TEXT', 1, None, 0)
+(3, 'submitter_name', 'TEXT', 0, None, 0)
+(4, 'submitter_role', 'TEXT', 0, None, 0)
+(5, 'contact', 'TEXT', 0, None, 0)
+(6, 'status', 'TEXT', 0, "'Pending Review'", 0)
+(7, 'created_at', 'TEXT', 1, None, 0)
+
+=== TABLE: dancer_profiles ===
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'user_id', 'INTEGER', 0, None, 0)
+(2, 'dance_name', 'TEXT', 1, None, 0)
+(3, 'real_name', 'TEXT', 0, None, 0)
+(4, 'team_affiliation', 'TEXT', 0, None, 0)
+(5, 'borough_scene', 'TEXT', 0, None, 0)
+(6, 'bio', 'TEXT', 0, None, 0)
+(7, 'source_url', 'TEXT', 0, None, 0)
+(8, 'status', 'TEXT', 0, "'Pending Review'", 0)
+(9, 'created_at', 'TEXT', 1, None, 0)
+(10, 'role_tags', 'TEXT', 0, None, 0)
+(11, 'profile_slug', 'TEXT', 0, None, 0)
+
+=== TABLE: dancer_suggestions ===
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'dancer_profile_id', 'INTEGER', 1, None, 0)
+(2, 'suggestion_text', 'TEXT', 1, None, 0)
+(3, 'source_url', 'TEXT', 0, None, 0)
+(4, 'submitter_name', 'TEXT', 0, None, 0)
+(5, 'submitter_role', 'TEXT', 0, None, 0)
+(6, 'contact', 'TEXT', 0, None, 0)
+(7, 'status', 'TEXT', 0, "'Pending Review'", 0)
+(8, 'created_at', 'TEXT', 1, None, 0)
+
+=== TABLE: media_items ===
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'media_type', 'TEXT', 1, None, 0)
+(2, 'title', 'TEXT', 1, None, 0)
+(3, 'artist_or_creator', 'TEXT', 0, None, 0)
+(4, 'url', 'TEXT', 1, None, 0)
+(5, 'platform', 'TEXT', 0, None, 0)
+(6, 'release_date', 'TEXT', 0, None, 0)
+(7, 'event_name', 'TEXT', 0, None, 0)
+(8, 'description', 'TEXT', 0, None, 0)
+(9, 'status', 'TEXT', 0, "'Published'", 0)
+(10, 'created_at', 'TEXT', 0, None, 0)
+(11, 'music_project_id', 'INTEGER', 0, None, 0)
+(12, 'track_number', 'INTEGER', 0, None, 0)
+(13, 'playable_url', 'TEXT', 0, None, 0)
+
+=== TABLE: music_feedback ===
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'media_item_id', 'INTEGER', 1, None, 0)
+(2, 'rating', 'INTEGER', 0, None, 0)
+(3, 'would_lab', 'INTEGER', 0, '0', 0)
+(4, 'would_shoot_video', 'INTEGER', 0, '0', 0)
+(5, 'would_battle', 'INTEGER', 0, '0', 0)
+(6, 'feedback', 'TEXT', 0, None, 0)
+(7, 'submitter_name', 'TEXT', 0, None, 0)
+(8, 'voter_key', 'TEXT', 0, None, 0)
+(9, 'created_at', 'TEXT', 0, None, 0)
+
+=== TABLE: music_play_events ===
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'media_item_id', 'INTEGER', 0, None, 0)
+(2, 'user_id', 'INTEGER', 0, None, 0)
+(3, 'is_admin', 'INTEGER', 0, '0', 0)
+(4, 'created_at', 'TEXT', 0, None, 0)
+
+=== TABLE: music_projects ===
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'title', 'TEXT', 1, None, 0)
+(2, 'artist_or_creator', 'TEXT', 0, None, 0)
+(3, 'url', 'TEXT', 0, None, 0)
+(4, 'platform', 'TEXT', 0, None, 0)
+(5, 'release_date', 'TEXT', 0, None, 0)
+(6, 'description', 'TEXT', 0, None, 0)
+(7, 'status', 'TEXT', 0, "'Published'", 0)
+(8, 'created_at', 'TEXT', 0, None, 0)
+
+=== TABLE: role_requests ===
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'user_id', 'INTEGER', 1, None, 0)
+(2, 'requested_role', 'TEXT', 1, None, 0)
+(3, 'reason', 'TEXT', 0, None, 0)
+(4, 'status', 'TEXT', 0, "'Pending Review'", 0)
+(5, 'created_at', 'TEXT', 1, None, 0)
+
+=== TABLE: site_settings ===
+(0, 'key', 'TEXT', 0, None, 1)
+(1, 'value', 'TEXT', 0, None, 0)
+(2, 'updated_at', 'TEXT', 0, 'CURRENT_TIMESTAMP', 0)
+
+=== TABLE: site_visits ===
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'path', 'TEXT', 0, None, 0)
+(2, 'method', 'TEXT', 0, None, 0)
+(3, 'user_id', 'INTEGER', 0, None, 0)
+(4, 'is_admin', 'INTEGER', 0, '0', 0)
+(5, 'referrer', 'TEXT', 0, None, 0)
+(6, 'user_agent', 'TEXT', 0, None, 0)
+(7, 'ip_hash', 'TEXT', 0, None, 0)
+(8, 'created_at', 'TEXT', 0, None, 0)
+
+=== TABLE: sqlite_sequence ===
+(0, 'name', '', 0, None, 0)
+(1, 'seq', '', 0, None, 0)
+
+=== TABLE: submissions ===
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'submission_type', 'TEXT', 0, None, 0)
+(2, 'title', 'TEXT', 0, None, 0)
+(3, 'related_to', 'TEXT', 0, None, 0)
+(4, 'source_url', 'TEXT', 0, None, 0)
+(5, 'submitter_name', 'TEXT', 0, None, 0)
+(6, 'submitter_role', 'TEXT', 0, None, 0)
+(7, 'contact', 'TEXT', 0, None, 0)
+(8, 'needs_verification', 'INTEGER', 0, '0', 0)
+(9, 'review_status', 'TEXT', 0, "'Pending Review'", 0)
+(10, 'details_json', 'TEXT', 0, None, 0)
+(11, 'created_at', 'TEXT', 1, None, 0)
+(12, 'contributor_user_id', 'INTEGER', 0, None, 0)
+(13, 'anonymous_submission', 'INTEGER', 0, '0', 0)
+
+=== TABLE: verification_votes ===
+(0, 'id', 'INTEGER', 0, None, 1)
+(1, 'submission_id', 'INTEGER', 1, None, 0)
+(2, 'vote_type', 'TEXT', 1, None, 0)
+(3, 'voter_name', 'TEXT', 0, None, 0)
+(4, 'voter_role', 'TEXT', 0, None, 0)
+(5, 'contact', 'TEXT', 0, None, 0)
+(6, 'source_url', 'TEXT', 0, None, 0)
+(7, 'note', 'TEXT', 0, None, 0)
+(8, 'created_at', 'TEXT', 1, None, 0)

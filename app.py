@@ -8346,3 +8346,268 @@ def normalize_people_profile_status(status):
 
     return "Inactive"
 
+
+
+# --- Phase 2 Ledger data model helpers ---
+def ledger_table_columns(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def ledger_add_column_if_missing(conn, table_name, column_name, column_sql):
+    existing_columns = ledger_table_columns(conn, table_name)
+
+    if column_name in existing_columns:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+
+
+def ensure_phase2_ledger_tables():
+    id_column = "id SERIAL PRIMARY KEY" if maintenance_uses_postgres() else "id INTEGER PRIMARY KEY AUTOINCREMENT"
+
+    with engine.begin() as conn:
+        conn.execute(text(f"""
+            CREATE TABLE IF NOT EXISTS ask_conversations (
+                {id_column},
+                user_id INTEGER,
+                visitor_key TEXT,
+                title TEXT,
+                status TEXT DEFAULT 'open',
+                source_context TEXT,
+                created_at TEXT,
+                updated_at TEXT
+            )
+        """))
+
+        conn.execute(text(f"""
+            CREATE TABLE IF NOT EXISTS ask_messages (
+                {id_column},
+                conversation_id INTEGER,
+                sender_type TEXT,
+                message_text TEXT,
+                verification_status TEXT,
+                source_url TEXT,
+                created_at TEXT
+            )
+        """))
+
+        conn.execute(text(f"""
+            CREATE TABLE IF NOT EXISTS community_perspectives (
+                {id_column},
+                related_type TEXT,
+                related_id INTEGER,
+                submission_id INTEGER,
+                user_id INTEGER,
+                perspective_text TEXT,
+                source_url TEXT,
+                perspective_status TEXT DEFAULT 'Pending Review',
+                review_label TEXT,
+                created_at TEXT,
+                updated_at TEXT
+            )
+        """))
+
+        conn.execute(text(f"""
+            CREATE TABLE IF NOT EXISTS profile_claims (
+                {id_column},
+                user_id INTEGER,
+                profile_type TEXT DEFAULT 'dancer',
+                profile_id INTEGER,
+                claimant_name TEXT,
+                claimant_contact TEXT,
+                claim_reason TEXT,
+                proof_url TEXT,
+                claim_status TEXT DEFAULT 'Pending Review',
+                reviewed_by INTEGER,
+                reviewed_at TEXT,
+                created_at TEXT
+            )
+        """))
+
+        conn.execute(text(f"""
+            CREATE TABLE IF NOT EXISTS saved_items (
+                {id_column},
+                user_id INTEGER,
+                item_type TEXT,
+                item_id INTEGER,
+                label TEXT,
+                notes TEXT,
+                created_at TEXT
+            )
+        """))
+
+        conn.execute(text(f"""
+            CREATE TABLE IF NOT EXISTS calendar_item_metadata (
+                {id_column},
+                submission_id INTEGER,
+                calendar_type TEXT,
+                recurrence_rule TEXT,
+                borough TEXT,
+                venue_name TEXT,
+                flyer_url TEXT,
+                cost_text TEXT,
+                dj_names TEXT,
+                host_names TEXT,
+                judges_text TEXT,
+                visibility_status TEXT DEFAULT 'public',
+                created_at TEXT,
+                updated_at TEXT
+            )
+        """))
+
+        conn.execute(text(f"""
+            CREATE TABLE IF NOT EXISTS battle_records (
+                {id_column},
+                submission_id INTEGER,
+                event_submission_id INTEGER,
+                battle_type TEXT,
+                competitor_one TEXT,
+                competitor_two TEXT,
+                competitor_one_team TEXT,
+                competitor_two_team TEXT,
+                winner TEXT,
+                official_winner TEXT,
+                judges_text TEXT,
+                video_url TEXT,
+                controversy_score INTEGER DEFAULT 0,
+                community_input_status TEXT DEFAULT 'None',
+                review_status TEXT DEFAULT 'Needs Review',
+                created_at TEXT,
+                updated_at TEXT
+            )
+        """))
+
+        conn.execute(text(f"""
+            CREATE TABLE IF NOT EXISTS team_access_grants (
+                {id_column},
+                team_name TEXT,
+                team_profile_id INTEGER,
+                user_id INTEGER,
+                access_role TEXT,
+                granted_by_user_id INTEGER,
+                status TEXT DEFAULT 'Pending Review',
+                created_at TEXT,
+                updated_at TEXT
+            )
+        """))
+
+        table_columns = {
+            "ask_conversations": {
+                "user_id": "INTEGER",
+                "visitor_key": "TEXT",
+                "title": "TEXT",
+                "status": "TEXT DEFAULT 'open'",
+                "source_context": "TEXT",
+                "created_at": "TEXT",
+                "updated_at": "TEXT",
+            },
+            "ask_messages": {
+                "conversation_id": "INTEGER",
+                "sender_type": "TEXT",
+                "message_text": "TEXT",
+                "verification_status": "TEXT",
+                "source_url": "TEXT",
+                "created_at": "TEXT",
+            },
+            "community_perspectives": {
+                "related_type": "TEXT",
+                "related_id": "INTEGER",
+                "submission_id": "INTEGER",
+                "user_id": "INTEGER",
+                "perspective_text": "TEXT",
+                "source_url": "TEXT",
+                "perspective_status": "TEXT DEFAULT 'Pending Review'",
+                "review_label": "TEXT",
+                "created_at": "TEXT",
+                "updated_at": "TEXT",
+            },
+            "profile_claims": {
+                "user_id": "INTEGER",
+                "profile_type": "TEXT DEFAULT 'dancer'",
+                "profile_id": "INTEGER",
+                "claimant_name": "TEXT",
+                "claimant_contact": "TEXT",
+                "claim_reason": "TEXT",
+                "proof_url": "TEXT",
+                "claim_status": "TEXT DEFAULT 'Pending Review'",
+                "reviewed_by": "INTEGER",
+                "reviewed_at": "TEXT",
+                "created_at": "TEXT",
+            },
+            "saved_items": {
+                "user_id": "INTEGER",
+                "item_type": "TEXT",
+                "item_id": "INTEGER",
+                "label": "TEXT",
+                "notes": "TEXT",
+                "created_at": "TEXT",
+            },
+            "calendar_item_metadata": {
+                "submission_id": "INTEGER",
+                "calendar_type": "TEXT",
+                "recurrence_rule": "TEXT",
+                "borough": "TEXT",
+                "venue_name": "TEXT",
+                "flyer_url": "TEXT",
+                "cost_text": "TEXT",
+                "dj_names": "TEXT",
+                "host_names": "TEXT",
+                "judges_text": "TEXT",
+                "visibility_status": "TEXT DEFAULT 'public'",
+                "created_at": "TEXT",
+                "updated_at": "TEXT",
+            },
+            "battle_records": {
+                "submission_id": "INTEGER",
+                "event_submission_id": "INTEGER",
+                "battle_type": "TEXT",
+                "competitor_one": "TEXT",
+                "competitor_two": "TEXT",
+                "competitor_one_team": "TEXT",
+                "competitor_two_team": "TEXT",
+                "winner": "TEXT",
+                "official_winner": "TEXT",
+                "judges_text": "TEXT",
+                "video_url": "TEXT",
+                "controversy_score": "INTEGER DEFAULT 0",
+                "community_input_status": "TEXT DEFAULT 'None'",
+                "review_status": "TEXT DEFAULT 'Needs Review'",
+                "created_at": "TEXT",
+                "updated_at": "TEXT",
+            },
+            "team_access_grants": {
+                "team_name": "TEXT",
+                "team_profile_id": "INTEGER",
+                "user_id": "INTEGER",
+                "access_role": "TEXT",
+                "granted_by_user_id": "INTEGER",
+                "status": "TEXT DEFAULT 'Pending Review'",
+                "created_at": "TEXT",
+                "updated_at": "TEXT",
+            },
+        }
+
+        for table_name, columns in table_columns.items():
+            for column_name, column_sql in columns.items():
+                ledger_add_column_if_missing(conn, table_name, column_name, column_sql)
+
+
+try:
+    ensure_phase2_ledger_tables()
+except Exception as phase2_error:
+    print(f"Phase 2 Ledger table setup skipped: {phase2_error}")
