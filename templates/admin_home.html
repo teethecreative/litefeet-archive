@@ -1,232 +1,136 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard | LiteFeet Ledger{% endblock %}
+{% block title %}Admin Dashboard | The LiteFeet Ledger{% endblock %}
 
 {% block content %}
-
-        <a class="button secondary" href="{{ url_for('admin_maintenance') }}">Maintenance Mode</a>
-
-<section class="content-section admin-command-center">
-    <p class="eyebrow">Ledger Command Center</p>
-    <h1>Admin Dashboard</h1>
-    <p>Track site traffic, new community activity, verification issues, accounts, submissions, and music activity.</p>
-
-    <div class="dashboard-stat-grid">
-        <article>
-            <span>Visits Today</span>
-            <strong>{{ visits_today }}</strong>
-        </article>
-        <article>
-            <span>New Accounts Today</span>
-            <strong>{{ new_accounts_today }}</strong>
-        </article>
-        <article>
-            <span>Total Accounts</span>
-            <strong>{{ total_accounts }}</strong>
-        </article>
-        <article>
-            <span>Pending Submissions</span>
-            <strong>{{ pending_submissions }}</strong>
-        </article>
-        <article>
-            <span>Role Requests</span>
-            <strong>{{ pending_role_requests }}</strong>
-        </article>
-        <article>
-            <span>Verification Issues</span>
-            <strong>{{ controversy_count }}</strong>
-        </article>
-        <article>
-            <span>Music Releases</span>
-            <strong>{{ total_music_releases }}</strong>
-        </article>
-        <article>
-            <span>Ledger Plays</span>
-            <strong>{{ total_ledger_plays }}</strong>
-        </article>
-    </div>
-</section>
-
-<section class="content-section">
+<section class="content-section admin-dashboard">
     <div class="section-heading-row">
         <div>
-            <p class="eyebrow">Activity</p>
-            <h2>New / Needs Action</h2>
+            <p class="eyebrow">Backend</p>
+            <h1>Admin Dashboard</h1>
+            <p>
+                Review submissions, accounts, moderation, site status, flagged records, errors,
+                recent activity, music, media, profiles, calendar items, and Ledger Review topics.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button primary" href="{{ url_for('admin_submissions') }}">Review Submissions</a>
+            <a class="button secondary" href="{{ url_for('admin_maintenance') }}">Maintenance Mode</a>
         </div>
     </div>
-
-    {% if activity_feed %}
-        <div class="release-table-wrap">
-            <table class="release-table">
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Item</th>
-                        <th>Details</th>
-                        <th>Created</th>
-                        <th>Open</th>
-                        <th>Dismiss</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in activity_feed %}
-                        <tr>
-                            <td>{{ item["activity_type"] }}</td>
-                            <td><strong>{{ item["title"] }}</strong></td>
-                            <td>{{ item["description"] }}</td>
-                            <td>{{ item["created_at"] }}</td>
-                            <td>
-                                {% if item["target_url"] %}
-                                    <a class="button small-button" href="{{ item['target_url'] }}">Open</a>
-                                {% else %}
-                                    —
-                                {% endif %}
-                            </td>
-                            <td>
-                                <form method="POST" action="{{ url_for('dismiss_admin_activity') }}">
-                                    <input type="hidden" name="activity_key" value="{{ item['activity_key'] }}">
-                                    <button type="submit" class="button small-button secondary">Dismiss</button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <div class="empty-state">
-            <h3>No new activity waiting</h3>
-            <p>Dismissed items stay out of this dashboard view.</p>
-        </div>
-    {% endif %}
 </section>
 
-<section class="content-section">
+<section class="admin-dashboard-grid">
+    <article class="admin-card admin-status-card">
+        <p class="eyebrow">Site Status</p>
+        <h2>Maintenance / Launch Control</h2>
+        <p>
+            Use this before major rebuild pushes, data migrations, or public-facing changes.
+        </p>
+        <a class="button small-button primary" href="{{ url_for('admin_maintenance') }}">Open Maintenance</a>
+    </article>
+
+    <article class="admin-card">
+        <p class="eyebrow">Queue</p>
+        <h2>Submissions</h2>
+        <p>
+            Approve, reject, request follow-up, mark verified, mark community-supported,
+            flag debated, or merge duplicates.
+        </p>
+        <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Open Queue</a>
+    </article>
+
+    <article class="admin-card">
+        <p class="eyebrow">Media</p>
+        <h2>Music / Videos</h2>
+        <p>
+            Add or edit LiteFeet Music records, battle videos, recaps, producer releases, and media embeds.
+        </p>
+        <a class="button small-button secondary" href="{{ url_for('admin_media') }}">Open Media</a>
+    </article>
+
+    <article class="admin-card">
+        <p class="eyebrow">Accounts</p>
+        <h2>Users / Roles</h2>
+        <p>
+            Contributor accounts, profile owners, affiliate hosts, CEOs, teams, role requests,
+            and beta access will be managed from this area.
+        </p>
+        <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Review Role Requests</a>
+    </article>
+
+    <article class="admin-card">
+        <p class="eyebrow">Moderation</p>
+        <h2>Comments / Flowers</h2>
+        <p>
+            Review community flowers, comments, corrections, profile claims, and owner-approved items.
+        </p>
+        <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Open Moderation</a>
+    </article>
+
+    <article class="admin-card">
+        <p class="eyebrow">Ledger Review</p>
+        <h2>Flagged / Debated</h2>
+        <p>
+            Track records where the community disagrees, proof is missing, or context needs review.
+        </p>
+        <a class="button small-button secondary" href="{{ url_for('verify_claims') }}">Open Ledger Review</a>
+    </article>
+</section>
+
+<section class="homepage-section">
     <div class="section-heading-row">
         <div>
-            <p class="eyebrow">Traffic</p>
-            <h2>Visits by Hour</h2>
+            <p class="eyebrow">Quick Actions</p>
+            <h2>Admin workflow</h2>
         </div>
     </div>
 
-    <div class="release-table-wrap">
-        <table class="release-table">
-            <thead>
-                <tr>
-                    <th>Hour</th>
-                    <th>Visits</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in hourly_visits %}
-                    <tr>
-                        <td>{{ row["bucket"] }}</td>
-                        <td>{{ row["count"] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="admin-quick-actions">
+        <a class="button secondary" href="{{ url_for('submit_info') }}">Add Public Submission</a>
+        <a class="button secondary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
+        <a class="button secondary" href="{{ url_for('litefeet_music') }}">View Music</a>
+        <a class="button secondary" href="{{ url_for('events') }}">View Calendar</a>
+        <a class="button secondary" href="{{ url_for('dancers') }}">View People</a>
     </div>
 </section>
 
-<section class="content-section">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Traffic</p>
-            <h2>Visits by Day</h2>
-        </div>
-    </div>
+<style>
+    .admin-dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
 
-    <div class="release-table-wrap">
-        <table class="release-table">
-            <thead>
-                <tr>
-                    <th>Day</th>
-                    <th>Visits</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in daily_visits %}
-                    <tr>
-                        <td>{{ row["bucket"] }}</td>
-                        <td>{{ row["count"] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
+    .admin-card {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
 
-<section class="content-section">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Traffic</p>
-            <h2>Top Pages</h2>
-        </div>
-    </div>
+    .admin-status-card {
+        border-style: dashed;
+    }
 
-    <div class="release-table-wrap">
-        <table class="release-table">
-            <thead>
-                <tr>
-                    <th>Page</th>
-                    <th>Visits</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in top_pages %}
-                    <tr>
-                        <td>{{ row["path"] }}</td>
-                        <td>{{ row["count"] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
+    .admin-quick-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
 
-<section class="content-section">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Verification</p>
-            <h2>Top Controversy Queue</h2>
-        </div>
+    @media (max-width: 1000px) {
+        .admin-dashboard-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
 
-        <a class="button secondary" href="{{ url_for('verify_claims') }}">Open Verify Page</a>
-    </div>
-
-    {% if controversy_queue %}
-        <div class="release-table-wrap">
-            <table class="release-table">
-                <thead>
-                    <tr>
-                        <th>Claim</th>
-                        <th>Reason</th>
-                        <th>True</th>
-                        <th>False</th>
-                        <th>Debatable</th>
-                        <th>Review</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in controversy_queue %}
-                        <tr>
-                            <td><strong>{{ item["title"] }}</strong></td>
-                            <td>{{ item["controversy_reason"] }}</td>
-                            <td>{{ item["true_count"] }}</td>
-                            <td>{{ item["false_count"] }}</td>
-                            <td>{{ item["debatable_count"] }}</td>
-                            <td><a class="button small-button" href="{{ url_for('verify_claim_detail', submission_id=item['id']) }}">Review</a></td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <div class="empty-state">
-            <h3>No active controversy queue</h3>
-            <p>Claims will appear here when votes split, users mark them debatable, or records are flagged.</p>
-        </div>
-    {% endif %}
-</section>
+    @media (max-width: 700px) {
+        .admin-dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}

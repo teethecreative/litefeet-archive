@@ -1,33 +1,75 @@
 {% extends "base.html" %}
 
-{% block title %}Maintenance Mode | The LiteFeet Ledger Admin{% endblock %}
+{% block title %}Maintenance Mode | The LiteFeet Ledger{% endblock %}
 
 {% block content %}
-<section class="page-header">
-    <p class="eyebrow">Admin</p>
+<section class="content-section admin-maintenance-page">
+    <p class="eyebrow">Backend</p>
     <h1>Maintenance Mode</h1>
     <p>
-        Toggle whether public visitors see the maintenance page. Admins can still access the site while maintenance mode is on.
+        Use this when The LiteFeet Ledger is being rebuilt, patched, migrated, or audited.
+        Admins can still access backend tools while public visitors see the maintenance screen.
     </p>
-</section>
 
-<section class="panel">
-    <h2>Current status</h2>
+    <div class="maintenance-status-card">
+        <h2>Current Status</h2>
 
-    {% if maintenance_mode %}
-        <p><strong>Maintenance mode is ON.</strong> Public visitors see the maintenance page.</p>
-    {% else %}
-        <p><strong>Maintenance mode is OFF.</strong> Public visitors can browse the site.</p>
-    {% endif %}
+        {% if maintenance_enabled %}
+            <p class="status-badge status-on">Maintenance is ON</p>
+            <p>Public pages should show the maintenance screen. Admin/backend access should remain available.</p>
+        {% else %}
+            <p class="status-badge status-off">Maintenance is OFF</p>
+            <p>The public site should be visible.</p>
+        {% endif %}
+    </div>
 
-    <form method="post">
-        <label for="maintenance_mode">Maintenance mode</label>
-        <select id="maintenance_mode" name="maintenance_mode">
-            <option value="on" {% if maintenance_mode %}selected{% endif %}>On</option>
-            <option value="off" {% if not maintenance_mode %}selected{% endif %}>Off</option>
-        </select>
-
-        <button class="button primary" type="submit">Save Maintenance Setting</button>
+    <form method="POST" class="form-card maintenance-toggle-form">
+        <button class="button primary" type="submit" name="maintenance_mode" value="on">Turn Maintenance On</button>
+        <button class="button secondary" type="submit" name="maintenance_mode" value="off">Turn Maintenance Off</button>
     </form>
+
+    <div class="empty-state compact-empty">
+        <h3>Deployment note</h3>
+        <p>
+            If the live Render site does not match this setting, check which branch Render is deploying
+            and whether the production database has the same site setting.
+        </p>
+    </div>
+
+    <div class="hero-actions">
+        <a class="button secondary" href="{{ url_for('admin_home') }}">Back to Admin Dashboard</a>
+        <a class="button secondary" href="{{ url_for('home') }}">View Public Home</a>
+    </div>
 </section>
+
+<style>
+    .maintenance-status-card {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+        margin: 16px 0;
+    }
+
+    .status-badge {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 5px 10px;
+        font-weight: 700;
+    }
+
+    .status-on {
+        border: 1px solid rgba(255,255,255,0.25);
+    }
+
+    .status-off {
+        border: 1px solid rgba(255,255,255,0.25);
+    }
+
+    .maintenance-toggle-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+</style>
 {% endblock %}

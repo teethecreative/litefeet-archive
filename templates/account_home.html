@@ -1,91 +1,177 @@
 {% extends "base.html" %}
 
-{% block title %}My Ledger Account | LiteFeet Ledger{% endblock %}
+{% block title %}Account Dashboard | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Manage your LiteFeet Ledger submissions, profile claims, comments, flowers, ratings, saved items, and Ask beta access.{% endblock %}
 
 {% block content %}
+{% set dashboard_user = user if user is defined else logged_in_user if logged_in_user is defined else none %}
+{% set account_submissions = submissions if submissions is defined else user_submissions if user_submissions is defined else [] %}
+{% set account_claims = claims if claims is defined else profile_claims if profile_claims is defined else [] %}
+{% set account_feedback = feedback_items if feedback_items is defined else comments if comments is defined else [] %}
+
 <section class="content-section account-dashboard">
-    {% if is_admin and not user %}
-        <p class="eyebrow">Admin Session</p>
-        <h1>Admin Account</h1>
-        <p>You are logged in as an admin. Use this space to track admin actions, review records, and manage the Ledger.</p>
-    {% else %}
-        <p class="eyebrow">Ledger Account</p>
-        <h1>{{ user["display_name"] }}</h1>
-        <p>
-            Track your profile, submissions, flowers, corrections, and Ledger activity.
-        </p>
-    {% endif %}
-
-    <div class="account-grid">
-        <div class="review-details">
-            <h3>Account Status</h3>
-
-            {% if is_admin %}
-                <p><strong>Access:</strong> Admin</p>
-            {% endif %}
-
-            {% if user %}
-                <p><strong>Name:</strong> {{ user["display_name"] }}</p>
-                <p><strong>Email:</strong> {{ user["email"] }}</p>
-            {% endif %}
-
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Account</p>
+            <h1>Account Dashboard</h1>
             <p>
-                <strong>Anonymous Mode:</strong>
-                {% if anonymous_mode %}On{% else %}Off{% endif %}
+                Track your Ledger submissions, profile claims, corrections, flowers, ratings,
+                saved items, and contributor tools.
             </p>
-
-            <form method="POST" action="{{ url_for('toggle_anonymous_mode') }}">
-                <button type="submit" class="button secondary">
-                    Turn Anonymous Mode {% if anonymous_mode %}Off{% else %}On{% endif %}
-                </button>
-            </form>
         </div>
 
-        <div class="review-details">
-            <h3>Profile</h3>
-
-            {% if claimed_profile %}
-                <p><strong>Profile:</strong> {{ claimed_profile["dance_name"] }}</p>
-                <p><strong>Status:</strong> {{ claimed_profile["status"] }}</p>
-
-                <div class="button-row">
-                    <a class="button primary" href="{{ claimed_profile | profile_url }}">View Profile</a>
-                    <a class="button secondary" href="{{ url_for('admin_person_edit', dancer_id=claimed_profile['id']) }}">Edit Profile</a>
-                </div>
-            {% else %}
-                <p>No claimed profile connected yet.</p>
-                <a class="button primary" href="{{ url_for('dancers') }}">Find / Claim Profile</a>
-            {% endif %}
+        <div class="hero-actions">
+            <a class="button primary" href="{{ url_for('submit_info') }}">Add to the Ledger</a>
+            <a class="button secondary" href="{{ url_for('ask_archive') }}">Ask Beta</a>
         </div>
     </div>
 
-    <div class="review-details">
-        <h3>My Contributions</h3>
+    {% if dashboard_user %}
+        <div class="account-summary-card">
+            <h2>{{ dashboard_user["display_name"] or dashboard_user["email"] or "Ledger User" }}</h2>
+            <p>
+                <strong>Role:</strong> {{ dashboard_user["role"] or session.get("user_role") or "contributor" }}
+                {% if dashboard_user["organization_name"] %}
+                    <br><strong>Organization:</strong> {{ dashboard_user["organization_name"] }}
+                {% endif %}
+            </p>
+        </div>
+    {% endif %}
+</section>
 
-        {% if contributions %}
-            <div class="compact-history-list">
-                {% for item in contributions %}
-                    <div class="history-row">
-                        <div>
-                            <strong>{{ item["title"] }}</strong>
-                            <p class="small-note">
-                                {{ item["submission_type"]|replace("_", " ")|title }}
-                                {% if item["created_at"] %} · {{ item["created_at"]|ledger_date }}{% endif %}
-                                {% if item["review_status"] %} · {{ item["review_status"] }}{% endif %}
-                            </p>
-                        </div>
+<section class="dashboard-grid">
+    <article class="dashboard-card">
+        <p class="eyebrow">Submissions</p>
+        <h2>Your Submissions</h2>
 
-                        {% if item["submission_type"] == "event" %}
-                            <a class="button small-button" href="{{ item | event_public_url }}">View</a>
-                        {% elif item["submission_type"] == "historical_claim" %}
-                            <a class="button small-button" href="{{ url_for('verify_claim_detail', submission_id=item['id']) }}">View</a>
-                        {% endif %}
+        {% if account_submissions %}
+            <div class="dashboard-mini-list">
+                {% for item in account_submissions[:5] %}
+                    <div>
+                        <h3>{{ item["title"] or "Untitled submission" }}</h3>
+                        <p class="small-note">
+                            {{ item["submission_type"] or "Submission" }}
+                            · {{ item["review_status"] or item["status"] or "Pending Review" }}
+                        </p>
                     </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p>No contributions connected to this account yet.</p>
+            <p class="small-note">
+                Submitted events, corrections, music, profiles, battles, awards, and context will appear here.
+            </p>
         {% endif %}
-    </div>
+    </article>
+
+    <article class="dashboard-card">
+        <p class="eyebrow">Profiles</p>
+        <h2>Profile Claims</h2>
+
+        {% if account_claims %}
+            <div class="dashboard-mini-list">
+                {% for claim in account_claims[:5] %}
+                    <div>
+                        <h3>{{ claim["profile_name"] or claim["title"] or "Profile claim" }}</h3>
+                        <p class="small-note">{{ claim["status"] or "Pending Review" }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="small-note">
+                Claimed profiles and profile access requests will sit here once connected.
+            </p>
+        {% endif %}
+
+        <a class="button small-button secondary" href="{{ url_for('dancers') }}">Find Profile</a>
+    </article>
+
+    <article class="dashboard-card">
+        <p class="eyebrow">Community</p>
+        <h2>Flowers / Comments</h2>
+
+        {% if account_feedback %}
+            <div class="dashboard-mini-list">
+                {% for item in account_feedback[:5] %}
+                    <div>
+                        <h3>{{ item["title"] or item["profile_name"] or "Community note" }}</h3>
+                        <p class="small-note">{{ item["status"] or "Pending Review" }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="small-note">
+                Flowers, comments, corrections, and community context connected to your account will appear here.
+            </p>
+        {% endif %}
+    </article>
+
+    <article class="dashboard-card">
+        <p class="eyebrow">Music</p>
+        <h2>Ratings / Reactions</h2>
+        <p class="small-note">
+            Your Lab, Battle, Video, thumbs, and 1–10 music feedback will appear here once the account dashboard is wired to music activity.
+        </p>
+        <a class="button small-button secondary" href="{{ url_for('litefeet_music') }}">Open Music</a>
+    </article>
+
+    <article class="dashboard-card">
+        <p class="eyebrow">Saved</p>
+        <h2>Saved Items</h2>
+        <p class="small-note">
+            Saved dancers, teams, battles, songs, events, and review topics will appear here in a later data pass.
+        </p>
+    </article>
+
+    <article class="dashboard-card">
+        <p class="eyebrow">Beta</p>
+        <h2>Ask Access</h2>
+        <p class="small-note">
+            Contributors and admins get access to the Ask beta shell while public visitors see the rebuilding notice.
+        </p>
+        <a class="button small-button secondary" href="{{ url_for('ask_archive') }}">Open Ask</a>
+    </article>
 </section>
+
+<style>
+    .account-summary-card,
+    .dashboard-card {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .account-summary-card {
+        margin-top: 16px;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .dashboard-mini-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .dashboard-mini-list > div {
+        border-top: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        padding-top: 10px;
+    }
+
+    @media (max-width: 1000px) {
+        .dashboard-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 700px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}
