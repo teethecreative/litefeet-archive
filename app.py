@@ -18715,3 +18715,407 @@ try:
             print(f"FINAL override active for /litefeet-music endpoint: {rule.endpoint}")
 except Exception as exc:
     print(f"Final LiteFeet Music route override failed: {exc}")
+
+
+# --- FINAL unified admin login fix ---
+# Keep one login page. Admin username/password can enter through /account/login.
+# Admin username match is case-insensitive so "Admin" works if env is "admin".
+def ledger_check_admin_login_flexible(username, password):
+    try:
+        expected_username = os.environ.get("ADMIN_USERNAME", "").strip()
+        expected_password = os.environ.get("ADMIN_PASSWORD", "").strip()
+
+        username = (username or "").strip()
+        password = (password or "").strip()
+
+        if not expected_username or not expected_password:
+            return False
+
+        return username.lower() == expected_username.lower() and password == expected_password
+    except Exception as exc:
+        print(f"Flexible admin login check failed: {exc}")
+        return False
+
+
+def ledger_set_admin_session(username):
+    session["admin_logged_in"] = True
+    session["is_admin"] = True
+    session["admin"] = True
+    session["admin_username"] = username
+    session.permanent = True
+
+
+def account_login_final_unified():
+    error = None
+
+    if request.method == "POST":
+        identifier = (
+            request.form.get("email")
+            or request.form.get("username")
+            or request.form.get("login")
+            or ""
+        ).strip()
+        password = (request.form.get("password") or "").strip()
+
+        # Admin login first. Does not require an email address.
+        if ledger_check_admin_login_flexible(identifier, password):
+            ledger_set_admin_session(identifier)
+
+            next_url = request.args.get("next") or "/admin"
+            if not next_url.startswith("/") or next_url.startswith("//"):
+                next_url = "/admin"
+
+            return redirect(next_url)
+
+        # If it looks like an admin username but failed, do not force email login.
+        expected_username = os.environ.get("ADMIN_USERNAME", "").strip()
+        if expected_username and identifier.lower() == expected_username.lower():
+            error = "That admin login did not work. Check the admin password."
+            return render_template("account_login.html", error=error), 200
+
+        # Regular contributor login uses email/password from archive_users.
+        email = identifier.lower()
+
+        if not email or not password:
+            error = "Add your username and password."
+            return render_template("account_login.html", error=error), 200
+
+        if "@" not in email:
+            error = "That login did not work. Use your Ledger email, or the admin username."
+            return render_template("account_login.html", error=error), 200
+
+        try:
+            users = fetch_all(
+                """
+                SELECT *
+                FROM archive_users
+                WHERE lower(email) = lower(:email)
+                LIMIT 1
+                """,
+                {"email": email},
+            ) or []
+        except Exception as exc:
+            print(f"Contributor login database check failed for {email}: {exc}")
+            error = "Login is temporarily unavailable. Please try again shortly."
+            return render_template("account_login.html", error=error), 200
+
+        user = users[0] if users else None
+
+        try:
+            password_hash = user.get("password_hash") if user else ""
+        except Exception:
+            password_hash = ""
+
+        try:
+            password_ok = bool(user and password_hash and check_password_hash(password_hash, password))
+        except Exception as exc:
+            print(f"Contributor password check failed for {email}: {exc}")
+            password_ok = False
+
+        if not password_ok:
+            error = "That login did not work. Check your username and password."
+            return render_template("account_login.html", error=error), 200
+
+        try:
+            session["user_id"] = user.get("id")
+            session["account_user_id"] = user.get("id")
+            session.permanent = True
+        except Exception as exc:
+            print(f"Contributor session failed for {email}: {exc}")
+            error = "Login could not be completed. Please try again."
+            return render_template("account_login.html", error=error), 200
+
+        next_url = request.args.get("next") or "/account"
+        if not next_url.startswith("/") or next_url.startswith("//"):
+            next_url = "/account"
+
+        return redirect(next_url)
+
+    return render_template("account_login.html", error=error)
+
+
+try:
+    app.view_functions["account_login"] = account_login_final_unified
+    print("FINAL unified account/admin login active.")
+except Exception as exc:
+    print(f"Could not activate final unified login: {exc}")
+
+
+def admin_login_final_redirect():
+    next_url = request.args.get("next") or "/admin"
+    return redirect(url_for("account_login", next=next_url))
+
+
+try:
+    if "admin_login" in app.view_functions:
+        app.view_functions["admin_login"] = admin_login_final_redirect
+        print("FINAL /admin/login redirects to unified login.")
+except Exception as exc:
+    print(f"Could not activate final admin login redirect: {exc}")
+
+
+# --- FINAL remove emergency mode and restore real routes ---
+# This block intentionally runs after the temporary fast/emergency patches.
+# It restores real routes and lets real errors go to the branded 404/500 pages.
+
+def current_user_is_admin():
+    try:
+        if (
+            session.get("admin_logged_in")
+            or session.get("admin_authenticated")
+            or session.get("is_admin")
+            or session.get("admin")
+        ):
+            return True
+    except Exception:
+        pass
+
+    try:
+        user = current_user()
+        if not user:
+            return False
+
+        role = str(user.get("role") or "").strip().lower()
+        account_status = str(user.get("account_status") or "").strip().lower()
+
+        return role in {"admin", "owner"} or account_status == "admin"
+    except Exception:
+        return False
+
+
+def ledger_set_admin_session_final(username):
+    session["admin_logged_in"] = True
+    session["admin_authenticated"] = True
+    session["is_admin"] = True
+    session["admin"] = True
+    session["admin_username"] = username
+    session.permanent = True
+
+
+def ledger_admin_login_matches(username, password):
+    try:
+        expected_username = os.environ.get("ADMIN_USERNAME", "").strip()
+        expected_password = os.environ.get("ADMIN_PASSWORD", "").strip()
+
+        username = (username or "").strip()
+        password = (password or "").strip()
+
+        if not expected_username or not expected_password:
+            return False
+
+        return username.lower() == expected_username.lower() and password == expected_password
+    except Exception as exc:
+        print(f"admin login match failed: {exc}")
+        return False
+
+
+def account_login_final_no_emergency():
+    error = None
+
+    if request.method == "POST":
+        identifier = (
+            request.form.get("email")
+            or request.form.get("username")
+            or request.form.get("login")
+            or ""
+        ).strip()
+        password = (request.form.get("password") or "").strip()
+
+        if ledger_admin_login_matches(identifier, password):
+            ledger_set_admin_session_final(identifier)
+            next_url = request.args.get("next") or "/admin"
+
+            if not next_url.startswith("/") or next_url.startswith("//"):
+                next_url = "/admin"
+
+            return redirect(next_url)
+
+        email = identifier.lower()
+
+        if not email or not password:
+            error = "Add your username and password."
+            return render_template("account_login.html", error=error), 200
+
+        if "@" not in email:
+            error = "That login did not work. Use your Ledger email, or the admin username."
+            return render_template("account_login.html", error=error), 200
+
+        users = fetch_all(
+            """
+            SELECT *
+            FROM archive_users
+            WHERE lower(email) = lower(:email)
+            LIMIT 1
+            """,
+            {"email": email},
+        ) or []
+
+        user = users[0] if users else None
+
+        if not user:
+            error = "That login did not work. Check your username and password."
+            return render_template("account_login.html", error=error), 200
+
+        password_hash = user.get("password_hash") or ""
+
+        if not password_hash or not check_password_hash(password_hash, password):
+            error = "That login did not work. Check your username and password."
+            return render_template("account_login.html", error=error), 200
+
+        session["user_id"] = user.get("id")
+        session["account_user_id"] = user.get("id")
+        session.permanent = True
+
+        next_url = request.args.get("next") or "/account"
+
+        if not next_url.startswith("/") or next_url.startswith("//"):
+            next_url = "/account"
+
+        return redirect(next_url)
+
+    return render_template("account_login.html", error=error)
+
+
+def admin_login_final_no_emergency_redirect():
+    next_url = request.args.get("next") or "/admin"
+    return redirect(url_for("account_login", next=next_url))
+
+
+def litefeet_music_real_records_no_emergency():
+    q = (request.args.get("q") or "").strip().lower()
+    selected_platform = (request.args.get("platform") or "all").strip()
+    selected_period = (request.args.get("period") or "all").strip()
+
+    records = fetch_all(
+        """
+        SELECT *
+        FROM media_items
+        WHERE media_type = 'music_release'
+        ORDER BY
+            CASE
+                WHEN release_date IS NULL OR release_date = '' THEN created_at
+                ELSE release_date
+            END DESC,
+            id DESC
+        LIMIT 800
+        """,
+        {},
+    ) or []
+
+    releases = []
+    platforms = []
+
+    for row in records:
+        item = dict(row)
+
+        title = str(item.get("title") or "").lower()
+        artist = str(item.get("artist_or_creator") or item.get("artist_name") or "").lower()
+        producer = str(item.get("producer_name") or "").lower()
+        description = str(item.get("description") or "").lower()
+        platform = (item.get("platform") or "").strip()
+
+        if platform and platform not in platforms:
+            platforms.append(platform)
+
+        if selected_platform.lower() not in {"", "all", "all platforms"}:
+            if platform.lower() != selected_platform.lower():
+                continue
+
+        if q and q not in title and q not in artist and q not in producer and q not in description:
+            continue
+
+        item["feedback_counts"] = item.get("feedback_counts") or {}
+        item["reaction_counts"] = item.get("reaction_counts") or {}
+        item["rating_average"] = item.get("rating_average") or None
+        item["release_stage"] = item.get("release_stage") or "released"
+        item["play_count"] = item.get("play_count") or 0
+
+        releases.append(item)
+
+    release_radar = releases[:12]
+
+    return render_template(
+        "litefeet_music.html",
+        releases=releases,
+        music_releases=releases,
+        music_records=releases,
+        latest_music_releases=releases,
+        media_items=releases,
+        release_radar=release_radar,
+        music_projects=[],
+        platform_options=platforms,
+        platforms=platforms,
+        selected_platform=selected_platform,
+        selected_type=request.args.get("type", "all"),
+        selected_music_type=request.args.get("type", "all"),
+        selected_period=selected_period,
+        period=selected_period,
+        query=request.args.get("q", ""),
+        search_query=request.args.get("q", ""),
+        feedback_counts={},
+        reaction_counts={},
+    )
+
+
+def ledger_restore_route(paths, function_names):
+    for function_name in function_names:
+        view_function = globals().get(function_name)
+        if callable(view_function):
+            for rule in list(app.url_map.iter_rules()):
+                if str(rule.rule) in paths:
+                    app.view_functions[rule.endpoint] = view_function
+                    print(f"RESTORED {rule.rule} -> {function_name}")
+            return True
+
+    print(f"No restore function found for {paths}: tried {function_names}")
+    return False
+
+
+# Restore public routes away from emergency pages.
+ledger_restore_route({"/"}, ["home", "index"])
+ledger_restore_route({"/ask"}, ["ask_archive"])
+ledger_restore_route({"/events", "/calendar"}, ["events"])
+ledger_restore_route({"/battles"}, ["battles"])
+ledger_restore_route({"/awards"}, ["awards"])
+
+# Music gets a real records route, not emergency fallback.
+for rule in list(app.url_map.iter_rules()):
+    if str(rule.rule) == "/litefeet-music":
+        app.view_functions[rule.endpoint] = litefeet_music_real_records_no_emergency
+        print(f"RESTORED /litefeet-music -> litefeet_music_real_records_no_emergency")
+
+# Unified login.
+app.view_functions["account_login"] = account_login_final_no_emergency
+
+if "admin_login" in app.view_functions:
+    app.view_functions["admin_login"] = admin_login_final_no_emergency_redirect
+
+
+@app.errorhandler(500)
+def final_real_500_page(error):
+    try:
+        logger = globals().get("log_error_event")
+        if callable(logger):
+            logger(500, error)
+    except Exception:
+        pass
+
+    try:
+        return render_template("error_500.html"), 500
+    except Exception:
+        return "The Ledger hit an internal error.", 500
+
+
+@app.errorhandler(404)
+def final_real_404_page(error):
+    try:
+        logger = globals().get("log_error_event")
+        if callable(logger):
+            logger(404, error)
+    except Exception:
+        pass
+
+    try:
+        return render_template("error_404.html"), 404
+    except Exception:
+        return "This page is not in the Ledger yet.", 404
