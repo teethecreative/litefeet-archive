@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}{{ phase8_award_title(award) }} | Awards{% endblock %}
+{% block meta_description %}LiteFeet award record with winner, nominee, category, year, source, and verification status.{% endblock %}
+
+{% block content %}
+<section class="content-section award-detail-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Award Record</p>
+            <h1>{{ phase8_award_title(award) }}</h1>
+            <p>Status: {{ phase8_award_status(award) }}</p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('awards') }}">Back to Awards</a>
+            <a class="button primary" href="{{ url_for('award_submit_phase8c') }}">Submit Award Info</a>
+        </div>
+    </div>
+</section>
+
+<section class="homepage-section award-detail-grid">
+    <article>
+        <p class="eyebrow">Winner / Nominee</p>
+        <h2>{{ phase8_award_person(award) }}</h2>
+
+        {% if phase8_value(award, "winner_name") %}
+            <p><strong>Winner:</strong> {{ phase8_value(award, "winner_name") }}</p>
+        {% endif %}
+
+        {% if phase8_value(award, "nominee_name") %}
+            <p><strong>Nominee:</strong> {{ phase8_value(award, "nominee_name") }}</p>
+        {% endif %}
+    </article>
+
+    <article>
+        <p class="eyebrow">Category</p>
+        <h2>{{ phase8_value(award, "category", default="Category needs confirmation") }}</h2>
+
+        {% if phase8_value(award, "award_year") %}
+            <p>{{ phase8_value(award, "award_year") }}</p>
+        {% endif %}
+    </article>
+
+    <article>
+        <p class="eyebrow">Award Show</p>
+        <h2>{{ phase8_value(award, "organizer", "award_show", default="Award show needs confirmation") }}</h2>
+        <p>{{ phase8_award_status(award) }}</p>
+    </article>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Details</p>
+            <h2>Record Notes</h2>
+        </div>
+    </div>
+
+    <div class="award-detail-notes-grid">
+        <article>
+            <p class="eyebrow">Notes</p>
+            <p>{{ phase8_value(award, "notes", default="No notes added yet.") }}</p>
+        </article>
+
+        <article>
+            <p class="eyebrow">Source</p>
+            {% if phase8_value(award, "source_url") %}
+                <p><a href="{{ phase8_value(award, 'source_url') }}" target="_blank" rel="noopener">Open source</a></p>
+            {% else %}
+                <p>No source link added yet.</p>
+            {% endif %}
+        </article>
+
+        <article>
+            <p class="eyebrow">Community Status</p>
+            <p>{{ phase8_award_status(award) }}</p>
+            <p class="small-note">Award records can be verified, community supported, disputed, or marked as needing more proof.</p>
+        </article>
+    </div>
+</section>
+
+<section class="homepage-section award-context-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Community Context</p>
+            <h2>Add correction or source</h2>
+            <p>
+                Use this if the winner, nominee, category, year, or source needs confirmation.
+            </p>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('submit_community_perspective_phase2g') }}" class="form-card community-perspective-form">
+        <input type="hidden" name="related_type" value="award">
+        <input type="hidden" name="related_id" value="{{ award['id'] }}">
+        <input type="hidden" name="review_label" value="Award Context">
+
+        <label>
+            Context / correction
+            <textarea name="perspective_text" rows="5" placeholder="Add winner confirmation, nominee list, category correction, source link, or missing context."></textarea>
+        </label>
+
+        <div class="form-grid two-column-form-grid">
+            <label>
+                Source link
+                <input type="url" name="source_url" placeholder="Flyer, post, video, award list, etc.">
+            </label>
+
+            <label>
+                Name / handle
+                <input type="text" name="submitter_name" placeholder="Optional">
+            </label>
+        </div>
+
+        <label>
+            Contact
+            <input type="text" name="submitter_contact" placeholder="Optional">
+        </label>
+
+        <button class="button secondary" type="submit">Submit Context</button>
+    </form>
+</section>
+
+<style>
+    .award-detail-grid,
+    .award-detail-notes-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .award-detail-grid article,
+    .award-detail-notes-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .two-column-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+        .award-detail-grid,
+        .award-detail-notes-grid,
+        .two-column-form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

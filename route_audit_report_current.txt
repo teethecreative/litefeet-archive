@@ -80,6 +80,8 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /ask/search                                                  -> ask_ledger_search_phase3a                     [POST]
 /ask/submit                                                  -> ask_beta_submit                               [POST]
 /awards                                                      -> awards                                        [GET]
+/awards/records/<int:award_id>                               -> award_record_detail_phase8b                   [GET]
+/awards/submit                                               -> award_submit_phase8c                          [GET, POST]
 /battle-records/<int:battle_id>                              -> battle_record_detail_phase2                   [GET]
 /battles                                                     -> battles                                       [GET]
 /battles/add                                                 -> battle_submit_phase2                          [GET, POST]
@@ -275,7 +277,22 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/ask_conversation.html:150: <a class="button small-button primary" href="{{ source['url'] }}">Open Ledger Record</a>
 /Users/teethecreative/litefeet-archive/templates/ask_conversation.html:154: <a class="button small-button secondary" href="{{ source['source_url'] }}" target="_blank" rel="noopener">Open Source</a>
 /Users/teethecreative/litefeet-archive/templates/ask_conversation.html:169: <form method="POST" action="{{ url_for('ask_ledger_search_phase3a') }}" class="form-card ask-followup-form">
-/Users/teethecreative/litefeet-archive/templates/awards.html:20: <a class="button primary" href="{{ url_for('submit_info') }}">Submit Award Info</a>
+/Users/teethecreative/litefeet-archive/templates/award_record_detail.html:16: <a class="button secondary" href="{{ url_for('awards') }}">Back to Awards</a>
+/Users/teethecreative/litefeet-archive/templates/award_record_detail.html:17: <a class="button primary" href="{{ url_for('award_submit_phase8c') }}">Submit Award Info</a>
+/Users/teethecreative/litefeet-archive/templates/award_record_detail.html:69: <p><a href="{{ phase8_value(award, 'source_url') }}" target="_blank" rel="noopener">Open source</a></p>
+/Users/teethecreative/litefeet-archive/templates/award_record_detail.html:94: <form method="POST" action="{{ url_for('submit_community_perspective_phase2g') }}" class="form-card community-perspective-form">
+/Users/teethecreative/litefeet-archive/templates/award_submit.html:18: <a class="button secondary" href="{{ url_for('awards') }}">Back to Awards</a>
+/Users/teethecreative/litefeet-archive/templates/award_submit.html:19: <a class="button secondary" href="{{ url_for('submit_info') }}">General Submission</a>
+/Users/teethecreative/litefeet-archive/templates/award_submit.html:32: <form method="POST" action="{{ url_for('award_submit_phase8c') }}" class="form-card award-submit-form">
+/Users/teethecreative/litefeet-archive/templates/awards.html:23: <a class="button primary" href="{{ url_for('award_submit_phase8c') }}">Submit Award Info</a>
+/Users/teethecreative/litefeet-archive/templates/awards.html:24: <a class="button secondary" href="{{ url_for('submit_info') }}">General Submission</a>
+/Users/teethecreative/litefeet-archive/templates/awards.html:30: <form method="GET" action="{{ url_for('awards') }}" class="award-filter-form">
+/Users/teethecreative/litefeet-archive/templates/awards.html:59: <a class="button secondary" href="{{ url_for('awards') }}">Reset</a>
+/Users/teethecreative/litefeet-archive/templates/awards.html:96: <a class="button small-button secondary" href="{{ url_for('award_record_detail_phase8b', award_id=award['id']) }}">Open</a>
+/Users/teethecreative/litefeet-archive/templates/awards.html:117: <a href="{{ url_for('award_record_detail_phase8b', award_id=award['id']) }}">
+/Users/teethecreative/litefeet-archive/templates/awards.html:137: <a class="button small-button secondary" href="{{ url_for('award_record_detail_phase8b', award_id=award['id']) }}">Details</a>
+/Users/teethecreative/litefeet-archive/templates/awards.html:139: <a class="button small-button secondary" href="{{ phase8_value(award, 'source_url') }}" target="_blank" rel="noopener">Source</a>
+/Users/teethecreative/litefeet-archive/templates/awards.html:151: <a class="button primary" href="{{ url_for('award_submit_phase8c') }}">Submit Award Info</a>
 /Users/teethecreative/litefeet-archive/templates/base.html:8: <link rel="canonical" href="{% block canonical_url %}https://thelitefeetvault.com{{ request.path }}{% endblock %}">
 /Users/teethecreative/litefeet-archive/templates/base.html:111: <a href="{{ url_for('home') }}">Home</a>
 /Users/teethecreative/litefeet-archive/templates/base.html:112: <a href="{{ url_for('ask_archive') }}">Ask</a>

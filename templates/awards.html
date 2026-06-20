@@ -1,149 +1,218 @@
 {% extends "base.html" %}
 
 {% block title %}Awards | The LiteFeet Ledger{% endblock %}
-{% block meta_description %}Browse LiteFeet awards, nominees, winners, award organizers, yearly categories, community accolades, and Ledger-calculated recognition.{% endblock %}
+{% block meta_description %}Browse LiteFeet award records, winners, nominees, categories, award years, and community-supported award history.{% endblock %}
 
 {% block content %}
-{% set award_records = awards if awards is defined else award_rows if award_rows is defined else records if records is defined else [] %}
+{% set selected_type = phase8_selected_award_filter() %}
+{% set selected_view = phase8_selected_award_view() %}
+{% set search_query = phase8_award_search_query() %}
+{% set award_rows = award_records if award_records is defined and award_records else phase8_fetch_award_records() %}
 
 <section class="content-section awards-page">
     <div class="section-heading-row">
         <div>
             <p class="eyebrow">Awards</p>
-            <h1>LiteFeet Awards</h1>
+            <h1>Awards</h1>
             <p>
-                A structured space for yearly awards, award organizers, categories, nominees, winners,
-                outside accolades, community votes, and Ledger-calculated recognition.
+                Browse LiteFeet award records, nominees, winners, categories, years, and records that still need confirmation.
             </p>
         </div>
 
-        <a class="button primary" href="{{ url_for('submit_info') }}">Submit Award Info</a>
+        <div class="hero-actions">
+            <a class="button primary" href="{{ url_for('award_submit_phase8c') }}">Submit Award Info</a>
+            <a class="button secondary" href="{{ url_for('submit_info') }}">General Submission</a>
+        </div>
     </div>
+</section>
 
-    <div class="award-org-row">
-        <span class="award-org-pill">LiteFeet Awards</span>
-        <span class="award-org-pill">Dancer’s Choice Awards</span>
-        <span class="award-org-pill">Ledger-calculated Awards</span>
-        <span class="award-org-pill">Other</span>
-    </div>
+<section class="homepage-section award-filter-section">
+    <form method="GET" action="{{ url_for('awards') }}" class="award-filter-form">
+        <label>
+            Search
+            <input type="search" name="q" value="{{ search_query }}" placeholder="Winner, nominee, year, category...">
+        </label>
+
+        <label>
+            Type
+            <select name="type">
+                {% for option in phase8_award_filter_options() %}
+                    <option value="{{ option.value }}" {% if selected_type == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>
+            View
+            <select name="view">
+                {% for option in phase8_award_view_options() %}
+                    <option value="{{ option.value }}" {% if selected_view == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <button class="button secondary" type="submit">Apply</button>
+        <a class="button secondary" href="{{ url_for('awards') }}">Reset</a>
+    </form>
 </section>
 
 <section class="homepage-section">
     <div class="section-heading-row">
         <div>
-            <p class="eyebrow">Structure</p>
-            <h2>Year → Organizer → Category → Nominees → Winner</h2>
+            <p class="eyebrow">Records</p>
+            <h2>Award Archive</h2>
         </div>
     </div>
 
-    {% if award_records %}
-        <div class="release-table-wrap">
-            <table class="release-table awards-table">
-                <thead>
-                    <tr>
-                        <th>Year</th>
-                        <th>Organizer</th>
-                        <th>Category</th>
-                        <th>Nominees</th>
-                        <th>Winner</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for award in award_records %}
+    {% if award_rows %}
+        {% if selected_view == "list" %}
+            <div class="release-table-wrap">
+                <table class="release-table award-list-table">
+                    <thead>
                         <tr>
-                            <td>{{ award["year"] or award["award_year"] or "Year TBD" }}</td>
-                            <td>{{ award["organizer"] or award["award_organizer"] or award["related_to"] or "—" }}</td>
-                            <td>{{ award["category"] or award["award_category"] or award["title"] or "Award category" }}</td>
-                            <td>{{ award["nominees"] or "Nominees TBD" }}</td>
-                            <td>{{ award["winner"] or "Winner hidden / TBD" }}</td>
-                            <td>{{ award["review_status"] or award["status"] or "Needs Review" }}</td>
+                            <th>Year</th>
+                            <th>Award</th>
+                            <th>Category</th>
+                            <th>Winner / Nominee</th>
+                            <th>Status</th>
+                            <th></th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+
+                    <tbody>
+                        {% for award in award_rows %}
+                            {% if phase8_award_matches_filter(award, selected_type, search_query) %}
+                                <tr>
+                                    <td>{{ phase8_value(award, "award_year") }}</td>
+                                    <td>{{ phase8_value(award, "organizer", "award_show") }}</td>
+                                    <td>{{ phase8_value(award, "category") }}</td>
+                                    <td>{{ phase8_award_person(award) }}</td>
+                                    <td>{{ phase8_award_status(award) }}</td>
+                                    <td>
+                                        <a class="button small-button secondary" href="{{ url_for('award_record_detail_phase8b', award_id=award['id']) }}">Open</a>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="award-card-grid {{ 'compact-award-grid' if selected_view == 'compact' else '' }}">
+                {% for award in award_rows %}
+                    {% if phase8_award_matches_filter(award, selected_type, search_query) %}
+                        {% set badges = phase8_award_badges(award) %}
+
+                        <article class="award-card">
+                            <div class="award-card-topline">
+                                <p class="eyebrow">{{ phase8_value(award, "category", default="Award") }}</p>
+                                <span class="award-status-pill">{{ phase8_award_status(award) }}</span>
+                            </div>
+
+                            <h3>
+                                <a href="{{ url_for('award_record_detail_phase8b', award_id=award['id']) }}">
+                                    {{ phase8_award_title(award) }}
+                                </a>
+                            </h3>
+
+                            <p><strong>{{ phase8_award_person(award) }}</strong></p>
+
+                            {% if phase8_value(award, "notes") and selected_view != "compact" %}
+                                <p>{{ phase8_value(award, "notes")[:240] }}{% if phase8_value(award, "notes")|length > 240 %}...{% endif %}</p>
+                            {% endif %}
+
+                            {% if badges %}
+                                <div class="award-badge-row">
+                                    {% for badge in badges %}
+                                        <span>{{ badge }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <div class="hero-actions">
+                                <a class="button small-button secondary" href="{{ url_for('award_record_detail_phase8b', award_id=award['id']) }}">Details</a>
+                                {% if phase8_value(award, "source_url") %}
+                                    <a class="button small-button secondary" href="{{ phase8_value(award, 'source_url') }}" target="_blank" rel="noopener">Source</a>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
     {% else %}
         <div class="empty-state compact-empty">
-            <h3>No structured awards loaded yet.</h3>
-            <p>
-                Awards will be organized by year, award organizer, category, nominees, and winner
-                once those records are added.
-            </p>
+            <h3>No award records yet.</h3>
+            <p>Add winners, nominees, categories, years, source links, or award context.</p>
+            <a class="button primary" href="{{ url_for('award_submit_phase8c') }}">Submit Award Info</a>
         </div>
     {% endif %}
 </section>
 
-<section class="homepage-section awards-grid">
-    <article>
-        <p class="eyebrow">LiteFeet Awards</p>
-        <h2>Historical awards</h2>
-        <p>Track existing LiteFeet awards, yearly categories, nominees, winners, hosts, and proof sources.</p>
-    </article>
-
-    <article>
-        <p class="eyebrow">Dancer’s Choice</p>
-        <h2>Community voting</h2>
-        <p>Future Dancer’s Choice awards can combine Ledger data with community voting and review rules.</p>
-    </article>
-
-    <article>
-        <p class="eyebrow">Ledger-calculated</p>
-        <h2>Data-backed recognition</h2>
-        <p>
-            The Ledger can eventually calculate recognition from battles, music activity, events,
-            verified records, and community participation.
-        </p>
-    </article>
-
-    <article>
-        <p class="eyebrow">Outside Accolades</p>
-        <h2>Profile-submitted</h2>
-        <p>
-            Dancers, producers, hosts, teams, and organizers should be able to submit outside accolades
-            from their own profile.
-        </p>
-    </article>
-</section>
-
 <style>
-    .award-org-row {
+    .award-filter-form {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 14px;
+        gap: 12px;
+        align-items: end;
     }
 
-    .award-org-pill {
-        border: 1px solid var(--border-color, rgba(255,255,255,0.14));
-        border-radius: 999px;
-        padding: 4px 9px;
-        font-size: 0.82rem;
+    .award-filter-form label {
+        min-width: 190px;
     }
 
-    .awards-grid {
+    .award-card-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
     }
 
-    .awards-grid article {
+    .compact-award-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .award-card {
         border: 1px solid var(--border-color, rgba(255,255,255,0.12));
         border-radius: 16px;
         padding: 16px;
         background: var(--card-bg, rgba(255,255,255,0.04));
+        display: grid;
+        gap: 10px;
+    }
+
+    .award-card-topline,
+    .award-badge-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .award-badge-row {
+        justify-content: flex-start;
+    }
+
+    .award-status-pill,
+    .award-badge-row span {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.16));
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 0.78rem;
     }
 
     @media (max-width: 1000px) {
-        .awards-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 700px) {
-        .awards-grid {
+        .award-card-grid,
+        .compact-award-grid {
             grid-template-columns: 1fr;
+        }
+
+        .award-filter-form {
+            display: grid;
         }
     }
 </style>

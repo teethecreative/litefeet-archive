@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Award Info | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Submit LiteFeet award winners, nominees, categories, years, sources, and corrections to The LiteFeet Ledger.{% endblock %}
+
+{% block content %}
+<section class="content-section award-submit-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Awards</p>
+            <h1>Submit Award Info</h1>
+            <p>
+                Add winners, nominees, categories, years, source links, or corrections for LiteFeet award records.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('awards') }}">Back to Awards</a>
+            <a class="button secondary" href="{{ url_for('submit_info') }}">General Submission</a>
+        </div>
+    </div>
+</section>
+
+<section class="homepage-section">
+    {% if error %}
+        <div class="empty-state compact-empty error-state">
+            <h3>Something needs fixing</h3>
+            <p>{{ error }}</p>
+        </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('award_submit_phase8c') }}" class="form-card award-submit-form">
+        <div class="form-grid two-column-form-grid">
+            <label>
+                Award year
+                <input type="text" name="award_year" placeholder="2024, 2025, 2026...">
+            </label>
+
+            <label>
+                Award organizer
+                <select name="organizer">
+                    <option value="LiteFeet Awards">LiteFeet Awards</option>
+                    <option value="Dancer's Choice Awards">Dancer's Choice Awards</option>
+                    <option value="Ledger Calculated Awards">Ledger Calculated Awards</option>
+                    <option value="Other">Other</option>
+                </select>
+            </label>
+
+            <label>
+                Award show / event name
+                <input type="text" name="award_show" placeholder="Optional if different from organizer">
+            </label>
+
+            <label>
+                Category
+                <input type="text" name="category" placeholder="Best Dancer, Best Battle, Best Producer..." required>
+            </label>
+
+            <label>
+                Winner
+                <input type="text" name="winner_name" placeholder="Leave blank if unknown">
+            </label>
+
+            <label>
+                Nominee
+                <input type="text" name="nominee_name" placeholder="Nominee name or list">
+            </label>
+
+            <label>
+                Result status
+                <select name="result_status">
+                    <option value="Winner">Winner</option>
+                    <option value="Nominee">Nominee</option>
+                    <option value="Submitted">Submitted</option>
+                    <option value="Needs Confirmation">Needs Confirmation</option>
+                    <option value="Disputed">Disputed</option>
+                </select>
+            </label>
+
+            <label>
+                Review status
+                <select name="review_status">
+                    <option value="Pending Review">Pending Review</option>
+                    <option value="Needs Verification">Needs Verification</option>
+                    <option value="Community Supported">Community Supported</option>
+                    <option value="Verified">Verified</option>
+                    <option value="Disputed">Disputed</option>
+                </select>
+            </label>
+
+            <label>
+                Source / proof link
+                <input type="url" name="source_url" placeholder="Flyer, post, video, award list...">
+            </label>
+
+            <label>
+                Submitter name
+                <input type="text" name="submitter_name" placeholder="Optional">
+            </label>
+
+            <label>
+                Contact
+                <input type="text" name="submitter_contact" placeholder="Optional email or IG">
+            </label>
+        </div>
+
+        <label>
+            Notes
+            <textarea name="notes" rows="5" placeholder="Add context, nominee list, award show details, source notes, or what needs verification."></textarea>
+        </label>
+
+        <button class="button primary" type="submit">Submit Award Info</button>
+    </form>
+</section>
+
+<style>
+    .award-submit-form {
+        display: grid;
+        gap: 16px;
+    }
+
+    .two-column-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+        .two-column-form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

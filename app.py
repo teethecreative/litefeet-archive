@@ -14495,3 +14495,433 @@ try:
     ensure_phase7_battle_tables()
 except Exception as exc:
     print(f"Phase 7 battle setup skipped: {exc}")
+
+
+# --- Phase 8A + 8B + 8C awards batch ---
+def phase8_table_exists(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+    rows = conn.execute(
+        text("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = :table_name
+            LIMIT 1
+        """),
+        {"table_name": table_name},
+    ).fetchall()
+    return bool(rows)
+
+
+def phase8_table_columns(conn, table_name):
+    if "ledger_table_columns" in globals():
+        return ledger_table_columns(conn, table_name)
+
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def phase8_add_column_if_missing(conn, table_name, column_name, column_sql):
+    if not phase8_table_exists(conn, table_name):
+        return
+
+    columns = phase8_table_columns(conn, table_name)
+
+    if column_name in columns:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+
+
+def ensure_phase8_awards_tables():
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS award_records (
+                    id SERIAL PRIMARY KEY,
+                    award_year TEXT,
+                    organizer TEXT,
+                    award_show TEXT,
+                    category TEXT,
+                    nominee_name TEXT,
+                    winner_name TEXT,
+                    result_status TEXT,
+                    source_url TEXT,
+                    notes TEXT,
+                    review_status TEXT,
+                    submitter_name TEXT,
+                    submitter_contact TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+        else:
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS award_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    award_year TEXT,
+                    organizer TEXT,
+                    award_show TEXT,
+                    category TEXT,
+                    nominee_name TEXT,
+                    winner_name TEXT,
+                    result_status TEXT,
+                    source_url TEXT,
+                    notes TEXT,
+                    review_status TEXT,
+                    submitter_name TEXT,
+                    submitter_contact TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+
+        for column_name, column_sql in [
+            ("award_year", "TEXT"),
+            ("organizer", "TEXT"),
+            ("award_show", "TEXT"),
+            ("category", "TEXT"),
+            ("nominee_name", "TEXT"),
+            ("winner_name", "TEXT"),
+            ("result_status", "TEXT"),
+            ("source_url", "TEXT"),
+            ("notes", "TEXT"),
+            ("review_status", "TEXT"),
+            ("submitter_name", "TEXT"),
+            ("submitter_contact", "TEXT"),
+            ("created_at", "TEXT"),
+            ("updated_at", "TEXT"),
+        ]:
+            phase8_add_column_if_missing(conn, "award_records", column_name, column_sql)
+
+
+def phase8_value(row, *keys, default=""):
+    if not row:
+        return default
+
+    for key in keys:
+        try:
+            if key in row.keys() and row[key] not in (None, ""):
+                return row[key]
+        except Exception:
+            pass
+
+        try:
+            value = row.get(key)
+            if value not in (None, ""):
+                return value
+        except Exception:
+            pass
+
+    return default
+
+
+def phase8_fetch_award_records(limit=300):
+    ensure_phase8_awards_tables()
+
+    try:
+        return fetch_all(
+            """
+            SELECT *
+            FROM award_records
+            ORDER BY
+                COALESCE(award_year, created_at, updated_at, '') DESC,
+                organizer ASC,
+                category ASC,
+                id DESC
+            LIMIT :limit
+            """,
+            {"limit": limit},
+        )
+    except Exception:
+        return []
+
+
+def phase8_fetch_award_record(award_id):
+    ensure_phase8_awards_tables()
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM award_records
+        WHERE id = :award_id
+        LIMIT 1
+        """,
+        {"award_id": award_id},
+    )
+
+    return rows[0] if rows else None
+
+
+def phase8_award_title(record):
+    category = phase8_value(record, "category", default="Award Category")
+    year = phase8_value(record, "award_year", default="")
+    organizer = phase8_value(record, "organizer", "award_show", default="")
+
+    parts = [part for part in [year, organizer, category] if part]
+    return " · ".join(parts) if parts else "Award Record"
+
+
+def phase8_award_person(record):
+    winner = phase8_value(record, "winner_name", default="")
+    nominee = phase8_value(record, "nominee_name", default="")
+
+    if winner:
+        return winner
+
+    if nominee:
+        return nominee
+
+    return "Needs confirmation"
+
+
+def phase8_award_status(record):
+    status = phase8_value(record, "review_status", "result_status", default="")
+
+    if status:
+        return status
+
+    if phase8_value(record, "winner_name", default=""):
+        return "Community Supported"
+
+    return "Needs Verification"
+
+
+def phase8_award_filter_options():
+    return [
+        {"value": "all", "label": "All Awards"},
+        {"value": "winner", "label": "Winners"},
+        {"value": "nominee", "label": "Nominees"},
+        {"value": "litefeet awards", "label": "LiteFeet Awards"},
+        {"value": "dancers choice", "label": "Dancer's Choice"},
+        {"value": "ledger calculated", "label": "Ledger Calculated"},
+        {"value": "needs verification", "label": "Needs Verification"},
+        {"value": "verified", "label": "Verified / Supported"},
+    ]
+
+
+def phase8_award_view_options():
+    return [
+        {"value": "cards", "label": "Cards"},
+        {"value": "list", "label": "List"},
+        {"value": "compact", "label": "Compact"},
+    ]
+
+
+def phase8_selected_award_filter():
+    selected = request.args.get("type", "all").strip().lower()
+    allowed = {item["value"] for item in phase8_award_filter_options()}
+
+    if selected not in allowed:
+        selected = "all"
+
+    return selected
+
+
+def phase8_selected_award_view():
+    selected = request.args.get("view", "cards").strip().lower()
+    allowed = {item["value"] for item in phase8_award_view_options()}
+
+    if selected not in allowed:
+        selected = "cards"
+
+    return selected
+
+
+def phase8_award_search_query():
+    return request.args.get("q", "").strip()
+
+
+def phase8_award_matches_filter(record, selected_type=None, query=None):
+    selected_type = selected_type or phase8_selected_award_filter()
+    query = query if query is not None else phase8_award_search_query()
+
+    organizer = phase8_value(record, "organizer", "award_show", default="").lower()
+    status = phase8_award_status(record).lower()
+    winner = phase8_value(record, "winner_name", default="")
+    nominee = phase8_value(record, "nominee_name", default="")
+
+    if selected_type != "all":
+        if selected_type == "winner":
+            if not winner:
+                return False
+        elif selected_type == "nominee":
+            if not nominee:
+                return False
+        elif selected_type == "needs verification":
+            if "needs" not in status and "pending" not in status:
+                return False
+        elif selected_type == "verified":
+            if "verified" not in status and "community supported" not in status:
+                return False
+        elif selected_type not in organizer:
+            return False
+
+    if query:
+        merged = " ".join(
+            str(value or "")
+            for value in [
+                phase8_award_title(record),
+                phase8_award_person(record),
+                phase8_value(record, "organizer", "award_show"),
+                phase8_value(record, "category"),
+                phase8_value(record, "award_year"),
+                phase8_value(record, "notes"),
+                phase8_value(record, "source_url"),
+            ]
+        ).lower()
+
+        if query.lower() not in merged:
+            return False
+
+    return True
+
+
+def phase8_award_badges(record):
+    badges = [
+        phase8_value(record, "award_year", default=""),
+        phase8_value(record, "organizer", "award_show", default=""),
+        phase8_award_status(record),
+    ]
+
+    clean = []
+    seen = set()
+
+    for badge in badges:
+        badge = str(badge or "").strip()
+        if not badge:
+            continue
+
+        key = badge.lower()
+        if key in seen:
+            continue
+
+        seen.add(key)
+        clean.append(badge)
+
+    return clean[:5]
+
+
+@app.context_processor
+def inject_phase8_award_helpers():
+    return {
+        "phase8_fetch_award_records": phase8_fetch_award_records,
+        "phase8_fetch_award_record": phase8_fetch_award_record,
+        "phase8_award_title": phase8_award_title,
+        "phase8_award_person": phase8_award_person,
+        "phase8_award_status": phase8_award_status,
+        "phase8_award_filter_options": phase8_award_filter_options,
+        "phase8_award_view_options": phase8_award_view_options,
+        "phase8_selected_award_filter": phase8_selected_award_filter,
+        "phase8_selected_award_view": phase8_selected_award_view,
+        "phase8_award_search_query": phase8_award_search_query,
+        "phase8_award_matches_filter": phase8_award_matches_filter,
+        "phase8_award_badges": phase8_award_badges,
+        "phase8_value": phase8_value,
+    }
+
+
+@app.route("/awards/records/<int:award_id>")
+def award_record_detail_phase8b(award_id):
+    ensure_phase8_awards_tables()
+
+    award = phase8_fetch_award_record(award_id)
+
+    if not award:
+        return redirect(url_for("awards"))
+
+    return render_template("award_record_detail.html", award=award)
+
+
+@app.route("/awards/submit", methods=["GET", "POST"])
+def award_submit_phase8c():
+    ensure_phase8_awards_tables()
+
+    error = ""
+
+    if request.method == "POST":
+        category = request.form.get("category", "").strip()
+        award_year = request.form.get("award_year", "").strip()
+        organizer = request.form.get("organizer", "").strip()
+
+        if not category:
+            error = "Add an award category."
+        else:
+            now_value = datetime.now().isoformat(timespec="seconds")
+
+            values = {
+                "award_year": award_year,
+                "organizer": organizer,
+                "award_show": request.form.get("award_show", "").strip() or organizer,
+                "category": category,
+                "nominee_name": request.form.get("nominee_name", "").strip(),
+                "winner_name": request.form.get("winner_name", "").strip(),
+                "result_status": request.form.get("result_status", "").strip() or "Submitted",
+                "source_url": request.form.get("source_url", "").strip(),
+                "notes": request.form.get("notes", "").strip(),
+                "review_status": request.form.get("review_status", "").strip() or "Pending Review",
+                "submitter_name": request.form.get("submitter_name", "").strip(),
+                "submitter_contact": request.form.get("submitter_contact", "").strip(),
+                "created_at": now_value,
+                "updated_at": now_value,
+            }
+
+            with engine.begin() as conn:
+                columns = phase8_table_columns(conn, "award_records")
+                clean_values = {key: value for key, value in values.items() if key in columns}
+
+                columns_sql = ", ".join(clean_values.keys())
+                values_sql = ", ".join(f":{key}" for key in clean_values.keys())
+
+                if maintenance_uses_postgres():
+                    result = conn.execute(
+                        text(f"INSERT INTO award_records ({columns_sql}) VALUES ({values_sql}) RETURNING id"),
+                        clean_values,
+                    )
+                    award_id = result.scalar()
+                else:
+                    result = conn.execute(
+                        text(f"INSERT INTO award_records ({columns_sql}) VALUES ({values_sql})"),
+                        clean_values,
+                    )
+                    award_id = result.lastrowid
+
+            return redirect(url_for("award_record_detail_phase8b", award_id=award_id))
+
+    return render_template("award_submit.html", error=error)
+
+
+try:
+    ensure_phase8_awards_tables()
+except Exception as exc:
+    print(f"Phase 8 award setup skipped: {exc}")
