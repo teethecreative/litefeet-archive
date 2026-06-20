@@ -1,6 +1,71 @@
 {% extends "base.html" %}
 
-{% block title %}{{ profile["dance_name"] or "Profile" }} | The LiteFeet Ledger{% endblock %}
+{% block title %}{{ profile["dance_name"] or "Profile" }} | The LiteFeet Ledger
+{% set profile_music = phase6d_music_for_profile(profile, 6) %}
+{% set profile_projects = phase6d_projects_for_profile(profile, 4) %}
+
+{% if profile_music or profile_projects %}
+<section class="homepage-section phase6d-profile-music-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Music</p>
+            <h2>Music connected to this profile</h2>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('litefeet_music', q=profile['dance_name'] or profile['real_name']) }}">Search Music</a>
+        </div>
+    </div>
+
+    {% if profile_music %}
+        <div class="profile-music-grid">
+            {% for item in profile_music %}
+                <article>
+                    <p class="eyebrow">{{ phase6_music_type(item)|title }}</p>
+                    <h3><a href="{{ url_for('music_release_detail', item_id=item['id']) }}">{{ phase6_music_title(item) }}</a></h3>
+                    <p>{{ phase6_music_platform(item) }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {% if profile_projects %}
+        <div class="profile-music-grid">
+            {% for project in profile_projects %}
+                <article>
+                    <p class="eyebrow">Project</p>
+                    <h3><a href="{{ url_for('music_project_detail_phase6e', project_id=project['id']) }}">{{ phase6d_project_title(project) }}</a></h3>
+                    <p>{{ phase6d_project_artist(project) }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .profile-music-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 14px;
+    }
+
+    .profile-music-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    @media (max-width: 900px) {
+        .profile-music-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endif %}
+
+{% endblock %}
 {% block meta_description %}LiteFeet Ledger profile for {{ profile["dance_name"] or "community profile" }} with roles, affiliations, music, battles, mentions, flowers, corrections, and community context.{% endblock %}
 
 {% block content %}

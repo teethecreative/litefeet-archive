@@ -141,7 +141,7 @@
         {% for project in projects %}
             <article class="music-project-card">
                 <p class="eyebrow">Project</p>
-                <h3>{{ phase6_value(project, "title", "project_title", "name", default="Untitled Project") }}</h3>
+                <h3><a href="{{ url_for('music_project_detail_phase6e', project_id=project['id']) }}">{{ phase6d_project_title(project) }}</a></h3>
                 <p>{{ phase6_value(project, "artist_name", "artist", "producer_name", "creator", default="Unknown Artist") }}</p>
 
                 {% if phase6_value(project, "description", "notes") %}

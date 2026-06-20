@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}{{ phase6d_project_title(project) }} | LiteFeet Music{% endblock %}
+{% block meta_description %}LiteFeet music project record in The LiteFeet Ledger.{% endblock %}
+
+{% block content %}
+<section class="content-section music-project-detail-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Music Project</p>
+            <h1>{{ phase6d_project_title(project) }}</h1>
+            <p>{{ phase6d_project_artist(project) }}</p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('litefeet_music') }}">Back to Music</a>
+            {% if phase6d_project_url(project) %}
+                <a class="button primary" href="{{ phase6d_project_url(project) }}" target="_blank" rel="noopener">Open Source</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="homepage-section project-detail-grid">
+    <article>
+        <p class="eyebrow">Project Info</p>
+
+        {% if phase6_value(project, "project_type") %}
+            <p><strong>Type:</strong> {{ phase6_value(project, "project_type") }}</p>
+        {% endif %}
+
+        {% if phase6_value(project, "release_date") %}
+            <p><strong>Release date:</strong> {{ phase6_value(project, "release_date") }}</p>
+        {% endif %}
+
+        {% if phase6_value(project, "platform") %}
+            <p><strong>Platform:</strong> {{ phase6_value(project, "platform") }}</p>
+        {% endif %}
+
+        {% if phase6_value(project, "review_status") %}
+            <p><strong>Status:</strong> {{ phase6_value(project, "review_status") }}</p>
+        {% endif %}
+
+        {% if phase6d_project_description(project) %}
+            <p>{{ phase6d_project_description(project) }}</p>
+        {% endif %}
+    </article>
+
+    <article>
+        <p class="eyebrow">How to help</p>
+        <h2>Missing tracklist or credits?</h2>
+        <p>
+            Submit corrections, producer credits, links, release dates, or context so the record can be improved.
+        </p>
+        <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Project Info</a>
+    </article>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Tracklist</p>
+            <h2>Linked Tracks</h2>
+        </div>
+    </div>
+
+    {% if tracks %}
+        <div class="music-release-grid">
+            {% for item in tracks %}
+                <article class="music-release-card">
+                    <p class="eyebrow">{{ phase6_music_type(item)|title }}</p>
+                    <h3><a href="{{ url_for('music_release_detail', item_id=item['id']) }}">{{ phase6_music_title(item) }}</a></h3>
+                    <p>{{ phase6_music_artist(item) }}</p>
+                    {% if phase6_music_url(item) %}
+                        <a class="button small-button secondary" href="{{ phase6_music_url(item) }}" target="_blank" rel="noopener">Listen</a>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No linked tracks yet.</h3>
+            <p>Tracks can be connected to this project as the music records get cleaned up.</p>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .project-detail-grid,
+    .music-release-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .music-release-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .project-detail-grid article,
+    .music-release-card {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+        display: grid;
+        gap: 10px;
+    }
+
+    @media (max-width: 1000px) {
+        .project-detail-grid,
+        .music-release-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

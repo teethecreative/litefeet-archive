@@ -13749,3 +13749,333 @@ try:
     ensure_phase6_music_feedback_tables()
 except Exception as exc:
     print(f"Phase 6 music feedback setup skipped: {exc}")
+
+
+# --- Phase 6D + 6E + 6F music finish batch ---
+def phase6d_table_exists(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+    rows = conn.execute(
+        text("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = :table_name
+            LIMIT 1
+        """),
+        {"table_name": table_name},
+    ).fetchall()
+    return bool(rows)
+
+
+def phase6d_table_columns(conn, table_name):
+    if "ledger_table_columns" in globals():
+        return ledger_table_columns(conn, table_name)
+
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def phase6d_add_column_if_missing(conn, table_name, column_name, column_sql):
+    if not phase6d_table_exists(conn, table_name):
+        return
+
+    columns = phase6d_table_columns(conn, table_name)
+
+    if column_name in columns:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+
+
+def ensure_phase6d_music_project_columns():
+    with engine.begin() as conn:
+        if phase6d_table_exists(conn, "music_projects"):
+            for column_name, column_sql in [
+                ("project_type", "TEXT"),
+                ("artist_name", "TEXT"),
+                ("producer_name", "TEXT"),
+                ("release_date", "TEXT"),
+                ("platform", "TEXT"),
+                ("source_url", "TEXT"),
+                ("cover_url", "TEXT"),
+                ("description", "TEXT"),
+                ("review_status", "TEXT"),
+                ("created_at", "TEXT"),
+                ("updated_at", "TEXT"),
+            ]:
+                phase6d_add_column_if_missing(conn, "music_projects", column_name, column_sql)
+
+        if phase6d_table_exists(conn, "media_items"):
+            for column_name, column_sql in [
+                ("project_id", "INTEGER"),
+                ("release_type", "TEXT"),
+                ("artist_name", "TEXT"),
+                ("producer_name", "TEXT"),
+                ("release_date", "TEXT"),
+                ("platform", "TEXT"),
+                ("review_status", "TEXT"),
+            ]:
+                phase6d_add_column_if_missing(conn, "media_items", column_name, column_sql)
+
+
+def phase6d_row_to_dict(row):
+    try:
+        return dict(row._mapping)
+    except Exception:
+        return dict(row)
+
+
+def phase6d_fetch_project(project_id):
+    ensure_phase6d_music_project_columns()
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM music_projects
+        WHERE id = :project_id
+        LIMIT 1
+        """,
+        {"project_id": project_id},
+    )
+
+    return rows[0] if rows else None
+
+
+def phase6d_project_title(project):
+    return phase6_value(project, "title", "project_title", "name", default="Untitled Project")
+
+
+def phase6d_project_artist(project):
+    return phase6_value(project, "artist_name", "artist", "producer_name", "creator", default="Unknown Artist")
+
+
+def phase6d_project_url(project):
+    return phase6_value(project, "source_url", "url", "link", default="")
+
+
+def phase6d_project_description(project):
+    return phase6_value(project, "description", "notes", "details", default="")
+
+
+def phase6d_project_tracks(project_id):
+    ensure_phase6d_music_project_columns()
+
+    with engine.connect() as conn:
+        if not phase6d_table_exists(conn, "media_items"):
+            return []
+
+        columns = phase6d_table_columns(conn, "media_items")
+
+    if "project_id" in columns:
+        try:
+            return fetch_all(
+                """
+                SELECT *
+                FROM media_items
+                WHERE project_id = :project_id
+                ORDER BY id ASC
+                LIMIT 100
+                """,
+                {"project_id": project_id},
+            )
+        except Exception:
+            return []
+
+    return []
+
+
+def phase6d_music_matches_name(item, name):
+    if not name:
+        return False
+
+    needle = str(name or "").strip().lower()
+
+    if not needle:
+        return False
+
+    merged = " ".join(
+        str(value or "")
+        for value in [
+            phase6_music_title(item),
+            phase6_music_artist(item),
+            phase6_value(item, "producer_name", "producer", "creator", "artist_name"),
+            phase6_music_description(item),
+        ]
+    ).lower()
+
+    return needle in merged
+
+
+def phase6d_music_for_profile(profile, limit=8):
+    if not profile:
+        return []
+
+    names = []
+
+    for key in ["dance_name", "real_name", "producer_name", "artist_name"]:
+        try:
+            value = profile[key]
+        except Exception:
+            value = ""
+
+        if value:
+            names.append(str(value).strip())
+
+    names = [name for name in names if name]
+
+    if not names:
+        return []
+
+    matches = []
+
+    for item in phase6_fetch_music_releases(limit=300):
+        for name in names:
+            if phase6d_music_matches_name(item, name):
+                matches.append(item)
+                break
+
+        if len(matches) >= limit:
+            break
+
+    return matches
+
+
+def phase6d_projects_for_profile(profile, limit=6):
+    if not profile:
+        return []
+
+    names = []
+
+    for key in ["dance_name", "real_name", "producer_name", "artist_name"]:
+        try:
+            value = profile[key]
+        except Exception:
+            value = ""
+
+        if value:
+            names.append(str(value).strip())
+
+    if not names:
+        return []
+
+    matches = []
+
+    for project in phase6_fetch_music_projects(limit=200):
+        merged = " ".join(
+            str(value or "")
+            for value in [
+                phase6d_project_title(project),
+                phase6d_project_artist(project),
+                phase6d_project_description(project),
+            ]
+        ).lower()
+
+        for name in names:
+            if name.lower() in merged:
+                matches.append(project)
+                break
+
+        if len(matches) >= limit:
+            break
+
+    return matches
+
+
+def phase6d_fetch_producers(limit=250):
+    with engine.connect() as conn:
+        if not phase6d_table_exists(conn, "dancer_profiles"):
+            return []
+
+        columns = phase6d_table_columns(conn, "dancer_profiles")
+
+    role_sql = ""
+
+    if "role_tags" in columns:
+        role_sql = "OR LOWER(COALESCE(role_tags, '')) LIKE '%producer%'"
+
+    try:
+        return fetch_all(
+            f"""
+            SELECT *
+            FROM dancer_profiles
+            WHERE LOWER(COALESCE(dance_name, '')) LIKE '%producer%'
+               OR LOWER(COALESCE(team_affiliation, '')) LIKE '%producer%'
+               OR LOWER(COALESCE(bio, '')) LIKE '%producer%'
+               {role_sql}
+            ORDER BY LOWER(COALESCE(dance_name, real_name, '')) ASC
+            LIMIT :limit
+            """,
+            {"limit": limit},
+        )
+    except Exception:
+        return []
+
+
+def phase6d_producer_music_count(profile):
+    return len(phase6d_music_for_profile(profile, limit=50)) + len(phase6d_projects_for_profile(profile, limit=50))
+
+
+@app.context_processor
+def inject_phase6d_music_finish_helpers():
+    return {
+        "phase6d_fetch_project": phase6d_fetch_project,
+        "phase6d_project_title": phase6d_project_title,
+        "phase6d_project_artist": phase6d_project_artist,
+        "phase6d_project_url": phase6d_project_url,
+        "phase6d_project_description": phase6d_project_description,
+        "phase6d_project_tracks": phase6d_project_tracks,
+        "phase6d_music_for_profile": phase6d_music_for_profile,
+        "phase6d_projects_for_profile": phase6d_projects_for_profile,
+        "phase6d_fetch_producers": phase6d_fetch_producers,
+        "phase6d_producer_music_count": phase6d_producer_music_count,
+    }
+
+
+@app.route("/litefeet-music/projects/<int:project_id>")
+def music_project_detail_phase6e(project_id):
+    ensure_phase6d_music_project_columns()
+
+    project = phase6d_fetch_project(project_id)
+
+    if not project:
+        return redirect(url_for("litefeet_music"))
+
+    tracks = phase6d_project_tracks(project_id)
+
+    return render_template(
+        "music_project_detail.html",
+        project=project,
+        tracks=tracks,
+    )
+
+
+try:
+    ensure_phase6d_music_project_columns()
+except Exception as exc:
+    print(f"Phase 6D music project setup skipped: {exc}")

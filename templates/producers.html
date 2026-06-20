@@ -1,107 +1,129 @@
 {% extends "base.html" %}
 
-{% block title %}LiteFeet Producers & Music Credits | LiteFeet Ledger{% endblock %}
-{% block meta_description %}Browse LiteFeet producers, music credits, releases, projects, collaborations, and community-submitted producer records in the LiteFeet Ledger.{% endblock %}
+{% block title %}Producers | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Browse LiteFeet producers, music contributors, beatmakers, DJs, and producer-linked records in The LiteFeet Ledger.{% endblock %}
 
 {% block content %}
-<section class="content-section">
-    <nav class="subtle-subnav">
-        <a href="{{ url_for('dancers') }}">Dancers</a>
-        <span>|</span>
-        <a href="{{ url_for('producers') }}" class="is-active">Producers</a>
-        <span>|</span>
-        <a href="{{ url_for('teams') }}">Teams</a>
-    </nav>
+{% set producer_rows = producers if producers is defined and producers else phase6d_fetch_producers() %}
 
-    <h1>Producers</h1>
-    <p>
-        Producer profiles use the same person cards as dancers. If someone dances and produces,
-        their profile appears in both sections instead of being duplicated.
-    </p>
+<section class="content-section producers-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">People & Music</p>
+            <h1>Producers</h1>
+            <p>
+                Producers, beatmakers, DJs, music contributors, and people connected to LiteFeet music records.
+            </p>
+        </div>
 
-    <div class="profile-controls" data-profile-controls>
-        <label>
-            Search
-            <input type="search" data-profile-search placeholder="Search producers, teams, boroughs, bios">
-        </label>
-
-        <label>
-            Sort
-            <select data-profile-sort>
-                <option value="az">A to Z</option>
-                <option value="za">Z to A</option>
-                <option value="status">Status</option>
-            </select>
-        </label>
-
-        <label>
-            Role
-            <select data-profile-role>
-                <option value="">All Roles</option>
-                <option value="producer">Producer</option>
-                <option value="dancer">Dancer</option>
-                <option value="host">Host</option>
-                <option value="judge">Judge</option>
-                    <option value="supporter">Supporter / Fan / Spectator</option>
-            </select>
-        </label>
-
-        <label>
-            Status
-            <select data-profile-status>
-                <option value="">All Statuses</option>
-                <option value="verified">Verified</option>
-                <option value="community supported">Community Supported</option>
-                <option value="needs verification">Needs Verification</option>
-                <option value="ghost profile">Ghost Profile</option>
-                <option value="approved">Approved</option>
-            </select>
-        </label>
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('dancers') }}">People & Teams</a>
+            <a class="button primary" href="{{ url_for('litefeet_music') }}">LiteFeet Music</a>
+            <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Producer Info</a>
+        </div>
     </div>
+</section>
 
-    {% if producer_profiles %}
-        <div class="dancer-grid">
-            {% for producer in producer_profiles %}
-                <article class="dancer-card profile-card"
-                    data-profile-card
-                    data-name="{{ producer['dance_name'] | lower }}"
-                    data-status="{{ producer['status'] | lower }}"
-                    data-roles="{{ producer['role_tags'] | lower }}"
-                    data-search="{{ (producer['dance_name'] ~ ' ' ~ (producer['team_affiliation'] or '') ~ ' ' ~ (producer['borough_scene'] or '') ~ ' ' ~ (producer['bio'] or '')) | lower }}">
-                    <div class="submission-meta">
-                        <span>{{ producer["status"] }}</span>
-                        {% for role in producer["role_tags"] | role_list %}
-                            <span>{{ role }}</span>
-                        {% endfor %}
-                    </div>
+<section class="homepage-section">
+    {% if producer_rows %}
+        <div class="producer-grid">
+            {% for producer in producer_rows %}
+                {% set music_count = phase6d_producer_music_count(producer) %}
+                {% set recent_music = phase6d_music_for_profile(producer, 3) %}
+                {% set recent_projects = phase6d_projects_for_profile(producer, 2) %}
 
-                    <h2>{{ producer["dance_name"] }}</h2>
+                <article class="producer-card">
+                    <p class="eyebrow">Producer</p>
+
+                    <h3><a href="{{ producer | profile_url }}">{{ producer["dance_name"] or producer["real_name"] or "Producer Profile" }}</a></h3>
 
                     {% if producer["team_affiliation"] %}
-                        <p><strong>Team/Affiliation:</strong> {{ producer["team_affiliation"] }}</p>
+                        <p><strong>{{ producer["team_affiliation"] }}</strong></p>
                     {% endif %}
 
-                    {% if producer["borough_scene"] %}
-                        <p><strong>Scene:</strong> {{ producer["borough_scene"] }}</p>
+                    {% if producer["bio"] %}
+                        <p>{{ producer["bio"][:220] }}{% if producer["bio"]|length > 220 %}...{% endif %}</p>
                     {% endif %}
 
-                    <p>
-                        <a href="{{ producer | profile_url }}" class="button secondary">View Profile</a>
-                    </p>
+                    <div class="producer-stat-row">
+                        <span>{{ music_count }} music links</span>
+                        {% if producer["status"] %}
+                            <span>{{ producer["status"] }}</span>
+                        {% endif %}
+                    </div>
 
-                    {% if not producer["user_id"] %}
-                        <p>
-                            <a href="{{ producer | profile_url }}/claim" class="button primary">Claim This Profile</a>
-                        </p>
+                    {% if recent_music %}
+                        <div class="mini-release-list">
+                            <p class="eyebrow">Recent Music</p>
+                            {% for item in recent_music %}
+                                <a href="{{ url_for('music_release_detail', item_id=item['id']) }}">{{ phase6_music_title(item) }}</a>
+                            {% endfor %}
+                        </div>
                     {% endif %}
+
+                    {% if recent_projects %}
+                        <div class="mini-release-list">
+                            <p class="eyebrow">Projects</p>
+                            {% for project in recent_projects %}
+                                <a href="{{ url_for('music_project_detail_phase6e', project_id=project['id']) }}">{{ phase6d_project_title(project) }}</a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="hero-actions">
+                        <a class="button small-button secondary" href="{{ producer | profile_url }}">View Profile</a>
+                        <a class="button small-button secondary" href="{{ url_for('litefeet_music', q=producer['dance_name'] or producer['real_name']) }}">Music</a>
+                    </div>
                 </article>
             {% endfor %}
         </div>
     {% else %}
-        <div class="empty-state">
-            <h3>No producer profiles listed yet</h3>
-            <p>Producer cards will appear here as event results and community submissions are added.</p>
+        <div class="empty-state compact-empty">
+            <h3>No producer profiles yet.</h3>
+            <p>Submit producers, beatmakers, DJs, or music contributors that should be connected to the Ledger.</p>
+            <a class="button primary" href="{{ url_for('submit_info') }}">Submit Producer Info</a>
         </div>
     {% endif %}
 </section>
+
+<style>
+    .producer-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .producer-card {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+        display: grid;
+        gap: 10px;
+    }
+
+    .producer-stat-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .producer-stat-row span {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.16));
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 0.78rem;
+    }
+
+    .mini-release-list {
+        display: grid;
+        gap: 4px;
+    }
+
+    @media (max-width: 1000px) {
+        .producer-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}
