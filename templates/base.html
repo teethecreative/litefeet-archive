@@ -97,14 +97,12 @@
 }
 </style>
 
-
     {# phase13-public-polish social meta #}
     {% set phase13_meta = phase13_page_meta_defaults() if phase13_page_meta_defaults is defined else {} %}
     <meta property="og:site_name" content="{{ phase13_meta.get('site_name', 'The LiteFeet Ledger') }}">
     <meta property="og:type" content="website">
     <meta property="og:description" content="{{ phase13_current_page_description() if phase13_current_page_description is defined else phase13_meta.get('default_description', 'The LiteFeet Ledger is a community-powered LiteFeet archive.') }}">
     <meta name="twitter:card" content="summary_large_image">
-
 
 <style id="phase13-public-polish">
     :root {
@@ -254,69 +252,16 @@
             </a>
 
             <nav class="nav-links">
-                <a href="/">Home</a>
-                <a href="{{ url_for('home') }}">Home</a>
-                <a href="{{ url_for('ask_archive') }}">Ask</a>
-                <a href="{{ url_for('events') }}">Calendar</a>
-                <a href="{{ url_for('dancers') }}">People & Teams</a>
-                <a href="{{ url_for('litefeet_music') }}">LiteFeet Music</a>
-                <a href="{{ url_for('battles') }}">Battles</a>
-                <a href="{{ url_for('awards') }}">Awards</a>
-                <a href="{{ url_for('about') }}">About</a>
-                <a href="{{ url_for('account_dashboard_phase11') }}">Account</a>
-
-                {% if nav_is_admin or nav_current_user %}
-                    <details class="account-menu">
-                        <summary>
-                            {% if nav_is_admin %}
-                                Admin
-                            {% elif nav_current_user %}
-                                {{ nav_current_user["display_name"] }}
-                            {% endif %}
-
-                            {% if nav_anonymous_mode %}
-                                <span class="anon-pill">Anon</span>
-                            {% endif %}
-                        </summary>
-
-                        <div class="account-menu-panel">
-                            {% if nav_is_admin %}
-                                <a href="{{ url_for('admin_home') }}">Admin Dashboard</a>
-                                <a href="{{ url_for('admin_submissions') }}">Submissions</a>
-                                <a href="{{ url_for('admin_media') }}">Media Feed</a>
-
-                                <form method="POST" action="{{ url_for('admin_view_as_public') }}">
-                                    <button type="submit">View as Public</button>
-                                </form>
-                                <a href="{{ url_for('submit_music_release') }}">Add Release</a>
-                            {% endif %}
-
-                            {% if nav_current_user %}
-                                <a href="{{ url_for('account_dashboard_phase11') }}">My Account</a>
-                                <a href="{{ url_for('submit_music_release') }}">Add Producer Release</a>
-
-                                {% if nav_claimed_profile %}
-                                    <a href="{{ nav_claimed_profile | profile_url }}">View My Profile</a>
-                                    <a href="{{ url_for('admin_person_edit', dancer_id=nav_claimed_profile['id']) }}">Edit My Profile</a>
-                                {% else %}
-                                    <a href="{{ url_for('dancers') }}">Claim Profile</a>
-                                {% endif %}
-                            {% endif %}
-
-                            <form method="POST" action="{{ url_for('toggle_anonymous_mode') }}">
-                                <button type="submit">
-                                    Anonymous Mode: {% if nav_anonymous_mode %}On{% else %}Off{% endif %}
-                                </button>
-                            </form>
-
-                            <a href="{{ url_for('account_logout') }}">Log Out</a>
-                        </div>
-                    </details>
-                {% else %}
-                    <a href="{{ url_for('account_login') }}">Log In</a>
-                    <a href="{{ url_for('account_signup') }}">Create Account</a>
-                {% endif %}
-            </nav>
+            <a href="{{ phase13_url_for('index', '/') if phase13_url_for is defined else url_for('home') }}">Home</a>
+            <a href="{{ phase13_url_for('ask_archive', '/ask') if phase13_url_for is defined else url_for('ask_archive') }}">Ask</a>
+            <a href="{{ phase13_url_for('events', '/events') if phase13_url_for is defined else url_for('events') }}">Calendar</a>
+            <a href="{{ phase13_url_for('dancers', '/people/dancers') if phase13_url_for is defined else url_for('dancers') }}">People & Teams</a>
+            <a href="{{ phase13_url_for('litefeet_music', '/litefeet-music') if phase13_url_for is defined else url_for('litefeet_music') }}">LiteFeet Music</a>
+            <a href="{{ phase13_url_for('battles', '/battles') if phase13_url_for is defined else url_for('battles') }}">Battles</a>
+            <a href="{{ phase13_url_for('awards', '/awards') if phase13_url_for is defined else url_for('awards') }}">Awards</a>
+            <a href="{{ phase13_url_for('about', '/about') if phase13_url_for is defined else url_for('about') }}">About</a>
+            <a href="{{ phase13_account_nav_url() if phase13_account_nav_url is defined else url_for('account_login') }}">{{ phase13_account_nav_label() if phase13_account_nav_label is defined else 'Account' }}</a>
+        </nav>
         </header>
 
         {% if session.get("admin_return_available") and not session.get("admin_logged_in") %}
