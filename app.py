@@ -16407,3 +16407,230 @@ def admin_command_center_phase12():
         return gate
 
     return render_template("admin_home.html")
+
+
+# --- Phase 13A + 13B + 13C public polish batch ---
+def phase13_endpoint_exists(endpoint_name):
+    try:
+        return endpoint_name in app.view_functions
+    except Exception:
+        return False
+
+
+def phase13_url_for(endpoint_name, fallback="#", **kwargs):
+    if phase13_endpoint_exists(endpoint_name):
+        try:
+            return url_for(endpoint_name, **kwargs)
+        except Exception:
+            return fallback
+
+    return fallback
+
+
+def phase13_public_nav_links():
+    return [
+        {"label": "Home", "endpoint": "index", "fallback": "/"},
+        {"label": "Ask", "endpoint": "ask_archive", "fallback": "/ask"},
+        {"label": "Calendar", "endpoint": "events", "fallback": "/events"},
+        {"label": "People & Teams", "endpoint": "dancers", "fallback": "/people/dancers"},
+        {"label": "Music", "endpoint": "litefeet_music", "fallback": "/litefeet-music"},
+        {"label": "Battles", "endpoint": "battles", "fallback": "/battles"},
+        {"label": "Awards", "endpoint": "awards", "fallback": "/awards"},
+        {"label": "Submit", "endpoint": "submit_start_phase10a", "fallback": "/submit/start"},
+    ]
+
+
+def phase13_account_nav_label():
+    user = None
+
+    try:
+        user = current_user()
+    except Exception:
+        user = None
+
+    return "Account" if user else "Log In"
+
+
+def phase13_account_nav_url():
+    user = None
+
+    try:
+        user = current_user()
+    except Exception:
+        user = None
+
+    if user:
+        return phase13_url_for("account_dashboard_phase11", "/account/dashboard")
+
+    return phase13_url_for("account_login", "/account/login")
+
+
+def phase13_page_meta_defaults():
+    return {
+        "site_name": "The LiteFeet Ledger",
+        "default_title": "The LiteFeet Ledger | LiteFeet Culture Archive",
+        "default_description": "The LiteFeet Ledger is a community-powered archive for LiteFeet history, dancers, teams, battles, music, events, awards, and verified records.",
+        "default_image": "",
+    }
+
+
+def phase13_public_page_descriptions():
+    return {
+        "/": "Search and explore LiteFeet culture through people, teams, battles, music, events, awards, and community-submitted records.",
+        "/ask": "Ask the Ledger questions about LiteFeet people, teams, events, battles, music, and community records.",
+        "/events": "Browse battles, classes, cyphers, workshops, performances, music releases, practices, and community dates.",
+        "/calendar": "Browse battles, classes, cyphers, workshops, performances, music releases, practices, and community dates.",
+        "/people/dancers": "Browse LiteFeet dancers, producers, community figures, profiles, teams, and profile records.",
+        "/people/producers": "Browse LiteFeet producers, beatmakers, DJs, and music contributors connected to the culture.",
+        "/people/teams": "Browse LiteFeet teams, crews, founders, members, lineages, borough scenes, and team history.",
+        "/litefeet-music": "Browse LiteFeet tracks, projects, battle music, producer records, videos, and release links.",
+        "/battles": "Browse LiteFeet battle records, matchups, winners, videos, event links, and records needing confirmation.",
+        "/awards": "Browse LiteFeet award records, nominees, winners, categories, years, and source links.",
+        "/submit/start": "Submit LiteFeet records, corrections, source links, events, music, battles, awards, teams, and community context.",
+        "/about": "Learn how The LiteFeet Ledger preserves LiteFeet history through community records, sources, corrections, and verification.",
+    }
+
+
+def phase13_current_page_description():
+    descriptions = phase13_public_page_descriptions()
+    path = request.path.rstrip("/") or "/"
+
+    return descriptions.get(path, phase13_page_meta_defaults()["default_description"])
+
+
+def phase13_public_status_line():
+    return "A living LiteFeet record built from sources, community memory, corrections, and verification."
+
+
+@app.context_processor
+def inject_phase13_public_polish_helpers():
+    return {
+        "phase13_endpoint_exists": phase13_endpoint_exists,
+        "phase13_url_for": phase13_url_for,
+        "phase13_public_nav_links": phase13_public_nav_links,
+        "phase13_account_nav_label": phase13_account_nav_label,
+        "phase13_account_nav_url": phase13_account_nav_url,
+        "phase13_page_meta_defaults": phase13_page_meta_defaults,
+        "phase13_current_page_description": phase13_current_page_description,
+        "phase13_public_status_line": phase13_public_status_line,
+    }
+
+
+# --- Phase 13 hotfix: music feedback compatibility + request-safe meta helper ---
+def ensure_phase13_music_feedback_compat_columns():
+    with engine.begin() as conn:
+        table_exists = False
+
+        if maintenance_uses_postgres():
+            rows = conn.execute(
+                text("""
+                    SELECT table_name
+                    FROM information_schema.tables
+                    WHERE table_schema = 'public'
+                      AND table_name = 'music_feedback'
+                    LIMIT 1
+                """)
+            ).fetchall()
+            table_exists = bool(rows)
+        else:
+            rows = conn.execute(
+                text("""
+                    SELECT name
+                    FROM sqlite_master
+                    WHERE type = 'table'
+                      AND name = 'music_feedback'
+                    LIMIT 1
+                """)
+            ).fetchall()
+            table_exists = bool(rows)
+
+        if not table_exists:
+            return
+
+        if maintenance_uses_postgres():
+            existing_columns = {
+                row[0]
+                for row in conn.execute(
+                    text("""
+                        SELECT column_name
+                        FROM information_schema.columns
+                        WHERE table_name = 'music_feedback'
+                    """)
+                ).fetchall()
+            }
+
+            for column_name, column_sql in [
+                ("rating", "INTEGER"),
+                ("would_lab", "INTEGER DEFAULT 0"),
+                ("would_shoot_video", "INTEGER DEFAULT 0"),
+                ("would_battle", "INTEGER DEFAULT 0"),
+            ]:
+                if column_name not in existing_columns:
+                    conn.execute(text(f"ALTER TABLE music_feedback ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+        else:
+            existing_columns = {
+                row[1]
+                for row in conn.execute(text("PRAGMA table_info(music_feedback)")).fetchall()
+            }
+
+            for column_name, column_sql in [
+                ("rating", "INTEGER"),
+                ("would_lab", "INTEGER DEFAULT 0"),
+                ("would_shoot_video", "INTEGER DEFAULT 0"),
+                ("would_battle", "INTEGER DEFAULT 0"),
+            ]:
+                if column_name not in existing_columns:
+                    conn.execute(text(f"ALTER TABLE music_feedback ADD COLUMN {column_name} {column_sql}"))
+
+        # Backfill old-column compatibility from the newer feedback fields.
+        try:
+            conn.execute(
+                text("""
+                    UPDATE music_feedback
+                    SET rating = COALESCE(rating, rating_value)
+                    WHERE rating IS NULL
+                      AND rating_value IS NOT NULL
+                """)
+            )
+        except Exception:
+            pass
+
+        try:
+            conn.execute(
+                text("""
+                    UPDATE music_feedback
+                    SET would_lab = CASE
+                            WHEN LOWER(COALESCE(reaction_label, '')) LIKE '%lab%' THEN 1
+                            ELSE COALESCE(would_lab, 0)
+                        END,
+                        would_shoot_video = CASE
+                            WHEN LOWER(COALESCE(reaction_label, '')) LIKE '%video%' THEN 1
+                            ELSE COALESCE(would_shoot_video, 0)
+                        END,
+                        would_battle = CASE
+                            WHEN LOWER(COALESCE(reaction_label, '')) LIKE '%battle%' THEN 1
+                            ELSE COALESCE(would_battle, 0)
+                        END
+                """)
+            )
+        except Exception:
+            pass
+
+
+# Override the Phase 13 helper so smoke checks can call it outside a request safely.
+def phase13_current_page_description():
+    try:
+        path = request.path.rstrip("/") or "/"
+    except RuntimeError:
+        return phase13_page_meta_defaults()["default_description"]
+    except Exception:
+        return phase13_page_meta_defaults()["default_description"]
+
+    descriptions = phase13_public_page_descriptions()
+    return descriptions.get(path, phase13_page_meta_defaults()["default_description"])
+
+
+try:
+    ensure_phase13_music_feedback_compat_columns()
+except Exception as exc:
+    print(f"Phase 13 music feedback compatibility skipped: {exc}")
