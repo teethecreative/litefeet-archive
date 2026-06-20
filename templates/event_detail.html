@@ -144,3 +144,76 @@
     {% endif %}
 </section>
 {% endblock %}
+
+
+{% set phase5_metadata = phase5_calendar_metadata_for_event(event["id"]) %}
+{% if phase5_metadata %}
+<section class="homepage-section phase5-calendar-detail-panel">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Calendar Metadata</p>
+            <h2>Calendar Details</h2>
+        </div>
+    </div>
+
+    <div class="calendar-detail-meta-grid">
+        <article>
+            <p class="eyebrow">Type</p>
+            <h3>{{ phase5_calendar_type_for_event(event)|title }}</h3>
+        </article>
+
+        <article>
+            <p class="eyebrow">Visibility</p>
+            <h3>{{ phase5_metadata["visibility_status"] or "Visible" }}</h3>
+        </article>
+
+        <article>
+            <p class="eyebrow">Review</p>
+            <h3>{{ phase5_metadata["review_status"] or event["review_status"] if "review_status" in event.keys() else "Pending Review" }}</h3>
+        </article>
+
+        {% if phase5_metadata["venue_name"] or phase5_metadata["borough"] %}
+            <article>
+                <p class="eyebrow">Location</p>
+                <h3>{{ phase5_metadata["venue_name"] or "Venue TBA" }}</h3>
+                <p>{{ phase5_metadata["borough"] }}</p>
+            </article>
+        {% endif %}
+    </div>
+
+    {% if phase5_metadata["ticket_url"] or phase5_metadata["rsvp_url"] or phase5_metadata["flyer_url"] %}
+        <div class="hero-actions calendar-detail-links">
+            {% if phase5_metadata["ticket_url"] %}
+                <a class="button secondary" href="{{ phase5_metadata['ticket_url'] }}" target="_blank" rel="noopener">Tickets</a>
+            {% endif %}
+            {% if phase5_metadata["rsvp_url"] %}
+                <a class="button secondary" href="{{ phase5_metadata['rsvp_url'] }}" target="_blank" rel="noopener">RSVP</a>
+            {% endif %}
+            {% if phase5_metadata["flyer_url"] %}
+                <a class="button secondary" href="{{ phase5_metadata['flyer_url'] }}" target="_blank" rel="noopener">Flyer</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .calendar-detail-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .calendar-detail-meta-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    @media (max-width: 900px) {
+        .calendar-detail-meta-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endif %}

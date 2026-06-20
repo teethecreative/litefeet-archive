@@ -1,108 +1,184 @@
 {% extends "base.html" %}
 
 {% block title %}Calendar | The LiteFeet Ledger{% endblock %}
-{% block meta_description %}Browse LiteFeet battles, classes, cyphers, performances, link-ups, workshops, releases, and community events in The LiteFeet Ledger Calendar.{% endblock %}
+{% block meta_description %}Browse LiteFeet battles, classes, cyphers, workshops, performances, music releases, and community events in The LiteFeet Ledger calendar.{% endblock %}
 
 {% block content %}
+{% set selected_type = phase5_calendar_selected_type() %}
+{% set selected_view = phase5_calendar_selected_view() %}
+{% set upcoming = upcoming_events if upcoming_events is defined else calendar_items if calendar_items is defined else events if events is defined else [] %}
+{% set past = past_events if past_events is defined else [] %}
+
 <section class="content-section calendar-page">
     <div class="section-heading-row">
         <div>
             <p class="eyebrow">Calendar</p>
             <h1>LiteFeet Calendar</h1>
             <p>
-                Battles, classes, link-ups, performances, cyphers, workshops, music releases,
-                team events, and community records connected to LiteFeet.
+                Battles, classes, cyphers, workshops, performances, practices, team events, music releases,
+                and community dates connected to the Ledger.
             </p>
         </div>
 
-        <a class="button primary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
-    </div>
-
-    <div class="calendar-view-tabs" aria-label="Calendar views">
-        <a class="button small-button secondary" href="#upcoming">Upcoming</a>
-        <a class="button small-button secondary" href="#later">Later</a>
-        <a class="button small-button secondary" href="#past">Past</a>
-        <a class="button small-button secondary" href="#undated">Needs Date</a>
+        <div class="hero-actions">
+            <a class="button primary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
+            <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Info</a>
+        </div>
     </div>
 </section>
 
-<section id="upcoming" class="homepage-section">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Next 2 Weeks</p>
-            <h2>Upcoming Soon</h2>
-        </div>
-    </div>
+<section class="homepage-section calendar-controls-section">
+    <form method="GET" action="{{ url_for('events') }}" class="calendar-filter-form">
+        <label>
+            Type
+            <select name="type">
+                {% for option in phase5_calendar_filter_options() %}
+                    <option value="{{ option.value }}" {% if selected_type == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
 
-    {% if upcoming_soon %}
-        <div class="calendar-list-grid">
-            {% for event in upcoming_soon %}
-                <article class="calendar-list-card">
-                    {% set event_date = event | detail_value("Event Date") %}
-                    {% set event_time = event | detail_value("Event Time") %}
-                    {% set event_location = event | detail_value("Event Location") %}
-                    {% set event_type = event | detail_value("Battle Type") %}
+        <label>
+            View
+            <select name="view">
+                {% for option in phase5_calendar_view_options() %}
+                    <option value="{{ option.value }}" {% if selected_view == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
 
-                    <p class="eyebrow">{{ event_date or "Upcoming" }}{% if event_time %} · {{ event_time }}{% endif %}</p>
-                    <h3><a href="{{ event | event_public_url }}">{{ event["title"] }}</a></h3>
-
-                    {% if event["related_to"] %}<p><strong>Organizer:</strong> {{ event["related_to"] }}</p>{% endif %}
-                    {% if event_location %}<p><strong>Location:</strong> {{ event_location }}</p>{% endif %}
-                    {% if event_type %}<p><strong>Type:</strong> {{ event_type }}</p>{% endif %}
-
-                    <a class="button small-button secondary" href="{{ event | event_public_url }}">Details</a>
-                </article>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty-state compact-empty">
-            <h3>No upcoming calendar items in the next two weeks.</h3>
-            <p>Add battles, classes, link-ups, performances, cyphers, workshops, and community events as they come in.</p>
-        </div>
-    {% endif %}
+        <button class="button secondary" type="submit">Apply</button>
+        <a class="button secondary" href="{{ url_for('events') }}">Reset</a>
+    </form>
 </section>
 
-<section id="later" class="homepage-section">
+<section class="homepage-section">
     <div class="section-heading-row">
         <div>
             <p class="eyebrow">Upcoming</p>
-            <h2>Later</h2>
+            <h2>Upcoming Calendar Items</h2>
         </div>
     </div>
 
-    {% if upcoming_later %}
-        <div class="release-table-wrap">
-            <table class="release-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Item</th>
-                        <th>Organizer</th>
-                        <th>Location</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for event in upcoming_later %}
+    {% if upcoming %}
+        {% if selected_view == "list" %}
+            <div class="release-table-wrap">
+                <table class="release-table calendar-list-table">
+                    <thead>
                         <tr>
-                            <td>{{ event | detail_value("Event Date") or "Date TBD" }}</td>
-                            <td>{{ event["title"] }}</td>
-                            <td>{{ event["related_to"] or "—" }}</td>
-                            <td>{{ event | detail_value("Event Location") or "—" }}</td>
-                            <td><a class="button small-button secondary" href="{{ event | event_public_url }}">Open</a></td>
+                            <th>Date</th>
+                            <th>Item</th>
+                            <th>Type</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th></th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                        {% for event in upcoming %}
+                            {% if phase5_calendar_item_matches_filter(event, selected_type) %}
+                                {% set metadata = phase5_calendar_metadata_for_event(event["id"]) %}
+                                <tr>
+                                    <td>
+                                        {{ phase5_get_event_detail(event, "Event Date") or metadata["start_datetime"] if metadata and "start_datetime" in metadata.keys() else "" }}
+                                    </td>
+                                    <td>
+                                        <a href="{{ event | event_public_url }}">{{ event["title"] }}</a>
+                                    </td>
+                                    <td>{{ phase5_calendar_type_for_event(event)|title }}</td>
+                                    <td>
+                                        {% if metadata and metadata["venue_name"] %}
+                                            {{ metadata["venue_name"] }}
+                                        {% else %}
+                                            {{ phase5_get_event_detail(event, "Event Location") }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ event["review_status"] if "review_status" in event.keys() else "" }}</td>
+                                    <td><a class="button small-button secondary" href="{{ event | event_public_url }}">Open</a></td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="calendar-card-grid {{ 'compact-calendar-grid' if selected_view == 'compact' else '' }}">
+                {% for event in upcoming %}
+                    {% if phase5_calendar_item_matches_filter(event, selected_type) %}
+                        {% set metadata = phase5_calendar_metadata_for_event(event["id"]) %}
+                        {% set badges = phase5_calendar_badges_for_event(event) %}
+
+                        <article class="calendar-card">
+                            <div class="calendar-card-topline">
+                                <p class="eyebrow">{{ phase5_calendar_type_for_event(event)|title }}</p>
+                                {% if metadata and metadata["visibility_status"] %}
+                                    <span class="calendar-status-pill">{{ metadata["visibility_status"] }}</span>
+                                {% endif %}
+                            </div>
+
+                            <h3><a href="{{ event | event_public_url }}">{{ event["title"] }}</a></h3>
+
+                            <div class="calendar-meta-stack">
+                                {% set event_date = phase5_get_event_detail(event, "Event Date") %}
+                                {% set event_time = phase5_get_event_detail(event, "Event Time") %}
+                                {% set event_location = phase5_get_event_detail(event, "Event Location") %}
+
+                                {% if event_date or metadata and metadata["start_datetime"] %}
+                                    <p><strong>Date:</strong> {{ event_date or metadata["start_datetime"] }}</p>
+                                {% endif %}
+
+                                {% if event_time or metadata and metadata["end_datetime"] %}
+                                    <p><strong>Time:</strong> {{ event_time or metadata["end_datetime"] }}</p>
+                                {% endif %}
+
+                                {% if event_location or metadata and metadata["venue_name"] %}
+                                    <p><strong>Location:</strong> {{ event_location or metadata["venue_name"] }}</p>
+                                {% endif %}
+                            </div>
+
+                            {% if badges %}
+                                <div class="calendar-badge-row">
+                                    {% for badge in badges %}
+                                        <span>{{ badge }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            {% if metadata and (metadata["ticket_url"] or metadata["rsvp_url"] or metadata["flyer_url"]) %}
+                                <div class="calendar-link-row">
+                                    {% if metadata["ticket_url"] %}
+                                        <a href="{{ metadata['ticket_url'] }}" target="_blank" rel="noopener">Tickets</a>
+                                    {% endif %}
+                                    {% if metadata["rsvp_url"] %}
+                                        <a href="{{ metadata['rsvp_url'] }}" target="_blank" rel="noopener">RSVP</a>
+                                    {% endif %}
+                                    {% if metadata["flyer_url"] %}
+                                        <a href="{{ metadata['flyer_url'] }}" target="_blank" rel="noopener">Flyer</a>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            <a class="button small-button secondary" href="{{ event | event_public_url }}">Details</a>
+                        </article>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
     {% else %}
         <div class="empty-state compact-empty">
-            <h3>No later upcoming items yet.</h3>
+            <h3>No upcoming calendar items yet.</h3>
+            <p>Add the next battle, cypher, class, music release, or community event.</p>
+            <a class="button primary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
         </div>
     {% endif %}
 </section>
 
-<section id="past" class="homepage-section">
+{% if past %}
+<section class="homepage-section">
     <div class="section-heading-row">
         <div>
             <p class="eyebrow">Archive</p>
@@ -110,87 +186,90 @@
         </div>
     </div>
 
-    {% if past_events %}
-        <div class="release-table-wrap">
-            <table class="release-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Item</th>
-                        <th>Organizer</th>
-                        <th>Location</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for event in past_events %}
-                        <tr>
-                            <td>{{ event | detail_value("Event Date") or "Date TBD" }}</td>
-                            <td>{{ event["title"] }}</td>
-                            <td>{{ event["related_to"] or "—" }}</td>
-                            <td>{{ event | detail_value("Event Location") or "—" }}</td>
-                            <td><a class="button small-button secondary" href="{{ event | event_public_url }}">Open</a></td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <div class="empty-state compact-empty">
-            <h3>No past calendar records yet.</h3>
-        </div>
-    {% endif %}
-</section>
-
-<section id="undated" class="homepage-section">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Needs Date</p>
-            <h2>Undated Records</h2>
-        </div>
-    </div>
-
-    {% if undated_events %}
-        <div class="calendar-list-grid">
-            {% for event in undated_events %}
-                <article class="calendar-list-card">
+    <div class="calendar-card-grid compact-calendar-grid">
+        {% for event in past %}
+            {% if phase5_calendar_item_matches_filter(event, selected_type) %}
+                <article class="calendar-card">
+                    <p class="eyebrow">{{ phase5_calendar_type_for_event(event)|title }}</p>
                     <h3><a href="{{ event | event_public_url }}">{{ event["title"] }}</a></h3>
-                    {% if event["related_to"] %}<p><strong>Organizer:</strong> {{ event["related_to"] }}</p>{% endif %}
-                    <p class="small-note">This record needs date confirmation.</p>
+                    <p>{{ phase5_get_event_detail(event, "Event Date") }}</p>
+                    <a class="button small-button secondary" href="{{ event | event_public_url }}">Open</a>
                 </article>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty-state compact-empty">
-            <h3>No undated calendar records.</h3>
-        </div>
-    {% endif %}
+            {% endif %}
+        {% endfor %}
+    </div>
 </section>
+{% endif %}
 
 <style>
-    .calendar-view-tabs {
+    .calendar-filter-form {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 14px;
+        gap: 12px;
+        align-items: end;
     }
 
-    .calendar-list-grid {
+    .calendar-filter-form label {
+        min-width: 180px;
+    }
+
+    .calendar-card-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
     }
 
-    .calendar-list-card {
+    .compact-calendar-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .calendar-card {
         border: 1px solid var(--border-color, rgba(255,255,255,0.12));
         border-radius: 16px;
         padding: 16px;
         background: var(--card-bg, rgba(255,255,255,0.04));
+        display: grid;
+        gap: 10px;
     }
 
-    @media (max-width: 900px) {
-        .calendar-list-grid {
+    .calendar-card-topline,
+    .calendar-badge-row,
+    .calendar-link-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .calendar-card-topline {
+        justify-content: space-between;
+    }
+
+    .calendar-badge-row span,
+    .calendar-status-pill {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.16));
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 0.78rem;
+    }
+
+    .calendar-meta-stack {
+        display: grid;
+        gap: 4px;
+    }
+
+    .calendar-meta-stack p {
+        margin: 0;
+    }
+
+    @media (max-width: 1000px) {
+        .calendar-card-grid,
+        .compact-calendar-grid {
             grid-template-columns: 1fr;
+        }
+
+        .calendar-filter-form {
+            display: grid;
         }
     }
 </style>

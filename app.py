@@ -12494,3 +12494,479 @@ try:
     ensure_phase4c_profile_owner_tables()
 except Exception as exc:
     print(f"Phase 4C profile owner setup skipped: {exc}")
+
+
+# --- Phase 5A + 5B + 5C calendar batch ---
+def phase5_admin_required():
+    if not current_user_is_admin():
+        return redirect(url_for("admin_login"))
+    return None
+
+
+def phase5_table_exists(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+    rows = conn.execute(
+        text("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = :table_name
+            LIMIT 1
+        """),
+        {"table_name": table_name},
+    ).fetchall()
+    return bool(rows)
+
+
+def phase5_table_columns(conn, table_name):
+    if "ledger_table_columns" in globals():
+        return ledger_table_columns(conn, table_name)
+
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def phase5_add_column_if_missing(conn, table_name, column_name, column_sql):
+    if not phase5_table_exists(conn, table_name):
+        return
+
+    columns = phase5_table_columns(conn, table_name)
+
+    if column_name in columns:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+
+
+def ensure_phase5_calendar_tables():
+    ensure_phase2_ledger_tables()
+
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS calendar_item_metadata (
+                    id SERIAL PRIMARY KEY,
+                    submission_id INTEGER,
+                    calendar_type TEXT,
+                    item_type TEXT,
+                    visibility_status TEXT,
+                    review_status TEXT,
+                    start_datetime TEXT,
+                    end_datetime TEXT,
+                    venue_name TEXT,
+                    borough TEXT,
+                    ticket_url TEXT,
+                    rsvp_url TEXT,
+                    flyer_url TEXT,
+                    recurrence_rule TEXT,
+                    recurrence_label TEXT,
+                    admin_note TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+        else:
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS calendar_item_metadata (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    submission_id INTEGER,
+                    calendar_type TEXT,
+                    item_type TEXT,
+                    visibility_status TEXT,
+                    review_status TEXT,
+                    start_datetime TEXT,
+                    end_datetime TEXT,
+                    venue_name TEXT,
+                    borough TEXT,
+                    ticket_url TEXT,
+                    rsvp_url TEXT,
+                    flyer_url TEXT,
+                    recurrence_rule TEXT,
+                    recurrence_label TEXT,
+                    admin_note TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+
+        for column_name, column_sql in [
+            ("submission_id", "INTEGER"),
+            ("calendar_type", "TEXT"),
+            ("item_type", "TEXT"),
+            ("visibility_status", "TEXT"),
+            ("review_status", "TEXT"),
+            ("start_datetime", "TEXT"),
+            ("end_datetime", "TEXT"),
+            ("venue_name", "TEXT"),
+            ("borough", "TEXT"),
+            ("ticket_url", "TEXT"),
+            ("rsvp_url", "TEXT"),
+            ("flyer_url", "TEXT"),
+            ("recurrence_rule", "TEXT"),
+            ("recurrence_label", "TEXT"),
+            ("admin_note", "TEXT"),
+            ("created_at", "TEXT"),
+            ("updated_at", "TEXT"),
+        ]:
+            phase5_add_column_if_missing(conn, "calendar_item_metadata", column_name, column_sql)
+
+
+def phase5_row_to_dict(row):
+    try:
+        return dict(row._mapping)
+    except Exception:
+        return dict(row)
+
+
+def phase5_get_event_detail(event, label):
+    helper = globals().get("get_detail_value")
+
+    if callable(helper):
+        try:
+            return helper(event, label)
+        except Exception:
+            try:
+                return helper(event.get("details_json"), label)
+            except Exception:
+                pass
+
+    return ""
+
+
+def phase5_calendar_metadata_for_event(event_id):
+    ensure_phase5_calendar_tables()
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM calendar_item_metadata
+        WHERE submission_id = :event_id
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        {"event_id": event_id},
+    )
+
+    return rows[0] if rows else None
+
+
+def phase5_calendar_type_for_event(event):
+    event_id = event["id"] if "id" in event.keys() else None
+    metadata = phase5_calendar_metadata_for_event(event_id) if event_id else None
+
+    for key in ["calendar_type", "item_type"]:
+        if metadata and key in metadata.keys() and metadata[key]:
+            return str(metadata[key]).strip()
+
+    title = str(event["title"] if "title" in event.keys() and event["title"] else "").lower()
+    related = str(event["related_to"] if "related_to" in event.keys() and event["related_to"] else "").lower()
+    details = str(event["details_json"] if "details_json" in event.keys() and event["details_json"] else "").lower()
+    merged = f"{title} {related} {details}"
+
+    if "battle" in merged or "body bag" in merged:
+        return "battle"
+    if "class" in merged or "workshop" in merged:
+        return "class"
+    if "cypher" in merged:
+        return "cypher"
+    if "release" in merged or "music" in merged:
+        return "music release"
+    if "team" in merged:
+        return "team event"
+    if "practice" in merged:
+        return "practice"
+    if "performance" in merged or "showcase" in merged:
+        return "performance"
+
+    return "event"
+
+
+def phase5_calendar_badges_for_event(event):
+    event_id = event["id"] if "id" in event.keys() else None
+    metadata = phase5_calendar_metadata_for_event(event_id) if event_id else None
+
+    badges = []
+
+    calendar_type = phase5_calendar_type_for_event(event)
+    if calendar_type:
+        badges.append(calendar_type.title())
+
+    if metadata:
+        for key, label in [
+            ("borough", None),
+            ("venue_name", None),
+            ("visibility_status", None),
+            ("review_status", None),
+            ("recurrence_label", None),
+        ]:
+            if key in metadata.keys() and metadata[key]:
+                badges.append(label or str(metadata[key]).strip())
+
+        if "recurrence_rule" in metadata.keys() and metadata["recurrence_rule"]:
+            badges.append("Recurring")
+
+    if "review_status" in event.keys() and event["review_status"]:
+        badges.append(str(event["review_status"]).strip())
+
+    clean_badges = []
+    seen = set()
+
+    for badge in badges:
+        badge = str(badge or "").strip()
+        if not badge:
+            continue
+
+        key = badge.lower()
+        if key in seen:
+            continue
+
+        seen.add(key)
+        clean_badges.append(badge)
+
+    return clean_badges[:6]
+
+
+def phase5_calendar_filter_options():
+    return [
+        {"value": "all", "label": "All"},
+        {"value": "battle", "label": "Battles"},
+        {"value": "class", "label": "Classes"},
+        {"value": "cypher", "label": "Cyphers"},
+        {"value": "workshop", "label": "Workshops"},
+        {"value": "practice", "label": "Practice"},
+        {"value": "performance", "label": "Performances"},
+        {"value": "music release", "label": "Music Releases"},
+        {"value": "team event", "label": "Team Events"},
+        {"value": "community event", "label": "Community Events"},
+        {"value": "other", "label": "Other"},
+    ]
+
+
+def phase5_calendar_view_options():
+    return [
+        {"value": "cards", "label": "Cards"},
+        {"value": "list", "label": "List"},
+        {"value": "compact", "label": "Compact"},
+    ]
+
+
+def phase5_calendar_selected_type():
+    selected = request.args.get("type", "all").strip().lower()
+    allowed = {item["value"] for item in phase5_calendar_filter_options()}
+
+    if selected not in allowed:
+        selected = "all"
+
+    return selected
+
+
+def phase5_calendar_selected_view():
+    selected = request.args.get("view", "cards").strip().lower()
+    allowed = {item["value"] for item in phase5_calendar_view_options()}
+
+    if selected not in allowed:
+        selected = "cards"
+
+    return selected
+
+
+def phase5_calendar_item_matches_filter(event, selected_type=None):
+    selected_type = selected_type or phase5_calendar_selected_type()
+
+    if selected_type == "all":
+        return True
+
+    event_type = phase5_calendar_type_for_event(event).strip().lower()
+
+    if selected_type == event_type:
+        return True
+
+    if selected_type == "workshop" and "workshop" in event_type:
+        return True
+
+    if selected_type == "community event" and event_type in {"event", "community event"}:
+        return True
+
+    if selected_type == "other" and event_type in {"event", "other"}:
+        return True
+
+    return False
+
+
+@app.context_processor
+def inject_phase5_calendar_helpers():
+    return {
+        "phase5_calendar_metadata_for_event": phase5_calendar_metadata_for_event,
+        "phase5_calendar_type_for_event": phase5_calendar_type_for_event,
+        "phase5_calendar_badges_for_event": phase5_calendar_badges_for_event,
+        "phase5_calendar_filter_options": phase5_calendar_filter_options,
+        "phase5_calendar_view_options": phase5_calendar_view_options,
+        "phase5_calendar_selected_type": phase5_calendar_selected_type,
+        "phase5_calendar_selected_view": phase5_calendar_selected_view,
+        "phase5_calendar_item_matches_filter": phase5_calendar_item_matches_filter,
+        "phase5_get_event_detail": phase5_get_event_detail,
+    }
+
+
+@app.route("/admin/calendar-review")
+def admin_calendar_review_phase5c():
+    gate = phase5_admin_required()
+    if gate:
+        return gate
+
+    ensure_phase5_calendar_tables()
+
+    metadata_rows = fetch_all(
+        """
+        SELECT calendar_item_metadata.*,
+               submissions.title AS event_title,
+               submissions.review_status AS event_review_status,
+               submissions.created_at AS event_created_at
+        FROM calendar_item_metadata
+        LEFT JOIN submissions
+          ON calendar_item_metadata.submission_id = submissions.id
+        ORDER BY
+            COALESCE(calendar_item_metadata.updated_at, calendar_item_metadata.created_at, '') DESC,
+            calendar_item_metadata.id DESC
+        LIMIT 200
+        """,
+        {},
+    )
+
+    event_rows = fetch_all(
+        """
+        SELECT *
+        FROM submissions
+        WHERE submission_type = 'event'
+        ORDER BY id DESC
+        LIMIT 100
+        """,
+        {},
+    )
+
+    status_counts = fetch_all(
+        """
+        SELECT
+            COALESCE(visibility_status, 'Unset') AS visibility_status,
+            COUNT(*) AS count
+        FROM calendar_item_metadata
+        GROUP BY COALESCE(visibility_status, 'Unset')
+        ORDER BY count DESC
+        """,
+        {},
+    )
+
+    type_counts = fetch_all(
+        """
+        SELECT
+            COALESCE(calendar_type, item_type, 'event') AS calendar_type,
+            COUNT(*) AS count
+        FROM calendar_item_metadata
+        GROUP BY COALESCE(calendar_type, item_type, 'event')
+        ORDER BY count DESC
+        """,
+        {},
+    )
+
+    return render_template(
+        "admin_calendar_review.html",
+        metadata_rows=metadata_rows,
+        event_rows=event_rows,
+        status_counts=status_counts,
+        type_counts=type_counts,
+    )
+
+
+@app.route("/admin/calendar-review/<int:metadata_id>/status", methods=["POST"])
+def admin_calendar_review_status_phase5c(metadata_id):
+    gate = phase5_admin_required()
+    if gate:
+        return gate
+
+    ensure_phase5_calendar_tables()
+
+    allowed_visibility = {
+        "Visible",
+        "Hidden",
+        "Needs Review",
+        "Draft",
+        "Archived",
+    }
+
+    allowed_review = {
+        "Pending Review",
+        "Verified",
+        "Community Supported",
+        "Needs Verification",
+        "Disputed",
+        "Archived",
+    }
+
+    visibility_status = request.form.get("visibility_status", "").strip()
+    review_status = request.form.get("review_status", "").strip()
+    calendar_type = request.form.get("calendar_type", "").strip()
+    admin_note = request.form.get("admin_note", "").strip()
+
+    if visibility_status not in allowed_visibility:
+        visibility_status = "Needs Review"
+
+    if review_status not in allowed_review:
+        review_status = "Pending Review"
+
+    execute_query(
+        """
+        UPDATE calendar_item_metadata
+        SET visibility_status = :visibility_status,
+            review_status = :review_status,
+            calendar_type = :calendar_type,
+            admin_note = :admin_note,
+            updated_at = :updated_at
+        WHERE id = :metadata_id
+        """,
+        {
+            "visibility_status": visibility_status,
+            "review_status": review_status,
+            "calendar_type": calendar_type,
+            "admin_note": admin_note,
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+            "metadata_id": metadata_id,
+        },
+    )
+
+    return redirect(url_for("admin_calendar_review_phase5c"))
+
+
+try:
+    ensure_phase5_calendar_tables()
+except Exception as exc:
+    print(f"Phase 5 calendar setup skipped: {exc}")

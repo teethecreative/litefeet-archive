@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Calendar Review | The LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section admin-calendar-review-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Backend</p>
+            <h1>Calendar Review</h1>
+            <p>
+                Review calendar metadata, visibility, type labels, recurrence notes, and event status from one backend screen.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('admin_home') }}">Admin Dashboard</a>
+            <a class="button secondary" href="{{ url_for('admin_phase2_moderation') }}">Phase 2 Moderation</a>
+            <a class="button primary" href="{{ url_for('events') }}">Open Calendar</a>
+        </div>
+    </div>
+</section>
+
+<section class="admin-calendar-summary-grid">
+    <article>
+        <p class="eyebrow">Metadata Rows</p>
+        <h2>{{ metadata_rows|length }}</h2>
+        <p>Calendar items with structured metadata.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Event Submissions</p>
+        <h2>{{ event_rows|length }}</h2>
+        <p>Recent event submissions.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Visibility</p>
+        {% if status_counts %}
+            <ul class="compact-admin-list">
+                {% for item in status_counts %}
+                    <li><strong>{{ item["visibility_status"] }}</strong> <span>{{ item["count"] }}</span></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="small-note">No visibility counts yet.</p>
+        {% endif %}
+    </article>
+
+    <article>
+        <p class="eyebrow">Types</p>
+        {% if type_counts %}
+            <ul class="compact-admin-list">
+                {% for item in type_counts %}
+                    <li><strong>{{ item["calendar_type"] }}</strong> <span>{{ item["count"] }}</span></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="small-note">No type counts yet.</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Metadata</p>
+            <h2>Calendar Metadata Queue</h2>
+        </div>
+    </div>
+
+    {% if metadata_rows %}
+        <div class="release-table-wrap">
+            <table class="release-table">
+                <thead>
+                    <tr>
+                        <th>Calendar Item</th>
+                        <th>Type</th>
+                        <th>Visibility / Review</th>
+                        <th>Links</th>
+                        <th>Admin</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in metadata_rows %}
+                        <tr>
+                            <td>
+                                {% if item["submission_id"] %}
+                                    <a href="{{ url_for('event_detail', event_id=item['submission_id']) }}">
+                                        {{ item["event_title"] or "Calendar Item #" ~ item["submission_id"] }}
+                                    </a>
+                                {% else %}
+                                    Metadata #{{ item["id"] }}
+                                {% endif %}
+                                <p class="small-note">
+                                    {{ item["venue_name"] or "" }}
+                                    {% if item["borough"] %} · {{ item["borough"] }}{% endif %}
+                                </p>
+                            </td>
+
+                            <td>
+                                {{ item["calendar_type"] or item["item_type"] or "event" }}
+                                {% if item["recurrence_label"] %}
+                                    <br><span class="small-note">{{ item["recurrence_label"] }}</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <p><strong>{{ item["visibility_status"] or "Unset" }}</strong></p>
+                                <p class="small-note">{{ item["review_status"] or item["event_review_status"] or "Pending Review" }}</p>
+                                {% if item["admin_note"] %}
+                                    <p>{{ item["admin_note"] }}</p>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item["ticket_url"] %}<p><a href="{{ item['ticket_url'] }}" target="_blank" rel="noopener">Tickets</a></p>{% endif %}
+                                {% if item["rsvp_url"] %}<p><a href="{{ item['rsvp_url'] }}" target="_blank" rel="noopener">RSVP</a></p>{% endif %}
+                                {% if item["flyer_url"] %}<p><a href="{{ item['flyer_url'] }}" target="_blank" rel="noopener">Flyer</a></p>{% endif %}
+                                {% if not item["ticket_url"] and not item["rsvp_url"] and not item["flyer_url"] %}
+                                    <span class="small-note">No links</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <form method="POST" action="{{ url_for('admin_calendar_review_status_phase5c', metadata_id=item['id']) }}" class="inline-admin-form">
+                                    <label>
+                                        Type
+                                        <select name="calendar_type">
+                                            {% for option in phase5_calendar_filter_options() %}
+                                                {% if option.value != "all" %}
+                                                    <option value="{{ option.value }}" {% if (item["calendar_type"] or item["item_type"] or "event") == option.value %}selected{% endif %}>{{ option.label }}</option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+
+                                    <label>
+                                        Visibility
+                                        <select name="visibility_status">
+                                            {% for option in ["Visible", "Hidden", "Needs Review", "Draft", "Archived"] %}
+                                                <option value="{{ option }}" {% if (item["visibility_status"] or "Needs Review") == option %}selected{% endif %}>{{ option }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+
+                                    <label>
+                                        Review
+                                        <select name="review_status">
+                                            {% for option in ["Pending Review", "Verified", "Community Supported", "Needs Verification", "Disputed", "Archived"] %}
+                                                <option value="{{ option }}" {% if (item["review_status"] or "Pending Review") == option %}selected{% endif %}>{{ option }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+
+                                    <label>
+                                        Admin note
+                                        <textarea name="admin_note" rows="3">{{ item["admin_note"] or "" }}</textarea>
+                                    </label>
+
+                                    <button class="button small-button secondary" type="submit">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No calendar metadata rows yet.</h3>
+            <p>Calendar submissions can still show publicly. Metadata rows appear as structured calendar details are added.</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Recent</p>
+            <h2>Recent Event Submissions</h2>
+        </div>
+    </div>
+
+    {% if event_rows %}
+        <div class="calendar-admin-event-grid">
+            {% for event in event_rows[:24] %}
+                <article>
+                    <p class="eyebrow">{{ event["review_status"] or "Pending Review" }}</p>
+                    <h3><a href="{{ url_for('event_detail', event_id=event['id']) }}">{{ event["title"] }}</a></h3>
+                    <p>{{ phase5_get_event_detail(event, "Event Date") }}</p>
+                    <a class="button small-button secondary" href="{{ url_for('admin_event_edit', event_id=event['id']) }}">Edit</a>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No event submissions found.</h3>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .admin-calendar-summary-grid,
+    .calendar-admin-event-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .admin-calendar-summary-grid article,
+    .calendar-admin-event-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .compact-admin-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 8px;
+    }
+
+    .compact-admin-list li {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        border-top: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        padding-top: 8px;
+    }
+
+    .inline-admin-form {
+        display: grid;
+        gap: 8px;
+        min-width: 220px;
+    }
+
+    .inline-admin-form select,
+    .inline-admin-form textarea {
+        width: 100%;
+    }
+
+    @media (max-width: 1000px) {
+        .admin-calendar-summary-grid,
+        .calendar-admin-event-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
