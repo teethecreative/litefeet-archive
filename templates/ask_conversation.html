@@ -6,6 +6,7 @@
 {% block content %}
 {% set conversation_title = conversation.title if conversation.title is defined else conversation["title"] if conversation["title"] is defined else "Ask Conversation" %}
 {% set conversation_status = conversation.status if conversation.status is defined else conversation["status"] if conversation["status"] is defined else "open" %}
+{% set conversation_id = conversation.id if conversation.id is defined else conversation["id"] %}
 {% set message_rows = messages if messages is defined else ask_messages if ask_messages is defined else [] %}
 
 <section class="content-section ask-conversation-page">
@@ -75,6 +76,52 @@
     {% endif %}
 </section>
 
+
+<section class="homepage-section ask-source-cards-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Sources</p>
+            <h2>Ledger records used for this answer</h2>
+        </div>
+    </div>
+
+    {% set source_cards = ask_source_cards_for_conversation(conversation_id) %}
+
+    {% if source_cards %}
+        <div class="ask-source-card-grid">
+            {% for source in source_cards %}
+                <article class="ask-source-card">
+                    <div class="ask-source-card-topline">
+                        <p class="eyebrow">{{ source["type_label"] }}</p>
+                        <span class="ask-status-badge {{ source['status_class'] }}">{{ source["status"] }}</span>
+                    </div>
+
+                    <h3>{{ source["title"] }}</h3>
+
+                    {% if source["snippet"] %}
+                        <p>{{ source["snippet"] }}</p>
+                    {% endif %}
+
+                    <div class="hero-actions">
+                        {% if source["url"] %}
+                            <a class="button small-button primary" href="{{ source['url'] }}">Open Ledger Record</a>
+                        {% endif %}
+
+                        {% if source["source_url"] %}
+                            <a class="button small-button secondary" href="{{ source['source_url'] }}" target="_blank" rel="noopener">Open Source</a>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No source cards saved for this conversation yet.</h3>
+            <p>New Ask searches will save clickable source cards when matching Ledger records are found.</p>
+        </div>
+    {% endif %}
+</section>
+
 <section class="homepage-section">
     <form method="POST" action="{{ url_for('ask_ledger_search_phase3a') }}" class="form-card ask-followup-form">
         <p class="eyebrow">New Search</p>
@@ -128,6 +175,45 @@
         .ask-status-grid {
             grid-template-columns: 1fr;
         }
+    }
+
+
+    .ask-source-card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .ask-source-card {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .ask-source-card-topline {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .ask-status-badge {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.18));
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 0.78rem;
+        white-space: nowrap;
+    }
+
+    .ask-status-badge.verified,
+    .ask-status-badge.community-supported {
+        font-weight: 700;
+    }
+
+    .ask-status-badge.debated,
+    .ask-status-badge.needs-review {
+        font-style: italic;
     }
 
     .ask-followup-form {

@@ -10856,3 +10856,136 @@ def phase3a_build_ask_answer(question, results):
     )
 
     return "\n".join(lines)
+
+
+# --- Phase 3C Ask source cards ---
+def phase3c_table_columns(conn, table_name):
+    if "ledger_table_columns" in globals():
+        return ledger_table_columns(conn, table_name)
+
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def phase3c_add_column_if_missing(conn, table_name, column_name, column_sql):
+    existing_columns = phase3c_table_columns(conn, table_name)
+
+    if column_name in existing_columns:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+
+
+def ensure_phase3c_ask_source_columns():
+    ensure_phase2_ledger_tables()
+
+    with engine.begin() as conn:
+        phase3c_add_column_if_missing(conn, "ask_messages", "source_summary", "TEXT")
+
+
+def phase3c_safe_json_loads(value, fallback=None):
+    if fallback is None:
+        fallback = []
+
+    if not value:
+        return fallback
+
+    try:
+        parsed = json.loads(value)
+    except Exception:
+        return fallback
+
+    return parsed
+
+
+def phase3c_status_class(status):
+    status = str(status or "").lower()
+
+    if "verified" in status:
+        return "verified"
+
+    if "community supported" in status:
+        return "community-supported"
+
+    if "debated" in status or "disputed" in status:
+        return "debated"
+
+    if "needs" in status or "pending" in status:
+        return "needs-review"
+
+    return "unknown"
+
+
+def ask_source_cards_for_conversation(conversation_id):
+    ensure_phase3c_ask_source_columns()
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM ask_messages
+        WHERE conversation_id = :conversation_id
+        ORDER BY id DESC
+        """,
+        {"conversation_id": conversation_id},
+    )
+
+    source_cards = []
+
+    for row in rows:
+        row_dict = phase3a_row_to_dict(row) if "phase3a_row_to_dict" in globals() else dict(row._mapping)
+
+        source_summary = row_dict.get("source_summary")
+        parsed = phase3c_safe_json_loads(source_summary, [])
+
+        if not isinstance(parsed, list):
+            continue
+
+        for item in parsed:
+            if not isinstance(item, dict):
+                continue
+
+            source_cards.append(
+                {
+                    "title": item.get("title") or "Ledger record",
+                    "type_label": item.get("type_label") or item.get("table") or "Ledger Record",
+                    "status": item.get("status") or "Unknown",
+                    "status_class": phase3c_status_class(item.get("status")),
+                    "snippet": item.get("snippet") or "",
+                    "url": item.get("url") or "",
+                    "source_url": item.get("source_url") or "",
+                    "score": item.get("score") or 0,
+                }
+            )
+
+        if source_cards:
+            break
+
+    return source_cards
+
+
+@app.context_processor
+def inject_phase3c_ask_source_helpers():
+    return {
+        "ask_source_cards_for_conversation": ask_source_cards_for_conversation,
+        "phase3c_status_class": phase3c_status_class,
+    }
+
+
+try:
+    ensure_phase3c_ask_source_columns()
+except Exception as exc:
+    print(f"Phase 3C Ask source-card schema setup skipped: {exc}")
