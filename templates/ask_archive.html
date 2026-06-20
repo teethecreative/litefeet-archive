@@ -1,127 +1,143 @@
 {% extends "base.html" %}
 
 {% block title %}Ask the Ledger | The LiteFeet Ledger{% endblock %}
-{% block meta_description %}Ask the LiteFeet Ledger about dancers, battles, music, events, awards, teams, and community records. Contributor/admin beta questions are saved for review.{% endblock %}
+{% block meta_description %}Ask The LiteFeet Ledger questions about LiteFeet dancers, battles, events, music, records, community context, and verification status.{% endblock %}
 
 {% block content %}
-<section class="content-section ask-page">
-    <p class="eyebrow">Ask the Ledger</p>
-    <h1>Ask is being rebuilt.</h1>
+{% set can_use_ask = logged_in_user or session.get("admin_logged_in") %}
+{% set conversations = recent_ask_conversations if recent_ask_conversations is defined else ask_conversations if ask_conversations is defined else [] %}
 
-    {% if logged_in_user or session.get("admin_logged_in") %}
-        <div class="empty-state compact-empty">
-            <h3>Beta access is open for contributors/admins.</h3>
+<section class="content-section ask-ledger-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Ask</p>
+            <h1>Ask the Ledger</h1>
             <p>
-                Questions submitted here are saved as Ask beta conversations. The next pass will connect
-                them to real Ledger search, sources, verification status, and community perspective records.
+                Search the Ledger across profiles, battles, calendar records, submissions, music,
+                media, and community perspectives.
             </p>
         </div>
 
-        <form method="POST" action="{{ url_for('ask_beta_submit') }}" class="form-card ask-beta-form">
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Info</a>
+            <a class="button secondary" href="{{ url_for('verify_claims') }}">Ledger Review</a>
+        </div>
+    </div>
+</section>
+
+<section class="homepage-section">
+    {% if can_use_ask %}
+        <form method="POST" action="{{ url_for('ask_ledger_search_phase3a') }}" class="ask-ledger-form form-card">
+            <p class="eyebrow">Beta Search</p>
+            <h2>Ask a Ledger question</h2>
+
+            <label>
+                Search Area
+                <select name="ask_scope">
+                    {% for option in ask_scope_options %}
+                        <option value="{{ option.value }}">{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+
+
             <label>
                 Question
                 <textarea
                     name="question"
                     rows="5"
-                    placeholder="Example: Who won Body Bag 10? What battles happened at Money in the Bank? Who produced this track?"
+                    placeholder="Example: Who won Body Bag 10? What records mention Robbie Rob? What battles need verification?"
                     required></textarea>
             </label>
 
-            <label>
-                Source / Proof Link <span class="small-note">(optional)</span>
-                <input type="url" name="source_url" placeholder="Flyer, video, post, song, recap, or reference link">
-            </label>
+            <button class="button primary" type="submit">Search Ledger</button>
 
-            <label>
-                Extra Context <span class="small-note">(optional)</span>
-                <textarea name="context_note" rows="3" placeholder="Add anything the Ledger should consider when answering."></textarea>
-            </label>
-
-            <button type="submit" class="button primary">Save Ask Question</button>
+            <p class="small-note">
+                Ask answers are generated from current Ledger records. Verified and Community Supported records carry
+                more weight than Pending Review, Debated, or Needs Verification records.
+            </p>
         </form>
-
-        <section class="ask-beta-grid">
-            <article class="ask-beta-card">
-                <h2>Verified</h2>
-                <p>Confirmed through strong records, direct sources, event proof, or trusted review.</p>
-            </article>
-
-            <article class="ask-beta-card">
-                <h2>Community Supported</h2>
-                <p>Supported by repeated community knowledge, flyers, video, testimony, or organizer context.</p>
-            </article>
-
-            <article class="ask-beta-card">
-                <h2>Debated / Unknown</h2>
-                <p>Marked clearly when proof is missing, people disagree, or the Ledger cannot answer yet.</p>
-            </article>
-        </section>
-
-        <section class="homepage-section">
-            <div class="section-heading-row">
-                <div>
-                    <p class="eyebrow">Recent</p>
-                    <h2>Saved Ask Conversations</h2>
-                </div>
-            </div>
-
-            {% if recent_ask_conversations %}
-                <div class="ask-conversation-list">
-                    {% for conversation in recent_ask_conversations %}
-                        <article class="ask-conversation-card">
-                            <h3>
-                                <a href="{{ url_for('ask_conversation_detail', conversation_id=conversation['id']) }}">
-                                    {{ conversation["title"] or "Untitled Ask conversation" }}
-                                </a>
-                            </h3>
-                            <p class="small-note">
-                                {{ conversation["status"] or "open" }}
-                                {% if conversation["updated_at"] %} · {{ conversation["updated_at"] }}{% endif %}
-                            </p>
-                        </article>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-state compact-empty">
-                    <h3>No saved Ask conversations yet.</h3>
-                    <p>Submit a beta question above to start one.</p>
-                </div>
-            {% endif %}
-        </section>
     {% else %}
         <div class="empty-state compact-empty">
-            <h3>The public Ask tool is not open yet.</h3>
+            <p class="eyebrow">Beta Access</p>
+            <h2>Ask is being opened to contributors first.</h2>
             <p>
-                The Ledger is being rebuilt so questions can be answered with records, sources,
-                verification status, and community context.
+                Public visitors can still submit information, corrections, memories, flyers, battles,
+                music links, and context for review.
             </p>
-        </div>
 
-        <div class="hero-actions">
-            <a class="button primary" href="{{ url_for('submit_info') }}">Add Context</a>
-            <a class="button secondary" href="{{ url_for('account_login') }}">Account Login</a>
-            <a class="button secondary" href="{{ url_for('events') }}">Open Calendar</a>
+            <div class="hero-actions">
+                <a class="button primary" href="{{ url_for('account_login') }}">Account Login</a>
+                <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Info</a>
+            </div>
         </div>
     {% endif %}
 </section>
 
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Saved</p>
+            <h2>Recent Ask Conversations</h2>
+        </div>
+    </div>
+
+    {% if conversations %}
+        <div class="ask-conversation-grid">
+            {% for conversation in conversations %}
+                <article class="ask-conversation-card">
+                    <p class="eyebrow">{{ conversation.status if conversation.status is defined else conversation["status"] if conversation["status"] is defined else "open" }}</p>
+                    <h3>{{ conversation.title if conversation.title is defined else conversation["title"] if conversation["title"] is defined else "Untitled conversation" }}</h3>
+                    <p class="small-note">
+                        {{ conversation.updated_at if conversation.updated_at is defined else conversation["updated_at"] if conversation["updated_at"] is defined else conversation.created_at if conversation.created_at is defined else "" }}
+                    </p>
+                    <a class="button small-button secondary" href="{{ url_for('ask_conversation_detail', conversation_id=conversation.id if conversation.id is defined else conversation['id']) }}">Open</a>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No Ask conversations yet.</h3>
+            <p>Searches will save here once contributors start asking the Ledger.</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="homepage-section ask-status-grid">
+    <article>
+        <p class="eyebrow">Verified</p>
+        <h2>Strongest answer</h2>
+        <p>Records with direct sources, admin confirmation, or trusted verification.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Community Supported</p>
+        <h2>Community-backed</h2>
+        <p>Records supported by testimony, repeated context, flyers, videos, or known community records.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Debated / Unknown</p>
+        <h2>Needs care</h2>
+        <p>Ask will show when something still needs verification instead of pretending it is settled.</p>
+    </article>
+</section>
+
 <style>
-    .ask-beta-form {
+    .ask-ledger-form {
         display: grid;
         gap: 12px;
-        margin-top: 18px;
     }
 
-    .ask-beta-grid,
-    .ask-conversation-list {
+    .ask-conversation-grid,
+    .ask-status-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
-        margin-top: 18px;
     }
 
-    .ask-beta-card,
-    .ask-conversation-card {
+    .ask-conversation-card,
+    .ask-status-grid article {
         border: 1px solid var(--border-color, rgba(255,255,255,0.12));
         border-radius: 16px;
         padding: 16px;
@@ -129,8 +145,8 @@
     }
 
     @media (max-width: 900px) {
-        .ask-beta-grid,
-        .ask-conversation-list {
+        .ask-conversation-grid,
+        .ask-status-grid {
             grid-template-columns: 1fr;
         }
     }

@@ -214,9 +214,9 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/ask_archive.html:22: <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Info</a>
 /Users/teethecreative/litefeet-archive/templates/ask_archive.html:23: <a class="button secondary" href="{{ url_for('verify_claims') }}">Ledger Review</a>
 /Users/teethecreative/litefeet-archive/templates/ask_archive.html:30: <form method="POST" action="{{ url_for('ask_ledger_search_phase3a') }}" class="ask-ledger-form form-card">
-/Users/teethecreative/litefeet-archive/templates/ask_archive.html:60: <a class="button primary" href="{{ url_for('account_login') }}">Account Login</a>
-/Users/teethecreative/litefeet-archive/templates/ask_archive.html:61: <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Info</a>
-/Users/teethecreative/litefeet-archive/templates/ask_archive.html:84: <a class="button small-button secondary" href="{{ url_for('ask_conversation_detail', conversation_id=conversation.id if conversation.id is defined else conversation['id']) }}">Open</a>
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:70: <a class="button primary" href="{{ url_for('account_login') }}">Account Login</a>
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:71: <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Info</a>
+/Users/teethecreative/litefeet-archive/templates/ask_archive.html:94: <a class="button small-button secondary" href="{{ url_for('ask_conversation_detail', conversation_id=conversation.id if conversation.id is defined else conversation['id']) }}">Open</a>
 /Users/teethecreative/litefeet-archive/templates/ask_conversation.html:21: <a class="button secondary" href="{{ url_for('ask_archive') }}">Back to Ask</a>
 /Users/teethecreative/litefeet-archive/templates/ask_conversation.html:22: <a class="button primary" href="{{ url_for('verify_claims') }}">Ledger Review</a>
 /Users/teethecreative/litefeet-archive/templates/ask_conversation.html:107: <a class="button small-button primary" href="{{ source['url'] }}">Open Ledger Record</a>

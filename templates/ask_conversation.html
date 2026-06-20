@@ -128,6 +128,16 @@
         <h2>Ask another Ledger question</h2>
 
         <label>
+            Search Area
+            <select name="ask_scope">
+                {% for option in ask_scope_options %}
+                <option value="{{ option.value }}">{{ option.label }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+
+        <label>
             Question
             <textarea name="question" rows="4" placeholder="Ask another question about records, dancers, battles, events, music, or context." required></textarea>
         </label>

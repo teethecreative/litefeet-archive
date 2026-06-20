@@ -10989,3 +10989,314 @@ try:
     ensure_phase3c_ask_source_columns()
 except Exception as exc:
     print(f"Phase 3C Ask source-card schema setup skipped: {exc}")
+
+
+# --- Phase 3D Ask filter controls ---
+def phase3d_allowed_scopes():
+    return {
+        "all": {
+            "label": "All Ledger",
+            "tables": [
+                "battle_records",
+                "dancer_profiles",
+                "submissions",
+                "community_perspectives",
+                "calendar_item_metadata",
+                "music_projects",
+                "media_items",
+            ],
+        },
+        "battles": {
+            "label": "Battles",
+            "tables": [
+                "battle_records",
+                "submissions",
+                "community_perspectives",
+                "media_items",
+            ],
+        },
+        "profiles": {
+            "label": "Profiles / People",
+            "tables": [
+                "dancer_profiles",
+                "community_perspectives",
+                "submissions",
+                "media_items",
+            ],
+        },
+        "calendar": {
+            "label": "Calendar",
+            "tables": [
+                "calendar_item_metadata",
+                "submissions",
+                "community_perspectives",
+            ],
+        },
+        "music": {
+            "label": "Music",
+            "tables": [
+                "music_projects",
+                "media_items",
+                "submissions",
+                "community_perspectives",
+            ],
+        },
+        "community": {
+            "label": "Community Context",
+            "tables": [
+                "community_perspectives",
+                "submissions",
+                "dancer_profiles",
+                "battle_records",
+            ],
+        },
+        "review": {
+            "label": "Verification / Review",
+            "tables": [
+                "submissions",
+                "community_perspectives",
+                "battle_records",
+                "calendar_item_metadata",
+            ],
+        },
+    }
+
+
+def phase3d_current_scope(default="all"):
+    try:
+        selected = request.form.get("ask_scope") or request.args.get("ask_scope") or default
+    except Exception:
+        selected = default
+
+    selected = str(selected or default).strip().lower()
+
+    if selected not in phase3d_allowed_scopes():
+        selected = default
+
+    return selected
+
+
+def phase3d_scope_label(scope):
+    scopes = phase3d_allowed_scopes()
+    return scopes.get(scope, scopes["all"])["label"]
+
+
+def phase3d_scope_tables(scope):
+    scopes = phase3d_allowed_scopes()
+    return scopes.get(scope, scopes["all"])["tables"]
+
+
+@app.context_processor
+def inject_phase3d_ask_filter_options():
+    scopes = phase3d_allowed_scopes()
+
+    return {
+        "ask_scope_options": [
+            {"value": key, "label": value["label"]}
+            for key, value in scopes.items()
+        ],
+        "phase3d_current_scope": phase3d_current_scope,
+        "phase3d_scope_label": phase3d_scope_label,
+    }
+
+
+def phase3a_search_ledger(question, limit=10):
+    ensure_phase2_ledger_tables()
+
+    profile_helper = globals().get("ensure_phase3a_profile_columns")
+    if callable(profile_helper):
+        try:
+            profile_helper()
+        except Exception:
+            pass
+
+    phase2g_helper = globals().get("ensure_phase2g_community_perspective_columns")
+    if callable(phase2g_helper):
+        try:
+            phase2g_helper()
+        except Exception:
+            pass
+
+    phase3c_helper = globals().get("ensure_phase3c_ask_source_columns")
+    if callable(phase3c_helper):
+        try:
+            phase3c_helper()
+        except Exception:
+            pass
+
+    tokens = phase3a_tokens(question)
+    normalized_question = phase3b_normalized_text(question) if "phase3b_normalized_text" in globals() else " ".join(tokens)
+    selected_scope = phase3d_current_scope()
+    search_tables = phase3d_scope_tables(selected_scope)
+
+    if not tokens:
+        return []
+
+    scored = []
+
+    for table_name in search_tables:
+        for row in phase3a_fetch_recent_rows(table_name, limit=500):
+            title = phase3a_record_title(table_name, row)
+            snippet = phase3a_record_snippet(table_name, row)
+
+            if "phase3b_row_search_text" in globals():
+                search_text = phase3b_row_search_text(table_name, row)
+            else:
+                search_text = " ".join(str(value or "") for value in row.values())
+
+            normalized_title = phase3b_normalized_text(title) if "phase3b_normalized_text" in globals() else title.lower()
+            normalized_search_text = phase3b_normalized_text(search_text) if "phase3b_normalized_text" in globals() else search_text.lower()
+
+            score = 0
+
+            if normalized_question and normalized_question in normalized_title:
+                score += 40
+
+            if normalized_question and normalized_question in normalized_search_text:
+                score += 25
+
+            matched_tokens = 0
+
+            for token in tokens:
+                if token in normalized_title:
+                    score += 12
+                    matched_tokens += 1
+                elif token in normalized_search_text:
+                    score += 4
+                    matched_tokens += 1
+
+            if matched_tokens == len(tokens):
+                score += 18
+
+            if matched_tokens >= max(1, len(tokens) - 1):
+                score += 8
+
+            if score <= 0:
+                continue
+
+            status = phase3a_record_status(table_name, row)
+
+            if "phase3b_status_weight" in globals():
+                score += phase3b_status_weight(status)
+
+            if "phase3b_table_weight" in globals():
+                score += phase3b_table_weight(table_name)
+
+            source_url = phase3a_record_source_url(row)
+
+            if source_url:
+                score += 3
+
+            scored.append(
+                {
+                    "score": score,
+                    "scope": selected_scope,
+                    "scope_label": phase3d_scope_label(selected_scope),
+                    "table": table_name,
+                    "id": row.get("id"),
+                    "title": title,
+                    "type_label": phase3a_record_type_label(table_name, row),
+                    "status": status,
+                    "snippet": snippet,
+                    "url": phase3a_record_url(table_name, row),
+                    "source_url": source_url,
+                    "matched_tokens": matched_tokens,
+                }
+            )
+
+    scored.sort(
+        key=lambda item: (
+            item["score"],
+            phase3b_status_weight(item["status"]) if "phase3b_status_weight" in globals() else 0,
+            item["matched_tokens"],
+        ),
+        reverse=True,
+    )
+
+    unique = []
+    seen = set()
+
+    for item in scored:
+        key = (item["table"], item["id"])
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+        unique.append(item)
+
+        if len(unique) >= limit:
+            break
+
+    return unique
+
+
+def phase3a_build_ask_answer(question, results):
+    selected_scope = phase3d_current_scope()
+    scope_label = phase3d_scope_label(selected_scope)
+
+    if not results:
+        return (
+            "I could not find a strong Ledger match for that yet.\n\n"
+            f"Search scope: {scope_label}\n"
+            "Ledger status: Unknown / Needs Verification\n\n"
+            "What this means: the Ledger does not currently have enough structured records, source links, "
+            "or community perspectives connected to answer this confidently.\n\n"
+            "Best next step: submit a source, flyer, video, correction, or community perspective so this can become a reviewable Ledger record."
+        )
+
+    if "phase3b_group_results" in globals():
+        groups = phase3b_group_results(results)
+    else:
+        groups = {
+            "Ledger Matches": results,
+        }
+
+    strong_count = len(groups.get("Verified / Community Supported", []))
+    review_count = len(groups.get("Debated / Needs Verification", []))
+
+    lines = [
+        "Ledger Search Result",
+        "",
+        f"Question: {question}",
+        f"Search scope: {scope_label}",
+        "",
+        f"Supported matches: {strong_count}",
+        f"Needs review/context matches: {review_count}",
+        "",
+    ]
+
+    for group_name, group_items in groups.items():
+        if not group_items:
+            continue
+
+        lines.append(group_name)
+        lines.append("-" * len(group_name))
+
+        for index, item in enumerate(group_items, start=1):
+            lines.append(f"{index}. {item['title']}")
+            lines.append(f"   Type: {item['type_label']}")
+            lines.append(f"   Status: {item['status']}")
+
+            if item.get("scope_label"):
+                lines.append(f"   Scope: {item['scope_label']}")
+
+            if item["snippet"]:
+                lines.append(f"   Context: {item['snippet']}")
+
+            if item["url"]:
+                lines.append(f"   Ledger record: {item['url']}")
+
+            if item["source_url"]:
+                lines.append(f"   Source/proof: {item['source_url']}")
+
+            lines.append("")
+
+    lines.append("How to read this:")
+    lines.append(
+        "Verified and Community Supported records carry the most weight. "
+        "Debated, Pending Review, and Needs Verification records are included as context, "
+        "but should not be treated as final until reviewed."
+    )
+
+    return "\n".join(lines)
