@@ -1,6 +1,6 @@
 === Phase 2I Production Release Check ===
 branch: main
-commit: 933b0ac
+commit: 834eacd
 database: sqlite
 original maintenance_mode: on
 ---- table checks ----

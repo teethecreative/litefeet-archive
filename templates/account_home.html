@@ -1,236 +1,277 @@
 {% extends "base.html" %}
 
 {% block title %}Account Dashboard | The LiteFeet Ledger{% endblock %}
-{% block meta_description %}Manage your LiteFeet Ledger submissions, profile claims, comments, flowers, ratings, saved items, and Ask beta access.{% endblock %}
+{% block meta_description %}Contributor dashboard for The LiteFeet Ledger account, saved items, submissions, profile claims, and profile editing.{% endblock %}
 
 {% block content %}
-{% set dashboard_user = user if user is defined else logged_in_user if logged_in_user is defined else none %}
-{% set account_submissions = submissions if submissions is defined else user_submissions if user_submissions is defined else contributions if contributions is defined else [] %}
-{% set account_claims = claims if claims is defined else profile_claims if profile_claims is defined else [] %}
-{% set account_saved_items = saved_items if saved_items is defined else [] %}
-{% set account_feedback = feedback_items if feedback_items is defined else comments if comments is defined else [] %}
+{% set user = phase11_user() %}
+{% set stats = phase11_account_stats() %}
+{% set linked_profile = stats.linked_profile %}
+{% set recent_submissions = phase11_recent_submissions() %}
+{% set saved_items = phase11_saved_items() %}
+{% set profile_claims = phase11_profile_claims() %}
+{% set ask_conversations = phase11_ask_conversations() %}
 
-<section class="content-section account-dashboard">
+<section class="content-section account-dashboard-page">
     <div class="section-heading-row">
         <div>
             <p class="eyebrow">Account</p>
-            <h1>Account Dashboard</h1>
+            <h1>Contributor Dashboard</h1>
             <p>
-                Track your Ledger submissions, profile claims, corrections, flowers, ratings,
-                saved items, and contributor tools.
+                Track what you submitted, saved, claimed, or asked. This is your home base for building with the Ledger.
             </p>
         </div>
 
         <div class="hero-actions">
-            <a class="button primary" href="{{ url_for('submit_info') }}">Add to the Ledger</a>
-            <a class="button secondary" href="{{ url_for('ask_archive') }}">Ask Beta</a>
+            <a class="button primary" href="{{ url_for('submit_start_phase10a') if phase10_endpoint_exists('submit_start_phase10a') else '/submit/start' }}">Add to the Ledger</a>
+            <a class="button secondary" href="{{ url_for('ask_archive') }}">Ask the Ledger</a>
+            <a class="button secondary" href="{{ url_for('account_logout') }}">Log Out</a>
         </div>
     </div>
-
-    {% if dashboard_user %}
-        <div class="account-summary-card">
-            <h2>{{ dashboard_user["display_name"] or dashboard_user["email"] or "Ledger User" }}</h2>
-            <p>
-                <strong>Role:</strong> {{ dashboard_user["role"] or session.get("user_role") or "contributor" }}
-                {% if dashboard_user["organization_name"] %}
-                    <br><strong>Organization:</strong> {{ dashboard_user["organization_name"] }}
-                {% endif %}
-            </p>
-        </div>
-    {% endif %}
-
-    {% if claimed_profile %}
-        <div class="account-summary-card">
-            <p class="eyebrow">Claimed Profile</p>
-            <h2>{{ claimed_profile["dance_name"] }}</h2>
-            <div class="hero-actions">
-                <a class="button small-button primary" href="{{ claimed_profile | profile_url }}">View Profile</a>
-                {% if session.get("admin_logged_in") %}
-                    <a class="button small-button secondary" href="{{ url_for('admin_person_edit', dancer_id=claimed_profile['id']) }}">Edit Profile</a>
-                {% endif %}
-            </div>
-        </div>
-    {% endif %}
 </section>
 
-<section class="homepage-section profile-owner-dashboard-panel">
+<section class="account-stat-grid">
+    <article>
+        <p class="eyebrow">Submissions</p>
+        <h2>{{ stats.submissions_count }}</h2>
+        <p>Records, corrections, and context connected to your account.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Saved</p>
+        <h2>{{ stats.saved_count }}</h2>
+        <p>Ledger items you saved for later.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Claims</p>
+        <h2>{{ stats.claims_count }}</h2>
+        <p>Profile claims connected to your account.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Ask</p>
+        <h2>{{ stats.ask_count }}</h2>
+        <p>Ask conversations tied to your account.</p>
+    </article>
+</section>
+
+<section class="homepage-section account-profile-panel">
     <div class="section-heading-row">
         <div>
-            <p class="eyebrow">Profile Controls</p>
+            <p class="eyebrow">Profile</p>
             <h2>My Ledger Profile</h2>
-            <p>
-                If your profile claim has been approved, you can manage your public Ledger profile here.
-            </p>
         </div>
 
         <div class="hero-actions">
-            <a class="button primary" href="{{ url_for('account_profile_editor_phase4c') }}">Open Profile Editor</a>
-            <a class="button secondary" href="{{ url_for('account_profile_link') }}">Profile Claim / Link</a>
+            <a class="button secondary" href="{{ url_for('account_profile_link') }}">Claim / Link Profile</a>
+            <a class="button primary" href="{{ url_for('account_profile_editor_phase4c') }}">Profile Editor</a>
         </div>
     </div>
+
+    {% if linked_profile %}
+        <div class="linked-profile-card">
+            <h3>{{ linked_profile["dance_name"] or linked_profile["real_name"] or "Linked Profile" }}</h3>
+
+            {% if linked_profile["team_affiliation"] %}
+                <p>{{ linked_profile["team_affiliation"] }}</p>
+            {% endif %}
+
+            <div class="hero-actions">
+                <a class="button small-button secondary" href="{{ linked_profile | profile_url }}">View Public Profile</a>
+                <a class="button small-button secondary" href="{{ url_for('account_profile_editor_phase4c') }}">Edit Profile</a>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No profile linked yet.</h3>
+            <p>Claim an existing profile or submit a missing one so your account can connect to your Ledger identity.</p>
+        </div>
+    {% endif %}
 </section>
 
+<section class="account-dashboard-grid">
+    <article class="account-dashboard-card">
+        <div class="section-heading-row">
+            <div>
+                <p class="eyebrow">Submissions</p>
+                <h2>Recent Submissions</h2>
+            </div>
+        </div>
 
-<section class="dashboard-grid">
-    <article class="dashboard-card">
-        <p class="eyebrow">Submissions</p>
-        <h2>Your Submissions</h2>
-
-        {% if account_submissions %}
-            <div class="dashboard-mini-list">
-                {% for item in account_submissions[:5] %}
-                    <div>
-                        <h3>{{ item["title"] or "Untitled submission" }}</h3>
-                        <p class="small-note">
-                            {{ item["submission_type"] or "Submission" }}
-                            · {{ item["review_status"] or item["status"] or "Pending Review" }}
-                        </p>
+        {% if recent_submissions %}
+            <div class="account-list">
+                {% for item in recent_submissions %}
+                    <div class="account-list-item">
+                        <div>
+                            <h3>{{ item["title"] or "Untitled Submission" }}</h3>
+                            <p>{{ item["submission_type"] or "general" }} · {{ phase11_submission_status(item) }}</p>
+                        </div>
                     </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="small-note">
-                Submitted events, corrections, music, profiles, battles, awards, and context will appear here.
-            </p>
+            <p class="small-note">No matched submissions yet.</p>
         {% endif %}
+
+        <a class="button small-button secondary" href="{{ url_for('submit_start_phase10a') if phase10_endpoint_exists('submit_start_phase10a') else '/submit/start' }}">Submit Something</a>
     </article>
 
-    <article class="dashboard-card">
-        <p class="eyebrow">Profiles</p>
-        <h2>Profile Claims</h2>
-
-        {% if account_claims %}
-            <div class="dashboard-mini-list">
-                {% for claim in account_claims[:5] %}
-                    <div>
-                        <h3>{{ claim["dance_name"] or claim["profile_name"] or claim["title"] or "Profile claim" }}</h3>
-                        <p class="small-note">
-                            {{ claim["profile_type"] or "profile" }}
-                            · {{ claim["claim_status"] or claim["status"] or "Pending Review" }}
-                        </p>
-                        {% if claim["claim_reason"] %}
-                            <p>{{ claim["claim_reason"]|truncate(120) }}</p>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+    <article class="account-dashboard-card">
+        <div class="section-heading-row">
+            <div>
+                <p class="eyebrow">Saved</p>
+                <h2>Saved Items</h2>
             </div>
-        {% else %}
-            <p class="small-note">
-                Claimed profiles and profile access requests will sit here once connected.
-            </p>
-        {% endif %}
+        </div>
 
-        <a class="button small-button secondary" href="{{ url_for('dancers') }}">Find Profile</a>
-    </article>
+        {% if saved_items %}
+            <div class="account-list">
+                {% for item in saved_items %}
+                    <div class="account-list-item">
+                        <div>
+                            <h3>
+                                {% if phase11_item_url(item) %}
+                                    <a href="{{ phase11_item_url(item) }}">{{ phase11_item_title(item) }}</a>
+                                {% else %}
+                                    {{ phase11_item_title(item) }}
+                                {% endif %}
+                            </h3>
+                            <p>{{ item["item_type"] or "Ledger item" }}</p>
+                        </div>
 
-    <article class="dashboard-card">
-        <p class="eyebrow">Saved</p>
-        <h2>Saved Items</h2>
-
-        {% if account_saved_items %}
-            <div class="dashboard-mini-list">
-                {% for item in account_saved_items[:8] %}
-                    <div>
-                        <h3>{{ item["label"] or item["item_type"] ~ " #" ~ item["item_id"] }}</h3>
-                        <p class="small-note">
-                            {{ item["item_type"] }} · Saved {{ item["created_at"] or "" }}
-                        </p>
-
-                        {% if item["notes"] %}
-                            <p>{{ item["notes"]|truncate(120) }}</p>
-                        {% endif %}
-
-                        <form method="POST" action="{{ url_for('delete_saved_ledger_item', saved_item_id=item['id']) }}">
+                        <form method="POST" action="{{ url_for('account_remove_saved_item_phase11', saved_item_id=item['id']) }}">
                             <button class="button small-button secondary" type="submit">Remove</button>
                         </form>
                     </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="small-note">
-                Saved dancers, teams, battles, songs, events, and review topics will appear here.
-            </p>
+            <p class="small-note">No saved items yet.</p>
         {% endif %}
     </article>
 
-    <article class="dashboard-card">
-        <p class="eyebrow">Community</p>
-        <h2>Flowers / Comments</h2>
+    <article class="account-dashboard-card">
+        <div class="section-heading-row">
+            <div>
+                <p class="eyebrow">Claims</p>
+                <h2>Profile Claims</h2>
+            </div>
+        </div>
 
-        {% if account_feedback %}
-            <div class="dashboard-mini-list">
-                {% for item in account_feedback[:5] %}
-                    <div>
-                        <h3>{{ item["title"] or item["profile_name"] or "Community note" }}</h3>
-                        <p class="small-note">{{ item["status"] or "Pending Review" }}</p>
+        {% if profile_claims %}
+            <div class="account-list">
+                {% for claim in profile_claims %}
+                    <div class="account-list-item">
+                        <div>
+                            <h3>{{ claim["dance_name"] or claim["real_name"] or "Profile Claim" }}</h3>
+                            <p>{{ claim["claim_status"] or "Pending Review" }}</p>
+                        </div>
+
+                        {% if (claim["claim_status"] or "Pending Review") != "Approved" %}
+                            <form method="POST" action="{{ url_for('account_withdraw_profile_claim_phase11', claim_id=claim['id']) }}">
+                                <button class="button small-button secondary" type="submit">Withdraw</button>
+                            </form>
+                        {% endif %}
                     </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="small-note">
-                Flowers, comments, corrections, and community context connected to your account will appear here.
-            </p>
+            <p class="small-note">No profile claims yet.</p>
         {% endif %}
+
+        <a class="button small-button secondary" href="{{ url_for('account_profile_link') }}">Claim Profile</a>
     </article>
 
-    <article class="dashboard-card">
-        <p class="eyebrow">Music</p>
-        <h2>Ratings / Reactions</h2>
-        <p class="small-note">
-            Your Lab, Battle, Video, thumbs, and 1–10 music feedback will appear here once the account dashboard is wired to music activity.
-        </p>
-        <a class="button small-button secondary" href="{{ url_for('litefeet_music') }}">Open Music</a>
-    </article>
+    <article class="account-dashboard-card">
+        <div class="section-heading-row">
+            <div>
+                <p class="eyebrow">Ask</p>
+                <h2>Ask Conversations</h2>
+            </div>
+        </div>
 
-    <article class="dashboard-card">
-        <p class="eyebrow">Beta</p>
-        <h2>Ask Access</h2>
-        <p class="small-note">
-            Contributors and admins get access to the Ask beta shell while public visitors see the rebuilding notice.
-        </p>
-        <a class="button small-button secondary" href="{{ url_for('ask_archive') }}">Open Ask</a>
+        {% if ask_conversations %}
+            <div class="account-list">
+                {% for item in ask_conversations %}
+                    <div class="account-list-item">
+                        <div>
+                            <h3>
+                                <a href="{{ url_for('ask_conversation_detail', conversation_id=item['id']) }}">
+                                    {{ item["title"] or "Ask Conversation" }}
+                                </a>
+                            </h3>
+                            <p>{{ item["status"] or "open" }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="small-note">No Ask conversations yet.</p>
+        {% endif %}
+
+        <a class="button small-button secondary" href="{{ url_for('ask_archive') }}">Ask Something</a>
     </article>
 </section>
 
 <style>
-    .account-summary-card,
-    .dashboard-card {
+    .account-stat-grid,
+    .account-dashboard-grid {
+        display: grid;
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .account-stat-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .account-dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .account-stat-grid article,
+    .account-dashboard-card,
+    .linked-profile-card {
         border: 1px solid var(--border-color, rgba(255,255,255,0.12));
         border-radius: 16px;
         padding: 16px;
         background: var(--card-bg, rgba(255,255,255,0.04));
     }
 
-    .account-summary-card {
-        margin-top: 16px;
-    }
-
-    .dashboard-grid {
+    .account-dashboard-card {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
-        margin-top: 18px;
+        align-content: start;
     }
 
-    .dashboard-mini-list {
+    .account-list {
         display: grid;
         gap: 10px;
     }
 
-    .dashboard-mini-list > div {
+    .account-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 12px;
         border-top: 1px solid var(--border-color, rgba(255,255,255,0.12));
         padding-top: 10px;
     }
 
-    @media (max-width: 1000px) {
-        .dashboard-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
+    .account-list-item h3,
+    .account-list-item p {
+        margin: 0;
     }
 
-    @media (max-width: 700px) {
-        .dashboard-grid {
+    @media (max-width: 1000px) {
+        .account-stat-grid,
+        .account-dashboard-grid {
             grid-template-columns: 1fr;
+        }
+
+        .account-list-item {
+            display: grid;
         }
     }
 </style>

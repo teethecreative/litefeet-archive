@@ -15422,3 +15422,644 @@ try:
     ensure_phase9_team_tables()
 except Exception as exc:
     print(f"Phase 9 team setup skipped: {exc}")
+
+
+# --- Phase 10A + 10B + 10C submission batch ---
+def phase10_endpoint_exists(endpoint_name):
+    try:
+        return endpoint_name in app.view_functions
+    except Exception:
+        return False
+
+
+def phase10_submission_categories():
+    return [
+        {
+            "value": "profile",
+            "label": "Dancer / Profile Info",
+            "description": "Add or correct a dancer, producer, or community profile.",
+            "preferred_endpoint": "submit_info",
+            "fallback_path": "/submit",
+        },
+        {
+            "value": "team",
+            "label": "Team Info",
+            "description": "Add a team, crew, founders, members, lineage, or team history.",
+            "preferred_endpoint": "team_submit_phase9c",
+            "fallback_path": "/teams/submit",
+        },
+        {
+            "value": "battle",
+            "label": "Battle Record",
+            "description": "Add a matchup, winner, video, judges, event link, or disputed result.",
+            "preferred_endpoint": "battle_submit_phase2",
+            "fallback_path": "/battles/add",
+        },
+        {
+            "value": "award",
+            "label": "Award Info",
+            "description": "Add winners, nominees, categories, years, source links, or award corrections.",
+            "preferred_endpoint": "award_submit_phase8c",
+            "fallback_path": "/awards/submit",
+        },
+        {
+            "value": "calendar",
+            "label": "Calendar Item",
+            "description": "Add battles, classes, cyphers, practices, performances, releases, or community dates.",
+            "preferred_endpoint": "submit_event",
+            "fallback_path": "/events/submit",
+        },
+        {
+            "value": "music",
+            "label": "Music / Release Info",
+            "description": "Add tracks, projects, producer credits, platforms, source links, or music context.",
+            "preferred_endpoint": "submit_music_release",
+            "fallback_path": "/litefeet-music",
+        },
+        {
+            "value": "project",
+            "label": "Music Project",
+            "description": "Add EPs, tapes, playlists, beat packs, compilations, or producer projects.",
+            "preferred_endpoint": "submit_music_project",
+            "fallback_path": "/litefeet-music/projects/submit",
+        },
+        {
+            "value": "correction",
+            "label": "Correction / Context",
+            "description": "Correct something already on the Ledger or add missing community context.",
+            "preferred_endpoint": "submit_info",
+            "fallback_path": "/submit",
+        },
+        {
+            "value": "general",
+            "label": "General Ledger Info",
+            "description": "Use this when the info does not fit one section yet.",
+            "preferred_endpoint": "submit_info",
+            "fallback_path": "/submit",
+        },
+    ]
+
+
+def phase10_category_by_value(value):
+    normalized = str(value or "").strip().lower()
+
+    for item in phase10_submission_categories():
+        if item["value"] == normalized:
+            return item
+
+    return phase10_submission_categories()[-1]
+
+
+def phase10_category_url(category_value):
+    item = phase10_category_by_value(category_value)
+    endpoint = item.get("preferred_endpoint")
+
+    if endpoint and phase10_endpoint_exists(endpoint):
+        try:
+            return url_for(endpoint)
+        except Exception:
+            pass
+
+    return item.get("fallback_path", "/submit")
+
+
+def phase10_suggested_submission_type(category_value):
+    mapping = {
+        "profile": "profile",
+        "team": "team",
+        "battle": "battle",
+        "award": "award",
+        "calendar": "event",
+        "music": "music",
+        "project": "music_project",
+        "correction": "correction",
+        "general": "general",
+    }
+
+    return mapping.get(str(category_value or "").strip().lower(), "general")
+
+
+def phase10_build_success_url(title="", category="general", next_url=""):
+    try:
+        return url_for(
+            "submission_success_phase10c",
+            title=title or "",
+            category=category or "general",
+            next=next_url or phase10_category_url(category),
+        )
+    except Exception:
+        return "/submit/success"
+
+
+@app.context_processor
+def inject_phase10_submission_helpers():
+    return {
+        "phase10_submission_categories": phase10_submission_categories,
+        "phase10_category_by_value": phase10_category_by_value,
+        "phase10_category_url": phase10_category_url,
+        "phase10_suggested_submission_type": phase10_suggested_submission_type,
+        "phase10_build_success_url": phase10_build_success_url,
+        "phase10_endpoint_exists": phase10_endpoint_exists,
+    }
+
+
+@app.route("/submit/start", methods=["GET", "POST"])
+def submit_start_phase10a():
+    if request.method == "POST":
+        category = request.form.get("category", "general").strip().lower()
+        redirect_url = phase10_category_url(category)
+
+        if "?" in redirect_url:
+            redirect_url = f"{redirect_url}&from_submit_hub=1"
+        else:
+            redirect_url = f"{redirect_url}?from_submit_hub=1"
+
+        return redirect(redirect_url)
+
+    return render_template("submit_start.html")
+
+
+@app.route("/submit/success")
+def submission_success_phase10c():
+    title = request.args.get("title", "").strip()
+    category = request.args.get("category", "general").strip().lower()
+    next_url = request.args.get("next", "").strip() or phase10_category_url(category)
+
+    return render_template(
+        "submission_success.html",
+        title=title,
+        category=category,
+        next_url=next_url,
+    )
+
+
+@app.route("/submit/category/<category>")
+def submit_category_redirect_phase10b(category):
+    return redirect(phase10_category_url(category))
+
+
+# --- Phase 11A + 11B + 11C account dashboard batch ---
+def phase11_table_exists(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+    rows = conn.execute(
+        text("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = :table_name
+            LIMIT 1
+        """),
+        {"table_name": table_name},
+    ).fetchall()
+    return bool(rows)
+
+
+def phase11_table_columns(conn, table_name):
+    if "ledger_table_columns" in globals():
+        return ledger_table_columns(conn, table_name)
+
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def phase11_add_column_if_missing(conn, table_name, column_name, column_sql):
+    if not phase11_table_exists(conn, table_name):
+        return
+
+    columns = phase11_table_columns(conn, table_name)
+
+    if column_name in columns:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+
+
+def ensure_phase11_account_tables():
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS saved_items (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER,
+                    item_type TEXT,
+                    item_id INTEGER,
+                    item_title TEXT,
+                    item_url TEXT,
+                    notes TEXT,
+                    saved_status TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+        else:
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS saved_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    item_type TEXT,
+                    item_id INTEGER,
+                    item_title TEXT,
+                    item_url TEXT,
+                    notes TEXT,
+                    saved_status TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+
+        for column_name, column_sql in [
+            ("user_id", "INTEGER"),
+            ("item_type", "TEXT"),
+            ("item_id", "INTEGER"),
+            ("item_title", "TEXT"),
+            ("item_url", "TEXT"),
+            ("notes", "TEXT"),
+            ("saved_status", "TEXT"),
+            ("created_at", "TEXT"),
+            ("updated_at", "TEXT"),
+        ]:
+            phase11_add_column_if_missing(conn, "saved_items", column_name, column_sql)
+
+        if phase11_table_exists(conn, "profile_claims"):
+            for column_name, column_sql in [
+                ("claim_status", "TEXT"),
+                ("admin_note", "TEXT"),
+                ("updated_at", "TEXT"),
+            ]:
+                phase11_add_column_if_missing(conn, "profile_claims", column_name, column_sql)
+
+        if phase11_table_exists(conn, "archive_users"):
+            for column_name, column_sql in [
+                ("contributor_status", "TEXT"),
+                ("contributor_level", "TEXT"),
+                ("last_account_activity_at", "TEXT"),
+            ]:
+                phase11_add_column_if_missing(conn, "archive_users", column_name, column_sql)
+
+
+def phase11_user():
+    try:
+        return current_user()
+    except Exception:
+        return None
+
+
+def phase11_value(row, *keys, default=""):
+    if not row:
+        return default
+
+    for key in keys:
+        try:
+            if key in row.keys() and row[key] not in (None, ""):
+                return row[key]
+        except Exception:
+            pass
+
+        try:
+            value = row.get(key)
+            if value not in (None, ""):
+                return value
+        except Exception:
+            pass
+
+    return default
+
+
+def phase11_linked_profile():
+    user = phase11_user()
+
+    if not user:
+        return None
+
+    helper = globals().get("phase4c_current_user_linked_profile")
+    if callable(helper):
+        try:
+            profile = helper()
+            if profile:
+                return profile
+        except Exception:
+            pass
+
+    try:
+        linked_profile_id = user["linked_profile_id"]
+    except Exception:
+        linked_profile_id = None
+
+    if not linked_profile_id:
+        return None
+
+    try:
+        rows = fetch_all(
+            """
+            SELECT *
+            FROM dancer_profiles
+            WHERE id = :profile_id
+            LIMIT 1
+            """,
+            {"profile_id": linked_profile_id},
+        )
+        return rows[0] if rows else None
+    except Exception:
+        return None
+
+
+def phase11_recent_submissions(limit=8):
+    user = phase11_user()
+
+    if not user:
+        return []
+
+    user_id = user["id"]
+    email = phase11_value(user, "email", default="")
+    display_name = phase11_value(user, "display_name", "name", "username", default="")
+
+    with engine.connect() as conn:
+        if not phase11_table_exists(conn, "submissions"):
+            return []
+
+        columns = phase11_table_columns(conn, "submissions")
+
+    clauses = []
+    params = {"limit": limit}
+
+    if "user_id" in columns:
+        clauses.append("user_id = :user_id")
+        params["user_id"] = user_id
+
+    if email and "contact" in columns:
+        clauses.append("LOWER(COALESCE(contact, '')) = :email")
+        params["email"] = email.lower()
+
+    if display_name and "submitter_name" in columns:
+        clauses.append("LOWER(COALESCE(submitter_name, '')) = :display_name")
+        params["display_name"] = display_name.lower()
+
+    if not clauses:
+        return []
+
+    where_sql = " OR ".join(clauses)
+
+    try:
+        return fetch_all(
+            f"""
+            SELECT *
+            FROM submissions
+            WHERE {where_sql}
+            ORDER BY id DESC
+            LIMIT :limit
+            """,
+            params,
+        )
+    except Exception:
+        return []
+
+
+def phase11_saved_items(limit=12):
+    user = phase11_user()
+
+    if not user:
+        return []
+
+    ensure_phase11_account_tables()
+
+    try:
+        return fetch_all(
+            """
+            SELECT *
+            FROM saved_items
+            WHERE user_id = :user_id
+              AND COALESCE(saved_status, 'Saved') != 'Removed'
+            ORDER BY id DESC
+            LIMIT :limit
+            """,
+            {"user_id": user["id"], "limit": limit},
+        )
+    except Exception:
+        return []
+
+
+def phase11_profile_claims(limit=8):
+    user = phase11_user()
+
+    if not user:
+        return []
+
+    with engine.connect() as conn:
+        if not phase11_table_exists(conn, "profile_claims"):
+            return []
+
+    try:
+        return fetch_all(
+            """
+            SELECT profile_claims.*,
+                   dancer_profiles.dance_name,
+                   dancer_profiles.real_name
+            FROM profile_claims
+            LEFT JOIN dancer_profiles
+              ON profile_claims.profile_id = dancer_profiles.id
+            WHERE profile_claims.user_id = :user_id
+            ORDER BY profile_claims.id DESC
+            LIMIT :limit
+            """,
+            {"user_id": user["id"], "limit": limit},
+        )
+    except Exception:
+        try:
+            return fetch_all(
+                """
+                SELECT *
+                FROM profile_claims
+                WHERE user_id = :user_id
+                ORDER BY id DESC
+                LIMIT :limit
+                """,
+                {"user_id": user["id"], "limit": limit},
+            )
+        except Exception:
+            return []
+
+
+def phase11_ask_conversations(limit=8):
+    user = phase11_user()
+
+    if not user:
+        return []
+
+    with engine.connect() as conn:
+        if not phase11_table_exists(conn, "ask_conversations"):
+            return []
+
+        columns = phase11_table_columns(conn, "ask_conversations")
+
+    clauses = []
+    params = {"limit": limit}
+
+    if "user_id" in columns:
+        clauses.append("user_id = :user_id")
+        params["user_id"] = user["id"]
+
+    if not clauses:
+        return []
+
+    try:
+        return fetch_all(
+            f"""
+            SELECT *
+            FROM ask_conversations
+            WHERE {' OR '.join(clauses)}
+            ORDER BY id DESC
+            LIMIT :limit
+            """,
+            params,
+        )
+    except Exception:
+        return []
+
+
+def phase11_account_stats():
+    submissions = phase11_recent_submissions(limit=100)
+    saved = phase11_saved_items(limit=100)
+    claims = phase11_profile_claims(limit=100)
+    ask_rows = phase11_ask_conversations(limit=100)
+
+    return {
+        "submissions_count": len(submissions),
+        "saved_count": len(saved),
+        "claims_count": len(claims),
+        "ask_count": len(ask_rows),
+        "linked_profile": phase11_linked_profile(),
+    }
+
+
+def phase11_item_title(item):
+    return phase11_value(item, "item_title", "title", "name", default="Saved Item")
+
+
+def phase11_item_url(item):
+    return phase11_value(item, "item_url", "url", "source_url", default="")
+
+
+def phase11_submission_status(item):
+    return phase11_value(item, "review_status", "status", default="Pending Review")
+
+
+@app.context_processor
+def inject_phase11_account_helpers():
+    return {
+        "phase11_user": phase11_user,
+        "phase11_linked_profile": phase11_linked_profile,
+        "phase11_recent_submissions": phase11_recent_submissions,
+        "phase11_saved_items": phase11_saved_items,
+        "phase11_profile_claims": phase11_profile_claims,
+        "phase11_ask_conversations": phase11_ask_conversations,
+        "phase11_account_stats": phase11_account_stats,
+        "phase11_item_title": phase11_item_title,
+        "phase11_item_url": phase11_item_url,
+        "phase11_submission_status": phase11_submission_status,
+        "phase11_value": phase11_value,
+    }
+
+
+@app.route("/account/dashboard")
+def account_dashboard_phase11():
+    user = phase11_user()
+
+    if not user:
+        return redirect(url_for("account_login", next=url_for("account_dashboard_phase11")))
+
+    return render_template("account_home.html")
+
+
+@app.route("/account/saved-items/<int:saved_item_id>/remove", methods=["POST"])
+def account_remove_saved_item_phase11(saved_item_id):
+    user = phase11_user()
+
+    if not user:
+        return redirect(url_for("account_login"))
+
+    ensure_phase11_account_tables()
+
+    execute_query(
+        """
+        UPDATE saved_items
+        SET saved_status = 'Removed',
+            updated_at = :updated_at
+        WHERE id = :saved_item_id
+          AND user_id = :user_id
+        """,
+        {
+            "saved_item_id": saved_item_id,
+            "user_id": user["id"],
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+        },
+    )
+
+    return redirect(url_for("account_dashboard_phase11"))
+
+
+@app.route("/account/profile-claims/<int:claim_id>/withdraw", methods=["POST"])
+def account_withdraw_profile_claim_phase11(claim_id):
+    user = phase11_user()
+
+    if not user:
+        return redirect(url_for("account_login"))
+
+    ensure_phase11_account_tables()
+
+    with engine.connect() as conn:
+        if not phase11_table_exists(conn, "profile_claims"):
+            return redirect(url_for("account_dashboard_phase11"))
+
+    execute_query(
+        """
+        UPDATE profile_claims
+        SET claim_status = 'Withdrawn',
+            updated_at = :updated_at
+        WHERE id = :claim_id
+          AND user_id = :user_id
+          AND COALESCE(claim_status, 'Pending Review') != 'Approved'
+        """,
+        {
+            "claim_id": claim_id,
+            "user_id": user["id"],
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+        },
+    )
+
+    return redirect(url_for("account_dashboard_phase11"))
+
+
+try:
+    ensure_phase11_account_tables()
+except Exception as exc:
+    print(f"Phase 11 account setup skipped: {exc}")
