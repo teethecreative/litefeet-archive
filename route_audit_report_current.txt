@@ -10,9 +10,12 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /account/anonymous-mode                                      -> toggle_anonymous_mode                         [POST]
 /account/login                                               -> account_login                                 [GET, POST]
 /account/logout                                              -> account_logout                                [GET]
+/account/profile-claims                                      -> submit_profile_claim_phase2                   [POST]
 /account/profile-link                                        -> account_profile_link                          [GET]
 /account/profile-link/<int:profile_id>/request               -> request_profile_link                          [POST]
 /account/profile-visibility                                  -> account_profile_visibility                    [GET, POST]
+/account/save-item                                           -> save_ledger_item                              [POST]
+/account/saved-items/<int:saved_item_id>/delete              -> delete_saved_ledger_item                      [POST]
 /account/signup                                              -> account_signup                                [GET, POST]
 /admin                                                       -> admin_home                                    [GET]
 /admin/activity/dismiss                                      -> dismiss_admin_activity                        [POST]
@@ -104,11 +107,14 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/submit.html:63: <textarea id="event_details" name="event_details" rows="4" placeholder="Add battle categories, performers, judges, DJ, flyer details, or anything people should know."></textarea>
 
 === DYNAMIC ROUTE-LIKE TEMPLATE LINES TO MANUALLY CHECK ===
-/Users/teethecreative/litefeet-archive/templates/account_home.html:24: <a class="button primary" href="{{ url_for('submit_info') }}">Add to the Ledger</a>
-/Users/teethecreative/litefeet-archive/templates/account_home.html:25: <a class="button secondary" href="{{ url_for('ask_archive') }}">Ask Beta</a>
-/Users/teethecreative/litefeet-archive/templates/account_home.html:85: <a class="button small-button secondary" href="{{ url_for('dancers') }}">Find Profile</a>
-/Users/teethecreative/litefeet-archive/templates/account_home.html:114: <a class="button small-button secondary" href="{{ url_for('litefeet_music') }}">Open Music</a>
-/Users/teethecreative/litefeet-archive/templates/account_home.html:131: <a class="button small-button secondary" href="{{ url_for('ask_archive') }}">Open Ask</a>
+/Users/teethecreative/litefeet-archive/templates/account_home.html:25: <a class="button primary" href="{{ url_for('submit_info') }}">Add to the Ledger</a>
+/Users/teethecreative/litefeet-archive/templates/account_home.html:26: <a class="button secondary" href="{{ url_for('ask_archive') }}">Ask Beta</a>
+/Users/teethecreative/litefeet-archive/templates/account_home.html:47: <a class="button small-button primary" href="{{ claimed_profile | profile_url }}">View Profile</a>
+/Users/teethecreative/litefeet-archive/templates/account_home.html:49: <a class="button small-button secondary" href="{{ url_for('admin_person_edit', dancer_id=claimed_profile['id']) }}">Edit Profile</a>
+/Users/teethecreative/litefeet-archive/templates/account_home.html:105: <a class="button small-button secondary" href="{{ url_for('dancers') }}">Find Profile</a>
+/Users/teethecreative/litefeet-archive/templates/account_home.html:125: <form method="POST" action="{{ url_for('delete_saved_ledger_item', saved_item_id=item['id']) }}">
+/Users/teethecreative/litefeet-archive/templates/account_home.html:164: <a class="button small-button secondary" href="{{ url_for('litefeet_music') }}">Open Music</a>
+/Users/teethecreative/litefeet-archive/templates/account_home.html:173: <a class="button small-button secondary" href="{{ url_for('ask_archive') }}">Open Ask</a>
 /Users/teethecreative/litefeet-archive/templates/account_login.html:37: New here? <a href="{{ url_for('account_signup') }}">Create an account</a>.
 /Users/teethecreative/litefeet-archive/templates/account_profile_link.html:15: <a href="{{ url_for('account_profile_visibility') }}" class="button secondary">Request Profile Visibility Change</a>
 /Users/teethecreative/litefeet-archive/templates/account_profile_link.html:48: <form action="{{ url_for('request_profile_link', profile_id=profile['id']) }}" method="post">
@@ -216,12 +222,16 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/dancer_create.html:7: <p><a href="{{ url_for('dancers') }}" class="button secondary">Back to Dancers</a></p>
 /Users/teethecreative/litefeet-archive/templates/dancer_create.html:22: <form class="archive-form" action="{{ url_for('create_dancer_profile') }}" method="post">
 /Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:34: <a class="button primary" href="{{ url_for('submit_info') }}">Submit Correction</a>
-/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:36: <a class="button secondary" href="{{ url_for('admin_person_edit', dancer_id=profile['id']) }}">Edit Profile</a>
-/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:57: <p><a href="{{ profile['source_url'] }}" target="_blank" rel="noopener">Source / Reference</a></p>
-/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:71: <a href="{{ mention['public_url'] }}">{{ mention["title"] }}</a>
-/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:94: <a href="{{ url_for('music_release_detail', item_id=item['id']) }}">{{ item["title"] }}</a>
-/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:148: <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Submit Context</a>
-/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:159: <h3><a href="{{ item | profile_url }}">{{ item["dance_name"] }}</a></h3>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:37: <form method="POST" action="{{ url_for('save_ledger_item') }}" class="inline-profile-form">
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:44: <a class="button secondary" href="{{ url_for('account_login') }}">Log in to Save</a>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:48: <a class="button secondary" href="{{ url_for('admin_person_edit', dancer_id=profile['id']) }}">Edit Profile</a>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:69: <p><a href="{{ profile['source_url'] }}" target="_blank" rel="noopener">Source / Reference</a></p>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:83: <a href="{{ mention['public_url'] }}">{{ mention["title"] }}</a>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:106: <a href="{{ url_for('music_release_detail', item_id=item['id']) }}">{{ item["title"] }}</a>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:160: <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Submit Context</a>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:169: <form method="POST" action="{{ url_for('submit_profile_claim_phase2') }}" class="profile-claim-form">
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:187: <a class="button small-button secondary" href="{{ url_for('account_login') }}">Account Login</a>
+/Users/teethecreative/litefeet-archive/templates/dancer_profile_detail.html:199: <h3><a href="{{ item | profile_url }}">{{ item["dance_name"] }}</a></h3>
 /Users/teethecreative/litefeet-archive/templates/dancers.html:21: <a class="button primary" href="{{ url_for('submit_info') }}">Add / Correct Profile</a>
 /Users/teethecreative/litefeet-archive/templates/dancers.html:27: <a class="button small-button primary" href="{{ url_for('dancers') }}">All People</a>
 /Users/teethecreative/litefeet-archive/templates/dancers.html:30: <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Submit Missing Info</a>

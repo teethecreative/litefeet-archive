@@ -5,8 +5,9 @@
 
 {% block content %}
 {% set dashboard_user = user if user is defined else logged_in_user if logged_in_user is defined else none %}
-{% set account_submissions = submissions if submissions is defined else user_submissions if user_submissions is defined else [] %}
+{% set account_submissions = submissions if submissions is defined else user_submissions if user_submissions is defined else contributions if contributions is defined else [] %}
 {% set account_claims = claims if claims is defined else profile_claims if profile_claims is defined else [] %}
+{% set account_saved_items = saved_items if saved_items is defined else [] %}
 {% set account_feedback = feedback_items if feedback_items is defined else comments if comments is defined else [] %}
 
 <section class="content-section account-dashboard">
@@ -35,6 +36,19 @@
                     <br><strong>Organization:</strong> {{ dashboard_user["organization_name"] }}
                 {% endif %}
             </p>
+        </div>
+    {% endif %}
+
+    {% if claimed_profile %}
+        <div class="account-summary-card">
+            <p class="eyebrow">Claimed Profile</p>
+            <h2>{{ claimed_profile["dance_name"] }}</h2>
+            <div class="hero-actions">
+                <a class="button small-button primary" href="{{ claimed_profile | profile_url }}">View Profile</a>
+                {% if session.get("admin_logged_in") %}
+                    <a class="button small-button secondary" href="{{ url_for('admin_person_edit', dancer_id=claimed_profile['id']) }}">Edit Profile</a>
+                {% endif %}
+            </div>
         </div>
     {% endif %}
 </section>
@@ -71,8 +85,14 @@
             <div class="dashboard-mini-list">
                 {% for claim in account_claims[:5] %}
                     <div>
-                        <h3>{{ claim["profile_name"] or claim["title"] or "Profile claim" }}</h3>
-                        <p class="small-note">{{ claim["status"] or "Pending Review" }}</p>
+                        <h3>{{ claim["dance_name"] or claim["profile_name"] or claim["title"] or "Profile claim" }}</h3>
+                        <p class="small-note">
+                            {{ claim["profile_type"] or "profile" }}
+                            · {{ claim["claim_status"] or claim["status"] or "Pending Review" }}
+                        </p>
+                        {% if claim["claim_reason"] %}
+                            <p>{{ claim["claim_reason"]|truncate(120) }}</p>
+                        {% endif %}
                     </div>
                 {% endfor %}
             </div>
@@ -83,6 +103,36 @@
         {% endif %}
 
         <a class="button small-button secondary" href="{{ url_for('dancers') }}">Find Profile</a>
+    </article>
+
+    <article class="dashboard-card">
+        <p class="eyebrow">Saved</p>
+        <h2>Saved Items</h2>
+
+        {% if account_saved_items %}
+            <div class="dashboard-mini-list">
+                {% for item in account_saved_items[:8] %}
+                    <div>
+                        <h3>{{ item["label"] or item["item_type"] ~ " #" ~ item["item_id"] }}</h3>
+                        <p class="small-note">
+                            {{ item["item_type"] }} · Saved {{ item["created_at"] or "" }}
+                        </p>
+
+                        {% if item["notes"] %}
+                            <p>{{ item["notes"]|truncate(120) }}</p>
+                        {% endif %}
+
+                        <form method="POST" action="{{ url_for('delete_saved_ledger_item', saved_item_id=item['id']) }}">
+                            <button class="button small-button secondary" type="submit">Remove</button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="small-note">
+                Saved dancers, teams, battles, songs, events, and review topics will appear here.
+            </p>
+        {% endif %}
     </article>
 
     <article class="dashboard-card">
@@ -112,14 +162,6 @@
             Your Lab, Battle, Video, thumbs, and 1–10 music feedback will appear here once the account dashboard is wired to music activity.
         </p>
         <a class="button small-button secondary" href="{{ url_for('litefeet_music') }}">Open Music</a>
-    </article>
-
-    <article class="dashboard-card">
-        <p class="eyebrow">Saved</p>
-        <h2>Saved Items</h2>
-        <p class="small-note">
-            Saved dancers, teams, battles, songs, events, and review topics will appear here in a later data pass.
-        </p>
     </article>
 
     <article class="dashboard-card">

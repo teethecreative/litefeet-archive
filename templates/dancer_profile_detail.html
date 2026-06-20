@@ -32,6 +32,18 @@
 
         <div class="profile-actions">
             <a class="button primary" href="{{ url_for('submit_info') }}">Submit Correction</a>
+
+            {% if logged_in_user %}
+                <form method="POST" action="{{ url_for('save_ledger_item') }}" class="inline-profile-form">
+                    <input type="hidden" name="item_type" value="profile">
+                    <input type="hidden" name="item_id" value="{{ profile['id'] }}">
+                    <input type="hidden" name="label" value="{{ profile['dance_name'] }}">
+                    <button class="button secondary" type="submit">Save Profile</button>
+                </form>
+            {% else %}
+                <a class="button secondary" href="{{ url_for('account_login') }}">Log in to Save</a>
+            {% endif %}
+
             {% if session.get("admin_logged_in") %}
                 <a class="button secondary" href="{{ url_for('admin_person_edit', dancer_id=profile['id']) }}">Edit Profile</a>
             {% endif %}
@@ -148,6 +160,34 @@
         <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Submit Context</a>
     </article>
 
+
+    <article class="profile-panel">
+        <p class="eyebrow">Claim</p>
+        <h2>Claim This Profile</h2>
+
+        {% if logged_in_user %}
+            <form method="POST" action="{{ url_for('submit_profile_claim_phase2') }}" class="profile-claim-form">
+                <input type="hidden" name="profile_type" value="dancer">
+                <input type="hidden" name="profile_id" value="{{ profile['id'] }}">
+
+                <label>
+                    Why are you claiming this profile?
+                    <textarea name="claim_reason" rows="4" placeholder="Example: This is my profile, I manage this team, I am helping maintain this record, etc."></textarea>
+                </label>
+
+                <label>
+                    Proof / Reference Link <span class="small-note">(optional)</span>
+                    <input type="url" name="proof_url" placeholder="IG, flyer, profile link, video, or other reference">
+                </label>
+
+                <button class="button primary small-button" type="submit">Submit Claim</button>
+            </form>
+        {% else %}
+            <p class="small-note">Log in to claim this profile or request access.</p>
+            <a class="button small-button secondary" href="{{ url_for('account_login') }}">Account Login</a>
+        {% endif %}
+    </article>
+
     <article class="profile-panel">
         <p class="eyebrow">Related</p>
         <h2>Similar Profiles</h2>
@@ -192,6 +232,15 @@
 
     .profile-about-panel {
         grid-column: 1 / -1;
+    }
+
+    .inline-profile-form {
+        display: inline;
+    }
+
+    .profile-claim-form {
+        display: grid;
+        gap: 10px;
     }
 
     .profile-mini-list {

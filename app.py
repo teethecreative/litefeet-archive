@@ -8828,3 +8828,249 @@ def ask_conversation_detail(conversation_id):
         conversation=conversation,
         messages=messages,
     )
+
+
+# --- Phase 2D profile claims and saved items ---
+@app.context_processor
+def inject_account_phase2_dashboard_data():
+    try:
+        ensure_phase2_ledger_tables()
+
+        user = current_user()
+        if not user:
+            return {
+                "profile_claims": [],
+                "saved_items": [],
+                "user_submissions": [],
+            }
+
+        user_submissions = fetch_all(
+            """
+            SELECT *
+            FROM submissions
+            WHERE contributor_user_id = :user_id
+               OR lower(contact) = lower(:email)
+               OR lower(submitter_name) = lower(:display_name)
+            ORDER BY created_at DESC
+            LIMIT 20
+            """,
+            {
+                "user_id": user["id"],
+                "email": user["email"] or "",
+                "display_name": user["display_name"] or "",
+            },
+        )
+
+        profile_claims = fetch_all(
+            """
+            SELECT profile_claims.*,
+                   dancer_profiles.dance_name,
+                   dancer_profiles.profile_slug,
+                   dancer_profiles.team_affiliation
+            FROM profile_claims
+            LEFT JOIN dancer_profiles
+              ON profile_claims.profile_type = 'dancer'
+             AND profile_claims.profile_id = dancer_profiles.id
+            WHERE profile_claims.user_id = :user_id
+            ORDER BY profile_claims.created_at DESC
+            LIMIT 20
+            """,
+            {"user_id": user["id"]},
+        )
+
+        saved_items = fetch_all(
+            """
+            SELECT *
+            FROM saved_items
+            WHERE user_id = :user_id
+            ORDER BY created_at DESC
+            LIMIT 30
+            """,
+            {"user_id": user["id"]},
+        )
+
+        return {
+            "user_submissions": user_submissions,
+            "profile_claims": profile_claims,
+            "saved_items": saved_items,
+        }
+    except Exception:
+        return {
+            "profile_claims": [],
+            "saved_items": [],
+            "user_submissions": [],
+        }
+
+
+@app.route("/account/profile-claims", methods=["POST"])
+def submit_profile_claim_phase2():
+    ensure_phase2_ledger_tables()
+
+    user = current_user()
+    if not user:
+        return redirect(url_for("account_login"))
+
+    profile_type = request.form.get("profile_type", "dancer").strip() or "dancer"
+    profile_id_raw = request.form.get("profile_id", "").strip()
+    claim_reason = request.form.get("claim_reason", "").strip()
+    proof_url = request.form.get("proof_url", "").strip()
+
+    try:
+        profile_id = int(profile_id_raw)
+    except Exception:
+        return redirect(url_for("dancers"))
+
+    now_value = datetime.now().isoformat(timespec="seconds")
+
+    existing = fetch_all(
+        """
+        SELECT id
+        FROM profile_claims
+        WHERE user_id = :user_id
+          AND profile_type = :profile_type
+          AND profile_id = :profile_id
+          AND claim_status IN ('Pending Review', 'Approved')
+        LIMIT 1
+        """,
+        {
+            "user_id": user["id"],
+            "profile_type": profile_type,
+            "profile_id": profile_id,
+        },
+    )
+
+    if not existing:
+        execute_query(
+            """
+            INSERT INTO profile_claims (
+                user_id,
+                profile_type,
+                profile_id,
+                claimant_name,
+                claimant_contact,
+                claim_reason,
+                proof_url,
+                claim_status,
+                created_at
+            )
+            VALUES (
+                :user_id,
+                :profile_type,
+                :profile_id,
+                :claimant_name,
+                :claimant_contact,
+                :claim_reason,
+                :proof_url,
+                :claim_status,
+                :created_at
+            )
+            """,
+            {
+                "user_id": user["id"],
+                "profile_type": profile_type,
+                "profile_id": profile_id,
+                "claimant_name": user["display_name"] or "",
+                "claimant_contact": user["email"] or "",
+                "claim_reason": claim_reason,
+                "proof_url": proof_url,
+                "claim_status": "Pending Review",
+                "created_at": now_value,
+            },
+        )
+
+    return redirect(request.referrer or url_for("account_home"))
+
+
+@app.route("/account/save-item", methods=["POST"])
+def save_ledger_item():
+    ensure_phase2_ledger_tables()
+
+    user = current_user()
+    if not user:
+        return redirect(url_for("account_login"))
+
+    item_type = request.form.get("item_type", "").strip()
+    item_id_raw = request.form.get("item_id", "").strip()
+    label = request.form.get("label", "").strip()
+    notes = request.form.get("notes", "").strip()
+
+    if not item_type or not item_id_raw:
+        return redirect(request.referrer or url_for("account_home"))
+
+    try:
+        item_id = int(item_id_raw)
+    except Exception:
+        return redirect(request.referrer or url_for("account_home"))
+
+    existing = fetch_all(
+        """
+        SELECT id
+        FROM saved_items
+        WHERE user_id = :user_id
+          AND item_type = :item_type
+          AND item_id = :item_id
+        LIMIT 1
+        """,
+        {
+            "user_id": user["id"],
+            "item_type": item_type,
+            "item_id": item_id,
+        },
+    )
+
+    now_value = datetime.now().isoformat(timespec="seconds")
+
+    if not existing:
+        execute_query(
+            """
+            INSERT INTO saved_items (
+                user_id,
+                item_type,
+                item_id,
+                label,
+                notes,
+                created_at
+            )
+            VALUES (
+                :user_id,
+                :item_type,
+                :item_id,
+                :label,
+                :notes,
+                :created_at
+            )
+            """,
+            {
+                "user_id": user["id"],
+                "item_type": item_type,
+                "item_id": item_id,
+                "label": label,
+                "notes": notes,
+                "created_at": now_value,
+            },
+        )
+
+    return redirect(request.referrer or url_for("account_home"))
+
+
+@app.route("/account/saved-items/<int:saved_item_id>/delete", methods=["POST"])
+def delete_saved_ledger_item(saved_item_id):
+    ensure_phase2_ledger_tables()
+
+    user = current_user()
+    if not user:
+        return redirect(url_for("account_login"))
+
+    execute_query(
+        """
+        DELETE FROM saved_items
+        WHERE id = :saved_item_id
+          AND user_id = :user_id
+        """,
+        {
+            "saved_item_id": saved_item_id,
+            "user_id": user["id"],
+        },
+    )
+
+    return redirect(request.referrer or url_for("account_home"))
