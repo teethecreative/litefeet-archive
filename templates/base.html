@@ -97,8 +97,155 @@
 }
 </style>
 
+
+    {# phase13-public-polish social meta #}
+    {% set phase13_meta = phase13_page_meta_defaults() if phase13_page_meta_defaults is defined else {} %}
+    <meta property="og:site_name" content="{{ phase13_meta.get('site_name', 'The LiteFeet Ledger') }}">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="{{ phase13_current_page_description() if phase13_current_page_description is defined else phase13_meta.get('default_description', 'The LiteFeet Ledger is a community-powered LiteFeet archive.') }}">
+    <meta name="twitter:card" content="summary_large_image">
+
+
+<style id="phase13-public-polish">
+    :root {
+        --ledger-mobile-gap: 12px;
+    }
+
+    .phase13-mobile-bar {
+        display: none;
+    }
+
+    .phase13-public-status {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.82rem;
+        opacity: 0.9;
+    }
+
+    .phase13-nav-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .phase13-nav-links {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .phase13-nav-links a {
+        text-decoration: none;
+    }
+
+    .phase13-mobile-submit {
+        position: fixed;
+        right: 14px;
+        bottom: 14px;
+        z-index: 50;
+        border-radius: 999px;
+        padding: 10px 14px;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+    }
+
+    @media (max-width: 900px) {
+        header,
+        .site-header,
+        .main-header,
+        nav,
+        .navbar,
+        .site-nav {
+            max-width: 100%;
+        }
+
+        header nav,
+        .site-nav,
+        .main-nav,
+        .navbar,
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--ledger-mobile-gap);
+            align-items: center;
+        }
+
+        header nav a,
+        .site-nav a,
+        .main-nav a,
+        .navbar a,
+        .nav-links a {
+            min-height: 38px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .content-section,
+        .homepage-section,
+        main {
+            max-width: 100%;
+        }
+
+        .hero-actions,
+        .section-heading-row {
+            gap: 10px;
+        }
+
+        .hero-actions {
+            flex-wrap: wrap;
+        }
+
+        .hero-actions .button,
+        .button {
+            white-space: normal;
+        }
+
+        table {
+            font-size: 0.92rem;
+        }
+
+        .release-table-wrap,
+        .table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .phase13-mobile-bar {
+            display: flex;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            gap: 8px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            backdrop-filter: blur(14px);
+            background: rgba(0,0,0,0.72);
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .phase13-mobile-bar a {
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+
 </head>
 <body>
+
+{% if phase13_public_nav_links is defined %}
+<div class="phase13-mobile-bar">
+    <a href="{{ phase13_url_for('index', '/') }}">Ledger</a>
+    <a href="{{ phase13_url_for('ask_archive', '/ask') }}">Ask</a>
+    <a href="{{ phase13_url_for('submit_start_phase10a', '/submit/start') }}">Submit</a>
+    <a href="{{ phase13_account_nav_url() }}">{{ phase13_account_nav_label() }}</a>
+</div>
+{% endif %}
+
     <div class="site-shell">
         <header class="site-header">
             <a href="/" class="logo brand-with-logo">
@@ -192,7 +339,12 @@
                 <a href="{{ url_for('account_login') }}">Account Login</a>
                 
             </div>
-        </footer>
+        
+{% if phase13_public_status_line is defined %}
+<p class="phase13-public-status">{{ phase13_public_status_line() }}</p>
+{% endif %}
+
+</footer>
     </div>
 
     <div id="globalNowPlayingBar" class="global-now-playing-bar" hidden>

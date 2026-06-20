@@ -1,258 +1,121 @@
 {% extends "base.html" %}
 
-{% block title %}Submit LiteFeet History, Events, Music & Profiles | LiteFeet Ledger{% endblock %}
-{% block meta_description %}Submit LiteFeet history, dancer profiles, teams, events, battles, music, awards, corrections, and community records to the LiteFeet Ledger.{% endblock %}
+{% block title %}General Submission | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Submit general LiteFeet information, corrections, source links, profile updates, battle notes, event context, music info, or community records to The LiteFeet Ledger.{% endblock %}
 
 {% block content %}
-<section class="content-section">
-    <h1>Submit to the Archive</h1>
+{% set selected_category = request.args.get("category", "general") %}
+{% set suggested_type = phase10_suggested_submission_type(selected_category) %}
 
-    <p>
-        Help build the LiteFeet Ledger by submitting event info, battle results, source links,
-        corrections, award history, dancer details, or context that belongs in the record.
-    </p>
-
-    <div class="notice">
-        <h2>Links only for now</h2>
-        <p>
-            The ledger is not accepting direct uploads yet. Please upload videos, flyers, photos,
-            or documents to another platform first, then paste the link below.
-        </p>
-    </div>
-
-    <form class="archive-form" action="#" method="post">
-        <label for="submission_type">What kind of ledger info are you sharing?</label>
-        <select id="submission_type" name="submission_type">
-            <option value="">Choose a type</option>
-            <option value="event">Event info</option>
-            <option value="battle_result">Battle result</option>
-            <option value="dancer_profile">Dancer profile info</option>
-            <option value="award_info">LiteFeet Awards info</option>
-            <option value="source_link">Source / media link</option>
-            <option value="correction">Correction</option>
-            <option value="historical_claim">Historical claim</option>
-            <option value="move_info">Move / style info</option>
-            <option value="host_affiliation">Host affiliation request</option>
-            <option value="other">Other</option>
-        </select>
-
-        <div id="typePrompt" class="form-note">
-            <h3>Choose a submission type to begin</h3>
+<section class="content-section general-submit-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Submit</p>
+            <h1>General Ledger Submission</h1>
             <p>
-                Different ledger submissions ask for different details. Pick the option that fits what you’re sharing,
-                and the right questions will appear here.
+                Use this for information that does not fit one specific form yet, corrections to existing records,
+                missing source links, or community context.
             </p>
         </div>
 
-        <div class="conditional-section" data-type="event">
-            <h3>Event Info</h3>
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('submit_start_phase10a') }}">Choose Another Type</a>
+            <a class="button secondary" href="{{ url_for('ledger_review') if phase10_endpoint_exists('ledger_review') else '/ledger-review' }}">Ledger Review</a>
+        </div>
+    </div>
+</section>
 
-            <label for="event_title">Event name or short title</label>
-            <input type="text" id="event_title" name="event_title" placeholder="Example: LiteFeet Battle Night, Awards Ceremony, Workshop">
+<section class="homepage-section">
+    {% if error %}
+        <div class="empty-state compact-empty error-state">
+            <h3>Something needs fixing</h3>
+            <p>{{ error }}</p>
+        </div>
+    {% endif %}
 
-            <label for="event_date">Event date</label>
-            <input type="date" id="event_date" name="event_date">
+    <form method="POST" action="{{ url_for('submit_info') }}" class="form-card general-submit-form">
+        <div class="form-grid two-column-form-grid">
+            <label>
+                Submission type
+                <select name="submission_type">
+                    {% for item in phase10_submission_categories() %}
+                        <option value="{{ phase10_suggested_submission_type(item.value) }}" {% if item.value == selected_category %}selected{% endif %}>
+                            {{ item.label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </label>
 
-            <label for="event_location">Event location</label>
-            <input type="text" id="event_location" name="event_location" placeholder="Venue, borough, city, or online location">
+            <label>
+                Title / name
+                <input type="text" name="title" placeholder="What should this record be called?" required>
+            </label>
 
-            <label for="event_host">Event host</label>
-            <input type="text" id="event_host" name="event_host" placeholder="Who hosted or organized the event?">
+            <label>
+                Related to
+                <input type="text" name="related_to" placeholder="Person, team, event, battle, award, release...">
+            </label>
 
-            <label for="event_details">Event details</label>
-            <textarea id="event_details" name="event_details" rows="4" placeholder="Add battle categories, performers, judges, DJ, flyer details, or anything people should know."></textarea>
+            <label>
+                Source / proof link
+                <input type="url" name="source_url" placeholder="Video, flyer, post, article, playlist, etc.">
+            </label>
+
+            <label>
+                Your name / handle
+                <input type="text" name="submitter_name" placeholder="Optional">
+            </label>
+
+            <label>
+                Your role
+                <input type="text" name="submitter_role" placeholder="Dancer, host, producer, viewer, team member...">
+            </label>
+
+            <label>
+                Contact
+                <input type="text" name="contact" placeholder="Optional email or IG">
+            </label>
+
+            <label>
+                Verification status
+                <select name="needs_verification">
+                    <option value="yes">Needs verification</option>
+                    <option value="no">I have a source / proof</option>
+                </select>
+            </label>
         </div>
 
-        <div class="conditional-section" data-type="battle_result">
-            <h3>Battle Result</h3>
+        <label>
+            Details / correction / context
+            <textarea name="details" rows="7" placeholder="Add the full context: what happened, what should be corrected, who was involved, dates, locations, credits, links, or anything that needs review."></textarea>
+        </label>
 
-            <label for="battle_event">Event name</label>
-            <input type="text" id="battle_event" name="battle_event" placeholder="What event did this battle happen at?">
+        <input type="hidden" name="review_status" value="Pending Review">
 
-            <label for="battle_date">Battle date</label>
-            <input type="date" id="battle_date" name="battle_date">
+        <button class="button primary" type="submit">Submit to Ledger</button>
 
-            <label for="dancer_one">Dancer 1</label>
-            <input type="text" id="dancer_one" name="dancer_one" placeholder="First dancer or team">
-
-            <label for="dancer_two">Dancer 2</label>
-            <input type="text" id="dancer_two" name="dancer_two" placeholder="Second dancer or team">
-
-            <label for="winner">Winner</label>
-            <input type="text" id="winner" name="winner" placeholder="Who won?">
-
-            <label for="battle_context">Extra battle context</label>
-            <textarea id="battle_context" name="battle_context" rows="4" placeholder="Round, category, judges, score, controversy, recap notes, or anything that helps verify the result."></textarea>
-        </div>
-
-        <div class="conditional-section" data-type="dancer_profile">
-            <h3>Dancer Profile Info</h3>
-
-            <label for="dancer_name">Dancer name or alias</label>
-            <input type="text" id="dancer_name" name="dancer_name" placeholder="Name, alias, or known stage name">
-
-            <label for="crew">Crew or affiliation</label>
-            <input type="text" id="crew" name="crew" placeholder="Crew, team, or affiliation if known">
-
-            <label for="location">Borough, city, or scene</label>
-            <input type="text" id="location" name="location" placeholder="Example: Harlem, Bronx, Brooklyn, NYC, etc.">
-
-            <label for="known_for">Known for</label>
-            <textarea id="known_for" name="known_for" rows="4" placeholder="Battles, moves, era, style, influence, awards, hosting, judging, or community impact."></textarea>
-        </div>
-
-        <div class="conditional-section" data-type="award_info">
-            <h3>LiteFeet Awards Info</h3>
-
-            <label for="award_year">Award year</label>
-            <input type="text" id="award_year" name="award_year" placeholder="Example: 2024">
-
-            <label for="award_category">Award category</label>
-            <input type="text" id="award_category" name="award_category" placeholder="Example: Dancer of the Year, Battle of the Year">
-
-            <label for="award_winner">Winner</label>
-            <input type="text" id="award_winner" name="award_winner" placeholder="Who won?">
-
-            <label for="award_context">Nominees or extra context</label>
-            <textarea id="award_context" name="award_context" rows="4" placeholder="List nominees, ceremony details, clips, presenters, or anything that helps complete the awards record."></textarea>
-        </div>
-
-        <div class="conditional-section" data-type="source_link">
-            <h3>Source / Media Link</h3>
-
-            <label for="source_title">What is this source?</label>
-            <input type="text" id="source_title" name="source_title" placeholder="Example: battle video, event flyer, recap post, interview, award clip">
-
-            <label for="source_context">What does the link show?</label>
-            <textarea id="source_context" name="source_context" rows="4" placeholder="Explain what the ledger should use this link for."></textarea>
-
-            <label for="source_platform">Platform</label>
-            <input type="text" id="source_platform" name="source_platform" placeholder="Example: YouTube, Instagram, TikTok, Google Drive, website">
-        </div>
-
-        <div class="conditional-section" data-type="correction">
-            <h3>Correction</h3>
-
-            <label for="correction_target">What needs to be corrected?</label>
-            <input type="text" id="correction_target" name="correction_target" placeholder="Page, dancer, event, battle, award, claim, or source">
-
-            <label for="current_info">What does the archive currently say?</label>
-            <textarea id="current_info" name="current_info" rows="3" placeholder="Paste or describe the current information"></textarea>
-
-            <label for="corrected_info">What should it say instead?</label>
-            <textarea id="corrected_info" name="corrected_info" rows="4" placeholder="Explain the correction clearly and include context."></textarea>
-        </div>
-
-        <div class="conditional-section" data-type="historical_claim">
-            <h3>Historical Claim</h3>
-
-            <label for="claim_text">What is the claim?</label>
-            <textarea id="claim_text" name="claim_text" rows="4" placeholder="Example: This dancer popularized this move, this crew started this event, this battle happened in this year, etc."></textarea>
-
-            <label for="claim_confidence">How confident are you?</label>
-            <select id="claim_confidence" name="claim_confidence">
-                <option value="">Choose one</option>
-                <option value="verified">I have a strong source</option>
-                <option value="memory">I remember it / community memory</option>
-                <option value="debatable">It may be debatable</option>
-                <option value="needs_review">It needs review</option>
-            </select>
-        </div>
-
-        <div class="conditional-section" data-type="move_info">
-            <h3>Move / Style Info</h3>
-
-            <label for="move_name">Move or style name</label>
-            <input type="text" id="move_name" name="move_name" placeholder="Name of the move, step, style, or variation">
-
-            <label for="move_origin">Origin or context</label>
-            <textarea id="move_origin" name="move_origin" rows="4" placeholder="Who used it, where it came from, who popularized it, or how it evolved."></textarea>
-
-            <label for="move_example">Example link</label>
-            <input type="url" id="move_example" name="move_example" placeholder="Video or post showing the move">
-        </div>
-
-        <div class="conditional-section" data-type="host_affiliation">
-            <h3>Host Affiliation Request</h3>
-
-            <label for="host_name">Host or organization name</label>
-            <input type="text" id="host_name" name="host_name" placeholder="Event host, brand, collective, or organization">
-
-            <label for="host_social">Host social or website</label>
-            <input type="text" id="host_social" name="host_social" placeholder="Instagram, website, Linktree, etc.">
-
-            <label for="host_request">What are you requesting?</label>
-            <textarea id="host_request" name="host_request" rows="4" placeholder="Example: I want my events listed, I want to submit official results, I want a host profile, etc."></textarea>
-        </div>
-
-        <div class="conditional-section" data-type="other">
-            <h3>Other Archive Info</h3>
-
-            <label for="other_details">What should we know?</label>
-            <textarea id="other_details" name="other_details" rows="4" placeholder="Explain what you want to add to the ledger."></textarea>
-        </div>
-
-        <div id="sharedFields" class="shared-fields">
-            <h3>Source & Submitter Info</h3>
-
-            <p class="small-note">Source links and contact info are optional, but they help the ledger review and verify submissions.</p>
-
-            <label for="related_to">Related person, event, battle, award, crew, or move</label>
-            <input
-                type="text"
-                id="related_to"
-                name="related_to"
-                placeholder="Example: LiteFeet Awards, dancer name, event host, battle name, crew name"
-            >
-
-            <label for="source_url">Source link</label>
-            <input
-                type="url"
-                id="source_url"
-                name="source_url"
-                placeholder="Paste a YouTube, Instagram, TikTok, Google Drive, article, flyer, or other source link"
-            >
-
-            <label for="submitter_name">Your name or alias</label>
-            <input
-                type="text"
-                id="submitter_name"
-                name="submitter_name"
-                placeholder="How should we credit or identify your submission?"
-            >
-
-            <label for="submitter_role">Your role in the community</label>
-            <select id="submitter_role" name="submitter_role">
-                <option value="">Choose a role</option>
-                <option value="dancer">Dancer</option>
-                <option value="host">Event host</option>
-                <option value="judge">Judge</option>
-                <option value="supporter">Supporter / Fan / Spectator</option>
-                <option value="dj">DJ</option>
-                <option value="videographer">Videographer / media</option>
-                <option value="award_team">LiteFeet Awards team</option>
-                <option value="fan">Fan / supporter</option>
-                <option value="community_member">Community member</option>
-                <option value="other">Other</option>
-            </select>
-
-            <label for="contact">Your contact link or email</label>
-            <input
-                type="text"
-                id="contact"
-                name="contact"
-                placeholder="Optional: Instagram, email, or another way to reach you if we need more context"
-            >
-<div class="form-note">
-                <h3>Before this goes public</h3>
-                <p>
-                    Every submission is reviewed before it appears in the ledger. Source links may be shown as
-                    hyperlinks, preview cards, or embedded media depending on the platform and review status.
-                </p>
-            </div>
-
-            <button type="submit" class="button primary">Submit for Review</button>
-        </div>
+        <p class="small-note">
+            Tip: if this is a battle, award, calendar item, team, or music project, the Submission Hub can send you to a more specific form.
+        </p>
     </form>
 </section>
+
+<style>
+    .general-submit-form {
+        display: grid;
+        gap: 16px;
+    }
+
+    .two-column-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+        .two-column-form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}
