@@ -1,20 +1,21 @@
 {% extends "base.html" %}
 
 {% block title %}Battles | The LiteFeet Ledger{% endblock %}
-{% block meta_description %}Browse LiteFeet battle records, videos, official winners, judges, events, debated battles, and community input in The LiteFeet Ledger.{% endblock %}
+{% block meta_description %}Browse LiteFeet battle records, winners, videos, event links, debated records, and community-supported battle history.{% endblock %}
 
 {% block content %}
-{% set battle_records = structured_battle_records if structured_battle_records is defined else battles if battles is defined else battle_rows if battle_rows is defined else records if records is defined else [] %}
-{% set video_records = latest_battle_videos if latest_battle_videos is defined else battle_videos if battle_videos is defined else media_items if media_items is defined else [] %}
+{% set selected_type = phase7_selected_battle_filter() %}
+{% set selected_view = phase7_selected_battle_view() %}
+{% set search_query = phase7_battle_search_query() %}
+{% set battle_rows = battle_records if battle_records is defined and battle_records else phase7_fetch_battle_records() %}
 
 <section class="content-section battles-page">
     <div class="section-heading-row">
         <div>
             <p class="eyebrow">Battles</p>
-            <h1>LiteFeet Battles</h1>
+            <h1>Battle Records</h1>
             <p>
-                Battle records separate official event results, video proof, judge decisions,
-                community context, debated outcomes, and missing details.
+                Browse LiteFeet battle records, winners, matchups, event connections, videos, and records that still need confirmation.
             </p>
         </div>
 
@@ -25,174 +26,206 @@
     </div>
 </section>
 
+<section class="homepage-section battle-filter-section">
+    <form method="GET" action="{{ url_for('battles') }}" class="battle-filter-form">
+        <label>
+            Search
+            <input type="search" name="q" value="{{ search_query }}" placeholder="Dancer, event, winner, battle type...">
+        </label>
+
+        <label>
+            Type
+            <select name="type">
+                {% for option in phase7_battle_filter_options() %}
+                    <option value="{{ option.value }}" {% if selected_type == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>
+            View
+            <select name="view">
+                {% for option in phase7_battle_view_options() %}
+                    <option value="{{ option.value }}" {% if selected_view == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <button class="button secondary" type="submit">Apply</button>
+        <a class="button secondary" href="{{ url_for('battles') }}">Reset</a>
+    </form>
+</section>
+
 <section class="homepage-section">
     <div class="section-heading-row">
         <div>
             <p class="eyebrow">Records</p>
-            <h2>Structured Battle Records</h2>
+            <h2>Battle Archive</h2>
         </div>
     </div>
 
-    {% if battle_records %}
-        <div class="release-table-wrap">
-            <table class="release-table battle-table">
-                <thead>
-                    <tr>
-                        <th>Battle</th>
-                        <th>Type</th>
-                        <th>Official Winner</th>
-                        <th>Judges</th>
-                        <th>Community</th>
-                        <th>Status</th>
-                        <th></th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for battle in battle_records %}
+    {% if battle_rows %}
+        {% if selected_view == "list" %}
+            <div class="release-table-wrap">
+                <table class="release-table battle-list-table">
+                    <thead>
                         <tr>
-                            <td>
-                                <strong>
-                                    {{ battle["competitor_one"] or "Competitor 1" }}
-                                    vs
-                                    {{ battle["competitor_two"] or "Competitor 2" }}
-                                </strong>
-
-                                {% if battle["competitor_one_team"] or battle["competitor_two_team"] %}
-                                    <br>
-                                    <span class="small-note">
-                                        {{ battle["competitor_one_team"] or "No team" }}
-                                        vs
-                                        {{ battle["competitor_two_team"] or "No team" }}
-                                    </span>
-                                {% endif %}
-                            </td>
-
-                            <td>{{ battle["battle_type"] or "Battle" }}</td>
-                            <td>{{ battle["official_winner"] or battle["winner"] or "Needs result" }}</td>
-                            <td>{{ battle["judges_text"] or "—" }}</td>
-                            <td>{{ battle["community_input_status"] or "None" }}</td>
-                            <td>{{ battle["review_status"] or "Needs Review" }}</td>
-                            <td>
-                                <a class="button small-button secondary" href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">
-                                    Open
-                                </a>
-                            </td>
+                            <th>Battle</th>
+                            <th>Event</th>
+                            <th>Type</th>
+                            <th>Winner</th>
+                            <th>Status</th>
+                            <th></th>
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+
+                    <tbody>
+                        {% for battle in battle_rows %}
+                            {% if phase7_battle_matches_filter(battle, selected_type, search_query) %}
+                                <tr>
+                                    <td>{{ phase7_battle_title(battle) }}</td>
+                                    <td>
+                                        {{ phase7_battle_event_name(battle) }}
+                                        {% if phase7_battle_date(battle) %}
+                                            <br><span class="small-note">{{ phase7_battle_date(battle) }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ phase7_battle_type(battle) }}</td>
+                                    <td>{{ phase7_battle_winner(battle) or "Needs confirmation" }}</td>
+                                    <td>{{ phase7_battle_status(battle) }}</td>
+                                    <td>
+                                        <a class="button small-button secondary" href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">Open</a>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="battle-card-grid {{ 'compact-battle-grid' if selected_view == 'compact' else '' }}">
+                {% for battle in battle_rows %}
+                    {% if phase7_battle_matches_filter(battle, selected_type, search_query) %}
+                        {% set badges = phase7_battle_badges(battle) %}
+
+                        <article class="battle-card">
+                            <div class="battle-card-topline">
+                                <p class="eyebrow">{{ phase7_battle_type(battle) }}</p>
+                                <span class="battle-status-pill">{{ phase7_battle_status(battle) }}</span>
+                            </div>
+
+                            <h3>
+                                <a href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">
+                                    {{ phase7_battle_title(battle) }}
+                                </a>
+                            </h3>
+
+                            {% if phase7_battle_event_name(battle) %}
+                                <p><strong>Event:</strong> {{ phase7_battle_event_name(battle) }}</p>
+                            {% endif %}
+
+                            {% if phase7_battle_date(battle) %}
+                                <p><strong>Date:</strong> {{ phase7_battle_date(battle) }}</p>
+                            {% endif %}
+
+                            <p><strong>Winner:</strong> {{ phase7_battle_winner(battle) or "Needs confirmation" }}</p>
+
+                            {% if phase7_battle_notes(battle) and selected_view != "compact" %}
+                                <p>{{ phase7_battle_notes(battle)[:260] }}{% if phase7_battle_notes(battle)|length > 260 %}...{% endif %}</p>
+                            {% endif %}
+
+                            {% if badges %}
+                                <div class="battle-badge-row">
+                                    {% for badge in badges %}
+                                        <span>{{ badge }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <div class="hero-actions">
+                                <a class="button small-button secondary" href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">Details</a>
+                                {% if phase7_battle_video_url(battle) %}
+                                    <a class="button small-button secondary" href="{{ phase7_battle_video_url(battle) }}" target="_blank" rel="noopener">Watch</a>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
     {% else %}
         <div class="empty-state compact-empty">
-            <h3>No structured battle records yet.</h3>
-            <p>
-                Add a battle record to start tracking competitors, teams, winner, official winner,
-                judges, video proof, debate status, and review status.
-            </p>
+            <h3>No battle records yet.</h3>
+            <p>Add known matchups, winners, videos, event context, or disputed records.</p>
             <a class="button primary" href="{{ url_for('battle_submit_phase2') }}">Add Battle Record</a>
         </div>
     {% endif %}
 </section>
 
-<section class="homepage-section">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Watch</p>
-            <h2>Battle Video Playlist</h2>
-        </div>
-    </div>
-
-    {% if video_records %}
-        <div class="video-feed-grid compact-video-playlist">
-            {% for item in video_records %}
-                <article class="media-card video-card">
-                    {% set embed_url = item["url"] | media_embed_url if item["url"] else "" %}
-
-                    {% if embed_url %}
-                        <iframe
-                            src="{{ embed_url }}"
-                            title="{{ item['title'] }}"
-                            loading="lazy"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowfullscreen>
-                        </iframe>
-                    {% elif item["url"] %}
-                        <div class="media-placeholder">
-                            <a href="{{ item['url'] }}" target="_blank" rel="noopener">Open Video</a>
-                        </div>
-                    {% else %}
-                        <div class="media-placeholder">Video link needed</div>
-                    {% endif %}
-
-                    <div class="media-card-body">
-                        <p class="media-meta">
-                            {{ item["platform"] or item["url"]|media_platform }}
-                            {% if item["release_date"] %} · {{ item["release_date"]|ledger_date }}{% endif %}
-                        </p>
-                        <h3>{{ item["title"] or "Untitled battle video" }}</h3>
-
-                        {% if item["event_name"] %}
-                            <p><strong>Event:</strong> {{ item["event_name"] }}</p>
-                        {% endif %}
-                    </div>
-                </article>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty-state compact-empty">
-            <h3>No battle videos loaded here yet.</h3>
-            <p>Battle videos, recaps, and proof links will appear here once they are connected.</p>
-        </div>
-    {% endif %}
-</section>
-
-<section class="homepage-section battles-info-grid">
-    <article>
-        <p class="eyebrow">Official Winner</p>
-        <h2>Event result first</h2>
-        <p>
-            The official winner should reflect what the event judges decided, even if community discussion
-            later adds disagreement or context.
-        </p>
-    </article>
-
-    <article>
-        <p class="eyebrow">Debated Battles</p>
-        <h2>Not erased</h2>
-        <p>
-            Debated outcomes should be marked clearly with community context, disagreement, comments,
-            corrections, and proof links.
-        </p>
-    </article>
-
-    <article>
-        <p class="eyebrow">Battle Types</p>
-        <h2>1v1 / 2v2 / Team</h2>
-        <p>
-            Battle display supports solo battles, 2v2 battles, team battles, royal rumbles,
-            elimination formats, and special event formats.
-        </p>
-    </article>
-</section>
-
 <style>
-    .battles-info-grid {
+    .battle-filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: end;
+    }
+
+    .battle-filter-form label {
+        min-width: 190px;
+    }
+
+    .battle-card-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
     }
 
-    .battles-info-grid article {
+    .compact-battle-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .battle-card {
         border: 1px solid var(--border-color, rgba(255,255,255,0.12));
         border-radius: 16px;
         padding: 16px;
         background: var(--card-bg, rgba(255,255,255,0.04));
+        display: grid;
+        gap: 10px;
     }
 
-    @media (max-width: 900px) {
-        .battles-info-grid {
+    .battle-card-topline,
+    .battle-badge-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .battle-badge-row {
+        justify-content: flex-start;
+    }
+
+    .battle-status-pill,
+    .battle-badge-row span {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.16));
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 0.78rem;
+    }
+
+    @media (max-width: 1000px) {
+        .battle-card-grid,
+        .compact-battle-grid {
             grid-template-columns: 1fr;
+        }
+
+        .battle-filter-form {
+            display: grid;
         }
     }
 </style>

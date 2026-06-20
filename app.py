@@ -14079,3 +14079,419 @@ try:
     ensure_phase6d_music_project_columns()
 except Exception as exc:
     print(f"Phase 6D music project setup skipped: {exc}")
+
+
+# --- Phase 7A + 7B + 7C battles batch ---
+def phase7_table_exists(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+    rows = conn.execute(
+        text("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = :table_name
+            LIMIT 1
+        """),
+        {"table_name": table_name},
+    ).fetchall()
+    return bool(rows)
+
+
+def phase7_table_columns(conn, table_name):
+    if "ledger_table_columns" in globals():
+        return ledger_table_columns(conn, table_name)
+
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def phase7_add_column_if_missing(conn, table_name, column_name, column_sql):
+    if not phase7_table_exists(conn, table_name):
+        return
+
+    columns = phase7_table_columns(conn, table_name)
+
+    if column_name in columns:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+
+
+def ensure_phase7_battle_tables():
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS battle_records (
+                    id SERIAL PRIMARY KEY,
+                    event_name TEXT,
+                    event_date TEXT,
+                    battle_type TEXT,
+                    competitor_one TEXT,
+                    competitor_two TEXT,
+                    official_winner TEXT,
+                    winner TEXT,
+                    result_text TEXT,
+                    judges_text TEXT,
+                    video_url TEXT,
+                    source_url TEXT,
+                    notes TEXT,
+                    review_status TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+        else:
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS battle_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    event_name TEXT,
+                    event_date TEXT,
+                    battle_type TEXT,
+                    competitor_one TEXT,
+                    competitor_two TEXT,
+                    official_winner TEXT,
+                    winner TEXT,
+                    result_text TEXT,
+                    judges_text TEXT,
+                    video_url TEXT,
+                    source_url TEXT,
+                    notes TEXT,
+                    review_status TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+
+        for column_name, column_sql in [
+            ("event_name", "TEXT"),
+            ("event_date", "TEXT"),
+            ("battle_type", "TEXT"),
+            ("competitor_one", "TEXT"),
+            ("competitor_two", "TEXT"),
+            ("official_winner", "TEXT"),
+            ("winner", "TEXT"),
+            ("result_text", "TEXT"),
+            ("judges_text", "TEXT"),
+            ("video_url", "TEXT"),
+            ("source_url", "TEXT"),
+            ("notes", "TEXT"),
+            ("review_status", "TEXT"),
+            ("created_at", "TEXT"),
+            ("updated_at", "TEXT"),
+        ]:
+            phase7_add_column_if_missing(conn, "battle_records", column_name, column_sql)
+
+
+def phase7_row_to_dict(row):
+    try:
+        return dict(row._mapping)
+    except Exception:
+        return dict(row)
+
+
+def phase7_value(row, *keys, default=""):
+    if not row:
+        return default
+
+    for key in keys:
+        try:
+            if key in row.keys() and row[key] not in (None, ""):
+                return row[key]
+        except Exception:
+            pass
+
+        try:
+            value = row.get(key)
+            if value not in (None, ""):
+                return value
+        except Exception:
+            pass
+
+    return default
+
+
+def phase7_fetch_battle_records(limit=300):
+    ensure_phase7_battle_tables()
+
+    try:
+        return fetch_all(
+            """
+            SELECT *
+            FROM battle_records
+            ORDER BY
+                COALESCE(event_date, created_at, updated_at, '') DESC,
+                id DESC
+            LIMIT :limit
+            """,
+            {"limit": limit},
+        )
+    except Exception:
+        return []
+
+
+def phase7_fetch_battle_record(battle_id):
+    ensure_phase7_battle_tables()
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM battle_records
+        WHERE id = :battle_id
+        LIMIT 1
+        """,
+        {"battle_id": battle_id},
+    )
+
+    return rows[0] if rows else None
+
+
+def phase7_battle_title(battle):
+    title = phase7_value(battle, "title", "battle_title", default="")
+
+    if title:
+        return title
+
+    one = phase7_value(battle, "competitor_one", "dancer_one", "person_one", default="Competitor 1")
+    two = phase7_value(battle, "competitor_two", "dancer_two", "person_two", default="Competitor 2")
+
+    return f"{one} vs {two}"
+
+
+def phase7_battle_type(battle):
+    raw = str(phase7_value(battle, "battle_type", "type", "category", default="")).strip()
+
+    if raw:
+        return raw
+
+    title = phase7_battle_title(battle).lower()
+    notes = str(phase7_value(battle, "notes", "result_text", "event_name", default="")).lower()
+    merged = f"{title} {notes}"
+
+    if "2v2" in merged or "2 vs 2" in merged:
+        return "2v2"
+    if "crew" in merged or "team" in merged:
+        return "Crew Battle"
+    if "bonus" in merged:
+        return "Bonus Battle"
+    if "main event" in merged:
+        return "Main Event"
+    if "elimination" in merged:
+        return "Elimination"
+    if "cypher" in merged:
+        return "Cypher"
+    if "producer" in merged:
+        return "Producer Battle"
+
+    return "1v1"
+
+
+def phase7_battle_winner(battle):
+    return phase7_value(battle, "official_winner", "winner", "result", default="")
+
+
+def phase7_battle_status(battle):
+    status = phase7_value(battle, "review_status", "status", default="")
+
+    if status:
+        return status
+
+    if phase7_battle_winner(battle):
+        return "Community Supported"
+
+    return "Needs Verification"
+
+
+def phase7_battle_event_name(battle):
+    return phase7_value(battle, "event_name", "event_title", "related_event", default="")
+
+
+def phase7_battle_date(battle):
+    return phase7_value(battle, "event_date", "date", "battle_date", "created_at", default="")
+
+
+def phase7_battle_video_url(battle):
+    return phase7_value(battle, "video_url", "source_url", "url", default="")
+
+
+def phase7_battle_source_url(battle):
+    return phase7_value(battle, "source_url", "video_url", "url", default="")
+
+
+def phase7_battle_notes(battle):
+    return phase7_value(battle, "notes", "result_text", "description", "details", default="")
+
+
+def phase7_battle_filter_options():
+    return [
+        {"value": "all", "label": "All Battles"},
+        {"value": "1v1", "label": "1v1"},
+        {"value": "2v2", "label": "2v2"},
+        {"value": "crew", "label": "Crew / Team"},
+        {"value": "main event", "label": "Main Events"},
+        {"value": "bonus", "label": "Bonus Battles"},
+        {"value": "elimination", "label": "Elimination"},
+        {"value": "cypher", "label": "Cypher"},
+        {"value": "producer", "label": "Producer Battles"},
+        {"value": "needs verification", "label": "Needs Verification"},
+        {"value": "verified", "label": "Verified / Supported"},
+    ]
+
+
+def phase7_battle_view_options():
+    return [
+        {"value": "cards", "label": "Cards"},
+        {"value": "list", "label": "List"},
+        {"value": "compact", "label": "Compact"},
+    ]
+
+
+def phase7_selected_battle_filter():
+    selected = request.args.get("type", "all").strip().lower()
+    allowed = {item["value"] for item in phase7_battle_filter_options()}
+
+    if selected not in allowed:
+        selected = "all"
+
+    return selected
+
+
+def phase7_selected_battle_view():
+    selected = request.args.get("view", "cards").strip().lower()
+    allowed = {item["value"] for item in phase7_battle_view_options()}
+
+    if selected not in allowed:
+        selected = "cards"
+
+    return selected
+
+
+def phase7_battle_search_query():
+    return request.args.get("q", "").strip()
+
+
+def phase7_battle_matches_filter(battle, selected_type=None, query=None):
+    selected_type = selected_type or phase7_selected_battle_filter()
+    query = query if query is not None else phase7_battle_search_query()
+
+    battle_type = phase7_battle_type(battle).lower()
+    status = phase7_battle_status(battle).lower()
+
+    if selected_type != "all":
+        if selected_type == "crew":
+            if "crew" not in battle_type and "team" not in battle_type:
+                return False
+        elif selected_type == "needs verification":
+            if "needs" not in status and "pending" not in status:
+                return False
+        elif selected_type == "verified":
+            if "verified" not in status and "community supported" not in status:
+                return False
+        elif selected_type not in battle_type:
+            return False
+
+    if query:
+        merged = " ".join(
+            str(value or "")
+            for value in [
+                phase7_battle_title(battle),
+                phase7_battle_event_name(battle),
+                phase7_battle_winner(battle),
+                phase7_battle_type(battle),
+                phase7_battle_status(battle),
+                phase7_battle_notes(battle),
+                phase7_battle_source_url(battle),
+            ]
+        ).lower()
+
+        if query.lower() not in merged:
+            return False
+
+    return True
+
+
+def phase7_battle_badges(battle):
+    badges = [
+        phase7_battle_type(battle),
+        phase7_battle_status(battle),
+    ]
+
+    event_name = phase7_battle_event_name(battle)
+    if event_name:
+        badges.append(event_name)
+
+    clean = []
+    seen = set()
+
+    for badge in badges:
+        badge = str(badge or "").strip()
+        if not badge:
+            continue
+
+        key = badge.lower()
+        if key in seen:
+            continue
+
+        seen.add(key)
+        clean.append(badge)
+
+    return clean[:5]
+
+
+@app.context_processor
+def inject_phase7_battle_helpers():
+    return {
+        "phase7_fetch_battle_records": phase7_fetch_battle_records,
+        "phase7_fetch_battle_record": phase7_fetch_battle_record,
+        "phase7_battle_title": phase7_battle_title,
+        "phase7_battle_type": phase7_battle_type,
+        "phase7_battle_winner": phase7_battle_winner,
+        "phase7_battle_status": phase7_battle_status,
+        "phase7_battle_event_name": phase7_battle_event_name,
+        "phase7_battle_date": phase7_battle_date,
+        "phase7_battle_video_url": phase7_battle_video_url,
+        "phase7_battle_source_url": phase7_battle_source_url,
+        "phase7_battle_notes": phase7_battle_notes,
+        "phase7_battle_filter_options": phase7_battle_filter_options,
+        "phase7_battle_view_options": phase7_battle_view_options,
+        "phase7_selected_battle_filter": phase7_selected_battle_filter,
+        "phase7_selected_battle_view": phase7_selected_battle_view,
+        "phase7_battle_search_query": phase7_battle_search_query,
+        "phase7_battle_matches_filter": phase7_battle_matches_filter,
+        "phase7_battle_badges": phase7_battle_badges,
+    }
+
+
+try:
+    ensure_phase7_battle_tables()
+except Exception as exc:
+    print(f"Phase 7 battle setup skipped: {exc}")

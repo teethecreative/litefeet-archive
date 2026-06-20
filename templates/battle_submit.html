@@ -1,119 +1,134 @@
 {% extends "base.html" %}
 
 {% block title %}Add Battle Record | The LiteFeet Ledger{% endblock %}
-{% block meta_description %}Add a structured LiteFeet battle record with competitors, teams, winner, judges, video proof, event context, and review status.{% endblock %}
+{% block meta_description %}Submit a LiteFeet battle record, matchup, winner, video, event connection, and verification context to The LiteFeet Ledger.{% endblock %}
 
 {% block content %}
 <section class="content-section battle-submit-page">
-    <p class="eyebrow">Battles</p>
-    <h1>Add Battle Record</h1>
-    <p>
-        Add a structured battle record. This also creates a reviewable Ledger submission so the battle
-        can be checked, corrected, verified, disputed, or community-supported later.
-    </p>
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Battles</p>
+            <h1>Add Battle Record</h1>
+            <p>
+                Submit a matchup, winner, video, event connection, judges, or battle context.
+                If something is not fully confirmed, mark it as needing verification.
+            </p>
+        </div>
 
-    <form method="POST" class="archive-form battle-form">
-        <div class="form-grid">
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('battles') }}">Back to Battles</a>
+            <a class="button secondary" href="{{ url_for('submit_info') }}">General Submission</a>
+        </div>
+    </div>
+</section>
+
+<section class="homepage-section">
+    {% if error %}
+        <div class="empty-state compact-empty error-state">
+            <h3>Something needs fixing</h3>
+            <p>{{ error }}</p>
+        </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('battle_submit_phase2') }}" class="form-card battle-submit-form">
+        <div class="form-grid two-column-form-grid">
             <label>
-                Battle Type
+                Competitor 1
+                <input type="text" name="competitor_one" placeholder="Dancer / team / producer" required>
+            </label>
+
+            <label>
+                Competitor 2
+                <input type="text" name="competitor_two" placeholder="Dancer / team / producer" required>
+            </label>
+
+            <label>
+                Battle type
                 <select name="battle_type">
                     <option value="1v1">1v1</option>
                     <option value="2v2">2v2</option>
-                    <option value="Team Battle">Team Battle</option>
-                    <option value="Royal Rumble">Royal Rumble</option>
+                    <option value="Crew Battle">Crew / Team Battle</option>
+                    <option value="Main Event">Main Event</option>
+                    <option value="Bonus Battle">Bonus Battle</option>
                     <option value="Elimination">Elimination</option>
+                    <option value="Cypher">Cypher</option>
+                    <option value="Producer Battle">Producer Battle</option>
                     <option value="Other">Other</option>
                 </select>
             </label>
 
             <label>
-                Competitor One
-                <input type="text" name="competitor_one" placeholder="Dancer, duo, team, or side one" required>
+                Official winner
+                <input type="text" name="official_winner" placeholder="Leave blank if unconfirmed">
             </label>
 
             <label>
-                Competitor Two
-                <input type="text" name="competitor_two" placeholder="Dancer, duo, team, or side two" required>
+                Event name
+                <input type="text" name="event_name" placeholder="Body Bag 10, Money in the Bank, etc.">
             </label>
 
             <label>
-                Competitor One Team <span class="small-note">(optional)</span>
-                <input type="text" name="competitor_one_team" placeholder="Team / crew / affiliation">
+                Event date
+                <input type="text" name="event_date" placeholder="MM/DD/YYYY, year, or unknown">
             </label>
 
             <label>
-                Competitor Two Team <span class="small-note">(optional)</span>
-                <input type="text" name="competitor_two_team" placeholder="Team / crew / affiliation">
+                Video link
+                <input type="url" name="video_url" placeholder="YouTube, IG, TikTok, etc.">
             </label>
 
             <label>
-                Winner <span class="small-note">(if known)</span>
-                <input type="text" name="winner" placeholder="Winner or result">
+                Source / proof link
+                <input type="url" name="source_url" placeholder="Flyer, post, event page, etc.">
             </label>
 
             <label>
-                Official Winner <span class="small-note">(judge decision)</span>
-                <input type="text" name="official_winner" placeholder="Official event result">
+                Review status
+                <select name="review_status">
+                    <option value="Pending Review">Pending Review</option>
+                    <option value="Needs Verification">Needs Verification</option>
+                    <option value="Community Supported">Community Supported</option>
+                    <option value="Verified">Verified</option>
+                    <option value="Disputed">Disputed</option>
+                </select>
             </label>
 
             <label>
-                Event Name <span class="small-note">(optional)</span>
-                <input type="text" name="event_name" placeholder="Example: Body Bag 10">
-            </label>
-
-            <label>
-                Event Date <span class="small-note">(optional)</span>
-                <input type="date" name="event_date">
-            </label>
-
-            <label>
-                Video / Proof Link <span class="small-note">(optional)</span>
-                <input type="url" name="video_url" placeholder="YouTube, IG, recap, post, or source link">
+                Submitter name
+                <input type="text" name="submitter_name" placeholder="Optional">
             </label>
         </div>
 
         <label>
-            Judges <span class="small-note">(optional)</span>
-            <textarea name="judges_text" rows="3" placeholder="List judges, host notes, panel, or decision context."></textarea>
+            Judges / result context
+            <textarea name="judges_text" rows="4" placeholder="Judges, score, tie-break, crowd decision, official result, etc."></textarea>
         </label>
 
         <label>
-            Community Input Status
-            <select name="community_input_status">
-                <option value="None">None</option>
-                <option value="Community Supported">Community Supported</option>
-                <option value="Debated">Debated</option>
-                <option value="Needs Context">Needs Context</option>
-                <option value="Disputed">Disputed</option>
-            </select>
+            Notes
+            <textarea name="notes" rows="5" placeholder="Anything else people should know: event context, disputed info, who hosted, what needs verification..."></textarea>
         </label>
 
-        <label>
-            Context Note <span class="small-note">(optional)</span>
-            <textarea name="context_note" rows="5" placeholder="Add details, controversy, round notes, missing names, score context, or what needs to be verified."></textarea>
-        </label>
-
-        <div class="form-grid">
-            <label>
-                Your Name / Alias <span class="small-note">(optional)</span>
-                <input type="text" name="submitter_name" placeholder="Name, dancer name, host name, or alias">
-            </label>
-
-            <label>
-                Your Role <span class="small-note">(optional)</span>
-                <input type="text" name="submitter_role" placeholder="Dancer, host, judge, organizer, supporter, etc.">
-            </label>
-
-            <label>
-                Contact <span class="small-note">(optional)</span>
-                <input type="text" name="contact" placeholder="Email or IG if follow-up is needed">
-            </label>
-        </div>
-
-        <div class="hero-actions">
-            <button type="submit" class="button primary">Save Battle Record</button>
-            <a class="button secondary" href="{{ url_for('battles') }}">Back to Battles</a>
-        </div>
+        <button class="button primary" type="submit">Submit Battle Record</button>
     </form>
 </section>
+
+<style>
+    .battle-submit-form {
+        display: grid;
+        gap: 16px;
+    }
+
+    .two-column-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+        .two-column-form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}

@@ -302,17 +302,23 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/base.html:170: <a href="{{ url_for('account_signup') }}">Create Account</a>
 /Users/teethecreative/litefeet-archive/templates/base.html:178: <form method="POST" action="{{ url_for('admin_return_to_admin') }}">
 /Users/teethecreative/litefeet-archive/templates/base.html:192: <a href="{{ url_for('account_login') }}">Account Login</a>
-/Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:23: <a class="button secondary" href="{{ url_for('battles') }}">Back to Battles</a>
-/Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:24: <a class="button primary" href="{{ url_for('submit_info') }}">Add Context</a>
-/Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:64: <p><a href="{{ battle['video_url'] }}" target="_blank" rel="noopener">Open video or proof link</a></p>
-/Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:97: <a class="button small-button secondary" href="{{ url_for('community_perspective_detail_phase2g', perspective_id=item['id']) }}">Open</a>
-/Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:107: <form method="POST" action="{{ url_for('submit_community_perspective_phase2g') }}" class="form-card community-perspective-form">
-/Users/teethecreative/litefeet-archive/templates/battle_submit.html:115: <a class="button secondary" href="{{ url_for('battles') }}">Back to Battles</a>
-/Users/teethecreative/litefeet-archive/templates/battles.html:22: <a class="button primary" href="{{ url_for('battle_submit_phase2') }}">Add Battle Record</a>
-/Users/teethecreative/litefeet-archive/templates/battles.html:23: <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Battle Info</a>
-/Users/teethecreative/litefeet-archive/templates/battles.html:77: <a class="button small-button secondary" href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">
-/Users/teethecreative/litefeet-archive/templates/battles.html:93: <a class="button primary" href="{{ url_for('battle_submit_phase2') }}">Add Battle Record</a>
-/Users/teethecreative/litefeet-archive/templates/battles.html:122: <a href="{{ item['url'] }}" target="_blank" rel="noopener">Open Video</a>
+/Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:16: <a class="button secondary" href="{{ url_for('battles') }}">Back to Battles</a>
+/Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:17: <a class="button primary" href="{{ url_for('submit_info') }}">Add Context</a>
+/Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:74: <p><a href="{{ phase7_battle_video_url(battle) }}" target="_blank" rel="noopener">Watch video</a></p>
+/Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:77: <p><a href="{{ phase7_battle_source_url(battle) }}" target="_blank" rel="noopener">Open source</a></p>
+/Users/teethecreative/litefeet-archive/templates/battle_record_detail.html:97: <form method="POST" action="{{ url_for('submit_community_perspective_phase2g') }}" class="form-card community-perspective-form">
+/Users/teethecreative/litefeet-archive/templates/battle_submit.html:19: <a class="button secondary" href="{{ url_for('battles') }}">Back to Battles</a>
+/Users/teethecreative/litefeet-archive/templates/battle_submit.html:20: <a class="button secondary" href="{{ url_for('submit_info') }}">General Submission</a>
+/Users/teethecreative/litefeet-archive/templates/battle_submit.html:33: <form method="POST" action="{{ url_for('battle_submit_phase2') }}" class="form-card battle-submit-form">
+/Users/teethecreative/litefeet-archive/templates/battles.html:23: <a class="button primary" href="{{ url_for('battle_submit_phase2') }}">Add Battle Record</a>
+/Users/teethecreative/litefeet-archive/templates/battles.html:24: <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Battle Info</a>
+/Users/teethecreative/litefeet-archive/templates/battles.html:30: <form method="GET" action="{{ url_for('battles') }}" class="battle-filter-form">
+/Users/teethecreative/litefeet-archive/templates/battles.html:59: <a class="button secondary" href="{{ url_for('battles') }}">Reset</a>
+/Users/teethecreative/litefeet-archive/templates/battles.html:101: <a class="button small-button secondary" href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">Open</a>
+/Users/teethecreative/litefeet-archive/templates/battles.html:122: <a href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">
+/Users/teethecreative/litefeet-archive/templates/battles.html:150: <a class="button small-button secondary" href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">Details</a>
+/Users/teethecreative/litefeet-archive/templates/battles.html:152: <a class="button small-button secondary" href="{{ phase7_battle_video_url(battle) }}" target="_blank" rel="noopener">Watch</a>
+/Users/teethecreative/litefeet-archive/templates/battles.html:164: <a class="button primary" href="{{ url_for('battle_submit_phase2') }}">Add Battle Record</a>
 /Users/teethecreative/litefeet-archive/templates/community_perspective_detail.html:20: <a class="button secondary" href="{{ url_for('verify_claims') }}">Ledger Review</a>
 /Users/teethecreative/litefeet-archive/templates/community_perspective_detail.html:21: <a class="button primary" href="{{ related_url }}">Open Related Record</a>
 /Users/teethecreative/litefeet-archive/templates/community_perspective_detail.html:38: <p><a href="{{ perspective['source_url'] }}" target="_blank" rel="noopener">Open source</a></p>
