@@ -5742,6 +5742,19 @@ def admin_merge_people(primary_id, duplicate_id):
 
 
 @app.context_processor
+
+
+# --- Global fetch_one fallback hotfix ---
+# Some newer routes/context processors expect fetch_one.
+# Keep it globally available and safe so one missing helper does not crash public pages.
+def fetch_one(query, params=None):
+    try:
+        rows = fetch_all(query, params or {})
+        return rows[0] if rows else None
+    except Exception as exc:
+        print(f"fetch_one fallback failed: {exc}")
+        return None
+
 def inject_nav_account_context():
     user = current_user()
 
@@ -17329,3 +17342,15 @@ def admin_error_logs():
         print(f"Could not fetch error logs: {exc}")
 
     return render_template("admin_error_logs.html", errors=errors)
+
+
+# --- Remove accidental fetch_one context processor registration ---
+# Safety cleanup in case fetch_one was accidentally registered as a context processor.
+try:
+    for _processor_key, _processors in app.template_context_processors.items():
+        app.template_context_processors[_processor_key] = [
+            _processor for _processor in _processors
+            if getattr(_processor, "__name__", "") != "fetch_one"
+        ]
+except Exception as exc:
+    print(f"fetch_one context processor cleanup skipped: {exc}")
