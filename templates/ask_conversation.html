@@ -77,6 +77,49 @@
 </section>
 
 
+
+<section class="homepage-section ask-feedback-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Feedback</p>
+            <h2>Was this Ask answer useful?</h2>
+        </div>
+    </div>
+
+    {% set assistant_message_id = latest_assistant_message_id(conversation_id) %}
+    {% set feedback_rows = ask_feedback_for_conversation(conversation_id) %}
+
+    <form method="POST" action="{{ url_for('submit_ask_feedback_phase3e', conversation_id=conversation_id) }}" class="form-card ask-feedback-form">
+        <input type="hidden" name="message_id" value="{{ assistant_message_id or '' }}">
+
+        <div class="ask-feedback-buttons">
+            <button class="button small-button secondary" type="submit" name="rating_label" value="Helpful">Helpful</button>
+            <button class="button small-button secondary" type="submit" name="rating_label" value="Wrong">Wrong</button>
+            <button class="button small-button secondary" type="submit" name="rating_label" value="Missing Context">Missing context</button>
+            <button class="button small-button secondary" type="submit" name="rating_label" value="Needs Review">Needs review</button>
+        </div>
+
+        <label>
+            Extra note <span class="small-note">(optional)</span>
+            <textarea name="feedback_text" rows="3" placeholder="What should be corrected, verified, or added?"></textarea>
+        </label>
+    </form>
+
+    {% if feedback_rows %}
+        <div class="ask-feedback-list">
+            {% for item in feedback_rows %}
+                <article class="ask-feedback-item">
+                    <p><strong>{{ item["rating_label"] }}</strong></p>
+                    {% if item["feedback_text"] %}
+                        <p>{{ item["feedback_text"] }}</p>
+                    {% endif %}
+                    <p class="small-note">{{ item["created_at"] }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    {% endif %}
+</section>
+
 <section class="homepage-section ask-source-cards-section">
     <div class="section-heading-row">
         <div>
@@ -147,6 +190,31 @@
 </section>
 
 <style>
+
+    .ask-feedback-form {
+        display: grid;
+        gap: 12px;
+    }
+
+    .ask-feedback-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ask-feedback-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+    }
+
+    .ask-feedback-item {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 14px;
+        padding: 12px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
     .ask-message-stack {
         display: grid;
         gap: 14px;

@@ -11300,3 +11300,235 @@ def phase3a_build_ask_answer(question, results):
     )
 
     return "\n".join(lines)
+
+
+# --- Phase 3E Ask feedback ---
+def ensure_phase3e_ask_feedback_table():
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS ask_feedback (
+                    id SERIAL PRIMARY KEY,
+                    conversation_id INTEGER,
+                    message_id INTEGER,
+                    user_id INTEGER,
+                    visitor_key TEXT,
+                    rating_label TEXT,
+                    feedback_text TEXT,
+                    created_at TEXT
+                )
+                """)
+            )
+        else:
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS ask_feedback (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    conversation_id INTEGER,
+                    message_id INTEGER,
+                    user_id INTEGER,
+                    visitor_key TEXT,
+                    rating_label TEXT,
+                    feedback_text TEXT,
+                    created_at TEXT
+                )
+                """)
+            )
+
+
+def phase3e_insert_feedback(values):
+    ensure_phase3e_ask_feedback_table()
+
+    columns = list(values.keys())
+    columns_sql = ", ".join(columns)
+    values_sql = ", ".join(f":{column}" for column in columns)
+
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            result = conn.execute(
+                text(f"INSERT INTO ask_feedback ({columns_sql}) VALUES ({values_sql}) RETURNING id"),
+                values,
+            )
+            return result.scalar()
+
+        result = conn.execute(
+            text(f"INSERT INTO ask_feedback ({columns_sql}) VALUES ({values_sql})"),
+            values,
+        )
+        return result.lastrowid
+
+
+def phase3e_visitor_key():
+    key = ""
+
+    try:
+        key = ask_beta_user_key()
+    except Exception:
+        key = session.get("visitor_key", "")
+
+    if isinstance(key, (tuple, list)):
+        key = next((str(item) for item in key if item), "")
+
+    return str(key or "")
+
+
+def fetch_ask_feedback_for_conversation(conversation_id):
+    ensure_phase3e_ask_feedback_table()
+
+    return fetch_all(
+        """
+        SELECT *
+        FROM ask_feedback
+        WHERE conversation_id = :conversation_id
+        ORDER BY created_at DESC, id DESC
+        """,
+        {"conversation_id": conversation_id},
+    )
+
+
+def fetch_latest_assistant_message_id(conversation_id):
+    ensure_phase2_ledger_tables()
+
+    columns = set()
+
+    try:
+        with engine.connect() as conn:
+            if "ledger_table_columns" in globals():
+                columns = ledger_table_columns(conn, "ask_messages")
+            elif maintenance_uses_postgres():
+                rows = conn.execute(
+                    text("""
+                        SELECT column_name
+                        FROM information_schema.columns
+                        WHERE table_name = 'ask_messages'
+                    """)
+                ).fetchall()
+                columns = {row[0] for row in rows}
+            else:
+                rows = conn.execute(text("PRAGMA table_info(ask_messages)")).fetchall()
+                columns = {row[1] for row in rows}
+    except Exception:
+        columns = set()
+
+    role_clauses = []
+
+    for column_name in ["sender", "role", "message_role", "sender_type"]:
+        if column_name in columns:
+            role_clauses.append(f"{column_name} = 'assistant'")
+
+    if role_clauses:
+        role_sql = " OR ".join(role_clauses)
+        query = f"""
+            SELECT id
+            FROM ask_messages
+            WHERE conversation_id = :conversation_id
+              AND ({role_sql})
+            ORDER BY id DESC
+            LIMIT 1
+        """
+    else:
+        query = """
+            SELECT id
+            FROM ask_messages
+            WHERE conversation_id = :conversation_id
+            ORDER BY id DESC
+            LIMIT 1
+        """
+
+    rows = fetch_all(query, {"conversation_id": conversation_id})
+    return rows[0]["id"] if rows else None
+
+
+@app.context_processor
+def inject_phase3e_ask_feedback_helpers():
+    return {
+        "ask_feedback_for_conversation": fetch_ask_feedback_for_conversation,
+        "latest_assistant_message_id": fetch_latest_assistant_message_id,
+    }
+
+
+@app.route("/ask/conversations/<int:conversation_id>/feedback", methods=["POST"])
+def submit_ask_feedback_phase3e(conversation_id):
+    ensure_phase3e_ask_feedback_table()
+
+    conversation = None
+
+    if "fetch_ask_conversation" in globals():
+        try:
+            conversation = fetch_ask_conversation(conversation_id)
+        except Exception:
+            conversation = None
+
+    if not conversation:
+        rows = fetch_all(
+            """
+            SELECT *
+            FROM ask_conversations
+            WHERE id = :conversation_id
+            LIMIT 1
+            """,
+            {"conversation_id": conversation_id},
+        )
+        conversation = rows[0] if rows else None
+
+    if not conversation:
+        return redirect(url_for("ask_archive"))
+
+    user = current_user()
+    is_admin = bool(session.get("admin_logged_in"))
+
+    can_view = is_admin
+
+    if "can_view_ask_conversation" in globals():
+        try:
+            can_view = can_view or bool(can_view_ask_conversation(conversation))
+        except Exception:
+            can_view = can_view or bool(user)
+    else:
+        can_view = can_view or bool(user)
+
+    if not can_view:
+        return redirect(url_for("account_login", next=url_for("ask_conversation_detail", conversation_id=conversation_id)))
+
+    rating_label = request.form.get("rating_label", "").strip()
+    feedback_text = request.form.get("feedback_text", "").strip()
+    message_id = request.form.get("message_id", "").strip()
+
+    allowed = {
+        "Helpful",
+        "Wrong",
+        "Missing Context",
+        "Needs Review",
+    }
+
+    if rating_label not in allowed:
+        rating_label = "Needs Review"
+
+    try:
+        message_id_value = int(message_id) if message_id else None
+    except Exception:
+        message_id_value = None
+
+    if not message_id_value:
+        message_id_value = fetch_latest_assistant_message_id(conversation_id)
+
+    phase3e_insert_feedback(
+        {
+            "conversation_id": conversation_id,
+            "message_id": message_id_value,
+            "user_id": user["id"] if user else None,
+            "visitor_key": phase3e_visitor_key(),
+            "rating_label": rating_label,
+            "feedback_text": feedback_text,
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+        }
+    )
+
+    return redirect(url_for("ask_conversation_detail", conversation_id=conversation_id))
+
+
+try:
+    ensure_phase3e_ask_feedback_table()
+except Exception as exc:
+    print(f"Phase 3E Ask feedback setup skipped: {exc}")
