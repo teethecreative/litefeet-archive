@@ -50,6 +50,7 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /admin/music/release/<int:item_id>/edit                      -> admin_music_release_edit                      [GET, POST]
 /admin/people/<int:dancer_id>/edit                           -> admin_person_edit                             [GET, POST]
 /admin/people/<int:primary_id>/merge/<int:duplicate_id>      -> admin_merge_people                            [POST]
+/admin/performance                                           -> admin_performance_phase14                     [GET]
 /admin/phase2-moderation                                     -> admin_phase2_moderation                       [GET]
 /admin/phase2/ask-conversations/<int:conversation_id>/status -> admin_phase2_ask_conversation_status          [POST]
 /admin/phase2/battle-records/<int:battle_id>/status          -> admin_phase2_battle_record_status             [POST]
@@ -213,6 +214,8 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/admin_music_feedback.html:84: <a href="{{ url_for('music_release_detail', item_id=release_id) }}">
 /Users/teethecreative/litefeet-archive/templates/admin_music_feedback.html:124: <form method="POST" action="{{ url_for('admin_music_feedback_status_phase6c', feedback_id=item['id']) }}" class="inline-admin-form">
 /Users/teethecreative/litefeet-archive/templates/admin_music_project_edit.html:82: <td><a href="{{ url_for('admin_music_release_edit', item_id=track['id']) }}">Edit Track</a></td>
+/Users/teethecreative/litefeet-archive/templates/admin_performance.html:18: <a class="button secondary" href="{{ url_for('admin_home') }}">Command Center</a>
+/Users/teethecreative/litefeet-archive/templates/admin_performance.html:19: <a class="button primary" href="{{ url_for('admin_deploy_status_phase2i') }}">Deploy Status</a>
 /Users/teethecreative/litefeet-archive/templates/admin_person_edit.html:8: <a href="{{ profile | profile_url }}" class="small-note">← Back to Profile</a>
 /Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:18: <a class="button secondary" href="{{ url_for('admin_home') }}">Admin Dashboard</a>
 /Users/teethecreative/litefeet-archive/templates/admin_phase2_moderation.html:19: <a class="button primary" href="{{ url_for('verify_claims') }}">Ledger Review</a>

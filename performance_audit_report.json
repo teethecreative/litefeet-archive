@@ -1,0 +1,277 @@
+{
+  "generated_at": "2026-06-20 04:09:08",
+  "database": "sqlite",
+  "results": [
+    {
+      "path": "/healthz",
+      "status": 200,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "min_ms": 0.43,
+      "median_ms": 0.46,
+      "max_ms": 0.57,
+      "avg_size_bytes": 2,
+      "timing_header_ms": "0.01",
+      "expected": [
+        200
+      ],
+      "ok": true
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "min_ms": 13.1,
+      "median_ms": 14.0,
+      "max_ms": 14.27,
+      "avg_size_bytes": 13049,
+      "timing_header_ms": "13.29",
+      "expected": [
+        200,
+        302,
+        503
+      ],
+      "ok": true
+    },
+    {
+      "path": "/ask",
+      "status": 302,
+      "statuses": [
+        302,
+        302,
+        302,
+        302
+      ],
+      "min_ms": 0.5,
+      "median_ms": 0.54,
+      "max_ms": 0.63,
+      "avg_size_bytes": 189,
+      "timing_header_ms": "",
+      "expected": [
+        200,
+        302,
+        503
+      ],
+      "ok": true
+    },
+    {
+      "path": "/events",
+      "status": 200,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "min_ms": 12.81,
+      "median_ms": 13.46,
+      "max_ms": 13.87,
+      "avg_size_bytes": 12281,
+      "timing_header_ms": "12.54",
+      "expected": [
+        200,
+        302,
+        503
+      ],
+      "ok": true
+    },
+    {
+      "path": "/people/dancers",
+      "status": 200,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "min_ms": 12.8,
+      "median_ms": 13.15,
+      "max_ms": 14.97,
+      "avg_size_bytes": 10468,
+      "timing_header_ms": "11.75",
+      "expected": [
+        200,
+        302,
+        503
+      ],
+      "ok": true
+    },
+    {
+      "path": "/people/producers",
+      "status": 200,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "min_ms": 12.91,
+      "median_ms": 13.44,
+      "max_ms": 13.81,
+      "avg_size_bytes": 9144,
+      "timing_header_ms": "12.32",
+      "expected": [
+        200,
+        302,
+        503
+      ],
+      "ok": true
+    },
+    {
+      "path": "/people/teams",
+      "status": 200,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "min_ms": 13.82,
+      "median_ms": 14.4,
+      "max_ms": 14.6,
+      "avg_size_bytes": 11758,
+      "timing_header_ms": "13.71",
+      "expected": [
+        200,
+        302,
+        503
+      ],
+      "ok": true
+    },
+    {
+      "path": "/litefeet-music",
+      "status": 200,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "min_ms": 13.75,
+      "median_ms": 14.16,
+      "max_ms": 14.39,
+      "avg_size_bytes": 12074,
+      "timing_header_ms": "12.9",
+      "expected": [
+        200,
+        302,
+        503
+      ],
+      "ok": true
+    },
+    {
+      "path": "/battles",
+      "status": 302,
+      "statuses": [
+        302,
+        302,
+        302,
+        302
+      ],
+      "min_ms": 0.57,
+      "median_ms": 0.68,
+      "max_ms": 1.02,
+      "avg_size_bytes": 189,
+      "timing_header_ms": "",
+      "expected": [
+        200,
+        302,
+        503
+      ],
+      "ok": true
+    },
+    {
+      "path": "/awards",
+      "status": 302,
+      "statuses": [
+        302,
+        302,
+        302,
+        302
+      ],
+      "min_ms": 0.57,
+      "median_ms": 0.76,
+      "max_ms": 1.77,
+      "avg_size_bytes": 189,
+      "timing_header_ms": "",
+      "expected": [
+        200,
+        302,
+        503
+      ],
+      "ok": true
+    },
+    {
+      "path": "/submit/start",
+      "status": 200,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "min_ms": 12.86,
+      "median_ms": 13.18,
+      "max_ms": 13.78,
+      "avg_size_bytes": 13191,
+      "timing_header_ms": "11.93",
+      "expected": [
+        200,
+        302,
+        503
+      ],
+      "ok": true
+    },
+    {
+      "path": "/about",
+      "status": 200,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "min_ms": 12.75,
+      "median_ms": 13.03,
+      "max_ms": 13.19,
+      "avg_size_bytes": 12317,
+      "timing_header_ms": "12.04",
+      "expected": [
+        200,
+        302,
+        503
+      ],
+      "ok": true
+    },
+    {
+      "path": "/account/login",
+      "status": 200,
+      "statuses": [
+        200,
+        200,
+        200,
+        200
+      ],
+      "min_ms": 12.7,
+      "median_ms": 12.84,
+      "max_ms": 13.03,
+      "avg_size_bytes": 8088,
+      "timing_header_ms": "11.96",
+      "expected": [
+        200,
+        302
+      ],
+      "ok": true
+    }
+  ],
+  "failures": []
+}

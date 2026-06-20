@@ -16634,3 +16634,271 @@ try:
     ensure_phase13_music_feedback_compat_columns()
 except Exception as exc:
     print(f"Phase 13 music feedback compatibility skipped: {exc}")
+
+
+# --- Phase 14A + 14B + 14C speed cleanup batch ---
+def phase14_admin_required():
+    if not current_user_is_admin():
+        return redirect(url_for("admin_login"))
+    return None
+
+
+def phase14_perf_counter():
+    return __import__("time").perf_counter()
+
+
+@app.before_request
+def phase14_request_timer_start():
+    try:
+        request.environ["phase14_request_start"] = phase14_perf_counter()
+    except Exception:
+        pass
+
+
+@app.after_request
+def phase14_add_timing_header(response):
+    try:
+        started = request.environ.get("phase14_request_start")
+        if started:
+            elapsed_ms = round((phase14_perf_counter() - started) * 1000, 2)
+            response.headers["X-Ledger-Response-Time-ms"] = str(elapsed_ms)
+    except Exception:
+        pass
+
+    return response
+
+
+def phase14_table_exists(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+    rows = conn.execute(
+        text("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = :table_name
+            LIMIT 1
+        """),
+        {"table_name": table_name},
+    ).fetchall()
+    return bool(rows)
+
+
+def phase14_table_columns(conn, table_name):
+    if "ledger_table_columns" in globals():
+        return ledger_table_columns(conn, table_name)
+
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def phase14_index_name(table_name, columns):
+    raw = "idx_phase14_" + table_name + "_" + "_".join(columns)
+    clean = "".join(ch if ch.isalnum() or ch == "_" else "_" for ch in raw)
+    return clean[:58]
+
+
+def phase14_add_index(conn, table_name, columns):
+    if not phase14_table_exists(conn, table_name):
+        return False
+
+    existing_columns = phase14_table_columns(conn, table_name)
+
+    for column in columns:
+        if column not in existing_columns:
+            return False
+
+    index_name = phase14_index_name(table_name, columns)
+    column_sql = ", ".join(columns)
+
+    conn.execute(text(f"CREATE INDEX IF NOT EXISTS {index_name} ON {table_name} ({column_sql})"))
+    return True
+
+
+def ensure_phase14_performance_indexes():
+    index_plan = [
+        ("submissions", ["submission_type"]),
+        ("submissions", ["review_status"]),
+        ("submissions", ["created_at"]),
+        ("submissions", ["submission_type", "review_status"]),
+
+        ("dancer_profiles", ["status"]),
+        ("dancer_profiles", ["dance_name"]),
+        ("dancer_profiles", ["profile_slug"]),
+        ("dancer_profiles", ["team_affiliation"]),
+
+        ("media_items", ["media_type"]),
+        ("media_items", ["status"]),
+        ("media_items", ["release_date"]),
+        ("media_items", ["created_at"]),
+        ("media_items", ["media_type", "status"]),
+
+        ("music_feedback", ["media_item_id"]),
+        ("music_feedback", ["item_id"]),
+        ("music_feedback", ["release_id"]),
+        ("music_feedback", ["created_at"]),
+
+        ("calendar_item_metadata", ["submission_id"]),
+        ("calendar_item_metadata", ["calendar_type"]),
+        ("calendar_item_metadata", ["visibility_status"]),
+        ("calendar_item_metadata", ["review_status"]),
+
+        ("battle_records", ["review_status"]),
+        ("battle_records", ["battle_type"]),
+        ("battle_records", ["event_date"]),
+
+        ("award_records", ["review_status"]),
+        ("award_records", ["award_year"]),
+        ("award_records", ["organizer"]),
+        ("award_records", ["category"]),
+
+        ("team_records", ["review_status"]),
+        ("team_records", ["team_name"]),
+        ("team_records", ["status"]),
+
+        ("community_perspectives", ["related_type"]),
+        ("community_perspectives", ["related_id"]),
+        ("community_perspectives", ["perspective_status"]),
+
+        ("ask_conversations", ["user_id"]),
+        ("ask_conversations", ["status"]),
+        ("ask_conversations", ["created_at"]),
+
+        ("ask_messages", ["conversation_id"]),
+
+        ("ask_feedback", ["conversation_id"]),
+        ("ask_feedback", ["feedback_status"]),
+
+        ("profile_claims", ["user_id"]),
+        ("profile_claims", ["profile_id"]),
+        ("profile_claims", ["claim_status"]),
+
+        ("saved_items", ["user_id"]),
+        ("saved_items", ["saved_status"]),
+    ]
+
+    created_or_confirmed = []
+
+    with engine.begin() as conn:
+        for table_name, columns in index_plan:
+            try:
+                if phase14_add_index(conn, table_name, columns):
+                    created_or_confirmed.append(f"{table_name}({', '.join(columns)})")
+            except Exception as exc:
+                print(f"Phase 14 index skipped for {table_name}({columns}): {exc}")
+
+    return created_or_confirmed
+
+
+def phase14_table_count(table_name):
+    try:
+        with engine.connect() as conn:
+            if not phase14_table_exists(conn, table_name):
+                return 0
+
+            return int(conn.execute(text(f"SELECT COUNT(*) FROM {table_name}")).scalar() or 0)
+    except Exception:
+        return 0
+
+
+def phase14_database_snapshot():
+    tables = [
+        "submissions",
+        "archive_users",
+        "dancer_profiles",
+        "media_items",
+        "music_feedback",
+        "ask_conversations",
+        "ask_messages",
+        "ask_feedback",
+        "profile_claims",
+        "saved_items",
+        "calendar_item_metadata",
+        "battle_records",
+        "award_records",
+        "team_records",
+        "community_perspectives",
+    ]
+
+    return [
+        {
+            "table": table_name,
+            "count": phase14_table_count(table_name),
+        }
+        for table_name in tables
+    ]
+
+
+def phase14_performance_notes():
+    return [
+        "If local routes are fast but Render is slow, hosting cold starts or plan limits are likely.",
+        "If one route is slow locally, optimize that route/template before upgrading Render.",
+        "If all public pages are slow locally, reduce repeated database calls and heavy template loops.",
+        "If pages are fast after warmup but slow on first hit, caching or Render plan changes may help.",
+    ]
+
+
+@app.context_processor
+def inject_phase14_performance_helpers():
+    return {
+        "phase14_database_snapshot": phase14_database_snapshot,
+        "phase14_performance_notes": phase14_performance_notes,
+    }
+
+
+@app.route("/admin/performance")
+def admin_performance_phase14():
+    gate = phase14_admin_required()
+    if gate:
+        return gate
+
+    indexes = ensure_phase14_performance_indexes()
+
+    return render_template(
+        "admin_performance.html",
+        database_snapshot=phase14_database_snapshot(),
+        indexes=indexes,
+        notes=phase14_performance_notes(),
+    )
+
+
+try:
+    ensure_phase14_performance_indexes()
+except Exception as exc:
+    print(f"Phase 14 performance indexes skipped: {exc}")
+
+
+# --- Phase 14 admin quick link override ---
+def phase12_admin_quick_links():
+    return [
+        {"label": "Deploy Status", "endpoint": "admin_deploy_status_phase2i", "fallback": "/admin/deploy-status"},
+        {"label": "Performance", "endpoint": "admin_performance_phase14", "fallback": "/admin/performance"},
+        {"label": "Maintenance", "endpoint": "admin_maintenance", "fallback": "/admin/maintenance"},
+        {"label": "Phase 2 Review", "endpoint": "admin_phase2_moderation", "fallback": "/admin/phase2"},
+        {"label": "Ask Feedback", "endpoint": "admin_ask_feedback_phase3f", "fallback": "/admin/ask-feedback"},
+        {"label": "Profile Corrections", "endpoint": "admin_profile_corrections_phase4e", "fallback": "/admin/profile-corrections"},
+        {"label": "Calendar Review", "endpoint": "admin_calendar_review_phase5c", "fallback": "/admin/calendar-review"},
+        {"label": "Music Feedback", "endpoint": "admin_music_feedback_phase6c", "fallback": "/admin/music-feedback"},
+    ]

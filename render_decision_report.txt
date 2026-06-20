@@ -1,0 +1,9 @@
+=== Render / Performance Decision Report ===
+database: sqlite
+generated_at: 2026-06-20 04:09:08
+
+Decision: LOCAL CODE LOOKS OK
+Reason: no 500s and no local route median crossed 800ms.
+
+If the live site still feels slow, the likely causes are Render cold starts, free/low-tier instance limits, database latency, or external assets.
+Next step: compare this local report against live browser load times. If live is much slower than local, upgrading Render is reasonable.

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Performance | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Performance and database health tools for The LiteFeet Ledger backend.{% endblock %}
+
+{% block content %}
+<section class="content-section admin-performance-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Backend</p>
+            <h1>Performance</h1>
+            <p>
+                Database counts, index cleanup, and speed notes for deciding whether the issue is code, data, templates, or hosting.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('admin_home') }}">Command Center</a>
+            <a class="button primary" href="{{ url_for('admin_deploy_status_phase2i') }}">Deploy Status</a>
+        </div>
+    </div>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Database</p>
+            <h2>Table Snapshot</h2>
+        </div>
+    </div>
+
+    <div class="performance-grid">
+        {% for item in database_snapshot %}
+            <article>
+                <p class="eyebrow">{{ item.table }}</p>
+                <h3>{{ item.count }}</h3>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Indexes</p>
+            <h2>Performance Indexes</h2>
+            <p>These indexes help common pages search and filter faster.</p>
+        </div>
+    </div>
+
+    {% if indexes %}
+        <div class="performance-list">
+            {% for item in indexes %}
+                <p>{{ item }}</p>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No indexes reported.</h3>
+            <p>This can happen if the database is empty or the indexes already exist.</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Decision Notes</p>
+            <h2>Render Upgrade Logic</h2>
+        </div>
+    </div>
+
+    <div class="performance-list">
+        {% for note in notes %}
+            <p>{{ note }}</p>
+        {% endfor %}
+    </div>
+</section>
+
+<style>
+    .performance-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .performance-grid article,
+    .performance-list {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .performance-list {
+        display: grid;
+        gap: 8px;
+    }
+
+    .performance-list p {
+        margin: 0;
+        border-top: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        padding-top: 8px;
+    }
+
+    .performance-list p:first-child {
+        border-top: 0;
+        padding-top: 0;
+    }
+
+    @media (max-width: 1000px) {
+        .performance-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

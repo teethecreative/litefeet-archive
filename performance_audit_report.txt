@@ -1,0 +1,16 @@
+=== LiteFeet Ledger Performance Audit ===
+/healthz                 status=200  median=    0.46ms max=    0.57ms size=2b header=0.01
+/                        status=200  median=    14.0ms max=   14.27ms size=13049b header=13.29
+/ask                     status=302  median=    0.54ms max=    0.63ms size=189b header=
+/events                  status=200  median=   13.46ms max=   13.87ms size=12281b header=12.54
+/people/dancers          status=200  median=   13.15ms max=   14.97ms size=10468b header=11.75
+/people/producers        status=200  median=   13.44ms max=   13.81ms size=9144b header=12.32
+/people/teams            status=200  median=    14.4ms max=    14.6ms size=11758b header=13.71
+/litefeet-music          status=200  median=   14.16ms max=   14.39ms size=12074b header=12.9
+/battles                 status=302  median=    0.68ms max=    1.02ms size=189b header=
+/awards                  status=302  median=    0.76ms max=    1.77ms size=189b header=
+/submit/start            status=200  median=   13.18ms max=   13.78ms size=13191b header=11.93
+/about                   status=200  median=   13.03ms max=   13.19ms size=12317b header=12.04
+/account/login           status=200  median=   12.84ms max=   13.03ms size=8088b header=11.96
+Wrote performance_audit_report.json
+Performance audit completed.
