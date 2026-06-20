@@ -20,6 +20,7 @@ EXPECTED_TABLES = [
     "role_requests",
     "ask_conversations",
     "ask_messages",
+    "ask_feedback",
     "profile_claims",
     "saved_items",
     "calendar_item_metadata",

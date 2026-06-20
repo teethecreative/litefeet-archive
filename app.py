@@ -11532,3 +11532,160 @@ try:
     ensure_phase3e_ask_feedback_table()
 except Exception as exc:
     print(f"Phase 3E Ask feedback setup skipped: {exc}")
+
+
+# --- Phase 3F admin Ask feedback review ---
+def phase3f_table_columns(conn, table_name):
+    if "ledger_table_columns" in globals():
+        return ledger_table_columns(conn, table_name)
+
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def phase3f_add_column_if_missing(conn, table_name, column_name, column_sql):
+    existing_columns = phase3f_table_columns(conn, table_name)
+
+    if column_name in existing_columns:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+
+
+def ensure_phase3f_ask_feedback_admin_columns():
+    ensure_phase3e_ask_feedback_table()
+
+    with engine.begin() as conn:
+        phase3f_add_column_if_missing(conn, "ask_feedback", "feedback_status", "TEXT")
+        phase3f_add_column_if_missing(conn, "ask_feedback", "admin_note", "TEXT")
+        phase3f_add_column_if_missing(conn, "ask_feedback", "updated_at", "TEXT")
+
+
+def phase3f_admin_required():
+    if not current_user_is_admin():
+        return redirect(url_for("admin_login"))
+    return None
+
+
+@app.route("/admin/ask-feedback")
+def admin_ask_feedback_phase3f():
+    gate = phase3f_admin_required()
+    if gate:
+        return gate
+
+    ensure_phase3f_ask_feedback_admin_columns()
+
+    feedback_rows = fetch_all(
+        """
+        SELECT ask_feedback.*,
+               ask_conversations.title AS conversation_title,
+               ask_conversations.status AS conversation_status,
+               ask_conversations.created_at AS conversation_created_at,
+               archive_users.display_name AS user_display_name,
+               archive_users.email AS user_email
+        FROM ask_feedback
+        LEFT JOIN ask_conversations
+          ON ask_feedback.conversation_id = ask_conversations.id
+        LEFT JOIN archive_users
+          ON ask_feedback.user_id = archive_users.id
+        ORDER BY
+            COALESCE(ask_feedback.updated_at, ask_feedback.created_at, '') DESC,
+            ask_feedback.id DESC
+        LIMIT 200
+        """,
+        {},
+    )
+
+    feedback_counts = fetch_all(
+        """
+        SELECT
+            COALESCE(feedback_status, 'New') AS feedback_status,
+            COUNT(*) AS count
+        FROM ask_feedback
+        GROUP BY COALESCE(feedback_status, 'New')
+        ORDER BY count DESC
+        """,
+        {},
+    )
+
+    rating_counts = fetch_all(
+        """
+        SELECT
+            COALESCE(rating_label, 'Unknown') AS rating_label,
+            COUNT(*) AS count
+        FROM ask_feedback
+        GROUP BY COALESCE(rating_label, 'Unknown')
+        ORDER BY count DESC
+        """,
+        {},
+    )
+
+    return render_template(
+        "admin_ask_feedback.html",
+        feedback_rows=feedback_rows,
+        feedback_counts=feedback_counts,
+        rating_counts=rating_counts,
+    )
+
+
+@app.route("/admin/ask-feedback/<int:feedback_id>/status", methods=["POST"])
+def admin_ask_feedback_status_phase3f(feedback_id):
+    gate = phase3f_admin_required()
+    if gate:
+        return gate
+
+    ensure_phase3f_ask_feedback_admin_columns()
+
+    feedback_status = request.form.get("feedback_status", "").strip()
+    admin_note = request.form.get("admin_note", "").strip()
+
+    allowed = {
+        "New",
+        "Reviewed",
+        "Needs Fix",
+        "Needs Context",
+        "Converted to Review",
+        "Archived",
+        "Dismissed",
+    }
+
+    if feedback_status not in allowed:
+        feedback_status = "New"
+
+    execute_query(
+        """
+        UPDATE ask_feedback
+        SET feedback_status = :feedback_status,
+            admin_note = :admin_note,
+            updated_at = :updated_at
+        WHERE id = :feedback_id
+        """,
+        {
+            "feedback_status": feedback_status,
+            "admin_note": admin_note,
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+            "feedback_id": feedback_id,
+        },
+    )
+
+    return redirect(url_for("admin_ask_feedback_phase3f"))
+
+
+try:
+    ensure_phase3f_ask_feedback_admin_columns()
+except Exception as exc:
+    print(f"Phase 3F Ask feedback admin setup skipped: {exc}")

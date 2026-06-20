@@ -19,6 +19,8 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /account/signup                                              -> account_signup                                [GET, POST]
 /admin                                                       -> admin_home                                    [GET]
 /admin/activity/dismiss                                      -> dismiss_admin_activity                        [POST]
+/admin/ask-feedback                                          -> admin_ask_feedback_phase3f                    [GET]
+/admin/ask-feedback/<int:feedback_id>/status                 -> admin_ask_feedback_status_phase3f             [POST]
 /admin/dancer-feedback                                       -> admin_dancer_feedback                         [GET]
 /admin/dancer-flowers/<int:flower_id>/status                 -> update_dancer_flower_status                   [POST]
 /admin/dancer-profiles                                       -> admin_dancer_profiles                         [GET]
@@ -135,6 +137,11 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/account_profile_link.html:15: <a href="{{ url_for('account_profile_visibility') }}" class="button secondary">Request Profile Visibility Change</a>
 /Users/teethecreative/litefeet-archive/templates/account_profile_link.html:48: <form action="{{ url_for('request_profile_link', profile_id=profile['id']) }}" method="post">
 /Users/teethecreative/litefeet-archive/templates/account_profile_visibility.html:15: <a href="{{ url_for('account_profile_link') }}" class="button secondary">Back to Profile Connection</a>
+/Users/teethecreative/litefeet-archive/templates/admin_ask_feedback.html:18: <a class="button secondary" href="{{ url_for('admin_home') }}">Admin Dashboard</a>
+/Users/teethecreative/litefeet-archive/templates/admin_ask_feedback.html:19: <a class="button secondary" href="{{ url_for('admin_phase2_moderation') }}">Phase 2 Moderation</a>
+/Users/teethecreative/litefeet-archive/templates/admin_ask_feedback.html:20: <a class="button primary" href="{{ url_for('ask_archive') }}">Open Ask</a>
+/Users/teethecreative/litefeet-archive/templates/admin_ask_feedback.html:104: <a href="{{ url_for('ask_conversation_detail', conversation_id=item['conversation_id']) }}">
+/Users/teethecreative/litefeet-archive/templates/admin_ask_feedback.html:134: <form method="POST" action="{{ url_for('admin_ask_feedback_status_phase3f', feedback_id=item['id']) }}" class="inline-admin-form">
 /Users/teethecreative/litefeet-archive/templates/admin_dancer_feedback.html:14: <a href="{{ url_for('admin_dancer_profiles') }}" class="button secondary">Back to Dancer Profiles</a>
 /Users/teethecreative/litefeet-archive/templates/admin_dancer_feedback.html:33: <form action="{{ url_for('update_dancer_flower_status', flower_id=flower['id']) }}" method="post" class="vote-form">
 /Users/teethecreative/litefeet-archive/templates/admin_dancer_feedback.html:66: <p><strong>Source:</strong> <a href="{{ suggestion['source_url'] }}" target="_blank" rel="noopener">Open source</a></p>
@@ -149,19 +156,20 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /Users/teethecreative/litefeet-archive/templates/admin_event_edit.html:8: <a href="{{ url_for('event_detail', event_id=event['id']) }}" class="small-note">← Back to Event</a>
 /Users/teethecreative/litefeet-archive/templates/admin_home.html:18: <a class="button primary" href="{{ url_for('admin_submissions') }}">Review Submissions</a>
 /Users/teethecreative/litefeet-archive/templates/admin_home.html:19: <a class="button secondary" href="{{ url_for('admin_phase2_moderation') }}">Phase 2 Moderation</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:20: <a class="button secondary" href="{{ url_for('admin_deploy_status_phase2i') }}">Deploy Status</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:21: <a class="button secondary" href="{{ url_for('admin_maintenance') }}">Maintenance Mode</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:33: <a class="button small-button primary" href="{{ url_for('admin_maintenance') }}">Open Maintenance</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:43: <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Open Queue</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:52: <a class="button small-button secondary" href="{{ url_for('admin_media') }}">Open Media</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:62: <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Review Role Requests</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:71: <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Open Moderation</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:80: <a class="button small-button secondary" href="{{ url_for('verify_claims') }}">Open Ledger Review</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:93: <a class="button secondary" href="{{ url_for('submit_info') }}">Add Public Submission</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:94: <a class="button secondary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:95: <a class="button secondary" href="{{ url_for('litefeet_music') }}">View Music</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:96: <a class="button secondary" href="{{ url_for('events') }}">View Calendar</a>
-/Users/teethecreative/litefeet-archive/templates/admin_home.html:97: <a class="button secondary" href="{{ url_for('dancers') }}">View People</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:20: <a class="button secondary" href="{{ url_for('admin_ask_feedback_phase3f') }}">Ask Feedback</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:21: <a class="button secondary" href="{{ url_for('admin_deploy_status_phase2i') }}">Deploy Status</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:22: <a class="button secondary" href="{{ url_for('admin_maintenance') }}">Maintenance Mode</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:34: <a class="button small-button primary" href="{{ url_for('admin_maintenance') }}">Open Maintenance</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:44: <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Open Queue</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:53: <a class="button small-button secondary" href="{{ url_for('admin_media') }}">Open Media</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:63: <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Review Role Requests</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:72: <a class="button small-button secondary" href="{{ url_for('admin_submissions') }}">Open Moderation</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:81: <a class="button small-button secondary" href="{{ url_for('verify_claims') }}">Open Ledger Review</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:94: <a class="button secondary" href="{{ url_for('submit_info') }}">Add Public Submission</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:95: <a class="button secondary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:96: <a class="button secondary" href="{{ url_for('litefeet_music') }}">View Music</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:97: <a class="button secondary" href="{{ url_for('events') }}">View Calendar</a>
+/Users/teethecreative/litefeet-archive/templates/admin_home.html:98: <a class="button secondary" href="{{ url_for('dancers') }}">View People</a>
 /Users/teethecreative/litefeet-archive/templates/admin_login.html:22: <form class="archive-form login-form" action="{{ url_for('admin_login') }}" method="post">
 /Users/teethecreative/litefeet-archive/templates/admin_maintenance.html:40: <a class="button secondary" href="{{ url_for('admin_home') }}">Back to Admin Dashboard</a>
 /Users/teethecreative/litefeet-archive/templates/admin_maintenance.html:41: <a class="button secondary" href="{{ url_for('home') }}">View Public Home</a>

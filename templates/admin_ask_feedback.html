@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Ask Feedback | The LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section admin-ask-feedback-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Backend</p>
+            <h1>Ask Feedback</h1>
+            <p>
+                Review Ask answers that users marked as helpful, wrong, missing context, or needing review.
+                This is where bad Ask answers become cleanup work instead of getting ignored.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('admin_home') }}">Admin Dashboard</a>
+            <a class="button secondary" href="{{ url_for('admin_phase2_moderation') }}">Phase 2 Moderation</a>
+            <a class="button primary" href="{{ url_for('ask_archive') }}">Open Ask</a>
+        </div>
+    </div>
+</section>
+
+<section class="admin-feedback-summary-grid">
+    <article>
+        <p class="eyebrow">By Status</p>
+        <h2>Feedback Queue</h2>
+
+        {% if feedback_counts %}
+            <ul class="compact-admin-list">
+                {% for item in feedback_counts %}
+                    <li>
+                        <strong>{{ item["feedback_status"] or "New" }}</strong>
+                        <span>{{ item["count"] }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="small-note">No feedback status counts yet.</p>
+        {% endif %}
+    </article>
+
+    <article>
+        <p class="eyebrow">By Rating</p>
+        <h2>Answer Quality</h2>
+
+        {% if rating_counts %}
+            <ul class="compact-admin-list">
+                {% for item in rating_counts %}
+                    <li>
+                        <strong>{{ item["rating_label"] or "Unknown" }}</strong>
+                        <span>{{ item["count"] }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="small-note">No rating counts yet.</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Queue</p>
+            <h2>Recent Ask Feedback</h2>
+        </div>
+    </div>
+
+    {% if feedback_rows %}
+        <div class="release-table-wrap">
+            <table class="release-table admin-ask-feedback-table">
+                <thead>
+                    <tr>
+                        <th>Feedback</th>
+                        <th>Conversation</th>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Admin Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in feedback_rows %}
+                        <tr>
+                            <td>
+                                <p><strong>{{ item["rating_label"] or "Unknown" }}</strong></p>
+
+                                {% if item["feedback_text"] %}
+                                    <p>{{ item["feedback_text"] }}</p>
+                                {% else %}
+                                    <p class="small-note">No extra note.</p>
+                                {% endif %}
+
+                                <p class="small-note">
+                                    Created: {{ item["created_at"] or "—" }}
+                                    {% if item["updated_at"] %}<br>Updated: {{ item["updated_at"] }}{% endif %}
+                                </p>
+                            </td>
+
+                            <td>
+                                {% if item["conversation_id"] %}
+                                    <a href="{{ url_for('ask_conversation_detail', conversation_id=item['conversation_id']) }}">
+                                        {{ item["conversation_title"] or "Ask Conversation #" ~ item["conversation_id"] }}
+                                    </a>
+                                {% else %}
+                                    No conversation
+                                {% endif %}
+
+                                {% if item["conversation_status"] %}
+                                    <br><span class="small-note">{{ item["conversation_status"] }}</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item["user_display_name"] or item["user_email"] %}
+                                    {{ item["user_display_name"] or item["user_email"] }}
+                                {% elif item["visitor_key"] %}
+                                    <span class="small-note">{{ item["visitor_key"] }}</span>
+                                {% else %}
+                                    Unknown
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ item["feedback_status"] or "New" }}
+                                {% if item["admin_note"] %}
+                                    <br><span class="small-note">{{ item["admin_note"] }}</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <form method="POST" action="{{ url_for('admin_ask_feedback_status_phase3f', feedback_id=item['id']) }}" class="inline-admin-form">
+                                    <label>
+                                        Status
+                                        <select name="feedback_status">
+                                            {% for option in ["New", "Reviewed", "Needs Fix", "Needs Context", "Converted to Review", "Archived", "Dismissed"] %}
+                                                <option value="{{ option }}" {% if (item["feedback_status"] or "New") == option %}selected{% endif %}>
+                                                    {{ option }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+
+                                    <label>
+                                        Admin note
+                                        <textarea name="admin_note" rows="3" placeholder="What needs to happen next?">{{ item["admin_note"] or "" }}</textarea>
+                                    </label>
+
+                                    <button class="button small-button secondary" type="submit">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No Ask feedback yet.</h3>
+            <p>Once users rate Ask answers, feedback will appear here.</p>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .admin-feedback-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .admin-feedback-summary-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .compact-admin-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 8px;
+    }
+
+    .compact-admin-list li {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        border-top: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        padding-top: 8px;
+    }
+
+    .inline-admin-form {
+        display: grid;
+        gap: 8px;
+        min-width: 220px;
+    }
+
+    .inline-admin-form select,
+    .inline-admin-form textarea {
+        width: 100%;
+    }
+
+    .admin-ask-feedback-table td {
+        vertical-align: top;
+    }
+
+    @media (max-width: 900px) {
+        .admin-feedback-summary-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

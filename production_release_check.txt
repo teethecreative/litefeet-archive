@@ -1,6 +1,6 @@
 === Phase 2I Production Release Check ===
 branch: main
-commit: ea9b50f
+commit: cfe1ede
 database: sqlite
 original maintenance_mode: on
 ---- table checks ----
@@ -14,6 +14,7 @@ verification_votes: OK
 role_requests: OK
 ask_conversations: OK
 ask_messages: OK
+ask_feedback: OK
 profile_claims: OK
 saved_items: OK
 calendar_item_metadata: OK
