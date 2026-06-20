@@ -4146,6 +4146,8 @@ def admin_event_edit(event_id):
     )
 
 @app.route("/dancers")
+@app.route("/people-teams")
+@app.route("/people-and-teams")
 @app.route("/people/dancers")
 def dancers():
     for fn_name in [

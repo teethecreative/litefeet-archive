@@ -1,205 +1,202 @@
 {% extends "base.html" %}
 
-{% block title %}LiteFeet Dancers & Teams | LiteFeet Ledger{% endblock %}
-{% block meta_description %}Explore LiteFeet dancers, teams, claimed profiles, community records, affiliations, boroughs, styles, and documented contributions to LiteFeet culture.{% endblock %}
+{% block title %}People & Teams | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Browse LiteFeet dancers, producers, teams, hosts, DJs, organizers, supporters, and community profiles in The LiteFeet Ledger.{% endblock %}
 
 {% block content %}
-<section class="content-section people-directory-page">
-    <div class="subnav-inline">
-        <a href="{{ url_for('dancers') }}">People</a>
-        <span>|</span>
-        <a href="{{ url_for('producers') }}">Producers</a>
-        <span>|</span>
-        <a href="{{ url_for('teams') }}">Teams</a>
-    </div>
+{% set people_records = profiles if profiles is defined else dancer_profiles if dancer_profiles is defined else [] %}
 
+<section class="content-section people-teams-page">
     <div class="section-heading-row">
         <div>
-            <h1>People</h1>
+            <p class="eyebrow">People & Teams</p>
+            <h1>People & Teams</h1>
             <p>
-                Dancer profiles are created by the dancers themselves. Community members can suggest additions or give flowers,
-                but public updates are reviewed before they appear.
+                A living directory for LiteFeet dancers, producers, teams, hosts, DJs, organizers,
+                videographers, photographers, artists, contributors, and supporters.
             </p>
         </div>
 
-        <a href="{{ url_for('create_dancer_profile') }}" class="button secondary">Create Your Profile</a>
-    </div>
-
-    <div class="people-directory-controls">
-        <label>
-            Search
-            <input id="peopleSearch" type="search" placeholder="Search names, teams, boroughs, roles">
-        </label>
-
-        <label>
-            Sort
-            <select id="peopleSort">
-                <option value="az" selected>A to Z</option>
-                <option value="za">Z to A</option>
-                <option value="recent">Recently Added</option>
-            </select>
-        </label>
-
-        <label>
-            Role
-            <select id="peopleRole">
-                <option value="">All Roles</option>
-                <option value="dancer">Dancer</option>
-                <option value="producer">Producer</option>
-                <option value="host">Host</option>
-                <option value="judge">Judge</option>
-                <option value="dj">DJ</option>
-                <option value="mc">MC</option>
-                <option value="team">Team</option>
-            </select>
-        </label>
-
-        <label>
-            Status
-            <select id="peopleStatus">
-                <option value="">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-            </select>
-        </label>
-
-        <div class="people-view-toggle" aria-label="View toggle">
-            <button type="button" class="button small-button is-active" data-view-mode="grid">Grid</button>
-            <button type="button" class="button small-button secondary" data-view-mode="list">List</button>
+        <div class="hero-actions">
+            <a class="button primary" href="{{ url_for('submit_info') }}">Add / Correct Profile</a>
+            <button class="button secondary" type="button" data-view-toggle>Toggle List/Grid</button>
         </div>
     </div>
 
-    {% if profiles %}
-        <div id="peopleDirectory" class="people-directory-grid" data-view="grid">
-            {% for profile in profiles %}
-                {% set name = profile["dance_name"] or profile["real_name"] or "Needs confirmation" %}
-                {% set team = profile["team_affiliation"] or "Needs confirmation" %}
-                {% set location = profile["borough_scene"] or "Needs confirmation" %}
-                {% set recent = profile["recent_battle"] or profile["battle_history"] or "Needs confirmation" %}
-                {% set roles = profile["role_tags"] or "Dancer" %}
-                {% set status = profile["directory_status"] or "Active" %}
-                {% set slug = profile["profile_slug"] or profile["id"] %}
+    <div class="people-tabs">
+        <a class="button small-button primary" href="{{ url_for('dancers') }}">All People</a>
+        <a class="button small-button secondary" href="/producers">Producers</a>
+        <a class="button small-button secondary" href="/teams">Teams</a>
+        <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Submit Missing Info</a>
+    </div>
+</section>
 
-                <article
-                    class="people-directory-card"
-                    data-name="{{ name|lower }}"
-                    data-team="{{ team|lower }}"
-                    data-location="{{ location|lower }}"
-                    data-recent="{{ recent|lower }}"
-                    data-roles="{{ roles|lower }}"
-                    data-status="{{ status|lower }}"
-                    data-created-at="{{ profile['created_at'] or '' }}">
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Directory</p>
+            <h2>Active Profiles</h2>
+        </div>
+    </div>
 
-                    <div class="people-card-fields">
-                        <p><strong>Dancer Name:</strong> <span>{{ name }}</span></p>
-                        <p><strong>Team:</strong> <span>{{ team }}</span></p>
-                        <p><strong>Location:</strong> <span>{{ location }}</span></p>
-                        <p><strong>Recent Activity:</strong> <span>{{ recent }}</span></p>
-                    </div>
+    {% if people_records %}
+        <div class="people-directory-grid" data-directory-grid>
+            {% for person in people_records %}
+                {% set person_status = person["status"]|default("") %}
+                {% if person_status != "Inactive" %}
+                    <article class="person-directory-card">
+                        <div class="person-card-header">
+                            <div>
+                                <p class="eyebrow">{{ person_status or "Profile" }}</p>
+                                <h3>
+                                    <a href="{{ person | profile_url }}">
+                                        {{ person["dance_name"] or person["display_name"] or person["name"] or "Unnamed profile" }}
+                                    </a>
+                                </h3>
+                            </div>
+                        </div>
 
-                    <div class="people-role-keywords">
-                        {% for role in roles.replace(",", " ").split() %}
-                            {% if role %}
-                                <span>{{ role }}</span>
+                        <div class="role-tag-row">
+                            {% set roles = person["role_tags"]|role_list %}
+                            {% if roles %}
+                                {% for role in roles %}
+                                    <span class="role-pill">{{ role }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="role-pill">Dancer</span>
                             {% endif %}
-                        {% endfor %}
-                    </div>
+                        </div>
 
-                    <div class="people-card-footer">
-                        <span class="people-status-pill">{{ status }}</span>
-                        <a class="button small-button" href="{{ url_for('dancer_profile_detail', profile_slug=slug) }}">View Profile</a>
-                    </div>
-                </article>
+                        {% if person["team_affiliation"] %}
+                            <p><strong>Team / Affiliation:</strong> {{ person["team_affiliation"] }}</p>
+                        {% endif %}
+
+                        {% if person["borough_scene"] %}
+                            <p><strong>Scene:</strong> {{ person["borough_scene"] }}</p>
+                        {% endif %}
+
+                        {% if person["bio"] %}
+                            <p>{{ person["bio"]|truncate(180) }}</p>
+                        {% else %}
+                            <p class="small-note">This profile can still be expanded with history, roles, media, battles, music, and community context.</p>
+                        {% endif %}
+
+                        <a class="button small-button secondary" href="{{ person | profile_url }}">Open Profile</a>
+                    </article>
+                {% endif %}
             {% endfor %}
         </div>
     {% else %}
-        <div class="empty-state">
-            <h3>Dancer profiles are waiting to be claimed</h3>
-            <p>
-                Profiles should be created by the dancers themselves. Once a dancer submits a profile and it is approved,
-                it will appear here with approved flowers and community additions.
-            </p>
+        <div class="empty-state compact-empty">
+            <h3>No profiles are loaded here yet.</h3>
+            <p>Profiles will appear once dancer/person records are available to this route.</p>
         </div>
     {% endif %}
 </section>
 
+<section class="homepage-section people-table-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">List View</p>
+            <h2>Directory Table</h2>
+        </div>
+    </div>
+
+    {% if people_records %}
+        <div class="release-table-wrap">
+            <table class="release-table people-directory-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Roles</th>
+                        <th>Team / Affiliation</th>
+                        <th>Scene</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for person in people_records %}
+                        {% set person_status = person["status"]|default("") %}
+                        {% if person_status != "Inactive" %}
+                            <tr>
+                                <td>{{ person["dance_name"] or person["display_name"] or person["name"] or "Unnamed profile" }}</td>
+                                <td>
+                                    {% set roles = person["role_tags"]|role_list %}
+                                    {{ roles|join(", ") if roles else "Dancer" }}
+                                </td>
+                                <td>{{ person["team_affiliation"] or "—" }}</td>
+                                <td>{{ person["borough_scene"] or "—" }}</td>
+                                <td>{{ person_status or "Profile" }}</td>
+                                <td><a class="button small-button secondary" href="{{ person | profile_url }}">Open</a></td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No table records yet.</h3>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .people-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .people-directory-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .person-directory-card {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .role-tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 8px 0 10px;
+    }
+
+    .role-pill {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.14));
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 0.82rem;
+    }
+
+    .people-teams-page.list-mode + .homepage-section .people-directory-grid,
+    body.people-list-mode .people-directory-grid {
+        display: none;
+    }
+
+    @media (max-width: 900px) {
+        .people-directory-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
 <script>
-(function () {
-    const directory = document.getElementById("peopleDirectory");
-    if (!directory) return;
+document.addEventListener("DOMContentLoaded", function () {
+    const toggle = document.querySelector("[data-view-toggle]");
+    if (!toggle) return;
 
-    const cards = Array.from(directory.querySelectorAll(".people-directory-card"));
-    const search = document.getElementById("peopleSearch");
-    const sort = document.getElementById("peopleSort");
-    const role = document.getElementById("peopleRole");
-    const status = document.getElementById("peopleStatus");
-    const viewButtons = Array.from(document.querySelectorAll("[data-view-mode]"));
-
-    function clean(value) {
-        return (value || "").toLowerCase().trim();
-    }
-
-    function matches(card) {
-        const query = clean(search ? search.value : "");
-        const roleValue = clean(role ? role.value : "");
-        const statusValue = clean(status ? status.value : "");
-
-        const haystack = [
-            card.dataset.name,
-            card.dataset.team,
-            card.dataset.location,
-            card.dataset.recent,
-            card.dataset.roles,
-            card.dataset.status
-        ].join(" ");
-
-        const queryOk = !query || haystack.includes(query);
-        const roleOk = !roleValue || clean(card.dataset.roles).includes(roleValue);
-        const statusOk = !statusValue || clean(card.dataset.status) === statusValue;
-
-        return queryOk && roleOk && statusOk;
-    }
-
-    function apply() {
-        const sortValue = sort ? sort.value : "az";
-
-        const sorted = [...cards].sort((a, b) => {
-            if (sortValue === "za") {
-                return clean(b.dataset.name).localeCompare(clean(a.dataset.name));
-            }
-
-            if (sortValue === "recent") {
-                return clean(b.dataset.createdAt).localeCompare(clean(a.dataset.createdAt));
-            }
-
-            return clean(a.dataset.name).localeCompare(clean(b.dataset.name));
-        });
-
-        sorted.forEach((card) => {
-            directory.appendChild(card);
-            card.hidden = !matches(card);
-        });
-    }
-
-    [search, sort, role, status].forEach((control) => {
-        if (!control) return;
-        control.addEventListener("input", apply);
-        control.addEventListener("change", apply);
+    toggle.addEventListener("click", function () {
+        document.body.classList.toggle("people-list-mode");
     });
-
-    viewButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-            const mode = button.dataset.viewMode;
-            directory.dataset.view = mode;
-
-            viewButtons.forEach((btn) => {
-                btn.classList.toggle("is-active", btn === button);
-                btn.classList.toggle("secondary", btn !== button);
-            });
-        });
-    });
-
-    apply();
-})();
+});
 </script>
 {% endblock %}

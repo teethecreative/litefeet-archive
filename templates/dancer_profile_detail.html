@@ -1,295 +1,235 @@
 {% extends "base.html" %}
 
-{% block title %}{{ profile["dance_name"] }} | LiteFeet Dancer Profile | LiteFeet Ledger{% endblock %}
-{% block meta_description %}View {{ profile["dance_name"] }}'s LiteFeet dancer profile, affiliations, releases, community records, and documented contributions in the LiteFeet Ledger.{% endblock %}
-
-{% if profile_releases %}
-<section class="content-section profile-releases-section">
-    <p class="eyebrow">Music</p>
-    <h2>Releases</h2>
-
-    <div class="release-table-wrap">
-        <table class="release-table">
-            <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Date</th>
-                    <th>Platform</th>
-                    <th>Stats</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for release in profile_releases %}
-                    <tr>
-                        <td>
-                            <a class="release-title-link" href="{{ url_for('music_release_detail', item_id=release['id']) }}">
-                                {{ release["title"] }}
-                            </a>
-                        </td>
-                        <td>{{ release["release_date"]|music_release_date }}</td>
-                        <td>{{ release["platform"] or "Unknown" }}</td>
-                        <td>
-                            <div class="release-stat-line">
-                                <span>Ledger Plays {{ release["play_count"] or 0 }}</span>
-                                <span>Spotify {{ release["spotify_streams"] or 0 }}</span>
-                                <span>Apple {{ release["apple_music_plays"] or 0 }}</span>
-                                <span>SoundCloud {{ release["soundcloud_plays"] or 0 }}</span>
-                                <span>YouTube {{ release["youtube_views"] or 0 }}</span>
-                            </div>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
-{% endif %}
-
-{% endblock %}
+{% block title %}{{ profile["dance_name"] or "Profile" }} | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}LiteFeet Ledger profile for {{ profile["dance_name"] or "community profile" }} with roles, affiliations, music, battles, mentions, flowers, corrections, and community context.{% endblock %}
 
 {% block content %}
-<section class="detail-shell profile-detail-shell">
-    <div class="detail-topbar">
-        <a href="{{ url_for('dancers') }}" class="button secondary">Back to People</a>
+<section class="content-section profile-page">
+    <div class="profile-hero-card">
+        <div>
+            <p class="eyebrow">{{ profile["status"] or "Profile" }}</p>
+            <h1>{{ profile["dance_name"] or "Unnamed Profile" }}</h1>
 
-        <div class="profile-action-row">
-            {% if not profile["user_id"] %}
-                <a href="{{ profile | profile_url }}/claim" class="button primary">Claim This Profile</a>
+            <div class="role-tag-row">
+                {% set roles = profile["role_tags"]|role_list %}
+                {% if roles %}
+                    {% for role in roles %}
+                        <span class="role-pill">{{ role }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span class="role-pill">Dancer</span>
+                {% endif %}
+            </div>
+
+            {% if profile["team_affiliation"] %}
+                <p><strong>Team / Affiliation:</strong> {{ profile["team_affiliation"] }}</p>
             {% endif %}
 
+            {% if profile["borough_scene"] %}
+                <p><strong>Scene:</strong> {{ profile["borough_scene"] }}</p>
+            {% endif %}
+        </div>
+
+        <div class="profile-actions">
+            <a class="button primary" href="{{ url_for('submit_info') }}">Submit Correction</a>
             {% if session.get("admin_logged_in") %}
-                <a href="{{ url_for('admin_person_edit', dancer_id=profile['id']) }}" class="button secondary">Edit Profile</a>
+                <a class="button secondary" href="{{ url_for('admin_person_edit', dancer_id=profile['id']) }}">Edit Profile</a>
             {% endif %}
         </div>
     </div>
+</section>
 
-    <header class="record-hero profile-hero">
-        <p class="eyebrow">People Record</p>
-        <h1>{{ profile["dance_name"] }}</h1>
+<section class="profile-layout-grid">
+    <article class="profile-panel profile-about-panel">
+        <p class="eyebrow">About</p>
+        <h2>Profile Notes</h2>
 
-        <div class="status-row">
-            <span class="status-pill">{{ profile["status"] }}</span>
-
-            {% for role in profile["role_tags"] | role_list %}
-                <span class="status-pill">{{ role }}</span>
-            {% endfor %}
-        </div>
-    </header>
-
-    <section class="event-detail-card profile-summary-card">
-        <div>
-            <span>Team / Affiliation</span>
-            <strong>{{ profile["team_affiliation"] or "Needs confirmation" }}</strong>
-        </div>
-
-        <div>
-            <span>Location / Scene</span>
-            <strong>{{ profile["borough_scene"] or "Needs confirmation" }}</strong>
-        </div>
-
-        <div>
-            <span>Era / Generation</span>
-            <strong>{{ profile.get("era") or "Needs confirmation" }}</strong>
-        </div>
-
-        <div>
-            <span>Recent Battle / Moment</span>
-            <strong>
-                {% if profile.get("battle_history") %}
-                    {{ profile["battle_history"][:120] }}{% if profile["battle_history"]|length > 120 %}...{% endif %}
-                {% else %}
-                    Needs confirmation
-                {% endif %}
-            </strong>
-        </div>
-    </section>
-
-    {% if similar_profiles %}
-        <section class="review-details duplicate-warning">
-            <h2>Possible Duplicate Profiles</h2>
+        {% if profile["bio"] %}
+            <p>{{ profile["bio"] }}</p>
+        {% else %}
             <p class="small-note">
-                These records have similar names. Admins can merge duplicates into this profile.
+                This profile still needs a fuller bio, role history, affiliations, battle history,
+                music connections, and source-backed context.
             </p>
+        {% endif %}
 
-            {% for duplicate in similar_profiles %}
-                <div class="duplicate-row">
-                    <div>
-                        <strong>{{ duplicate["dance_name"] }}</strong>
-                        <p class="small-note">
-                            {{ duplicate["status"] }}
-                            {% if duplicate["role_tags"] %} · {{ duplicate["role_tags"] }}{% endif %}
-                        </p>
-                    </div>
+        {% if profile["source_url"] %}
+            <p><a href="{{ profile['source_url'] }}" target="_blank" rel="noopener">Source / Reference</a></p>
+        {% endif %}
+    </article>
 
-                    {% if session.get("admin_logged_in") %}
-                        <form method="POST" action="{{ url_for('admin_merge_people', primary_id=profile['id'], duplicate_id=duplicate['id']) }}">
-                            <button type="submit" class="button small-button">Merge Into This Profile</button>
-                        </form>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </section>
-    {% endif %}
+    <article class="profile-panel">
+        <p class="eyebrow">Battle / Event Mentions</p>
+        <h2>Ledger Mentions</h2>
 
-    <section class="detail-section-grid">
-        <div class="review-details">
-            <h2>Profile</h2>
-
-            {% if profile["bio"] %}
-                <p>{{ profile["bio"] }}</p>
-            {% else %}
-                <p class="small-note">This profile needs a confirmed bio or community context.</p>
-            {% endif %}
-
-            {% if profile.get("aliases") %}
-                <p><strong>Aliases:</strong> {{ profile["aliases"] }}</p>
-            {% endif %}
-
-            {% if profile.get("legacy_notes") %}
-                <p><strong>Legacy Notes:</strong> {{ profile["legacy_notes"] }}</p>
-            {% endif %}
-        </div>
-
-        <div class="review-details">
-            <h2>Style & Moves</h2>
-
-            {% if profile.get("style_notes") %}
-                <p><strong>Style:</strong> {{ profile["style_notes"] }}</p>
-            {% endif %}
-
-            {% if profile.get("signature_moves") %}
-                <p><strong>Signature Moves:</strong> {{ profile["signature_moves"] }}</p>
-            {% endif %}
-
-            {% if not profile.get("style_notes") and not profile.get("signature_moves") %}
-                <p class="small-note">No style or move details confirmed yet.</p>
-            {% endif %}
-        </div>
-    </section>
-
-    {% if profile.get("battle_history") %}
-        <section class="review-details">
-            <h2>Battle / Moment History</h2>
-            <p>{{ profile["battle_history"] }}</p>
-        </section>
-    {% endif %}
-
-    {% if ledger_mentions %}
-        <section class="review-details ledger-history-block">
-            <h2>Created From / Ledger History</h2>
-
-            <div class="compact-history-list">
-                {% for item in ledger_mentions %}
-                    <div class="history-row">
-                        <div>
-                            <strong>{{ item["title"] }}</strong>
-                            <p class="small-note">
-                                {{ item["submission_type"]|replace("_", " ")|title }}
-                                {% if item["created_at"] %} · {{ item["created_at"]|ledger_date }}{% endif %}
-                                {% if item["review_status"] %} · {{ item["review_status"] }}{% endif %}
-                            </p>
-
-                            {% if item.get("mention_labels") %}
-                                <p class="small-note">
-                                    Mentioned in:
-                                    {% if item["mention_labels"] is string %}
-                                        {{ item["mention_labels"] }}
-                                    {% else %}
-                                        {{ item["mention_labels"]|join(", ") }}
-                                    {% endif %}
-                                </p>
+        {% if ledger_mentions %}
+            <div class="profile-mini-list">
+                {% for mention in ledger_mentions %}
+                    <div class="profile-mini-item">
+                        <h3>
+                            {% if mention["public_url"] %}
+                                <a href="{{ mention['public_url'] }}">{{ mention["title"] }}</a>
+                            {% else %}
+                                {{ mention["title"] }}
                             {% endif %}
-                        </div>
-
-                        {% if item.get("public_url") %}
-                            <a class="button small-button" href="{{ item['public_url'] }}">View</a>
-                        {% endif %}
+                        </h3>
+                        <p class="small-note">{{ mention["submission_type"] or "Ledger record" }}</p>
                     </div>
                 {% endfor %}
             </div>
-        </section>
-    {% endif %}
+        {% else %}
+            <p class="small-note">No Ledger mentions are connected yet.</p>
+        {% endif %}
+    </article>
 
-    <section class="detail-section-grid">
-        <div class="review-details">
-            <h2>Flowers</h2>
+    <article class="profile-panel">
+        <p class="eyebrow">Music</p>
+        <h2>Releases / Production</h2>
 
-            {% if flowers %}
+        {% if profile_releases %}
+            <div class="profile-mini-list">
+                {% for item in profile_releases %}
+                    <div class="profile-mini-item">
+                        <h3>
+                            <a href="{{ url_for('music_release_detail', item_id=item['id']) }}">{{ item["title"] }}</a>
+                        </h3>
+                        <p class="small-note">
+                            {{ item["artist_or_creator"] or "Unknown" }}
+                            {% if item["release_date"] %} · {{ item["release_date"] }}{% endif %}
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="small-note">No music records are connected yet.</p>
+        {% endif %}
+    </article>
+
+    <article class="profile-panel">
+        <p class="eyebrow">Flowers</p>
+        <h2>Community Flowers</h2>
+
+        {% if flowers %}
+            <div class="profile-mini-list">
                 {% for flower in flowers %}
-                    <div class="history-row">
-                        <div>
-                            <strong>{{ flower["submitter_name"] or "Community Member" }}</strong>
-                            <p>{{ flower["message"] }}</p>
-                        </div>
+                    <div class="profile-mini-item">
+                        <p>{{ flower["flower_text"] }}</p>
+                        <p class="small-note">
+                            {{ flower["submitter_name"] or "Anonymous" }}
+                            {% if flower["created_at"] %} · {{ flower["created_at"] }}{% endif %}
+                        </p>
                     </div>
                 {% endfor %}
-            {% else %}
-                <p>No approved flowers yet.</p>
-            {% endif %}
-        </div>
+            </div>
+        {% else %}
+            <p class="small-note">No flowers have been added yet.</p>
+        {% endif %}
+    </article>
 
-        <div class="review-details">
-            <h2>Community Additions</h2>
+    <article class="profile-panel">
+        <p class="eyebrow">Corrections</p>
+        <h2>Suggestions / Claims</h2>
 
-            {% if suggestions %}
+        {% if suggestions %}
+            <div class="profile-mini-list">
                 {% for suggestion in suggestions %}
-                    <div class="history-row">
-                        <div>
-                            <strong>{{ suggestion["submitter_name"] or "Community Member" }}</strong>
-                            <p>{{ suggestion["message"] }}</p>
-                        </div>
+                    <div class="profile-mini-item">
+                        <p>{{ suggestion["suggestion_text"] or suggestion["comment"] or suggestion["details"] }}</p>
+                        <p class="small-note">{{ suggestion["status"] or "Pending Review" }}</p>
                     </div>
                 {% endfor %}
-            {% else %}
-                <p>No approved community additions yet.</p>
-            {% endif %}
-        </div>
-    </section>
+            </div>
+        {% else %}
+            <p class="small-note">
+                Corrections, profile claims, and added context will appear here for review.
+            </p>
+        {% endif %}
 
-    <details class="vote-box collapsible-panel">
-        <summary>Give Flowers</summary>
+        <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Submit Context</a>
+    </article>
 
-        <form method="POST" action="{{ url_for('give_dancer_flowers', dancer_id=profile['id']) }}" class="stacked-form">
-            <label>
-                Your name
-                <input type="text" name="submitter_name" placeholder="Optional">
-            </label>
+    <article class="profile-panel">
+        <p class="eyebrow">Related</p>
+        <h2>Similar Profiles</h2>
 
-            <label class="checkbox-line">
-                <input type="checkbox" name="anonymous_submission" value="1">
-                Submit this anonymously
-            </label>
-
-            <label>
-                Message
-                <textarea name="message" required placeholder="Give flowers, appreciation, or recognition."></textarea>
-            </label>
-
-            <button type="submit" class="button primary">Submit Flowers</button>
-        </form>
-    </details>
-
-    <details class="vote-box collapsible-panel">
-        <summary>Suggest Addition or Correction</summary>
-
-        <form method="POST" action="{{ url_for('suggest_dancer_update', dancer_id=profile['id']) }}" class="stacked-form">
-            <label>
-                Your name
-                <input type="text" name="submitter_name" placeholder="Optional">
-            </label>
-
-            <label class="checkbox-line">
-                <input type="checkbox" name="anonymous_submission" value="1">
-                Submit this anonymously
-            </label>
-
-            <label>
-                Addition / correction
-                <textarea name="suggestion_text" required placeholder="Add context, correct something, or suggest a source."></textarea>
-            </label>
-
-            <button type="submit" class="button primary">Submit Addition</button>
-        </form>
-    </details>
+        {% if similar_profiles %}
+            <div class="profile-mini-list">
+                {% for item in similar_profiles %}
+                    <div class="profile-mini-item">
+                        <h3><a href="{{ item | profile_url }}">{{ item["dance_name"] }}</a></h3>
+                        {% if item["team_affiliation"] %}<p class="small-note">{{ item["team_affiliation"] }}</p>{% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="small-note">No similar profiles are connected yet.</p>
+        {% endif %}
+    </article>
 </section>
+
+<style>
+    .profile-hero-card,
+    .profile-panel {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 18px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .profile-hero-card {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: flex-end;
+    }
+
+    .profile-layout-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .profile-about-panel {
+        grid-column: 1 / -1;
+    }
+
+    .profile-mini-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .profile-mini-item {
+        border-top: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        padding-top: 10px;
+    }
+
+    .role-tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 8px 0 10px;
+    }
+
+    .role-pill {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.14));
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 0.82rem;
+    }
+
+    @media (max-width: 800px) {
+        .profile-hero-card {
+            display: block;
+        }
+
+        .profile-layout-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .profile-actions {
+            margin-top: 14px;
+        }
+    }
+</style>
 {% endblock %}

@@ -1,51 +1,94 @@
 {% extends "base.html" %}
 
-{% block title %}Verify LiteFeet History & Community Claims | LiteFeet Ledger{% endblock %}
-{% block meta_description %}Review and verify LiteFeet community claims, submitted records, event history, dancer profiles, music details, and cultural documentation.{% endblock %}
+{% block title %}Ledger Review | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Review LiteFeet Ledger claims, corrections, debated records, community context, and source-backed submissions.{% endblock %}
 
 {% block content %}
-<section class="content-section verify-page-section">
-    <h1>Verify Claims</h1>
+{% set review_records = submissions if submissions is defined else claims if claims is defined else records if records is defined else [] %}
 
-    <p>
-        This queue is for claims that are controversial, disputed, debatable, or intentionally flagged for community review.
-        Incomplete ghost records stay out of this page unless they have votes or have been escalated.
-    </p>
+<section class="content-section ledger-review-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Ledger Review</p>
+            <h1>Ledger Review</h1>
+            <p>
+                This is where community records, claims, corrections, disputed details, and source-backed
+                context get reviewed instead of being treated as final automatically.
+            </p>
+        </div>
 
-    {% if submissions %}
-        <div class="verify-table-wrap">
-            <table class="verify-claims-table">
+        <a class="button primary" href="{{ url_for('submit_info') }}">Submit Correction</a>
+    </div>
+
+    <div class="review-status-grid">
+        <article>
+            <h2>Verified</h2>
+            <p>Confirmed through strong sources, direct records, or trusted community confirmation.</p>
+        </article>
+
+        <article>
+            <h2>Community Supported</h2>
+            <p>Supported by community knowledge, event records, flyers, videos, or repeated testimony.</p>
+        </article>
+
+        <article>
+            <h2>Debated / Needs Context</h2>
+            <p>Not erased, but marked clearly when people disagree or proof is still missing.</p>
+        </article>
+    </div>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Queue</p>
+            <h2>Records Needing Review</h2>
+        </div>
+    </div>
+
+    {% if review_records %}
+        <div class="release-table-wrap">
+            <table class="release-table ledger-review-table">
                 <thead>
                     <tr>
-                        <th>Claim</th>
-                        <th>Type</th>
-                        <th>Reason</th>
-                        <th>True</th>
-                        <th>False</th>
-                        <th>Debatable</th>
-                        <th>Total</th>
+                        <th>Topic</th>
+                        <th>Related Item</th>
                         <th>Status</th>
-                        <th>Review</th>
+                        <th>Context</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
+
                 <tbody>
-                    {% for submission in submissions %}
+                    {% for record in review_records %}
                         <tr>
-                            <td class="verify-claim-cell">
-                                <strong>{{ submission["title"] }}</strong>
-                                {% if submission["related_to"] %}
-                                    <span>Related to: {{ submission["related_to"] }}</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ submission["submission_type"] or "Uncategorized" }}</td>
-                            <td>{{ submission["controversy_reason"] or "Flagged for verification" }}</td>
-                            <td>{{ submission["true_count"] or 0 }}</td>
-                            <td>{{ submission["false_count"] or 0 }}</td>
-                            <td>{{ submission["debatable_count"] or 0 }}</td>
-                            <td>{{ submission["total_votes"] or 0 }}</td>
-                            <td>{{ submission["review_status"] }}</td>
                             <td>
-                                <a href="{{ url_for('verify_claim_detail', submission_id=submission['id']) }}" class="button small-button">Review</a>
+                                <strong>{{ record["title"] or "Untitled record" }}</strong>
+                                <br>
+                                <span class="small-note">{{ record["submission_type"] or "Ledger record" }}</span>
+                            </td>
+
+                            <td>{{ record["related_to"] or "—" }}</td>
+
+                            <td>
+                                <span class="review-pill">{{ record["review_status"] or record["status"] or "Needs Review" }}</span>
+                            </td>
+
+                            <td>
+                                {% set short_context = record | detail_value("Event Details") %}
+                                {% if not short_context %}
+                                    {% set short_context = record | detail_value("Description") %}
+                                {% endif %}
+                                {{ short_context or "Context can be added by the community." }}
+                            </td>
+
+                            <td>
+                                <div class="review-actions">
+                                    <a class="button small-button secondary" href="{{ url_for('submit_info') }}">Add Context</a>
+                                    {% if record["source_url"] %}
+                                        <a class="button small-button secondary" href="{{ record['source_url'] }}" target="_blank" rel="noopener">Source</a>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}
@@ -53,13 +96,75 @@
             </table>
         </div>
     {% else %}
-        <div class="empty-state">
-            <h3>No controversial claims need review right now</h3>
+        <div class="empty-state compact-empty">
+            <h3>No active review records are loaded here yet.</h3>
             <p>
-                Claims will appear here when they are flagged, disputed, marked debatable,
-                or have a close true/false split.
+                Once claims, corrections, debated records, and context submissions are connected,
+                they will appear here with clear review statuses.
             </p>
         </div>
     {% endif %}
 </section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Community Input</p>
+            <h2>How review should work</h2>
+        </div>
+    </div>
+
+    <div class="review-status-grid">
+        <article>
+            <h3>Agree</h3>
+            <p>Support a record without rewriting the official version.</p>
+        </article>
+
+        <article>
+            <h3>Add Context</h3>
+            <p>Add memories, links, flyers, clips, dates, names, or missing details.</p>
+        </article>
+
+        <article>
+            <h3>Submit Correction</h3>
+            <p>Flag wrong names, dates, winners, locations, roles, or missing credits.</p>
+        </article>
+    </div>
+</section>
+
+<style>
+    .review-status-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .review-status-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .review-pill {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.14));
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 0.82rem;
+        display: inline-block;
+    }
+
+    .review-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    @media (max-width: 900px) {
+        .review-status-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}
