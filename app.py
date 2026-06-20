@@ -18388,3 +18388,158 @@ try:
             print(f"Fixed normal /litefeet-music records endpoint: {rule.endpoint}")
 except Exception as exc:
     print(f"Could not fix normal LiteFeet Music records route: {exc}")
+
+
+# --- Dedicated LiteFeet Music submit flow ---
+def ledger_table_columns_for_insert(table_name):
+    try:
+        if engine.dialect.name == "postgresql":
+            rows = fetch_all(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                ORDER BY ordinal_position
+                """,
+                {"table_name": table_name},
+            )
+            return [row.get("column_name") for row in rows]
+        rows = fetch_all(f"PRAGMA table_info({table_name})", {})
+        return [row.get("name") for row in rows]
+    except Exception as exc:
+        print(f"Could not inspect {table_name} columns: {exc}")
+        return []
+
+
+def ledger_insert_dynamic(table_name, values):
+    columns = ledger_table_columns_for_insert(table_name)
+    allowed = {column for column in columns if column and column != "id"}
+
+    payload = {
+        key: value
+        for key, value in values.items()
+        if key in allowed
+    }
+
+    if not payload:
+        raise RuntimeError(f"No insertable columns found for {table_name}")
+
+    column_sql = ", ".join(payload.keys())
+    value_sql = ", ".join([f":{key}" for key in payload.keys()])
+
+    execute_query(
+        f"INSERT INTO {table_name} ({column_sql}) VALUES ({value_sql})",
+        payload,
+    )
+
+
+@app.route("/litefeet-music/submit", methods=["GET", "POST"])
+def submit_litefeet_music_dedicated():
+    error = None
+
+    try:
+        ensure_media_items_table()
+    except Exception as exc:
+        print(f"Music submit table check skipped: {exc}")
+
+    try:
+        ensure_media_release_key_column()
+    except Exception as exc:
+        print(f"Music submit release key check skipped: {exc}")
+
+    try:
+        ensure_music_release_status_columns()
+    except Exception as exc:
+        print(f"Music submit status column check skipped: {exc}")
+
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        artist_or_creator = request.form.get("artist_or_creator", "").strip()
+        platform = request.form.get("platform", "").strip()
+        url = request.form.get("url", "").strip()
+        release_date = request.form.get("release_date", "").strip()
+        description = request.form.get("description", "").strip()
+        release_stage = request.form.get("release_stage", "released").strip() or "released"
+        producer_name = request.form.get("producer_name", "").strip()
+        submitter_name = request.form.get("submitter_name", "").strip()
+        submitter_contact = request.form.get("submitter_contact", "").strip()
+
+        if not title:
+            error = "Add the music title."
+        elif not artist_or_creator:
+            error = "Add the artist, producer, or creator name."
+        else:
+            try:
+                canonical_release_key = ""
+                try:
+                    canonical_release_key = music_release_key(title, artist_or_creator)
+                except Exception:
+                    canonical_release_key = f"{artist_or_creator.lower()}::{title.lower()}"
+
+                existing = []
+                try:
+                    existing = fetch_all(
+                        """
+                        SELECT id
+                        FROM media_items
+                        WHERE media_type = 'music_release'
+                          AND canonical_release_key = :canonical_release_key
+                        LIMIT 1
+                        """,
+                        {"canonical_release_key": canonical_release_key},
+                    )
+                except Exception:
+                    existing = []
+
+                if existing:
+                    return redirect("/litefeet-music?duplicate=1")
+
+                details = description
+                if submitter_name or submitter_contact:
+                    details = details + f"\n\nSubmitted by: {submitter_name or 'Not provided'}"
+                    details = details + f"\nContact: {submitter_contact or 'Not provided'}"
+
+                values = {
+                    "media_type": "music_release",
+                    "title": title,
+                    "artist_or_creator": artist_or_creator,
+                    "artist_name": artist_or_creator,
+                    "producer_name": producer_name,
+                    "url": url,
+                    "platform": platform,
+                    "release_date": release_date,
+                    "event_name": "",
+                    "description": details.strip(),
+                    "status": "Published",
+                    "review_status": "Published",
+                    "created_at": datetime.now().isoformat(timespec="seconds"),
+                    "canonical_release_key": canonical_release_key,
+                    "release_stage": release_stage,
+                    "play_count": 0,
+                    "last_played_at": "",
+                    "playable_url": "",
+                }
+
+                ledger_insert_dynamic("media_items", values)
+
+                return redirect("/litefeet-music?submitted=1&period=all")
+            except Exception as exc:
+                print(f"Dedicated music submit failed: {exc}")
+                error = "The music submission could not be saved. Try again shortly."
+
+    return render_template("submit_music.html", error=error)
+
+
+def submit_music_release_legacy_redirect():
+    if request.method == "POST":
+        return submit_litefeet_music_dedicated()
+    return redirect("/litefeet-music/submit")
+
+
+try:
+    if "submit_music_release" in app.view_functions:
+        app.view_functions["submit_music_release"] = submit_music_release_legacy_redirect
+        print("Redirected legacy Add Release route to Submit Music.")
+except Exception as exc:
+    print(f"Legacy release redirect setup skipped: {exc}")

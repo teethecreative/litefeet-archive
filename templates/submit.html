@@ -1,121 +1,99 @@
 {% extends "base.html" %}
 
-{% block title %}General Submission | The LiteFeet Ledger{% endblock %}
-{% block meta_description %}Submit general LiteFeet information, corrections, source links, profile updates, battle notes, event context, music info, or community records to The LiteFeet Ledger.{% endblock %}
+{% block title %}General Ledger Submission | The LiteFeet Ledger{% endblock %}
 
 {% block content %}
-{% set selected_category = request.args.get("category", "general") %}
-{% set suggested_type = phase10_suggested_submission_type(selected_category) %}
-
-<section class="content-section general-submit-page">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Submit</p>
-            <h1>General Ledger Submission</h1>
-            <p>
-                Use this for information that does not fit one specific form yet, corrections to existing records,
-                missing source links, or community context.
-            </p>
-        </div>
-
-        <div class="hero-actions">
-            <a class="button secondary" href="{{ url_for('submit_start_phase10a') }}">Choose Another Type</a>
-            <a class="button secondary" href="{{ url_for('ledger_review') if phase10_endpoint_exists('ledger_review') else '/ledger-review' }}">Ledger Review</a>
-        </div>
+<section class="page-hero submit-hero">
+    <p class="eyebrow">Submit</p>
+    <h1>General Ledger Submission</h1>
+    <p>
+        Use this for corrections, missing source links, community context, or information that does not fit one specific form yet.
+    </p>
+    <div class="hero-actions">
+        <a class="button secondary" href="/submit/start">Choose Another Type</a>
+        <a class="button secondary" href="/ledger-review">Ledger Review</a>
     </div>
 </section>
 
-<section class="homepage-section">
+<section class="ledger-form-shell">
     {% if error %}
-        <div class="empty-state compact-empty error-state">
-            <h3>Something needs fixing</h3>
-            <p>{{ error }}</p>
-        </div>
+        <div class="form-alert">{{ error }}</div>
     {% endif %}
 
-    <form method="POST" action="{{ url_for('submit_info') }}" class="form-card general-submit-form">
-        <div class="form-grid two-column-form-grid">
-            <label>
-                Submission type
+    <form method="POST" class="ledger-form-card">
+        <div class="form-card-header">
+            <p class="eyebrow">General Record</p>
+            <h2>What should be added or corrected?</h2>
+            <p>If this is specifically music, use the music form from the LiteFeet Music page.</p>
+        </div>
+
+        <div class="form-grid two">
+            <label class="field-card">
+                <span>Submission type</span>
                 <select name="submission_type">
-                    {% for item in phase10_submission_categories() %}
-                        <option value="{{ phase10_suggested_submission_type(item.value) }}" {% if item.value == selected_category %}selected{% endif %}>
-                            {{ item.label }}
-                        </option>
-                    {% endfor %}
+                    <option>Correction</option>
+                    <option>Missing Source</option>
+                    <option>Community Context</option>
+                    <option>Person / Profile Info</option>
+                    <option>Team Info</option>
+                    <option>Battle Info</option>
+                    <option>Award Info</option>
+                    <option>Calendar / Event Info</option>
+                    <option>Music / Release Info</option>
+                    <option>General Info</option>
                 </select>
             </label>
 
-            <label>
-                Title / name
-                <input type="text" name="title" placeholder="What should this record be called?" required>
+            <label class="field-card">
+                <span>Title / name</span>
+                <input type="text" name="title" placeholder="What should this record be called?">
             </label>
 
-            <label>
-                Related to
-                <input type="text" name="related_to" placeholder="Person, team, event, battle, award, release...">
+            <label class="field-card">
+                <span>Related to</span>
+                <input type="text" name="related_to" placeholder="Person, team, event, battle, song, etc.">
             </label>
 
-            <label>
-                Source / proof link
-                <input type="url" name="source_url" placeholder="Video, flyer, post, article, playlist, etc.">
+            <label class="field-card">
+                <span>Source / proof link</span>
+                <input type="url" name="source_url" placeholder="Video, flyer, post, article, archive link">
             </label>
 
-            <label>
-                Your name / handle
+            <label class="field-card">
+                <span>Your name / handle</span>
                 <input type="text" name="submitter_name" placeholder="Optional">
             </label>
 
-            <label>
-                Your role
-                <input type="text" name="submitter_role" placeholder="Dancer, host, producer, viewer, team member...">
-            </label>
-
-            <label>
-                Contact
+            <label class="field-card">
+                <span>Contact</span>
                 <input type="text" name="contact" placeholder="Optional email or IG">
             </label>
 
-            <label>
-                Verification status
+            <label class="field-card">
+                <span>Your role</span>
+                <input type="text" name="submitter_role" placeholder="Dancer, host, producer, witness, etc.">
+            </label>
+
+            <label class="field-card">
+                <span>Verification status</span>
                 <select name="needs_verification">
                     <option value="yes">Needs verification</option>
-                    <option value="no">I have a source / proof</option>
+                    <option value="no">Already confirmed</option>
+                    <option value="unsure">Not sure</option>
                 </select>
             </label>
         </div>
 
-        <label>
-            Details / correction / context
-            <textarea name="details" rows="7" placeholder="Add the full context: what happened, what should be corrected, who was involved, dates, locations, credits, links, or anything that needs review."></textarea>
+        <label class="field-card full">
+            <span>Details / correction / context</span>
+            <textarea name="details" rows="8" placeholder="Add the full context: what happened, what should be corrected, who was involved, dates, locations, credits, links, or anything that needs review."></textarea>
         </label>
 
-        <input type="hidden" name="review_status" value="Pending Review">
+        <button class="button primary full-submit" type="submit">Submit to Ledger</button>
 
-        <button class="button primary" type="submit">Submit to Ledger</button>
-
-        <p class="small-note">
-            Tip: if this is a battle, award, calendar item, team, or music project, the Submission Hub can send you to a more specific form.
+        <p class="form-note">
+            Tip: if this is clearly a music record, submit it from the LiteFeet Music page so it goes straight into the music workflow.
         </p>
     </form>
 </section>
-
-<style>
-    .general-submit-form {
-        display: grid;
-        gap: 16px;
-    }
-
-    .two-column-form-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
-    }
-
-    @media (max-width: 900px) {
-        .two-column-form-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
 {% endblock %}

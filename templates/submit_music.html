@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Music | The LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="page-hero submit-hero">
+    <p class="eyebrow">LiteFeet Music</p>
+    <h1>Submit Music</h1>
+    <p>
+        Add a LiteFeet track, producer drop, battle song, remix, video link, or music record.
+        The Ledger will place it into Release Radar or the all-time music records based on the release date.
+    </p>
+    <div class="hero-actions">
+        <a class="button secondary" href="/litefeet-music">Back to LiteFeet Music</a>
+    </div>
+</section>
+
+<section class="ledger-form-shell">
+    {% if error %}
+        <div class="form-alert">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" class="ledger-form-card">
+        <div class="form-card-header">
+            <p class="eyebrow">Music Record</p>
+            <h2>Music details</h2>
+            <p>No need to choose Release Radar vs All-Time. The site handles that from the release date.</p>
+        </div>
+
+        <div class="form-grid two">
+            <label class="field-card">
+                <span>Title</span>
+                <input type="text" name="title" placeholder="Track, remix, project, or video title" required>
+            </label>
+
+            <label class="field-card">
+                <span>Artist / Producer / Creator</span>
+                <input type="text" name="artist_or_creator" placeholder="Name connected to the release" required>
+            </label>
+
+            <label class="field-card">
+                <span>Producer name, if different</span>
+                <input type="text" name="producer_name" placeholder="Optional">
+            </label>
+
+            <label class="field-card">
+                <span>Platform</span>
+                <select name="platform">
+                    <option value="">Choose platform</option>
+                    <option>SoundCloud</option>
+                    <option>YouTube</option>
+                    <option>Spotify</option>
+                    <option>Apple Music</option>
+                    <option>Audiomack</option>
+                    <option>Bandcamp</option>
+                    <option>Other</option>
+                </select>
+            </label>
+
+            <label class="field-card">
+                <span>Release date</span>
+                <input type="date" name="release_date">
+                <small>Recent dates can appear in Release Radar. Older dates still stay in all-time records.</small>
+            </label>
+
+            <label class="field-card">
+                <span>Status</span>
+                <select name="release_stage">
+                    <option value="released">Released</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="archival">Archival / older record</option>
+                </select>
+            </label>
+        </div>
+
+        <label class="field-card full">
+            <span>Music link</span>
+            <input type="url" name="url" placeholder="SoundCloud, YouTube, Spotify, Apple Music, etc.">
+        </label>
+
+        <label class="field-card full">
+            <span>Context / notes</span>
+            <textarea name="description" rows="6" placeholder="Add credits, who produced it, where it came from, why it matters, or anything that helps verify the record."></textarea>
+        </label>
+
+        <div class="form-grid two">
+            <label class="field-card">
+                <span>Your name / handle</span>
+                <input type="text" name="submitter_name" placeholder="Optional">
+            </label>
+
+            <label class="field-card">
+                <span>Contact</span>
+                <input type="text" name="submitter_contact" placeholder="Optional email or IG">
+            </label>
+        </div>
+
+        <button class="button primary full-submit" type="submit">Submit Music</button>
+    </form>
+</section>
+{% endblock %}
