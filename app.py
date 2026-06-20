@@ -10467,3 +10467,392 @@ try:
     ensure_phase3a_profile_columns()
 except Exception as exc:
     print(f"Phase 3A profile schema hotfix skipped: {exc}")
+
+
+# --- Phase 3B Ask ranking and answer quality ---
+def phase3b_parse_details_json(value):
+    if not value:
+        return ""
+
+    try:
+        parsed = json.loads(value)
+    except Exception:
+        return str(value)
+
+    parts = []
+
+    if isinstance(parsed, list):
+        for item in parsed:
+            if isinstance(item, dict):
+                label = item.get("label") or item.get("name") or ""
+                item_value = item.get("value") or item.get("text") or ""
+                if item_value:
+                    if label:
+                        parts.append(f"{label}: {item_value}")
+                    else:
+                        parts.append(str(item_value))
+            elif item:
+                parts.append(str(item))
+
+    elif isinstance(parsed, dict):
+        for key, item_value in parsed.items():
+            if item_value:
+                parts.append(f"{key}: {item_value}")
+
+    else:
+        parts.append(str(parsed))
+
+    return " | ".join(parts)
+
+
+def phase3b_normalized_text(value):
+    import re
+
+    value = str(value or "").lower()
+    value = re.sub(r"[^a-z0-9'\s]+", " ", value)
+    value = re.sub(r"\s+", " ", value).strip()
+    return value
+
+
+def phase3b_status_weight(status):
+    status = str(status or "").lower()
+
+    if "verified" in status:
+        return 10
+
+    if "community supported" in status:
+        return 8
+
+    if "debated" in status or "disputed" in status:
+        return 5
+
+    if "needs" in status:
+        return 3
+
+    if "pending" in status:
+        return 2
+
+    return 1
+
+
+def phase3b_table_weight(table_name):
+    weights = {
+        "submissions": 6,
+        "dancer_profiles": 8,
+        "battle_records": 9,
+        "calendar_item_metadata": 6,
+        "music_projects": 6,
+        "media_items": 5,
+        "community_perspectives": 7,
+    }
+
+    return weights.get(table_name, 1)
+
+
+def phase3b_row_search_text(table_name, row):
+    values = []
+
+    for key, value in row.items():
+        if value in (None, ""):
+            continue
+
+        if key == "details_json":
+            values.append(phase3b_parse_details_json(value))
+        else:
+            values.append(str(value))
+
+    if table_name == "calendar_item_metadata" and row.get("submission_id"):
+        try:
+            event_rows = fetch_all(
+                """
+                SELECT *
+                FROM submissions
+                WHERE id = :submission_id
+                LIMIT 1
+                """,
+                {"submission_id": row.get("submission_id")},
+            )
+            if event_rows:
+                event_row = phase3a_row_to_dict(event_rows[0])
+                values.extend(str(value or "") for value in event_row.values())
+        except Exception:
+            pass
+
+    return " ".join(values)
+
+
+def phase3a_record_url(table_name, row):
+    try:
+        if table_name == "submissions":
+            if row.get("submission_type") == "event":
+                return url_for("event_detail", event_id=row.get("id"))
+            return url_for("verify_claim_detail", submission_id=row.get("id"))
+
+        if table_name == "dancer_profiles":
+            if row.get("profile_slug"):
+                return url_for("dancer_profile_detail", profile_slug=row.get("profile_slug"))
+            return url_for("dancer_profile_detail_by_id", dancer_id=row.get("id"))
+
+        if table_name == "battle_records":
+            return url_for("battle_record_detail_phase2", battle_id=row.get("id"))
+
+        if table_name == "calendar_item_metadata" and row.get("submission_id"):
+            return url_for("event_detail", event_id=row.get("submission_id"))
+
+        if table_name == "community_perspectives":
+            return url_for("community_perspective_detail_phase2g", perspective_id=row.get("id"))
+
+        if table_name in {"music_projects", "media_items"}:
+            if row.get("id") and table_name == "media_items":
+                return url_for("music_release_detail", item_id=row.get("id"))
+            return url_for("litefeet_music")
+    except Exception:
+        pass
+
+    return ""
+
+
+def phase3a_record_snippet(table_name, row):
+    priority_fields = [
+        "bio",
+        "details_json",
+        "perspective_text",
+        "description",
+        "event_details",
+        "judges_text",
+        "winner",
+        "official_winner",
+        "related_to",
+        "team_affiliation",
+        "borough",
+        "venue_name",
+        "calendar_type",
+        "artist_name",
+        "platform",
+        "source_url",
+        "url",
+    ]
+
+    parts = []
+
+    for field in priority_fields:
+        value = row.get(field)
+
+        if not value:
+            continue
+
+        if field == "details_json":
+            value = phase3b_parse_details_json(value)
+
+        if value:
+            parts.append(str(value))
+
+    if not parts:
+        for key, value in row.items():
+            if key == "id" or value in (None, ""):
+                continue
+            parts.append(str(value))
+            if len(parts) >= 4:
+                break
+
+    return phase3a_compact_text(" | ".join(parts), 420)
+
+
+def phase3a_search_ledger(question, limit=10):
+    ensure_phase2_ledger_tables()
+
+    profile_helper = globals().get("ensure_phase3a_profile_columns")
+    if callable(profile_helper):
+        try:
+            profile_helper()
+        except Exception:
+            pass
+
+    phase2g_helper = globals().get("ensure_phase2g_community_perspective_columns")
+    if callable(phase2g_helper):
+        try:
+            phase2g_helper()
+        except Exception:
+            pass
+
+    tokens = phase3a_tokens(question)
+    normalized_question = phase3b_normalized_text(question)
+
+    if not tokens:
+        return []
+
+    search_tables = [
+        "battle_records",
+        "dancer_profiles",
+        "submissions",
+        "community_perspectives",
+        "calendar_item_metadata",
+        "music_projects",
+        "media_items",
+    ]
+
+    scored = []
+
+    for table_name in search_tables:
+        for row in phase3a_fetch_recent_rows(table_name, limit=500):
+            title = phase3a_record_title(table_name, row)
+            snippet = phase3a_record_snippet(table_name, row)
+            search_text = phase3b_row_search_text(table_name, row)
+
+            normalized_title = phase3b_normalized_text(title)
+            normalized_search_text = phase3b_normalized_text(search_text)
+
+            score = 0
+
+            if normalized_question and normalized_question in normalized_title:
+                score += 40
+
+            if normalized_question and normalized_question in normalized_search_text:
+                score += 25
+
+            matched_tokens = 0
+
+            for token in tokens:
+                if token in normalized_title:
+                    score += 12
+                    matched_tokens += 1
+                elif token in normalized_search_text:
+                    score += 4
+                    matched_tokens += 1
+
+            if matched_tokens == len(tokens):
+                score += 18
+
+            if matched_tokens >= max(1, len(tokens) - 1):
+                score += 8
+
+            if score <= 0:
+                continue
+
+            status = phase3a_record_status(table_name, row)
+            score += phase3b_status_weight(status)
+            score += phase3b_table_weight(table_name)
+
+            source_url = phase3a_record_source_url(row)
+
+            if source_url:
+                score += 3
+
+            scored.append(
+                {
+                    "score": score,
+                    "table": table_name,
+                    "id": row.get("id"),
+                    "title": title,
+                    "type_label": phase3a_record_type_label(table_name, row),
+                    "status": status,
+                    "snippet": snippet,
+                    "url": phase3a_record_url(table_name, row),
+                    "source_url": source_url,
+                    "matched_tokens": matched_tokens,
+                }
+            )
+
+    scored.sort(
+        key=lambda item: (
+            item["score"],
+            phase3b_status_weight(item["status"]),
+            item["matched_tokens"],
+        ),
+        reverse=True,
+    )
+
+    unique = []
+    seen = set()
+
+    for item in scored:
+        key = (item["table"], item["id"])
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+        unique.append(item)
+
+        if len(unique) >= limit:
+            break
+
+    return unique
+
+
+def phase3b_group_results(results):
+    groups = {
+        "Verified / Community Supported": [],
+        "Debated / Needs Verification": [],
+        "Other Matches": [],
+    }
+
+    for item in results:
+        status = item.get("status", "")
+
+        if status in {"Verified", "Community Supported"}:
+            groups["Verified / Community Supported"].append(item)
+        elif status in {"Debated", "Needs Verification", "Pending Review"}:
+            groups["Debated / Needs Verification"].append(item)
+        else:
+            groups["Other Matches"].append(item)
+
+    return groups
+
+
+def phase3a_build_ask_answer(question, results):
+    if not results:
+        return (
+            "I could not find a strong Ledger match for that yet.\n\n"
+            "Ledger status: Unknown / Needs Verification\n\n"
+            "What this means: the Ledger does not currently have enough structured records, source links, "
+            "or community perspectives connected to answer this confidently.\n\n"
+            "Best next step: submit a source, flyer, video, correction, or community perspective so this can become a reviewable Ledger record."
+        )
+
+    groups = phase3b_group_results(results)
+
+    strong_count = len(groups["Verified / Community Supported"])
+    review_count = len(groups["Debated / Needs Verification"])
+
+    lines = [
+        "Ledger Search Result",
+        "",
+        f"Question: {question}",
+        "",
+        f"Supported matches: {strong_count}",
+        f"Needs review/context matches: {review_count}",
+        "",
+    ]
+
+    for group_name, group_items in groups.items():
+        if not group_items:
+            continue
+
+        lines.append(group_name)
+        lines.append("-" * len(group_name))
+
+        for index, item in enumerate(group_items, start=1):
+            lines.append(f"{index}. {item['title']}")
+            lines.append(f"   Type: {item['type_label']}")
+            lines.append(f"   Status: {item['status']}")
+
+            if item["snippet"]:
+                lines.append(f"   Context: {item['snippet']}")
+
+            if item["url"]:
+                lines.append(f"   Ledger record: {item['url']}")
+
+            if item["source_url"]:
+                lines.append(f"   Source/proof: {item['source_url']}")
+
+            lines.append("")
+
+    lines.append("How to read this:")
+    lines.append(
+        "Verified and Community Supported records carry the most weight. "
+        "Debated, Pending Review, and Needs Verification records are included as context, "
+        "but should not be treated as final until reviewed."
+    )
+
+    return "\n".join(lines)
