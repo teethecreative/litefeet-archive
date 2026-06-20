@@ -1,20 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}Submit a LiteFeet Event or Battle | LiteFeet Ledger{% endblock %}
+{% block title %}Add Calendar Item | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Submit a LiteFeet battle, class, cypher, link-up, performance, workshop, release, team event, or community event to The LiteFeet Ledger Calendar.{% endblock %}
 
 {% block content %}
-<section class="content-section">
-    <p><a href="{{ url_for('events') }}" class="button secondary">Back to Calendar</a></p>
-
-    <h1>Add to Calendar</h1>
-
+<section class="content-section event-submit-page">
+    <p class="eyebrow">Calendar</p>
+    <h1>Add Calendar Item</h1>
     <p>
-        Add an upcoming, past, recurring, or on-the-spot LiteFeet calendar item for Ledger review. Events are reviewed before they appear publicly.
+        Add an upcoming, past, recurring, or on-the-spot LiteFeet calendar item for Ledger review.
+        This can be a battle, class, link-up, cypher, workshop, performance, music release,
+        team event, or other community event.
     </p>
 
     {% if errors %}
         <div class="form-errors">
-            <h2>Before this can be saved</h2>
+            <h2>Fix this first</h2>
             <ul>
                 {% for error in errors %}
                     <li>{{ error }}</li>
@@ -23,218 +24,144 @@
         </div>
     {% endif %}
 
-    <form class="archive-form" action="{{ url_for('submit_event') }}" method="post">
-        <label for="event_timing">Is this event upcoming, past, or on the spot?</label>
-        <select id="event_timing" name="event_timing">
-            <option value="">Choose one</option>
-            <option value="future">Future / upcoming event</option>
-            <option value="past">Past event</option>
-            <option value="on_the_spot">On-the-spot event / happened without being fully planned</option>
-        </select>
+    <form method="POST" class="archive-form event-form">
+        <div class="form-grid">
+            <label>
+                Host / Organization
+                <input type="text" name="event_org" placeholder="Example: Body Bag, Team Demon, Small Room Sundays" required>
+            </label>
 
-        <label for="event_org">Organization / host name</label>
-        <input
-            type="text"
-            id="event_org"
-            name="event_org"
-            placeholder="Example: BodyBag, HypeItUpTV, event host, crew, brand, or organization"
-        >
+            <label>
+                Calendar Item Name
+                <input type="text" name="event_name" placeholder="Example: Body Bag 10, LiteFeet class, cypher night" required>
+            </label>
 
-        <label for="event_name">Event name</label>
-        <input
-            type="text"
-            id="event_name"
-            name="event_name"
-            placeholder="Example: Elimination Chamber, Goblet of Fire, Money in the Bank"
-        >
+            <label>
+                Date
+                <input type="date" name="event_date" required>
+            </label>
 
-        <label for="event_date">Date</label>
-        <input type="date" id="event_date" name="event_date">
+            <label>
+                Time
+                <input type="text" name="event_time" placeholder="Example: 6 PM, 6–10 PM, TBD" required>
+            </label>
 
-        <label for="event_time">Time</label>
-        <input type="time" id="event_time" name="event_time">
+            <label>
+                Location
+                <input type="text" name="event_location" placeholder="Studio, park, venue, borough, or online" required>
+            </label>
 
-        <label for="event_location">Location</label>
-        <input
-            type="text"
-            id="event_location"
-            name="event_location"
-            placeholder="Example: 123 Lenox Ave, New York, NY 10027 — or venue / borough / online location"
-        >
+            <label>
+                Calendar Type
+                <select name="event_timing">
+                    <option value="">Choose one</option>
+                    <option value="Battle">Battle</option>
+                    <option value="Class">Class</option>
+                    <option value="Cypher">Cypher</option>
+                    <option value="Link-up">Link-up</option>
+                    <option value="Performance">Performance</option>
+                    <option value="Workshop">Workshop</option>
+                    <option value="Practice">Practice</option>
+                    <option value="Music Release">Music Release</option>
+                    <option value="Team Event">Team Event</option>
+                    <option value="Community Event">Community Event</option>
+                    <option value="Other">Other</option>
+                </select>
+            </label>
 
-        <label for="event_battle_type">Battle format / event type</label>
-        <select id="event_battle_type" name="event_battle_type">
-            <option value="">Choose one</option>
-            <option value="1v1">1v1</option>
-            <option value="2v2">2v2</option>
-            <option value="3v3">3v3</option>
-            <option value="4v4">4v4</option>
-            <option value="5v5">5v5</option>
-            <option value="team_vs_team">Team vs Team</option>
-            <option value="tournament">Tournament / bracket</option>
-            <option value="showcase">Showcase / cypher</option>
-            <option value="on_the_spot">On-the-spot battles</option>
-            <option value="mixed">Mixed formats</option>
-            <option value="other">Other</option>
-        </select>
+            <label>
+                Battle Type <span class="small-note">(optional)</span>
+                <input type="text" name="event_battle_type" placeholder="1v1, 2v2, team battle, royal rumble, etc.">
+            </label>
 
-        <label for="event_battle_list">Planned battle list</label>
-        <textarea
-            id="event_battle_list"
-            name="event_battle_list"
-            rows="7"
-            placeholder="Use one battle per line:
-Dancer Name | Team vs Dancer Name | Team
-Dancer Name | Team + Dancer Name | Team vs Dancer Name | Team + Dancer Name | Team
-Team Name vs Team Name
-Tournament: list confirmed dancers/teams or bracket notes"
-        ></textarea>
+            <label>
+                Source / Flyer / Link <span class="small-note">(optional)</span>
+                <input type="url" name="source_url" placeholder="Instagram flyer, YouTube recap, post, ticket link">
+            </label>
+        </div>
 
-        <label for="event_judges">Judges</label>
-        <textarea
-            id="event_judges"
-            name="event_judges"
-            rows="4"
-            placeholder="Use one judge per line:
-Judge Name | Team/Affiliation
-Judge Name | Team/Affiliation"
-        ></textarea>
+        <label>
+            Planned Battle List <span class="small-note">(optional)</span>
+            <textarea name="event_battle_list" rows="4" placeholder="List the battles or matchups if known."></textarea>
+        </label>
 
-        <label for="event_details">Extra event details</label>
-        <textarea
-            id="event_details"
-            name="event_details"
-            rows="5"
-            placeholder="Add prizes, categories, DJ, age group, rules, flyer details, doors open time, ticket info, recap notes, or anything else people should know."
-        ></textarea>
+        <label>
+            Judges / DJs / Hosts <span class="small-note">(optional)</span>
+            <textarea name="event_judges" rows="3" placeholder="Judges, DJ, host, special guests, etc."></textarea>
+        </label>
 
-        <div id="pastEventFields" class="conditional-panel">
-            <h2>Past Event Results</h2>
+        <label>
+            Details
+            <textarea name="event_details" rows="5" placeholder="What should people know about this calendar item?"></textarea>
+        </label>
 
-            <label for="event_results">What happened at the event?</label>
-            <textarea
-                id="event_results"
-                name="event_results"
-                rows="6"
-                placeholder="Add results, winners, standout moments, battle outcomes, crowd reactions, judges’ decisions, or recap notes."
-            ></textarea>
+        <label>
+            Results / Recap <span class="small-note">(optional for past events)</span>
+            <textarea name="event_results" rows="5" placeholder="Winners, outcomes, links, controversy, notes, recap, etc."></textarea>
+        </label>
 
-            <label for="planned_battles_status">Did all planned battles happen?</label>
-            <select id="planned_battles_status" name="planned_battles_status">
-                <option value="">Choose one</option>
-                <option value="all_happened">Yes, all planned battles happened</option>
-                <option value="some_did_not_happen">Some battles did not happen</option>
-                <option value="none_happened">No, the planned battles did not happen</option>
-                <option value="not_planned">There was no planned battle list / battles happened on the spot</option>
+        <label>
+            Planned Battles Status <span class="small-note">(optional)</span>
+            <select name="planned_battles_status">
+                <option value="">No status</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Partially confirmed">Partially confirmed</option>
+                <option value="Needs verification">Needs verification</option>
+                <option value="Changed">Changed</option>
+                <option value="Cancelled">Cancelled</option>
             </select>
+        </label>
 
-            <div id="battleIssueFields" class="conditional-panel nested-panel">
-                <h3>If a planned battle did not happen, what happened?</h3>
+        <fieldset class="form-card compact-fieldset">
+            <legend>Battle issue flags</legend>
 
-                <label class="checkbox-row">
-                    <input type="checkbox" name="battle_issue_rescheduled" value="yes">
-                    <span>Battle was rescheduled</span>
-                </label>
+            <label class="checkbox-line">
+                <input type="checkbox" name="battle_issue_rescheduled" value="yes">
+                Battle was rescheduled
+            </label>
 
-                <label class="checkbox-row">
-                    <input type="checkbox" name="battle_issue_cancelled" value="yes">
-                    <span>Battle was cancelled</span>
-                </label>
+            <label class="checkbox-line">
+                <input type="checkbox" name="battle_issue_cancelled" value="yes">
+                Battle was cancelled
+            </label>
 
-                <label class="checkbox-row">
-                    <input type="checkbox" name="battle_issue_one_milk_carton" value="yes">
-                    <span>One dancer was on the milk carton</span>
-                </label>
+            <label class="checkbox-line">
+                <input type="checkbox" name="battle_issue_one_milk_carton" value="yes">
+                One dancer was on milk carton
+            </label>
 
-                <label class="checkbox-row">
-                    <input type="checkbox" name="battle_issue_both_milk_carton" value="yes">
-                    <span>Both dancers were on the milk carton</span>
-                </label>
+            <label class="checkbox-line">
+                <input type="checkbox" name="battle_issue_both_milk_carton" value="yes">
+                Both dancers were on milk carton
+            </label>
 
-                <label for="battle_issue_details">Which battle(s) did not happen and why?</label>
-                <textarea
-                    id="battle_issue_details"
-                    name="battle_issue_details"
-                    rows="5"
-                    placeholder="Example:
-Dancer Name | Team vs Dancer Name | Team — did not happen because one dancer was missing.
-Dancer Name | Team vs Dancer Name | Team — rescheduled for another date."
-                ></textarea>
-            </div>
+            <label>
+                Battle Issue Details
+                <textarea name="battle_issue_details" rows="3" placeholder="Explain any cancellation, reschedule, no-show, or disputed details."></textarea>
+            </label>
+        </fieldset>
+
+        <div class="form-grid">
+            <label>
+                Your Name / Alias <span class="small-note">(optional)</span>
+                <input type="text" name="submitter_name" placeholder="Name, dancer name, producer name, or alias">
+            </label>
+
+            <label>
+                Your Role <span class="small-note">(optional)</span>
+                <input type="text" name="submitter_role" placeholder="Host, dancer, organizer, producer, supporter, etc.">
+            </label>
+
+            <label>
+                Contact <span class="small-note">(optional)</span>
+                <input type="text" name="contact" placeholder="Email or IG if follow-up is needed">
+            </label>
         </div>
 
-        <div class="form-note">
-            <h3>Source & submitter info</h3>
-            <p>
-                Source links and contact info are optional, but they help the ledger review and verify event records.
-            </p>
+        <div class="hero-actions">
+            <button type="submit" class="button primary">Submit Calendar Item</button>
+            <a href="{{ url_for('events') }}" class="button secondary">Back to Calendar</a>
         </div>
-
-        <label for="source_url">Source link</label>
-        <input
-            type="url"
-            id="source_url"
-            name="source_url"
-            placeholder="Optional: flyer, Instagram post, Eventbrite, YouTube recap, Google Drive, website, etc."
-        >
-
-        <label for="submitter_name">Your name or alias</label>
-        <input
-            type="text"
-            id="submitter_name"
-            name="submitter_name"
-            placeholder="Optional: how should we identify who submitted this?"
-        >
-
-        <label for="submitter_role">Your role</label>
-        <select id="submitter_role" name="submitter_role">
-            <option value="">Choose a role</option>
-            <option value="host">Event host</option>
-            <option value="dancer">Dancer</option>
-            <option value="judge">Judge</option>
-                <option value="supporter">Supporter / Fan / Spectator</option>
-            <option value="dj">DJ</option>
-            <option value="videographer">Videographer / media</option>
-            <option value="community_member">Community member</option>
-            <option value="fan">Fan / supporter</option>
-            <option value="other">Other</option>
-        </select>
-
-        <label for="contact">Contact link or email</label>
-        <input
-            type="text"
-            id="contact"
-            name="contact"
-            placeholder="Optional: Instagram, email, or another way to reach you if we need more context"
-        >
-
-        <button type="submit" class="button primary">Submit Event for Review</button>
     </form>
 </section>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const eventTiming = document.getElementById("event_timing");
-        const pastEventFields = document.getElementById("pastEventFields");
-        const plannedBattlesStatus = document.getElementById("planned_battles_status");
-        const battleIssueFields = document.getElementById("battleIssueFields");
-
-        function updatePastFields() {
-            const showPastFields = eventTiming.value === "past" || eventTiming.value === "on_the_spot";
-            pastEventFields.classList.toggle("is-visible", showPastFields);
-        }
-
-        function updateBattleIssueFields() {
-            const value = plannedBattlesStatus.value;
-            const showIssueFields = value === "some_did_not_happen" || value === "none_happened";
-            battleIssueFields.classList.toggle("is-visible", showIssueFields);
-        }
-
-        eventTiming.addEventListener("change", updatePastFields);
-        plannedBattlesStatus.addEventListener("change", updateBattleIssueFields);
-
-        updatePastFields();
-        updateBattleIssueFields();
-    });
-</script>
 {% endblock %}

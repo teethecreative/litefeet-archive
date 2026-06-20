@@ -3780,6 +3780,7 @@ def submit_success():
 
 
 
+@app.route("/calendar/add", methods=["GET", "POST"])
 @app.route("/events/submit", methods=["GET", "POST"])
 def submit_event():
     if request.method == "POST":
@@ -5070,6 +5071,7 @@ def gate_unfinished_public_sections():
         return redirect(url_for("home"))
 
 
+@app.route("/ask")
 @app.route("/ask", methods=["GET", "POST"])
 def ask_archive():
     query = ""

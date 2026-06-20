@@ -1,153 +1,197 @@
 {% extends "base.html" %}
 
-{% block title %}LiteFeet Calendar & Battle Results | LiteFeet Ledger{% endblock %}
-{% block meta_description %}Browse LiteFeet events, battle results, event archives, organizers, dates, locations, judges, winners, and verified community-submitted event history.{% endblock %}
+{% block title %}Calendar | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Browse LiteFeet battles, classes, cyphers, performances, link-ups, workshops, releases, and community events in The LiteFeet Ledger Calendar.{% endblock %}
 
 {% block content %}
-<section class="content-section">
-    <h1>Calendar</h1>
-    <p>
-        Browse LiteFeet battles, events, classes, link-ups, performances, cyphers, flyers, results, and recap links.
-    </p>
+<section class="content-section calendar-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Calendar</p>
+            <h1>LiteFeet Calendar</h1>
+            <p>
+                Battles, classes, link-ups, performances, cyphers, workshops, music releases,
+                team events, and community records connected to LiteFeet.
+            </p>
+        </div>
 
-    <p>
-        <a href="{{ url_for('submit_event') }}" class="button primary">Add to Calendar</a>
-    </p>
+        <a class="button primary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
+    </div>
 
-    <section class="event-section">
-        <h2>Happening in the Next 2 Weeks</h2>
+    <div class="calendar-view-tabs" aria-label="Calendar views">
+        <a class="button small-button secondary" href="#upcoming">Upcoming</a>
+        <a class="button small-button secondary" href="#later">Later</a>
+        <a class="button small-button secondary" href="#past">Past</a>
+        <a class="button small-button secondary" href="#undated">Needs Date</a>
+    </div>
+</section>
 
-        {% if upcoming_soon %}
-            <div class="event-square-grid">
-                {% for event in upcoming_soon %}
-                    {% set event_date = event["details_json"] | detail_value("Event Date") %}
-                    {% set event_time = event["details_json"] | detail_value("Event Time") %}
-                    {% set event_location = event["details_json"] | detail_value("Event Location") %}
-                    {% set event_org = event["details_json"] | detail_value("Organization Name") %}
-                    {% set battle_type = event["details_json"] | detail_value("Battle Type") %}
+<section id="upcoming" class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Next 2 Weeks</p>
+            <h2>Upcoming Soon</h2>
+        </div>
+    </div>
 
-                    <a href="{{ event | event_public_url }}" class="event-square-link">
-                        <article class="event-square-card">
-                            <div class="submission-meta">
-                                <span>{{ event["review_status"] }}</span>
-                                {% if battle_type %}
-                                    <span>{{ battle_type }}</span>
-                                {% endif %}
-                            </div>
+    {% if upcoming_soon %}
+        <div class="calendar-list-grid">
+            {% for event in upcoming_soon %}
+                <article class="calendar-list-card">
+                    {% set event_date = event | detail_value("Event Date") %}
+                    {% set event_time = event | detail_value("Event Time") %}
+                    {% set event_location = event | detail_value("Event Location") %}
+                    {% set event_type = event | detail_value("Battle Type") %}
 
-                            <h3>{{ event["title"] }}</h3>
+                    <p class="eyebrow">{{ event_date or "Upcoming" }}{% if event_time %} · {{ event_time }}{% endif %}</p>
+                    <h3><a href="{{ event | event_public_url }}">{{ event["title"] }}</a></h3>
 
-                            <div>
-                                {% if event_org %}
-                                    <p><strong>Host:</strong> {{ event_org }}</p>
-                                {% endif %}
+                    {% if event["related_to"] %}<p><strong>Organizer:</strong> {{ event["related_to"] }}</p>{% endif %}
+                    {% if event_location %}<p><strong>Location:</strong> {{ event_location }}</p>{% endif %}
+                    {% if event_type %}<p><strong>Type:</strong> {{ event_type }}</p>{% endif %}
 
-                                {% if event_date or event_time %}
-                                    <p><strong>When:</strong> {{ event_date }}{% if event_time %} at {{ event_time }}{% endif %}</p>
-                                {% endif %}
+                    <a class="button small-button secondary" href="{{ event | event_public_url }}">Details</a>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No upcoming calendar items in the next two weeks.</h3>
+            <p>Add battles, classes, link-ups, performances, cyphers, workshops, and community events as they come in.</p>
+        </div>
+    {% endif %}
+</section>
 
-                                {% if event_location %}
-                                    <p><strong>Where:</strong> {{ event_location }}</p>
-                                {% endif %}
-                            </div>
-
-                            <span class="small-note">View event details</span>
-                        </article>
-                    </a>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="empty-state compact-empty">
-                <h3>No events listed for the next 2 weeks</h3>
-                <p>
-                    When verified or affiliate-host events are coming up soon, they’ll appear here as quick event cards.
-                </p>
-            </div>
-        {% endif %}
-    </section>
+<section id="later" class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Upcoming</p>
+            <h2>Later</h2>
+        </div>
+    </div>
 
     {% if upcoming_later %}
-        <section class="event-section">
-            <h2>Upcoming Later</h2>
-
-            <div class="event-table-wrap">
-                <table class="event-table">
-                    <thead>
+        <div class="release-table-wrap">
+            <table class="release-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Item</th>
+                        <th>Organizer</th>
+                        <th>Location</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in upcoming_later %}
                         <tr>
-                            <th>Date</th>
-                            <th>Event</th>
-                            <th>Host</th>
-                            <th>Location</th>
-                            <th>Format</th>
-                            <th>Status</th>
+                            <td>{{ event | detail_value("Event Date") or "Date TBD" }}</td>
+                            <td>{{ event["title"] }}</td>
+                            <td>{{ event["related_to"] or "—" }}</td>
+                            <td>{{ event | detail_value("Event Location") or "—" }}</td>
+                            <td><a class="button small-button secondary" href="{{ event | event_public_url }}">Open</a></td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for event in upcoming_later %}
-                            {% set event_date = event["details_json"] | detail_value("Event Date") %}
-                            {% set event_location = event["details_json"] | detail_value("Event Location") %}
-                            {% set event_org = event["details_json"] | detail_value("Organization Name") %}
-                            {% set battle_type = event["details_json"] | detail_value("Battle Type") %}
-
-                            <tr class="clickable-row" onclick="window.location.href='{{ event | event_public_url }}'">
-                                <td>{{ event_date or "Date TBD" }}</td>
-                                <td>{{ event["title"] }}</td>
-                                <td>{{ event_org or "Host TBD" }}</td>
-                                <td>{{ event_location or "Location TBD" }}</td>
-                                <td>{{ battle_type or "Format TBD" }}</td>
-                                <td>{{ event["review_status"] }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No later upcoming items yet.</h3>
+        </div>
     {% endif %}
-
-    <section class="event-section">
-        <h2>Past Calendar Items</h2>
-
-        {% if past_events %}
-            <div class="event-table-wrap">
-                <table class="event-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Event</th>
-                            <th>Host</th>
-                            <th>Location</th>
-                            <th>Format</th>
-                            <th>Results</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for event in past_events %}
-                            {% set event_date = event["details_json"] | detail_value("Event Date") %}
-                            {% set event_location = event["details_json"] | detail_value("Event Location") %}
-                            {% set event_org = event["details_json"] | detail_value("Organization Name") %}
-                            {% set battle_type = event["details_json"] | detail_value("Battle Type") %}
-                            {% set event_results = event["details_json"] | detail_value("Event Results") %}
-
-                            <tr class="clickable-row" onclick="window.location.href='{{ event | event_public_url }}'">
-                                <td>{{ event_date or "Date unknown" }}</td>
-                                <td>{{ event["title"] }}</td>
-                                <td>{{ event_org or "Host unknown" }}</td>
-                                <td>{{ event_location or "Location unknown" }}</td>
-                                <td>{{ battle_type or "Format unknown" }}</td>
-                                <td>{% if event_results %}Added{% else %}Not added yet{% endif %}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div class="empty-state compact-empty">
-                <h3>No past events listed yet</h3>
-                <p>
-                    Past verified events will appear here as the ledger collects event history, battle cards, results, and recap links.
-                </p>
-            </div>
-        {% endif %}
-    </section>
 </section>
+
+<section id="past" class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Archive</p>
+            <h2>Past Calendar Items</h2>
+        </div>
+    </div>
+
+    {% if past_events %}
+        <div class="release-table-wrap">
+            <table class="release-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Item</th>
+                        <th>Organizer</th>
+                        <th>Location</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in past_events %}
+                        <tr>
+                            <td>{{ event | detail_value("Event Date") or "Date TBD" }}</td>
+                            <td>{{ event["title"] }}</td>
+                            <td>{{ event["related_to"] or "—" }}</td>
+                            <td>{{ event | detail_value("Event Location") or "—" }}</td>
+                            <td><a class="button small-button secondary" href="{{ event | event_public_url }}">Open</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No past calendar records yet.</h3>
+        </div>
+    {% endif %}
+</section>
+
+<section id="undated" class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Needs Date</p>
+            <h2>Undated Records</h2>
+        </div>
+    </div>
+
+    {% if undated_events %}
+        <div class="calendar-list-grid">
+            {% for event in undated_events %}
+                <article class="calendar-list-card">
+                    <h3><a href="{{ event | event_public_url }}">{{ event["title"] }}</a></h3>
+                    {% if event["related_to"] %}<p><strong>Organizer:</strong> {{ event["related_to"] }}</p>{% endif %}
+                    <p class="small-note">This record needs date confirmation.</p>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No undated calendar records.</h3>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .calendar-view-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+    }
+
+    .calendar-list-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .calendar-list-card {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    @media (max-width: 900px) {
+        .calendar-list-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}

@@ -9,8 +9,8 @@
         <p class="eyebrow">The LiteFeet Ledger</p>
         <h1>A living archive for LiteFeet history.</h1>
         <p>
-            The LiteFeet Ledger tracks dancers, teams, battles, music, calendar events, awards, producers,
-            organizers, and community knowledge connected to LiteFeet culture.
+            The LiteFeet Ledger tracks dancers, teams, battles, music, calendar events, awards,
+            producers, organizers, and community knowledge connected to LiteFeet culture.
         </p>
     </div>
 
@@ -35,12 +35,7 @@
         {% if next_calendar_item %}
             <article class="calendar-main-card">
                 <p class="eyebrow">Next Calendar Item</p>
-
-                <h3>
-                    <a href="{{ next_calendar_item | event_public_url }}">
-                        {{ next_calendar_item["title"] }}
-                    </a>
-                </h3>
+                <h3><a href="{{ next_calendar_item | event_public_url }}">{{ next_calendar_item["title"] }}</a></h3>
 
                 {% set next_date = next_calendar_item | detail_value("Event Date") %}
                 {% set next_time = next_calendar_item | detail_value("Event Time") %}
@@ -64,8 +59,8 @@
                 <p class="eyebrow">Next Calendar Item</p>
                 <h3>No upcoming calendar items yet</h3>
                 <p>
-                    Upcoming battles, classes, link-ups, performances, cyphers, workshops, and community events
-                    will appear here once they are added and supported by the Ledger.
+                    Upcoming battles, classes, link-ups, performances, cyphers, workshops,
+                    and community events will appear here once they are added and supported by the Ledger.
                 </p>
                 <a class="button small-button primary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
             </article>
@@ -79,10 +74,7 @@
                     {% set item_location = item | detail_value("Event Location") %}
 
                     <p class="eyebrow">{{ item_date or "Upcoming" }}</p>
-
-                    <h3>
-                        <a href="{{ item | event_public_url }}">{{ item["title"] }}</a>
-                    </h3>
+                    <h3><a href="{{ item | event_public_url }}">{{ item["title"] }}</a></h3>
 
                     <p>
                         {% if item_time %}{{ item_time }}{% endif %}
@@ -95,17 +87,13 @@
             <article class="calendar-mini-card">
                 <p class="eyebrow">This Week</p>
                 <h3>More items coming soon</h3>
-                <p>
-                    Smaller upcoming items will sit here once the calendar has more active records.
-                </p>
+                <p>Smaller upcoming items will sit here once the calendar has more active records.</p>
             </article>
 
             <article class="calendar-mini-card">
                 <p class="eyebrow">Community</p>
                 <h3>Submit what is missing</h3>
-                <p>
-                    Add battles, classes, link-ups, cyphers, workshops, performances, and community events.
-                </p>
+                <p>Add battles, classes, link-ups, cyphers, workshops, performances, and community events.</p>
             </article>
         {% endif %}
     </div>
@@ -215,16 +203,14 @@
 
                 <tbody id="musicFeedList">
                     {% for item in latest_music_releases[:10] %}
-                        {% set embed_url = item["embed_url"] or (item["url"]|media_embed_url if item["url"] else "") %}
-                        <tr
-                            data-release-row
-                            data-search="{{ item['title'] }} {{ item['artist_or_creator'] }} {{ item['platform'] }} {{ item['event_name'] }} {{ item['description'] }}">
+                        {% set embed_url = item["url"]|media_embed_url if item["url"] else "" %}
+                        <tr data-release-row>
                             <td>
                                 <button
                                     type="button"
                                     class="playlist-play-button table-play-control"
                                     data-play-item-id="{{ item['id'] }}"
-                                    data-play-count="{{ item['play_count'] or 0 }}"
+                                    data-play-count="0"
                                     data-player-title="{{ item['title'] }}"
                                     data-player-artist="{{ item['artist_or_creator'] or 'Unknown producer' }}"
                                     data-player-platform="{{ item['platform'] or item['url']|media_platform }}"
@@ -250,39 +236,7 @@
                                 {% if logged_in_user %}
                                     <details class="mini-feedback-panel">
                                         <summary>Rate</summary>
-
-                                        <form method="POST" action="{{ url_for('music_feedback_submit', item_id=item['id']) }}" class="music-feedback-form compact-feedback-form">
-                                            <input type="hidden" name="action" value="full">
-
-                                            <label>
-                                                Rating
-                                                <select name="rating">
-                                                    <option value="">No rating</option>
-                                                    <option value="10">10 - Crazy</option>
-                                                    <option value="8">8 - Fire</option>
-                                                    <option value="6">6 - Solid</option>
-                                                    <option value="4">4 - Needs work</option>
-                                                    <option value="2">2 - Not for me</option>
-                                                </select>
-                                            </label>
-
-                                            <label class="checkbox-line">
-                                                <input type="checkbox" name="would_lab" value="1">
-                                                Lab
-                                            </label>
-
-                                            <label class="checkbox-line">
-                                                <input type="checkbox" name="would_battle" value="1">
-                                                Battle
-                                            </label>
-
-                                            <label class="checkbox-line">
-                                                <input type="checkbox" name="would_shoot_video" value="1">
-                                                Video
-                                            </label>
-
-                                            <button type="submit" class="button primary small-button">Save</button>
-                                        </form>
+                                        <a class="button small-button secondary" href="{{ url_for('music_release_detail', item_id=item['id']) }}">Open</a>
                                     </details>
                                 {% else %}
                                     <a class="button small-button secondary" href="{{ url_for('account_login') }}">Log in</a>
@@ -318,20 +272,18 @@
 </section>
 
 <style>
-    .ledger-home-shell {
+    .ledger-home-shell,
+    .home-submit-cta {
         display: flex;
         justify-content: space-between;
         gap: 24px;
         align-items: flex-end;
     }
 
-    .ledger-home-shell > div:first-child {
-        max-width: 760px;
-    }
-
+    .ledger-home-shell > div:first-child,
+    .home-submit-cta > div:first-child,
     .section-intro {
         max-width: 760px;
-        margin-top: -4px;
     }
 
     .home-calendar-grid {
@@ -349,26 +301,6 @@
         background: var(--card-bg, rgba(255,255,255,0.04));
     }
 
-    .calendar-main-card h3,
-    .calendar-mini-card h3 {
-        margin-top: 0;
-    }
-
-    .compact-video-playlist {
-        margin-top: 12px;
-    }
-
-    .home-submit-cta {
-        display: flex;
-        justify-content: space-between;
-        gap: 18px;
-        align-items: center;
-    }
-
-    .home-submit-cta > div:first-child {
-        max-width: 760px;
-    }
-
     @media (min-width: 900px) {
         .home-hero {
             padding-top: 24px;
@@ -384,14 +316,6 @@
         .homepage-section {
             margin-top: 18px;
             margin-bottom: 18px;
-        }
-
-        .video-feed-grid {
-            gap: 14px;
-        }
-
-        .media-card-body {
-            padding: 12px;
         }
 
         .release-table th,
