@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Music Feedback | The LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section admin-music-feedback-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Backend</p>
+            <h1>Music Feedback</h1>
+            <p>
+                Review music reactions, ratings, corrections, and context submitted by the community.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('admin_home') }}">Admin Dashboard</a>
+            <a class="button primary" href="{{ url_for('litefeet_music') }}">Open Music</a>
+        </div>
+    </div>
+</section>
+
+<section class="admin-music-summary-grid">
+    <article>
+        <p class="eyebrow">Feedback</p>
+        <h2>{{ feedback_rows|length }}</h2>
+        <p>Recent music feedback records.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Status</p>
+        {% if status_counts %}
+            <ul class="compact-admin-list">
+                {% for item in status_counts %}
+                    <li><strong>{{ item["feedback_status"] }}</strong> <span>{{ item["count"] }}</span></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="small-note">No status counts yet.</p>
+        {% endif %}
+    </article>
+
+    <article>
+        <p class="eyebrow">Reactions</p>
+        {% if reaction_counts %}
+            <ul class="compact-admin-list">
+                {% for item in reaction_counts %}
+                    <li><strong>{{ item["reaction_label"] }}</strong> <span>{{ item["count"] }}</span></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="small-note">No reactions yet.</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Queue</p>
+            <h2>Recent Music Feedback</h2>
+        </div>
+    </div>
+
+    {% if feedback_rows %}
+        <div class="release-table-wrap">
+            <table class="release-table">
+                <thead>
+                    <tr>
+                        <th>Release</th>
+                        <th>Feedback</th>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Review</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in feedback_rows %}
+                        <tr>
+                            <td>
+                                {% if item["item_id"] or item["media_item_id"] or item["release_id"] %}
+                                    {% set release_id = item["item_id"] or item["media_item_id"] or item["release_id"] %}
+                                    <a href="{{ url_for('music_release_detail', item_id=release_id) }}">
+                                        {{ item["release_title"] or "Release #" ~ release_id }}
+                                    </a>
+                                {% else %}
+                                    No linked release
+                                {% endif %}
+
+                                {% if item["release_artist"] %}
+                                    <p class="small-note">{{ item["release_artist"] }}</p>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <p><strong>{{ item["reaction_label"] or item["rating_category"] or "Feedback" }}</strong></p>
+
+                                {% if item["rating_value"] %}
+                                    <p>Rating: {{ item["rating_value"] }}/10</p>
+                                {% endif %}
+
+                                {% if item["feedback_text"] %}
+                                    <p>{{ item["feedback_text"] }}</p>
+                                {% else %}
+                                    <p class="small-note">No written note.</p>
+                                {% endif %}
+
+                                <p class="small-note">{{ item["created_at"] or "" }}</p>
+                            </td>
+
+                            <td>
+                                {{ item["user_display_name"] or item["user_email"] or item["visitor_key"] or "Unknown" }}
+                            </td>
+
+                            <td>
+                                {{ item["feedback_status"] or "New" }}
+                                {% if item["admin_note"] %}
+                                    <br><span class="small-note">{{ item["admin_note"] }}</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <form method="POST" action="{{ url_for('admin_music_feedback_status_phase6c', feedback_id=item['id']) }}" class="inline-admin-form">
+                                    <label>
+                                        Status
+                                        <select name="feedback_status">
+                                            {% for option in ["New", "Reviewed", "Needs Follow-up", "Needs Source", "Added to Review", "Archived", "Dismissed"] %}
+                                                <option value="{{ option }}" {% if (item["feedback_status"] or "New") == option %}selected{% endif %}>{{ option }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+
+                                    <label>
+                                        Admin note
+                                        <textarea name="admin_note" rows="3">{{ item["admin_note"] or "" }}</textarea>
+                                    </label>
+
+                                    <button class="button small-button secondary" type="submit">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No music feedback yet.</h3>
+            <p>Feedback from release pages will appear here.</p>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .admin-music-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .admin-music-summary-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .compact-admin-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 8px;
+    }
+
+    .compact-admin-list li {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        border-top: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        padding-top: 8px;
+    }
+
+    .inline-admin-form {
+        display: grid;
+        gap: 8px;
+        min-width: 220px;
+    }
+
+    .inline-admin-form select,
+    .inline-admin-form textarea {
+        width: 100%;
+    }
+
+    @media (max-width: 900px) {
+        .admin-music-summary-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

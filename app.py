@@ -13157,3 +13157,595 @@ def admin_calendar_recurrence_phase5d(metadata_id):
     )
 
     return redirect(url_for("admin_calendar_review_phase5c"))
+
+
+# --- Phase 6A + 6B + 6C music batch ---
+def phase6_admin_required():
+    if not current_user_is_admin():
+        return redirect(url_for("admin_login"))
+    return None
+
+
+def phase6_table_exists(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+    rows = conn.execute(
+        text("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = :table_name
+            LIMIT 1
+        """),
+        {"table_name": table_name},
+    ).fetchall()
+    return bool(rows)
+
+
+def phase6_table_columns(conn, table_name):
+    if "ledger_table_columns" in globals():
+        return ledger_table_columns(conn, table_name)
+
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def phase6_add_column_if_missing(conn, table_name, column_name, column_sql):
+    if not phase6_table_exists(conn, table_name):
+        return
+
+    columns = phase6_table_columns(conn, table_name)
+
+    if column_name in columns:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+
+
+def ensure_phase6_music_feedback_tables():
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS music_feedback (
+                    id SERIAL PRIMARY KEY,
+                    item_id INTEGER,
+                    media_item_id INTEGER,
+                    release_id INTEGER,
+                    project_id INTEGER,
+                    user_id INTEGER,
+                    rating_category TEXT,
+                    rating_value INTEGER,
+                    reaction_label TEXT,
+                    feedback_text TEXT,
+                    feedback_status TEXT,
+                    admin_note TEXT,
+                    visitor_key TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+        else:
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS music_feedback (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    item_id INTEGER,
+                    media_item_id INTEGER,
+                    release_id INTEGER,
+                    project_id INTEGER,
+                    user_id INTEGER,
+                    rating_category TEXT,
+                    rating_value INTEGER,
+                    reaction_label TEXT,
+                    feedback_text TEXT,
+                    feedback_status TEXT,
+                    admin_note TEXT,
+                    visitor_key TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+
+        for column_name, column_sql in [
+            ("item_id", "INTEGER"),
+            ("media_item_id", "INTEGER"),
+            ("release_id", "INTEGER"),
+            ("project_id", "INTEGER"),
+            ("user_id", "INTEGER"),
+            ("rating_category", "TEXT"),
+            ("rating_value", "INTEGER"),
+            ("reaction_label", "TEXT"),
+            ("feedback_text", "TEXT"),
+            ("feedback_status", "TEXT"),
+            ("admin_note", "TEXT"),
+            ("visitor_key", "TEXT"),
+            ("created_at", "TEXT"),
+            ("updated_at", "TEXT"),
+        ]:
+            phase6_add_column_if_missing(conn, "music_feedback", column_name, column_sql)
+
+
+def phase6_row_to_dict(row):
+    try:
+        return dict(row._mapping)
+    except Exception:
+        return dict(row)
+
+
+def phase6_value(row, *keys, default=""):
+    if not row:
+        return default
+
+    for key in keys:
+        try:
+            if key in row.keys() and row[key] not in (None, ""):
+                return row[key]
+        except Exception:
+            pass
+
+        try:
+            value = row.get(key)
+            if value not in (None, ""):
+                return value
+        except Exception:
+            pass
+
+    return default
+
+
+def phase6_music_title(item):
+    return phase6_value(item, "title", "track_title", "project_title", "name", default="Untitled Release")
+
+
+def phase6_music_artist(item):
+    return phase6_value(item, "artist_or_creator", "artist_name", "artist", "creator", "producer", "producer_name", default="Unknown Artist")
+
+
+def phase6_music_platform(item):
+    platform = phase6_value(item, "platform", "source_platform", "media_platform", default="")
+    url = str(phase6_music_url(item) or "").lower()
+
+    if platform:
+        return platform
+
+    if "soundcloud" in url:
+        return "SoundCloud"
+    if "youtube" in url or "youtu.be" in url:
+        return "YouTube"
+    if "spotify" in url:
+        return "Spotify"
+    if "apple" in url:
+        return "Apple Music"
+
+    return "Ledger"
+
+
+def phase6_music_url(item):
+    return phase6_value(item, "url", "source_url", "video_url", "audio_url", "link", default="")
+
+
+def phase6_music_date(item):
+    return phase6_value(item, "release_date", "date", "created_at", "updated_at", default="")
+
+
+def phase6_music_description(item):
+    return phase6_value(item, "description", "notes", "details", "caption", default="")
+
+
+def phase6_music_type(item):
+    raw = str(phase6_value(item, "media_type", "release_type", "type", "category", default="")).lower()
+    title = str(phase6_music_title(item) or "").lower()
+    merged = f"{raw} {title}"
+
+    if "project" in merged or "album" in merged or "ep" in merged or "tape" in merged:
+        return "project"
+    if "battle" in merged:
+        return "battle track"
+    if "video" in merged or "youtube" in str(phase6_music_url(item)).lower():
+        return "video"
+    if "playlist" in merged:
+        return "playlist"
+    if "producer" in merged or "beat" in merged:
+        return "producer"
+    if "track" in merged or "song" in merged or raw:
+        return raw or "track"
+
+    return "track"
+
+
+def phase6_music_filter_options():
+    return [
+        {"value": "all", "label": "All Music"},
+        {"value": "track", "label": "Tracks"},
+        {"value": "project", "label": "Projects"},
+        {"value": "battle track", "label": "Battle Tracks"},
+        {"value": "producer", "label": "Producer / Beat"},
+        {"value": "video", "label": "Videos"},
+        {"value": "playlist", "label": "Playlists"},
+    ]
+
+
+def phase6_music_platform_options():
+    return [
+        {"value": "all", "label": "All Platforms"},
+        {"value": "SoundCloud", "label": "SoundCloud"},
+        {"value": "YouTube", "label": "YouTube"},
+        {"value": "Spotify", "label": "Spotify"},
+        {"value": "Apple Music", "label": "Apple Music"},
+        {"value": "Ledger", "label": "Ledger"},
+    ]
+
+
+def phase6_selected_music_type():
+    selected = request.args.get("type", "all").strip().lower()
+    allowed = {item["value"] for item in phase6_music_filter_options()}
+
+    if selected not in allowed:
+        selected = "all"
+
+    return selected
+
+
+def phase6_selected_platform():
+    selected = request.args.get("platform", "all").strip()
+    allowed = {item["value"] for item in phase6_music_platform_options()}
+
+    if selected not in allowed:
+        selected = "all"
+
+    return selected
+
+
+def phase6_music_search_query():
+    return request.args.get("q", "").strip()
+
+
+def phase6_fetch_music_releases(limit=250):
+    with engine.connect() as conn:
+        if not phase6_table_exists(conn, "media_items"):
+            return []
+
+    try:
+        rows = fetch_all(
+            """
+            SELECT *
+            FROM media_items
+            ORDER BY
+                COALESCE(created_at, updated_at, '') DESC,
+                id DESC
+            LIMIT :limit
+            """,
+            {"limit": limit},
+        )
+        return rows
+    except Exception:
+        return []
+
+
+def phase6_fetch_music_projects(limit=100):
+    with engine.connect() as conn:
+        if not phase6_table_exists(conn, "music_projects"):
+            return []
+
+    try:
+        rows = fetch_all(
+            """
+            SELECT *
+            FROM music_projects
+            ORDER BY
+                COALESCE(created_at, updated_at, '') DESC,
+                id DESC
+            LIMIT :limit
+            """,
+            {"limit": limit},
+        )
+        return rows
+    except Exception:
+        return []
+
+
+def phase6_music_item_matches(item, selected_type=None, selected_platform=None, query=None):
+    selected_type = selected_type or phase6_selected_music_type()
+    selected_platform = selected_platform or phase6_selected_platform()
+    query = query if query is not None else phase6_music_search_query()
+
+    item_type = str(phase6_music_type(item) or "").lower()
+    platform = str(phase6_music_platform(item) or "")
+
+    if selected_type != "all" and selected_type != item_type:
+        if selected_type == "track" and item_type in {"song", "single", "audio"}:
+            pass
+        else:
+            return False
+
+    if selected_platform != "all" and selected_platform.lower() != platform.lower():
+        return False
+
+    if query:
+        merged = " ".join(
+            str(value or "")
+            for value in [
+                phase6_music_title(item),
+                phase6_music_artist(item),
+                phase6_music_platform(item),
+                phase6_music_description(item),
+                phase6_music_url(item),
+            ]
+        ).lower()
+
+        if query.lower() not in merged:
+            return False
+
+    return True
+
+
+def phase6_music_feedback_counts(item_id):
+    ensure_phase6_music_feedback_tables()
+
+    try:
+        rows = fetch_all(
+            """
+            SELECT
+                COALESCE(reaction_label, rating_category, 'Feedback') AS label,
+                COUNT(*) AS count
+            FROM music_feedback
+            WHERE item_id = :item_id
+               OR media_item_id = :item_id
+               OR release_id = :item_id
+            GROUP BY COALESCE(reaction_label, rating_category, 'Feedback')
+            ORDER BY count DESC
+            """,
+            {"item_id": item_id},
+        )
+        return rows
+    except Exception:
+        return []
+
+
+def phase6_insert_music_feedback(values):
+    ensure_phase6_music_feedback_tables()
+
+    now_value = datetime.now().isoformat(timespec="seconds")
+    values.setdefault("created_at", now_value)
+    values.setdefault("updated_at", now_value)
+    values.setdefault("feedback_status", "New")
+
+    with engine.begin() as conn:
+        columns = phase6_table_columns(conn, "music_feedback")
+        clean_values = {key: value for key, value in values.items() if key in columns}
+
+        if not clean_values:
+            return None
+
+        columns_sql = ", ".join(clean_values.keys())
+        values_sql = ", ".join(f":{key}" for key in clean_values.keys())
+
+        if maintenance_uses_postgres():
+            result = conn.execute(
+                text(f"INSERT INTO music_feedback ({columns_sql}) VALUES ({values_sql}) RETURNING id"),
+                clean_values,
+            )
+            return result.scalar()
+
+        result = conn.execute(
+            text(f"INSERT INTO music_feedback ({columns_sql}) VALUES ({values_sql})"),
+            clean_values,
+        )
+        return result.lastrowid
+
+
+def phase6_fetch_admin_music_feedback(limit=200):
+    ensure_phase6_music_feedback_tables()
+
+    try:
+        rows = fetch_all(
+            """
+            SELECT music_feedback.*,
+                   media_items.title AS release_title,
+                   media_items.artist_or_creator AS release_artist,
+                   media_items.url AS release_url,
+                   archive_users.display_name AS user_display_name,
+                   archive_users.email AS user_email
+            FROM music_feedback
+            LEFT JOIN media_items
+              ON music_feedback.item_id = media_items.id
+              OR music_feedback.media_item_id = media_items.id
+              OR music_feedback.release_id = media_items.id
+            LEFT JOIN archive_users
+              ON music_feedback.user_id = archive_users.id
+            ORDER BY
+                COALESCE(music_feedback.updated_at, music_feedback.created_at, '') DESC,
+                music_feedback.id DESC
+            LIMIT :limit
+            """,
+            {"limit": limit},
+        )
+        return rows
+    except Exception:
+        return fetch_all(
+            """
+            SELECT *
+            FROM music_feedback
+            ORDER BY id DESC
+            LIMIT :limit
+            """,
+            {"limit": limit},
+        )
+
+
+@app.context_processor
+def inject_phase6_music_helpers():
+    return {
+        "phase6_value": phase6_value,
+        "phase6_music_title": phase6_music_title,
+        "phase6_music_artist": phase6_music_artist,
+        "phase6_music_platform": phase6_music_platform,
+        "phase6_music_url": phase6_music_url,
+        "phase6_music_date": phase6_music_date,
+        "phase6_music_description": phase6_music_description,
+        "phase6_music_type": phase6_music_type,
+        "phase6_music_filter_options": phase6_music_filter_options,
+        "phase6_music_platform_options": phase6_music_platform_options,
+        "phase6_selected_music_type": phase6_selected_music_type,
+        "phase6_selected_platform": phase6_selected_platform,
+        "phase6_music_search_query": phase6_music_search_query,
+        "phase6_fetch_music_releases": phase6_fetch_music_releases,
+        "phase6_fetch_music_projects": phase6_fetch_music_projects,
+        "phase6_music_item_matches": phase6_music_item_matches,
+        "phase6_music_feedback_counts": phase6_music_feedback_counts,
+    }
+
+
+@app.route("/music/releases/<int:item_id>/feedback", methods=["POST"])
+def submit_music_feedback_phase6(item_id):
+    ensure_phase6_music_feedback_tables()
+
+    user = current_user()
+
+    reaction_label = request.form.get("reaction_label", "").strip()
+    rating_category = request.form.get("rating_category", "").strip()
+    feedback_text = request.form.get("feedback_text", "").strip()
+    rating_value_raw = request.form.get("rating_value", "").strip()
+
+    try:
+        rating_value = int(rating_value_raw) if rating_value_raw else None
+    except Exception:
+        rating_value = None
+
+    if rating_value is not None:
+        rating_value = max(1, min(10, rating_value))
+
+    phase6_insert_music_feedback(
+        {
+            "item_id": item_id,
+            "media_item_id": item_id,
+            "release_id": item_id,
+            "project_id": None,
+            "user_id": user["id"] if user else None,
+            "rating_category": rating_category or "General",
+            "rating_value": rating_value,
+            "reaction_label": reaction_label or "Feedback",
+            "feedback_text": feedback_text,
+            "visitor_key": session.get("visitor_key", ""),
+            "feedback_status": "New",
+        }
+    )
+
+    return redirect(url_for("music_release_detail", item_id=item_id))
+
+
+@app.route("/admin/music-feedback")
+def admin_music_feedback_phase6c():
+    gate = phase6_admin_required()
+    if gate:
+        return gate
+
+    ensure_phase6_music_feedback_tables()
+
+    feedback_rows = phase6_fetch_admin_music_feedback()
+
+    status_counts = fetch_all(
+        """
+        SELECT COALESCE(feedback_status, 'New') AS feedback_status,
+               COUNT(*) AS count
+        FROM music_feedback
+        GROUP BY COALESCE(feedback_status, 'New')
+        ORDER BY count DESC
+        """,
+        {},
+    )
+
+    reaction_counts = fetch_all(
+        """
+        SELECT COALESCE(reaction_label, rating_category, 'Feedback') AS reaction_label,
+               COUNT(*) AS count
+        FROM music_feedback
+        GROUP BY COALESCE(reaction_label, rating_category, 'Feedback')
+        ORDER BY count DESC
+        """,
+        {},
+    )
+
+    return render_template(
+        "admin_music_feedback.html",
+        feedback_rows=feedback_rows,
+        status_counts=status_counts,
+        reaction_counts=reaction_counts,
+    )
+
+
+@app.route("/admin/music-feedback/<int:feedback_id>/status", methods=["POST"])
+def admin_music_feedback_status_phase6c(feedback_id):
+    gate = phase6_admin_required()
+    if gate:
+        return gate
+
+    ensure_phase6_music_feedback_tables()
+
+    feedback_status = request.form.get("feedback_status", "").strip()
+    admin_note = request.form.get("admin_note", "").strip()
+
+    allowed = {
+        "New",
+        "Reviewed",
+        "Needs Follow-up",
+        "Needs Source",
+        "Added to Review",
+        "Archived",
+        "Dismissed",
+    }
+
+    if feedback_status not in allowed:
+        feedback_status = "New"
+
+    execute_query(
+        """
+        UPDATE music_feedback
+        SET feedback_status = :feedback_status,
+            admin_note = :admin_note,
+            updated_at = :updated_at
+        WHERE id = :feedback_id
+        """,
+        {
+            "feedback_status": feedback_status,
+            "admin_note": admin_note,
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+            "feedback_id": feedback_id,
+        },
+    )
+
+    return redirect(url_for("admin_music_feedback_phase6c"))
+
+
+try:
+    ensure_phase6_music_feedback_tables()
+except Exception as exc:
+    print(f"Phase 6 music feedback setup skipped: {exc}")

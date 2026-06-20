@@ -1,6 +1,83 @@
 {% extends "base.html" %}
 
-{% block title %}Behind the Music | {{ item["title"] }}{% endblock %}
+{% block title %}Behind the Music | {{ item["title"] }}
+<section class="homepage-section phase6-music-feedback-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Community Feedback</p>
+            <h2>React to this release</h2>
+            <p>
+                Mark how this record connects to LiteFeet: battle track, lab track, video, classic, new release, or needs better info.
+            </p>
+        </div>
+    </div>
+
+    {% set feedback_counts = phase6_music_feedback_counts(item["id"]) if item and "id" in item.keys() else [] %}
+
+    {% if feedback_counts %}
+        <div class="music-feedback-mini feedback-detail-counts">
+            {% for count in feedback_counts %}
+                <span>{{ count["label"] }}: {{ count["count"] }}</span>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('submit_music_feedback_phase6', item_id=item['id']) }}" class="form-card music-feedback-form">
+        <div class="form-grid two-column-form-grid">
+            <label>
+                Reaction
+                <select name="reaction_label">
+                    <option value="Battle Track">Battle Track</option>
+                    <option value="Lab Track">Lab Track</option>
+                    <option value="Classic">Classic</option>
+                    <option value="New Heat">New Heat</option>
+                    <option value="Video">Video</option>
+                    <option value="Needs Info">Needs Info</option>
+                </select>
+            </label>
+
+            <label>
+                Rating
+                <input type="number" name="rating_value" min="1" max="10" placeholder="1-10">
+            </label>
+        </div>
+
+        <label>
+            Feedback / context
+            <textarea name="feedback_text" rows="4" placeholder="Where was this played? Who used it? Is the artist/producer correct? Any missing info?"></textarea>
+        </label>
+
+        <input type="hidden" name="rating_category" value="Release Feedback">
+
+        <button class="button secondary" type="submit">Submit Feedback</button>
+    </form>
+</section>
+
+<style>
+    .music-feedback-form {
+        display: grid;
+        gap: 14px;
+    }
+
+    .feedback-detail-counts {
+        margin-bottom: 14px;
+        justify-content: flex-start;
+    }
+
+    .two-column-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+        .two-column-form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+{% endblock %}
 
 {% block content %}
 <section class="content-section music-page behind-music-page">

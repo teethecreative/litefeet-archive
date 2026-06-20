@@ -1,14 +1,14 @@
 === Phase 2I Production Release Check ===
 branch: main
-commit: b5015bf
+commit: acc0760
 database: sqlite
 original maintenance_mode: on
 ---- table checks ----
 submissions: OK
 archive_users: OK
 dancer_profiles: OK
-media_items: MISSING
-music_feedback: MISSING
+media_items: OK
+music_feedback: OK
 music_play_events: OK
 verification_votes: OK
 role_requests: OK
@@ -27,7 +27,7 @@ team_access_grants: OK
 /ask 302 /
 /calendar 200 
 /people-teams 200 
-/litefeet-music 200 
+/litefeet-music 500 
 /battles 302 /
 /awards 302 /
 /ledger-review 200 
@@ -51,4 +51,4 @@ team_access_grants: OK
 /admin/phase2 302 /admin/login
 restored maintenance_mode: on
 ---- FAILURES ----
-('missing_tables', 'media_items,music_feedback', 'all expected tables present')
+('/litefeet-music', 500, [200, 302])

@@ -1,204 +1,220 @@
 {% extends "base.html" %}
 
 {% block title %}LiteFeet Music | The LiteFeet Ledger{% endblock %}
-{% block meta_description %}Browse LiteFeet music releases, producer drops, Release Radar, all-time releases, Ledger plays, ratings, reactions, and community feedback.{% endblock %}
+{% block meta_description %}Browse LiteFeet music, tracks, projects, battle records, producers, videos, and release links in The LiteFeet Ledger.{% endblock %}
 
 {% block content %}
-{% set music_records = releases if releases is defined else music_releases if music_releases is defined else latest_music_releases if latest_music_releases is defined else media_items if media_items is defined else [] %}
+{% set selected_type = phase6_selected_music_type() %}
+{% set selected_platform = phase6_selected_platform() %}
+{% set search_query = phase6_music_search_query() %}
+{% set releases = phase6_fetch_music_releases() %}
+{% set projects = phase6_fetch_music_projects() %}
 
-<section class="content-section music-page">
+<section class="content-section litefeet-music-page">
     <div class="section-heading-row">
         <div>
-            <p class="eyebrow">LiteFeet Music</p>
+            <p class="eyebrow">Music</p>
             <h1>LiteFeet Music</h1>
             <p>
-                A Ledger for LiteFeet-connected songs, producer drops, projects, beats, battle tracks,
-                videos, ratings, reactions, and community listening activity.
+                Tracks, projects, battle music, producer records, videos, and release links connected to LiteFeet culture.
             </p>
         </div>
 
         <div class="hero-actions">
             <a class="button primary" href="{{ url_for('submit_info') }}">Submit Music</a>
-            {% if session.get("admin_logged_in") %}
-                <a class="button secondary" href="{{ url_for('admin_media') }}">Add Release</a>
-            {% endif %}
+            <a class="button secondary" href="{{ url_for('submit_music_release') }}">Add Release</a>
         </div>
-    </div>
-
-    <div class="music-filter-row">
-        <span class="filter-pill">Release Radar</span>
-        <span class="filter-pill">All-Time Releases</span>
-        <span class="filter-pill">Producers</span>
-        <span class="filter-pill">Artists</span>
-        <span class="filter-pill">Lab</span>
-        <span class="filter-pill">Battle</span>
-        <span class="filter-pill">Video</span>
     </div>
 </section>
 
-<section class="homepage-section release-radar-section">
+<section class="homepage-section music-filter-section">
+    <form method="GET" action="{{ url_for('litefeet_music') }}" class="music-filter-form">
+        <label>
+            Search
+            <input type="search" name="q" value="{{ search_query }}" placeholder="Track, producer, artist, platform...">
+        </label>
+
+        <label>
+            Type
+            <select name="type">
+                {% for option in phase6_music_filter_options() %}
+                    <option value="{{ option.value }}" {% if selected_type == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>
+            Platform
+            <select name="platform">
+                {% for option in phase6_music_platform_options() %}
+                    <option value="{{ option.value }}" {% if selected_platform == option.value %}selected{% endif %}>
+                        {{ option.label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <button class="button secondary" type="submit">Apply</button>
+        <a class="button secondary" href="{{ url_for('litefeet_music') }}">Reset</a>
+    </form>
+</section>
+
+<section class="homepage-section">
     <div class="section-heading-row">
         <div>
             <p class="eyebrow">Release Radar</p>
-            <h2>Recent Drops</h2>
+            <h2>Music Records</h2>
         </div>
     </div>
 
-    <p class="section-intro">
-        Release Radar should focus on recent LiteFeet-connected releases. If the release date is missing,
-        the Ledger can fall back to the date it was submitted or added.
-    </p>
+    {% if releases %}
+        <div class="music-release-grid">
+            {% for item in releases %}
+                {% if phase6_music_item_matches(item, selected_type, selected_platform, search_query) %}
+                    <article class="music-release-card">
+                        <div class="music-card-topline">
+                            <p class="eyebrow">{{ phase6_music_type(item)|title }}</p>
+                            <span class="music-platform-pill">{{ phase6_music_platform(item) }}</span>
+                        </div>
 
-    <div class="top-playlist-player" data-top-playlist-player>
-        <div>
-            <p class="eyebrow">Now Playing</p>
-            <h3 data-player-title>Pick a release</h3>
-            <p class="small-note" data-player-meta>Playable links load here when a direct or embeddable source is saved.</p>
-        </div>
-        <div class="top-playlist-player-body" data-player-body>
-            <p class="small-note">Tap a play button to load a track here.</p>
-        </div>
-    </div>
+                        <h3>
+                            {% if phase6_value(item, "id") %}
+                                <a href="{{ url_for('music_release_detail', item_id=item['id']) }}">{{ phase6_music_title(item) }}</a>
+                            {% else %}
+                                {{ phase6_music_title(item) }}
+                            {% endif %}
+                        </h3>
 
-    {% if music_records %}
-        <div class="release-table-wrap">
-            <table class="release-table music-release-table">
-                <thead>
-                    <tr>
-                        <th>Play</th>
-                        <th>Title</th>
-                        <th>Artist / Producer</th>
-                        <th>Date</th>
-                        <th>Platform</th>
-                        <th>Use</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
+                        <p><strong>{{ phase6_music_artist(item) }}</strong></p>
 
-                <tbody>
-                    {% for item in music_records %}
-                        {% set embed_url = item["url"]|media_embed_url if item["url"] else "" %}
-                        <tr>
-                            <td>
-                                <button
-                                    type="button"
-                                    class="playlist-play-button table-play-control"
-                                    data-play-item-id="{{ item['id'] }}"
-                                    data-play-count="{{ item['play_count'] or 0 }}"
-                                    data-player-title="{{ item['title'] }}"
-                                    data-player-artist="{{ item['artist_or_creator'] or 'Unknown' }}"
-                                    data-player-platform="{{ item['platform'] or item['url']|media_platform }}"
-                                    data-player-playable-url="{{ item['playable_url'] or '' }}"
-                                    data-player-embed-url="{{ embed_url or '' }}"
-                                    data-player-source-url="{{ item['url'] or '' }}"
-                                    aria-label="Play {{ item['title'] }}">
-                                    ▶
-                                </button>
-                            </td>
+                        {% if phase6_music_date(item) %}
+                            <p class="small-note">{{ phase6_music_date(item) }}</p>
+                        {% endif %}
 
-                            <td>
-                                {% if item["id"] %}
-                                    <a href="{{ url_for('music_release_detail', item_id=item['id']) }}">{{ item["title"] }}</a>
-                                {% else %}
-                                    {{ item["title"] or "Untitled release" }}
-                                {% endif %}
-                            </td>
+                        {% if phase6_music_description(item) %}
+                            <p>{{ phase6_music_description(item) }}</p>
+                        {% endif %}
 
-                            <td>{{ item["artist_or_creator"] or item["artist"] or item["producer"] or "Unknown" }}</td>
-                            <td>{% if item["release_date"] %}{{ item["release_date"]|music_release_date }}{% else %}Date unknown{% endif %}</td>
-                            <td>{{ item["platform"] or item["url"]|media_platform or "—" }}</td>
+                        {% set feedback_counts = phase6_music_feedback_counts(item["id"]) if phase6_value(item, "id") else [] %}
+                        {% if feedback_counts %}
+                            <div class="music-feedback-mini">
+                                {% for count in feedback_counts[:3] %}
+                                    <span>{{ count["label"] }}: {{ count["count"] }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
 
-                            <td>
-                                <span class="music-use-pill">Lab</span>
-                                <span class="music-use-pill">Battle</span>
-                                <span class="music-use-pill">Video</span>
-                            </td>
+                        <div class="hero-actions">
+                            {% if phase6_value(item, "id") %}
+                                <a class="button small-button secondary" href="{{ url_for('music_release_detail', item_id=item['id']) }}">Open</a>
+                            {% endif %}
 
-                            <td>
-                                {% if item["id"] %}
-                                    <a class="button small-button secondary" href="{{ url_for('music_release_detail', item_id=item['id']) }}">Open</a>
-                                {% elif item["url"] %}
-                                    <a class="button small-button secondary" href="{{ item['url'] }}" target="_blank" rel="noopener">Open</a>
-                                {% else %}
-                                    <span class="small-note">No link</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            {% if phase6_music_url(item) %}
+                                <a class="button small-button secondary" href="{{ phase6_music_url(item) }}" target="_blank" rel="noopener">Listen</a>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% endif %}
+            {% endfor %}
         </div>
     {% else %}
         <div class="empty-state compact-empty">
-            <h3>No music records are loaded here yet.</h3>
-            <p>Producer drops, projects, battle tracks, and releases will appear here once they are added.</p>
+            <h3>No music records yet.</h3>
+            <p>Add tracks, producer records, battle music, releases, or video links.</p>
+            <a class="button primary" href="{{ url_for('submit_info') }}">Submit Music</a>
         </div>
     {% endif %}
 </section>
 
-<section class="homepage-section music-sections-grid">
-    <article>
-        <p class="eyebrow">All-Time Releases</p>
-        <h2>Full Catalog</h2>
-        <p>
-            The all-time catalog will support filters by time period, producer, artist, platform,
-            rating, use type, most played, newest, oldest, and highest rated.
-        </p>
-    </article>
+{% if projects %}
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Projects</p>
+            <h2>Music Projects</h2>
+        </div>
+    </div>
 
-    <article>
-        <p class="eyebrow">Ledger Plays</p>
-        <h2>On-site activity</h2>
-        <p>
-            Ledger plays should track on-site listening separately from original platform stats.
-            Platform activity can be shown only where it is supported or manually verified.
-        </p>
-    </article>
+    <div class="music-project-grid">
+        {% for project in projects %}
+            <article class="music-project-card">
+                <p class="eyebrow">Project</p>
+                <h3>{{ phase6_value(project, "title", "project_title", "name", default="Untitled Project") }}</h3>
+                <p>{{ phase6_value(project, "artist_name", "artist", "producer_name", "creator", default="Unknown Artist") }}</p>
 
-    <article>
-        <p class="eyebrow">Community Reactions</p>
-        <h2>Lab / Battle / Video</h2>
-        <p>
-            Dancers can eventually mark whether they would lab to it, battle to it, shoot a video to it,
-            and rate the release from 1–10.
-        </p>
-    </article>
+                {% if phase6_value(project, "description", "notes") %}
+                    <p>{{ phase6_value(project, "description", "notes") }}</p>
+                {% endif %}
+
+                {% if phase6_value(project, "source_url", "url") %}
+                    <a class="button small-button secondary" href="{{ phase6_value(project, "source_url", "url") }}" target="_blank" rel="noopener">Open Project</a>
+                {% endif %}
+            </article>
+        {% endfor %}
+    </div>
 </section>
+{% endif %}
 
 <style>
-    .music-filter-row {
+    .music-filter-form {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 14px;
+        gap: 12px;
+        align-items: end;
     }
 
-    .filter-pill,
-    .music-use-pill {
-        border: 1px solid var(--border-color, rgba(255,255,255,0.14));
-        border-radius: 999px;
-        padding: 4px 9px;
-        font-size: 0.82rem;
-        display: inline-block;
-        margin: 2px;
+    .music-filter-form label {
+        min-width: 190px;
     }
 
-    .music-sections-grid {
+    .music-release-grid,
+    .music-project-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
     }
 
-    .music-sections-grid article {
+    .music-release-card,
+    .music-project-card {
         border: 1px solid var(--border-color, rgba(255,255,255,0.12));
         border-radius: 16px;
         padding: 16px;
         background: var(--card-bg, rgba(255,255,255,0.04));
+        display: grid;
+        gap: 10px;
     }
 
-    @media (max-width: 900px) {
-        .music-sections-grid {
+    .music-card-topline,
+    .music-feedback-mini {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .music-feedback-mini {
+        justify-content: flex-start;
+    }
+
+    .music-platform-pill,
+    .music-feedback-mini span {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.16));
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 0.78rem;
+    }
+
+    @media (max-width: 1000px) {
+        .music-release-grid,
+        .music-project-grid {
             grid-template-columns: 1fr;
+        }
+
+        .music-filter-form {
+            display: grid;
         }
     }
 </style>
