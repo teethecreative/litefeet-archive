@@ -17354,3 +17354,248 @@ try:
         ]
 except Exception as exc:
     print(f"fetch_one context processor cleanup skipped: {exc}")
+
+
+# --- Live stabilization batch: safe helpers, nav context, public routes ---
+
+# Keep fetch_one globally available. Also make it harmless if it was accidentally
+# registered as a Flask context processor and called with no arguments.
+def fetch_one(query=None, params=None):
+    if not query:
+        return {}
+    try:
+        rows = fetch_all(query, params or {})
+        return rows[0] if rows else None
+    except Exception as exc:
+        print(f"fetch_one fallback failed: {exc}")
+        return None
+
+
+# Remove unsafe/bad context processors that were causing every template render to crash or hit DB.
+try:
+    _bad_context_processor_names = {"fetch_one", "inject_nav_account_context"}
+    for _processor_key, _processors in app.template_context_processors.items():
+        app.template_context_processors[_processor_key] = [
+            _processor for _processor in _processors
+            if getattr(_processor, "__name__", "") not in _bad_context_processor_names
+        ]
+    print("Cleaned unsafe nav/fetch_one context processors.")
+except Exception as exc:
+    print(f"Context processor cleanup skipped: {exc}")
+
+
+@app.context_processor
+def ledger_live_safe_nav_context():
+    # No database call here. This runs on every page.
+    try:
+        logged_in = bool(session.get("user_id") or session.get("account_user_id"))
+    except Exception:
+        logged_in = False
+
+    def phase13_account_nav_url():
+        return "/account" if logged_in else "/account/login"
+
+    def phase13_account_nav_label():
+        return "Account" if logged_in else "Log In"
+
+    return {
+        "phase13_account_nav_url": phase13_account_nav_url,
+        "phase13_account_nav_label": phase13_account_nav_label,
+        "claimed_profile": None,
+        "nav_claimed_profile": None,
+    }
+
+
+def ledger_log_route_error(status_code, error):
+    try:
+        logger = globals().get("log_error_event")
+        if callable(logger):
+            logger(status_code, error)
+    except Exception:
+        pass
+
+
+def ledger_simple_public_page(title, message, status_code=200):
+    import html as html_module
+
+    title_safe = html_module.escape(title or "The LiteFeet Ledger")
+    message_safe = html_module.escape(message or "")
+
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{title_safe} | The LiteFeet Ledger</title>
+    <style>
+        body {{
+            margin: 0;
+            background: #030303;
+            color: #f4f1e8;
+            font-family: Arial, sans-serif;
+        }}
+        .wrap {{
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 36px 22px;
+        }}
+        .brand {{
+            color: #d8b84c;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            font-weight: 700;
+            font-size: 12px;
+        }}
+        h1 {{
+            font-size: clamp(36px, 7vw, 72px);
+            line-height: .95;
+            margin: 18px 0;
+        }}
+        p {{
+            color: #d7d1c4;
+            font-size: 18px;
+            line-height: 1.5;
+        }}
+        a {{
+            color: #f0d56b;
+            text-decoration: none;
+            font-weight: 700;
+        }}
+        .actions {{
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }}
+        .button {{
+            border: 1px solid rgba(240, 213, 107, .45);
+            border-radius: 999px;
+            padding: 12px 16px;
+        }}
+    </style>
+</head>
+<body>
+    <main class="wrap">
+        <div class="brand">The LiteFeet Ledger</div>
+        <h1>{title_safe}</h1>
+        <p>{message_safe}</p>
+        <div class="actions">
+            <a class="button" href="/">Home</a>
+            <a class="button" href="/submit/start">Submit Info</a>
+            <a class="button" href="/account/login">Log In</a>
+        </div>
+    </main>
+</body>
+</html>""", status_code
+
+
+def ledger_try_render(template_name, status_code=200, **context):
+    try:
+        return render_template(template_name, **context), status_code
+    except Exception as exc:
+        print(f"{template_name} render failed: {exc}")
+        ledger_log_route_error(500, exc)
+        title = context.get("page_title") or "Page temporarily unavailable"
+        return ledger_simple_public_page(
+            title,
+            "This section is being stabilized. Try again shortly.",
+            200,
+        )
+
+
+def ledger_fetch_records_with_helper(helper_name):
+    try:
+        helper = globals().get(helper_name)
+        if callable(helper):
+            records = helper()
+            return records or []
+    except Exception as exc:
+        print(f"{helper_name} failed: {exc}")
+        ledger_log_route_error(500, exc)
+    return []
+
+
+def ask_archive_live_safe():
+    return ledger_try_render(
+        "ask_archive.html",
+        page_title="Ask the Ledger",
+        conversations=[],
+        ask_conversations=[],
+        sources=[],
+        source_cards=[],
+        selected_filter=request.args.get("filter", "all"),
+        query=request.args.get("q", ""),
+        answer=None,
+        error=None,
+    )
+
+
+def battles_live_safe():
+    records = ledger_fetch_records_with_helper("phase7_fetch_battle_records")
+    return ledger_try_render(
+        "battles.html",
+        page_title="Battles",
+        battle_records=records,
+        battles=records,
+        records=records,
+        selected_status=request.args.get("status", ""),
+        selected_query=request.args.get("q", ""),
+        error=None,
+    )
+
+
+def awards_live_safe():
+    records = ledger_fetch_records_with_helper("phase8_fetch_award_records")
+    return ledger_try_render(
+        "awards.html",
+        page_title="Awards",
+        award_records=records,
+        awards=records,
+        records=records,
+        selected_status=request.args.get("status", ""),
+        selected_query=request.args.get("q", ""),
+        error=None,
+    )
+
+
+def calendar_live_safe():
+    # First priority: do not 500. We can restore the richer calendar data after the site is stable.
+    records = []
+    for helper_name in [
+        "phase6_fetch_calendar_items",
+        "phase6_fetch_event_records",
+        "fetch_calendar_items",
+        "fetch_event_records",
+    ]:
+        records = ledger_fetch_records_with_helper(helper_name)
+        if records:
+            break
+
+    return ledger_try_render(
+        "events.html",
+        page_title="Calendar",
+        events=records,
+        event_records=records,
+        calendar_items=records,
+        homepage_calendar_items=records,
+        selected_status=request.args.get("status", ""),
+        selected_type=request.args.get("type", ""),
+        selected_query=request.args.get("q", ""),
+        error=None,
+    )
+
+
+def ledger_override_public_rules(paths, view_function):
+    try:
+        for rule in list(app.url_map.iter_rules()):
+            if str(rule.rule) in paths:
+                app.view_functions[rule.endpoint] = view_function
+                print(f"Overrode {rule.rule} endpoint {rule.endpoint} with {view_function.__name__}")
+    except Exception as exc:
+        print(f"Route override failed for {paths}: {exc}")
+
+
+ledger_override_public_rules({"/ask"}, ask_archive_live_safe)
+ledger_override_public_rules({"/battles"}, battles_live_safe)
+ledger_override_public_rules({"/awards"}, awards_live_safe)
+ledger_override_public_rules({"/calendar", "/events"}, calendar_live_safe)
