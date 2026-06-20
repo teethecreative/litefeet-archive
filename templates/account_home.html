@@ -53,6 +53,24 @@
     {% endif %}
 </section>
 
+<section class="homepage-section profile-owner-dashboard-panel">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Profile Controls</p>
+            <h2>My Ledger Profile</h2>
+            <p>
+                If your profile claim has been approved, you can manage your public Ledger profile here.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button primary" href="{{ url_for('account_profile_editor_phase4c') }}">Open Profile Editor</a>
+            <a class="button secondary" href="{{ url_for('account_profile_link') }}">Profile Claim / Link</a>
+        </div>
+    </div>
+</section>
+
+
 <section class="dashboard-grid">
     <article class="dashboard-card">
         <p class="eyebrow">Submissions</p>

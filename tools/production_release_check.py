@@ -22,6 +22,7 @@ EXPECTED_TABLES = [
     "ask_messages",
     "ask_feedback",
     "profile_claims",
+    "profile_edit_logs",
     "saved_items",
     "calendar_item_metadata",
     "battle_records",

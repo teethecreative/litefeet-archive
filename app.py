@@ -11980,3 +11980,517 @@ try:
     ensure_phase4a_profile_claim_link_columns()
 except Exception as exc:
     print(f"Phase 4A profile claim link setup skipped: {exc}")
+
+
+# --- Phase 4C + 4D + 4E profile owner batch ---
+def phase4c_admin_required():
+    if not current_user_is_admin():
+        return redirect(url_for("admin_login"))
+    return None
+
+
+def phase4c_table_exists(conn, table_name):
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+    rows = conn.execute(
+        text("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name = :table_name
+            LIMIT 1
+        """),
+        {"table_name": table_name},
+    ).fetchall()
+    return bool(rows)
+
+
+def phase4c_table_columns(conn, table_name):
+    if "ledger_table_columns" in globals():
+        return ledger_table_columns(conn, table_name)
+
+    if maintenance_uses_postgres():
+        rows = conn.execute(
+            text("""
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return {row[0] for row in rows}
+
+    rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+    return {row[1] for row in rows}
+
+
+def phase4c_add_column_if_missing(conn, table_name, column_name, column_sql):
+    if not phase4c_table_exists(conn, table_name):
+        return
+
+    columns = phase4c_table_columns(conn, table_name)
+
+    if column_name in columns:
+        return
+
+    if maintenance_uses_postgres():
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+    else:
+        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+
+
+def ensure_phase4c_profile_owner_tables():
+    ensure_phase4a_profile_claim_link_columns()
+
+    phase3a_profile_helper = globals().get("ensure_phase3a_profile_columns")
+    if callable(phase3a_profile_helper):
+        try:
+            phase3a_profile_helper()
+        except Exception:
+            pass
+
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS profile_edit_logs (
+                    id SERIAL PRIMARY KEY,
+                    profile_type TEXT,
+                    profile_id INTEGER,
+                    user_id INTEGER,
+                    edit_action TEXT,
+                    old_values_json TEXT,
+                    new_values_json TEXT,
+                    edit_status TEXT,
+                    admin_note TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+        else:
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS profile_edit_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    profile_type TEXT,
+                    profile_id INTEGER,
+                    user_id INTEGER,
+                    edit_action TEXT,
+                    old_values_json TEXT,
+                    new_values_json TEXT,
+                    edit_status TEXT,
+                    admin_note TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
+                )
+                """)
+            )
+
+        phase4c_add_column_if_missing(conn, "profile_edit_logs", "profile_type", "TEXT")
+        phase4c_add_column_if_missing(conn, "profile_edit_logs", "profile_id", "INTEGER")
+        phase4c_add_column_if_missing(conn, "profile_edit_logs", "user_id", "INTEGER")
+        phase4c_add_column_if_missing(conn, "profile_edit_logs", "edit_action", "TEXT")
+        phase4c_add_column_if_missing(conn, "profile_edit_logs", "old_values_json", "TEXT")
+        phase4c_add_column_if_missing(conn, "profile_edit_logs", "new_values_json", "TEXT")
+        phase4c_add_column_if_missing(conn, "profile_edit_logs", "edit_status", "TEXT")
+        phase4c_add_column_if_missing(conn, "profile_edit_logs", "admin_note", "TEXT")
+        phase4c_add_column_if_missing(conn, "profile_edit_logs", "created_at", "TEXT")
+        phase4c_add_column_if_missing(conn, "profile_edit_logs", "updated_at", "TEXT")
+
+
+def phase4c_row_to_dict(row):
+    try:
+        return dict(row._mapping)
+    except Exception:
+        return dict(row)
+
+
+def phase4c_allowed_profile_fields():
+    return {
+        "dance_name": "Dance name",
+        "real_name": "Real name",
+        "team_affiliation": "Team affiliation",
+        "borough_scene": "Borough / scene",
+        "bio": "Bio",
+        "source_url": "Source / reference link",
+        "role_tags": "Role tags",
+        "aliases": "Aliases",
+        "era": "Era",
+        "style_notes": "Style notes",
+        "signature_moves": "Signature moves",
+        "recent_battle": "Recent battle",
+        "battle_history": "Battle history",
+        "legacy_notes": "Legacy notes",
+    }
+
+
+def phase4c_fetch_profile_by_id(profile_id):
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM dancer_profiles
+        WHERE id = :profile_id
+        LIMIT 1
+        """,
+        {"profile_id": profile_id},
+    )
+    return rows[0] if rows else None
+
+
+def phase4c_current_user_linked_profile():
+    ensure_phase4c_profile_owner_tables()
+
+    user = current_user()
+
+    if not user:
+        return None
+
+    user_id = user["id"]
+
+    linked_profile_id = None
+    linked_profile_type = "dancer"
+
+    try:
+        linked_profile_id = user["linked_profile_id"]
+    except Exception:
+        linked_profile_id = None
+
+    try:
+        linked_profile_type = user["linked_profile_type"] or "dancer"
+    except Exception:
+        linked_profile_type = "dancer"
+
+    if linked_profile_id and linked_profile_type == "dancer":
+        profile = phase4c_fetch_profile_by_id(linked_profile_id)
+        if profile:
+            return profile
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM dancer_profiles
+        WHERE user_id = :user_id
+           OR claimed_by_user_id = :user_id
+        ORDER BY id ASC
+        LIMIT 1
+        """,
+        {"user_id": user_id},
+    )
+
+    return rows[0] if rows else None
+
+
+def phase4c_user_can_edit_profile(profile_id):
+    if current_user_is_admin():
+        return True
+
+    user = current_user()
+
+    if not user:
+        return False
+
+    profile = phase4c_fetch_profile_by_id(profile_id)
+
+    if not profile:
+        return False
+
+    user_id = user["id"]
+
+    approved_user_link = False
+
+    try:
+        approved_user_link = (
+            int(user["linked_profile_id"] or 0) == int(profile_id)
+            and str(user["profile_edit_status"] or "").lower() == "approved"
+        )
+    except Exception:
+        approved_user_link = False
+
+    approved_profile_link = False
+
+    try:
+        approved_profile_link = (
+            int(profile["claimed_by_user_id"] or profile["user_id"] or 0) == int(user_id)
+            and str(profile["edit_access_status"] or "").lower() == "approved"
+        )
+    except Exception:
+        approved_profile_link = False
+
+    direct_owner_match = False
+
+    try:
+        direct_owner_match = int(profile["user_id"] or 0) == int(user_id)
+    except Exception:
+        direct_owner_match = False
+
+    return approved_user_link or approved_profile_link or direct_owner_match
+
+
+def phase4c_insert_profile_edit_log(profile_id, user_id, old_values, new_values, edit_action="owner_update"):
+    ensure_phase4c_profile_owner_tables()
+
+    now_value = datetime.now().isoformat(timespec="seconds")
+
+    with engine.begin() as conn:
+        columns = phase4c_table_columns(conn, "profile_edit_logs")
+        values = {
+            "profile_type": "dancer",
+            "profile_id": profile_id,
+            "user_id": user_id,
+            "edit_action": edit_action,
+            "old_values_json": json.dumps(old_values, ensure_ascii=False),
+            "new_values_json": json.dumps(new_values, ensure_ascii=False),
+            "edit_status": "Logged",
+            "admin_note": "",
+            "created_at": now_value,
+            "updated_at": now_value,
+        }
+
+        clean_values = {key: value for key, value in values.items() if key in columns}
+
+        columns_sql = ", ".join(clean_values.keys())
+        values_sql = ", ".join(f":{key}" for key in clean_values.keys())
+
+        if maintenance_uses_postgres():
+            conn.execute(
+                text(f"INSERT INTO profile_edit_logs ({columns_sql}) VALUES ({values_sql})"),
+                clean_values,
+            )
+        else:
+            conn.execute(
+                text(f"INSERT INTO profile_edit_logs ({columns_sql}) VALUES ({values_sql})"),
+                clean_values,
+            )
+
+
+def phase4c_update_profile(profile_id, values):
+    ensure_phase4c_profile_owner_tables()
+
+    with engine.begin() as conn:
+        columns = phase4c_table_columns(conn, "dancer_profiles")
+        allowed = phase4c_allowed_profile_fields()
+        clean_values = {
+            key: value
+            for key, value in values.items()
+            if key in allowed and key in columns
+        }
+
+        if not clean_values:
+            return
+
+        clean_values["profile_id"] = profile_id
+
+        set_sql = ", ".join(f"{key} = :{key}" for key in clean_values.keys() if key != "profile_id")
+        conn.execute(
+            text(f"UPDATE dancer_profiles SET {set_sql} WHERE id = :profile_id"),
+            clean_values,
+        )
+
+
+@app.context_processor
+def inject_phase4c_profile_owner_helpers():
+    return {
+        "phase4c_current_user_linked_profile": phase4c_current_user_linked_profile,
+        "phase4c_user_can_edit_profile": phase4c_user_can_edit_profile,
+        "phase4c_allowed_profile_fields": phase4c_allowed_profile_fields,
+    }
+
+
+@app.route("/account/profile-editor", methods=["GET", "POST"])
+def account_profile_editor_phase4c():
+    ensure_phase4c_profile_owner_tables()
+
+    user = current_user()
+
+    if not user:
+        return redirect(url_for("account_login", next=url_for("account_profile_editor_phase4c")))
+
+    profile = phase4c_current_user_linked_profile()
+
+    if not profile:
+        return render_template(
+            "profile_owner_editor.html",
+            profile=None,
+            allowed_fields=phase4c_allowed_profile_fields(),
+            saved=False,
+            denied=False,
+        )
+
+    if not phase4c_user_can_edit_profile(profile["id"]):
+        return render_template(
+            "profile_owner_editor.html",
+            profile=profile,
+            allowed_fields=phase4c_allowed_profile_fields(),
+            saved=False,
+            denied=True,
+        )
+
+    saved = False
+
+    if request.method == "POST":
+        old_values = {}
+        new_values = {}
+
+        for field_name in phase4c_allowed_profile_fields():
+            old_values[field_name] = profile[field_name] if field_name in profile.keys() else ""
+            new_values[field_name] = request.form.get(field_name, "").strip()
+
+        phase4c_update_profile(profile["id"], new_values)
+        phase4c_insert_profile_edit_log(profile["id"], user["id"], old_values, new_values)
+
+        return redirect(url_for("account_profile_editor_phase4c", saved="1"))
+
+    saved = request.args.get("saved") == "1"
+    profile = phase4c_current_user_linked_profile()
+
+    return render_template(
+        "profile_owner_editor.html",
+        profile=profile,
+        allowed_fields=phase4c_allowed_profile_fields(),
+        saved=saved,
+        denied=False,
+    )
+
+
+@app.route("/admin/profile-corrections")
+def admin_profile_corrections_phase4e():
+    gate = phase4c_admin_required()
+    if gate:
+        return gate
+
+    ensure_phase4c_profile_owner_tables()
+
+    edit_logs = fetch_all(
+        """
+        SELECT profile_edit_logs.*,
+               dancer_profiles.dance_name,
+               dancer_profiles.real_name,
+               archive_users.display_name,
+               archive_users.email
+        FROM profile_edit_logs
+        LEFT JOIN dancer_profiles
+          ON profile_edit_logs.profile_id = dancer_profiles.id
+        LEFT JOIN archive_users
+          ON profile_edit_logs.user_id = archive_users.id
+        ORDER BY profile_edit_logs.id DESC
+        LIMIT 150
+        """,
+        {},
+    )
+
+    profile_claims = []
+    dancer_suggestions = []
+    dancer_flowers = []
+
+    try:
+        profile_claims = fetch_all(
+            """
+            SELECT *
+            FROM profile_claims
+            ORDER BY id DESC
+            LIMIT 50
+            """,
+            {},
+        )
+    except Exception:
+        profile_claims = []
+
+    try:
+        dancer_suggestions = fetch_all(
+            """
+            SELECT dancer_suggestions.*,
+                   dancer_profiles.dance_name
+            FROM dancer_suggestions
+            LEFT JOIN dancer_profiles
+              ON dancer_suggestions.dancer_id = dancer_profiles.id
+            ORDER BY dancer_suggestions.id DESC
+            LIMIT 50
+            """,
+            {},
+        )
+    except Exception:
+        dancer_suggestions = []
+
+    try:
+        dancer_flowers = fetch_all(
+            """
+            SELECT dancer_flowers.*,
+                   dancer_profiles.dance_name
+            FROM dancer_flowers
+            LEFT JOIN dancer_profiles
+              ON dancer_flowers.dancer_id = dancer_profiles.id
+            ORDER BY dancer_flowers.id DESC
+            LIMIT 50
+            """,
+            {},
+        )
+    except Exception:
+        dancer_flowers = []
+
+    return render_template(
+        "admin_profile_corrections.html",
+        edit_logs=edit_logs,
+        profile_claims=profile_claims,
+        dancer_suggestions=dancer_suggestions,
+        dancer_flowers=dancer_flowers,
+    )
+
+
+@app.route("/admin/profile-edit-logs/<int:log_id>/status", methods=["POST"])
+def admin_profile_edit_log_status_phase4e(log_id):
+    gate = phase4c_admin_required()
+    if gate:
+        return gate
+
+    ensure_phase4c_profile_owner_tables()
+
+    edit_status = request.form.get("edit_status", "").strip()
+    admin_note = request.form.get("admin_note", "").strip()
+
+    allowed = {
+        "Logged",
+        "Reviewed",
+        "Needs Follow-up",
+        "Approved",
+        "Archived",
+        "Dismissed",
+    }
+
+    if edit_status not in allowed:
+        edit_status = "Logged"
+
+    execute_query(
+        """
+        UPDATE profile_edit_logs
+        SET edit_status = :edit_status,
+            admin_note = :admin_note,
+            updated_at = :updated_at
+        WHERE id = :log_id
+        """,
+        {
+            "edit_status": edit_status,
+            "admin_note": admin_note,
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+            "log_id": log_id,
+        },
+    )
+
+    return redirect(url_for("admin_profile_corrections_phase4e"))
+
+
+try:
+    ensure_phase4c_profile_owner_tables()
+except Exception as exc:
+    print(f"Phase 4C profile owner setup skipped: {exc}")

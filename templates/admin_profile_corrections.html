@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Corrections | The LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section admin-profile-corrections-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Backend</p>
+            <h1>Profile Corrections</h1>
+            <p>
+                Review profile owner edits, profile claims, flowers, and profile correction suggestions from one backend screen.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('admin_home') }}">Admin Dashboard</a>
+            <a class="button secondary" href="{{ url_for('admin_phase2_moderation') }}">Phase 2 Moderation</a>
+            <a class="button primary" href="{{ url_for('dancers') }}">People & Teams</a>
+        </div>
+    </div>
+</section>
+
+<section class="admin-profile-summary-grid">
+    <article>
+        <p class="eyebrow">Owner Edits</p>
+        <h2>{{ edit_logs|length }}</h2>
+        <p>Recent profile edits from approved owners.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Claims</p>
+        <h2>{{ profile_claims|length }}</h2>
+        <p>Recent profile claim records.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Suggestions</p>
+        <h2>{{ dancer_suggestions|length }}</h2>
+        <p>Community profile correction suggestions.</p>
+    </article>
+
+    <article>
+        <p class="eyebrow">Flowers</p>
+        <h2>{{ dancer_flowers|length }}</h2>
+        <p>Recent profile support / flowers.</p>
+    </article>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Owner Edits</p>
+            <h2>Profile Edit Logs</h2>
+        </div>
+    </div>
+
+    {% if edit_logs %}
+        <div class="release-table-wrap">
+            <table class="release-table">
+                <thead>
+                    <tr>
+                        <th>Profile</th>
+                        <th>User</th>
+                        <th>Changes</th>
+                        <th>Status</th>
+                        <th>Admin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in edit_logs %}
+                        <tr>
+                            <td>
+                                {% if item["profile_id"] %}
+                                    <a href="{{ url_for('dancer_profile_detail_by_id', dancer_id=item['profile_id']) }}">
+                                        {{ item["dance_name"] or item["real_name"] or "Profile #" ~ item["profile_id"] }}
+                                    </a>
+                                {% else %}
+                                    Unknown profile
+                                {% endif %}
+                                <p class="small-note">{{ item["created_at"] }}</p>
+                            </td>
+                            <td>
+                                {{ item["display_name"] or item["email"] or "Unknown user" }}
+                            </td>
+                            <td>
+                                <details>
+                                    <summary>View saved values</summary>
+                                    <p><strong>New values</strong></p>
+                                    <pre>{{ item["new_values_json"] }}</pre>
+                                    <p><strong>Old values</strong></p>
+                                    <pre>{{ item["old_values_json"] }}</pre>
+                                </details>
+                            </td>
+                            <td>
+                                {{ item["edit_status"] or "Logged" }}
+                                {% if item["admin_note"] %}
+                                    <br><span class="small-note">{{ item["admin_note"] }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin_profile_edit_log_status_phase4e', log_id=item['id']) }}" class="inline-admin-form">
+                                    <label>
+                                        Status
+                                        <select name="edit_status">
+                                            {% for option in ["Logged", "Reviewed", "Needs Follow-up", "Approved", "Archived", "Dismissed"] %}
+                                                <option value="{{ option }}" {% if (item["edit_status"] or "Logged") == option %}selected{% endif %}>{{ option }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+
+                                    <label>
+                                        Admin note
+                                        <textarea name="admin_note" rows="3">{{ item["admin_note"] or "" }}</textarea>
+                                    </label>
+
+                                    <button class="button small-button secondary" type="submit">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No owner edits yet.</h3>
+            <p>Approved profile owner edits will show here.</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="homepage-section admin-profile-review-grid">
+    <article>
+        <p class="eyebrow">Profile Claims</p>
+        <h2>Recent Claims</h2>
+
+        {% if profile_claims %}
+            <ul class="compact-admin-list">
+                {% for claim in profile_claims %}
+                    <li>
+                        <span>#{{ claim["id"] }} — {{ claim["claim_status"] or "Pending Review" }}</span>
+                        {% if claim["profile_id"] %}
+                            <a href="{{ url_for('dancer_profile_detail_by_id', dancer_id=claim['profile_id']) }}">Profile</a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="small-note">No profile claims found.</p>
+        {% endif %}
+    </article>
+
+    <article>
+        <p class="eyebrow">Suggestions</p>
+        <h2>Recent Suggestions</h2>
+
+        {% if dancer_suggestions %}
+            <ul class="compact-admin-list">
+                {% for item in dancer_suggestions %}
+                    <li>
+                        <span>{{ item["dance_name"] or "Profile" }} — {{ item["status"] or "Pending" }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="small-note">No suggestions found.</p>
+        {% endif %}
+    </article>
+
+    <article>
+        <p class="eyebrow">Flowers</p>
+        <h2>Recent Flowers</h2>
+
+        {% if dancer_flowers %}
+            <ul class="compact-admin-list">
+                {% for item in dancer_flowers %}
+                    <li>
+                        <span>{{ item["dance_name"] or "Profile" }} — {{ item["status"] or "New" }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="small-note">No flowers found.</p>
+        {% endif %}
+    </article>
+</section>
+
+<style>
+    .admin-profile-summary-grid,
+    .admin-profile-review-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .admin-profile-review-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .admin-profile-summary-grid article,
+    .admin-profile-review-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .compact-admin-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 8px;
+    }
+
+    .compact-admin-list li {
+        border-top: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        padding-top: 8px;
+    }
+
+    .inline-admin-form {
+        display: grid;
+        gap: 8px;
+        min-width: 220px;
+    }
+
+    .inline-admin-form select,
+    .inline-admin-form textarea {
+        width: 100%;
+    }
+
+    pre {
+        max-width: 360px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.78rem;
+    }
+
+    @media (max-width: 1000px) {
+        .admin-profile-summary-grid,
+        .admin-profile-review-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Editor | The LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section profile-owner-editor-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Account</p>
+            <h1>Profile Editor</h1>
+            <p>
+                Approved profile owners can update their Ledger profile here. Edits are saved immediately
+                and logged for backend review.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('account_home') }}">Account Dashboard</a>
+            <a class="button secondary" href="{{ url_for('dancers') }}">People & Teams</a>
+        </div>
+    </div>
+</section>
+
+{% if saved %}
+    <section class="homepage-section">
+        <div class="empty-state compact-empty">
+            <h2>Profile saved.</h2>
+            <p>Your update was saved and logged in the backend.</p>
+        </div>
+    </section>
+{% endif %}
+
+{% if not profile %}
+    <section class="homepage-section">
+        <div class="empty-state compact-empty">
+            <h2>No linked profile yet.</h2>
+            <p>
+                Once a profile claim is approved, your profile editor will appear here.
+            </p>
+            <div class="hero-actions">
+                <a class="button primary" href="{{ url_for('dancers') }}">Find Your Profile</a>
+                <a class="button secondary" href="{{ url_for('submit_info') }}">Submit Missing Profile</a>
+            </div>
+        </div>
+    </section>
+{% elif denied %}
+    <section class="homepage-section">
+        <div class="empty-state compact-empty">
+            <h2>Profile linked, editing not unlocked yet.</h2>
+            <p>
+                This profile is connected to your account, but edit access is not marked approved yet.
+                An admin can approve the link from the backend.
+            </p>
+        </div>
+    </section>
+{% else %}
+    <section class="homepage-section">
+        <form method="POST" action="{{ url_for('account_profile_editor_phase4c') }}" class="form-card profile-owner-form">
+            <div class="section-heading-row">
+                <div>
+                    <p class="eyebrow">Editing</p>
+                    <h2>{{ profile["dance_name"] or profile["real_name"] or "Ledger Profile" }}</h2>
+                </div>
+
+                <a class="button small-button secondary" href="{{ profile | profile_url }}">View Public Profile</a>
+            </div>
+
+            {% for field_name, field_label in allowed_fields.items() %}
+                <label>
+                    {{ field_label }}
+                    {% if field_name in ["bio", "style_notes", "battle_history", "legacy_notes"] %}
+                        <textarea name="{{ field_name }}" rows="5">{{ profile[field_name] if field_name in profile.keys() and profile[field_name] else "" }}</textarea>
+                    {% else %}
+                        <input type="text" name="{{ field_name }}" value="{{ profile[field_name] if field_name in profile.keys() and profile[field_name] else "" }}">
+                    {% endif %}
+                </label>
+            {% endfor %}
+
+            <button class="button primary" type="submit">Save Profile</button>
+        </form>
+    </section>
+{% endif %}
+
+<style>
+    .profile-owner-form {
+        display: grid;
+        gap: 14px;
+    }
+</style>
+{% endblock %}

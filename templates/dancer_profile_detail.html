@@ -33,6 +33,10 @@
         <div class="profile-actions">
             <a class="button primary" href="{{ url_for('submit_info') }}">Submit Correction</a>
 
+            {% if phase4c_user_can_edit_profile(profile["id"]) %}
+                <a class="button secondary" href="{{ url_for('account_profile_editor_phase4c') }}">Manage My Profile</a>
+            {% endif %}
+
             {% if logged_in_user %}
                 <form method="POST" action="{{ url_for('save_ledger_item') }}" class="inline-profile-form">
                     <input type="hidden" name="item_type" value="profile">
