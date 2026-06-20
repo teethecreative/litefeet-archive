@@ -18243,3 +18243,40 @@ try:
             print(f"Fixed /litefeet-music endpoint {rule.endpoint} to use media_items music_release records.")
 except Exception as exc:
     print(f"Could not override LiteFeet Music fast table source: {exc}")
+
+
+# --- Restore normal LiteFeet Music page with fallback ---
+# Bring /litefeet-music back to the real template/page.
+# If the full page errors in production, fall back to the fast table instead of showing a 500.
+
+try:
+    _original_litefeet_music_view = litefeet_music
+except Exception:
+    _original_litefeet_music_view = None
+
+
+def litefeet_music_normal_with_fallback():
+    if callable(_original_litefeet_music_view):
+        try:
+            return _original_litefeet_music_view()
+        except Exception as exc:
+            print(f"Normal LiteFeet Music page failed; using fast fallback: {exc}")
+
+    fallback = globals().get("litefeet_music_media_items_fast_table") or globals().get("litefeet_music_fast_table")
+    if callable(fallback):
+        return fallback()
+
+    return emergency_fast_html(
+        "LiteFeet Music",
+        "The music page is temporarily unavailable while the release archive is being restored.",
+        200,
+    )
+
+
+try:
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/litefeet-music":
+            app.view_functions[rule.endpoint] = litefeet_music_normal_with_fallback
+            print(f"Restored normal /litefeet-music endpoint with fallback: {rule.endpoint}")
+except Exception as exc:
+    print(f"Could not restore normal LiteFeet Music route: {exc}")
