@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Deploy Status | The LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section admin-deploy-status-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Backend</p>
+            <h1>Deploy Status</h1>
+            <p>
+                Use this page after pushing or deploying to confirm the active environment,
+                maintenance setting, database connection, Phase 2 tables, and recent Ledger activity.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('admin_home') }}">Admin Dashboard</a>
+            <a class="button secondary" href="{{ url_for('admin_maintenance') }}">Maintenance Mode</a>
+            <a class="button primary" href="{{ url_for('admin_phase2_moderation') }}">Phase 2 Moderation</a>
+        </div>
+    </div>
+</section>
+
+<section class="deploy-status-grid">
+    <article>
+        <p class="eyebrow">Environment</p>
+        <h2>Runtime</h2>
+        <table class="mini-status-table">
+            <tbody>
+                <tr><th>Database</th><td>{{ env_status["database_dialect"] }}</td></tr>
+                <tr><th>Maintenance</th><td>{{ env_status["maintenance_mode"] }}</td></tr>
+                <tr><th>DATABASE_URL</th><td>{{ env_status["database_url_present"] }}</td></tr>
+                <tr><th>Render</th><td>{{ env_status["render"] }}</td></tr>
+                <tr><th>Service</th><td>{{ env_status["render_service_name"] or "—" }}</td></tr>
+                <tr><th>External URL</th><td>{{ env_status["render_external_url"] or "—" }}</td></tr>
+                <tr><th>Render Branch</th><td>{{ env_status["render_git_branch"] or "not exposed" }}</td></tr>
+                <tr><th>Render Commit</th><td>{{ env_status["render_git_commit"] or "not exposed" }}</td></tr>
+                <tr><th>Python</th><td>{{ env_status["python_version"] }}</td></tr>
+            </tbody>
+        </table>
+    </article>
+
+    <article>
+        <p class="eyebrow">Deploy Checklist</p>
+        <h2>What to confirm</h2>
+        <ul class="deploy-checklist">
+            <li>Render is deploying the branch you pushed.</li>
+            <li>The live database is Postgres, not local SQLite.</li>
+            <li>Maintenance mode setting matches what you expect.</li>
+            <li>Admin login still works while maintenance is on.</li>
+            <li>Public pages either show maintenance or the rebuilt Ledger.</li>
+        </ul>
+    </article>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Tables</p>
+            <h2>Database Table Status</h2>
+        </div>
+    </div>
+
+    <div class="release-table-wrap">
+        <table class="release-table">
+            <thead>
+                <tr>
+                    <th>Table</th>
+                    <th>Status</th>
+                    <th>Rows</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for table in table_status %}
+                    <tr>
+                        <td>{{ table["name"] }}</td>
+                        <td>
+                            {% if table["exists"] %}
+                                <span class="status-pill">OK</span>
+                            {% else %}
+                                <span class="status-pill danger">Missing</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ table["count"] if table["count"] is not none else "—" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Recent</p>
+            <h2>Recent Submissions</h2>
+        </div>
+    </div>
+
+    {% if recent_submissions %}
+        <div class="release-table-wrap">
+            <table class="release-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in recent_submissions %}
+                        <tr>
+                            <td>{{ item["id"] }}</td>
+                            <td>{{ item["submission_type"] }}</td>
+                            <td>{{ item["title"] or "Untitled" }}</td>
+                            <td>{{ item["review_status"] or "—" }}</td>
+                            <td>{{ item["created_at"] or "—" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No recent submissions found.</h3>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .deploy-status-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .deploy-status-grid article {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .mini-status-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .mini-status-table th,
+    .mini-status-table td {
+        text-align: left;
+        border-top: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        padding: 8px;
+        vertical-align: top;
+    }
+
+    .status-pill {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 3px 8px;
+        border: 1px solid var(--border-color, rgba(255,255,255,0.18));
+    }
+
+    .status-pill.danger {
+        font-weight: 700;
+    }
+
+    .deploy-checklist {
+        padding-left: 20px;
+    }
+
+    @media (max-width: 800px) {
+        .deploy-status-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

@@ -9819,3 +9819,165 @@ def admin_phase2_ask_conversation_status(conversation_id):
     )
 
     return redirect(url_for("admin_phase2_moderation"))
+
+
+# --- Phase 2I deploy status and release safety ---
+def phase2i_admin_required():
+    if not current_user_is_admin():
+        return redirect(url_for("admin_login"))
+    return None
+
+
+def phase2i_table_exists(table_name):
+    with engine.connect() as conn:
+        if maintenance_uses_postgres():
+            rows = conn.execute(
+                text("""
+                    SELECT table_name
+                    FROM information_schema.tables
+                    WHERE table_schema = 'public'
+                      AND table_name = :table_name
+                    LIMIT 1
+                """),
+                {"table_name": table_name},
+            ).fetchall()
+            return bool(rows)
+
+        rows = conn.execute(
+            text("""
+                SELECT name
+                FROM sqlite_master
+                WHERE type='table'
+                  AND name = :table_name
+                LIMIT 1
+            """),
+            {"table_name": table_name},
+        ).fetchall()
+        return bool(rows)
+
+
+def phase2i_count_table(table_name):
+    allowed_tables = {
+        "submissions",
+        "archive_users",
+        "dancer_profiles",
+        "media_items",
+        "music_feedback",
+        "music_play_events",
+        "verification_votes",
+        "role_requests",
+        "ask_conversations",
+        "ask_messages",
+        "profile_claims",
+        "saved_items",
+        "calendar_item_metadata",
+        "battle_records",
+        "community_perspectives",
+        "team_access_grants",
+    }
+
+    if table_name not in allowed_tables:
+        return None
+
+    try:
+        rows = fetch_all(f"SELECT COUNT(*) AS count FROM {table_name}", {})
+        return rows[0]["count"] if rows else 0
+    except Exception:
+        return None
+
+
+def phase2i_setting_value(key, default=""):
+    try:
+        rows = fetch_all(
+            """
+            SELECT value
+            FROM site_settings
+            WHERE key = :key
+            LIMIT 1
+            """,
+            {"key": key},
+        )
+        return rows[0]["value"] if rows else default
+    except Exception:
+        return default
+
+
+@app.route("/admin/deploy-status")
+def admin_deploy_status_phase2i():
+    gate = phase2i_admin_required()
+    if gate:
+        return gate
+
+    try:
+        ensure_phase2_ledger_tables()
+    except Exception:
+        pass
+
+    phase2g_helper = globals().get("ensure_phase2g_community_perspective_columns")
+    if callable(phase2g_helper):
+        try:
+            phase2g_helper()
+        except Exception:
+            pass
+
+    import os
+    import sys
+
+    expected_tables = [
+        "submissions",
+        "archive_users",
+        "dancer_profiles",
+        "media_items",
+        "music_feedback",
+        "music_play_events",
+        "verification_votes",
+        "role_requests",
+        "ask_conversations",
+        "ask_messages",
+        "profile_claims",
+        "saved_items",
+        "calendar_item_metadata",
+        "battle_records",
+        "community_perspectives",
+        "team_access_grants",
+    ]
+
+    table_status = []
+    for table_name in expected_tables:
+        exists = phase2i_table_exists(table_name)
+        table_status.append(
+            {
+                "name": table_name,
+                "exists": exists,
+                "count": phase2i_count_table(table_name) if exists else None,
+            }
+        )
+
+    env_status = {
+        "database_dialect": engine.dialect.name,
+        "maintenance_mode": phase2i_setting_value("maintenance_mode", "unknown"),
+        "database_url_present": "yes" if os.environ.get("DATABASE_URL") else "no",
+        "render": "yes" if os.environ.get("RENDER") else "no",
+        "render_service_name": os.environ.get("RENDER_SERVICE_NAME", ""),
+        "render_external_url": os.environ.get("RENDER_EXTERNAL_URL", ""),
+        "render_git_commit": os.environ.get("RENDER_GIT_COMMIT", ""),
+        "render_git_branch": os.environ.get("RENDER_GIT_BRANCH", ""),
+        "python_version": sys.version.split()[0],
+    }
+
+    recent_submissions = fetch_all(
+        """
+        SELECT id, submission_type, title, review_status, created_at
+        FROM submissions
+        ORDER BY created_at DESC, id DESC
+        LIMIT 10
+        """,
+        {},
+    )
+
+    return render_template(
+        "admin_deploy_status.html",
+        env_status=env_status,
+        table_status=table_status,
+        recent_submissions=recent_submissions,
+    )
