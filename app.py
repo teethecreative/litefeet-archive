@@ -18280,3 +18280,111 @@ try:
             print(f"Restored normal /litefeet-music endpoint with fallback: {rule.endpoint}")
 except Exception as exc:
     print(f"Could not restore normal LiteFeet Music route: {exc}")
+
+
+# --- Fix normal LiteFeet Music records source ---
+# The normal template is fine, but the route was sending empty release lists.
+# Force the normal page to use live media_items music_release records.
+
+def litefeet_music_normal_records_fixed():
+    selected_platform = request.args.get("platform", "").strip()
+    selected_type = request.args.get("type", "").strip()
+    search_query = request.args.get("q", "").strip().lower()
+
+    try:
+        records = fetch_all(
+            """
+            SELECT *
+            FROM media_items
+            WHERE media_type = 'music_release'
+            ORDER BY
+                CASE
+                    WHEN release_date IS NULL OR release_date = '' THEN created_at
+                    ELSE release_date
+                END DESC,
+                id DESC
+            LIMIT 800
+            """,
+            {},
+        ) or []
+    except Exception as exc:
+        print(f"Normal LiteFeet Music fixed fetch failed: {exc}")
+        records = []
+
+    releases = []
+    for item in records:
+        row = dict(item)
+
+        title = str(row.get("title") or "").lower()
+        artist = str(row.get("artist_or_creator") or row.get("artist_name") or "").lower()
+        producer = str(row.get("producer_name") or "").lower()
+        platform = str(row.get("platform") or "").strip()
+
+        if selected_platform and selected_platform != "all" and platform.lower() != selected_platform.lower():
+            continue
+
+        if search_query and search_query not in title and search_query not in artist and search_query not in producer:
+            continue
+
+        # Normalize fields the template/helpers may expect.
+        row.setdefault("feedback_counts", {})
+        row.setdefault("rating_average", None)
+        row.setdefault("reaction_counts", {})
+        row.setdefault("project_title", "")
+        row.setdefault("project_id", None)
+        row.setdefault("release_stage", row.get("release_stage") or "released")
+        row.setdefault("play_count", row.get("play_count") or 0)
+
+        releases.append(row)
+
+    release_radar = releases[:12]
+    music_projects = []
+
+    platform_options = []
+    seen_platforms = set()
+    for item in records:
+        platform = (dict(item).get("platform") or "").strip()
+        if platform and platform.lower() not in seen_platforms:
+            platform_options.append(platform)
+            seen_platforms.add(platform.lower())
+
+    try:
+        return render_template(
+            "litefeet_music.html",
+            releases=releases,
+            music_releases=releases,
+            music_records=releases,
+            release_radar=release_radar,
+            music_projects=music_projects,
+            platform_options=platform_options,
+            selected_platform=selected_platform or "all",
+            selected_type=selected_type or "all",
+            selected_music_type=selected_type or "all",
+            search_query=request.args.get("q", ""),
+            query=request.args.get("q", ""),
+            period=request.args.get("period", "all"),
+            selected_period=request.args.get("period", "all"),
+            feedback_counts={},
+            reaction_counts={},
+        )
+    except Exception as exc:
+        print(f"Normal LiteFeet Music template failed after fixed records fetch: {exc}")
+
+        fallback = globals().get("litefeet_music_media_items_fast_table") or globals().get("litefeet_music_fast_table")
+        if callable(fallback):
+            return fallback()
+
+        return emergency_fast_html(
+            "LiteFeet Music",
+            "The music records were found, but the normal page template needs another fix.",
+            200,
+        )
+
+
+try:
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/litefeet-music":
+            app.view_functions[rule.endpoint] = litefeet_music_normal_records_fixed
+            print(f"Fixed normal /litefeet-music records endpoint: {rule.endpoint}")
+except Exception as exc:
+    print(f"Could not fix normal LiteFeet Music records route: {exc}")
