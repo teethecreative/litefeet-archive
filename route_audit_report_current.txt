@@ -62,6 +62,7 @@ Using templates: /Users/teethecreative/litefeet-archive/templates
 /battle-records/<int:battle_id>                              -> battle_record_detail_phase2                   [GET]
 /battles                                                     -> battles                                       [GET]
 /battles/add                                                 -> battle_submit_phase2                          [GET, POST]
+/calendar/items/<int:event_id>/metadata                      -> update_calendar_metadata_phase2               [POST]
 /contributor                                                 -> contributor_portal                            [GET]
 /contributor/request-role                                    -> contributor_request_role                      [POST]
 /dancers                                                     -> dancers_index_redirect                        [GET]

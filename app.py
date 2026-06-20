@@ -3783,6 +3783,8 @@ def submit_success():
 @app.route("/calendar/add", methods=["GET", "POST"])
 @app.route("/events/submit", methods=["GET", "POST"])
 def submit_event():
+    ensure_phase2_ledger_tables()
+
     if request.method == "POST":
         form_data = request.form.to_dict()
 
@@ -3798,16 +3800,16 @@ def submit_event():
             errors.append("Add the organization or host name.")
 
         if len(event_name) < 2:
-            errors.append("Add the event name.")
+            errors.append("Add the calendar item name.")
 
         if not event_date:
-            errors.append("Add the event date.")
+            errors.append("Add the date.")
 
         if not event_time:
-            errors.append("Add the event time.")
+            errors.append("Add the time.")
 
         if len(event_location) < 2:
-            errors.append("Add the event location.")
+            errors.append("Add the location.")
 
         if errors:
             return render_template("event_submit.html", errors=errors), 400
@@ -3818,11 +3820,18 @@ def submit_event():
 
         details = [
             {"label": "Event Timing", "value": form_data.get("event_timing", "").strip()},
+            {"label": "Calendar Type", "value": form_data.get("calendar_type", "").strip()},
             {"label": "Organization Name", "value": event_org},
             {"label": "Event Name", "value": event_name},
             {"label": "Event Date", "value": event_date},
             {"label": "Event Time", "value": event_time},
             {"label": "Event Location", "value": event_location},
+            {"label": "Borough", "value": form_data.get("borough", "").strip()},
+            {"label": "Venue Name", "value": form_data.get("venue_name", "").strip()},
+            {"label": "Cost", "value": form_data.get("cost_text", "").strip()},
+            {"label": "Recurring Rule", "value": form_data.get("recurrence_rule", "").strip()},
+            {"label": "Host Names", "value": form_data.get("host_names", "").strip()},
+            {"label": "DJ Names", "value": form_data.get("dj_names", "").strip()},
             {"label": "Battle Type", "value": form_data.get("event_battle_type", "").strip()},
             {"label": "Planned Battle List", "value": form_data.get("event_battle_list", "").strip()},
             {"label": "Judges", "value": form_data.get("event_judges", "").strip()},
@@ -3838,164 +3847,40 @@ def submit_event():
 
         details = [item for item in details if item["value"]]
 
-        execute_query(
-            """
-            INSERT INTO submissions (
-                submission_type,
-                title,
-                related_to,
-                source_url,
-                submitter_name,
-                submitter_role,
-                contact,
-                needs_verification,
-                review_status,
-                details_json,
-                created_at
-            )
-            VALUES (
-                :submission_type,
-                :title,
-                :related_to,
-                :source_url,
-                :submitter_name,
-                :submitter_role,
-                :contact,
-                :needs_verification,
-                :review_status,
-                :details_json,
-                :created_at
-            )
-            """,
+        submitter_name = form_data.get("submitter_name", "").strip()
+        contact = form_data.get("contact", "").strip()
+
+        if user:
+            submitter_name = submitter_name or user["display_name"] or ""
+            contact = contact or user["email"] or ""
+
+        now_value = datetime.now().isoformat(timespec="seconds")
+
+        submission_id = phase2_safe_insert_and_get_id(
+            "submissions",
             {
                 "submission_type": "event",
                 "title": event_name,
                 "related_to": event_org,
-                "source_url": form_data.get("source_url", "").strip(),
-                "submitter_name": form_data.get("submitter_name", "").strip(),
+                "source_url": form_data.get("source_url", "").strip() or form_data.get("flyer_url", "").strip(),
+                "submitter_name": submitter_name,
                 "submitter_role": form_data.get("submitter_role", "").strip(),
-                "contact": form_data.get("contact", "").strip(),
-                "needs_verification": 1,
-                "review_status": "Pending Review",
+                "contact": contact,
+                "needs_verification": 0 if is_affiliate else 1,
+                "review_status": review_status,
                 "details_json": json.dumps(details, ensure_ascii=False),
-                "created_at": datetime.now().isoformat(timespec="seconds"),
+                "created_at": now_value,
+                "contributor_user_id": user["id"] if user else None,
+                "anonymous_submission": 0,
             },
         )
 
-        return redirect(url_for("submit_success"))
+        upsert_calendar_metadata(submission_id, form_data)
+
+        return redirect(url_for("event_detail", event_id=submission_id))
 
     return render_template("event_submit.html", errors=[])
 
-
-
-# --- Event details compatibility patch for legacy list + structured dict details ---
-def get_detail_value(record, label):
-    details = parse_submission_details(record)
-
-    def clean_value(value):
-        if value is None:
-            return ""
-        if isinstance(value, str):
-            return value
-        if isinstance(value, (int, float)):
-            return str(value)
-
-        if isinstance(value, list):
-            cleaned_items = []
-            for item in value:
-                if isinstance(item, dict):
-                    name = item.get("name") or item.get("title") or item.get("value")
-                    note = item.get("note")
-                    featuring = item.get("featuring")
-
-                    if name and note:
-                        cleaned_items.append(f"{name} ({note})")
-                    elif name:
-                        cleaned_items.append(str(name))
-                    elif featuring:
-                        cleaned_items.append(", ".join(str(x) for x in featuring))
-                    else:
-                        cleaned_items.append(str(item))
-                else:
-                    cleaned_items.append(str(item))
-
-            return " | ".join(cleaned_items)
-
-        if isinstance(value, dict):
-            name = value.get("name") or value.get("title") or value.get("value")
-            note = value.get("note")
-
-            if name and note:
-                return f"{name} ({note})"
-            if name:
-                return str(name)
-
-            return ", ".join(f"{k}: {v}" for k, v in value.items())
-
-        return str(value)
-
-    def record_value(key):
-        try:
-            return record.get(key)
-        except AttributeError:
-            try:
-                return record[key]
-            except Exception:
-                return None
-
-    # Legacy details_json format:
-    # [{"label": "Event Date", "value": "2026-06-06"}, ...]
-    if isinstance(details, list):
-        for item in details:
-            if isinstance(item, dict) and item.get("label") == label:
-                return clean_value(item.get("value"))
-        return ""
-
-    # New structured details_json format:
-    # {"event_date": "2026-06-06", "time": "...", "battles": [...]}
-    if isinstance(details, dict):
-        label_key_map = {
-            "Event Name": ["event_name", "title"],
-            "Organization Name": ["organization_name", "organizer", "series", "presented_by"],
-            "Event Date": ["event_date", "date"],
-            "Event Time": ["event_time", "time"],
-            "Event Location": ["event_location", "location", "venue"],
-            "Venue Notes": ["venue_notes", "note", "message"],
-            "Battle Type": ["battle_type", "type"],
-            "Age Restriction": ["age_restriction", "requirement"],
-            "Entry": ["entry"],
-            "Host": ["host", "hosted_by"],
-            "Judges": ["judges", "special_guest_judges"],
-            "Event Results": ["event_results", "results"],
-            "Results Status": ["results_status"],
-            "Needs Confirmation": ["needs_confirmation", "confirmation_needed"],
-            "Archive Note": ["archive_note", "notes"],
-            "Battle List": ["battle_list", "battles"],
-            "Studio": ["studio", "venue"],
-            "Borough": ["borough"],
-            "End Results": ["end_results", "results"],
-            "Organizer": ["organizer", "presented_by", "series"],
-            "Event Host": ["event_host", "host", "hosted_by"],
-        }
-
-        possible_keys = label_key_map.get(label, [])
-        possible_keys.extend([
-            label,
-            label.lower(),
-            label.lower().replace(" ", "_"),
-        ])
-
-        for key in possible_keys:
-            if key in details and details.get(key) not in (None, ""):
-                return clean_value(details.get(key))
-
-        if label == "Event Name":
-            return clean_value(record_value("title"))
-
-        if label == "Organization Name":
-            return clean_value(record_value("related_to"))
-
-    return ""
 
 
 @app.route("/calendar")
@@ -9258,3 +9143,148 @@ def battle_record_detail_phase2(battle_id):
         battle=battle,
         submission=submission,
     )
+
+
+# --- Phase 2F calendar metadata helpers and routes ---
+def phase2_safe_insert_and_get_id(table_name, values):
+    helper = globals().get("phase2_insert_and_get_id") or globals().get("ledger_insert_and_get_id")
+    if callable(helper):
+        return helper(table_name, values)
+
+    columns = list(values.keys())
+    columns_sql = ", ".join(columns)
+    values_sql = ", ".join(f":{column}" for column in columns)
+
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            result = conn.execute(
+                text(f"INSERT INTO {table_name} ({columns_sql}) VALUES ({values_sql}) RETURNING id"),
+                values,
+            )
+            return result.scalar()
+
+        result = conn.execute(
+            text(f"INSERT INTO {table_name} ({columns_sql}) VALUES ({values_sql})"),
+            values,
+        )
+        return result.lastrowid
+
+
+def fetch_calendar_metadata(submission_id):
+    ensure_phase2_ledger_tables()
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM calendar_item_metadata
+        WHERE submission_id = :submission_id
+        LIMIT 1
+        """,
+        {"submission_id": submission_id},
+    )
+
+    return rows[0] if rows else None
+
+
+def calendar_metadata_values_from_form(submission_id, form_data):
+    now_value = datetime.now().isoformat(timespec="seconds")
+
+    return {
+        "submission_id": submission_id,
+        "calendar_type": (
+            form_data.get("calendar_type", "").strip()
+            or form_data.get("event_timing", "").strip()
+        ),
+        "recurrence_rule": form_data.get("recurrence_rule", "").strip(),
+        "borough": form_data.get("borough", "").strip(),
+        "venue_name": form_data.get("venue_name", "").strip(),
+        "flyer_url": (
+            form_data.get("flyer_url", "").strip()
+            or form_data.get("source_url", "").strip()
+        ),
+        "cost_text": form_data.get("cost_text", "").strip(),
+        "dj_names": form_data.get("dj_names", "").strip(),
+        "host_names": form_data.get("host_names", "").strip(),
+        "judges_text": (
+            form_data.get("judges_text", "").strip()
+            or form_data.get("event_judges", "").strip()
+        ),
+        "visibility_status": form_data.get("visibility_status", "public").strip() or "public",
+        "created_at": now_value,
+        "updated_at": now_value,
+    }
+
+
+def upsert_calendar_metadata(submission_id, form_data):
+    ensure_phase2_ledger_tables()
+
+    values = calendar_metadata_values_from_form(submission_id, form_data)
+    existing = fetch_calendar_metadata(submission_id)
+
+    if existing:
+        update_values = dict(values)
+        update_values["metadata_id"] = existing["id"]
+
+        execute_query(
+            """
+            UPDATE calendar_item_metadata
+            SET calendar_type = :calendar_type,
+                recurrence_rule = :recurrence_rule,
+                borough = :borough,
+                venue_name = :venue_name,
+                flyer_url = :flyer_url,
+                cost_text = :cost_text,
+                dj_names = :dj_names,
+                host_names = :host_names,
+                judges_text = :judges_text,
+                visibility_status = :visibility_status,
+                updated_at = :updated_at
+            WHERE id = :metadata_id
+            """,
+            update_values,
+        )
+
+        return existing["id"]
+
+    return phase2_safe_insert_and_get_id("calendar_item_metadata", values)
+
+
+@app.context_processor
+def inject_calendar_metadata_helpers():
+    return {
+        "calendar_metadata_for": fetch_calendar_metadata,
+    }
+
+
+@app.route("/calendar/items/<int:event_id>/metadata", methods=["POST"])
+def update_calendar_metadata_phase2(event_id):
+    ensure_phase2_ledger_tables()
+
+    events = fetch_all(
+        """
+        SELECT *
+        FROM submissions
+        WHERE id = :event_id
+        AND submission_type = 'event'
+        LIMIT 1
+        """,
+        {"event_id": event_id},
+    )
+
+    if not events:
+        return redirect(url_for("events"))
+
+    event = events[0]
+    user = current_user()
+
+    can_edit = bool(session.get("admin_logged_in"))
+
+    if user and event["contributor_user_id"] and event["contributor_user_id"] == user["id"]:
+        can_edit = True
+
+    if not can_edit:
+        return redirect(url_for("account_login"))
+
+    upsert_calendar_metadata(event_id, request.form)
+
+    return redirect(url_for("event_detail", event_id=event_id))
