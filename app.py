@@ -9538,3 +9538,284 @@ def community_perspective_detail_phase2g(perspective_id):
         perspective=perspective,
         related_url=community_perspective_related_url(perspective),
     )
+
+
+# --- Phase 2H admin moderation for Phase 2 tables ---
+def phase2h_admin_required():
+    if not current_user_is_admin():
+        return redirect(url_for("admin_login"))
+    return None
+
+
+def phase2h_ensure_all_tables():
+    ensure_phase2_ledger_tables()
+
+    phase2g_helper = globals().get("ensure_phase2g_community_perspective_columns")
+    if callable(phase2g_helper):
+        phase2g_helper()
+
+
+@app.route("/admin/phase2")
+@app.route("/admin/phase2-moderation")
+def admin_phase2_moderation():
+    gate = phase2h_admin_required()
+    if gate:
+        return gate
+
+    phase2h_ensure_all_tables()
+
+    profile_claims = fetch_all(
+        """
+        SELECT profile_claims.*,
+               dancer_profiles.dance_name,
+               dancer_profiles.profile_slug,
+               dancer_profiles.team_affiliation,
+               archive_users.display_name AS user_display_name,
+               archive_users.email AS user_email
+        FROM profile_claims
+        LEFT JOIN dancer_profiles
+          ON profile_claims.profile_type = 'dancer'
+         AND profile_claims.profile_id = dancer_profiles.id
+        LEFT JOIN archive_users
+          ON profile_claims.user_id = archive_users.id
+        ORDER BY profile_claims.created_at DESC, profile_claims.id DESC
+        LIMIT 100
+        """,
+        {},
+    )
+
+    community_perspectives = fetch_all(
+        """
+        SELECT *
+        FROM community_perspectives
+        ORDER BY created_at DESC, id DESC
+        LIMIT 100
+        """,
+        {},
+    )
+
+    battle_records = fetch_all(
+        """
+        SELECT *
+        FROM battle_records
+        ORDER BY updated_at DESC, created_at DESC, id DESC
+        LIMIT 100
+        """,
+        {},
+    )
+
+    ask_conversations = fetch_all(
+        """
+        SELECT ask_conversations.*,
+               archive_users.display_name,
+               archive_users.email
+        FROM ask_conversations
+        LEFT JOIN archive_users
+          ON ask_conversations.user_id = archive_users.id
+        ORDER BY ask_conversations.updated_at DESC, ask_conversations.created_at DESC, ask_conversations.id DESC
+        LIMIT 100
+        """,
+        {},
+    )
+
+    calendar_metadata = fetch_all(
+        """
+        SELECT calendar_item_metadata.*,
+               submissions.title,
+               submissions.related_to,
+               submissions.review_status
+        FROM calendar_item_metadata
+        LEFT JOIN submissions
+          ON calendar_item_metadata.submission_id = submissions.id
+        ORDER BY calendar_item_metadata.updated_at DESC, calendar_item_metadata.created_at DESC, calendar_item_metadata.id DESC
+        LIMIT 100
+        """,
+        {},
+    )
+
+    return render_template(
+        "admin_phase2_moderation.html",
+        profile_claims=profile_claims,
+        community_perspectives=community_perspectives,
+        battle_records=battle_records,
+        ask_conversations=ask_conversations,
+        calendar_metadata=calendar_metadata,
+    )
+
+
+@app.route("/admin/phase2/profile-claims/<int:claim_id>/status", methods=["POST"])
+def admin_phase2_profile_claim_status(claim_id):
+    gate = phase2h_admin_required()
+    if gate:
+        return gate
+
+    phase2h_ensure_all_tables()
+
+    new_status = request.form.get("claim_status", "").strip()
+    allowed = {"Pending Review", "Approved", "Rejected", "Needs Follow-up"}
+
+    if new_status not in allowed:
+        return redirect(url_for("admin_phase2_moderation"))
+
+    execute_query(
+        """
+        UPDATE profile_claims
+        SET claim_status = :claim_status,
+            reviewed_by = NULL,
+            reviewed_at = :reviewed_at
+        WHERE id = :claim_id
+        """,
+        {
+            "claim_status": new_status,
+            "reviewed_at": datetime.now().isoformat(timespec="seconds"),
+            "claim_id": claim_id,
+        },
+    )
+
+    return redirect(url_for("admin_phase2_moderation"))
+
+
+@app.route("/admin/phase2/community-perspectives/<int:perspective_id>/status", methods=["POST"])
+def admin_phase2_community_perspective_status(perspective_id):
+    gate = phase2h_admin_required()
+    if gate:
+        return gate
+
+    phase2h_ensure_all_tables()
+
+    new_status = request.form.get("perspective_status", "").strip()
+    review_label = request.form.get("review_label", "").strip()
+
+    allowed = {"Pending Review", "Approved", "Community Supported", "Rejected", "Needs Verification", "Debated"}
+
+    if new_status not in allowed:
+        return redirect(url_for("admin_phase2_moderation"))
+
+    execute_query(
+        """
+        UPDATE community_perspectives
+        SET perspective_status = :perspective_status,
+            review_label = :review_label,
+            updated_at = :updated_at
+        WHERE id = :perspective_id
+        """,
+        {
+            "perspective_status": new_status,
+            "review_label": review_label or "Community Perspective",
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+            "perspective_id": perspective_id,
+        },
+    )
+
+    return redirect(url_for("admin_phase2_moderation"))
+
+
+@app.route("/admin/phase2/battle-records/<int:battle_id>/status", methods=["POST"])
+def admin_phase2_battle_record_status(battle_id):
+    gate = phase2h_admin_required()
+    if gate:
+        return gate
+
+    phase2h_ensure_all_tables()
+
+    review_status = request.form.get("review_status", "").strip()
+    community_input_status = request.form.get("community_input_status", "").strip()
+    controversy_score_raw = request.form.get("controversy_score", "0").strip()
+
+    allowed_review = {"Needs Review", "Verified", "Community Supported", "Disputed", "Rejected"}
+    allowed_community = {"None", "Community Supported", "Debated", "Needs Context", "Disputed"}
+
+    if review_status not in allowed_review:
+        return redirect(url_for("admin_phase2_moderation"))
+
+    if community_input_status not in allowed_community:
+        community_input_status = "None"
+
+    try:
+        controversy_score = int(controversy_score_raw)
+    except Exception:
+        controversy_score = 0
+
+    controversy_score = max(0, min(100, controversy_score))
+
+    execute_query(
+        """
+        UPDATE battle_records
+        SET review_status = :review_status,
+            community_input_status = :community_input_status,
+            controversy_score = :controversy_score,
+            updated_at = :updated_at
+        WHERE id = :battle_id
+        """,
+        {
+            "review_status": review_status,
+            "community_input_status": community_input_status,
+            "controversy_score": controversy_score,
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+            "battle_id": battle_id,
+        },
+    )
+
+    return redirect(url_for("admin_phase2_moderation"))
+
+
+@app.route("/admin/phase2/calendar-metadata/<int:metadata_id>/visibility", methods=["POST"])
+def admin_phase2_calendar_metadata_visibility(metadata_id):
+    gate = phase2h_admin_required()
+    if gate:
+        return gate
+
+    phase2h_ensure_all_tables()
+
+    visibility_status = request.form.get("visibility_status", "").strip()
+    allowed = {"public", "hidden", "needs_review"}
+
+    if visibility_status not in allowed:
+        return redirect(url_for("admin_phase2_moderation"))
+
+    execute_query(
+        """
+        UPDATE calendar_item_metadata
+        SET visibility_status = :visibility_status,
+            updated_at = :updated_at
+        WHERE id = :metadata_id
+        """,
+        {
+            "visibility_status": visibility_status,
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+            "metadata_id": metadata_id,
+        },
+    )
+
+    return redirect(url_for("admin_phase2_moderation"))
+
+
+@app.route("/admin/phase2/ask-conversations/<int:conversation_id>/status", methods=["POST"])
+def admin_phase2_ask_conversation_status(conversation_id):
+    gate = phase2h_admin_required()
+    if gate:
+        return gate
+
+    phase2h_ensure_all_tables()
+
+    status = request.form.get("status", "").strip()
+    allowed = {"open", "answered", "needs_review", "archived"}
+
+    if status not in allowed:
+        return redirect(url_for("admin_phase2_moderation"))
+
+    execute_query(
+        """
+        UPDATE ask_conversations
+        SET status = :status,
+            updated_at = :updated_at
+        WHERE id = :conversation_id
+        """,
+        {
+            "status": status,
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+            "conversation_id": conversation_id,
+        },
+    )
+
+    return redirect(url_for("admin_phase2_moderation"))

@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Phase 2 Moderation | The LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section admin-phase2-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Backend</p>
+            <h1>Phase 2 Moderation</h1>
+            <p>
+                Moderate the new Ledger data layers: profile claims, community perspectives,
+                structured battles, Ask conversations, and calendar metadata.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('admin_home') }}">Admin Dashboard</a>
+            <a class="button primary" href="{{ url_for('verify_claims') }}">Ledger Review</a>
+        </div>
+    </div>
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Profiles</p>
+            <h2>Profile Claims</h2>
+        </div>
+    </div>
+
+    {% if profile_claims %}
+        <div class="release-table-wrap">
+            <table class="release-table admin-phase2-table">
+                <thead>
+                    <tr>
+                        <th>Profile</th>
+                        <th>Claimant</th>
+                        <th>Reason</th>
+                        <th>Proof</th>
+                        <th>Status</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for claim in profile_claims %}
+                        <tr>
+                            <td>
+                                {{ claim["dance_name"] or "Profile #" ~ claim["profile_id"] }}
+                                {% if claim["team_affiliation"] %}
+                                    <br><span class="small-note">{{ claim["team_affiliation"] }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ claim["claimant_name"] or claim["user_display_name"] or "Unknown" }}
+                                {% if claim["claimant_contact"] or claim["user_email"] %}
+                                    <br><span class="small-note">{{ claim["claimant_contact"] or claim["user_email"] }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ claim["claim_reason"] or "—" }}</td>
+                            <td>
+                                {% if claim["proof_url"] %}
+                                    <a href="{{ claim['proof_url'] }}" target="_blank" rel="noopener">Proof</a>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>{{ claim["claim_status"] or "Pending Review" }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin_phase2_profile_claim_status', claim_id=claim['id']) }}" class="inline-admin-form">
+                                    <select name="claim_status">
+                                        {% for option in ["Pending Review", "Approved", "Rejected", "Needs Follow-up"] %}
+                                            <option value="{{ option }}" {% if claim["claim_status"] == option %}selected{% endif %}>{{ option }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="button small-button secondary" type="submit">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No profile claims yet.</h3>
+        </div>
+    {% endif %}
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Community</p>
+            <h2>Community Perspectives</h2>
+        </div>
+    </div>
+
+    {% if community_perspectives %}
+        <div class="release-table-wrap">
+            <table class="release-table admin-phase2-table">
+                <thead>
+                    <tr>
+                        <th>Context</th>
+                        <th>Related</th>
+                        <th>Source</th>
+                        <th>Status</th>
+                        <th>Label</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in community_perspectives %}
+                        <tr>
+                            <td>
+                                {{ item["perspective_text"]|truncate(180) }}
+                                <br><span class="small-note">{{ item["submitter_name"] or "Anonymous / Not listed" }}</span>
+                            </td>
+                            <td>
+                                {{ item["related_type"] or "general" }}
+                                {% if item["related_id"] %} #{{ item["related_id"] }}{% endif %}
+                                {% if item["submission_id"] %}<br><span class="small-note">Submission #{{ item["submission_id"] }}</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if item["source_url"] %}
+                                    <a href="{{ item['source_url'] }}" target="_blank" rel="noopener">Source</a>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>{{ item["perspective_status"] or "Pending Review" }}</td>
+                            <td>{{ item["review_label"] or "Community Perspective" }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin_phase2_community_perspective_status', perspective_id=item['id']) }}" class="inline-admin-form">
+                                    <select name="perspective_status">
+                                        {% for option in ["Pending Review", "Approved", "Community Supported", "Rejected", "Needs Verification", "Debated"] %}
+                                            <option value="{{ option }}" {% if item["perspective_status"] == option %}selected{% endif %}>{{ option }}</option>
+                                        {% endfor %}
+                                    </select>
+
+                                    <input type="text" name="review_label" value="{{ item['review_label'] or 'Community Perspective' }}">
+
+                                    <button class="button small-button secondary" type="submit">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No community perspectives yet.</h3>
+        </div>
+    {% endif %}
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Battles</p>
+            <h2>Structured Battle Records</h2>
+        </div>
+    </div>
+
+    {% if battle_records %}
+        <div class="release-table-wrap">
+            <table class="release-table admin-phase2-table">
+                <thead>
+                    <tr>
+                        <th>Battle</th>
+                        <th>Winner</th>
+                        <th>Community</th>
+                        <th>Controversy</th>
+                        <th>Status</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for battle in battle_records %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">
+                                    {{ battle["competitor_one"] or "Competitor 1" }} vs {{ battle["competitor_two"] or "Competitor 2" }}
+                                </a>
+                                <br><span class="small-note">{{ battle["battle_type"] or "Battle" }}</span>
+                            </td>
+                            <td>{{ battle["official_winner"] or battle["winner"] or "Needs result" }}</td>
+                            <td>{{ battle["community_input_status"] or "None" }}</td>
+                            <td>{{ battle["controversy_score"] or 0 }}</td>
+                            <td>{{ battle["review_status"] or "Needs Review" }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin_phase2_battle_record_status', battle_id=battle['id']) }}" class="inline-admin-form">
+                                    <select name="review_status">
+                                        {% for option in ["Needs Review", "Verified", "Community Supported", "Disputed", "Rejected"] %}
+                                            <option value="{{ option }}" {% if battle["review_status"] == option %}selected{% endif %}>{{ option }}</option>
+                                        {% endfor %}
+                                    </select>
+
+                                    <select name="community_input_status">
+                                        {% for option in ["None", "Community Supported", "Debated", "Needs Context", "Disputed"] %}
+                                            <option value="{{ option }}" {% if battle["community_input_status"] == option %}selected{% endif %}>{{ option }}</option>
+                                        {% endfor %}
+                                    </select>
+
+                                    <input type="number" min="0" max="100" name="controversy_score" value="{{ battle['controversy_score'] or 0 }}">
+
+                                    <button class="button small-button secondary" type="submit">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No structured battle records yet.</h3>
+        </div>
+    {% endif %}
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Ask</p>
+            <h2>Ask Conversations</h2>
+        </div>
+    </div>
+
+    {% if ask_conversations %}
+        <div class="release-table-wrap">
+            <table class="release-table admin-phase2-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>User</th>
+                        <th>Status</th>
+                        <th>Updated</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for conversation in ask_conversations %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('ask_conversation_detail', conversation_id=conversation['id']) }}">
+                                    {{ conversation["title"] or "Untitled conversation" }}
+                                </a>
+                            </td>
+                            <td>{{ conversation["display_name"] or conversation["email"] or conversation["visitor_key"] or "Unknown" }}</td>
+                            <td>{{ conversation["status"] or "open" }}</td>
+                            <td>{{ conversation["updated_at"] or conversation["created_at"] or "—" }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin_phase2_ask_conversation_status', conversation_id=conversation['id']) }}" class="inline-admin-form">
+                                    <select name="status">
+                                        {% for option in ["open", "answered", "needs_review", "archived"] %}
+                                            <option value="{{ option }}" {% if conversation["status"] == option %}selected{% endif %}>{{ option }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="button small-button secondary" type="submit">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No Ask conversations yet.</h3>
+        </div>
+    {% endif %}
+</section>
+
+<section class="homepage-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Calendar</p>
+            <h2>Calendar Metadata</h2>
+        </div>
+    </div>
+
+    {% if calendar_metadata %}
+        <div class="release-table-wrap">
+            <table class="release-table admin-phase2-table">
+                <thead>
+                    <tr>
+                        <th>Calendar Item</th>
+                        <th>Type</th>
+                        <th>Borough</th>
+                        <th>Venue</th>
+                        <th>Visibility</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in calendar_metadata %}
+                        <tr>
+                            <td>
+                                {% if item["submission_id"] %}
+                                    <a href="{{ url_for('event_detail', event_id=item['submission_id']) }}">
+                                        {{ item["title"] or "Calendar item" }}
+                                    </a>
+                                {% else %}
+                                    {{ item["title"] or "Calendar item" }}
+                                {% endif %}
+                                <br><span class="small-note">{{ item["related_to"] or "—" }}</span>
+                            </td>
+                            <td>{{ item["calendar_type"] or "—" }}</td>
+                            <td>{{ item["borough"] or "—" }}</td>
+                            <td>{{ item["venue_name"] or "—" }}</td>
+                            <td>{{ item["visibility_status"] or "public" }}</td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin_phase2_calendar_metadata_visibility', metadata_id=item['id']) }}" class="inline-admin-form">
+                                    <select name="visibility_status">
+                                        {% for option in ["public", "hidden", "needs_review"] %}
+                                            <option value="{{ option }}" {% if item["visibility_status"] == option %}selected{% endif %}>{{ option }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="button small-button secondary" type="submit">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No calendar metadata yet.</h3>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .inline-admin-form {
+        display: grid;
+        gap: 6px;
+        min-width: 180px;
+    }
+
+    .inline-admin-form select,
+    .inline-admin-form input {
+        width: 100%;
+    }
+
+    .admin-phase2-table td {
+        vertical-align: top;
+    }
+</style>
+{% endblock %}
