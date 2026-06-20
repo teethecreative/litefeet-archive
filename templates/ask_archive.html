@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Ask the Ledger | The LiteFeet Ledger{% endblock %}
-{% block meta_description %}Ask the LiteFeet Ledger about dancers, battles, music, events, awards, teams, and community records. The public Ask system is being rebuilt with community verification in mind.{% endblock %}
+{% block meta_description %}Ask the LiteFeet Ledger about dancers, battles, music, events, awards, teams, and community records. Contributor/admin beta questions are saved for review.{% endblock %}
 
 {% block content %}
 <section class="content-section ask-page">
@@ -10,36 +10,83 @@
 
     {% if logged_in_user or session.get("admin_logged_in") %}
         <div class="empty-state compact-empty">
-            <h3>Beta access shell</h3>
+            <h3>Beta access is open for contributors/admins.</h3>
             <p>
-                Contributors and admins will use this space to ask questions against real Ledger records,
-                review source context, add follow-ups, and submit proof when something needs correction.
+                Questions submitted here are saved as Ask beta conversations. The next pass will connect
+                them to real Ledger search, sources, verification status, and community perspective records.
             </p>
         </div>
 
+        <form method="POST" action="{{ url_for('ask_beta_submit') }}" class="form-card ask-beta-form">
+            <label>
+                Question
+                <textarea
+                    name="question"
+                    rows="5"
+                    placeholder="Example: Who won Body Bag 10? What battles happened at Money in the Bank? Who produced this track?"
+                    required></textarea>
+            </label>
+
+            <label>
+                Source / Proof Link <span class="small-note">(optional)</span>
+                <input type="url" name="source_url" placeholder="Flyer, video, post, song, recap, or reference link">
+            </label>
+
+            <label>
+                Extra Context <span class="small-note">(optional)</span>
+                <textarea name="context_note" rows="3" placeholder="Add anything the Ledger should consider when answering."></textarea>
+            </label>
+
+            <button type="submit" class="button primary">Save Ask Question</button>
+        </form>
+
         <section class="ask-beta-grid">
             <article class="ask-beta-card">
-                <h2>What the beta will do</h2>
-                <p>
-                    Ask about LiteFeet dancers, teams, battles, events, music, awards, organizers,
-                    producers, and historical claims.
-                </p>
+                <h2>Verified</h2>
+                <p>Confirmed through strong records, direct sources, event proof, or trusted review.</p>
             </article>
 
             <article class="ask-beta-card">
-                <h2>How answers should read</h2>
-                <p>
-                    Responses should separate Verified, Community Supported, Debated, and Unknown information
-                    instead of flattening everything into one answer.
-                </p>
+                <h2>Community Supported</h2>
+                <p>Supported by repeated community knowledge, flyers, video, testimony, or organizer context.</p>
             </article>
 
             <article class="ask-beta-card">
-                <h2>When the community disagrees</h2>
-                <p>
-                    Disagreements should become community perspective records with links, context, and review status.
-                </p>
+                <h2>Debated / Unknown</h2>
+                <p>Marked clearly when proof is missing, people disagree, or the Ledger cannot answer yet.</p>
             </article>
+        </section>
+
+        <section class="homepage-section">
+            <div class="section-heading-row">
+                <div>
+                    <p class="eyebrow">Recent</p>
+                    <h2>Saved Ask Conversations</h2>
+                </div>
+            </div>
+
+            {% if recent_ask_conversations %}
+                <div class="ask-conversation-list">
+                    {% for conversation in recent_ask_conversations %}
+                        <article class="ask-conversation-card">
+                            <h3>
+                                <a href="{{ url_for('ask_conversation_detail', conversation_id=conversation['id']) }}">
+                                    {{ conversation["title"] or "Untitled Ask conversation" }}
+                                </a>
+                            </h3>
+                            <p class="small-note">
+                                {{ conversation["status"] or "open" }}
+                                {% if conversation["updated_at"] %} · {{ conversation["updated_at"] }}{% endif %}
+                            </p>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state compact-empty">
+                    <h3>No saved Ask conversations yet.</h3>
+                    <p>Submit a beta question above to start one.</p>
+                </div>
+            {% endif %}
         </section>
     {% else %}
         <div class="empty-state compact-empty">
@@ -49,32 +96,41 @@
                 verification status, and community context.
             </p>
         </div>
-    {% endif %}
 
-    <div class="hero-actions">
-        <a class="button primary" href="{{ url_for('submit_info') }}">Add Context</a>
-        <a class="button secondary" href="{{ url_for('account_login') }}">Account Login</a>
-        <a class="button secondary" href="{{ url_for('events') }}">Open Calendar</a>
-    </div>
+        <div class="hero-actions">
+            <a class="button primary" href="{{ url_for('submit_info') }}">Add Context</a>
+            <a class="button secondary" href="{{ url_for('account_login') }}">Account Login</a>
+            <a class="button secondary" href="{{ url_for('events') }}">Open Calendar</a>
+        </div>
+    {% endif %}
 </section>
 
 <style>
-    .ask-beta-grid {
+    .ask-beta-form {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+    }
+
+    .ask-beta-grid,
+    .ask-conversation-list {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
         margin-top: 18px;
     }
 
-    .ask-beta-card {
+    .ask-beta-card,
+    .ask-conversation-card {
         border: 1px solid var(--border-color, rgba(255,255,255,0.12));
         border-radius: 16px;
         padding: 16px;
         background: var(--card-bg, rgba(255,255,255,0.04));
     }
 
-    @media (max-width: 800px) {
-        .ask-beta-grid {
+    @media (max-width: 900px) {
+        .ask-beta-grid,
+        .ask-conversation-list {
             grid-template-columns: 1fr;
         }
     }

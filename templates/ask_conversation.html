@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Ask Conversation | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Saved Ask beta conversation in The LiteFeet Ledger.{% endblock %}
+
+{% block content %}
+<section class="content-section ask-conversation-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Ask Beta</p>
+            <h1>{{ conversation["title"] or "Ask Conversation" }}</h1>
+            <p class="small-note">
+                Status: {{ conversation["status"] or "open" }}
+                {% if conversation["created_at"] %} · Created {{ conversation["created_at"] }}{% endif %}
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('ask_archive') }}">Back to Ask</a>
+            <a class="button primary" href="{{ url_for('submit_info') }}">Add Context</a>
+        </div>
+    </div>
+
+    {% if conversation["source_context"] %}
+        <div class="empty-state compact-empty">
+            <h3>Context Note</h3>
+            <p>{{ conversation["source_context"] }}</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="ask-thread">
+    {% if messages %}
+        {% for message in messages %}
+            <article class="ask-message-card ask-message-{{ message['sender_type'] }}">
+                <p class="eyebrow">
+                    {% if message["sender_type"] == "user" %}
+                        Question
+                    {% else %}
+                        Ledger Beta
+                    {% endif %}
+                    {% if message["verification_status"] %} · {{ message["verification_status"] }}{% endif %}
+                </p>
+
+                <p>{{ message["message_text"] }}</p>
+
+                {% if message["source_url"] %}
+                    <p><a href="{{ message['source_url'] }}" target="_blank" rel="noopener">Source / Proof Link</a></p>
+                {% endif %}
+
+                {% if message["created_at"] %}
+                    <p class="small-note">{{ message["created_at"] }}</p>
+                {% endif %}
+            </article>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state compact-empty">
+            <h3>No messages saved yet.</h3>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+    .ask-thread {
+        display: grid;
+        gap: 12px;
+        max-width: 920px;
+        margin: 18px auto 0;
+    }
+
+    .ask-message-card {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .ask-message-ledger {
+        margin-left: 32px;
+    }
+
+    .ask-message-user {
+        margin-right: 32px;
+    }
+
+    @media (max-width: 700px) {
+        .ask-message-ledger,
+        .ask-message-user {
+            margin-left: 0;
+            margin-right: 0;
+        }
+    }
+</style>
+{% endblock %}

@@ -8611,3 +8611,220 @@ try:
     ensure_phase2_ledger_tables()
 except Exception as phase2_error:
     print(f"Phase 2 Ledger table setup skipped: {phase2_error}")
+
+
+# --- Phase 2C Ask beta routes ---
+def ledger_insert_and_get_id(table_name, values):
+    columns = list(values.keys())
+    columns_sql = ", ".join(columns)
+    values_sql = ", ".join(f":{column}" for column in columns)
+
+    with engine.begin() as conn:
+        if maintenance_uses_postgres():
+            result = conn.execute(
+                text(f"INSERT INTO {table_name} ({columns_sql}) VALUES ({values_sql}) RETURNING id"),
+                values,
+            )
+            return result.scalar()
+
+        result = conn.execute(
+            text(f"INSERT INTO {table_name} ({columns_sql}) VALUES ({values_sql})"),
+            values,
+        )
+        return result.lastrowid
+
+
+def ask_beta_user_key():
+    import uuid
+
+    user = current_user()
+    if user:
+        return user["id"], None
+
+    if session.get("admin_logged_in"):
+        visitor_key = session.get("ask_admin_visitor_key")
+        if not visitor_key:
+            visitor_key = f"admin-{uuid.uuid4().hex}"
+            session["ask_admin_visitor_key"] = visitor_key
+        return None, visitor_key
+
+    visitor_key = session.get("ask_visitor_key")
+    if not visitor_key:
+        visitor_key = f"visitor-{uuid.uuid4().hex}"
+        session["ask_visitor_key"] = visitor_key
+
+    return None, visitor_key
+
+
+def fetch_ask_conversation(conversation_id):
+    ensure_phase2_ledger_tables()
+
+    rows = fetch_all(
+        """
+        SELECT *
+        FROM ask_conversations
+        WHERE id = :conversation_id
+        LIMIT 1
+        """,
+        {"conversation_id": conversation_id},
+    )
+
+    return rows[0] if rows else None
+
+
+def can_view_ask_conversation(conversation):
+    if not conversation:
+        return False
+
+    if session.get("admin_logged_in"):
+        return True
+
+    user = current_user()
+    if user and conversation["user_id"] == user["id"]:
+        return True
+
+    visitor_key = session.get("ask_visitor_key") or session.get("ask_admin_visitor_key")
+    if visitor_key and conversation["visitor_key"] == visitor_key:
+        return True
+
+    return False
+
+
+@app.context_processor
+def inject_ask_beta_context():
+    try:
+        ensure_phase2_ledger_tables()
+
+        if not (current_user() or session.get("admin_logged_in")):
+            return {"recent_ask_conversations": []}
+
+        user_id, visitor_key = ask_beta_user_key()
+
+        if user_id:
+            conversations = fetch_all(
+                """
+                SELECT *
+                FROM ask_conversations
+                WHERE user_id = :user_id
+                ORDER BY updated_at DESC, created_at DESC
+                LIMIT 8
+                """,
+                {"user_id": user_id},
+            )
+        elif session.get("admin_logged_in"):
+            conversations = fetch_all(
+                """
+                SELECT *
+                FROM ask_conversations
+                ORDER BY updated_at DESC, created_at DESC
+                LIMIT 8
+                """,
+                {},
+            )
+        else:
+            conversations = fetch_all(
+                """
+                SELECT *
+                FROM ask_conversations
+                WHERE visitor_key = :visitor_key
+                ORDER BY updated_at DESC, created_at DESC
+                LIMIT 8
+                """,
+                {"visitor_key": visitor_key},
+            )
+
+        return {"recent_ask_conversations": conversations}
+    except Exception:
+        return {"recent_ask_conversations": []}
+
+
+@app.route("/ask/submit", methods=["POST"])
+def ask_beta_submit():
+    ensure_phase2_ledger_tables()
+
+    if not (current_user() or session.get("admin_logged_in")):
+        return redirect(url_for("account_login"))
+
+    question = request.form.get("question", "").strip()
+    source_url = request.form.get("source_url", "").strip()
+    context_note = request.form.get("context_note", "").strip()
+
+    if len(question) < 3:
+        return redirect(url_for("ask_archive"))
+
+    now_value = datetime.now().isoformat(timespec="seconds")
+    user_id, visitor_key = ask_beta_user_key()
+
+    title = question[:80]
+    if len(question) > 80:
+        title = title.rstrip() + "..."
+
+    conversation_id = ledger_insert_and_get_id(
+        "ask_conversations",
+        {
+            "user_id": user_id,
+            "visitor_key": visitor_key,
+            "title": title,
+            "status": "open",
+            "source_context": context_note,
+            "created_at": now_value,
+            "updated_at": now_value,
+        },
+    )
+
+    ledger_insert_and_get_id(
+        "ask_messages",
+        {
+            "conversation_id": conversation_id,
+            "sender_type": "user",
+            "message_text": question,
+            "verification_status": "Submitted",
+            "source_url": source_url,
+            "created_at": now_value,
+        },
+    )
+
+    beta_reply = (
+        "This Ask beta record was saved. The next build step will connect questions to real Ledger search, "
+        "separate Verified / Community Supported / Debated / Unknown context, and allow community perspective records "
+        "when someone disagrees or adds proof."
+    )
+
+    ledger_insert_and_get_id(
+        "ask_messages",
+        {
+            "conversation_id": conversation_id,
+            "sender_type": "ledger",
+            "message_text": beta_reply,
+            "verification_status": "Beta Placeholder",
+            "source_url": "",
+            "created_at": now_value,
+        },
+    )
+
+    return redirect(url_for("ask_conversation_detail", conversation_id=conversation_id))
+
+
+@app.route("/ask/conversations/<int:conversation_id>")
+def ask_conversation_detail(conversation_id):
+    ensure_phase2_ledger_tables()
+
+    conversation = fetch_ask_conversation(conversation_id)
+    if not can_view_ask_conversation(conversation):
+        return redirect(url_for("ask_archive"))
+
+    messages = fetch_all(
+        """
+        SELECT *
+        FROM ask_messages
+        WHERE conversation_id = :conversation_id
+        ORDER BY created_at ASC, id ASC
+        """,
+        {"conversation_id": conversation_id},
+    )
+
+    return render_template(
+        "ask_conversation.html",
+        conversation=conversation,
+        messages=messages,
+    )
