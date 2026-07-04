@@ -96,6 +96,8 @@ def protect_admin_routes():
 MAINTENANCE_ALLOWED_PATHS = {
     "/admin/login",
     "/account/login",
+    "/account/forgot-password",
+    "/account/reset-password",
     "/login",
     "/maintenance-submit",
     "/static",
@@ -19147,3 +19149,300 @@ try:
         print("Added favicon endpoint.")
 except Exception as exc:
     print(f"Could not set favicon endpoint: {exc}")
+
+# --- Ledger password reset patch: account forgot/reset password ---
+import hashlib as _ledger_pw_hashlib
+import os as _ledger_pw_os
+import secrets as _ledger_pw_secrets
+from datetime import datetime as _ledger_pw_datetime, timedelta as _ledger_pw_timedelta
+
+try:
+    import requests as _ledger_pw_requests
+except Exception:
+    _ledger_pw_requests = None
+
+
+def ledger_password_reset_now():
+    return _ledger_pw_datetime.now()
+
+
+def ledger_password_reset_iso(dt=None):
+    return (dt or ledger_password_reset_now()).isoformat(timespec="seconds")
+
+
+def ledger_password_reset_hash(token):
+    return _ledger_pw_hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def ensure_password_reset_tokens_table():
+    if engine.dialect.name.startswith("postgres"):
+        execute_query("""
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                token_hash TEXT NOT NULL UNIQUE,
+                expires_at TEXT NOT NULL,
+                used_at TEXT,
+                created_at TEXT NOT NULL
+            )
+        """)
+    else:
+        execute_query("""
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                token_hash TEXT NOT NULL UNIQUE,
+                expires_at TEXT NOT NULL,
+                used_at TEXT,
+                created_at TEXT NOT NULL
+            )
+        """)
+
+    execute_query("""
+        CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token_hash
+        ON password_reset_tokens (token_hash)
+    """)
+
+    execute_query("""
+        CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id
+        ON password_reset_tokens (user_id)
+    """)
+
+
+def ledger_password_reset_base_url():
+    configured = (
+        _ledger_pw_os.environ.get("PUBLIC_BASE_URL")
+        or _ledger_pw_os.environ.get("SITE_URL")
+        or _ledger_pw_os.environ.get("BASE_URL")
+    )
+
+    if configured:
+        return configured.rstrip("/")
+
+    try:
+        return request.host_url.rstrip("/")
+    except Exception:
+        return ""
+
+
+def create_password_reset_token(user_id):
+    ensure_password_reset_tokens_table()
+
+    token = _ledger_pw_secrets.token_urlsafe(32)
+    token_hash = ledger_password_reset_hash(token)
+    now = ledger_password_reset_now()
+    expires_at = now + _ledger_pw_timedelta(hours=1)
+
+    execute_query(
+        """
+        INSERT INTO password_reset_tokens (
+            user_id,
+            token_hash,
+            expires_at,
+            used_at,
+            created_at
+        )
+        VALUES (
+            :user_id,
+            :token_hash,
+            :expires_at,
+            NULL,
+            :created_at
+        )
+        """,
+        {
+            "user_id": user_id,
+            "token_hash": token_hash,
+            "expires_at": ledger_password_reset_iso(expires_at),
+            "created_at": ledger_password_reset_iso(now),
+        },
+    )
+
+    return token
+
+
+def ledger_find_password_reset_record(token):
+    ensure_password_reset_tokens_table()
+
+    if not token:
+        return None
+
+    token_hash = ledger_password_reset_hash(token)
+
+    rows = fetch_all(
+        """
+        SELECT password_reset_tokens.*, archive_users.email, archive_users.display_name
+        FROM password_reset_tokens
+        JOIN archive_users
+          ON archive_users.id = password_reset_tokens.user_id
+        WHERE password_reset_tokens.token_hash = :token_hash
+        LIMIT 1
+        """,
+        {"token_hash": token_hash},
+    )
+
+    return rows[0] if rows else None
+
+
+def ledger_password_reset_record_is_valid(record):
+    if not record:
+        return False
+
+    if record["used_at"]:
+        return False
+
+    try:
+        expires_at = _ledger_pw_datetime.fromisoformat(str(record["expires_at"]))
+    except Exception:
+        return False
+
+    return expires_at >= ledger_password_reset_now()
+
+
+def ledger_send_password_reset_email(user, reset_url):
+    email = (user.get("email") if hasattr(user, "get") else user["email"]) or ""
+    display_name = (user.get("display_name") if hasattr(user, "get") else user["display_name"]) or "there"
+
+    resend_api_key = _ledger_pw_os.environ.get("RESEND_API_KEY", "").strip()
+    from_email = (
+        _ledger_pw_os.environ.get("PASSWORD_RESET_EMAIL_FROM")
+        or _ledger_pw_os.environ.get("ACCOUNT_APPROVAL_EMAIL_FROM")
+        or _ledger_pw_os.environ.get("PROFILE_SUGGESTION_EMAIL_FROM")
+        or _ledger_pw_os.environ.get("PROOF_EMAIL_FROM")
+        or ""
+    ).strip()
+
+    subject = "Reset your LiteFeet Ledger password"
+    body_text = f"""Peace {display_name},
+
+Use this link to reset your LiteFeet Ledger password:
+
+{reset_url}
+
+This link expires in 1 hour. If you did not request this, you can ignore this email.
+"""
+
+    if resend_api_key and from_email and _ledger_pw_requests:
+        try:
+            response = _ledger_pw_requests.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {resend_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": from_email,
+                    "to": [email],
+                    "subject": subject,
+                    "text": body_text,
+                },
+                timeout=10,
+            )
+            response.raise_for_status()
+            return True
+        except Exception as exc:
+            print(f"Password reset email failed: {type(exc).__name__}: {exc}")
+
+    if not _ledger_pw_os.environ.get("DATABASE_URL"):
+        print(f"DEV PASSWORD RESET LINK for {email}: {reset_url}")
+    else:
+        print("Password reset requested, but email env is not fully configured.")
+
+    return False
+
+
+@app.route("/account/forgot-password", methods=["GET", "POST"])
+def account_forgot_password():
+    message = ""
+    error = ""
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+
+        # Always show the same public message so people cannot test which emails exist.
+        message = "If that account exists, a reset link was sent."
+
+        if email and "@" in email:
+            users = fetch_all(
+                "SELECT * FROM archive_users WHERE email = :email LIMIT 1",
+                {"email": email},
+            )
+
+            if users:
+                user = users[0]
+                token = create_password_reset_token(user["id"])
+                reset_url = (
+                    f"{ledger_password_reset_base_url()}"
+                    f"{url_for('account_reset_password')}?token={token}"
+                )
+                ledger_send_password_reset_email(user, reset_url)
+
+    return render_template(
+        "account_forgot_password.html",
+        message=message,
+        error=error,
+    )
+
+
+@app.route("/account/reset-password", methods=["GET", "POST"])
+def account_reset_password():
+    token = request.values.get("token", "").strip()
+    record = ledger_find_password_reset_record(token)
+
+    error = ""
+    success = ""
+    valid_token = ledger_password_reset_record_is_valid(record)
+
+    if not token:
+        error = "Reset token missing."
+    elif not valid_token:
+        error = "This reset link is invalid, expired, or already used."
+
+    if request.method == "POST" and valid_token:
+        password = request.form.get("password", "").strip()
+        confirm_password = request.form.get("confirm_password", "").strip()
+
+        if len(password) < 8:
+            error = "Password must be at least 8 characters."
+        elif password != confirm_password:
+            error = "Passwords do not match."
+        else:
+            execute_query(
+                """
+                UPDATE archive_users
+                SET password_hash = :password_hash
+                WHERE id = :user_id
+                """,
+                {
+                    "password_hash": generate_password_hash(password),
+                    "user_id": record["user_id"],
+                },
+            )
+
+            execute_query(
+                """
+                UPDATE password_reset_tokens
+                SET used_at = :used_at
+                WHERE id = :token_id
+                """,
+                {
+                    "used_at": ledger_password_reset_iso(),
+                    "token_id": record["id"],
+                },
+            )
+
+            session.pop("user_id", None)
+            session.pop("user_role", None)
+            session.pop("admin_logged_in", None)
+
+            success = "Your password was reset. You can log in now."
+            valid_token = False
+
+    return render_template(
+        "account_reset_password.html",
+        token=token,
+        error=error,
+        success=success,
+        valid_token=valid_token,
+    )
+
