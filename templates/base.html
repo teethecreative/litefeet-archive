@@ -237,7 +237,7 @@
 
 {% if phase13_public_nav_links is defined %}
 <div class="phase13-mobile-bar">
-    <a href="{{ phase13_url_for('index', '/') }}">Ledger</a>
+    <a href="{{ phase13_url_for('home', '/') }}">Ledger</a>
     <a href="{{ phase13_url_for('ask_archive', '/ask') }}">Ask</a>
     <a href="{{ phase13_url_for('submit_start_phase10a', '/submit/start') }}">Submit</a>
     <a href="{{ phase13_account_nav_url() }}">{{ phase13_account_nav_label() }}</a>
@@ -252,7 +252,7 @@
             </a>
 
             <nav class="nav-links">
-            <a href="{{ phase13_url_for('index', '/') if phase13_url_for is defined else url_for('home') }}">Home</a>
+            <a href="{{ phase13_url_for('home', '/') if phase13_url_for is defined else url_for('home') }}">Home</a>
             <a href="{{ phase13_url_for('ask_archive', '/ask') if phase13_url_for is defined else url_for('ask_archive') }}">Ask</a>
             <a href="/calendar">Calendar</a>
             <a href="{{ phase13_url_for('dancers', '/people/dancers') if phase13_url_for is defined else url_for('dancers') }}">People & Teams</a>
