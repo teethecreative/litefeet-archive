@@ -26362,3 +26362,328 @@ try:
 except Exception as exc:
     print(f"AWARDS SUBNAV LITEFEET DCA setup failed: {type(exc).__name__}: {exc}")
 
+# --- DCA NOMINEE PUBLIC VOTE COUNTS PATCH ---
+# Dancer’s Choice Awards public nominee vote display:
+# - seeds public nominee vote counts from CSV
+# - shows DCA categories under /awards/dancers-choice
+# - shows every nominee and vote count
+# - does not show raw/fixed/adjusted/audit/PDF page language publicly
+
+import csv as _dnav_csv
+from pathlib import Path as _dnav_Path
+
+try:
+    from sqlalchemy import text as _dnav_text
+except Exception:
+    _dnav_text = text
+
+
+DCA_NOMINEE_CSV = _dnav_Path("data/imports/dancers_choice_august_2023_all_nominee_fixed_votes.csv")
+DCA_NOMINEE_AWARD_SHOW = "Dancer’s Choice Awards — August 2023"
+DCA_NOMINEE_YEAR = "2023"
+
+
+def dnav_execute(query, params=None):
+    params = params or {}
+    with engine.begin() as conn:
+        conn.execute(_dnav_text(query), params)
+
+
+def dnav_fetch_all(query, params=None):
+    params = params or {}
+    try:
+        with engine.connect() as conn:
+            return [dict(row) for row in conn.execute(_dnav_text(query), params).mappings().all()]
+    except Exception as exc:
+        print(f"DCA_NOMINEE_FETCH_FAILED: {type(exc).__name__}: {exc}")
+        return []
+
+
+def dnav_fetch_one(query, params=None):
+    rows = dnav_fetch_all(query, params or {})
+    return rows[0] if rows else None
+
+
+def dnav_ensure_table():
+    if engine.dialect.name.startswith("postgres"):
+        dnav_execute("""
+            CREATE TABLE IF NOT EXISTS award_nominee_votes (
+                id SERIAL PRIMARY KEY,
+                award_year TEXT,
+                award_show TEXT,
+                category TEXT,
+                rank INTEGER,
+                nominee_name TEXT,
+                public_vote_count INTEGER,
+                result_status TEXT,
+                public_status TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+    else:
+        dnav_execute("""
+            CREATE TABLE IF NOT EXISTS award_nominee_votes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                award_year TEXT,
+                award_show TEXT,
+                category TEXT,
+                rank INTEGER,
+                nominee_name TEXT,
+                public_vote_count INTEGER,
+                result_status TEXT,
+                public_status TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+    dnav_execute("CREATE INDEX IF NOT EXISTS idx_award_nominee_votes_show ON award_nominee_votes (award_show)")
+    dnav_execute("CREATE INDEX IF NOT EXISTS idx_award_nominee_votes_category ON award_nominee_votes (category)")
+    dnav_execute("CREATE INDEX IF NOT EXISTS idx_award_nominee_votes_status ON award_nominee_votes (result_status)")
+
+
+def dnav_int(value, default=0):
+    try:
+        if value in [None, ""]:
+            return default
+        return int(float(value))
+    except Exception:
+        return default
+
+
+def dnav_seed_from_csv(replace=True):
+    dnav_ensure_table()
+
+    if not DCA_NOMINEE_CSV.exists():
+        print(f"DCA nominee CSV missing: {DCA_NOMINEE_CSV}")
+        return 0
+
+    if replace:
+        dnav_execute(
+            """
+            DELETE FROM award_nominee_votes
+            WHERE award_year = :award_year
+              AND lower(award_show) LIKE '%dancer%choice%'
+            """,
+            {"award_year": DCA_NOMINEE_YEAR},
+        )
+
+    inserted = 0
+
+    with DCA_NOMINEE_CSV.open(newline="", encoding="utf-8-sig") as handle:
+        reader = _dnav_csv.DictReader(handle)
+
+        for row in reader:
+            award_show = row.get("Award Show") or DCA_NOMINEE_AWARD_SHOW
+            category = row.get("Category") or ""
+            nominee = row.get("Nominee") or ""
+
+            if not category or not nominee:
+                continue
+
+            dnav_execute(
+                """
+                INSERT INTO award_nominee_votes (
+                    award_year,
+                    award_show,
+                    category,
+                    rank,
+                    nominee_name,
+                    public_vote_count,
+                    result_status,
+                    public_status,
+                    created_at,
+                    updated_at
+                )
+                VALUES (
+                    :award_year,
+                    :award_show,
+                    :category,
+                    :rank,
+                    :nominee_name,
+                    :public_vote_count,
+                    :result_status,
+                    :public_status,
+                    CURRENT_TIMESTAMP,
+                    CURRENT_TIMESTAMP
+                )
+                """,
+                {
+                    "award_year": DCA_NOMINEE_YEAR,
+                    "award_show": award_show,
+                    "category": category,
+                    "rank": dnav_int(row.get("Rank")),
+                    "nominee_name": nominee,
+                    "public_vote_count": dnav_int(row.get("Fixed Public Votes")),
+                    "result_status": row.get("Official Result") or "nominee",
+                    "public_status": row.get("Public Status") or "official_pdf_category",
+                },
+            )
+
+            inserted += 1
+
+    return inserted
+
+
+def dnav_count_rows():
+    dnav_ensure_table()
+
+    row = dnav_fetch_one(
+        """
+        SELECT COUNT(*) AS count
+        FROM award_nominee_votes
+        WHERE award_year = :award_year
+          AND lower(award_show) LIKE '%dancer%choice%'
+        """,
+        {"award_year": DCA_NOMINEE_YEAR},
+    )
+
+    return dnav_int(row.get("count") if row else 0)
+
+
+def dnav_seed_if_empty():
+    try:
+        if dnav_count_rows() == 0 and DCA_NOMINEE_CSV.exists():
+            count = dnav_seed_from_csv(replace=True)
+            print(f"DCA nominee vote counts seeded: {count}")
+    except Exception as exc:
+        print(f"DCA_NOMINEE_SEED_IF_EMPTY_FAILED: {type(exc).__name__}: {exc}")
+
+
+def dnav_vote_groups():
+    dnav_ensure_table()
+    dnav_seed_if_empty()
+
+    rows = dnav_fetch_all(
+        """
+        SELECT *
+        FROM award_nominee_votes
+        WHERE award_year = :award_year
+          AND lower(award_show) LIKE '%dancer%choice%'
+        ORDER BY
+            category ASC,
+            rank ASC,
+            public_vote_count DESC,
+            nominee_name ASC
+        """,
+        {"award_year": DCA_NOMINEE_YEAR},
+    )
+
+    groups_by_category = {}
+
+    for row in rows:
+        category = row.get("category") or "Uncategorized"
+        groups_by_category.setdefault(category, [])
+        groups_by_category[category].append(row)
+
+    groups = []
+
+    for category, nominees in groups_by_category.items():
+        winners = [
+            nominee for nominee in nominees
+            if str(nominee.get("result_status") or "").lower() in {"official_winner", "official_co_winner"}
+        ]
+
+        groups.append({
+            "category": category,
+            "nominees": nominees,
+            "winners": winners,
+            "is_co_winner": len(winners) > 1 or any(str(w.get("result_status") or "").lower() == "official_co_winner" for w in winners),
+        })
+
+    return groups
+
+
+def dnav_public_dca_awards():
+    groups = dnav_vote_groups()
+
+    return ledger_try_render(
+        "awards.html",
+        page_title="Dancer’s Choice Awards",
+        award_records=[],
+        awards=[],
+        records=[],
+        dca_vote_groups=groups,
+        award_scope="dancers-choice",
+        active_award_tab="dancers-choice",
+        selected_query=request.args.get("q", ""),
+        selected_view=request.args.get("view", "cards"),
+        dancers_choice_count=len(groups),
+        litefeet_count=0,
+        total_award_count=len(groups),
+        error=None,
+    )
+
+
+def dnav_public_litefeet_awards():
+    records = []
+
+    try:
+        records = award_subnav_filter_records(award_subnav_fetch_records(), "litefeet")
+    except Exception:
+        try:
+            records = phase8_fetch_award_records()
+        except Exception:
+            records = []
+
+    dca_count = len(dnav_vote_groups())
+
+    return ledger_try_render(
+        "awards.html",
+        page_title="LiteFeet Awards",
+        award_records=records,
+        awards=records,
+        records=records,
+        dca_vote_groups=[],
+        award_scope="litefeet",
+        active_award_tab="litefeet",
+        selected_query=request.args.get("q", ""),
+        selected_view=request.args.get("view", "cards"),
+        dancers_choice_count=dca_count,
+        litefeet_count=len(records),
+        total_award_count=len(records) + dca_count,
+        error=None,
+    )
+
+
+def dnav_admin_seed_votes():
+    try:
+        if not (session.get("admin_logged_in") or session.get("is_admin") or str(session.get("user_role") or "").lower() == "admin"):
+            return redirect("/admin/login")
+    except Exception:
+        return redirect("/admin/login")
+
+    count = dnav_seed_from_csv(replace=True)
+    return f"Seeded {count} Dancer’s Choice nominee vote rows. <a href='/awards/dancers-choice'>View Dancer’s Choice Awards</a>"
+
+
+try:
+    dnav_ensure_table()
+    dnav_seed_if_empty()
+
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/awards":
+            app.view_functions[rule.endpoint] = dnav_public_litefeet_awards
+            print(f"DCA nominee votes active: /awards -> {rule.endpoint}")
+
+        if str(rule.rule) == "/awards/litefeet":
+            app.view_functions[rule.endpoint] = dnav_public_litefeet_awards
+            print(f"DCA nominee votes active: /awards/litefeet -> {rule.endpoint}")
+
+        if str(rule.rule) == "/awards/dancers-choice":
+            app.view_functions[rule.endpoint] = dnav_public_dca_awards
+            print(f"DCA nominee votes active: /awards/dancers-choice -> {rule.endpoint}")
+
+    if "dnav_admin_seed_votes" not in app.view_functions:
+        app.add_url_rule(
+            "/admin/imports/dancers-choice-votes-2023",
+            "dnav_admin_seed_votes",
+            dnav_admin_seed_votes,
+            methods=["GET", "POST"],
+        )
+
+    print("DCA NOMINEE PUBLIC VOTE COUNTS active")
+except Exception as exc:
+    print(f"DCA NOMINEE PUBLIC VOTE COUNTS setup failed: {type(exc).__name__}: {exc}")
+
