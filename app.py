@@ -23662,3 +23662,408 @@ try:
 except Exception as exc:
     print(f"SITEWIDE DUPLICATE REPORTS setup failed: {type(exc).__name__}: {exc}")
 
+# --- MUSIC SUBMIT LINK PREVIEW PROJECT PATCH ---
+# Submit Music:
+# - paste a music link
+# - try to pull title/creator/platform from YouTube or SoundCloud oEmbed
+# - user can edit fields before submit
+# - supports single song or project with track links
+# - project tracks are stored in music_project_tracks and also saved as music release rows when possible
+
+import json as _ms_json
+import re as _ms_re
+from urllib.parse import urlencode as _ms_urlencode, urlparse as _ms_urlparse
+from urllib.request import Request as _ms_Request, urlopen as _ms_urlopen
+
+try:
+    from flask import Response as _ms_Response
+except Exception:
+    _ms_Response = None
+
+try:
+    from sqlalchemy import text as _ms_text
+except Exception:
+    _ms_text = text
+
+
+def ms_json_response(payload, status=200):
+    body = _ms_json.dumps(payload)
+    if _ms_Response:
+        return _ms_Response(body, status=status, mimetype="application/json")
+    return body, status, {"Content-Type": "application/json"}
+
+
+def ms_execute(query, params=None):
+    params = params or {}
+    with engine.begin() as conn:
+        conn.execute(_ms_text(query), params)
+
+
+def ms_fetch_one(query, params=None):
+    params = params or {}
+    try:
+        with engine.connect() as conn:
+            return dict(conn.execute(_ms_text(query), params).mappings().first() or {})
+    except Exception:
+        return {}
+
+
+def ms_fetch_all(query, params=None):
+    params = params or {}
+    try:
+        with engine.connect() as conn:
+            return [dict(row) for row in conn.execute(_ms_text(query), params).mappings().all()]
+    except Exception:
+        return []
+
+
+def ms_columns(table_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            rows = ms_fetch_all(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+                """,
+                {"table_name": table_name},
+            )
+            return {row.get("column_name") for row in rows}
+
+        rows = ms_fetch_all(f"PRAGMA table_info({table_name})")
+        return {row.get("name") for row in rows}
+    except Exception:
+        return set()
+
+
+def ms_ensure_project_tracks_table():
+    if engine.dialect.name.startswith("postgres"):
+        ms_execute("""
+            CREATE TABLE IF NOT EXISTS music_project_tracks (
+                id SERIAL PRIMARY KEY,
+                project_media_item_id TEXT,
+                track_media_item_id TEXT,
+                track_number INTEGER,
+                title TEXT,
+                url TEXT,
+                platform TEXT,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+    else:
+        ms_execute("""
+            CREATE TABLE IF NOT EXISTS music_project_tracks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_media_item_id TEXT,
+                track_media_item_id TEXT,
+                track_number INTEGER,
+                title TEXT,
+                url TEXT,
+                platform TEXT,
+                notes TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+
+def ms_insert_media_item(values):
+    try:
+        ensure_media_items_table()
+    except Exception:
+        pass
+
+    cols = ms_columns("media_items")
+
+    if not cols:
+        raise RuntimeError("media_items table columns could not be read")
+
+    clean = {}
+
+    for key, value in values.items():
+        if key in cols:
+            clean[key] = value
+
+    if "status" in cols and not clean.get("status"):
+        clean["status"] = "Published"
+
+    if "created_at" in cols and "created_at" not in clean:
+        clean["created_at"] = None
+
+    if not clean:
+        raise RuntimeError("No matching media_items columns found")
+
+    insert_cols = []
+    value_bits = []
+    params = {}
+
+    for key, value in clean.items():
+        insert_cols.append(key)
+
+        if key == "created_at" and value is None:
+            value_bits.append("CURRENT_TIMESTAMP")
+        else:
+            value_bits.append(f":{key}")
+            params[key] = value
+
+    query = f"""
+        INSERT INTO media_items ({", ".join(insert_cols)})
+        VALUES ({", ".join(value_bits)})
+    """
+
+    if engine.dialect.name.startswith("postgres") and "id" in cols:
+        query += " RETURNING id"
+
+    with engine.begin() as conn:
+        if engine.dialect.name.startswith("postgres") and "id" in cols:
+            row = conn.execute(_ms_text(query), params).mappings().first()
+            return row.get("id") if row else None
+
+        conn.execute(_ms_text(query), params)
+
+        if "id" in cols:
+            row = conn.execute(_ms_text("SELECT id FROM media_items ORDER BY id DESC LIMIT 1")).mappings().first()
+            return row.get("id") if row else None
+
+    return None
+
+
+def ms_insert_project_track(values):
+    ms_ensure_project_tracks_table()
+
+    cols = ms_columns("music_project_tracks")
+    clean = {key: value for key, value in values.items() if key in cols}
+
+    if "created_at" in cols and "created_at" not in clean:
+        clean["created_at"] = None
+
+    insert_cols = []
+    value_bits = []
+    params = {}
+
+    for key, value in clean.items():
+        insert_cols.append(key)
+
+        if key == "created_at" and value is None:
+            value_bits.append("CURRENT_TIMESTAMP")
+        else:
+            value_bits.append(f":{key}")
+            params[key] = value
+
+    ms_execute(
+        f"""
+        INSERT INTO music_project_tracks ({", ".join(insert_cols)})
+        VALUES ({", ".join(value_bits)})
+        """,
+        params,
+    )
+
+
+def ms_platform_from_url(url):
+    lower = (url or "").lower()
+
+    if "youtube.com" in lower or "youtu.be" in lower:
+        return "YouTube"
+
+    if "soundcloud.com" in lower:
+        return "SoundCloud"
+
+    if "spotify.com" in lower:
+        return "Spotify"
+
+    if "music.apple.com" in lower:
+        return "Apple Music"
+
+    if "audiomack.com" in lower:
+        return "Audiomack"
+
+    if "bandcamp.com" in lower:
+        return "Bandcamp"
+
+    return ""
+
+
+def ms_title_from_url(url):
+    try:
+        parsed = _ms_urlparse(url if "://" in url else "https://" + url)
+        slug = parsed.path.rstrip("/").split("/")[-1]
+        slug = _ms_re.sub(r"[-_]+", " ", slug)
+        slug = _ms_re.sub(r"\s+", " ", slug).strip()
+        return slug.title()
+    except Exception:
+        return ""
+
+
+def ms_oembed_lookup(url):
+    platform = ms_platform_from_url(url)
+
+    endpoints = []
+
+    if platform == "YouTube":
+        endpoints.append("https://www.youtube.com/oembed?" + _ms_urlencode({"url": url, "format": "json"}))
+
+    if platform == "SoundCloud":
+        endpoints.append("https://soundcloud.com/oembed?" + _ms_urlencode({"url": url, "format": "json"}))
+
+    for endpoint in endpoints:
+        try:
+            request_obj = _ms_Request(endpoint, headers={"User-Agent": "LiteFeetLedger/1.0"})
+            with _ms_urlopen(request_obj, timeout=6) as response:
+                data = _ms_json.loads(response.read().decode("utf-8", errors="replace"))
+
+            return {
+                "ok": True,
+                "title": data.get("title") or ms_title_from_url(url),
+                "artist_or_creator": data.get("author_name") or "",
+                "platform": platform,
+                "thumbnail_url": data.get("thumbnail_url") or "",
+                "source": "oembed",
+            }
+        except Exception:
+            continue
+
+    return {
+        "ok": bool(url),
+        "title": ms_title_from_url(url),
+        "artist_or_creator": "",
+        "platform": platform,
+        "thumbnail_url": "",
+        "source": "url",
+    }
+
+
+def litefeet_music_link_preview():
+    url = (request.args.get("url") or "").strip()
+
+    if not url:
+        return ms_json_response({"ok": False, "error": "Paste a link first."}, 400)
+
+    return ms_json_response(ms_oembed_lookup(url))
+
+
+_original_submit_litefeet_music_dedicated = app.view_functions.get("submit_litefeet_music_dedicated")
+
+
+def litefeet_music_submit_project_enabled():
+    if request.method == "GET":
+        return render_template("submit_music.html", error=None)
+
+    submission_kind = (request.form.get("submission_kind") or "single").strip().lower()
+
+    if submission_kind != "project":
+        if callable(_original_submit_litefeet_music_dedicated):
+            return _original_submit_litefeet_music_dedicated()
+
+    title = (request.form.get("title") or "").strip()
+    artist = (request.form.get("artist_or_creator") or "").strip()
+    producer = (request.form.get("producer_name") or "").strip()
+    platform = (request.form.get("platform") or "").strip()
+    release_date = (request.form.get("release_date") or "").strip()
+    release_stage = (request.form.get("release_stage") or "released").strip()
+    url = (request.form.get("url") or "").strip()
+    description = (request.form.get("description") or "").strip()
+    submitter_name = (request.form.get("submitter_name") or "").strip()
+    submitter_contact = (request.form.get("submitter_contact") or "").strip()
+
+    track_titles = request.form.getlist("track_titles[]")
+    track_urls = request.form.getlist("track_urls[]")
+    track_platforms = request.form.getlist("track_platforms[]")
+    track_notes = request.form.getlist("track_notes[]")
+
+    if not title or not artist:
+        return render_template("submit_music.html", error="Add a project title and artist/producer/creator.")
+
+    try:
+        project_id = ms_insert_media_item({
+            "title": title,
+            "artist_or_creator": artist,
+            "artist": artist,
+            "artist_name": artist,
+            "producer_name": producer,
+            "producer": producer,
+            "platform": platform or ms_platform_from_url(url) or "Project",
+            "release_date": release_date,
+            "release_stage": release_stage,
+            "url": url,
+            "playable_url": url,
+            "external_url": url,
+            "description": description,
+            "media_type": "music_project",
+            "status": "Published",
+            "submitter_name": submitter_name,
+            "submitter_contact": submitter_contact,
+        })
+
+        saved_tracks = 0
+
+        for index, track_url in enumerate(track_urls):
+            track_url = (track_url or "").strip()
+            track_title = (track_titles[index] if index < len(track_titles) else "").strip()
+            track_platform = (track_platforms[index] if index < len(track_platforms) else "").strip()
+            track_note = (track_notes[index] if index < len(track_notes) else "").strip()
+
+            if not track_url and not track_title:
+                continue
+
+            track_number = saved_tracks + 1
+            track_platform = track_platform or ms_platform_from_url(track_url)
+            track_title = track_title or f"{title} - Track {track_number}"
+
+            track_media_id = ms_insert_media_item({
+                "title": track_title,
+                "artist_or_creator": artist,
+                "artist": artist,
+                "artist_name": artist,
+                "producer_name": producer,
+                "producer": producer,
+                "platform": track_platform,
+                "release_date": release_date,
+                "release_stage": release_stage,
+                "url": track_url,
+                "playable_url": track_url,
+                "external_url": track_url,
+                "description": f"Track {track_number} from project: {title}. {track_note}".strip(),
+                "media_type": "music_release",
+                "status": "Published",
+                "project_id": project_id,
+                "parent_project_id": project_id,
+                "parent_media_item_id": project_id,
+                "submitter_name": submitter_name,
+                "submitter_contact": submitter_contact,
+            })
+
+            ms_insert_project_track({
+                "project_media_item_id": str(project_id or ""),
+                "track_media_item_id": str(track_media_id or ""),
+                "track_number": track_number,
+                "title": track_title,
+                "url": track_url,
+                "platform": track_platform,
+                "notes": track_note,
+            })
+
+            saved_tracks += 1
+
+        return redirect("/litefeet-music?submitted=1")
+
+    except Exception as exc:
+        print(f"MUSIC_PROJECT_SUBMIT_FAILED: {type(exc).__name__}: {exc}")
+        return render_template("submit_music.html", error="The project could not be saved. Check the required fields and try again.")
+
+
+try:
+    if "litefeet_music_link_preview" not in app.view_functions:
+        app.add_url_rule(
+            "/litefeet-music/link-preview",
+            "litefeet_music_link_preview",
+            litefeet_music_link_preview,
+            methods=["GET"],
+        )
+
+    if "submit_litefeet_music_dedicated" in app.view_functions:
+        app.view_functions["submit_litefeet_music_dedicated"] = litefeet_music_submit_project_enabled
+
+    print("MUSIC SUBMIT LINK PREVIEW PROJECT active")
+except Exception as exc:
+    print(f"MUSIC SUBMIT LINK PREVIEW PROJECT setup failed: {type(exc).__name__}: {exc}")
+
