@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Duplicate Reports | Admin{% endblock %}
+
+{% block content %}
+<section class="content-section admin-duplicate-reports-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Admin Review</p>
+            <h1>Duplicate Reports</h1>
+            <p>Review possible duplicate records across music, videos, profiles, teams, battles, events, and awards.</p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="/admin">Back to Command Center</a>
+        </div>
+    </div>
+
+    <div class="duplicate-report-summary">
+        <span><strong>{{ open_count }}</strong> open</span>
+        <span>·</span>
+        <span><strong>{{ total_count }}</strong> total shown</span>
+    </div>
+</section>
+
+<section class="content-section duplicate-report-table-section">
+    <div class="duplicate-report-table-wrap">
+        <table class="duplicate-report-table">
+            <thead>
+                <tr>
+                    <th>Report</th>
+                    <th>Record</th>
+                    <th>Possible Duplicate</th>
+                    <th>Reporter</th>
+                    <th>Status</th>
+                    <th>Review</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% if reports %}
+                    {% for report in reports %}
+                        <tr class="{% if report.status == 'open' %}open-report-row{% endif %}">
+                            <td>
+                                <strong>#{{ report.id }}</strong>
+                                <small>{{ report.created_at or "—" }}</small>
+                            </td>
+
+                            <td>
+                                <strong>{{ report.resource_type|title }} #{{ report.resource_id }}</strong>
+                                <small>{{ report.resource_title or "Title not found" }}</small>
+                            </td>
+
+                            <td>
+                                {% if report.duplicate_resource_id %}
+                                    <strong>{{ (report.duplicate_resource_type or report.resource_type)|title }} #{{ report.duplicate_resource_id }}</strong>
+                                    <small>{{ report.duplicate_title or "Title not found" }}</small>
+                                {% else %}
+                                    <strong>Not specified</strong>
+                                    <small>User flagged this as duplicate-looking.</small>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <strong>{{ report.reporter_name or report.reporter_user_id or "public" }}</strong>
+                                {% if report.reporter_contact %}
+                                    <small>{{ report.reporter_contact }}</small>
+                                {% endif %}
+                                {% if report.reporter_note %}
+                                    <small>{{ report.reporter_note }}</small>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <span class="duplicate-status-pill status-{{ report.status or 'open' }}">{{ report.status or "open" }}</span>
+                                {% if report.owner_user_id %}
+                                    <small>Owner alert saved</small>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <form method="post" class="duplicate-review-form">
+                                    <input type="hidden" name="report_id" value="{{ report.id }}">
+                                    <textarea name="resolution_note" rows="2" placeholder="Resolution note">{{ report.resolution_note or "" }}</textarea>
+
+                                    <div class="duplicate-review-actions">
+                                        <button class="button primary" type="submit" name="action" value="resolve">Resolved</button>
+                                        <button class="button secondary" type="submit" name="action" value="not_duplicate">Not duplicate</button>
+                                        <button class="button secondary" type="submit" name="action" value="dismiss">Dismiss</button>
+                                        {% if report.status != "open" %}
+                                            <button class="button secondary" type="submit" name="action" value="reopen">Reopen</button>
+                                        {% endif %}
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="empty-report-row">No duplicate reports yet.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<style>
+    .duplicate-report-summary {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        font-weight: 800;
+    }
+
+    .duplicate-report-summary strong {
+        color: var(--accent-color, #e8c65a);
+    }
+
+    .duplicate-report-table-wrap {
+        max-height: 680px;
+        overflow: auto;
+        border: 1px solid rgba(232, 198, 90, 0.22);
+        border-radius: 14px;
+    }
+
+    .duplicate-report-table {
+        width: 100%;
+        min-width: 1120px;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.88rem;
+    }
+
+    .duplicate-report-table th,
+    .duplicate-report-table td {
+        padding: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        border-right: 1px solid rgba(255,255,255,0.04);
+        vertical-align: top;
+        text-align: left;
+    }
+
+    .duplicate-report-table th {
+        position: sticky;
+        top: 0;
+        background: #080808;
+        z-index: 5;
+        color: var(--accent-color, #e8c65a);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.72rem;
+    }
+
+    .duplicate-report-table small {
+        display: block;
+        margin-top: 4px;
+        opacity: 0.72;
+        overflow-wrap: anywhere;
+    }
+
+    .open-report-row {
+        background: rgba(232, 198, 90, 0.035);
+    }
+
+    .duplicate-status-pill {
+        display: inline-flex;
+        border-radius: 999px;
+        padding: 4px 9px;
+        border: 1px solid rgba(232, 198, 90, 0.35);
+        color: var(--accent-color, #e8c65a);
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+    }
+
+    .duplicate-review-form {
+        display: grid;
+        gap: 8px;
+        min-width: 280px;
+    }
+
+    .duplicate-review-form textarea {
+        width: 100%;
+        border-radius: 10px;
+        border: 1px solid rgba(232, 198, 90, 0.28);
+        background: rgba(0,0,0,0.22);
+        color: #fff;
+        padding: 8px;
+        font: inherit;
+    }
+
+    .duplicate-review-actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .duplicate-review-actions .button {
+        padding: 6px 9px;
+        font-size: 0.78rem;
+    }
+
+    .empty-report-row {
+        padding: 22px;
+        text-align: center;
+        opacity: 0.75;
+    }
+</style>
+{% endblock %}

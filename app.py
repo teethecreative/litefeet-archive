@@ -23091,3 +23091,574 @@ try:
 except Exception as exc:
     print(f"MUSIC DUPLICATE FLAG REPORT setup failed: {type(exc).__name__}: {exc}")
 
+# --- SITEWIDE DUPLICATE REPORTS PATCH ---
+# Site-wide duplicate review:
+# - generic duplicate_reports table
+# - generic owner/admin alert table
+# - /report-duplicate route
+# - /admin/duplicate-reports review queue
+# - bridges LiteFeet Music duplicate reports into the same queue
+
+try:
+    from sqlalchemy import text as _sdr_text
+except Exception:
+    _sdr_text = text
+
+
+def sdr_execute(query, params=None):
+    params = params or {}
+    with engine.begin() as conn:
+        conn.execute(_sdr_text(query), params)
+
+
+def sdr_fetch_all(query, params=None):
+    params = params or {}
+    try:
+        with engine.connect() as conn:
+            return [dict(row) for row in conn.execute(_sdr_text(query), params).mappings().all()]
+    except Exception as exc:
+        print(f"SITEWIDE_DUPLICATE_FETCH_FAILED: {type(exc).__name__}: {exc}")
+        return []
+
+
+def sdr_fetch_one(query, params=None):
+    rows = sdr_fetch_all(query, params or {})
+    return rows[0] if rows else None
+
+
+def sdr_table_exists(table_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            return bool(sdr_fetch_one(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_name = :table_name
+                LIMIT 1
+                """,
+                {"table_name": table_name},
+            ))
+
+        return bool(sdr_fetch_one(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name=:table_name LIMIT 1",
+            {"table_name": table_name},
+        ))
+    except Exception:
+        return False
+
+
+def sdr_columns(table_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            rows = sdr_fetch_all(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+                """,
+                {"table_name": table_name},
+            )
+            return {row.get("column_name") for row in rows}
+
+        rows = sdr_fetch_all(f"PRAGMA table_info({table_name})")
+        return {row.get("name") for row in rows}
+    except Exception:
+        return set()
+
+
+def sdr_ensure_tables():
+    if engine.dialect.name.startswith("postgres"):
+        sdr_execute("""
+            CREATE TABLE IF NOT EXISTS duplicate_reports (
+                id SERIAL PRIMARY KEY,
+                resource_type TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                resource_title TEXT,
+                duplicate_resource_type TEXT,
+                duplicate_resource_id TEXT,
+                duplicate_title TEXT,
+                reporter_user_id TEXT,
+                reporter_name TEXT,
+                reporter_contact TEXT,
+                reporter_note TEXT,
+                owner_user_id TEXT,
+                status TEXT DEFAULT 'open',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                reviewed_at TIMESTAMP,
+                resolution_note TEXT
+            )
+        """)
+
+        sdr_execute("""
+            CREATE TABLE IF NOT EXISTS duplicate_report_alerts (
+                id SERIAL PRIMARY KEY,
+                report_id TEXT,
+                audience TEXT DEFAULT 'admin',
+                owner_user_id TEXT,
+                resource_type TEXT,
+                resource_id TEXT,
+                status TEXT DEFAULT 'unread',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+    else:
+        sdr_execute("""
+            CREATE TABLE IF NOT EXISTS duplicate_reports (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                resource_type TEXT NOT NULL,
+                resource_id TEXT NOT NULL,
+                resource_title TEXT,
+                duplicate_resource_type TEXT,
+                duplicate_resource_id TEXT,
+                duplicate_title TEXT,
+                reporter_user_id TEXT,
+                reporter_name TEXT,
+                reporter_contact TEXT,
+                reporter_note TEXT,
+                owner_user_id TEXT,
+                status TEXT DEFAULT 'open',
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                reviewed_at TEXT,
+                resolution_note TEXT
+            )
+        """)
+
+        sdr_execute("""
+            CREATE TABLE IF NOT EXISTS duplicate_report_alerts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                report_id TEXT,
+                audience TEXT DEFAULT 'admin',
+                owner_user_id TEXT,
+                resource_type TEXT,
+                resource_id TEXT,
+                status TEXT DEFAULT 'unread',
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+    sdr_execute("CREATE INDEX IF NOT EXISTS idx_duplicate_reports_status ON duplicate_reports (status)")
+    sdr_execute("CREATE INDEX IF NOT EXISTS idx_duplicate_reports_resource ON duplicate_reports (resource_type, resource_id)")
+    sdr_execute("CREATE INDEX IF NOT EXISTS idx_duplicate_alerts_status ON duplicate_report_alerts (status)")
+
+
+def sdr_current_user_id():
+    try:
+        value = session.get("user_id") or session.get("account_user_id") or session.get("admin_user_id")
+        if value:
+            return str(value)
+    except Exception:
+        pass
+
+    try:
+        user_obj = current_user() if callable(current_user) else current_user
+        if isinstance(user_obj, dict):
+            return str(user_obj.get("id") or "")
+        if hasattr(user_obj, "get_id"):
+            return str(user_obj.get_id() or "")
+    except Exception:
+        pass
+
+    return "public"
+
+
+def sdr_is_admin():
+    try:
+        if session.get("admin_logged_in") or session.get("is_admin"):
+            return True
+
+        if str(session.get("user_role") or "").lower() == "admin":
+            return True
+    except Exception:
+        pass
+
+    try:
+        user_obj = current_user() if callable(current_user) else current_user
+        if isinstance(user_obj, dict):
+            return str(user_obj.get("role") or "").lower() == "admin"
+        return bool(getattr(user_obj, "is_admin", False))
+    except Exception:
+        return False
+
+
+def sdr_admin_gate():
+    if sdr_is_admin():
+        return None
+    return redirect("/admin/login")
+
+
+def sdr_resource_table(resource_type):
+    resource_type = (resource_type or "").strip().lower()
+
+    mapping = {
+        "music": "media_items",
+        "music_release": "media_items",
+        "video": "media_items",
+        "profile": "dancer_profiles",
+        "dancer": "dancer_profiles",
+        "team": "teams",
+        "battle": "battle_records",
+        "event": "events",
+        "award": "awards",
+    }
+
+    return mapping.get(resource_type)
+
+
+def sdr_resource_title(row):
+    if not row:
+        return ""
+
+    for col in [
+        "title",
+        "name",
+        "dance_name",
+        "real_name",
+        "team_name",
+        "event_name",
+        "battle_name",
+        "award_name",
+        "artist_or_creator",
+        "producer_name",
+    ]:
+        if row.get(col):
+            return str(row.get(col))
+
+    if row.get("id"):
+        return f"Record #{row.get('id')}"
+
+    return ""
+
+
+def sdr_owner_user_id(row):
+    if not row:
+        return ""
+
+    for col in [
+        "owner_user_id",
+        "user_id",
+        "account_user_id",
+        "created_by_user_id",
+        "submitted_by_user_id",
+        "claimed_by_user_id",
+        "profile_owner_user_id",
+    ]:
+        if row.get(col):
+            return str(row.get(col))
+
+    return ""
+
+
+def sdr_lookup_resource(resource_type, resource_id):
+    table = sdr_resource_table(resource_type)
+
+    if not table or not resource_id or not sdr_table_exists(table):
+        return {"title": "", "owner_user_id": ""}
+
+    cols = sdr_columns(table)
+
+    if "id" not in cols:
+        return {"title": "", "owner_user_id": ""}
+
+    row = sdr_fetch_one(f"SELECT * FROM {table} WHERE id = :resource_id LIMIT 1", {"resource_id": resource_id})
+
+    return {
+        "title": sdr_resource_title(row),
+        "owner_user_id": sdr_owner_user_id(row),
+    }
+
+
+def sdr_create_report(form_data):
+    sdr_ensure_tables()
+
+    resource_type = (form_data.get("resource_type") or form_data.get("type") or "unknown").strip().lower()
+    resource_id = str(form_data.get("resource_id") or form_data.get("id") or "").strip()
+
+    duplicate_resource_type = (
+        form_data.get("duplicate_resource_type")
+        or form_data.get("duplicate_type")
+        or resource_type
+    )
+    duplicate_resource_type = str(duplicate_resource_type or "").strip().lower()
+
+    duplicate_resource_id = str(
+        form_data.get("duplicate_resource_id")
+        or form_data.get("possible_duplicate_id")
+        or ""
+    ).strip()
+
+    reporter_user_id = sdr_current_user_id()
+    reporter_name = str(form_data.get("reporter_name") or "").strip()
+    reporter_contact = str(form_data.get("reporter_contact") or "").strip()
+    reporter_note = str(form_data.get("reporter_note") or form_data.get("note") or "").strip()
+
+    if not resource_type or not resource_id:
+        return None
+
+    resource_info = sdr_lookup_resource(resource_type, resource_id)
+    duplicate_info = sdr_lookup_resource(duplicate_resource_type, duplicate_resource_id)
+
+    existing = sdr_fetch_one(
+        """
+        SELECT id
+        FROM duplicate_reports
+        WHERE resource_type = :resource_type
+          AND resource_id = :resource_id
+          AND COALESCE(duplicate_resource_type, '') = COALESCE(:duplicate_resource_type, '')
+          AND COALESCE(duplicate_resource_id, '') = COALESCE(:duplicate_resource_id, '')
+          AND COALESCE(reporter_user_id, '') = COALESCE(:reporter_user_id, '')
+          AND status = 'open'
+        LIMIT 1
+        """,
+        {
+            "resource_type": resource_type,
+            "resource_id": resource_id,
+            "duplicate_resource_type": duplicate_resource_type,
+            "duplicate_resource_id": duplicate_resource_id,
+            "reporter_user_id": reporter_user_id,
+        },
+    )
+
+    if existing:
+        return existing.get("id")
+
+    sdr_execute(
+        """
+        INSERT INTO duplicate_reports (
+            resource_type,
+            resource_id,
+            resource_title,
+            duplicate_resource_type,
+            duplicate_resource_id,
+            duplicate_title,
+            reporter_user_id,
+            reporter_name,
+            reporter_contact,
+            reporter_note,
+            owner_user_id,
+            status,
+            created_at
+        )
+        VALUES (
+            :resource_type,
+            :resource_id,
+            :resource_title,
+            :duplicate_resource_type,
+            :duplicate_resource_id,
+            :duplicate_title,
+            :reporter_user_id,
+            :reporter_name,
+            :reporter_contact,
+            :reporter_note,
+            :owner_user_id,
+            'open',
+            CURRENT_TIMESTAMP
+        )
+        """,
+        {
+            "resource_type": resource_type,
+            "resource_id": resource_id,
+            "resource_title": resource_info.get("title") or "",
+            "duplicate_resource_type": duplicate_resource_type,
+            "duplicate_resource_id": duplicate_resource_id,
+            "duplicate_title": duplicate_info.get("title") or "",
+            "reporter_user_id": reporter_user_id,
+            "reporter_name": reporter_name,
+            "reporter_contact": reporter_contact,
+            "reporter_note": reporter_note,
+            "owner_user_id": resource_info.get("owner_user_id") or "",
+        },
+    )
+
+    inserted = sdr_fetch_one(
+        """
+        SELECT id
+        FROM duplicate_reports
+        WHERE resource_type = :resource_type
+          AND resource_id = :resource_id
+          AND COALESCE(reporter_user_id, '') = COALESCE(:reporter_user_id, '')
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        {
+            "resource_type": resource_type,
+            "resource_id": resource_id,
+            "reporter_user_id": reporter_user_id,
+        },
+    )
+
+    report_id = str(inserted.get("id")) if inserted else ""
+
+    sdr_execute(
+        """
+        INSERT INTO duplicate_report_alerts (
+            report_id,
+            audience,
+            owner_user_id,
+            resource_type,
+            resource_id,
+            status,
+            created_at
+        )
+        VALUES (
+            :report_id,
+            'admin',
+            '',
+            :resource_type,
+            :resource_id,
+            'unread',
+            CURRENT_TIMESTAMP
+        )
+        """,
+        {
+            "report_id": report_id,
+            "resource_type": resource_type,
+            "resource_id": resource_id,
+        },
+    )
+
+    if resource_info.get("owner_user_id"):
+        sdr_execute(
+            """
+            INSERT INTO duplicate_report_alerts (
+                report_id,
+                audience,
+                owner_user_id,
+                resource_type,
+                resource_id,
+                status,
+                created_at
+            )
+            VALUES (
+                :report_id,
+                'owner',
+                :owner_user_id,
+                :resource_type,
+                :resource_id,
+                'unread',
+                CURRENT_TIMESTAMP
+            )
+            """,
+            {
+                "report_id": report_id,
+                "owner_user_id": resource_info.get("owner_user_id"),
+                "resource_type": resource_type,
+                "resource_id": resource_id,
+            },
+        )
+
+    return report_id
+
+
+def sitewide_report_duplicate():
+    sdr_create_report(request.form)
+    return redirect(request.referrer or "/")
+
+
+def admin_duplicate_reports():
+    gate = sdr_admin_gate()
+    if gate:
+        return gate
+
+    sdr_ensure_tables()
+
+    if request.method == "POST":
+        report_id = str(request.form.get("report_id") or "").strip()
+        action = str(request.form.get("action") or "").strip().lower()
+        resolution_note = str(request.form.get("resolution_note") or "").strip()
+
+        status = {
+            "resolve": "resolved",
+            "not_duplicate": "not_duplicate",
+            "dismiss": "dismissed",
+            "reopen": "open",
+        }.get(action)
+
+        if report_id and status:
+            sdr_execute(
+                """
+                UPDATE duplicate_reports
+                SET status = :status,
+                    reviewed_at = CURRENT_TIMESTAMP,
+                    resolution_note = :resolution_note
+                WHERE id = :report_id
+                """,
+                {
+                    "status": status,
+                    "resolution_note": resolution_note,
+                    "report_id": report_id,
+                },
+            )
+
+        return redirect("/admin/duplicate-reports")
+
+    reports = sdr_fetch_all(
+        """
+        SELECT *
+        FROM duplicate_reports
+        ORDER BY
+            CASE WHEN status = 'open' THEN 0 ELSE 1 END,
+            created_at DESC,
+            id DESC
+        LIMIT 500
+        """
+    )
+
+    open_count = sum(1 for row in reports if row.get("status") == "open")
+
+    return render_template(
+        "admin_duplicate_reports.html",
+        reports=reports,
+        open_count=open_count,
+        total_count=len(reports),
+    )
+
+
+_original_music_duplicate_report = app.view_functions.get("litefeet_music_report_duplicate")
+
+
+def sitewide_music_duplicate_report_bridge():
+    media_item_id = str(request.form.get("media_item_id") or "").strip()
+    possible_duplicate_id = str(request.form.get("possible_duplicate_id") or "").strip()
+
+    data = {
+        "resource_type": "music",
+        "resource_id": media_item_id,
+        "duplicate_resource_type": "music",
+        "duplicate_resource_id": possible_duplicate_id,
+        "reporter_note": request.form.get("reporter_note") or "Music duplicate reported from LiteFeet Music table.",
+    }
+
+    sdr_create_report(data)
+
+    if callable(_original_music_duplicate_report):
+        return _original_music_duplicate_report()
+
+    return redirect(request.referrer or "/litefeet-music")
+
+
+try:
+    sdr_ensure_tables()
+
+    if "sitewide_report_duplicate" not in app.view_functions:
+        app.add_url_rule(
+            "/report-duplicate",
+            "sitewide_report_duplicate",
+            sitewide_report_duplicate,
+            methods=["POST"],
+        )
+
+    if "admin_duplicate_reports" not in app.view_functions:
+        app.add_url_rule(
+            "/admin/duplicate-reports",
+            "admin_duplicate_reports",
+            admin_duplicate_reports,
+            methods=["GET", "POST"],
+        )
+
+    if "litefeet_music_report_duplicate" in app.view_functions:
+        app.view_functions["litefeet_music_report_duplicate"] = sitewide_music_duplicate_report_bridge
+
+    print("SITEWIDE DUPLICATE REPORTS active")
+except Exception as exc:
+    print(f"SITEWIDE DUPLICATE REPORTS setup failed: {type(exc).__name__}: {exc}")
+
