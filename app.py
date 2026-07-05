@@ -21516,3 +21516,522 @@ try:
 except Exception as exc:
     print(f"FINAL /litefeet-music public stats override failed: {type(exc).__name__}: {exc}")
 
+# --- FINAL PEOPLE DIRECTORY FILTERS STATS PATCH ---
+# Public People & Teams directory:
+# - scrollable table showing about 10 rows
+# - filters by team, borough/scene, and multi-role tags
+# - default sort by most recently accessed profile
+# - optional name A-Z / Z-A sorting
+# - profile view stats and battle stats shown as details, not sortable stats
+
+import re as _people_dir_re
+from datetime import datetime as _people_dir_datetime
+
+try:
+    from sqlalchemy import text as _people_dir_text
+except Exception:
+    _people_dir_text = text
+
+
+def people_dir_execute(query, params=None):
+    try:
+        return execute_query(query, params or {})
+    except TypeError:
+        return execute_query(query)
+
+
+def people_dir_fetch_all(query, params=None):
+    try:
+        return fetch_all(query, params or {})
+    except TypeError:
+        return fetch_all(query)
+    except Exception as exc:
+        print(f"PEOPLE_DIR_FETCH_FAILED: {type(exc).__name__}: {exc}")
+        return []
+
+
+def people_dir_table_exists(table_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            rows = people_dir_fetch_all(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_name = :table_name
+                LIMIT 1
+                """,
+                {"table_name": table_name},
+            )
+            return bool(rows)
+
+        with engine.connect() as conn:
+            row = conn.execute(
+                _people_dir_text("SELECT name FROM sqlite_master WHERE type='table' AND name=:name LIMIT 1"),
+                {"name": table_name},
+            ).mappings().first()
+            return bool(row)
+    except Exception:
+        return False
+
+
+def people_dir_columns(table_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            rows = people_dir_fetch_all(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+                """,
+                {"table_name": table_name},
+            )
+            return {row.get("column_name") for row in rows}
+
+        with engine.connect() as conn:
+            rows = conn.execute(_people_dir_text(f"PRAGMA table_info({table_name})")).mappings().all()
+            return {row.get("name") for row in rows}
+    except Exception as exc:
+        print(f"PEOPLE_DIR_COLUMNS_FAILED {table_name}: {type(exc).__name__}: {exc}")
+        return set()
+
+
+def people_dir_ensure_profile_views_table():
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            people_dir_execute("""
+                CREATE TABLE IF NOT EXISTS profile_views (
+                    id SERIAL PRIMARY KEY,
+                    profile_id INTEGER,
+                    profile_slug TEXT,
+                    profile_name TEXT,
+                    path TEXT,
+                    user_id TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        else:
+            people_dir_execute("""
+                CREATE TABLE IF NOT EXISTS profile_views (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    profile_id INTEGER,
+                    profile_slug TEXT,
+                    profile_name TEXT,
+                    path TEXT,
+                    user_id TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
+        people_dir_execute("CREATE INDEX IF NOT EXISTS idx_profile_views_profile_id ON profile_views (profile_id)")
+        people_dir_execute("CREATE INDEX IF NOT EXISTS idx_profile_views_created_at ON profile_views (created_at)")
+        return True
+    except Exception as exc:
+        print(f"PEOPLE_DIR_PROFILE_VIEWS_SETUP_FAILED: {type(exc).__name__}: {exc}")
+        return False
+
+
+def people_dir_slugify(value):
+    value = (value or "").lower().strip()
+    value = _people_dir_re.sub(r"[^a-z0-9]+", "-", value)
+    return value.strip("-")
+
+
+def people_dir_split_roles(value):
+    raw = value or ""
+    parts = _people_dir_re.split(r"[,;/|]+", raw)
+    out = []
+
+    for part in parts:
+        role = part.strip()
+        if role and role.lower() not in {existing.lower() for existing in out}:
+            out.append(role)
+
+    return out
+
+
+def people_dir_profile_url(profile):
+    profile_id = profile.get("id")
+    name = profile.get("dance_name") or profile.get("real_name") or profile.get("name") or ""
+    slug = profile.get("slug") or profile.get("profile_slug") or people_dir_slugify(name)
+
+    if slug:
+        return f"/people/dancers/{slug}"
+    if profile_id:
+        return f"/dancers/{profile_id}"
+
+    return "/people/dancers"
+
+
+def people_dir_current_user_id():
+    try:
+        user = current_user()
+        if user:
+            return str(user.get("id") or "")
+    except Exception:
+        pass
+
+    try:
+        return str(session.get("user_id") or session.get("account_user_id") or "")
+    except Exception:
+        return ""
+
+
+def people_dir_find_profile_from_path(path):
+    path = path or ""
+
+    if not any(path.startswith(prefix) for prefix in ["/people/dancers/", "/dancers/"]):
+        return None
+
+    if path.rstrip("/") in {"/people/dancers", "/dancers"}:
+        return None
+
+    key = path.rstrip("/").split("/")[-1].strip()
+    if not key:
+        return None
+
+    cols = people_dir_columns("dancer_profiles")
+    if not cols:
+        return None
+
+    if key.isdigit() and "id" in cols:
+        rows = people_dir_fetch_all(
+            "SELECT * FROM dancer_profiles WHERE id = :id LIMIT 1",
+            {"id": int(key)},
+        )
+        return rows[0] if rows else None
+
+    checks = []
+    params = {"key": key, "key_lower": key.lower()}
+
+    if "slug" in cols:
+        checks.append("LOWER(slug) = :key_lower")
+    if "profile_slug" in cols:
+        checks.append("LOWER(profile_slug) = :key_lower")
+    if "dance_name" in cols:
+        checks.append("LOWER(REPLACE(dance_name, ' ', '-')) = :key_lower")
+        checks.append("LOWER(dance_name) = LOWER(REPLACE(:key, '-', ' '))")
+    if "real_name" in cols:
+        checks.append("LOWER(REPLACE(real_name, ' ', '-')) = :key_lower")
+        checks.append("LOWER(real_name) = LOWER(REPLACE(:key, '-', ' '))")
+    if "name" in cols:
+        checks.append("LOWER(REPLACE(name, ' ', '-')) = :key_lower")
+        checks.append("LOWER(name) = LOWER(REPLACE(:key, '-', ' '))")
+
+    if not checks:
+        return None
+
+    rows = people_dir_fetch_all(
+        f"""
+        SELECT *
+        FROM dancer_profiles
+        WHERE {" OR ".join(checks)}
+        LIMIT 1
+        """,
+        params,
+    )
+    return rows[0] if rows else None
+
+
+@app.before_request
+def people_dir_track_profile_access():
+    try:
+        if request.method != "GET":
+            return None
+
+        profile = people_dir_find_profile_from_path(request.path)
+        if not profile:
+            return None
+
+        people_dir_ensure_profile_views_table()
+
+        profile_name = profile.get("dance_name") or profile.get("real_name") or profile.get("name") or ""
+        profile_slug = profile.get("slug") or profile.get("profile_slug") or people_dir_slugify(profile_name)
+
+        people_dir_execute(
+            """
+            INSERT INTO profile_views (
+                profile_id,
+                profile_slug,
+                profile_name,
+                path,
+                user_id,
+                created_at
+            )
+            VALUES (
+                :profile_id,
+                :profile_slug,
+                :profile_name,
+                :path,
+                :user_id,
+                CURRENT_TIMESTAMP
+            )
+            """,
+            {
+                "profile_id": profile.get("id"),
+                "profile_slug": profile_slug,
+                "profile_name": profile_name,
+                "path": request.path,
+                "user_id": people_dir_current_user_id(),
+            },
+        )
+    except Exception as exc:
+        print(f"PEOPLE_DIR_PROFILE_ACCESS_TRACK_SKIPPED: {type(exc).__name__}: {exc}")
+
+    return None
+
+
+def people_dir_profile_view_stats():
+    stats = {}
+
+    try:
+        people_dir_ensure_profile_views_table()
+
+        if engine.dialect.name.startswith("postgres"):
+            recent_where = "created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'"
+        else:
+            recent_where = "created_at >= datetime('now', '-7 days')"
+
+        total_rows = people_dir_fetch_all("""
+            SELECT
+                profile_id,
+                COUNT(*) AS total_views,
+                MAX(created_at) AS last_accessed_at
+            FROM profile_views
+            WHERE profile_id IS NOT NULL
+            GROUP BY profile_id
+        """)
+
+        recent_rows = people_dir_fetch_all(f"""
+            SELECT
+                profile_id,
+                COUNT(*) AS views_7d
+            FROM profile_views
+            WHERE profile_id IS NOT NULL
+              AND {recent_where}
+            GROUP BY profile_id
+        """)
+
+        for row in total_rows:
+            pid = row.get("profile_id")
+            stats[pid] = {
+                "total_views": row.get("total_views") or 0,
+                "views_7d": 0,
+                "last_accessed_at": row.get("last_accessed_at") or "",
+            }
+
+        for row in recent_rows:
+            pid = row.get("profile_id")
+            stats.setdefault(pid, {"total_views": 0, "views_7d": 0, "last_accessed_at": ""})
+            stats[pid]["views_7d"] = row.get("views_7d") or 0
+
+    except Exception as exc:
+        print(f"PEOPLE_DIR_PROFILE_VIEW_STATS_FAILED: {type(exc).__name__}: {exc}")
+
+    return stats
+
+
+def people_dir_battle_stats_for_profiles(profiles):
+    stats = {}
+
+    for profile in profiles:
+        stats[profile.get("id")] = {
+            "battle_total": 0,
+            "battle_wins": 0,
+            "battle_losses": 0,
+        }
+
+    try:
+        if not people_dir_table_exists("battle_records"):
+            return stats
+
+        cols = people_dir_columns("battle_records")
+        rows = people_dir_fetch_all("SELECT * FROM battle_records LIMIT 5000")
+
+        participant_cols = [
+            col for col in cols
+            if any(term in col.lower() for term in ["dancer", "participant", "competitor", "opponent", "challenger", "player", "name"])
+        ]
+
+        winner_cols = [
+            col for col in cols
+            if "winner" in col.lower() or col.lower() in {"win", "won_by"}
+        ]
+
+        loser_cols = [
+            col for col in cols
+            if "loser" in col.lower()
+        ]
+
+        for profile in profiles:
+            pid = profile.get("id")
+            names = [
+                profile.get("dance_name"),
+                profile.get("real_name"),
+                profile.get("name"),
+            ]
+            names = [str(name).strip().lower() for name in names if str(name or "").strip()]
+
+            total = 0
+            wins = 0
+            losses = 0
+
+            for row in rows:
+                participant_text = " ".join(str(row.get(col) or "").lower() for col in participant_cols)
+                winner_text = " ".join(str(row.get(col) or "").lower() for col in winner_cols)
+                loser_text = " ".join(str(row.get(col) or "").lower() for col in loser_cols)
+
+                appears = any(name in participant_text for name in names)
+                won = any(name in winner_text for name in names)
+                lost = any(name in loser_text for name in names)
+
+                if appears or won or lost:
+                    total += 1
+                if won:
+                    wins += 1
+                if lost:
+                    losses += 1
+
+            stats[pid] = {
+                "battle_total": total,
+                "battle_wins": wins,
+                "battle_losses": losses,
+            }
+
+    except Exception as exc:
+        print(f"PEOPLE_DIR_BATTLE_STATS_FAILED: {type(exc).__name__}: {exc}")
+
+    return stats
+
+
+def people_dancers_directory_final():
+    try:
+        ensure_person_role_columns()
+    except Exception:
+        pass
+
+    try:
+        ensure_profile_slug_column()
+    except Exception:
+        pass
+
+    people_dir_ensure_profile_views_table()
+
+    selected_sort = (request.args.get("sort") or "recent").strip().lower()
+    selected_team = (request.args.get("team") or "all").strip()
+    selected_borough = (request.args.get("borough") or "all").strip()
+    selected_role = (request.args.get("role") or "all").strip()
+
+    profiles = people_dir_fetch_all(
+        """
+        SELECT *
+        FROM dancer_profiles
+        WHERE status IN (
+            'Approved',
+            'Verified',
+            'Community Supported',
+            'Needs Verification',
+            'Ghost Profile',
+            'Active'
+        )
+        ORDER BY lower(COALESCE(dance_name, real_name, '')) ASC
+        LIMIT 1000
+        """
+    )
+
+    profiles = [dict(row) for row in profiles]
+    view_stats = people_dir_profile_view_stats()
+    battle_stats = people_dir_battle_stats_for_profiles(profiles)
+
+    teams = []
+    boroughs = []
+    roles = []
+
+    for profile in profiles:
+        pid = profile.get("id")
+
+        display_name = profile.get("dance_name") or profile.get("real_name") or profile.get("name") or "Unnamed profile"
+        team = (profile.get("team_affiliation") or profile.get("team_name") or "").strip()
+        borough = (profile.get("borough_scene") or profile.get("borough") or profile.get("scene") or "").strip()
+
+        raw_roles = profile.get("role_tags") or profile.get("role") or "Dancer"
+        role_list = people_dir_split_roles(raw_roles) or ["Dancer"]
+
+        pviews = view_stats.get(pid, {"total_views": 0, "views_7d": 0, "last_accessed_at": ""})
+        bstats = battle_stats.get(pid, {"battle_total": 0, "battle_wins": 0, "battle_losses": 0})
+
+        profile["display_name"] = display_name
+        profile["display_team"] = team
+        profile["display_borough"] = borough
+        profile["role_list"] = role_list
+        profile["display_roles"] = ", ".join(role_list)
+        profile["display_status"] = profile.get("activity_status") or profile.get("status") or "Unknown"
+        profile["profile_url"] = people_dir_profile_url(profile)
+        profile["views_7d"] = pviews.get("views_7d") or 0
+        profile["total_views"] = pviews.get("total_views") or 0
+        profile["last_accessed_at"] = pviews.get("last_accessed_at") or ""
+        profile["battle_total"] = bstats.get("battle_total") or 0
+        profile["battle_wins"] = bstats.get("battle_wins") or 0
+        profile["battle_losses"] = bstats.get("battle_losses") or 0
+
+        if team and team not in teams:
+            teams.append(team)
+        if borough and borough not in boroughs:
+            boroughs.append(borough)
+        for role in role_list:
+            if role and role not in roles:
+                roles.append(role)
+
+    filtered = []
+
+    for profile in profiles:
+        if selected_team.lower() != "all" and (profile.get("display_team") or "").lower() != selected_team.lower():
+            continue
+
+        if selected_borough.lower() != "all" and (profile.get("display_borough") or "").lower() != selected_borough.lower():
+            continue
+
+        if selected_role.lower() != "all":
+            if not any(role.lower() == selected_role.lower() for role in profile.get("role_list", [])):
+                continue
+
+        filtered.append(profile)
+
+    if selected_sort == "az":
+        filtered.sort(key=lambda profile: (profile.get("display_name") or "").lower())
+    elif selected_sort == "za":
+        filtered.sort(key=lambda profile: (profile.get("display_name") or "").lower(), reverse=True)
+    else:
+        selected_sort = "recent"
+        filtered.sort(
+            key=lambda profile: (
+                1 if profile.get("last_accessed_at") else 0,
+                str(profile.get("last_accessed_at") or ""),
+                int(profile.get("total_views") or 0),
+                (profile.get("display_name") or "").lower(),
+            ),
+            reverse=True,
+        )
+
+    return render_template(
+        "people_dancers_directory.html",
+        profiles=filtered,
+        total_profiles=len(profiles),
+        filtered_count=len(filtered),
+        teams=sorted(teams, key=lambda x: x.lower()),
+        boroughs=sorted(boroughs, key=lambda x: x.lower()),
+        roles=sorted(roles, key=lambda x: x.lower()),
+        selected_sort=selected_sort,
+        selected_team=selected_team,
+        selected_borough=selected_borough,
+        selected_role=selected_role,
+    )
+
+
+try:
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) in {"/people/dancers", "/dancers"}:
+            app.view_functions[rule.endpoint] = people_dancers_directory_final
+            print(f"FINAL people directory override active: {rule.rule} -> {rule.endpoint}")
+except Exception as exc:
+    print(f"FINAL people directory override failed: {type(exc).__name__}: {exc}")
+

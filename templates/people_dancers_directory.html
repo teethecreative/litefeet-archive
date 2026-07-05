@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}People & Teams | The LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section people-directory-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">The LiteFeet Ledger</p>
+            <h1>People & Teams</h1>
+            <p>Directory view with filters, recent profile activity, roles, teams, borough/scene, and linked battle details.</p>
+        </div>
+    </div>
+</section>
+
+<section class="content-section people-filter-section">
+    <form class="people-filter-form" method="get">
+        <label>
+            Sort
+            <select name="sort">
+                <option value="recent" {% if selected_sort == "recent" %}selected{% endif %}>Recently accessed</option>
+                <option value="az" {% if selected_sort == "az" %}selected{% endif %}>Name A–Z</option>
+                <option value="za" {% if selected_sort == "za" %}selected{% endif %}>Name Z–A</option>
+            </select>
+        </label>
+
+        <label>
+            Team
+            <select name="team">
+                <option value="all">All Teams</option>
+                {% for team in teams %}
+                    <option value="{{ team }}" {% if selected_team == team %}selected{% endif %}>{{ team }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>
+            Borough / Scene
+            <select name="borough">
+                <option value="all">All Boroughs / Scenes</option>
+                {% for borough in boroughs %}
+                    <option value="{{ borough }}" {% if selected_borough == borough %}selected{% endif %}>{{ borough }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>
+            Role
+            <select name="role">
+                <option value="all">All Roles</option>
+                {% for role in roles %}
+                    <option value="{{ role }}" {% if selected_role == role %}selected{% endif %}>{{ role }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <button class="button primary" type="submit">Apply</button>
+        <a class="button secondary" href="/people/dancers">Reset</a>
+    </form>
+
+    <p class="small-note">
+        Showing {{ filtered_count }} of {{ total_profiles }} profiles.
+        Default view puts recently accessed profiles first.
+    </p>
+</section>
+
+<section class="content-section people-table-section">
+    <div class="people-scroll-table">
+        <table class="people-directory-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Team / Affiliation</th>
+                    <th>Borough / Scene</th>
+                    <th>Roles</th>
+                    <th>Profile Activity</th>
+                    <th>Battle Details</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% if profiles %}
+                    {% for profile in profiles %}
+                        <tr>
+                            <td class="name-cell">
+                                <a href="{{ profile.profile_url }}">{{ profile.display_name }}</a>
+                                {% if profile.real_name and profile.real_name != profile.display_name %}
+                                    <small>{{ profile.real_name }}</small>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ profile.display_team or "—" }}</td>
+                            <td>{{ profile.display_borough or "—" }}</td>
+
+                            <td class="roles-cell">
+                                {% for role in profile.role_list %}
+                                    <span class="role-chip">{{ role }}</span>
+                                {% endfor %}
+                            </td>
+
+                            <td class="stats-cell">
+                                <strong>{{ profile.views_7d }}</strong>
+                                <small>views last 7 days</small>
+                                <span>{{ profile.total_views }} total views</span>
+                                {% if profile.last_accessed_at %}
+                                    <span>Last: {{ profile.last_accessed_at }}</span>
+                                {% else %}
+                                    <span>Not accessed yet</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="stats-cell">
+                                <strong>{{ profile.battle_wins }}W / {{ profile.battle_losses }}L</strong>
+                                <small>{{ profile.battle_total }} linked battles</small>
+                            </td>
+
+                            <td>
+                                <span class="status-pill">{{ profile.display_status }}</span>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="empty-table-row">No profiles match these filters.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<style>
+    .people-filter-section {
+        padding-block: 18px;
+    }
+
+    .people-filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: end;
+    }
+
+    .people-filter-form label {
+        display: grid;
+        gap: 4px;
+        font-size: 0.86rem;
+    }
+
+    .people-filter-form select {
+        min-height: 34px;
+        min-width: 160px;
+    }
+
+    .people-scroll-table {
+        height: 560px;
+        overflow: auto;
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 12px;
+        background: rgba(255,255,255,0.025);
+    }
+
+    .people-directory-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.88rem;
+        line-height: 1.3;
+    }
+
+    .people-directory-table th,
+    .people-directory-table td {
+        padding: 9px 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.075);
+        border-right: 1px solid rgba(255,255,255,0.045);
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .people-directory-table th {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: #080808;
+        color: var(--accent-color, #e8c65a);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        white-space: nowrap;
+    }
+
+    .people-directory-table tr {
+        height: 54px;
+    }
+
+    .people-directory-table tr:hover {
+        background: rgba(255,255,255,0.055);
+    }
+
+    .name-cell {
+        min-width: 180px;
+    }
+
+    .name-cell a {
+        color: var(--accent-color, #e8c65a);
+        text-decoration: none;
+        font-weight: 800;
+    }
+
+    .name-cell small,
+    .stats-cell small,
+    .stats-cell span {
+        display: block;
+        margin-top: 3px;
+        opacity: 0.74;
+    }
+
+    .roles-cell {
+        min-width: 170px;
+    }
+
+    .role-chip,
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid rgba(232,198,90,0.35);
+        border-radius: 999px;
+        padding: 3px 8px;
+        margin: 0 4px 4px 0;
+        color: var(--accent-color, #e8c65a);
+        font-size: 0.76rem;
+        font-weight: 800;
+    }
+
+    .stats-cell {
+        min-width: 145px;
+    }
+
+    .stats-cell strong {
+        color: var(--accent-color, #e8c65a);
+    }
+
+    .empty-table-row {
+        text-align: center;
+        padding: 22px;
+        opacity: 0.78;
+    }
+
+    @media (max-width: 900px) {
+        .people-filter-form {
+            display: grid;
+        }
+
+        .people-scroll-table {
+            height: 520px;
+        }
+
+        .people-directory-table {
+            min-width: 1050px;
+        }
+    }
+</style>
+{% endblock %}
