@@ -26850,3 +26850,215 @@ try:
 except Exception as exc:
     print(f"DCA NOMINEE VOTES PUBLIC setup failed: {type(exc).__name__}: {exc}")
 
+# --- AWARDS LANDING AND DCA SECTIONS PATCH ---
+# Awards page:
+# - /awards is now a landing page only
+# - no counts in award system nav
+# - no submit/general submission buttons on public awards pages
+# - /awards/dancers-choice groups categories into readable sections
+
+def awx_litefeet_records():
+    try:
+        return dcav_fetch_litefeet_awards()
+    except Exception:
+        pass
+
+    try:
+        records = award_subnav_fetch_records()
+        return award_subnav_filter_records(records, "litefeet")
+    except Exception:
+        pass
+
+    try:
+        return phase8_fetch_award_records()
+    except Exception:
+        return []
+
+
+def awx_dca_groups(query=""):
+    try:
+        return dcav_vote_groups(query)
+    except Exception as exc:
+        print(f"AWARDS_DCA_GROUPS_FAILED: {type(exc).__name__}: {exc}")
+        return []
+
+
+def awx_category_section(category):
+    text = str(category or "").lower()
+
+    if any(term in text for term in ["trick", "hat", "shoe", "footwork", "ankle", "balance", "combo"]):
+        return "tricks"
+
+    if any(term in text for term in ["battle", "tag team", "collab", "entertainer", "musicality", "fearless", "versatile"]):
+        return "battle_performance"
+
+    if any(term in text for term in ["team video", "content creator", "content"]):
+        return "media_content"
+
+    if any(term in text for term in ["producer", "song", "music", "track"]):
+        return "music_producers"
+
+    if any(term in text for term in ["passionate", "involved", "consistent", "improved", "life of the party"]):
+        return "community_recognition"
+
+    if any(term in text for term in ["event", "out of state", "big man", "junior", "youngest"]):
+        return "special_honors"
+
+    return "other"
+
+
+def awx_dca_sections(query=""):
+    groups = awx_dca_groups(query)
+
+    section_meta = {
+        "tricks": {
+            "title": "Tricks, Footwork & Technical Style",
+            "description": "Categories focused on the movement vocabulary, technical control, tricks, footwork, balance, and signature LiteFeet skill.",
+        },
+        "battle_performance": {
+            "title": "Battles, Performance & Presence",
+            "description": "Categories centered on rounds, stage presence, battle moments, musicality, teamwork, and performance impact.",
+        },
+        "media_content": {
+            "title": "Teams, Videos & Content",
+            "description": "Categories recognizing team work, video moments, creators, and the content that helped LiteFeet stay visible.",
+        },
+        "music_producers": {
+            "title": "Music & Producers",
+            "description": "Categories for producers, songs, and tracks that shaped the sound of LiteFeet battles, content, and sessions.",
+        },
+        "community_recognition": {
+            "title": "Community Recognition & Growth",
+            "description": "Categories recognizing consistency, improvement, passion, involvement, and the people helping push the culture forward.",
+        },
+        "special_honors": {
+            "title": "Events & Special Honors",
+            "description": "Categories for major events, younger dancers, out-of-state impact, and special community recognitions.",
+        },
+        "other": {
+            "title": "Other Dancer’s Choice Categories",
+            "description": "Additional Dancer’s Choice categories and community-selected honors.",
+        },
+    }
+
+    order = [
+        "tricks",
+        "battle_performance",
+        "media_content",
+        "music_producers",
+        "community_recognition",
+        "special_honors",
+        "other",
+    ]
+
+    buckets = {key: [] for key in order}
+
+    for group in groups:
+        key = awx_category_section(group.get("category"))
+        group["section_key"] = key
+        buckets.setdefault(key, [])
+        buckets[key].append(group)
+
+    sections = []
+
+    for key in order:
+        if buckets.get(key):
+            sections.append({
+                "key": key,
+                "title": section_meta[key]["title"],
+                "description": section_meta[key]["description"],
+                "groups": buckets[key],
+                "count": len(buckets[key]),
+            })
+
+    return sections
+
+
+def awx_awards_landing():
+    dca_sections = awx_dca_sections("")
+    litefeet_records = awx_litefeet_records()
+
+    return ledger_try_render(
+        "awards.html",
+        page_title="Awards",
+        award_landing=True,
+        active_award_tab="landing",
+        award_records=[],
+        awards=[],
+        records=[],
+        dca_vote_groups=[],
+        dca_sections=[],
+        dancers_choice_count=len(dca_sections),
+        litefeet_count=len(litefeet_records),
+        selected_query="",
+        selected_view="cards",
+        error=None,
+    )
+
+
+def awx_awards_litefeet():
+    records = awx_litefeet_records()
+
+    return ledger_try_render(
+        "awards.html",
+        page_title="LiteFeet Awards",
+        award_landing=False,
+        active_award_tab="litefeet",
+        award_records=records,
+        awards=records,
+        records=records,
+        dca_vote_groups=[],
+        dca_sections=[],
+        selected_query=request.args.get("q", ""),
+        selected_view=request.args.get("view", "cards"),
+        dancers_choice_count=len(awx_dca_sections("")),
+        litefeet_count=len(records),
+        error=None,
+    )
+
+
+def awx_awards_dancers_choice():
+    query = request.args.get("q", "")
+
+    return ledger_try_render(
+        "awards.html",
+        page_title="Dancer’s Choice Awards",
+        award_landing=False,
+        active_award_tab="dancers-choice",
+        award_records=[],
+        awards=[],
+        records=[],
+        dca_vote_groups=awx_dca_groups(query),
+        dca_sections=awx_dca_sections(query),
+        selected_query=query,
+        selected_view=request.args.get("view", "cards"),
+        dancers_choice_count=len(awx_dca_sections("")),
+        litefeet_count=len(awx_litefeet_records()),
+        error=None,
+    )
+
+
+try:
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/awards":
+            app.view_functions[rule.endpoint] = awx_awards_landing
+            print(f"AWARDS LANDING active: /awards -> {rule.endpoint}")
+
+        if str(rule.rule) == "/awards/litefeet":
+            app.view_functions[rule.endpoint] = awx_awards_litefeet
+            print(f"AWARDS LANDING active: /awards/litefeet -> {rule.endpoint}")
+
+        if str(rule.rule) == "/awards/dancers-choice":
+            app.view_functions[rule.endpoint] = awx_awards_dancers_choice
+            print(f"AWARDS LANDING active: /awards/dancers-choice -> {rule.endpoint}")
+
+    if "awx_awards_litefeet" not in app.view_functions:
+        app.add_url_rule("/awards/litefeet", "awx_awards_litefeet", awx_awards_litefeet, methods=["GET"])
+
+    if "awx_awards_dancers_choice" not in app.view_functions:
+        app.add_url_rule("/awards/dancers-choice", "awx_awards_dancers_choice", awx_awards_dancers_choice, methods=["GET"])
+
+    print("AWARDS LANDING AND DCA SECTIONS active")
+except Exception as exc:
+    print(f"AWARDS LANDING AND DCA SECTIONS setup failed: {type(exc).__name__}: {exc}")
+
