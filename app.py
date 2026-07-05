@@ -21383,3 +21383,136 @@ try:
             print(f"FINAL /litefeet-music uses same source as homepage: {rule.endpoint}")
 except Exception as exc:
     print(f"FINAL /litefeet-music homepage-source override failed: {type(exc).__name__}: {exc}")
+
+# --- FINAL FIX: LiteFeet Music public play/reaction stats ---
+# Shows play counts and reaction stats publicly, while still requiring login to submit reactions.
+
+def litefeet_music_public_stats_source():
+    q = (request.args.get("q") or "").strip().lower()
+    selected_platform = (request.args.get("platform") or "all").strip()
+    selected_type = (request.args.get("type") or "all").strip()
+
+    try:
+        ensure_media_items_table()
+    except Exception as exc:
+        print(f"LF_MUSIC_PUBLIC_STATS ensure_media_items_table skipped: {type(exc).__name__}: {exc}")
+
+    try:
+        ensure_music_play_count_columns()
+    except Exception as exc:
+        print(f"LF_MUSIC_PUBLIC_STATS ensure_music_play_count_columns skipped: {type(exc).__name__}: {exc}")
+
+    try:
+        ensure_music_feedback_table()
+    except Exception as exc:
+        print(f"LF_MUSIC_PUBLIC_STATS ensure_music_feedback_table skipped: {type(exc).__name__}: {exc}")
+
+    try:
+        records = fetch_all(
+            """
+            SELECT
+                m.*,
+                COALESCE(f.feedback_count, 0) AS feedback_count,
+                COALESCE(f.avg_rating, 0) AS avg_rating,
+                COALESCE(f.would_lab_count, 0) AS would_lab_count,
+                COALESCE(f.would_battle_count, 0) AS would_battle_count,
+                COALESCE(f.would_shoot_video_count, 0) AS would_shoot_video_count
+            FROM media_items m
+            LEFT JOIN (
+                SELECT
+                    media_item_id,
+                    COUNT(*) AS feedback_count,
+                    AVG(rating) AS avg_rating,
+                    SUM(CASE WHEN would_lab = 1 THEN 1 ELSE 0 END) AS would_lab_count,
+                    SUM(CASE WHEN would_battle = 1 THEN 1 ELSE 0 END) AS would_battle_count,
+                    SUM(CASE WHEN would_shoot_video = 1 THEN 1 ELSE 0 END) AS would_shoot_video_count
+                FROM music_feedback
+                GROUP BY media_item_id
+            ) f ON f.media_item_id = m.id
+            WHERE m.media_type = 'music_release'
+              AND m.status = 'Published'
+            ORDER BY
+                CASE
+                    WHEN m.release_date IS NULL OR m.release_date = '' THEN m.created_at
+                    ELSE m.release_date
+                END DESC,
+                m.created_at DESC,
+                m.id DESC
+            LIMIT 800
+            """,
+            {},
+        ) or []
+    except Exception as exc:
+        print(f"FINAL_LITEFEET_MUSIC_PUBLIC_STATS_FAILED: {type(exc).__name__}: {exc}")
+        records = []
+
+    rows = []
+    platforms = []
+    types = []
+
+    for row in records:
+        item = dict(row)
+
+        title = str(item.get("title") or "").lower()
+        artist = str(item.get("artist_or_creator") or item.get("artist") or item.get("artist_name") or "").lower()
+        producer = str(item.get("producer_name") or item.get("producer") or "").lower()
+        description = str(item.get("description") or "").lower()
+        platform = str(item.get("platform") or "").strip()
+        media_type = str(item.get("media_type") or "music_release").strip()
+
+        if platform and platform not in platforms:
+            platforms.append(platform)
+
+        if media_type and media_type not in types:
+            types.append(media_type)
+
+        if selected_platform.lower() not in {"", "all", "all platforms"}:
+            if platform.lower() != selected_platform.lower():
+                continue
+
+        if selected_type.lower() not in {"", "all", "all music"}:
+            if media_type.lower() != selected_type.lower():
+                continue
+
+        if q and q not in title and q not in artist and q not in producer and q not in description:
+            continue
+
+        item["artist"] = item.get("artist") or item.get("artist_or_creator") or item.get("artist_name") or ""
+        item["producer"] = item.get("producer") or item.get("producer_name") or ""
+        item["media_type"] = media_type
+        item["created_at"] = item.get("release_date") or item.get("created_at") or ""
+        item["url"] = item.get("playable_url") or item.get("url") or item.get("link") or item.get("external_url") or ""
+        item["play_count"] = item.get("play_count") or 0
+        item["feedback_count"] = item.get("feedback_count") or 0
+        item["avg_rating"] = item.get("avg_rating") or 0
+        item["would_lab_count"] = item.get("would_lab_count") or 0
+        item["would_battle_count"] = item.get("would_battle_count") or 0
+        item["would_shoot_video_count"] = item.get("would_shoot_video_count") or 0
+
+        rows.append(item)
+
+    return render_template(
+        "litefeet_music.html",
+        music_records=rows,
+        records=rows,
+        media_items=rows,
+        releases=rows,
+        latest_music_releases=rows,
+        release_radar=rows[:12],
+        total_music_records=len(rows),
+        platforms=platforms,
+        music_types=types,
+        selected_q=request.args.get("q", ""),
+        selected_type=selected_type,
+        selected_platform=selected_platform,
+    )
+
+
+try:
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/litefeet-music":
+            app.view_functions[rule.endpoint] = litefeet_music_public_stats_source
+            print(f"FINAL /litefeet-music public stats source active: {rule.endpoint}")
+except Exception as exc:
+    print(f"FINAL /litefeet-music public stats override failed: {type(exc).__name__}: {exc}")
+

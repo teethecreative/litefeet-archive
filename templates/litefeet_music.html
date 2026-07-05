@@ -71,27 +71,29 @@
         </div>
     </div>
 
-    {% if rows %}
-        <div class="release-table-wrap release-radar-table-wrap litefeet-music-table-wrap">
-            <table class="release-table release-radar-table compact-home-table litefeet-music-table">
-                <thead>
-                    <tr>
-                        <th>Play</th>
-                        <th>Title</th>
-                        <th>Artist / Producer</th>
-                        <th>Date</th>
-                        <th>Platform</th>
-                        <th>React</th>
-                    </tr>
-                </thead>
+    <div class="release-table-wrap release-radar-table-wrap litefeet-music-table-wrap">
+        <table class="release-table release-radar-table compact-home-table litefeet-music-table">
+            <thead>
+                <tr>
+                    <th>Play</th>
+                    <th>Title</th>
+                    <th>Artist / Producer</th>
+                    <th>Date</th>
+                    <th>Platform</th>
+                    <th>Plays</th>
+                    <th>Reactions</th>
+                </tr>
+            </thead>
 
-                <tbody id="musicFeedList">
+            <tbody id="musicFeedList">
+                {% if rows %}
                     {% for item in rows %}
-                        {% set item_url = item.url or item.link or item.external_url or "" %}
+                        {% set item_url = item.playable_url or item.url or item.link or item.external_url or "" %}
                         {% set embed_url = item_url|media_embed_url if item_url else "" %}
                         {% set artist_name = item.artist_or_creator or item.artist or item.artist_name or item.producer_name or item.producer or "Unknown producer" %}
                         {% set platform_name = item.platform or item_url|media_platform %}
                         {% set release_date = item.release_date or item.created_at or item.date %}
+                        {% set avg_rating = item.avg_rating or 0 %}
 
                         <tr data-release-row>
                             <td class="play-cell">
@@ -123,11 +125,11 @@
                                 {% endif %}
 
                                 {% if item.description %}
-                                    <small>{{ item.description }}</small>
+                                    <small class="music-description-clamp">{{ item.description }}</small>
                                 {% endif %}
                             </td>
 
-                            <td>
+                            <td class="artist-cell">
                                 {{ artist_name }}
                                 {% if item.producer_name and item.producer_name != artist_name %}
                                     <small>Producer: {{ item.producer_name }}</small>
@@ -136,7 +138,7 @@
                                 {% endif %}
                             </td>
 
-                            <td>
+                            <td class="date-cell">
                                 {% if release_date %}
                                     {{ release_date|ledger_date }}
                                 {% else %}
@@ -144,17 +146,36 @@
                                 {% endif %}
                             </td>
 
-                            <td>{{ platform_name or "—" }}</td>
+                            <td class="platform-cell">{{ platform_name or "—" }}</td>
 
-                            <td>
-                                {% if session.get("user_id") or session.get("account_user_id") %}
-                                    {% if item.id %}
-                                        <a class="button small-button secondary" href="/litefeet-music/release/{{ item.id }}">React</a>
+                            <td class="plays-cell">
+                                <strong>{{ item.play_count or 0 }}</strong>
+                                <small>plays</small>
+                            </td>
+
+                            <td class="reactions-cell">
+                                <strong>{{ item.feedback_count or item.reaction_count or 0 }}</strong>
+                                <small>
+                                    {% if avg_rating %}
+                                        {{ "%.1f"|format(avg_rating|float) }}/5 avg
                                     {% else %}
-                                        <span class="small-note">No record page</span>
+                                        reactions
                                     {% endif %}
-                                {% else %}
-                                    <a class="button small-button secondary" href="{{ url_for('account_login', next=request.path) }}">Log in</a>
+                                </small>
+
+                                {% if item.would_lab_count or item.would_battle_count or item.would_shoot_video_count %}
+                                    <details class="reaction-breakdown">
+                                        <summary>Breakdown</summary>
+                                        <span>{{ item.would_lab_count or 0 }} lab</span>
+                                        <span>{{ item.would_battle_count or 0 }} battle</span>
+                                        <span>{{ item.would_shoot_video_count or 0 }} video</span>
+                                    </details>
+                                {% endif %}
+
+                                {% if item.id %}
+                                    <a class="small-note react-link" href="/litefeet-music/release/{{ item.id }}">
+                                        View / react
+                                    </a>
                                 {% endif %}
 
                                 {% if item_url %}
@@ -163,16 +184,16 @@
                             </td>
                         </tr>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <div class="empty-state compact-empty">
-            <h3>No music records yet.</h3>
-            <p>Add tracks, producer records, battle music, releases, or video links.</p>
-            <a class="button primary" href="/litefeet-music/submit">Submit Music</a>
-        </div>
-    {% endif %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="empty-music-row">
+                            No music records yet. Add tracks, producer records, battle music, releases, or video links.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
 </section>
 
 <style>
@@ -209,6 +230,7 @@
 
     .litefeet-music-table {
         width: 100%;
+        table-layout: fixed;
     }
 
     .litefeet-music-table th {
@@ -220,15 +242,37 @@
 
     .litefeet-music-table td,
     .litefeet-music-table th {
-        vertical-align: middle;
+        vertical-align: top;
     }
 
     .play-cell {
-        width: 64px;
+        width: 58px;
     }
 
     .title-cell {
-        min-width: 300px;
+        width: 34%;
+        max-width: 360px;
+    }
+
+    .artist-cell {
+        width: 17%;
+    }
+
+    .date-cell {
+        width: 105px;
+    }
+
+    .platform-cell {
+        width: 105px;
+    }
+
+    .plays-cell {
+        width: 78px;
+        text-align: center;
+    }
+
+    .reactions-cell {
+        width: 126px;
     }
 
     .music-title-link {
@@ -247,17 +291,51 @@
         opacity: 0.72;
     }
 
+    .music-description-clamp {
+        max-width: 100%;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        line-height: 1.35;
+        word-break: break-word;
+    }
+
+    .reaction-breakdown {
+        margin-top: 5px;
+    }
+
+    .reaction-breakdown summary {
+        cursor: pointer;
+        color: var(--accent-color, #e8c65a);
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+    .reaction-breakdown span {
+        display: block;
+        margin-top: 3px;
+        opacity: 0.78;
+    }
+
+    .react-link,
     .source-link {
         margin-top: 6px;
     }
 
-    @media (max-width: 800px) {
+    .empty-music-row {
+        text-align: center;
+        padding: 22px;
+        opacity: 0.78;
+    }
+
+    @media (max-width: 900px) {
         .music-filter-form {
             display: grid;
         }
 
         .litefeet-music-table {
-            min-width: 860px;
+            min-width: 900px;
         }
     }
 </style>
