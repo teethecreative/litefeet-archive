@@ -398,7 +398,7 @@
     {% endif %}
 
     {% if active_tab == "dancers-choice" and dca_section_rows %}
-        <details class="dca-year-card" open>
+        <details class="dca-year-card">
             <summary class="dca-year-card-summary">
                 <div>
                     <p class="eyebrow">Dancer’s Choice Awards Ledger</p>
@@ -408,13 +408,13 @@
                     </p>
                 </div>
 
-                <span>2023 Results</span>
+                <span class="accordion-label">2023 Results</span>
             </summary>
 
             <div class="dca-year-card-body">
                 <div class="dca-section-stack">
                     {% for section in dca_section_rows %}
-                <details class="dca-award-section" {% if loop.first %}open{% endif %}>
+                <details class="dca-award-section">
                     <summary>
                         <div>
                             <p class="eyebrow">{{ section.count }} categories</p>
@@ -1440,6 +1440,77 @@
 
     .dca-new-category-item input[name="new_category_name"]::placeholder {
         color: transparent !important;
+    }
+
+
+    /* --- FORCE DCA 2023 LEDGER ACCORDIONS CLOSED WITH PLUS/MINUS --- */
+    .dca-year-card > summary,
+    .dca-award-section > summary,
+    .dca-category-row > summary {
+        position: relative !important;
+        cursor: pointer !important;
+        padding-right: 76px !important;
+    }
+
+    .dca-year-card > summary::after,
+    .dca-award-section > summary::after,
+    .dca-category-row > summary::after {
+        content: "+" !important;
+        position: absolute !important;
+        right: 18px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 999px !important;
+        border: 1px solid rgba(227, 198, 106, 0.55) !important;
+        background: #0A0A0A !important;
+        color: #E3C66A !important;
+        display: grid !important;
+        place-items: center !important;
+        font-weight: 1000 !important;
+        font-size: 1.35rem !important;
+        line-height: 1 !important;
+        z-index: 3 !important;
+    }
+
+    .dca-year-card[open] > summary::after,
+    .dca-award-section[open] > summary::after,
+    .dca-category-row[open] > summary::after {
+        content: "−" !important;
+    }
+
+    .dca-year-card > summary::-webkit-details-marker,
+    .dca-award-section > summary::-webkit-details-marker,
+    .dca-category-row > summary::-webkit-details-marker {
+        display: none !important;
+    }
+
+    .dca-year-card > summary::marker,
+    .dca-award-section > summary::marker,
+    .dca-category-row > summary::marker {
+        content: "" !important;
+    }
+
+    .accordion-label,
+    .dca-category-open-pill {
+        margin-right: 44px !important;
+    }
+
+    @media (max-width: 900px) {
+        .dca-year-card > summary,
+        .dca-award-section > summary,
+        .dca-category-row > summary {
+            padding-right: 66px !important;
+        }
+
+        .dca-year-card > summary::after,
+        .dca-award-section > summary::after,
+        .dca-category-row > summary::after {
+            right: 14px !important;
+            top: 20px !important;
+            transform: none !important;
+        }
     }
 
 </style>
