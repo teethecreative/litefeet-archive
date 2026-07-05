@@ -24473,8 +24473,10 @@ def hp_inject_homepage_prompt(response):
         if not widget:
             return response
 
-        if "</main>" in html:
-            html = html.replace("</main>", widget + "\n</main>", 1)
+        main_match = _hp_re.search(r"<main[^>]*>", html, flags=_hp_re.IGNORECASE)
+        if main_match:
+            insert_at = main_match.end()
+            html = html[:insert_at] + "\n" + widget + "\n" + html[insert_at:]
         elif "</body>" in html:
             html = html.replace("</body>", widget + "\n</body>", 1)
         else:
@@ -24681,4 +24683,499 @@ try:
     print("HOMEPAGE PROMPT QUESTIONS active")
 except Exception as exc:
     print(f"HOMEPAGE PROMPT QUESTIONS setup failed: {type(exc).__name__}: {exc}")
+
+# --- HOME PROMPT VIDEO NEXT7 LAYOUT PATCH ---
+# Home cleanup:
+# - prompt should appear near the top of the home page
+# - old Calendar/Next Up/Add Missing block is hidden on home
+# - top hero CTA buttons are hidden on home
+# - Next 7 Days in LiteFeet table is injected near the bottom of main content
+# - Calendar public page is pinned for rebuild
+
+from datetime import datetime as _h7_datetime, timedelta as _h7_timedelta, timezone as _h7_timezone
+import re as _h7_re
+import html as _h7_html
+
+try:
+    from sqlalchemy import text as _h7_text
+except Exception:
+    _h7_text = text
+
+
+def h7_fetch_all(query, params=None):
+    params = params or {}
+    try:
+        with engine.connect() as conn:
+            return [dict(row) for row in conn.execute(_h7_text(query), params).mappings().all()]
+    except Exception as exc:
+        print(f"HOME_NEXT7_FETCH_FAILED: {type(exc).__name__}: {exc}")
+        return []
+
+
+def h7_table_exists(table_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            rows = h7_fetch_all(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_name = :table_name
+                LIMIT 1
+                """,
+                {"table_name": table_name},
+            )
+            return bool(rows)
+
+        rows = h7_fetch_all(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name=:table_name LIMIT 1",
+            {"table_name": table_name},
+        )
+        return bool(rows)
+    except Exception:
+        return False
+
+
+def h7_columns(table_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            rows = h7_fetch_all(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+                """,
+                {"table_name": table_name},
+            )
+            return {row.get("column_name") for row in rows}
+
+        rows = h7_fetch_all(f"PRAGMA table_info({table_name})")
+        return {row.get("name") for row in rows}
+    except Exception:
+        return set()
+
+
+def h7_parse_date(value):
+    if not value:
+        return None
+
+    raw = str(value).strip()
+
+    for cleanup in [
+        lambda item: item.replace("Z", "+00:00"),
+        lambda item: item.replace(" ", "T", 1) if " " in item and "T" not in item else item,
+    ]:
+        raw = cleanup(raw)
+
+    try:
+        dt = _h7_datetime.fromisoformat(raw)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=_h7_timezone.utc)
+        return dt.astimezone(_h7_timezone.utc)
+    except Exception:
+        pass
+
+    for fmt in ["%Y-%m-%d", "%m/%d/%Y", "%Y-%m-%d %H:%M:%S", "%m/%d/%Y %I:%M %p"]:
+        try:
+            return _h7_datetime.strptime(str(value).strip()[:19], fmt).replace(tzinfo=_h7_timezone.utc)
+        except Exception:
+            continue
+
+    return None
+
+
+def h7_pick(row, names):
+    for name in names:
+        if name in row and row.get(name):
+            return row.get(name)
+    return ""
+
+
+def h7_event_url(source, row):
+    item_id = row.get("id")
+
+    if source in {"events", "calendar_items"} and item_id:
+        return f"/events/{item_id}"
+
+    if source in {"battles", "battle_records"} and item_id:
+        return f"/battles/{item_id}"
+
+    return ""
+
+
+def h7_next_items():
+    now = _h7_datetime.now(_h7_timezone.utc)
+    end = now + _h7_timedelta(days=7)
+
+    sources = [
+        "events",
+        "calendar_items",
+        "battle_events",
+        "battles",
+        "battle_records",
+    ]
+
+    date_cols = [
+        "start_time",
+        "starts_at",
+        "start_at",
+        "event_date",
+        "date",
+        "scheduled_for",
+        "battle_date",
+        "created_at",
+    ]
+
+    title_cols = [
+        "title",
+        "event_name",
+        "name",
+        "battle_name",
+        "headline",
+    ]
+
+    location_cols = [
+        "location",
+        "venue",
+        "address",
+        "borough",
+        "scene",
+    ]
+
+    type_cols = [
+        "event_type",
+        "category",
+        "type",
+        "battle_type",
+    ]
+
+    items = []
+    seen = set()
+
+    for source in sources:
+        if not h7_table_exists(source):
+            continue
+
+        cols = h7_columns(source)
+
+        usable_date_cols = [col for col in date_cols if col in cols]
+
+        if not usable_date_cols:
+            continue
+
+        try:
+            rows = h7_fetch_all(f"SELECT * FROM {source} LIMIT 2000")
+        except Exception:
+            continue
+
+        for row in rows:
+            dt = None
+
+            for col in usable_date_cols:
+                dt = h7_parse_date(row.get(col))
+                if dt:
+                    break
+
+            if not dt:
+                continue
+
+            if dt < now or dt > end:
+                continue
+
+            title = h7_pick(row, title_cols) or "Untitled LiteFeet item"
+            location = h7_pick(row, location_cols)
+            item_type = h7_pick(row, type_cols) or source.replace("_", " ").title()
+            url = h7_event_url(source, row)
+
+            key = (str(dt), str(title).lower(), str(location).lower())
+
+            if key in seen:
+                continue
+
+            seen.add(key)
+
+            items.append({
+                "date": dt,
+                "title": title,
+                "location": location,
+                "type": item_type,
+                "url": url,
+            })
+
+    items.sort(key=lambda item: item["date"])
+    return items[:12]
+
+
+def h7_date_label(dt):
+    try:
+        return dt.strftime("%a %m/%d")
+    except Exception:
+        return "—"
+
+
+def h7_time_label(dt):
+    try:
+        return dt.strftime("%-I:%M %p")
+    except Exception:
+        try:
+            return dt.strftime("%I:%M %p").lstrip("0")
+        except Exception:
+            return ""
+
+
+def h7_escape(value):
+    return _h7_html.escape(str(value or ""), quote=True)
+
+
+def h7_next7_section():
+    items = h7_next_items()
+
+    if items:
+        rows = ""
+
+        for item in items:
+            title = h7_escape(item.get("title"))
+            location = h7_escape(item.get("location") or "Location TBA")
+            item_type = h7_escape(item.get("type") or "LiteFeet")
+            date = h7_escape(h7_date_label(item.get("date")))
+            time = h7_escape(h7_time_label(item.get("date")))
+            url = item.get("url") or ""
+
+            if url:
+                title_html = f'<a href="{h7_escape(url)}">{title}</a>'
+            else:
+                title_html = title
+
+            rows += f"""
+                <tr>
+                    <td><strong>{date}</strong><small>{time}</small></td>
+                    <td>{title_html}</td>
+                    <td>{item_type}</td>
+                    <td>{location}</td>
+                </tr>
+            """
+    else:
+        rows = """
+            <tr>
+                <td colspan="4" class="home-next7-empty">
+                    No scheduled LiteFeet items in the next 7 days yet.
+                </td>
+            </tr>
+        """
+
+    return f"""
+    <section class="home-next7-section" data-home-next7>
+        <div class="home-next7-heading">
+            <div>
+                <p class="eyebrow">Next 7 Days</p>
+                <h2>Next 7 Days in LiteFeet</h2>
+            </div>
+            <p class="home-next7-note">Small public preview while the full Calendar + Events pages are pinned for rebuild.</p>
+        </div>
+
+        <div class="home-next7-table-wrap">
+            <table class="home-next7-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Item</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    """
+
+
+def h7_home_layout_css_js():
+    return """
+    <style>
+        body[data-home-layout-cleanup="1"] main > section:first-of-type .hero-actions,
+        body[data-home-layout-cleanup="1"] .page-hero .hero-actions {
+            display: none !important;
+        }
+
+        body[data-home-layout-cleanup="1"] .homepage-prompt-widget {
+            margin-top: 22px !important;
+            margin-bottom: 26px !important;
+        }
+
+        body[data-home-layout-cleanup="1"] .home-next7-section {
+            max-width: 1120px;
+            margin: 30px auto 48px;
+            padding: 0 20px;
+        }
+
+        body[data-home-layout-cleanup="1"] .home-next7-heading {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            align-items: end;
+            margin-bottom: 14px;
+        }
+
+        body[data-home-layout-cleanup="1"] .home-next7-heading h2 {
+            margin: 4px 0 0;
+            color: var(--accent-color, #e8c65a);
+            font-size: clamp(1.65rem, 4vw, 3rem);
+        }
+
+        body[data-home-layout-cleanup="1"] .home-next7-note {
+            max-width: 390px;
+            margin: 0;
+            opacity: 0.72;
+            text-align: right;
+        }
+
+        body[data-home-layout-cleanup="1"] .home-next7-table-wrap {
+            border: 1px solid rgba(232, 198, 90, 0.22);
+            border-radius: 16px;
+            overflow: auto;
+            background: rgba(255, 255, 255, 0.032);
+        }
+
+        body[data-home-layout-cleanup="1"] .home-next7-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.92rem;
+        }
+
+        body[data-home-layout-cleanup="1"] .home-next7-table th,
+        body[data-home-layout-cleanup="1"] .home-next7-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        body[data-home-layout-cleanup="1"] .home-next7-table th {
+            color: var(--accent-color, #e8c65a);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.72rem;
+            background: rgba(0,0,0,0.28);
+        }
+
+        body[data-home-layout-cleanup="1"] .home-next7-table td strong {
+            color: var(--accent-color, #e8c65a);
+        }
+
+        body[data-home-layout-cleanup="1"] .home-next7-table td small {
+            display: block;
+            margin-top: 3px;
+            opacity: 0.7;
+        }
+
+        body[data-home-layout-cleanup="1"] .home-next7-table a {
+            color: var(--accent-color, #e8c65a);
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+        body[data-home-layout-cleanup="1"] .home-next7-empty {
+            text-align: center;
+            opacity: 0.76;
+            padding: 22px !important;
+        }
+
+        @media (max-width: 800px) {
+            body[data-home-layout-cleanup="1"] .home-next7-heading {
+                display: grid;
+            }
+
+            body[data-home-layout-cleanup="1"] .home-next7-note {
+                text-align: left;
+            }
+
+            body[data-home-layout-cleanup="1"] .home-next7-table {
+                min-width: 720px;
+            }
+        }
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.body.setAttribute("data-home-layout-cleanup", "1");
+
+            document.querySelectorAll("main section, .content-section").forEach(function (section) {
+                const text = (section.innerText || "").toLowerCase();
+
+                const isOldCalendarBlock =
+                    text.includes("calendar") &&
+                    text.includes("next up") &&
+                    (
+                        text.includes("submit what is missing") ||
+                        text.includes("add calendar item") ||
+                        text.includes("open calendar")
+                    );
+
+                if (isOldCalendarBlock) {
+                    section.remove();
+                }
+            });
+        });
+    </script>
+    """
+
+
+@app.after_request
+def h7_inject_home_layout_cleanup(response):
+    try:
+        if request.method != "GET":
+            return response
+
+        if request.path not in {"/", ""}:
+            return response
+
+        if response.status_code != 200:
+            return response
+
+        content_type = response.headers.get("Content-Type", "")
+        if "text/html" not in content_type:
+            return response
+
+        html = response.get_data(as_text=True)
+
+        if "data-home-next7" not in html:
+            next7 = h7_next7_section()
+            if "</main>" in html:
+                html = html.replace("</main>", next7 + "\n</main>", 1)
+            elif "</body>" in html:
+                html = html.replace("</body>", next7 + "\n</body>", 1)
+            else:
+                html += next7
+
+        if "data-home-layout-cleanup" not in html:
+            cleanup = h7_home_layout_css_js()
+            if "</body>" in html:
+                html = html.replace("</body>", cleanup + "\n</body>", 1)
+            else:
+                html += cleanup
+
+        response.set_data(html)
+        response.headers["Content-Length"] = str(len(response.get_data()))
+    except Exception as exc:
+        print(f"HOME_LAYOUT_CLEANUP_FAILED: {type(exc).__name__}: {exc}")
+
+    return response
+
+
+def h7_calendar_rebuild_pin():
+    return redirect("/")
+
+
+try:
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) in {"/calendar", "/events/calendar"}:
+            app.view_functions[rule.endpoint] = h7_calendar_rebuild_pin
+            print(f"CALENDAR PAGE PINNED FOR REBUILD: {rule.rule} -> {rule.endpoint}")
+
+    print("HOME PROMPT VIDEO NEXT7 LAYOUT active")
+except Exception as exc:
+    print(f"HOME PROMPT VIDEO NEXT7 LAYOUT setup failed: {type(exc).__name__}: {exc}")
 
