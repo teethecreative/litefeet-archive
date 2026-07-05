@@ -129,8 +129,22 @@
     </div>
 
     {% if active_tab == "dancers-choice" and dca_section_rows %}
-        <div class="dca-section-stack">
-            {% for section in dca_section_rows %}
+        <details class="dca-year-card" open>
+            <summary class="dca-year-card-summary">
+                <div>
+                    <p class="eyebrow">Dancer’s Choice Awards Archive</p>
+                    <h3>Dancer’s Choice Awards 2023</h3>
+                    <p>
+                        Community-selected categories, official winners, nominees, and public vote counts from the 2023 Dancer’s Choice Awards.
+                    </p>
+                </div>
+
+                <span>2023 Results</span>
+            </summary>
+
+            <div class="dca-year-card-body">
+                <div class="dca-section-stack">
+                    {% for section in dca_section_rows %}
                 <details class="dca-award-section" {% if loop.first %}open{% endif %}>
                     <summary>
                         <div>
@@ -243,8 +257,10 @@
                         </div>
                     {% endif %}
                 </details>
-            {% endfor %}
-        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </details>
     {% elif award_rows %}
         {% if view_mode == "list" %}
             <div class="release-table-wrap">
@@ -442,6 +458,56 @@
         margin-left: 6px;
         font-size: 0.68rem;
         padding: 2px 6px;
+    }
+
+    .dca-year-card {
+        border: 1px solid rgba(232, 198, 90, 0.26);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.03);
+        overflow: hidden;
+        box-shadow: 0 18px 55px rgba(0, 0, 0, 0.18);
+    }
+
+    .dca-year-card-summary {
+        cursor: pointer;
+        list-style: none;
+        padding: 22px;
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        align-items: center;
+        border-bottom: 1px solid rgba(232, 198, 90, 0.16);
+        background: radial-gradient(circle at top left, rgba(232, 198, 90, 0.1), rgba(255,255,255,0.025) 38%, rgba(0,0,0,0.18));
+    }
+
+    .dca-year-card-summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .dca-year-card-summary h3 {
+        margin: 4px 0 6px;
+        color: var(--accent-color, #e8c65a);
+        font-size: clamp(1.6rem, 4vw, 2.6rem);
+    }
+
+    .dca-year-card-summary p {
+        margin: 0;
+        max-width: 760px;
+        opacity: 0.82;
+        line-height: 1.45;
+    }
+
+    .dca-year-card-summary > span {
+        border: 1px solid rgba(232, 198, 90, 0.32);
+        color: var(--accent-color, #e8c65a);
+        border-radius: 999px;
+        padding: 8px 14px;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .dca-year-card-body {
+        padding: 18px;
     }
 
     .dca-section-stack {
@@ -650,6 +716,7 @@
             display: grid;
         }
 
+        .dca-year-card-summary,
         .dca-award-section summary,
         .dca-category-row summary {
             display: grid;
