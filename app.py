@@ -25302,3 +25302,402 @@ def fh_force_home_prompt_and_remove_missing(response):
 
     return response
 
+# --- FINAL HOME PROMPT MISSING CLEANUP PATCH ---
+# Home page final cleanup:
+# - force the question prompt onto the top of the home page
+# - remove "Add what the archive is missing"
+# - remove old calendar/next-up home block if present
+# - keep video playlist before Next 7 Days
+
+import re as _fhp_re
+import html as _fhp_html
+import random as _fhp_random
+
+try:
+    from sqlalchemy import text as _fhp_text
+except Exception:
+    _fhp_text = text
+
+
+def fhp_execute(query, params=None):
+    params = params or {}
+    with engine.begin() as conn:
+        conn.execute(_fhp_text(query), params)
+
+
+def fhp_fetch_all(query, params=None):
+    params = params or {}
+    try:
+        with engine.connect() as conn:
+            return [dict(row) for row in conn.execute(_fhp_text(query), params).mappings().all()]
+    except Exception:
+        return []
+
+
+def fhp_fetch_one(query, params=None):
+    rows = fhp_fetch_all(query, params or {})
+    return rows[0] if rows else None
+
+
+def fhp_ensure_prompt_tables():
+    if engine.dialect.name.startswith("postgres"):
+        fhp_execute("""
+            CREATE TABLE IF NOT EXISTS homepage_prompts (
+                id SERIAL PRIMARY KEY,
+                question TEXT NOT NULL,
+                prompt_type TEXT DEFAULT 'question',
+                is_active INTEGER DEFAULT 1,
+                display_order INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                archived_at TEXT
+            )
+        """)
+
+        fhp_execute("""
+            CREATE TABLE IF NOT EXISTS homepage_prompt_answers (
+                id SERIAL PRIMARY KEY,
+                prompt_id INTEGER,
+                question TEXT,
+                answer_text TEXT NOT NULL,
+                visitor_key TEXT,
+                user_id TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+    else:
+        fhp_execute("""
+            CREATE TABLE IF NOT EXISTS homepage_prompts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                question TEXT NOT NULL,
+                prompt_type TEXT DEFAULT 'question',
+                is_active INTEGER DEFAULT 1,
+                display_order INTEGER DEFAULT 0,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                archived_at TEXT
+            )
+        """)
+
+        fhp_execute("""
+            CREATE TABLE IF NOT EXISTS homepage_prompt_answers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                prompt_id INTEGER,
+                question TEXT,
+                answer_text TEXT NOT NULL,
+                visitor_key TEXT,
+                user_id TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+
+def fhp_seed_minimum_prompt():
+    fhp_ensure_prompt_tables()
+
+    existing = fhp_fetch_one("SELECT id FROM homepage_prompts LIMIT 1")
+
+    if existing:
+        return
+
+    starter_questions = [
+        "What is LiteFeet?",
+        "Where did LiteFeet come from?",
+        "What makes LiteFeet different from other dance styles?",
+        "What LiteFeet moment should every new dancer know?",
+        "What is missing from LiteFeet history online?",
+    ]
+
+    for index, question in enumerate(starter_questions, start=1):
+        fhp_execute(
+            """
+            INSERT INTO homepage_prompts (
+                question,
+                prompt_type,
+                is_active,
+                display_order,
+                created_at
+            )
+            VALUES (
+                :question,
+                'question',
+                1,
+                :display_order,
+                CURRENT_TIMESTAMP
+            )
+            """,
+            {
+                "question": question,
+                "display_order": index,
+            },
+        )
+
+
+def fhp_pick_prompt():
+    fhp_seed_minimum_prompt()
+
+    prompts = fhp_fetch_all(
+        """
+        SELECT *
+        FROM homepage_prompts
+        WHERE is_active = 1
+          AND archived_at IS NULL
+        ORDER BY display_order ASC, id ASC
+        LIMIT 500
+        """
+    )
+
+    if not prompts:
+        return None
+
+    answered = set(str(x) for x in session.get("homepage_prompt_answered_ids", []))
+    available = [p for p in prompts if str(p.get("id")) not in answered]
+
+    if not available:
+        available = prompts
+
+    return _fhp_random.choice(available)
+
+
+def fhp_escape(value):
+    return _fhp_html.escape(str(value or ""), quote=True)
+
+
+def fhp_prompt_widget():
+    try:
+        if session.get("homepage_prompt_answered_once") and not session.get("homepage_prompt_answer_more"):
+            return """
+            <section class="homepage-prompt-widget final-home-prompt-widget">
+                <div class="homepage-prompt-inner">
+                    <div>
+                        <p class="eyebrow">LiteFeet Ledger Question</p>
+                        <h2>Thanks for adding your answer.</h2>
+                        <p>Your response was saved for Ledger review.</p>
+                    </div>
+                    <a class="button secondary homepage-answer-more-button" href="/home-prompt/more">Answer more</a>
+                </div>
+            </section>
+            """ + fhp_prompt_css()
+
+        session.pop("homepage_prompt_answer_more", None)
+
+        prompt = fhp_pick_prompt()
+
+        if not prompt:
+            return ""
+
+        prompt_id = fhp_escape(prompt.get("id"))
+        question = fhp_escape(prompt.get("question"))
+
+        return f"""
+        <section class="homepage-prompt-widget final-home-prompt-widget">
+            <div class="homepage-prompt-inner">
+                <div class="homepage-prompt-copy">
+                    <p class="eyebrow">LiteFeet Ledger Question</p>
+                    <h2>{question}</h2>
+                    <p>Answer one community question. Your response helps build the Ledger with real LiteFeet knowledge.</p>
+                </div>
+
+                <form method="post" action="/home-prompt/answer" class="homepage-prompt-form">
+                    <input type="hidden" name="prompt_id" value="{prompt_id}">
+                    <textarea name="answer_text" rows="4" placeholder="Type your answer here..." required></textarea>
+                    <div class="homepage-prompt-actions">
+                        <button class="button primary" type="submit">Submit answer</button>
+                        <a class="button secondary homepage-answer-more-button" href="/home-prompt/more">Answer more</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+        """ + fhp_prompt_css()
+    except Exception as exc:
+        print(f"FINAL_HOME_PROMPT_WIDGET_FAILED: {type(exc).__name__}: {exc}")
+        return ""
+
+
+def fhp_prompt_css():
+    return """
+    <style>
+        .final-home-prompt-widget {
+            max-width: 1120px;
+            margin: 24px auto 34px;
+            padding: 0 20px;
+        }
+
+        .final-home-prompt-widget .homepage-prompt-inner {
+            border: 1px solid rgba(232, 198, 90, 0.28);
+            background: radial-gradient(circle at top left, rgba(232, 198, 90, 0.14), rgba(255,255,255,0.035) 36%, rgba(0,0,0,0.22));
+            border-radius: 20px;
+            padding: 22px;
+            display: grid;
+            grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+            gap: 20px;
+            align-items: start;
+            box-shadow: 0 20px 55px rgba(0,0,0,0.22);
+        }
+
+        .final-home-prompt-widget h2 {
+            margin: 4px 0 8px;
+            color: var(--accent-color, #e8c65a);
+            font-size: clamp(1.55rem, 3vw, 2.4rem);
+            line-height: 1.08;
+        }
+
+        .final-home-prompt-widget p {
+            margin: 0;
+            opacity: 0.82;
+        }
+
+        .homepage-prompt-form {
+            display: grid;
+            gap: 12px;
+        }
+
+        .homepage-prompt-form textarea {
+            width: 100%;
+            min-height: 126px;
+            border-radius: 14px;
+            border: 1px solid rgba(232, 198, 90, 0.34);
+            background: rgba(0, 0, 0, 0.32);
+            color: #fff;
+            padding: 12px;
+            font: inherit;
+            resize: vertical;
+        }
+
+        .homepage-prompt-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        @media (max-width: 800px) {
+            .final-home-prompt-widget .homepage-prompt-inner {
+                grid-template-columns: 1fr;
+            }
+
+            .homepage-prompt-actions .button,
+            .homepage-answer-more-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+    """
+
+
+def fhp_remove_containing_block(html, phrase):
+    lowered = html.lower()
+    phrase = phrase.lower()
+
+    index = lowered.find(phrase)
+
+    if index == -1:
+        return html
+
+    # Prefer removing the full section containing the phrase.
+    section_start = lowered.rfind("<section", 0, index)
+    section_end = lowered.find("</section>", index)
+
+    if section_start != -1 and section_end != -1:
+        return html[:section_start] + html[section_end + len("</section>"):]
+
+    # Fallback: remove the nearest card/div block.
+    div_start = lowered.rfind("<div", 0, index)
+    div_end = lowered.find("</div>", index)
+
+    if div_start != -1 and div_end != -1:
+        return html[:div_start] + html[div_end + len("</div>"):]
+
+    return html
+
+
+def fhp_remove_old_home_blocks(html):
+    phrases = [
+        "add what the archive is missing",
+        "submit what is missing",
+        "add calendar item",
+        "open calendar",
+        "no upcoming calendar items yet",
+    ]
+
+    for phrase in phrases:
+        while phrase in html.lower():
+            new_html = fhp_remove_containing_block(html, phrase)
+
+            if new_html == html:
+                break
+
+            html = new_html
+
+    return html
+
+
+def fhp_remove_duplicate_or_old_prompt(html):
+    # Remove old broken prompt/widget duplicates, then we insert one clean prompt.
+    blocks = _fhp_re.findall(
+        r"<section\b[^>]*(?:homepage-prompt-widget|final-home-prompt-widget)[^>]*>.*?</section>",
+        html,
+        flags=_fhp_re.IGNORECASE | _fhp_re.DOTALL,
+    )
+
+    for block in blocks:
+        html = html.replace(block, "", 1)
+
+    return html
+
+
+def fhp_insert_prompt_before_first_real_section(html):
+    widget = fhp_prompt_widget()
+
+    if not widget:
+        return html
+
+    main_match = _fhp_re.search(r"<main[^>]*>", html, flags=_fhp_re.IGNORECASE)
+
+    if main_match:
+        insert_at = main_match.end()
+        return html[:insert_at] + "\n" + widget + "\n" + html[insert_at:]
+
+    body_match = _fhp_re.search(r"<body[^>]*>", html, flags=_fhp_re.IGNORECASE)
+
+    if body_match:
+        insert_at = body_match.end()
+        return html[:insert_at] + "\n" + widget + "\n" + html[insert_at:]
+
+    return widget + html
+
+
+@app.after_request
+def fhp_final_home_prompt_cleanup(response):
+    try:
+        if request.method != "GET":
+            return response
+
+        if request.path not in {"/", ""}:
+            return response
+
+        if response.status_code != 200:
+            return response
+
+        if "text/html" not in response.headers.get("Content-Type", ""):
+            return response
+
+        html = response.get_data(as_text=True)
+
+        html = fhp_remove_old_home_blocks(html)
+        html = fhp_remove_duplicate_or_old_prompt(html)
+        html = fhp_insert_prompt_before_first_real_section(html)
+
+        response.set_data(html)
+        response.headers["Content-Length"] = str(len(response.get_data()))
+    except Exception as exc:
+        print(f"FINAL_HOME_PROMPT_CLEANUP_FAILED: {type(exc).__name__}: {exc}")
+
+    return response
+
+
+try:
+    fhp_seed_minimum_prompt()
+    print("FINAL HOME PROMPT MISSING CLEANUP active")
+except Exception as exc:
+    print(f"FINAL HOME PROMPT MISSING CLEANUP setup failed: {type(exc).__name__}: {exc}")
+
