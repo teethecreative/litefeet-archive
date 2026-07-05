@@ -15,7 +15,7 @@
         <div>
             <p class="eyebrow">Awards</p>
             <h1>Awards</h1>
-            <p>Browse award records by archive: LiteFeet Awards and Dancer’s Choice Awards.</p>
+            <p>Explore the two award systems connected to LiteFeet culture: the LiteFeet Awards weekend and the community-voted Dancer’s Choice Awards.</p>
         </div>
 
         <div class="hero-actions">
@@ -27,14 +27,43 @@
     <nav class="award-subnav" aria-label="Award archive navigation">
         <a class="award-subnav-link {% if active_tab == 'litefeet' %}active{% endif %}" href="/awards/litefeet">
             <span>LiteFeet Awards</span>
-            <strong>{{ litefeet_count if litefeet_count is defined else 0 }}</strong>
         </a>
 
         <a class="award-subnav-link {% if active_tab == 'dancers-choice' %}active{% endif %}" href="/awards/dancers-choice">
             <span>Dancer’s Choice Awards</span>
-            <strong>{{ dancers_choice_count if dancers_choice_count is defined else 0 }}</strong>
         </a>
     </nav>
+
+    <div class="award-system-info-grid">
+        <article class="award-system-info-card">
+            <p class="eyebrow">LiteFeet Awards</p>
+            <h2>LiteFeet Awards Weekend</h2>
+            <p>
+                The LiteFeet Awards is a full weekend dedicated to LiteFeet. The weekend usually runs Friday through Sunday with a press conference, a battle event, and the awards ceremony.
+            </p>
+            <p>
+                The press conference creates space for Q&amp;A, community conversation, reveals, and producer battles. The battle event is usually focused on main-event battles and some kind of tournament. The awards ceremony is a full program with physical awards, performances, speeches, and recognition across the culture.
+            </p>
+            <p>
+                Winners are selected by a panel connected to the LiteFeet Awards system.
+            </p>
+        </article>
+
+        <article class="award-system-info-card">
+            <p class="eyebrow">Dancer’s Choice Awards</p>
+            <h2>Community-Voted Awards</h2>
+            <p>
+                The Dancer’s Choice Awards was created as a response to people feeling like they had no say in the LiteFeet Awards process.
+            </p>
+            <p>
+                DCA gives the community more control: people help choose the categories, nominate dancers, and vote for who they want to win.
+            </p>
+            <p>
+                Dancer’s Choice records, nominees, winners, and public vote counts live in their own section so they do not get mixed into LiteFeet Awards records.
+            </p>
+        </article>
+    </div>
+
 </section>
 
 <section class="homepage-section award-filter-section">
@@ -255,8 +284,9 @@
         padding: 16px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         gap: 12px;
+        text-align: center;
     }
 
     .award-subnav-link span {
@@ -407,10 +437,40 @@
         min-width: 880px;
     }
 
+
+    .award-system-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+    }
+
+    .award-system-info-card {
+        border: 1px solid rgba(232, 198, 90, 0.18);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.035);
+        padding: 18px;
+        display: grid;
+        gap: 10px;
+    }
+
+    .award-system-info-card h2 {
+        margin: 0;
+        color: var(--accent-color, #e8c65a);
+        font-size: clamp(1.35rem, 3vw, 2rem);
+    }
+
+    .award-system-info-card p {
+        margin: 0;
+        line-height: 1.45;
+        opacity: 0.86;
+    }
+
     @media (max-width: 1000px) {
         .award-card-grid,
         .dca-category-grid,
-        .award-subnav {
+        .award-subnav,
+        .award-system-info-grid {
             grid-template-columns: 1fr;
         }
 
