@@ -175,26 +175,6 @@
 </section>
 
 {% if not is_landing %}
-<section class="homepage-section award-filter-section">
-    <form method="GET" action="{% if active_tab == 'dancers-choice' %}/awards/dancers-choice{% else %}/awards/litefeet{% endif %}" class="award-filter-form">
-        <label>
-            Search
-            <input type="search" name="q" value="{{ search_query }}" placeholder="Winner, nominee, year, category...">
-        </label>
-
-        <label>
-            View
-            <select name="view">
-                <option value="cards" {% if view_mode == "cards" %}selected{% endif %}>Cards</option>
-                <option value="list" {% if view_mode == "list" %}selected{% endif %}>List</option>
-            </select>
-        </label>
-
-        <button class="button secondary" type="submit">Apply</button>
-        <a class="button secondary" href="{% if active_tab == 'dancers-choice' %}/awards/dancers-choice{% else %}/awards/litefeet{% endif %}">Reset</a>
-    </form>
-</section>
-
 <section class="homepage-section">
     <div class="section-heading-row">
         <div>
@@ -230,13 +210,13 @@
             <div class="dca-round-heading">
                 <div>
                     <p class="eyebrow">This Year’s Dancer’s Choice Awards</p>
-                    <h3>Help build this year’s categories</h3>
+                    <h3>Build this year’s categories</h3>
                     <p>
                         The first Dancer’s Choice Awards had <strong>{{ dca_first_category_total or 36 }} categories</strong>,
                         <strong>{{ dca_first_nominee_entries or 206 }} nominee entries</strong>,
                         <strong>{{ dca_first_nomination_participants or 70 }} nomination participants</strong>,
                         and <strong>{{ dca_first_voting_participants or 79 }} voting participants</strong>.
-                        This year, the community is helping decide how many categories make sense, which categories should return, and what new awards should be added.
+                        Now the community is deciding the category count, what should return, and what new awards should be added.
                     </p>
                 </div>
             </div>
@@ -299,9 +279,9 @@
                 </div>
             {% else %}
                 <form method="post" action="/awards/dancers-choice/category-round" class="dca-round-form">
-                    <div class="dca-form-block">
+                    <div class="dca-form-block dca-form-block-compact">
                         <p class="eyebrow">Required</p>
-                        <h4>Your email</h4>
+                        <h4>Email</h4>
                         <label>
                             Email address
                             <input type="email" name="email" required placeholder="you@example.com">
@@ -311,11 +291,11 @@
                         </p>
                     </div>
 
-                    <div class="dca-form-block">
+                    <div class="dca-form-block dca-form-block-compact">
                         <p class="eyebrow">Question 1</p>
                         <h4>How many categories should we do this year?</h4>
                         <label>
-                            Category count
+                            Number of categories
                             <input type="number" name="suggested_category_count" min="1" max="100" step="1" required placeholder="Example: 24">
                         </label>
                         <p class="small-note">
@@ -323,9 +303,9 @@
                         </p>
                     </div>
 
-                    <div class="dca-form-block">
+                    <div class="dca-form-block dca-form-block-tight">
                         <p class="eyebrow">Question 2</p>
-                        <h4>Which 2023 categories should come back?</h4>
+                        <h4>Pick up to 5 categories to bring back</h4>
                         <p class="small-note">
                             Select up to {{ dca_round_prior_max or 5 }} old categories.
                         </p>
@@ -344,7 +324,7 @@
                         </p>
                     </div>
 
-                    <div class="dca-form-block">
+                    <div class="dca-form-block dca-form-block-tight">
                         <p class="eyebrow">Question 3</p>
                         <h4>Suggest new categories</h4>
                         <p class="small-note">
@@ -1292,5 +1272,156 @@
             width: 100%;
         }
     }
+
+    /* Awards cleanup: no public search bar */
+    .award-filter-section {
+        display: none !important;
+    }
+
+    /* DCA voting round: flatter, tighter, less giant-card feeling */
+    .dca-round-card {
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin-bottom: 28px !important;
+        box-shadow: none !important;
+    }
+
+    .dca-round-heading {
+        border-left: 4px solid var(--accent-color, #e8c65a);
+        padding-left: 16px;
+        margin-bottom: 4px;
+    }
+
+    .dca-round-heading h3 {
+        font-size: clamp(2rem, 5vw, 4rem) !important;
+        line-height: 0.95;
+        letter-spacing: 0.02em;
+    }
+
+    .dca-round-heading p {
+        max-width: 980px !important;
+        font-size: 1rem;
+    }
+
+    .dca-round-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin: 10px 0 4px;
+    }
+
+    .dca-round-stat-grid article {
+        min-height: 112px;
+        border: 1px solid rgba(232, 198, 90, 0.24) !important;
+        border-radius: 18px !important;
+        background: linear-gradient(180deg, rgba(232, 198, 90, 0.09), rgba(255,255,255,0.025)) !important;
+        padding: 16px !important;
+        display: grid;
+        align-content: center;
+    }
+
+    .dca-round-stat-grid strong {
+        font-size: clamp(2.4rem, 6vw, 4.2rem) !important;
+        line-height: 0.9 !important;
+        letter-spacing: -0.04em;
+        margin-bottom: 10px !important;
+    }
+
+    .dca-round-stat-grid span {
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        line-height: 1.15;
+    }
+
+    .dca-round-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px !important;
+        align-items: start;
+    }
+
+    .dca-form-block {
+        border-radius: 16px !important;
+        padding: 14px !important;
+        gap: 9px !important;
+    }
+
+    .dca-form-block-compact {
+        min-height: 180px;
+    }
+
+    .dca-form-block-tight {
+        grid-column: 1 / -1;
+    }
+
+    .dca-form-block h4 {
+        font-size: 1.08rem !important;
+        margin-top: -2px !important;
+    }
+
+    .dca-form-block .small-note {
+        margin: 0;
+        font-size: 0.88rem;
+        opacity: 0.74;
+    }
+
+    .dca-form-block input,
+    .dca-form-block textarea {
+        padding: 9px 10px !important;
+        border-radius: 10px !important;
+    }
+
+    .dca-prior-category-grid {
+        max-height: 150px;
+        overflow: auto;
+        padding-right: 4px;
+    }
+
+    .dca-category-chip span {
+        padding: 6px 10px !important;
+        font-size: 0.8rem !important;
+    }
+
+    .dca-new-category-item {
+        padding: 12px !important;
+        gap: 10px !important;
+    }
+
+    .dca-new-category-item textarea {
+        min-height: 86px !important;
+    }
+
+    .dca-builder-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+    }
+
+    .dca-builder-actions .button {
+        width: auto !important;
+        min-width: 220px;
+    }
+
+    .dca-round-results-card {
+        margin-top: 8px;
+    }
+
+    @media (max-width: 900px) {
+        .dca-round-form,
+        .dca-round-stat-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .dca-form-block-compact {
+            min-height: auto;
+        }
+
+        .dca-builder-actions .button {
+            width: 100% !important;
+        }
+    }
+
 </style>
 {% endblock %}
