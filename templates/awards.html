@@ -1513,5 +1513,128 @@
         }
     }
 
+
+    /* --- AWARDS GLOBAL PALETTE BRIDGE ---
+       Awards template styles load after global CSS, so this keeps Awards aligned
+       with the cleaned site-wide palette without changing layout.
+    */
+    .awards-page,
+    .homepage-section {
+        background: transparent !important;
+        color: #F2EFE6 !important;
+        box-shadow: none !important;
+    }
+
+    .award-system-info-card,
+    .award-card,
+    .dca-category-card,
+    .dca-round-stat-grid article,
+    .dca-form-block,
+    .dca-new-category-item,
+    .dca-round-results-card,
+    .dca-results-panel,
+    .dca-year-card,
+    .dca-award-section,
+    .dca-category-row,
+    .release-table-wrap,
+    .dca-nominee-table-wrap,
+    .empty-state,
+    .compact-empty {
+        background: #F2EFE6 !important;
+        color: #0A0A0A !important;
+        border: 1px solid rgba(138, 111, 42, 0.46) !important;
+        box-shadow: 0 14px 32px rgba(0, 0, 0, 0.30) !important;
+    }
+
+    .award-system-info-card *,
+    .award-card *,
+    .dca-category-card *,
+    .dca-round-stat-grid article *,
+    .dca-form-block *,
+    .dca-new-category-item *,
+    .dca-round-results-card *,
+    .dca-results-panel *,
+    .dca-year-card *,
+    .dca-award-section *,
+    .dca-category-row *,
+    .release-table-wrap *,
+    .dca-nominee-table-wrap *,
+    .empty-state *,
+    .compact-empty * {
+        color: #0A0A0A !important;
+    }
+
+    .award-system-info-card h2,
+    .award-card h3,
+    .dca-category-card h3,
+    .dca-round-stat-grid strong,
+    .dca-form-block h4,
+    .dca-round-results-card h3,
+    .dca-results-panel h4,
+    .dca-year-card h3,
+    .dca-award-section h3,
+    .dca-category-row h4 {
+        color: #8A6F2A !important;
+    }
+
+    .dca-round-card {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        color: #F2EFE6 !important;
+    }
+
+    .dca-round-heading,
+    .dca-round-heading *,
+    .awards-main-blurb,
+    .section-heading-row p {
+        color: rgba(242, 239, 230, 0.84) !important;
+    }
+
+    .dca-round-heading h3,
+    .awards-page h1,
+    .awards-page h2,
+    .homepage-section > .section-heading-row h2 {
+        color: #E3C66A !important;
+    }
+
+    .dca-form-block input,
+    .dca-form-block textarea,
+    .dca-form-block select {
+        background: #F2EFE6 !important;
+        color: #0A0A0A !important;
+        border-color: rgba(138, 111, 42, 0.46) !important;
+    }
+
+    .dca-category-chip span,
+    .button.secondary,
+    button.secondary,
+    .award-subnav-link,
+    .dca-category-open-pill,
+    .award-status-pill,
+    .mini-result-pill,
+    .dca-results-type-pill,
+    .accordion-label {
+        background: #0A0A0A !important;
+        color: #E3C66A !important;
+        border-color: rgba(227, 198, 106, 0.52) !important;
+    }
+
+    .dca-category-chip input:checked + span,
+    .button.primary,
+    button.primary {
+        background: #E3C66A !important;
+        color: #0A0A0A !important;
+        border-color: #8A6F2A !important;
+    }
+
+    .dca-year-card > summary::after,
+    .dca-award-section > summary::after,
+    .dca-category-row > summary::after {
+        background: #0A0A0A !important;
+        color: #E3C66A !important;
+        border-color: rgba(227, 198, 106, 0.55) !important;
+    }
+
 </style>
 {% endblock %}
