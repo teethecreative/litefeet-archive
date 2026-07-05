@@ -21039,3 +21039,358 @@ app.register_error_handler(500, lf_final_500)
 
 print("LITEFEET ERROR TRANSLATOR + REAL FIXES PATCH active.")
 
+# --- LITEFEET MUSIC REAL RECORDS + HOME TIMING PATCH ---
+# Fixes /litefeet-music showing empty even when homepage has music records.
+# Also times / and /litefeet-music requests in logs so home slowness is visible.
+
+import time as _lf_music_time
+
+
+def lf_music_fetch_all_safe(query, params=None):
+    try:
+        return fetch_all(query, params or {})
+    except TypeError:
+        return fetch_all(query)
+    except Exception as exc:
+        print(f"LF_MUSIC_FETCH_FAILED: {type(exc).__name__}: {exc}")
+        return []
+
+
+def lf_music_fetch_one_safe(query, params=None):
+    rows = lf_music_fetch_all_safe(query, params or {})
+    return rows[0] if rows else None
+
+
+def lf_music_table_columns(table_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            rows = lf_music_fetch_all_safe(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+                """,
+                {"table_name": table_name},
+            )
+            return {row.get("column_name") for row in rows}
+
+        with engine.connect() as conn:
+            rows = conn.execute(text(f"PRAGMA table_info({table_name})")).mappings().all()
+        return {row.get("name") for row in rows}
+    except Exception as exc:
+        print(f"LF_MUSIC_COLUMN_LOOKUP_FAILED {table_name}: {type(exc).__name__}: {exc}")
+        return set()
+
+
+def lf_music_table_exists(table_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            row = lf_music_fetch_one_safe(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_name = :table_name
+                LIMIT 1
+                """,
+                {"table_name": table_name},
+            )
+            return bool(row)
+
+        with engine.connect() as conn:
+            row = conn.execute(
+                text("SELECT name FROM sqlite_master WHERE type='table' AND name=:name LIMIT 1"),
+                {"name": table_name},
+            ).mappings().first()
+        return bool(row)
+    except Exception:
+        return False
+
+
+def lf_music_value(row, *keys):
+    for key in keys:
+        try:
+            value = row.get(key)
+        except Exception:
+            value = None
+        if value not in [None, ""]:
+            return value
+    return ""
+
+
+def lf_music_records_query():
+    if not lf_music_table_exists("media_items"):
+        return []
+
+    cols = lf_music_table_columns("media_items")
+    if not cols:
+        return []
+
+    select_cols = []
+    for col in [
+        "id",
+        "title",
+        "artist",
+        "producer",
+        "media_type",
+        "type",
+        "category",
+        "platform",
+        "url",
+        "link",
+        "external_url",
+        "description",
+        "created_at",
+        "release_date",
+        "published_at",
+    ]:
+        if col in cols:
+            select_cols.append(col)
+
+    if not select_cols:
+        select_cols = ["id"]
+
+    searchable = [c for c in ["media_type", "type", "category", "title", "artist", "producer", "platform", "description"] if c in cols]
+
+    where = ""
+    params = {}
+
+    # Broad match so the page does not hide records because one old patch used the wrong media_type.
+    if searchable:
+        clauses = []
+        for idx, col in enumerate(searchable):
+            clauses.append(f"LOWER(COALESCE(CAST({col} AS TEXT), '')) LIKE :term_music")
+            clauses.append(f"LOWER(COALESCE(CAST({col} AS TEXT), '')) LIKE :term_release")
+            clauses.append(f"LOWER(COALESCE(CAST({col} AS TEXT), '')) LIKE :term_track")
+            clauses.append(f"LOWER(COALESCE(CAST({col} AS TEXT), '')) LIKE :term_beat")
+        where = "WHERE " + " OR ".join(clauses)
+        params = {
+            "term_music": "%music%",
+            "term_release": "%release%",
+            "term_track": "%track%",
+            "term_beat": "%beat%",
+        }
+
+    order_col = "created_at" if "created_at" in cols else "id"
+
+    rows = lf_music_fetch_all_safe(
+        f"""
+        SELECT {", ".join(select_cols)}
+        FROM media_items
+        {where}
+        ORDER BY {order_col} DESC
+        LIMIT 200
+        """,
+        params,
+    )
+
+    # If broad music search still returns zero, show all media_items rather than an empty page.
+    if not rows:
+        rows = lf_music_fetch_all_safe(
+            f"""
+            SELECT {", ".join(select_cols)}
+            FROM media_items
+            ORDER BY {order_col} DESC
+            LIMIT 200
+            """,
+            {},
+        )
+
+    records = []
+    for row in rows:
+        records.append({
+            "id": lf_music_value(row, "id"),
+            "title": lf_music_value(row, "title") or "Untitled music record",
+            "artist": lf_music_value(row, "artist"),
+            "producer": lf_music_value(row, "producer"),
+            "media_type": lf_music_value(row, "media_type", "type", "category"),
+            "platform": lf_music_value(row, "platform"),
+            "url": lf_music_value(row, "url", "link", "external_url"),
+            "description": lf_music_value(row, "description"),
+            "created_at": lf_music_value(row, "release_date", "published_at", "created_at"),
+        })
+
+    return records
+
+
+def litefeet_music_records_fixed():
+    q = (request.args.get("q") or "").strip().lower()
+    type_filter = (request.args.get("type") or "").strip().lower()
+    platform_filter = (request.args.get("platform") or "").strip().lower()
+
+    records = lf_music_records_query()
+
+    if q:
+        records = [
+            record for record in records
+            if q in " ".join([
+                str(record.get("title", "")),
+                str(record.get("artist", "")),
+                str(record.get("producer", "")),
+                str(record.get("description", "")),
+            ]).lower()
+        ]
+
+    if type_filter and type_filter not in ["all", "all music"]:
+        records = [
+            record for record in records
+            if type_filter in str(record.get("media_type", "")).lower()
+        ]
+
+    if platform_filter and platform_filter not in ["all", "all platforms"]:
+        records = [
+            record for record in records
+            if platform_filter in str(record.get("platform", "")).lower()
+        ]
+
+    platforms = sorted({
+        str(record.get("platform", "")).strip()
+        for record in records
+        if str(record.get("platform", "")).strip()
+    })
+
+    types = sorted({
+        str(record.get("media_type", "")).strip()
+        for record in records
+        if str(record.get("media_type", "")).strip()
+    })
+
+    return render_template(
+        "litefeet_music.html",
+        music_records=records,
+        records=records,
+        media_items=records,
+        releases=records,
+        total_music_records=len(records),
+        platforms=platforms,
+        music_types=types,
+        selected_q=q,
+        selected_type=type_filter,
+        selected_platform=platform_filter,
+    )
+
+
+try:
+    for _rule in list(app.url_map.iter_rules()):
+        if str(_rule) == "/litefeet-music":
+            app.view_functions[_rule.endpoint] = litefeet_music_records_fixed
+            print(f"LF_MUSIC_PAGE_OVERRIDE active for endpoint {_rule.endpoint}")
+except Exception as exc:
+    print(f"LF_MUSIC_PAGE_OVERRIDE_FAILED: {type(exc).__name__}: {exc}")
+
+
+@app.before_request
+def lf_route_timing_start():
+    try:
+        if request.path in ["/", "/litefeet-music"]:
+            g._lf_route_started_at = _lf_music_time.perf_counter()
+    except Exception:
+        pass
+
+
+@app.after_request
+def lf_route_timing_end(response):
+    try:
+        started = getattr(g, "_lf_route_started_at", None)
+        if started is not None:
+            elapsed_ms = int((_lf_music_time.perf_counter() - started) * 1000)
+            print(f"LF_ROUTE_TIMING path={request.path} status={response.status_code} elapsed_ms={elapsed_ms}")
+    except Exception:
+        pass
+    return response
+
+
+
+# --- FINAL FIX: LiteFeet Music uses same published music source as homepage ---
+# Home already shows music from media_items where media_type='music_release' and status='Published'.
+# This final override makes /litefeet-music use that same source instead of older stacked overrides.
+
+def litefeet_music_same_source_as_home():
+    q = (request.args.get("q") or "").strip().lower()
+    selected_platform = (request.args.get("platform") or "all").strip()
+    selected_type = (request.args.get("type") or "all").strip()
+
+    try:
+        records = fetch_all(
+            """
+            SELECT *
+            FROM media_items
+            WHERE media_type = 'music_release'
+              AND status = 'Published'
+            ORDER BY
+                CASE
+                    WHEN release_date IS NULL OR release_date = '' THEN created_at
+                    ELSE release_date
+                END DESC,
+                created_at DESC,
+                id DESC
+            LIMIT 800
+            """,
+            {},
+        ) or []
+    except Exception as exc:
+        print(f"FINAL_LITEFEET_MUSIC_SOURCE_FAILED: {type(exc).__name__}: {exc}")
+        records = []
+
+    rows = []
+    platforms = []
+    types = []
+
+    for row in records:
+        item = dict(row)
+
+        title = str(item.get("title") or "").lower()
+        artist = str(item.get("artist_or_creator") or item.get("artist") or item.get("artist_name") or "").lower()
+        producer = str(item.get("producer_name") or item.get("producer") or "").lower()
+        description = str(item.get("description") or "").lower()
+        platform = str(item.get("platform") or "").strip()
+        media_type = str(item.get("media_type") or "music_release").strip()
+
+        if platform and platform not in platforms:
+            platforms.append(platform)
+
+        if media_type and media_type not in types:
+            types.append(media_type)
+
+        if selected_platform.lower() not in {"", "all", "all platforms"}:
+            if platform.lower() != selected_platform.lower():
+                continue
+
+        if selected_type.lower() not in {"", "all", "all music"}:
+            if media_type.lower() != selected_type.lower():
+                continue
+
+        if q and q not in title and q not in artist and q not in producer and q not in description:
+            continue
+
+        item["artist"] = item.get("artist") or item.get("artist_or_creator") or item.get("artist_name") or ""
+        item["producer"] = item.get("producer") or item.get("producer_name") or ""
+        item["media_type"] = media_type
+        item["created_at"] = item.get("release_date") or item.get("created_at") or ""
+        item["url"] = item.get("url") or item.get("link") or item.get("external_url") or ""
+
+        rows.append(item)
+
+    return render_template(
+        "litefeet_music.html",
+        music_records=rows,
+        records=rows,
+        media_items=rows,
+        releases=rows,
+        latest_music_releases=rows,
+        release_radar=rows[:12],
+        total_music_records=len(rows),
+        platforms=platforms,
+        music_types=types,
+        selected_q=request.args.get("q", ""),
+        selected_type=selected_type,
+        selected_platform=selected_platform,
+    )
+
+
+try:
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/litefeet-music":
+            app.view_functions[rule.endpoint] = litefeet_music_same_source_as_home
+            print(f"FINAL /litefeet-music uses same source as homepage: {rule.endpoint}")
+except Exception as exc:
+    print(f"FINAL /litefeet-music homepage-source override failed: {type(exc).__name__}: {exc}")
