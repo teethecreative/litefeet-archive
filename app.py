@@ -20123,3 +20123,919 @@ app.register_error_handler(500, ledger_err_final_500)
 
 print("ERROR INBOX PRIVACY + DATE FORMAT PATCH active.")
 
+# --- LITEFEET ERROR TRANSLATOR + REAL FIXES PATCH ---
+# Fixes known production errors, improves error logging, adds stream-safe error inbox,
+# and adds plain-English error explanations.
+
+import os as _lf_err_os
+import re as _lf_err_re
+import unicodedata as _lf_err_unicodedata
+import traceback as _lf_err_traceback
+from datetime import datetime as _lf_err_datetime, timezone as _lf_err_timezone
+from zoneinfo import ZoneInfo as _lf_err_ZoneInfo
+
+try:
+    import requests as _lf_err_requests
+except Exception:
+    _lf_err_requests = None
+
+
+LITEFEET_ADMIN_TIMEZONE = _lf_err_os.environ.get("ADMIN_TIMEZONE", "America/New_York")
+
+
+# ---------------------------------------------------------------------------
+# Known bug fix 1:
+# Music release pages called normalize_name(), but production logs showed:
+# NameError: name 'normalize_name' is not defined
+# ---------------------------------------------------------------------------
+def normalize_name(value):
+    value = "" if value is None else str(value)
+    value = _lf_err_unicodedata.normalize("NFKD", value)
+    value = value.encode("ascii", "ignore").decode("ascii")
+    value = value.lower().strip()
+    value = value.replace("&", " and ")
+    value = _lf_err_re.sub(r"[^a-z0-9]+", " ", value)
+    value = _lf_err_re.sub(r"\s+", " ", value).strip()
+    return value
+
+
+# ---------------------------------------------------------------------------
+# Small DB wrappers that tolerate older helper signatures.
+# ---------------------------------------------------------------------------
+def lf_err_execute(query, params=None):
+    try:
+        return execute_query(query, params or {})
+    except TypeError:
+        return execute_query(query)
+
+
+def lf_err_fetch_all(query, params=None):
+    try:
+        return fetch_all(query, params or {})
+    except TypeError:
+        return fetch_all(query)
+
+
+def lf_err_fetch_one(query, params=None):
+    rows = lf_err_fetch_all(query, params or {})
+    return rows[0] if rows else None
+
+
+def lf_err_column_exists(table_name, column_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            row = lf_err_fetch_one(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+                  AND column_name = :column_name
+                LIMIT 1
+                """,
+                {"table_name": table_name, "column_name": column_name},
+            )
+            return bool(row)
+
+        with engine.connect() as conn:
+            rows = conn.execute(text(f"PRAGMA table_info({table_name})")).mappings().all()
+        return any(row.get("name") == column_name for row in rows)
+    except Exception:
+        return False
+
+
+def lf_err_add_column_if_missing(table_name, column_name, column_sql):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            lf_err_execute(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}")
+            return
+
+        if not lf_err_column_exists(table_name, column_name):
+            lf_err_execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}")
+    except Exception as exc:
+        print(f"LF_ERR_COLUMN_ADD_SKIPPED {table_name}.{column_name}: {type(exc).__name__}: {exc}")
+
+
+# ---------------------------------------------------------------------------
+# Error table + dismissal/geolocation columns.
+# ---------------------------------------------------------------------------
+def lf_err_ensure_error_events_table():
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            lf_err_execute("""
+                CREATE TABLE IF NOT EXISTS error_events (
+                    id SERIAL PRIMARY KEY,
+                    status_code INTEGER,
+                    path TEXT,
+                    method TEXT,
+                    referrer TEXT,
+                    user_agent TEXT,
+                    remote_addr TEXT,
+                    user_id TEXT,
+                    error_type TEXT,
+                    error_message TEXT,
+                    traceback_text TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        else:
+            lf_err_execute("""
+                CREATE TABLE IF NOT EXISTS error_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    status_code INTEGER,
+                    path TEXT,
+                    method TEXT,
+                    referrer TEXT,
+                    user_agent TEXT,
+                    remote_addr TEXT,
+                    user_id TEXT,
+                    error_type TEXT,
+                    error_message TEXT,
+                    traceback_text TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
+        lf_err_add_column_if_missing("error_events", "dismissed_at", "TEXT")
+        lf_err_add_column_if_missing("error_events", "dismissed_by", "TEXT")
+        lf_err_add_column_if_missing("error_events", "dismiss_note", "TEXT")
+        lf_err_add_column_if_missing("error_events", "geo_city", "TEXT")
+        lf_err_add_column_if_missing("error_events", "geo_region", "TEXT")
+        lf_err_add_column_if_missing("error_events", "geo_country", "TEXT")
+        lf_err_add_column_if_missing("error_events", "geo_label", "TEXT")
+
+        lf_err_execute("""
+            CREATE INDEX IF NOT EXISTS idx_error_events_created_at
+            ON error_events (created_at)
+        """)
+
+        lf_err_execute("""
+            CREATE INDEX IF NOT EXISTS idx_error_events_status_code
+            ON error_events (status_code)
+        """)
+
+        lf_err_execute("""
+            CREATE INDEX IF NOT EXISTS idx_error_events_dismissed_at
+            ON error_events (dismissed_at)
+        """)
+
+        return True
+    except Exception as exc:
+        print(f"LF_ERR_TABLE_SETUP_FAILED: {type(exc).__name__}: {exc}")
+        return False
+
+
+ensure_error_events_table = lf_err_ensure_error_events_table
+
+
+# ---------------------------------------------------------------------------
+# Known bug fix 2:
+# site_visits analytics should never crash the public site.
+# Production logs showed network errors while creating/checking site_visits.
+# ---------------------------------------------------------------------------
+def lf_install_safe_site_visit_wrapper():
+    try:
+        funcs = list(app.before_request_funcs.get(None, []))
+        new_funcs = []
+        changed = False
+
+        for fn in funcs:
+            fn_name = getattr(fn, "__name__", "")
+
+            if fn_name == "track_public_site_visit" and not getattr(fn, "_litefeet_safe_wrapped", False):
+                def make_safe(original):
+                    def safe_track_public_site_visit():
+                        try:
+                            return original()
+                        except Exception as exc:
+                            print(
+                                "LF_SITE_VISIT_TRACKING_SKIPPED "
+                                f"{type(exc).__name__}: {str(exc)[:300]}"
+                            )
+                            return None
+
+                    safe_track_public_site_visit.__name__ = "safe_track_public_site_visit"
+                    safe_track_public_site_visit._litefeet_safe_wrapped = True
+                    return safe_track_public_site_visit
+
+                new_funcs.append(make_safe(fn))
+                changed = True
+            else:
+                new_funcs.append(fn)
+
+        if changed:
+            app.before_request_funcs[None] = new_funcs
+            print("Wrapped track_public_site_visit so analytics cannot crash pages.")
+    except Exception as exc:
+        print(f"LF_SITE_VISIT_WRAPPER_INSTALL_FAILED: {type(exc).__name__}: {exc}")
+
+
+lf_install_safe_site_visit_wrapper()
+
+
+# Also wrap the analytics-table initializer if present.
+try:
+    _lf_original_ensure_admin_analytics_tables = ensure_admin_analytics_tables
+
+    def ensure_admin_analytics_tables():
+        try:
+            return _lf_original_ensure_admin_analytics_tables()
+        except Exception as exc:
+            print(f"LF_ANALYTICS_TABLE_CHECK_SKIPPED: {type(exc).__name__}: {str(exc)[:300]}")
+            return False
+
+    print("Wrapped ensure_admin_analytics_tables safely.")
+except Exception:
+    pass
+
+
+# ---------------------------------------------------------------------------
+# Submit route redirects for old/bad links.
+# ---------------------------------------------------------------------------
+def lf_safe_url_for(endpoint, fallback):
+    try:
+        return url_for(endpoint)
+    except Exception:
+        return fallback
+
+
+def lf_redirect_submit_music():
+    return redirect(lf_safe_url_for("submit_litefeet_music_dedicated", "/litefeet-music/submit"))
+
+
+def lf_redirect_submit_event():
+    return redirect(lf_safe_url_for("submit_event", "/events/submit"))
+
+
+try:
+    existing_rules = {str(rule) for rule in app.url_map.iter_rules()}
+
+    if "/submit/music" not in existing_rules:
+        app.add_url_rule("/submit/music", "lf_redirect_submit_music", lf_redirect_submit_music, methods=["GET"])
+
+    if "/submit/event" not in existing_rules:
+        app.add_url_rule("/submit/event", "lf_redirect_submit_event", lf_redirect_submit_event, methods=["GET"])
+
+    print("Added legacy submit redirects.")
+except Exception as exc:
+    print(f"LF_SUBMIT_REDIRECTS_SKIPPED: {type(exc).__name__}: {exc}")
+
+
+# ---------------------------------------------------------------------------
+# Stream-safe formatting and geolocation.
+# ---------------------------------------------------------------------------
+def ledger_format_admin_datetime(value):
+    if not value:
+        return ""
+
+    raw = str(value).strip()
+
+    try:
+        normalized = raw.replace("Z", "+00:00")
+
+        if " " in normalized and "T" not in normalized:
+            normalized = normalized.replace(" ", "T", 1)
+
+        dt = _lf_err_datetime.fromisoformat(normalized)
+
+        # Treat DB timestamps as UTC when no offset is stored.
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=_lf_err_timezone.utc)
+
+        local_dt = dt.astimezone(_lf_err_ZoneInfo(LITEFEET_ADMIN_TIMEZONE))
+
+        # User requested normal 12-hour time + Day, DD, MM, YYYY.
+        # Example: 7:56 PM Sat, 04 Jul 2026 ET
+        formatted = local_dt.strftime("%I:%M %p %a, %d %b %Y").lstrip("0")
+        return f"{formatted} ET"
+    except Exception:
+        return raw
+
+
+def lf_err_public_ip(raw_ip):
+    value = (raw_ip or "").strip()
+
+    if "," in value:
+        value = value.split(",", 1)[0].strip()
+
+    if not value:
+        return ""
+
+    private_patterns = [
+        r"^127\.",
+        r"^10\.",
+        r"^192\.168\.",
+        r"^172\.(1[6-9]|2[0-9]|3[0-1])\.",
+        r"^::1$",
+        r"^localhost$",
+    ]
+
+    if any(_lf_err_re.search(pattern, value) for pattern in private_patterns):
+        return ""
+
+    return value
+
+
+def lf_err_geo_lookup(raw_ip):
+    ip = lf_err_public_ip(raw_ip)
+
+    if not ip:
+        return {
+            "geo_city": "",
+            "geo_region": "",
+            "geo_country": "",
+            "geo_label": "Local / internal request",
+        }
+
+    try:
+        if _lf_err_requests:
+            response = _lf_err_requests.get(
+                f"https://ipapi.co/{ip}/json/",
+                timeout=2.5,
+            )
+            if response.ok:
+                data = response.json() or {}
+                city = (data.get("city") or "").strip()
+                region = (data.get("region") or data.get("region_code") or "").strip()
+                country = (data.get("country_name") or "").strip()
+
+                parts = [part for part in [city, region, country] if part]
+                label = ", ".join(parts) if parts else "Location unavailable"
+
+                return {
+                    "geo_city": city,
+                    "geo_region": region,
+                    "geo_country": country,
+                    "geo_label": label,
+                }
+    except Exception as exc:
+        print(f"LF_GEO_LOOKUP_SKIPPED: {type(exc).__name__}: {exc}")
+
+    return {
+        "geo_city": "",
+        "geo_region": "",
+        "geo_country": "",
+        "geo_label": "Location unavailable",
+    }
+
+
+def ledger_error_location_label(error):
+    try:
+        label = (error.get("geo_label") or "").strip()
+    except Exception:
+        label = ""
+
+    if label:
+        return label
+
+    return "Location unavailable"
+
+
+# ---------------------------------------------------------------------------
+# Stronger logger.
+# ---------------------------------------------------------------------------
+def lf_err_current_user_id():
+    try:
+        user = current_user()
+        if user:
+            return str(user.get("id", ""))
+    except Exception:
+        pass
+
+    try:
+        return str(session.get("user_id") or session.get("account_user_id") or "")
+    except Exception:
+        return ""
+
+
+def lf_err_log_error_event(status_code, error=None):
+    try:
+        if not lf_err_ensure_error_events_table():
+            return False
+
+        original_error = getattr(error, "original_exception", None) or error
+        error_type = type(original_error).__name__ if original_error else ""
+        error_message = str(original_error or "")[:2000]
+
+        traceback_text = ""
+        if original_error:
+            try:
+                traceback_text = "".join(
+                    _lf_err_traceback.format_exception(
+                        type(original_error),
+                        original_error,
+                        getattr(original_error, "__traceback__", None),
+                    )
+                )[-12000:]
+            except Exception:
+                traceback_text = ""
+
+        try:
+            raw_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "")
+            geo = lf_err_geo_lookup(raw_ip)
+            path = request.path or ""
+            method = request.method or ""
+            referrer = request.referrer or ""
+            user_agent = request.headers.get("User-Agent", "")
+        except Exception:
+            raw_ip = ""
+            geo = {
+                "geo_city": "",
+                "geo_region": "",
+                "geo_country": "",
+                "geo_label": "Location unavailable",
+            }
+            path = ""
+            method = ""
+            referrer = ""
+            user_agent = ""
+
+        lf_err_execute(
+            """
+            INSERT INTO error_events (
+                status_code,
+                path,
+                method,
+                referrer,
+                user_agent,
+                remote_addr,
+                user_id,
+                error_type,
+                error_message,
+                traceback_text,
+                geo_city,
+                geo_region,
+                geo_country,
+                geo_label
+            )
+            VALUES (
+                :status_code,
+                :path,
+                :method,
+                :referrer,
+                :user_agent,
+                :remote_addr,
+                :user_id,
+                :error_type,
+                :error_message,
+                :traceback_text,
+                :geo_city,
+                :geo_region,
+                :geo_country,
+                :geo_label
+            )
+            """,
+            {
+                "status_code": int(status_code or 500),
+                "path": path,
+                "method": method,
+                "referrer": referrer,
+                "user_agent": user_agent,
+                "remote_addr": raw_ip,
+                "user_id": lf_err_current_user_id(),
+                "error_type": error_type,
+                "error_message": error_message,
+                "traceback_text": traceback_text,
+                "geo_city": geo.get("geo_city", ""),
+                "geo_region": geo.get("geo_region", ""),
+                "geo_country": geo.get("geo_country", ""),
+                "geo_label": geo.get("geo_label", ""),
+            },
+        )
+
+        print(f"LF_ERROR_LOGGED status={status_code} path={path} type={error_type}")
+        return True
+    except Exception as exc:
+        print(f"LF_ERROR_LOGGING_FAILED: {type(exc).__name__}: {exc}")
+        return False
+
+
+log_error_event = lf_err_log_error_event
+
+
+# ---------------------------------------------------------------------------
+# Plain-English translator.
+# ---------------------------------------------------------------------------
+def ledger_translate_error(error):
+    try:
+        status_code = int(error.get("status_code") or 0)
+    except Exception:
+        status_code = 0
+
+    try:
+        error_type = (error.get("error_type") or "").strip()
+        message = (error.get("error_message") or "").strip()
+        path = (error.get("path") or "").strip()
+    except Exception:
+        error_type = ""
+        message = ""
+        path = ""
+
+    text = f"{error_type} {message} {path}".lower()
+
+    explanation = {
+        "severity": "Medium",
+        "category": "General",
+        "what_happened": "The app hit an error while loading this request.",
+        "what_it_means": "This needs review because the system could not complete the request normally.",
+        "likely_cause": "Unknown until the traceback is reviewed.",
+        "suggested_fix": "Open the traceback and inspect the route/template mentioned there.",
+        "fix_status": "Needs review",
+    }
+
+    if "builderror" in text and "endpoint 'index'" in text:
+        explanation.update({
+            "severity": "High",
+            "category": "Broken route/link",
+            "what_happened": "A page tried to link to a route named “index,” but this app does not have an index route.",
+            "what_it_means": "A template or redirect was using an outdated homepage route name.",
+            "likely_cause": "The real homepage endpoint is “home,” not “index.”",
+            "suggested_fix": "Replace url_for('index') with url_for('home').",
+            "fix_status": "Fixed candidate: this should be fixed after the latest index→home patch is deployed.",
+        })
+    elif "interfaceerror" in text and "site_visits" in text:
+        explanation.update({
+            "severity": "High",
+            "category": "Analytics/database tracking",
+            "what_happened": "The app lost database connection while trying to create or update the site_visits analytics table.",
+            "what_it_means": "Visitor tracking was allowed to crash real pages, which should never happen.",
+            "likely_cause": "Analytics tracking was running during normal page requests and failing hard on a database/network hiccup.",
+            "suggested_fix": "Make site visit tracking best-effort so tracking failures are skipped instead of breaking the page.",
+            "fix_status": "Fixed candidate: this patch wraps site visit tracking so analytics cannot crash the site.",
+        })
+    elif "nameerror" in text and "normalize_name" in text:
+        explanation.update({
+            "severity": "High",
+            "category": "Missing helper function",
+            "what_happened": "A LiteFeet Music release page tried to use normalize_name(), but Python could not find that function.",
+            "what_it_means": "The release detail page had a missing helper dependency.",
+            "likely_cause": "normalize_name was removed, renamed, or defined too late for the route using it.",
+            "suggested_fix": "Define normalize_name globally before the release detail route runs.",
+            "fix_status": "Fixed candidate: this patch defines normalize_name globally.",
+        })
+    elif status_code == 404 and any(piece in text for piece in ["wp-admin", "wp-json", "wp-includes", "wlwmanifest", "wordpress"]):
+        explanation.update({
+            "severity": "Low",
+            "category": "Bot/scanner noise",
+            "what_happened": "A bot scanned the site for WordPress files.",
+            "what_it_means": "This is common internet noise, not a LiteFeet Ledger content problem.",
+            "likely_cause": "Automated scanners look for WordPress installs on many domains.",
+            "suggested_fix": "No content fix needed. Dismiss or filter these from the main active queue.",
+            "fix_status": "Safe to dismiss unless the volume becomes excessive.",
+        })
+    elif status_code == 404 and "/people/dancers/" in text:
+        explanation.update({
+            "severity": "Medium",
+            "category": "Missing dancer/profile page",
+            "what_happened": "Someone opened a dancer profile URL that does not currently exist.",
+            "what_it_means": "This could be a missing profile, an old slug, a typo, or a link that needs an alias/redirect.",
+            "likely_cause": "The requested dancer slug is not connected to a profile record.",
+            "suggested_fix": "If this is a real dancer, create the profile or add a slug alias/redirect. If it is random, dismiss it.",
+            "fix_status": "Needs content/alias review.",
+        })
+    elif status_code == 404 and path in {"/submit/music", "/submit/event"}:
+        explanation.update({
+            "severity": "Medium",
+            "category": "Old submit link",
+            "what_happened": "Someone opened an old submit URL.",
+            "what_it_means": "The site has a newer submit route, but old links may still exist.",
+            "likely_cause": "Old page link, old bookmark, or previous route name.",
+            "suggested_fix": "Redirect the old submit URL to the current submit page.",
+            "fix_status": "Fixed candidate: this patch adds redirects for /submit/music and /submit/event.",
+        })
+    elif status_code == 404:
+        explanation.update({
+            "severity": "Low",
+            "category": "Missing page",
+            "what_happened": "Someone requested a page that does not exist.",
+            "what_it_means": "This may be a bad link, old URL, typo, missing content, or bot traffic.",
+            "likely_cause": "The route or content record does not exist.",
+            "suggested_fix": "If this is a real Ledger URL, add a redirect or create the missing content. Otherwise dismiss it.",
+            "fix_status": "Needs review only if the path looks like real Ledger content.",
+        })
+    elif status_code >= 500:
+        explanation.update({
+            "severity": "High",
+            "category": "Server error",
+            "what_happened": "The server crashed while trying to load this page.",
+            "what_it_means": "A user likely saw a 500 error page.",
+            "likely_cause": "Usually a code bug, missing helper, database issue, or bad template reference.",
+            "suggested_fix": "Open the traceback and patch the specific function/template named there.",
+            "fix_status": "Needs review.",
+        })
+
+    return explanation
+
+
+def lf_err_recent_summary():
+    summary = {
+        "active_count": 0,
+        "active_500_count": 0,
+        "active_404_count": 0,
+        "recent_count": 0,
+        "recent_500_count": 0,
+        "recent_404_count": 0,
+        "dismissed_count": 0,
+        "historical_count": 0,
+        "latest_path": "",
+        "latest_created_at": "",
+        "latest_error_type": "",
+        "latest_error_message": "",
+    }
+
+    try:
+        lf_err_ensure_error_events_table()
+
+        if engine.dialect.name.startswith("postgres"):
+            recent_where = "created_at >= CURRENT_TIMESTAMP - INTERVAL '24 hours'"
+        else:
+            recent_where = "created_at >= datetime('now', '-1 day')"
+
+        active = lf_err_fetch_one("""
+            SELECT
+                COUNT(*) AS active_count,
+                COALESCE(SUM(CASE WHEN status_code = 500 THEN 1 ELSE 0 END), 0) AS active_500_count,
+                COALESCE(SUM(CASE WHEN status_code = 404 THEN 1 ELSE 0 END), 0) AS active_404_count
+            FROM error_events
+            WHERE dismissed_at IS NULL
+        """)
+
+        recent = lf_err_fetch_one(f"""
+            SELECT
+                COUNT(*) AS recent_count,
+                COALESCE(SUM(CASE WHEN status_code = 500 THEN 1 ELSE 0 END), 0) AS recent_500_count,
+                COALESCE(SUM(CASE WHEN status_code = 404 THEN 1 ELSE 0 END), 0) AS recent_404_count
+            FROM error_events
+            WHERE {recent_where}
+        """)
+
+        dismissed = lf_err_fetch_one("""
+            SELECT COUNT(*) AS dismissed_count
+            FROM error_events
+            WHERE dismissed_at IS NOT NULL
+        """)
+
+        historical = lf_err_fetch_one("""
+            SELECT COUNT(*) AS historical_count
+            FROM error_events
+        """)
+
+        latest = lf_err_fetch_one("""
+            SELECT path, created_at, error_type, error_message
+            FROM error_events
+            WHERE dismissed_at IS NULL
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+        """)
+
+        for source in [active, recent, dismissed, historical]:
+            if not source:
+                continue
+            for key, val in source.items():
+                summary[key] = val or 0
+
+        if latest:
+            summary["latest_path"] = latest.get("path") or ""
+            summary["latest_created_at"] = latest.get("created_at") or ""
+            summary["latest_error_type"] = latest.get("error_type") or ""
+            summary["latest_error_message"] = latest.get("error_message") or ""
+
+        return summary
+    except Exception as exc:
+        print(f"LF_ERROR_SUMMARY_FAILED: {type(exc).__name__}: {exc}")
+        return summary
+
+
+get_admin_error_log_summary = lf_err_recent_summary
+
+
+@app.context_processor
+def lf_error_inbox_context():
+    return {
+        "ledger_format_admin_datetime": ledger_format_admin_datetime,
+        "ledger_translate_error": ledger_translate_error,
+        "ledger_error_location_label": ledger_error_location_label,
+        "admin_error_log_summary": lf_err_recent_summary(),
+    }
+
+
+def lf_err_admin_required():
+    try:
+        return bool(current_user_is_admin() or session.get("admin_logged_in"))
+    except Exception:
+        return bool(session.get("admin_logged_in"))
+
+
+def lf_admin_error_logs_view():
+    if not lf_err_admin_required():
+        return redirect(url_for("account_login", next=request.path))
+
+    lf_err_ensure_error_events_table()
+
+    status_filter = (request.args.get("status") or "").strip().lower()
+    view_filter = (request.args.get("view") or "active").strip().lower()
+
+    where_parts = []
+    params = {}
+
+    if view_filter == "dismissed":
+        where_parts.append("dismissed_at IS NOT NULL")
+    elif view_filter == "all":
+        pass
+    elif view_filter == "recent":
+        if engine.dialect.name.startswith("postgres"):
+            where_parts.append("created_at >= CURRENT_TIMESTAMP - INTERVAL '24 hours'")
+        else:
+            where_parts.append("created_at >= datetime('now', '-1 day')")
+    else:
+        view_filter = "active"
+        where_parts.append("dismissed_at IS NULL")
+
+    if status_filter in {"404", "500"}:
+        where_parts.append("status_code = :status_code")
+        params["status_code"] = int(status_filter)
+    else:
+        status_filter = ""
+
+    where_sql = ""
+    if where_parts:
+        where_sql = "WHERE " + " AND ".join(where_parts)
+
+    try:
+        errors = lf_err_fetch_all(
+            f"""
+            SELECT
+                id,
+                status_code,
+                path,
+                method,
+                referrer,
+                user_agent,
+                remote_addr,
+                user_id,
+                error_type,
+                error_message,
+                traceback_text,
+                created_at,
+                dismissed_at,
+                dismissed_by,
+                dismiss_note,
+                geo_city,
+                geo_region,
+                geo_country,
+                geo_label
+            FROM error_events
+            {where_sql}
+            ORDER BY created_at DESC, id DESC
+            LIMIT 300
+            """,
+            params,
+        )
+    except Exception as exc:
+        print(f"LF_ADMIN_ERROR_LOGS_FETCH_FAILED: {type(exc).__name__}: {exc}")
+        errors = []
+
+    return render_template(
+        "admin_error_logs.html",
+        errors=errors,
+        summary=lf_err_recent_summary(),
+        status_filter=status_filter,
+        view_filter=view_filter,
+    )
+
+
+app.view_functions["admin_error_logs"] = lf_admin_error_logs_view
+
+
+def lf_dismiss_error(error_id):
+    if not lf_err_admin_required():
+        return redirect(url_for("account_login", next="/admin/error-logs"))
+
+    lf_err_ensure_error_events_table()
+
+    note = request.form.get("dismiss_note", "").strip()
+    admin_id = lf_err_current_user_id() or "admin-session"
+
+    lf_err_execute(
+        """
+        UPDATE error_events
+        SET dismissed_at = CURRENT_TIMESTAMP,
+            dismissed_by = :dismissed_by,
+            dismiss_note = :dismiss_note
+        WHERE id = :error_id
+        """,
+        {
+            "error_id": error_id,
+            "dismissed_by": admin_id,
+            "dismiss_note": note,
+        },
+    )
+
+    return redirect(request.referrer or url_for("admin_error_logs"))
+
+
+def lf_dismiss_visible_errors():
+    if not lf_err_admin_required():
+        return redirect(url_for("account_login", next="/admin/error-logs"))
+
+    lf_err_ensure_error_events_table()
+
+    ids = request.form.getlist("error_ids")
+    note = request.form.get("dismiss_note", "").strip() or "Dismissed from current admin filter."
+    admin_id = lf_err_current_user_id() or "admin-session"
+
+    clean_ids = []
+    for item in ids:
+        try:
+            clean_ids.append(int(item))
+        except Exception:
+            continue
+
+    if clean_ids:
+        placeholders = ", ".join([f":id_{idx}" for idx, _ in enumerate(clean_ids)])
+        params = {
+            f"id_{idx}": error_id
+            for idx, error_id in enumerate(clean_ids)
+        }
+        params["dismissed_by"] = admin_id
+        params["dismiss_note"] = note
+
+        lf_err_execute(
+            f"""
+            UPDATE error_events
+            SET dismissed_at = CURRENT_TIMESTAMP,
+                dismissed_by = :dismissed_by,
+                dismiss_note = :dismiss_note
+            WHERE id IN ({placeholders})
+              AND dismissed_at IS NULL
+            """,
+            params,
+        )
+
+    return redirect(request.referrer or url_for("admin_error_logs"))
+
+
+def lf_test_error_logger():
+    if not lf_err_admin_required():
+        return redirect(url_for("account_login", next="/admin/error-logs"))
+
+    lf_err_log_error_event(
+        500,
+        RuntimeError("Manual admin test error. This confirms error logging, plain-English translation, date formatting, and dismissal are connected."),
+    )
+
+    return redirect(url_for("admin_error_logs"))
+
+
+if "lf_dismiss_error" not in app.view_functions:
+    app.add_url_rule(
+        "/admin/error-logs/<int:error_id>/dismiss",
+        "lf_dismiss_error",
+        lf_dismiss_error,
+        methods=["POST"],
+    )
+else:
+    app.view_functions["lf_dismiss_error"] = lf_dismiss_error
+
+if "lf_dismiss_visible_errors" not in app.view_functions:
+    app.add_url_rule(
+        "/admin/error-logs/dismiss-visible",
+        "lf_dismiss_visible_errors",
+        lf_dismiss_visible_errors,
+        methods=["POST"],
+    )
+else:
+    app.view_functions["lf_dismiss_visible_errors"] = lf_dismiss_visible_errors
+
+if "lf_test_error_logger" not in app.view_functions:
+    app.add_url_rule(
+        "/admin/error-logs/test",
+        "lf_test_error_logger",
+        lf_test_error_logger,
+        methods=["POST"],
+    )
+else:
+    app.view_functions["lf_test_error_logger"] = lf_test_error_logger
+
+
+def lf_final_404(error):
+    lf_err_log_error_event(404, error)
+    try:
+        return render_template("error_404.html"), 404
+    except Exception:
+        return "Page not found.", 404
+
+
+def lf_final_500(error):
+    original_error = getattr(error, "original_exception", None) or error
+    lf_err_log_error_event(500, original_error)
+    try:
+        return render_template("error_500.html"), 500
+    except Exception:
+        return "The Ledger hit an internal error. Please try again shortly.", 500
+
+
+app.register_error_handler(404, lf_final_404)
+app.register_error_handler(500, lf_final_500)
+
+print("LITEFEET ERROR TRANSLATOR + REAL FIXES PATCH active.")
+

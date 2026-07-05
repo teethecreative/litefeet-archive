@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Error Logs | The LiteFeet Ledger Admin{% endblock %}
+{% block title %}Error Inbox | The LiteFeet Ledger Admin{% endblock %}
 
 {% block content %}
 <section class="admin-panel error-inbox-page">
@@ -8,7 +8,9 @@
         <div>
             <p class="eyebrow">Admin</p>
             <h1>Error Inbox</h1>
-            <p>Stream-safe error review. IP addresses are hidden unless you open technical visitor details.</p>
+            <p>
+                Plain-English error review. IP addresses and user agents are hidden unless you reveal technical visitor info.
+            </p>
         </div>
 
         <div class="hero-actions">
@@ -61,19 +63,44 @@
 
         <div class="admin-error-log-list">
             {% for error in errors %}
+                {% set explanation = ledger_translate_error(error) %}
+
                 <article class="admin-error-log-card {% if error.dismissed_at %}dismissed{% elif error.status_code == 500 %}urgent{% elif error.status_code == 404 %}needs-attention{% endif %}">
                     <div class="error-log-topline">
                         <div>
-                            <p class="eyebrow">{{ error.status_code }} · {{ error.method }}</p>
+                            <p class="eyebrow">{{ error.status_code }} · {{ error.method }} · {{ explanation.category }}</p>
                             <h2>{{ error.path }}</h2>
                         </div>
                         <time>{{ ledger_format_admin_datetime(error.created_at) }}</time>
                     </div>
 
+                    <div class="error-explainer-grid">
+                        <section class="plain-error-box">
+                            <p class="eyebrow">What happened</p>
+                            <p>{{ explanation.what_happened }}</p>
+                        </section>
+
+                        <section class="plain-error-box">
+                            <p class="eyebrow">What it means</p>
+                            <p>{{ explanation.what_it_means }}</p>
+                        </section>
+
+                        <section class="plain-error-box">
+                            <p class="eyebrow">Suggested fix</p>
+                            <p>{{ explanation.suggested_fix }}</p>
+                        </section>
+
+                        <section class="plain-error-box status-box">
+                            <p class="eyebrow">Fix Status</p>
+                            <strong>{{ explanation.fix_status }}</strong>
+                        </section>
+                    </div>
+
                     <div class="error-main-grid">
                         <div>
                             <p>
-                                <strong>{{ error.error_type or "Unknown" }}</strong>
+                                <strong>Raw error:</strong>
+                                {{ error.error_type or "Unknown" }}
                                 {% if error.error_message %}
                                     <br>{{ error.error_message }}
                                 {% endif %}
@@ -86,7 +113,7 @@
 
                         <div class="visitor-safe-box">
                             <p class="eyebrow">General Visitor Location</p>
-                            <strong>{{ error.geo_label or "Location unavailable" }}</strong>
+                            <strong>{{ ledger_error_location_label(error) }}</strong>
                             <small>User: {{ error.user_id or "Public" }}</small>
 
                             <details class="technical-details">
@@ -112,7 +139,7 @@
                             {% endif %}
                         {% else %}
                             <form method="post" action="/admin/error-logs/{{ error.id }}/dismiss">
-                                <input type="hidden" name="dismiss_note" value="Dismissed from error inbox.">
+                                <input type="hidden" name="dismiss_note" value="Dismissed after review.">
                                 <button class="button small-button secondary" type="submit">Dismiss</button>
                             </form>
                         {% endif %}
@@ -174,7 +201,8 @@
 
     .error-log-topline,
     .error-main-grid,
-    .error-card-actions {
+    .error-card-actions,
+    .error-explainer-grid {
         display: grid;
         gap: 12px;
     }
@@ -184,10 +212,12 @@
         align-items: start;
     }
 
-    .error-main-grid {
-        grid-template-columns: minmax(0, 1fr) minmax(240px, 0.35fr);
+    .error-explainer-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-top: 14px;
     }
 
+    .plain-error-box,
     .visitor-safe-box {
         border: 1px solid rgba(255,255,255,0.12);
         border-radius: 12px;
@@ -195,6 +225,15 @@
         background: rgba(0,0,0,0.18);
         display: grid;
         gap: 6px;
+    }
+
+    .status-box {
+        border-color: rgba(236, 203, 89, 0.45);
+    }
+
+    .error-main-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(240px, 0.35fr);
+        margin-top: 14px;
     }
 
     .technical-details,
@@ -216,8 +255,9 @@
         white-space: nowrap;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 1100px) {
         .admin-error-summary-grid,
+        .error-explainer-grid,
         .error-main-grid,
         .error-log-topline {
             grid-template-columns: 1fr;

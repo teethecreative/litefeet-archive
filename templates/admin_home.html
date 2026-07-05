@@ -92,17 +92,19 @@
 <!-- Error Logs Dashboard Card -->
 <a class="admin-card error-log-card" href="/admin/error-logs">
     <p class="eyebrow">Site Health</p>
-    <h2>Error Logs</h2>
+    <h2>Error Inbox</h2>
     <p>
-        {{ admin_error_log_summary.recent_count or 0 }} errors in the last 24 hours.
-        {{ admin_error_log_summary.recent_500_count or 0 }} internal errors /
-        {{ admin_error_log_summary.recent_404_count or 0 }} missing pages.
+        {{ admin_error_log_summary.active_count or 0 }} active errors.
+        {{ admin_error_log_summary.active_500_count or 0 }} active internal errors /
+        {{ admin_error_log_summary.active_404_count or 0 }} active missing pages.
     </p>
     {% if admin_error_log_summary.latest_path %}
-        <small>Latest: {{ admin_error_log_summary.latest_path }}</small>
+        <small>Latest active: {{ admin_error_log_summary.latest_path }}</small>
     {% else %}
-        <small>No recent errors logged.</small>
+        <small>No active errors logged.</small>
     {% endif %}
+    <br>
+    <small>{{ admin_error_log_summary.historical_count or 0 }} total historical errors / {{ admin_error_log_summary.dismissed_count or 0 }} dismissed.</small>
 </a>
 
         {% for card in review_cards %}
