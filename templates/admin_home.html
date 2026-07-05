@@ -4,6 +4,61 @@
 {% block meta_description %}Backend command center for The LiteFeet Ledger.{% endblock %}
 
 {% block content %}
+
+<section class="admin-profile-user-access-panel">
+    <div class="admin-access-card">
+        <div>
+            <p class="eyebrow">Accounts + Profiles</p>
+            <h2>User/Profile Access</h2>
+            <p>Jump directly to account users, profile records, profile links, claim requests, and correction queues.</p>
+        </div>
+
+        <div class="admin-access-actions">
+            <a class="button primary" href="/admin/users">User Accounts</a>
+            <a class="button secondary" href="/admin/dancer-profiles">Dancer/Profile Records</a>
+            <a class="button secondary" href="/admin/profile-links">Profile Links</a>
+            <a class="button secondary" href="/admin/phase2/profile-claims">Profile Claims</a>
+            <a class="button secondary" href="/admin/profile-corrections">Profile Corrections</a>
+            <a class="button secondary" href="/admin/profile-visibility-requests">Visibility Requests</a>
+        </div>
+    </div>
+</section>
+
+<style>
+    .admin-profile-user-access-panel {
+        margin: 18px 0 24px;
+    }
+
+    .admin-access-card {
+        border: 1px solid rgba(232, 198, 90, 0.22);
+        border-radius: 18px;
+        padding: 18px;
+        background: rgba(255, 255, 255, 0.035);
+        display: grid;
+        gap: 14px;
+    }
+
+    .admin-access-card h2 {
+        margin: 4px 0 6px;
+        color: var(--accent-color, #e8c65a);
+    }
+
+    .admin-access-card p {
+        margin: 0;
+        opacity: 0.82;
+    }
+
+    .admin-access-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .admin-access-actions .button {
+        justify-content: center;
+    }
+</style>
+
 {% set site = phase12_site_status() %}
 {% set review_cards = phase12_review_queue_cards() %}
 {% set public_links = phase12_public_quick_links() %}
