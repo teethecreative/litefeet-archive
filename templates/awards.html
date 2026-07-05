@@ -23,7 +23,7 @@
         </div>
 
         <div class="hero-actions">
-            <a class="button secondary" href="/">Home</a>
+            <a class="button secondary" href="/awards">Awards Home</a>
         </div>
     </div>
 
@@ -178,26 +178,37 @@
                             </table>
                         </div>
                     {% else %}
-                        <div class="dca-category-grid">
+                        <div class="dca-award-list">
                             {% for group in section.groups %}
-                                <article class="dca-category-card">
-                                    <div class="award-card-topline">
-                                        <p class="eyebrow">{{ group.category }}</p>
-                                        {% if group.is_co_winner %}
-                                            <span class="award-status-pill">Co-winners</span>
-                                        {% else %}
-                                            <span class="award-status-pill">Winner</span>
-                                        {% endif %}
-                                    </div>
+                                <details class="dca-category-row">
+                                    <summary>
+                                        <div class="dca-category-summary-main">
+                                            <p class="eyebrow">{{ group.category }}</p>
+                                            <h4>{{ group.category }}</h4>
+                                        </div>
 
-                                    <div class="dca-winner-box">
-                                        {% for winner in group.winners %}
-                                            <div>
-                                                <strong>{{ winner.nominee_name }}</strong>
-                                                <span>{{ winner.votes }} votes</span>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
+                                        <div class="dca-category-summary-winners">
+                                            {% if group.winners %}
+                                                {% for winner in group.winners %}
+                                                    <span>
+                                                        <strong>{{ winner.nominee_name }}</strong>
+                                                        <em>{{ winner.votes }} votes</em>
+                                                    </span>
+                                                {% endfor %}
+                                            {% else %}
+                                                <span>
+                                                    <strong>No winner listed</strong>
+                                                    <em>Nominees available</em>
+                                                </span>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if group.is_co_winner %}
+                                            <span class="dca-category-open-pill">Co-winners</span>
+                                        {% else %}
+                                            <span class="dca-category-open-pill">Nominees</span>
+                                        {% endif %}
+                                    </summary>
 
                                     <div class="dca-nominee-table-wrap">
                                         <table class="dca-nominee-table">
@@ -227,7 +238,7 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                </article>
+                                </details>
                             {% endfor %}
                         </div>
                     {% endif %}
@@ -482,8 +493,85 @@
     }
 
     .dca-award-section .dca-category-grid,
+    .dca-award-section .dca-award-list,
     .dca-award-section .release-table-wrap {
         padding: 16px;
+    }
+
+    .dca-award-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .dca-category-row {
+        border: 1px solid rgba(232, 198, 90, 0.18);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.035);
+        overflow: hidden;
+    }
+
+    .dca-category-row summary {
+        cursor: pointer;
+        list-style: none;
+        padding: 14px;
+        display: grid;
+        grid-template-columns: minmax(220px, 0.9fr) minmax(260px, 1.1fr) auto;
+        gap: 14px;
+        align-items: center;
+    }
+
+    .dca-category-row summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .dca-category-summary-main h4 {
+        margin: 3px 0 0;
+        color: var(--accent-color, #e8c65a);
+        font-size: 1.15rem;
+    }
+
+    .dca-category-summary-winners {
+        display: grid;
+        gap: 6px;
+    }
+
+    .dca-category-summary-winners span {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        border: 1px solid rgba(232, 198, 90, 0.14);
+        border-radius: 999px;
+        padding: 7px 10px;
+        background: rgba(232, 198, 90, 0.045);
+    }
+
+    .dca-category-summary-winners strong {
+        color: var(--accent-color, #e8c65a);
+    }
+
+    .dca-category-summary-winners em {
+        font-style: normal;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .dca-category-open-pill {
+        border: 1px solid rgba(232, 198, 90, 0.28);
+        color: var(--accent-color, #e8c65a);
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-weight: 900;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    .dca-category-row[open] .dca-category-open-pill {
+        background: rgba(232, 198, 90, 0.1);
+    }
+
+    .dca-category-row .dca-nominee-table-wrap {
+        padding: 0 14px 14px;
     }
 
     .dca-winner-box {
@@ -562,8 +650,15 @@
             display: grid;
         }
 
-        .dca-award-section summary {
+        .dca-award-section summary,
+        .dca-category-row summary {
             display: grid;
+            grid-template-columns: 1fr;
+        }
+
+        .dca-category-summary-winners span {
+            align-items: flex-start;
+            border-radius: 12px;
         }
 
         .award-open-button {
