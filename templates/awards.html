@@ -188,9 +188,9 @@
 
             <h2>
                 {% if active_tab == "dancers-choice" %}
-                    Dancer’s Choice Awards Archive
+                    Dancer’s Choice Awards Ledger
                 {% else %}
-                    LiteFeet Awards Archive
+                    LiteFeet Awards Ledger
                 {% endif %}
             </h2>
 
@@ -296,11 +296,8 @@
                         <h4>How many categories should we do this year?</h4>
                         <label>
                             Number of categories
-                            <input type="number" name="suggested_category_count" min="1" max="100" step="1" required placeholder="Example: 24">
+                            <input type="number" name="suggested_category_count" min="1" max="100" step="1" required>
                         </label>
-                        <p class="small-note">
-                            The current community average helps guide how many categories this year’s Dancer’s Choice Awards should have.
-                        </p>
                     </div>
 
                     <div class="dca-form-block dca-form-block-tight">
@@ -335,7 +332,7 @@
                             <div class="dca-new-category-item">
                                 <label>
                                     Category name
-                                    <input type="text" name="new_category_name" placeholder="Example: Best New Gen Battler">
+                                    <input type="text" name="new_category_name">
                                 </label>
 
                                 <label>
@@ -404,7 +401,7 @@
         <details class="dca-year-card" open>
             <summary class="dca-year-card-summary">
                 <div>
-                    <p class="eyebrow">Dancer’s Choice Awards Archive</p>
+                    <p class="eyebrow">Dancer’s Choice Awards Ledger</p>
                     <h3>Dancer’s Choice Awards 2023</h3>
                     <p>
                         Community-selected categories, official winners, nominees, and public vote counts from the 2023 Dancer’s Choice Awards.
@@ -1427,6 +1424,22 @@
 
     .dca-archive-heading-hidden {
         display: none !important;
+    }
+
+
+    /* DCA category form cleanup */
+    .dca-prior-category-grid {
+        max-height: none !important;
+        overflow: visible !important;
+        padding-right: 0 !important;
+    }
+
+    .dca-form-block-tight {
+        grid-column: 1 / -1 !important;
+    }
+
+    .dca-new-category-item input[name="new_category_name"]::placeholder {
+        color: transparent !important;
     }
 
 </style>

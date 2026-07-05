@@ -1402,7 +1402,7 @@ def seed_litefeet_research_records():
                 "related_to": record.get("related_to", ""),
                 "source_url": record.get("source_url", ""),
                 "submitter_name": "LiteFeet Ledger",
-                "submitter_role": "Archive Research Seed",
+                "submitter_role": "Ledger Research Seed",
                 "contact": "",
                 "needs_verification": 1,
                 "review_status": record["review_status"],
@@ -7265,7 +7265,7 @@ def music_playback_status(item):
         }
 
     return {
-        "label": "Archived Only",
+        "label": "Ledgerd Only",
         "admin_note": "No source link or playable URL exists. The Ledger can show metadata, but cannot play this track.",
         "state": "archived",
     }
@@ -7667,7 +7667,7 @@ def get_detail_value(record_or_details, label):
             "Event Results": ["event_results", "results"],
             "Results Status": ["results_status"],
             "Needs Confirmation": ["needs_confirmation", "confirmation_needed"],
-            "Archive Note": ["archive_note", "notes"],
+            "Ledger Note": ["archive_note", "notes"],
             "Battle List": ["battle_list", "battles"],
             "Studio": ["studio", "venue"],
             "Borough": ["borough"],
@@ -8039,7 +8039,7 @@ def get_detail_value(record_or_details, label):
             "Event Results": ["event_results", "results"],
             "Results Status": ["results_status"],
             "Needs Confirmation": ["needs_confirmation", "confirmation_needed"],
-            "Archive Note": ["archive_note", "notes"],
+            "Ledger Note": ["archive_note", "notes"],
             "Battle List": ["battle_list", "battles"],
             "Studio": ["studio", "venue"],
             "Borough": ["borough"],
@@ -11663,7 +11663,7 @@ def admin_ask_feedback_status_phase3f(feedback_id):
         "Needs Fix",
         "Needs Context",
         "Converted to Review",
-        "Archived",
+        "Ledgerd",
         "Dismissed",
     }
 
@@ -12468,7 +12468,7 @@ def admin_profile_edit_log_status_phase4e(log_id):
         "Reviewed",
         "Needs Follow-up",
         "Approved",
-        "Archived",
+        "Ledgerd",
         "Dismissed",
     }
 
@@ -12924,7 +12924,7 @@ def admin_calendar_review_status_phase5c(metadata_id):
         "Hidden",
         "Needs Review",
         "Draft",
-        "Archived",
+        "Ledgerd",
     }
 
     allowed_review = {
@@ -12933,7 +12933,7 @@ def admin_calendar_review_status_phase5c(metadata_id):
         "Community Supported",
         "Needs Verification",
         "Disputed",
-        "Archived",
+        "Ledgerd",
     }
 
     visibility_status = request.form.get("visibility_status", "").strip()
@@ -13723,7 +13723,7 @@ def admin_music_feedback_status_phase6c(feedback_id):
         "Needs Follow-up",
         "Needs Source",
         "Added to Review",
-        "Archived",
+        "Ledgerd",
         "Dismissed",
     }
 
@@ -16472,7 +16472,7 @@ def phase13_account_nav_url():
 def phase13_page_meta_defaults():
     return {
         "site_name": "The LiteFeet Ledger",
-        "default_title": "The LiteFeet Ledger | LiteFeet Culture Archive",
+        "default_title": "The LiteFeet Ledger | LiteFeet Culture Ledger",
         "default_description": "The LiteFeet Ledger is a community-powered archive for LiteFeet history, dancers, teams, battles, music, events, awards, and verified records.",
         "default_image": "",
     }
@@ -27340,6 +27340,8 @@ def dcar_prior_categories():
         groups = dcav_vote_groups("")
         for group in groups:
             category = str(group.get("category") or "").strip()
+            if category == "Best Event 2023":
+                category = f"Best Event {DCA_ROUND_YEAR}"
             if category and category not in categories:
                 categories.append(category)
     except Exception:
@@ -27374,7 +27376,7 @@ def dcar_prior_categories():
             "Best Balance",
             "Best Musicality",
             "Best Out of State Dancer",
-            "Best Event",
+            f"Best Event {DCA_ROUND_YEAR}",
             "Best Big Man",
             "Best Junior Dancer",
             "Youngest in Charge",
