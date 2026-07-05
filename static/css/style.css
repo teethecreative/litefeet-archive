@@ -1,12 +1,16 @@
 :root {
-    --bg: #080808;
-    --panel: #141414;
-    --panel-soft: #1f1f1f;
-    --text: #f7f2e8;
-    --muted: #c8bfae;
-    --gold: #d8a83f;
-    --gold-soft: #f4d37a;
-    --border: rgba(216, 168, 63, 0.22);
+    --bg: #262626;
+    --panel: #2A2F30;
+    --panel-soft: #36454F;
+    --text: #F2EFE6;
+    --muted: #D8D2C2;
+    --gold: #E3C66A;
+    --gold-soft: #EBC634;
+    --border: rgba(227, 198, 106, 0.24);
+
+    --border-color: rgba(227, 198, 106, 0.24);
+    --card-bg: rgba(54, 69, 79, 0.48);
+    --accent-color: #E3C66A;
 }
 
 * {
@@ -4043,3 +4047,244 @@ body:has(select[name="status"]) select[name="status"] {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* --- CHARCOAL GOLD THEME PASS ---
+   Softer black/gold palette: charcoal surfaces, warm cream text, richer gold accents.
+   This keeps the Ledger identity without the pitch-black cave effect.
+*/
+:root {
+    --bg: #262626;
+    --page-bg: #262626;
+    --deep-bg: #0A0A0A;
+    --panel: #2A2F30;
+    --panel-soft: #36454F;
+    --surface: rgba(54, 69, 79, 0.50);
+    --surface-strong: rgba(42, 47, 48, 0.88);
+    --gold: #E3C66A;
+    --gold-soft: #EBC634;
+    --gold-deep: #A57C00;
+    --text: #F2EFE6;
+    --muted: #D8D2C2;
+    --border: rgba(227, 198, 106, 0.24);
+    --border-color: rgba(227, 198, 106, 0.24);
+    --card-bg: rgba(54, 69, 79, 0.48);
+    --accent-color: #E3C66A;
+}
+
+html,
+body {
+    background:
+        radial-gradient(circle at top left, rgba(227, 198, 106, 0.09), transparent 32rem),
+        linear-gradient(180deg, #2A2F30 0%, #262626 46%, #202424 100%) !important;
+    color: var(--text) !important;
+}
+
+body::before {
+    background:
+        linear-gradient(90deg, rgba(227,198,106,0.035), transparent 38%, rgba(10,10,10,0.12)),
+        radial-gradient(circle at 80% 0%, rgba(54,69,79,0.24), transparent 34rem) !important;
+}
+
+.site-header,
+.main-header,
+header,
+nav.site-nav {
+    background: rgba(10, 10, 10, 0.78) !important;
+    border-color: rgba(227, 198, 106, 0.22) !important;
+    backdrop-filter: blur(16px);
+}
+
+main,
+.page,
+.site-main,
+.container {
+    color: var(--text) !important;
+}
+
+.content-section,
+.homepage-section,
+.archive-section,
+.admin-panel,
+.card,
+.panel,
+.archive-card,
+.form-card,
+.table-card,
+.empty-state,
+.compact-empty,
+.release-table-wrap,
+.music-record-table-wrap,
+.dca-year-card,
+.dca-round-results-card,
+.award-system-info-card,
+.award-card,
+.dca-category-card,
+.dca-award-section,
+.dca-category-row,
+.dca-results-panel,
+.dca-form-block {
+    background: var(--surface) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text) !important;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.16);
+}
+
+.content-section,
+.homepage-section,
+.archive-section,
+.admin-panel {
+    background: rgba(42, 47, 48, 0.58) !important;
+}
+
+.dca-round-card {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.dca-round-stat-grid article,
+.stat-card,
+.metric-card,
+.account-stat-grid article,
+.ask-status-grid article,
+.review-status-grid article,
+.community-perspective-card {
+    background:
+        linear-gradient(180deg, rgba(227, 198, 106, 0.12), rgba(54, 69, 79, 0.38)) !important;
+    border-color: rgba(227, 198, 106, 0.28) !important;
+}
+
+.dca-round-stat-grid strong,
+.stat-card h2,
+.metric-card h2,
+.account-stat-grid h2 {
+    color: var(--gold) !important;
+    text-shadow: 0 0 22px rgba(227, 198, 106, 0.14);
+}
+
+h1,
+h2,
+h3,
+h4,
+.eyebrow,
+.brand,
+.site-title,
+.logo-text {
+    color: var(--gold) !important;
+}
+
+p,
+li,
+td,
+label,
+.small-note,
+.media-meta,
+.award-system-info-card p,
+.dca-round-heading p,
+.dca-round-results-heading p {
+    color: var(--muted) !important;
+}
+
+a {
+    color: var(--text);
+}
+
+a:hover {
+    color: var(--gold);
+}
+
+.button.primary,
+button.primary,
+input[type="submit"],
+.dca-builder-actions .button.primary {
+    background: var(--gold) !important;
+    color: #0A0A0A !important;
+    border-color: var(--gold) !important;
+    box-shadow: 0 10px 24px rgba(227, 198, 106, 0.18);
+}
+
+.button.secondary,
+button.secondary,
+.award-subnav-link,
+.dca-category-open-pill,
+.award-status-pill,
+.mini-result-pill,
+.dca-results-type-pill {
+    background: rgba(42, 47, 48, 0.72) !important;
+    color: var(--gold) !important;
+    border-color: rgba(227, 198, 106, 0.34) !important;
+}
+
+.button.secondary:hover,
+button.secondary:hover,
+.award-subnav-link:hover {
+    background: rgba(227, 198, 106, 0.12) !important;
+}
+
+input,
+select,
+textarea {
+    background: rgba(10, 10, 10, 0.36) !important;
+    color: var(--text) !important;
+    border-color: rgba(227, 198, 106, 0.28) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: rgba(242, 239, 230, 0.52) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 0 3px rgba(227, 198, 106, 0.14) !important;
+    outline: none !important;
+}
+
+table,
+.release-table,
+.dca-nominee-table,
+.music-record-table {
+    color: var(--text) !important;
+}
+
+th,
+.release-table th,
+.dca-nominee-table th,
+.music-record-table th {
+    background: rgba(10, 10, 10, 0.52) !important;
+    color: var(--gold) !important;
+    border-color: rgba(227, 198, 106, 0.18) !important;
+}
+
+td,
+.release-table td,
+.dca-nominee-table td,
+.music-record-table td {
+    border-color: rgba(242, 239, 230, 0.09) !important;
+}
+
+tr:hover {
+    background: rgba(227, 198, 106, 0.055) !important;
+}
+
+.winner-row,
+.dca-single-results-table tbody tr:first-child {
+    background: rgba(227, 198, 106, 0.09) !important;
+}
+
+hr,
+.section-divider {
+    border-color: rgba(227, 198, 106, 0.18) !important;
+}
+
+@media (max-width: 900px) {
+    html,
+    body {
+        background:
+            radial-gradient(circle at top left, rgba(227, 198, 106, 0.08), transparent 24rem),
+            linear-gradient(180deg, #2A2F30 0%, #262626 100%) !important;
+    }
+}
+
