@@ -1,18 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Awards | The LiteFeet Ledger
-<section class="homepage-section phase13-section-note">
-    <p class="small-note">Award records can be updated with winners, nominees, categories, years, and source links.</p>
-</section>
-
-{% endblock %}
-{% block meta_description %}Browse LiteFeet award records, winners, nominees, categories, award years, and community-supported award history.{% endblock %}
+{% block title %}Awards | The LiteFeet Ledger{% endblock %}
+{% block meta_description %}Browse LiteFeet Awards and Dancer’s Choice Awards records, winners, nominees, categories, years, and public award history.{% endblock %}
 
 {% block content %}
-{% set selected_type = phase8_selected_award_filter() %}
-{% set selected_view = phase8_selected_award_view() %}
-{% set search_query = phase8_award_search_query() %}
-{% set award_rows = award_records if award_records is defined and award_records else phase8_fetch_award_records() %}
+{% set award_rows = award_records if award_records is defined and award_records else [] %}
+{% set active_tab = active_award_tab if active_award_tab is defined else "litefeet" %}
+{% set view_mode = selected_view if selected_view is defined else request.args.get("view", "cards") %}
+{% set search_query = selected_query if selected_query is defined else request.args.get("q", "") %}
 
 <section class="content-section awards-page">
     <div class="section-heading-row">
@@ -20,7 +15,7 @@
             <p class="eyebrow">Awards</p>
             <h1>Awards</h1>
             <p>
-                Browse LiteFeet award records, nominees, winners, categories, years, and records that still need confirmation.
+                Browse award records by archive: LiteFeet Awards and Dancer’s Choice Awards.
             </p>
         </div>
 
@@ -29,52 +24,69 @@
             <a class="button secondary" href="{{ url_for('submit_info') }}">General Submission</a>
         </div>
     </div>
+
+    <nav class="award-subnav" aria-label="Award archive navigation">
+        <a class="award-subnav-link {% if active_tab == 'litefeet' %}active{% endif %}" href="/awards/litefeet">
+            <span>LiteFeet Awards</span>
+            <strong>{{ litefeet_count if litefeet_count is defined else 0 }}</strong>
+        </a>
+
+        <a class="award-subnav-link {% if active_tab == 'dancers-choice' %}active{% endif %}" href="/awards/dancers-choice">
+            <span>Dancer’s Choice Awards</span>
+            <strong>{{ dancers_choice_count if dancers_choice_count is defined else 0 }}</strong>
+        </a>
+    </nav>
 </section>
 
 <section class="homepage-section award-filter-section">
-    <form method="GET" action="{{ url_for('awards') }}" class="award-filter-form">
+    <form method="GET" action="{% if active_tab == 'dancers-choice' %}/awards/dancers-choice{% else %}/awards/litefeet{% endif %}" class="award-filter-form">
         <label>
             Search
             <input type="search" name="q" value="{{ search_query }}" placeholder="Winner, nominee, year, category...">
         </label>
 
         <label>
-            Type
-            <select name="type">
-                {% for option in phase8_award_filter_options() %}
-                    <option value="{{ option.value }}" {% if selected_type == option.value %}selected{% endif %}>
-                        {{ option.label }}
-                    </option>
-                {% endfor %}
-            </select>
-        </label>
-
-        <label>
             View
             <select name="view">
-                {% for option in phase8_award_view_options() %}
-                    <option value="{{ option.value }}" {% if selected_view == option.value %}selected{% endif %}>
-                        {{ option.label }}
-                    </option>
-                {% endfor %}
+                <option value="cards" {% if view_mode == "cards" %}selected{% endif %}>Cards</option>
+                <option value="list" {% if view_mode == "list" %}selected{% endif %}>List</option>
             </select>
         </label>
 
         <button class="button secondary" type="submit">Apply</button>
-        <a class="button secondary" href="{{ url_for('awards') }}">Reset</a>
+        <a class="button secondary" href="{% if active_tab == 'dancers-choice' %}/awards/dancers-choice{% else %}/awards/litefeet{% endif %}">Reset</a>
     </form>
 </section>
 
 <section class="homepage-section">
     <div class="section-heading-row">
         <div>
-            <p class="eyebrow">Records</p>
-            <h2>Award Archive</h2>
+            <p class="eyebrow">
+                {% if active_tab == "dancers-choice" %}
+                    Dancer’s Choice Awards
+                {% else %}
+                    LiteFeet Awards
+                {% endif %}
+            </p>
+
+            <h2>
+                {% if active_tab == "dancers-choice" %}
+                    Dancer’s Choice Awards Archive
+                {% else %}
+                    LiteFeet Awards Archive
+                {% endif %}
+            </h2>
+
+            {% if active_tab == "dancers-choice" %}
+                <p class="small-note">Dancer’s Choice categories, winners, nominees, and public vote counts will live here.</p>
+            {% else %}
+                <p class="small-note">LiteFeet Awards records will live here separately from Dancer’s Choice Awards.</p>
+            {% endif %}
         </div>
     </div>
 
     {% if award_rows %}
-        {% if selected_view == "list" %}
+        {% if view_mode == "list" %}
             <div class="release-table-wrap">
                 <table class="release-table award-list-table">
                     <thead>
@@ -82,83 +94,117 @@
                             <th>Year</th>
                             <th>Award</th>
                             <th>Category</th>
-                            <th>Winner / Nominee</th>
+                            <th>Winner</th>
                             <th>Status</th>
-                            <th></th>
                         </tr>
                     </thead>
 
                     <tbody>
                         {% for award in award_rows %}
-                            {% if phase8_award_matches_filter(award, selected_type, search_query) %}
-                                <tr>
-                                    <td>{{ phase8_value(award, "award_year") }}</td>
-                                    <td>{{ phase8_value(award, "organizer", "award_show") }}</td>
-                                    <td>{{ phase8_value(award, "category") }}</td>
-                                    <td>{{ phase8_award_person(award) }}</td>
-                                    <td>{{ phase8_award_status(award) }}</td>
-                                    <td>
-                                        <a class="button small-button secondary" href="{{ url_for('award_record_detail_phase8b', award_id=award['id']) }}">Open</a>
-                                    </td>
-                                </tr>
-                            {% endif %}
+                            <tr>
+                                <td>{{ award.award_year or "—" }}</td>
+                                <td>{{ award.award_show or award.organizer or "—" }}</td>
+                                <td>{{ award.category or "—" }}</td>
+                                <td>{{ award.winner_name or award.nominee_name or "—" }}</td>
+                                <td>{{ award.result_status or award.review_status or "—" }}</td>
+                            </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         {% else %}
-            <div class="award-card-grid {{ 'compact-award-grid' if selected_view == 'compact' else '' }}">
+            <div class="award-card-grid">
                 {% for award in award_rows %}
-                    {% if phase8_award_matches_filter(award, selected_type, search_query) %}
-                        {% set badges = phase8_award_badges(award) %}
-
-                        <article class="award-card">
-                            <div class="award-card-topline">
-                                <p class="eyebrow">{{ phase8_value(award, "category", default="Award") }}</p>
-                                <span class="award-status-pill">{{ phase8_award_status(award) }}</span>
-                            </div>
-
-                            <h3>
-                                <a href="{{ url_for('award_record_detail_phase8b', award_id=award['id']) }}">
-                                    {{ phase8_award_title(award) }}
-                                </a>
-                            </h3>
-
-                            <p><strong>{{ phase8_award_person(award) }}</strong></p>
-
-                            {% if phase8_value(award, "notes") and selected_view != "compact" %}
-                                <p>{{ phase8_value(award, "notes")[:240] }}{% if phase8_value(award, "notes")|length > 240 %}...{% endif %}</p>
-                            {% endif %}
-
-                            {% if badges %}
-                                <div class="award-badge-row">
-                                    {% for badge in badges %}
-                                        <span>{{ badge }}</span>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-
-                            <div class="hero-actions">
-                                <a class="button small-button secondary" href="{{ url_for('award_record_detail_phase8b', award_id=award['id']) }}">Details</a>
-                                {% if phase8_value(award, "source_url") %}
-                                    <a class="button small-button secondary" href="{{ phase8_value(award, 'source_url') }}" target="_blank" rel="noopener">Source</a>
+                    <article class="award-card">
+                        <div class="award-card-topline">
+                            <p class="eyebrow">{{ award.category or "Award" }}</p>
+                            <span class="award-status-pill">
+                                {% if award.result_status == "official_co_winner" %}
+                                    Co-winner
+                                {% elif award.result_status %}
+                                    {{ award.result_status.replace("_", " ") }}
+                                {% elif award.review_status %}
+                                    {{ award.review_status }}
+                                {% else %}
+                                    Record
                                 {% endif %}
-                            </div>
-                        </article>
-                    {% endif %}
+                            </span>
+                        </div>
+
+                        <h3>{{ award.winner_name or award.nominee_name or "Unnamed winner" }}</h3>
+
+                        <p>
+                            <strong>{{ award.award_show or award.organizer or "Award record" }}</strong>
+                            {% if award.award_year %}
+                                <span> · {{ award.award_year }}</span>
+                            {% endif %}
+                        </p>
+
+                        {% if active_tab == "dancers-choice" %}
+                            <p class="small-note">Nominee vote breakdown coming in the Dancer’s Choice section.</p>
+                        {% elif award.notes %}
+                            <p>{{ award.notes[:180] }}{% if award.notes|length > 180 %}...{% endif %}</p>
+                        {% endif %}
+                    </article>
                 {% endfor %}
             </div>
         {% endif %}
     {% else %}
         <div class="empty-state compact-empty">
-            <h3>No award records yet.</h3>
-            <p>Add winners, nominees, categories, years, source links, or award context.</p>
+            {% if active_tab == "dancers-choice" %}
+                <h3>No Dancer’s Choice Award records yet.</h3>
+                <p>Seed the official Dancer’s Choice Awards results first, then nominee vote counts will be added here.</p>
+            {% else %}
+                <h3>No LiteFeet Award records yet.</h3>
+                <p>LiteFeet Awards records will stay separate from Dancer’s Choice Awards.</p>
+            {% endif %}
+
             <a class="button primary" href="{{ url_for('award_submit_phase8c') }}">Submit Award Info</a>
         </div>
     {% endif %}
 </section>
 
 <style>
+    .award-subnav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 22px;
+    }
+
+    .award-subnav-link {
+        border: 1px solid rgba(232, 198, 90, 0.24);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.035);
+        color: inherit;
+        text-decoration: none;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .award-subnav-link span {
+        font-weight: 900;
+        font-size: 1.05rem;
+    }
+
+    .award-subnav-link strong {
+        color: var(--accent-color, #e8c65a);
+        border: 1px solid rgba(232, 198, 90, 0.28);
+        border-radius: 999px;
+        padding: 4px 10px;
+        min-width: 42px;
+        text-align: center;
+    }
+
+    .award-subnav-link.active {
+        border-color: var(--accent-color, #e8c65a);
+        background: rgba(232, 198, 90, 0.1);
+        color: var(--accent-color, #e8c65a);
+    }
+
     .award-filter-form {
         display: flex;
         flex-wrap: wrap;
@@ -176,21 +222,26 @@
         gap: 14px;
     }
 
-    .compact-award-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
     .award-card {
-        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border: 1px solid rgba(232, 198, 90, 0.18);
         border-radius: 16px;
         padding: 16px;
-        background: var(--card-bg, rgba(255,255,255,0.04));
+        background: rgba(255,255,255,0.04);
         display: grid;
         gap: 10px;
     }
 
-    .award-card-topline,
-    .award-badge-row {
+    .award-card h3 {
+        margin: 0;
+        color: var(--accent-color, #e8c65a);
+        font-size: 1.45rem;
+    }
+
+    .award-card p {
+        margin: 0;
+    }
+
+    .award-card-topline {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
@@ -198,21 +249,23 @@
         justify-content: space-between;
     }
 
-    .award-badge-row {
-        justify-content: flex-start;
-    }
-
-    .award-status-pill,
-    .award-badge-row span {
-        border: 1px solid var(--border-color, rgba(255,255,255,0.16));
+    .award-status-pill {
+        border: 1px solid rgba(232, 198, 90, 0.28);
         border-radius: 999px;
         padding: 3px 8px;
+        color: var(--accent-color, #e8c65a);
         font-size: 0.78rem;
+        font-weight: 900;
+        text-transform: capitalize;
+    }
+
+    .award-list-table {
+        min-width: 880px;
     }
 
     @media (max-width: 1000px) {
         .award-card-grid,
-        .compact-award-grid {
+        .award-subnav {
             grid-template-columns: 1fr;
         }
 

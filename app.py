@@ -26219,3 +26219,146 @@ try:
 except Exception as exc:
     print(f"DANCERS CHOICE AUGUST 2023 OFFICIAL AWARDS setup failed: {type(exc).__name__}: {exc}")
 
+# --- AWARDS SUBNAV LITEFEET DCA PATCH ---
+# Public Awards structure:
+# - /awards defaults to LiteFeet Awards
+# - /awards/litefeet
+# - /awards/dancers-choice
+# - Dancer's Choice records stay separated from LiteFeet Awards
+
+def award_subnav_is_dancers_choice(row):
+    text = " ".join([
+        str(row.get("award_show") or ""),
+        str(row.get("organizer") or ""),
+        str(row.get("notes") or ""),
+    ]).lower()
+
+    return "dancer" in text and "choice" in text
+
+
+def award_subnav_fetch_records():
+    records = []
+
+    try:
+        records = phase8_fetch_award_records()
+    except Exception:
+        records = []
+
+    if not records:
+        try:
+            records = fetch_all(
+                """
+                SELECT *
+                FROM award_records
+                ORDER BY
+                    award_year DESC,
+                    award_show ASC,
+                    category ASC,
+                    winner_name ASC,
+                    id DESC
+                """
+            )
+        except Exception as exc:
+            print(f"AWARDS_SUBNAV_FETCH_FAILED: {type(exc).__name__}: {exc}")
+            records = []
+
+    return [dict(row) for row in records]
+
+
+def award_subnav_filter_records(records, scope):
+    scope = (scope or "litefeet").strip().lower()
+
+    if scope == "dancers-choice":
+        return [row for row in records if award_subnav_is_dancers_choice(row)]
+
+    if scope == "litefeet":
+        return [row for row in records if not award_subnav_is_dancers_choice(row)]
+
+    return records
+
+
+def award_subnav_search(records, query):
+    query = (query or "").strip().lower()
+
+    if not query:
+        return records
+
+    filtered = []
+
+    for row in records:
+        text = " ".join([
+            str(row.get("award_year") or ""),
+            str(row.get("organizer") or ""),
+            str(row.get("award_show") or ""),
+            str(row.get("category") or ""),
+            str(row.get("nominee_name") or ""),
+            str(row.get("winner_name") or ""),
+            str(row.get("result_status") or ""),
+            str(row.get("review_status") or ""),
+        ]).lower()
+
+        if query in text:
+            filtered.append(row)
+
+    return filtered
+
+
+def awards_subnav_page(scope="litefeet"):
+    all_records = award_subnav_fetch_records()
+    scoped_records = award_subnav_filter_records(all_records, scope)
+    scoped_records = award_subnav_search(scoped_records, request.args.get("q", ""))
+
+    dancers_choice_count = len(award_subnav_filter_records(all_records, "dancers-choice"))
+    litefeet_count = len(award_subnav_filter_records(all_records, "litefeet"))
+
+    return ledger_try_render(
+        "awards.html",
+        page_title="Awards",
+        award_records=scoped_records,
+        awards=scoped_records,
+        records=scoped_records,
+        award_scope=scope,
+        active_award_tab=scope,
+        selected_query=request.args.get("q", ""),
+        selected_view=request.args.get("view", "cards"),
+        dancers_choice_count=dancers_choice_count,
+        litefeet_count=litefeet_count,
+        total_award_count=len(all_records),
+        error=None,
+    )
+
+
+def awards_public_litefeet():
+    return awards_subnav_page("litefeet")
+
+
+def awards_public_dancers_choice():
+    return awards_subnav_page("dancers-choice")
+
+
+try:
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/awards":
+            app.view_functions[rule.endpoint] = awards_public_litefeet
+            print(f"AWARDS SUBNAV active: /awards -> {rule.endpoint}")
+
+    if "awards_public_litefeet" not in app.view_functions:
+        app.add_url_rule(
+            "/awards/litefeet",
+            "awards_public_litefeet",
+            awards_public_litefeet,
+            methods=["GET"],
+        )
+
+    if "awards_public_dancers_choice" not in app.view_functions:
+        app.add_url_rule(
+            "/awards/dancers-choice",
+            "awards_public_dancers_choice",
+            awards_public_dancers_choice,
+            methods=["GET"],
+        )
+
+    print("AWARDS SUBNAV LITEFEET DCA active")
+except Exception as exc:
+    print(f"AWARDS SUBNAV LITEFEET DCA setup failed: {type(exc).__name__}: {exc}")
+
