@@ -26687,3 +26687,166 @@ try:
 except Exception as exc:
     print(f"DCA NOMINEE PUBLIC VOTE COUNTS setup failed: {type(exc).__name__}: {exc}")
 
+# --- DCA NOMINEE VOTES PUBLIC PATCH ---
+# Dancer’s Choice Awards:
+# - reads public nominee vote counts from CSV
+# - shows all nominees + vote counts under /awards/dancers-choice
+# - keeps LiteFeet Awards separate
+# - public page does not show raw/fixed/adjusted/audit language
+
+import csv as _dcav_csv
+from collections import OrderedDict as _dcav_OrderedDict
+from pathlib import Path as _dcav_Path
+
+DCA_PUBLIC_VOTES_CSV = _dcav_Path("data/imports/dancers_choice_august_2023_all_nominee_fixed_votes.csv")
+
+
+def dcav_int(value, default=0):
+    try:
+        if value in [None, ""]:
+            return default
+        return int(float(value))
+    except Exception:
+        return default
+
+
+def dcav_load_vote_rows():
+    if not DCA_PUBLIC_VOTES_CSV.exists():
+        return []
+
+    rows = []
+
+    with DCA_PUBLIC_VOTES_CSV.open(newline="", encoding="utf-8-sig") as handle:
+        reader = _dcav_csv.DictReader(handle)
+
+        for row in reader:
+            category = (row.get("Category") or "").strip()
+            nominee = (row.get("Nominee") or "").strip()
+
+            if not category or not nominee:
+                continue
+
+            rows.append({
+                "award_show": (row.get("Award Show") or "Dancer’s Choice Awards — August 2023").strip(),
+                "category": category,
+                "rank": dcav_int(row.get("Rank")),
+                "nominee_name": nominee,
+                "votes": dcav_int(row.get("Fixed Public Votes")),
+                "result_status": (row.get("Official Result") or "nominee").strip(),
+                "public_status": (row.get("Public Status") or "").strip(),
+            })
+
+    return rows
+
+
+def dcav_vote_groups(query=""):
+    query = (query or "").strip().lower()
+    rows = dcav_load_vote_rows()
+    grouped = _dcav_OrderedDict()
+
+    for row in rows:
+        text = " ".join([
+            row.get("category", ""),
+            row.get("nominee_name", ""),
+            row.get("award_show", ""),
+        ]).lower()
+
+        if query and query not in text:
+            continue
+
+        grouped.setdefault(row["category"], [])
+        grouped[row["category"]].append(row)
+
+    groups = []
+
+    for category, nominees in grouped.items():
+        nominees.sort(key=lambda item: (dcav_int(item.get("rank")), -dcav_int(item.get("votes")), item.get("nominee_name", "")))
+
+        winners = [
+            nominee for nominee in nominees
+            if str(nominee.get("result_status") or "").lower() in {"official_winner", "official_co_winner"}
+        ]
+
+        groups.append({
+            "category": category,
+            "nominees": nominees,
+            "winners": winners,
+            "is_co_winner": len(winners) > 1 or any(str(w.get("result_status") or "").lower() == "official_co_winner" for w in winners),
+        })
+
+    return groups
+
+
+def dcav_fetch_litefeet_awards():
+    try:
+        records = award_subnav_fetch_records()
+        return award_subnav_filter_records(records, "litefeet")
+    except Exception:
+        pass
+
+    try:
+        return phase8_fetch_award_records()
+    except Exception:
+        return []
+
+
+def dcav_public_dancers_choice_awards():
+    groups = dcav_vote_groups(request.args.get("q", ""))
+
+    return ledger_try_render(
+        "awards.html",
+        page_title="Dancer’s Choice Awards",
+        award_records=[],
+        awards=[],
+        records=[],
+        dca_vote_groups=groups,
+        active_award_tab="dancers-choice",
+        award_scope="dancers-choice",
+        selected_query=request.args.get("q", ""),
+        selected_view=request.args.get("view", "cards"),
+        dancers_choice_count=len(dcav_vote_groups("")),
+        litefeet_count=len(dcav_fetch_litefeet_awards()),
+        total_award_count=len(dcav_vote_groups("")) + len(dcav_fetch_litefeet_awards()),
+        error=None,
+    )
+
+
+def dcav_public_litefeet_awards():
+    records = dcav_fetch_litefeet_awards()
+
+    return ledger_try_render(
+        "awards.html",
+        page_title="LiteFeet Awards",
+        award_records=records,
+        awards=records,
+        records=records,
+        dca_vote_groups=[],
+        active_award_tab="litefeet",
+        award_scope="litefeet",
+        selected_query=request.args.get("q", ""),
+        selected_view=request.args.get("view", "cards"),
+        dancers_choice_count=len(dcav_vote_groups("")),
+        litefeet_count=len(records),
+        total_award_count=len(dcav_vote_groups("")) + len(records),
+        error=None,
+    )
+
+
+try:
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/awards":
+            app.view_functions[rule.endpoint] = dcav_public_litefeet_awards
+            print(f"DCA nominee votes active: /awards -> {rule.endpoint}")
+
+        if str(rule.rule) == "/awards/litefeet":
+            app.view_functions[rule.endpoint] = dcav_public_litefeet_awards
+            print(f"DCA nominee votes active: /awards/litefeet -> {rule.endpoint}")
+
+        if str(rule.rule) == "/awards/dancers-choice":
+            app.view_functions[rule.endpoint] = dcav_public_dancers_choice_awards
+            print(f"DCA nominee votes active: /awards/dancers-choice -> {rule.endpoint}")
+
+    print("DCA NOMINEE VOTES PUBLIC active")
+except Exception as exc:
+    print(f"DCA NOMINEE VOTES PUBLIC setup failed: {type(exc).__name__}: {exc}")
+

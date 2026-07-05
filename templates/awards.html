@@ -5,19 +5,17 @@
 
 {% block content %}
 {% set award_rows = award_records if award_records is defined and award_records else [] %}
+{% set dca_groups = dca_vote_groups if dca_vote_groups is defined else [] %}
 {% set active_tab = active_award_tab if active_award_tab is defined else "litefeet" %}
 {% set view_mode = selected_view if selected_view is defined else request.args.get("view", "cards") %}
 {% set search_query = selected_query if selected_query is defined else request.args.get("q", "") %}
-{% set dca_groups = dca_vote_groups if dca_vote_groups is defined else [] %}
 
 <section class="content-section awards-page">
     <div class="section-heading-row">
         <div>
             <p class="eyebrow">Awards</p>
             <h1>Awards</h1>
-            <p>
-                Browse award records by archive: LiteFeet Awards and Dancer’s Choice Awards.
-            </p>
+            <p>Browse award records by archive: LiteFeet Awards and Dancer’s Choice Awards.</p>
         </div>
 
         <div class="hero-actions">
@@ -79,7 +77,7 @@
             </h2>
 
             {% if active_tab == "dancers-choice" %}
-                <p class="small-note">August 2023 categories, official winners, nominees, and public vote counts.</p>
+                <p class="small-note">August 2023 categories, winners, nominees, and public vote counts.</p>
             {% else %}
                 <p class="small-note">LiteFeet Awards records stay separate from Dancer’s Choice Awards.</p>
             {% endif %}
@@ -107,7 +105,7 @@
                                     <td>{{ group.category }}</td>
                                     <td>{{ nominee.rank }}</td>
                                     <td>{{ nominee.nominee_name }}</td>
-                                    <td><strong>{{ nominee.public_vote_count }}</strong></td>
+                                    <td><strong>{{ nominee.votes }}</strong></td>
                                     <td>
                                         {% if nominee.result_status == "official_co_winner" %}
                                             Co-winner
@@ -126,61 +124,54 @@
         {% else %}
             <div class="dca-category-grid">
                 {% for group in dca_groups %}
-                    {% set visible_group = true %}
-                    {% if search_query %}
-                        {% set joined = (group.category ~ " " ~ group.nominees|map(attribute='nominee_name')|join(" "))|lower %}
-                        {% set visible_group = search_query|lower in joined %}
-                    {% endif %}
+                    <article class="dca-category-card">
+                        <div class="award-card-topline">
+                            <p class="eyebrow">{{ group.category }}</p>
+                            {% if group.is_co_winner %}
+                                <span class="award-status-pill">Co-winners</span>
+                            {% else %}
+                                <span class="award-status-pill">Winner</span>
+                            {% endif %}
+                        </div>
 
-                    {% if visible_group %}
-                        <article class="dca-category-card">
-                            <div class="award-card-topline">
-                                <p class="eyebrow">{{ group.category }}</p>
-                                {% if group.is_co_winner %}
-                                    <span class="award-status-pill">Co-winners</span>
-                                {% else %}
-                                    <span class="award-status-pill">Winner</span>
-                                {% endif %}
-                            </div>
+                        <div class="dca-winner-box">
+                            {% for winner in group.winners %}
+                                <div>
+                                    <strong>{{ winner.nominee_name }}</strong>
+                                    <span>{{ winner.votes }} votes</span>
+                                </div>
+                            {% endfor %}
+                        </div>
 
-                            <div class="dca-winner-box">
-                                {% for winner in group.winners %}
-                                    <div>
-                                        <strong>{{ winner.nominee_name }}</strong>
-                                        <span>{{ winner.public_vote_count }} votes</span>
-                                    </div>
-                                {% endfor %}
-                            </div>
+                        <div class="dca-nominee-table-wrap">
+                            <table class="dca-nominee-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Nominee</th>
+                                        <th>Votes</th>
+                                    </tr>
+                                </thead>
 
-                            <div class="dca-nominee-table-wrap">
-                                <table class="dca-nominee-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Rank</th>
-                                            <th>Nominee</th>
-                                            <th>Votes</th>
+                                <tbody>
+                                    {% for nominee in group.nominees %}
+                                        <tr class="{% if nominee.result_status in ['official_winner', 'official_co_winner'] %}winner-row{% endif %}">
+                                            <td>{{ nominee.rank }}</td>
+                                            <td>
+                                                {{ nominee.nominee_name }}
+                                                {% if nominee.result_status == "official_winner" %}
+                                                    <span class="mini-result-pill">Winner</span>
+                                                {% elif nominee.result_status == "official_co_winner" %}
+                                                    <span class="mini-result-pill">Co-winner</span>
+                                                {% endif %}
+                                            </td>
+                                            <td><strong>{{ nominee.votes }}</strong></td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for nominee in group.nominees %}
-                                            <tr class="{% if nominee.result_status in ['official_winner', 'official_co_winner'] %}winner-row{% endif %}">
-                                                <td>{{ nominee.rank }}</td>
-                                                <td>
-                                                    {{ nominee.nominee_name }}
-                                                    {% if nominee.result_status == "official_winner" %}
-                                                        <span class="mini-result-pill">Winner</span>
-                                                    {% elif nominee.result_status == "official_co_winner" %}
-                                                        <span class="mini-result-pill">Co-winner</span>
-                                                    {% endif %}
-                                                </td>
-                                                <td><strong>{{ nominee.public_vote_count }}</strong></td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </article>
-                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
                 {% endfor %}
             </div>
         {% endif %}
@@ -228,10 +219,6 @@
                                 <span> · {{ award.award_year }}</span>
                             {% endif %}
                         </p>
-
-                        {% if award.notes %}
-                            <p>{{ award.notes[:180] }}{% if award.notes|length > 180 %}...{% endif %}</p>
-                        {% endif %}
                     </article>
                 {% endfor %}
             </div>
@@ -240,7 +227,7 @@
         <div class="empty-state compact-empty">
             {% if active_tab == "dancers-choice" %}
                 <h3>No Dancer’s Choice Award records yet.</h3>
-                <p>Seed the Dancer’s Choice nominee vote counts to show the August 2023 archive.</p>
+                <p>Add the Dancer’s Choice nominee vote file to show the August 2023 archive.</p>
             {% else %}
                 <h3>No LiteFeet Award records yet.</h3>
                 <p>LiteFeet Awards records will stay separate from Dancer’s Choice Awards.</p>
