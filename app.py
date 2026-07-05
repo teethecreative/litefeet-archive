@@ -25960,3 +25960,262 @@ def cho_clean_home_order(response):
 
 print("CLEAN HOME SOURCE ORDER active")
 
+# --- DANCERS CHOICE AUGUST 2023 OFFICIAL AWARDS PATCH ---
+# Dancer’s Choice Awards — August 2023:
+# - uses official PDF certificate winners only
+# - does not import raw votes
+# - does not display vote totals
+# - Best Team Video is stored as co-winners: Bombsquad + 2Crafty
+# - replaces previous August 2023 Dancer's Choice records with official PDF records
+
+import json as _dca_json
+from pathlib import Path as _dca_Path
+
+try:
+    from sqlalchemy import text as _dca_text
+except Exception:
+    _dca_text = text
+
+
+DCA_IMPORT_PATH = _dca_Path("data/imports/dancers_choice_august_2023_official_results.json")
+DCA_AWARD_SHOW = "Dancer’s Choice Awards — August 2023"
+DCA_AWARD_YEAR = "2023"
+DCA_ORGANIZER = "Dancer’s Choice Awards"
+DCA_SOURCE = "Dancer’s Choice August 2023 Results.pdf"
+
+
+def dca_execute(query, params=None):
+    params = params or {}
+    with engine.begin() as conn:
+        conn.execute(_dca_text(query), params)
+
+
+def dca_fetch_all(query, params=None):
+    params = params or {}
+    try:
+        with engine.connect() as conn:
+            return [dict(row) for row in conn.execute(_dca_text(query), params).mappings().all()]
+    except Exception as exc:
+        print(f"DCA_FETCH_FAILED: {type(exc).__name__}: {exc}")
+        return []
+
+
+def dca_fetch_one(query, params=None):
+    rows = dca_fetch_all(query, params or {})
+    return rows[0] if rows else None
+
+
+def dca_is_admin():
+    try:
+        if session.get("admin_logged_in") or session.get("is_admin"):
+            return True
+        if str(session.get("user_role") or "").lower() == "admin":
+            return True
+    except Exception:
+        pass
+
+    try:
+        user_obj = current_user() if callable(current_user) else current_user
+        if isinstance(user_obj, dict):
+            return str(user_obj.get("role") or "").lower() == "admin"
+        return bool(getattr(user_obj, "is_admin", False))
+    except Exception:
+        return False
+
+
+def dca_admin_gate():
+    if dca_is_admin():
+        return None
+    return redirect("/admin/login")
+
+
+def dca_ensure_award_records():
+    dca_execute("""
+        CREATE TABLE IF NOT EXISTS award_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            award_year TEXT,
+            organizer TEXT,
+            award_show TEXT,
+            category TEXT,
+            nominee_name TEXT,
+            winner_name TEXT,
+            result_status TEXT,
+            source_url TEXT,
+            notes TEXT,
+            review_status TEXT,
+            submitter_name TEXT,
+            submitter_contact TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT
+        )
+    """)
+
+
+def dca_official_results():
+    if not DCA_IMPORT_PATH.exists():
+        return []
+
+    rows = _dca_json.loads(DCA_IMPORT_PATH.read_text(errors="replace"))
+
+    for row in rows:
+        row.setdefault("result_status", "official_winner")
+        row.setdefault("affiliation", "")
+        row.setdefault("location", "")
+
+    return rows
+
+
+def dca_existing_rows():
+    dca_ensure_award_records()
+
+    return dca_fetch_all(
+        """
+        SELECT *
+        FROM award_records
+        WHERE award_year = :award_year
+          AND (
+                lower(award_show) LIKE '%dancer%choice%'
+             OR lower(organizer) LIKE '%dancer%choice%'
+          )
+        ORDER BY category ASC, winner_name ASC, id ASC
+        """,
+        {"award_year": DCA_AWARD_YEAR},
+    )
+
+
+def dca_replace_official_records():
+    dca_ensure_award_records()
+
+    results = dca_official_results()
+
+    dca_execute(
+        """
+        DELETE FROM award_records
+        WHERE award_year = :award_year
+          AND (
+                lower(award_show) LIKE '%dancer%choice%'
+             OR lower(organizer) LIKE '%dancer%choice%'
+             OR lower(notes) LIKE '%dancer’s choice august 2023%'
+             OR lower(notes) LIKE '%dancer''s choice august 2023%'
+          )
+        """,
+        {"award_year": DCA_AWARD_YEAR},
+    )
+
+    for row in results:
+        notes_bits = [
+            "Official PDF certificate result.",
+            f"Source: {DCA_SOURCE}, page {row.get('page')}.",
+            "Raw nomination/vote spreadsheet data intentionally not used for official Ledger result.",
+        ]
+
+        if row.get("category") == "Best Team Video":
+            notes_bits.append("Official co-winner category.")
+
+        if row.get("affiliation"):
+            notes_bits.append(f"Affiliation/team: {row.get('affiliation')}.")
+
+        if row.get("location"):
+            notes_bits.append(f"Location: {row.get('location')}.")
+
+        dca_execute(
+            """
+            INSERT INTO award_records (
+                award_year,
+                organizer,
+                award_show,
+                category,
+                nominee_name,
+                winner_name,
+                result_status,
+                source_url,
+                notes,
+                review_status,
+                submitter_name,
+                submitter_contact,
+                created_at,
+                updated_at
+            )
+            VALUES (
+                :award_year,
+                :organizer,
+                :award_show,
+                :category,
+                :nominee_name,
+                :winner_name,
+                :result_status,
+                :source_url,
+                :notes,
+                'approved',
+                'Admin import',
+                '',
+                CURRENT_TIMESTAMP,
+                CURRENT_TIMESTAMP
+            )
+            """,
+            {
+                "award_year": DCA_AWARD_YEAR,
+                "organizer": DCA_ORGANIZER,
+                "award_show": DCA_AWARD_SHOW,
+                "category": row.get("category"),
+                "nominee_name": row.get("winner"),
+                "winner_name": row.get("winner"),
+                "result_status": row.get("result_status") or "official_winner",
+                "source_url": f"{DCA_SOURCE}#page={row.get('page')}",
+                "notes": " ".join(notes_bits),
+            },
+        )
+
+    return len(results)
+
+
+def admin_dancers_choice_2023_import():
+    gate = dca_admin_gate()
+    if gate:
+        return gate
+
+    if request.method == "POST":
+        action = str(request.form.get("action") or "").strip().lower()
+
+        if action == "replace_seed":
+            dca_replace_official_records()
+
+        return redirect("/admin/imports/dancers-choice-2023")
+
+    official_results = dca_official_results()
+    existing = dca_existing_rows()
+
+    official_count = len(official_results)
+    existing_count = len(existing)
+    categories = sorted({row.get("category") for row in official_results if row.get("category")})
+    co_winners = [row for row in official_results if row.get("result_status") == "official_co_winner"]
+
+    return render_template(
+        "admin_dancers_choice_2023_import.html",
+        official_results=official_results,
+        existing_records=existing,
+        official_count=official_count,
+        existing_count=existing_count,
+        category_count=len(categories),
+        co_winners=co_winners,
+        award_show=DCA_AWARD_SHOW,
+        award_year=DCA_AWARD_YEAR,
+        source_name=DCA_SOURCE,
+    )
+
+
+try:
+    dca_ensure_award_records()
+
+    if "admin_dancers_choice_2023_import" not in app.view_functions:
+        app.add_url_rule(
+            "/admin/imports/dancers-choice-2023",
+            "admin_dancers_choice_2023_import",
+            admin_dancers_choice_2023_import,
+            methods=["GET", "POST"],
+        )
+
+    print("DANCERS CHOICE AUGUST 2023 OFFICIAL AWARDS active")
+except Exception as exc:
+    print(f"DANCERS CHOICE AUGUST 2023 OFFICIAL AWARDS setup failed: {type(exc).__name__}: {exc}")
+

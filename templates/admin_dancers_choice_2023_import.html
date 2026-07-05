@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Dancer’s Choice Import | Admin{% endblock %}
+
+{% block content %}
+<section class="content-section dca-import-page">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Admin Import</p>
+            <h1>Dancer’s Choice Awards — August 2023</h1>
+            <p>
+                This import uses the official certificate PDF winners only.
+                Raw nomination/vote totals are not shown and are not seeded.
+            </p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="/admin">Back to Command Center</a>
+            <a class="button secondary" href="/awards">View Awards</a>
+        </div>
+    </div>
+
+    <div class="dca-summary-grid">
+        <article>
+            <strong>{{ official_count }}</strong>
+            <span>official result rows</span>
+        </article>
+
+        <article>
+            <strong>{{ category_count }}</strong>
+            <span>categories</span>
+        </article>
+
+        <article>
+            <strong>{{ existing_count }}</strong>
+            <span>current Dancer’s Choice 2023 rows</span>
+        </article>
+
+        <article>
+            <strong>{{ co_winners|length }}</strong>
+            <span>co-winner rows</span>
+        </article>
+    </div>
+
+    <form method="post" class="dca-seed-card">
+        <input type="hidden" name="action" value="replace_seed">
+
+        <div>
+            <p class="eyebrow">Official Seed</p>
+            <h2>Replace with PDF winners</h2>
+            <p>
+                This deletes current Dancer’s Choice 2023 award rows and replaces them with the official August 2023 certificate results.
+                Best Team Video will seed as co-winners: Bombsquad and 2Crafty.
+            </p>
+        </div>
+
+        <button class="button primary" type="submit">Replace + Seed Official Winners</button>
+    </form>
+</section>
+
+<section class="content-section dca-results-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Official PDF Results</p>
+            <h2>Rows ready to seed</h2>
+        </div>
+    </div>
+
+    <div class="dca-table-wrap">
+        <table class="dca-table">
+            <thead>
+                <tr>
+                    <th>Page</th>
+                    <th>Category</th>
+                    <th>Official Winner</th>
+                    <th>Affiliation</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for row in official_results %}
+                    <tr class="{% if row.result_status == 'official_co_winner' %}co-winner-row{% endif %}">
+                        <td>{{ row.page }}</td>
+                        <td><strong>{{ row.category }}</strong></td>
+                        <td>{{ row.winner }}</td>
+                        <td>{{ row.affiliation or "—" }}</td>
+                        <td>{{ row.location or "—" }}</td>
+                        <td>
+                            {% if row.result_status == "official_co_winner" %}
+                                <span class="dca-status-pill">Co-winner</span>
+                            {% else %}
+                                <span class="dca-status-pill">Official winner</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="content-section dca-existing-section">
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Current Database</p>
+            <h2>Existing Dancer’s Choice 2023 award rows</h2>
+            <p>These are what will be replaced when you seed the official PDF results.</p>
+        </div>
+    </div>
+
+    <div class="dca-table-wrap">
+        <table class="dca-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Award Show</th>
+                    <th>Category</th>
+                    <th>Winner</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% if existing_records %}
+                    {% for row in existing_records %}
+                        <tr>
+                            <td>{{ row.id }}</td>
+                            <td>{{ row.award_show or "—" }}</td>
+                            <td>{{ row.category or "—" }}</td>
+                            <td>{{ row.winner_name or "—" }}</td>
+                            <td>{{ row.result_status or row.review_status or "—" }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="empty-dca-row">No existing Dancer’s Choice 2023 rows found.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<style>
+    .dca-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+    }
+
+    .dca-summary-grid article,
+    .dca-seed-card {
+        border: 1px solid rgba(232,198,90,0.22);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.035);
+        padding: 16px;
+    }
+
+    .dca-summary-grid strong {
+        display: block;
+        color: var(--accent-color, #e8c65a);
+        font-size: 2rem;
+        line-height: 1;
+        margin-bottom: 6px;
+    }
+
+    .dca-summary-grid span {
+        opacity: 0.76;
+        font-weight: 800;
+    }
+
+    .dca-seed-card {
+        margin-top: 18px;
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .dca-seed-card h2 {
+        margin: 4px 0 6px;
+        color: var(--accent-color, #e8c65a);
+    }
+
+    .dca-seed-card p {
+        margin: 0;
+        opacity: 0.8;
+    }
+
+    .dca-table-wrap {
+        border: 1px solid rgba(232,198,90,0.22);
+        border-radius: 14px;
+        overflow: auto;
+        max-height: 680px;
+        background: rgba(255,255,255,0.025);
+    }
+
+    .dca-table {
+        width: 100%;
+        min-width: 920px;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.9rem;
+    }
+
+    .dca-table th,
+    .dca-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .dca-table th {
+        position: sticky;
+        top: 0;
+        z-index: 4;
+        background: #080808;
+        color: var(--accent-color, #e8c65a);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.72rem;
+    }
+
+    .co-winner-row {
+        background: rgba(232,198,90,0.04);
+    }
+
+    .dca-status-pill {
+        display: inline-flex;
+        border: 1px solid rgba(232,198,90,0.34);
+        color: var(--accent-color, #e8c65a);
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-size: 0.74rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .empty-dca-row {
+        text-align: center;
+        opacity: 0.75;
+        padding: 22px !important;
+    }
+
+    @media (max-width: 850px) {
+        .dca-summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .dca-seed-card {
+            display: grid;
+        }
+    }
+</style>
+{% endblock %}
