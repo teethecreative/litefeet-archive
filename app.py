@@ -25179,3 +25179,126 @@ try:
 except Exception as exc:
     print(f"HOME PROMPT VIDEO NEXT7 LAYOUT setup failed: {type(exc).__name__}: {exc}")
 
+# --- FIX HOME PROMPT REMOVE MISSING BLOCK PATCH ---
+# Hard home page cleanup:
+# - server-side removes old Calendar / Next Up / Submit what is missing block
+# - server-side inserts homepage prompt directly after <main>
+# - keeps the Next 7 Days in LiteFeet section
+# - hides old hero CTA buttons
+
+import re as _fh_re
+
+
+def fh_remove_old_home_missing_sections(html):
+    sections = _fh_re.findall(r"<section\b[^>]*>.*?</section>", html, flags=_fh_re.IGNORECASE | _fh_re.DOTALL)
+
+    for section in sections:
+        plain = _fh_re.sub(r"<[^>]+>", " ", section)
+        plain = _fh_re.sub(r"\s+", " ", plain).strip().lower()
+
+        old_calendar_missing_block = (
+            "next up" in plain
+            and (
+                "submit what is missing" in plain
+                or "add calendar item" in plain
+                or "open calendar" in plain
+                or "no upcoming calendar items yet" in plain
+            )
+        )
+
+        if old_calendar_missing_block:
+            html = html.replace(section, "", 1)
+
+    return html
+
+
+def fh_remove_first_home_hero_actions(html):
+    # removes the home hero CTA buttons without touching nav links
+    match = _fh_re.search(
+        r'<div class="hero-actions">.*?</div>',
+        html,
+        flags=_fh_re.IGNORECASE | _fh_re.DOTALL,
+    )
+
+    if match:
+        html = html[:match.start()] + "" + html[match.end():]
+
+    return html
+
+
+def fh_prompt_widget_once():
+    try:
+        return hp_home_widget()
+    except Exception as exc:
+        print(f"FIX_HOME_PROMPT_WIDGET_FAILED: {type(exc).__name__}: {exc}")
+        return ""
+
+
+@app.after_request
+def fh_force_home_prompt_and_remove_missing(response):
+    try:
+        if request.method != "GET":
+            return response
+
+        if request.path not in {"/", ""}:
+            return response
+
+        if response.status_code != 200:
+            return response
+
+        if "text/html" not in response.headers.get("Content-Type", ""):
+            return response
+
+        html = response.get_data(as_text=True)
+
+        html = fh_remove_old_home_missing_sections(html)
+        html = fh_remove_first_home_hero_actions(html)
+
+        if "homepage-prompt-widget" not in html:
+            widget = fh_prompt_widget_once()
+
+            if widget:
+                main_match = _fh_re.search(r"<main[^>]*>", html, flags=_fh_re.IGNORECASE)
+
+                if main_match:
+                    insert_at = main_match.end()
+                    html = html[:insert_at] + "\n" + widget + "\n" + html[insert_at:]
+                elif "</body>" in html:
+                    html = html.replace("</body>", widget + "\n</body>", 1)
+                else:
+                    html = widget + html
+
+        if "data-home-next7" not in html:
+            try:
+                next7 = h7_next7_section()
+            except Exception as exc:
+                print(f"FIX_HOME_NEXT7_FAILED: {type(exc).__name__}: {exc}")
+                next7 = ""
+
+            if next7:
+                if "</main>" in html:
+                    html = html.replace("</main>", next7 + "\n</main>", 1)
+                elif "</body>" in html:
+                    html = html.replace("</body>", next7 + "\n</body>", 1)
+                else:
+                    html += next7
+
+        hard_css = """
+        <style>
+            body main > section:first-of-type .hero-actions,
+            body .page-hero .hero-actions {
+                display: none !important;
+            }
+        </style>
+        """
+
+        if "body .page-hero .hero-actions" not in html:
+            html = html.replace("</body>", hard_css + "\n</body>", 1) if "</body>" in html else html + hard_css
+
+        response.set_data(html)
+        response.headers["Content-Length"] = str(len(response.get_data()))
+    except Exception as exc:
+        print(f"FIX_HOME_PROMPT_REMOVE_MISSING_FAILED: {type(exc).__name__}: {exc}")
+
+    return response
+
