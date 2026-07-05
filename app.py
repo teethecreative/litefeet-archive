@@ -27461,12 +27461,38 @@ def dcar_round_stats():
         for category, votes in prior_counter.most_common()
     ]
 
+    combined_category_results = []
+
+    for item in top_prior:
+        combined_category_results.append({
+            "category": item.get("category"),
+            "category_type": "Returning",
+            "votes": int(item.get("votes") or 0),
+        })
+
+    for item in top_new:
+        combined_category_results.append({
+            "category": item.get("category_name"),
+            "category_type": "New",
+            "votes": int(item.get("support") or 0),
+        })
+
+    combined_category_results = sorted(
+        combined_category_results,
+        key=lambda item: (
+            -int(item.get("votes") or 0),
+            0 if item.get("category_type") == "Returning" else 1,
+            str(item.get("category") or "").lower(),
+        ),
+    )
+
     return {
         "average_category_count": avg_count,
         "category_count_responses": len(category_counts),
         "total_submissions": len(submissions),
         "top_prior_categories": top_prior[:30],
         "top_new_categories": top_new[:30],
+        "combined_category_results": combined_category_results[:80],
         "total_new_suggestions": len(suggestion_items),
     }
 

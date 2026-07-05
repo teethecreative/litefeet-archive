@@ -357,76 +357,46 @@
             {% endif %}
         </section>
 
-        <section class="dca-round-results-card">
+        <section class="dca-round-results-card dca-results-single-card">
             <div class="dca-round-results-heading">
                 <p class="eyebrow">Live Results</p>
                 <h3>Category suggestion results</h3>
                 <p>
-                    These rankings update as people submit their daily category vote. Similar category ideas may still need to be merged during review.
+                    This table combines returning 2023 categories and new category ideas into one ranking.
                 </p>
             </div>
 
-            <div class="dca-results-grid">
-                <article class="dca-results-panel">
-                    <h4>Top Returning 2023 Categories</h4>
+            {% set category_results = round_stats.combined_category_results if round_stats.combined_category_results is defined else [] %}
 
-                    {% if round_stats.top_prior_categories %}
-                        <div class="release-table-wrap">
-                            <table class="release-table dca-results-table">
-                                <thead>
-                                    <tr>
-                                        <th>Rank</th>
-                                        <th>Category</th>
-                                        <th>Votes</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in round_stats.top_prior_categories %}
-                                        <tr>
-                                            <td>{{ loop.index }}</td>
-                                            <td>{{ item.category }}</td>
-                                            <td><strong>{{ item.votes }}</strong></td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="small-note">No returning category votes yet.</p>
-                    {% endif %}
-                </article>
+            {% if category_results %}
+                <div class="release-table-wrap">
+                    <table class="release-table dca-results-table dca-single-results-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th>Votes</th>
+                            </tr>
+                        </thead>
 
-                <article class="dca-results-panel">
-                    <h4>Top New Category Suggestions</h4>
-
-                    {% if round_stats.top_new_categories %}
-                        <div class="release-table-wrap">
-                            <table class="release-table dca-results-table">
-                                <thead>
-                                    <tr>
-                                        <th>Rank</th>
-                                        <th>Suggestion</th>
-                                        <th>Support</th>
-                                        <th>Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in round_stats.top_new_categories %}
-                                        <tr>
-                                            <td>{{ loop.index }}</td>
-                                            <td>{{ item.category_name }}</td>
-                                            <td><strong>{{ item.support }}</strong></td>
-                                            <td>{{ item.description[:140] }}{% if item.description|length > 140 %}...{% endif %}</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="small-note">No new category suggestions yet.</p>
-                    {% endif %}
-                </article>
-            </div>
+                        <tbody>
+                            {% for item in category_results %}
+                                <tr>
+                                    <td>{{ item.category }}</td>
+                                    <td>
+                                        <span class="dca-results-type-pill {{ 'returning' if item.category_type == 'Returning' else 'new' }}">
+                                            {{ item.category_type }}
+                                        </span>
+                                    </td>
+                                    <td><strong>{{ item.votes }}</strong></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="small-note">No category votes yet.</p>
+            {% endif %}
         </section>
     {% endif %}
 
@@ -1421,6 +1391,37 @@
         .dca-builder-actions .button {
             width: 100% !important;
         }
+    }
+
+
+    .dca-results-single-card {
+        gap: 14px;
+    }
+
+    .dca-single-results-table {
+        min-width: 620px;
+    }
+
+    .dca-single-results-table th:nth-child(3),
+    .dca-single-results-table td:nth-child(3) {
+        text-align: right;
+    }
+
+    .dca-results-type-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(232, 198, 90, 0.28);
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-size: 0.76rem;
+        font-weight: 900;
+        color: var(--accent-color, #e8c65a);
+        background: rgba(232, 198, 90, 0.08);
+    }
+
+    .dca-results-type-pill.new {
+        background: rgba(255, 255, 255, 0.04);
     }
 
 </style>
