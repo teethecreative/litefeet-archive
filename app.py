@@ -24067,3 +24067,618 @@ try:
 except Exception as exc:
     print(f"MUSIC SUBMIT LINK PREVIEW PROJECT setup failed: {type(exc).__name__}: {exc}")
 
+# --- HOMEPAGE PROMPT QUESTIONS PATCH ---
+# Home page prompt feature:
+# - seed/admin manage LiteFeet questions
+# - show one question per visit/session
+# - user can answer
+# - after answer, show small "Answer more" button
+# - admin can review recent answers
+
+import html as _hp_html
+import random as _hp_random
+import re as _hp_re
+from pathlib import Path as _hp_Path
+
+try:
+    from sqlalchemy import text as _hp_text
+except Exception:
+    _hp_text = text
+
+
+def hp_execute(query, params=None):
+    params = params or {}
+    with engine.begin() as conn:
+        conn.execute(_hp_text(query), params)
+
+
+def hp_fetch_all(query, params=None):
+    params = params or {}
+    try:
+        with engine.connect() as conn:
+            return [dict(row) for row in conn.execute(_hp_text(query), params).mappings().all()]
+    except Exception as exc:
+        print(f"HOMEPAGE_PROMPT_FETCH_FAILED: {type(exc).__name__}: {exc}")
+        return []
+
+
+def hp_fetch_one(query, params=None):
+    rows = hp_fetch_all(query, params or {})
+    return rows[0] if rows else None
+
+
+def hp_is_admin():
+    try:
+        if session.get("admin_logged_in") or session.get("is_admin"):
+            return True
+        if str(session.get("user_role") or "").lower() == "admin":
+            return True
+    except Exception:
+        pass
+
+    try:
+        user_obj = current_user() if callable(current_user) else current_user
+        if isinstance(user_obj, dict):
+            return str(user_obj.get("role") or "").lower() == "admin"
+        return bool(getattr(user_obj, "is_admin", False))
+    except Exception:
+        return False
+
+
+def hp_admin_gate():
+    if hp_is_admin():
+        return None
+    return redirect("/admin/login")
+
+
+def hp_current_user_id():
+    try:
+        value = session.get("user_id") or session.get("account_user_id") or session.get("admin_user_id")
+        if value:
+            return str(value)
+    except Exception:
+        pass
+
+    try:
+        user_obj = current_user() if callable(current_user) else current_user
+        if isinstance(user_obj, dict):
+            return str(user_obj.get("id") or "")
+        if hasattr(user_obj, "get_id"):
+            return str(user_obj.get_id() or "")
+    except Exception:
+        pass
+
+    return ""
+
+
+def hp_visitor_key():
+    try:
+        key = session.get("homepage_prompt_visitor_key")
+        if not key:
+            key = f"visitor-{_hp_random.randint(100000, 999999)}-{_hp_random.randint(100000, 999999)}"
+            session["homepage_prompt_visitor_key"] = key
+        return key
+    except Exception:
+        return "public"
+
+
+def hp_ensure_tables():
+    if engine.dialect.name.startswith("postgres"):
+        hp_execute("""
+            CREATE TABLE IF NOT EXISTS homepage_prompts (
+                id SERIAL PRIMARY KEY,
+                question TEXT NOT NULL,
+                prompt_type TEXT DEFAULT 'question',
+                is_active INTEGER DEFAULT 1,
+                display_order INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                archived_at TEXT
+            )
+        """)
+
+        hp_execute("""
+            CREATE TABLE IF NOT EXISTS homepage_prompt_answers (
+                id SERIAL PRIMARY KEY,
+                prompt_id INTEGER,
+                question TEXT,
+                answer_text TEXT NOT NULL,
+                visitor_key TEXT,
+                user_id TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+    else:
+        hp_execute("""
+            CREATE TABLE IF NOT EXISTS homepage_prompts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                question TEXT NOT NULL,
+                prompt_type TEXT DEFAULT 'question',
+                is_active INTEGER DEFAULT 1,
+                display_order INTEGER DEFAULT 0,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                archived_at TEXT
+            )
+        """)
+
+        hp_execute("""
+            CREATE TABLE IF NOT EXISTS homepage_prompt_answers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                prompt_id INTEGER,
+                question TEXT,
+                answer_text TEXT NOT NULL,
+                visitor_key TEXT,
+                user_id TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+    hp_execute("CREATE INDEX IF NOT EXISTS idx_homepage_prompts_active ON homepage_prompts (is_active)")
+    hp_execute("CREATE INDEX IF NOT EXISTS idx_homepage_prompt_answers_prompt ON homepage_prompt_answers (prompt_id)")
+
+
+def hp_seed_prompts_from_file():
+    hp_ensure_tables()
+
+    questions_file = _hp_Path("data/homepage_prompt_questions.txt")
+    if not questions_file.exists():
+        return 0
+
+    raw_questions = [
+        line.strip()
+        for line in questions_file.read_text(errors="replace").splitlines()
+        if line.strip()
+    ]
+
+    inserted = 0
+
+    for index, question in enumerate(raw_questions, start=1):
+        existing = hp_fetch_one(
+            "SELECT id FROM homepage_prompts WHERE lower(question) = lower(:question) LIMIT 1",
+            {"question": question},
+        )
+
+        if existing:
+            continue
+
+        hp_execute(
+            """
+            INSERT INTO homepage_prompts (
+                question,
+                prompt_type,
+                is_active,
+                display_order,
+                created_at
+            )
+            VALUES (
+                :question,
+                'question',
+                1,
+                :display_order,
+                CURRENT_TIMESTAMP
+            )
+            """,
+            {
+                "question": question,
+                "display_order": index,
+            },
+        )
+
+        inserted += 1
+
+    return inserted
+
+
+def hp_active_prompts():
+    hp_ensure_tables()
+    hp_seed_prompts_from_file()
+
+    return hp_fetch_all(
+        """
+        SELECT *
+        FROM homepage_prompts
+        WHERE is_active = 1
+          AND archived_at IS NULL
+        ORDER BY display_order ASC, id ASC
+        """
+    )
+
+
+def hp_pick_prompt():
+    prompts = hp_active_prompts()
+
+    if not prompts:
+        return None
+
+    answered_ids = set(str(value) for value in session.get("homepage_prompt_answered_ids", []))
+    available = [prompt for prompt in prompts if str(prompt.get("id")) not in answered_ids]
+
+    if not available:
+        available = prompts
+
+    return _hp_random.choice(available)
+
+
+def hp_escape(value):
+    return _hp_html.escape(str(value or ""), quote=True)
+
+
+def hp_home_widget():
+    try:
+        hp_ensure_tables()
+
+        if session.get("homepage_prompt_answered_once") and not session.get("homepage_prompt_answer_more"):
+            return """
+            <section class="homepage-prompt-widget homepage-prompt-thanks">
+                <div class="homepage-prompt-inner">
+                    <p class="eyebrow">LiteFeet Ledger Question</p>
+                    <h2>Thanks for adding your answer.</h2>
+                    <p>Your response was saved for Ledger review.</p>
+                    <a class="button secondary homepage-answer-more-button" href="/home-prompt/more">Answer more</a>
+                </div>
+            </section>
+            """ + hp_widget_css()
+
+        session.pop("homepage_prompt_answer_more", None)
+
+        prompt = hp_pick_prompt()
+
+        if not prompt:
+            return ""
+
+        prompt_id = hp_escape(prompt.get("id"))
+        question = hp_escape(prompt.get("question"))
+
+        return f"""
+        <section class="homepage-prompt-widget">
+            <div class="homepage-prompt-inner">
+                <div class="homepage-prompt-copy">
+                    <p class="eyebrow">LiteFeet Ledger Question</p>
+                    <h2>{question}</h2>
+                    <p>Answer one community question. Your response helps build the Ledger with real LiteFeet knowledge.</p>
+                </div>
+
+                <form method="post" action="/home-prompt/answer" class="homepage-prompt-form">
+                    <input type="hidden" name="prompt_id" value="{prompt_id}">
+                    <textarea name="answer_text" rows="4" placeholder="Type your answer here..." required></textarea>
+                    <div class="homepage-prompt-actions">
+                        <button class="button primary" type="submit">Submit answer</button>
+                        <a class="button secondary homepage-answer-more-button" href="/home-prompt/more">Answer more</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+        """ + hp_widget_css()
+    except Exception as exc:
+        print(f"HOMEPAGE_PROMPT_WIDGET_FAILED: {type(exc).__name__}: {exc}")
+        return ""
+
+
+def hp_widget_css():
+    return """
+    <style>
+        .homepage-prompt-widget {
+            max-width: 1120px;
+            margin: 28px auto;
+            padding: 0 20px;
+        }
+
+        .homepage-prompt-inner {
+            border: 1px solid rgba(232, 198, 90, 0.26);
+            background: radial-gradient(circle at top left, rgba(232, 198, 90, 0.12), rgba(255,255,255,0.035) 34%, rgba(0,0,0,0.22));
+            border-radius: 20px;
+            padding: 22px;
+            display: grid;
+            grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+            gap: 20px;
+            align-items: start;
+            box-shadow: 0 20px 55px rgba(0,0,0,0.22);
+        }
+
+        .homepage-prompt-thanks .homepage-prompt-inner {
+            grid-template-columns: 1fr auto;
+            align-items: center;
+        }
+
+        .homepage-prompt-copy h2,
+        .homepage-prompt-inner h2 {
+            margin: 4px 0 8px;
+            color: var(--accent-color, #e8c65a);
+            font-size: clamp(1.45rem, 3vw, 2.2rem);
+            line-height: 1.08;
+        }
+
+        .homepage-prompt-copy p,
+        .homepage-prompt-inner p {
+            margin: 0;
+            opacity: 0.82;
+        }
+
+        .homepage-prompt-form {
+            display: grid;
+            gap: 12px;
+        }
+
+        .homepage-prompt-form textarea {
+            width: 100%;
+            min-height: 128px;
+            border-radius: 14px;
+            border: 1px solid rgba(232, 198, 90, 0.32);
+            background: rgba(0, 0, 0, 0.32);
+            color: #fff;
+            padding: 12px;
+            font: inherit;
+            resize: vertical;
+        }
+
+        .homepage-prompt-form textarea:focus {
+            outline: none;
+            border-color: var(--accent-color, #e8c65a);
+            box-shadow: 0 0 0 3px rgba(232, 198, 90, 0.14);
+        }
+
+        .homepage-prompt-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .homepage-answer-more-button {
+            white-space: nowrap;
+        }
+
+        @media (max-width: 800px) {
+            .homepage-prompt-inner,
+            .homepage-prompt-thanks .homepage-prompt-inner {
+                grid-template-columns: 1fr;
+            }
+
+            .homepage-prompt-actions {
+                justify-content: stretch;
+            }
+
+            .homepage-prompt-actions .button,
+            .homepage-answer-more-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+    """
+
+
+@app.after_request
+def hp_inject_homepage_prompt(response):
+    try:
+        if request.method != "GET":
+            return response
+
+        if request.path not in {"/", ""}:
+            return response
+
+        if response.status_code != 200:
+            return response
+
+        content_type = response.headers.get("Content-Type", "")
+        if "text/html" not in content_type:
+            return response
+
+        html = response.get_data(as_text=True)
+
+        if "homepage-prompt-widget" in html:
+            return response
+
+        widget = hp_home_widget()
+
+        if not widget:
+            return response
+
+        if "</main>" in html:
+            html = html.replace("</main>", widget + "\n</main>", 1)
+        elif "</body>" in html:
+            html = html.replace("</body>", widget + "\n</body>", 1)
+        else:
+            html += widget
+
+        response.set_data(html)
+        response.headers["Content-Length"] = str(len(response.get_data()))
+    except Exception as exc:
+        print(f"HOMEPAGE_PROMPT_INJECT_FAILED: {type(exc).__name__}: {exc}")
+
+    return response
+
+
+def home_prompt_answer():
+    hp_ensure_tables()
+
+    prompt_id = str(request.form.get("prompt_id") or "").strip()
+    answer_text = str(request.form.get("answer_text") or "").strip()
+
+    if not prompt_id or not answer_text:
+        return redirect(request.referrer or "/")
+
+    prompt = hp_fetch_one(
+        "SELECT * FROM homepage_prompts WHERE id = :prompt_id LIMIT 1",
+        {"prompt_id": prompt_id},
+    )
+
+    question = prompt.get("question") if prompt else ""
+
+    hp_execute(
+        """
+        INSERT INTO homepage_prompt_answers (
+            prompt_id,
+            question,
+            answer_text,
+            visitor_key,
+            user_id,
+            created_at
+        )
+        VALUES (
+            :prompt_id,
+            :question,
+            :answer_text,
+            :visitor_key,
+            :user_id,
+            CURRENT_TIMESTAMP
+        )
+        """,
+        {
+            "prompt_id": prompt_id,
+            "question": question,
+            "answer_text": answer_text,
+            "visitor_key": hp_visitor_key(),
+            "user_id": hp_current_user_id(),
+        },
+    )
+
+    answered_ids = list(session.get("homepage_prompt_answered_ids", []))
+    if prompt_id not in [str(value) for value in answered_ids]:
+        answered_ids.append(prompt_id)
+
+    session["homepage_prompt_answered_ids"] = answered_ids[-200:]
+    session["homepage_prompt_answered_once"] = True
+    session.pop("homepage_prompt_answer_more", None)
+
+    return redirect("/")
+
+
+def home_prompt_more():
+    session["homepage_prompt_answer_more"] = True
+    return redirect("/")
+
+
+def admin_home_prompts():
+    gate = hp_admin_gate()
+    if gate:
+        return gate
+
+    hp_ensure_tables()
+
+    if request.method == "POST":
+        action = str(request.form.get("action") or "add").strip().lower()
+
+        if action == "seed":
+            hp_seed_prompts_from_file()
+
+        elif action == "add":
+            question = str(request.form.get("question") or "").strip()
+            if question:
+                existing = hp_fetch_one(
+                    "SELECT id FROM homepage_prompts WHERE lower(question) = lower(:question) LIMIT 1",
+                    {"question": question},
+                )
+
+                if not existing:
+                    hp_execute(
+                        """
+                        INSERT INTO homepage_prompts (
+                            question,
+                            prompt_type,
+                            is_active,
+                            display_order,
+                            created_at
+                        )
+                        VALUES (
+                            :question,
+                            'question',
+                            1,
+                            9999,
+                            CURRENT_TIMESTAMP
+                        )
+                        """,
+                        {"question": question},
+                    )
+
+        elif action in {"activate", "deactivate", "archive"}:
+            prompt_id = str(request.form.get("prompt_id") or "").strip()
+
+            if prompt_id:
+                if action == "activate":
+                    hp_execute(
+                        "UPDATE homepage_prompts SET is_active = 1, archived_at = NULL WHERE id = :prompt_id",
+                        {"prompt_id": prompt_id},
+                    )
+
+                elif action == "deactivate":
+                    hp_execute(
+                        "UPDATE homepage_prompts SET is_active = 0 WHERE id = :prompt_id",
+                        {"prompt_id": prompt_id},
+                    )
+
+                elif action == "archive":
+                    hp_execute(
+                        "UPDATE homepage_prompts SET is_active = 0, archived_at = CURRENT_TIMESTAMP WHERE id = :prompt_id",
+                        {"prompt_id": prompt_id},
+                    )
+
+        return redirect("/admin/home-prompts")
+
+    hp_seed_prompts_from_file()
+
+    prompts = hp_fetch_all(
+        """
+        SELECT p.*,
+               COUNT(a.id) AS answer_count
+        FROM homepage_prompts p
+        LEFT JOIN homepage_prompt_answers a
+          ON a.prompt_id = p.id
+        WHERE p.archived_at IS NULL
+        GROUP BY p.id, p.question, p.prompt_type, p.is_active, p.display_order, p.created_at, p.archived_at
+        ORDER BY p.is_active DESC, p.display_order ASC, p.id ASC
+        LIMIT 500
+        """
+    )
+
+    answers = hp_fetch_all(
+        """
+        SELECT *
+        FROM homepage_prompt_answers
+        ORDER BY created_at DESC, id DESC
+        LIMIT 100
+        """
+    )
+
+    active_count = sum(1 for prompt in prompts if str(prompt.get("is_active")) in {"1", "true", "True"})
+
+    return render_template(
+        "admin_home_prompts.html",
+        prompts=prompts,
+        answers=answers,
+        active_count=active_count,
+        total_count=len(prompts),
+    )
+
+
+try:
+    hp_ensure_tables()
+
+    if "home_prompt_answer" not in app.view_functions:
+        app.add_url_rule(
+            "/home-prompt/answer",
+            "home_prompt_answer",
+            home_prompt_answer,
+            methods=["POST"],
+        )
+
+    if "home_prompt_more" not in app.view_functions:
+        app.add_url_rule(
+            "/home-prompt/more",
+            "home_prompt_more",
+            home_prompt_more,
+            methods=["GET"],
+        )
+
+    if "admin_home_prompts" not in app.view_functions:
+        app.add_url_rule(
+            "/admin/home-prompts",
+            "admin_home_prompts",
+            admin_home_prompts,
+            methods=["GET", "POST"],
+        )
+
+    hp_seed_prompts_from_file()
+    print("HOMEPAGE PROMPT QUESTIONS active")
+except Exception as exc:
+    print(f"HOMEPAGE PROMPT QUESTIONS setup failed: {type(exc).__name__}: {exc}")
+
