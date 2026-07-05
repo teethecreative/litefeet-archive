@@ -3,66 +3,229 @@
 {% block title %}Error Logs | The LiteFeet Ledger Admin{% endblock %}
 
 {% block content %}
-<section class="admin-panel">
-    <div class="admin-header">
-        <p class="eyebrow">Admin</p>
-        <h1>Error Logs</h1>
-        <p>Recent 404 and 500 errors from public visitors and logged-in users.</p>
+<section class="admin-panel error-inbox-page">
+    <div class="admin-header section-heading-row">
+        <div>
+            <p class="eyebrow">Admin</p>
+            <h1>Error Inbox</h1>
+            <p>Stream-safe error review. IP addresses are hidden unless you open technical visitor details.</p>
+        </div>
+
+        <div class="hero-actions">
+            <a class="button secondary" href="{{ url_for('admin_home') }}">Command Center</a>
+            <form method="post" action="/admin/error-logs/test">
+                <button class="button primary" type="submit">Test Logger</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="admin-error-summary-grid">
+        <article class="{% if summary.active_500_count %}urgent{% endif %}">
+            <p class="eyebrow">Active 500s</p>
+            <h2>{{ summary.active_500_count or 0 }}</h2>
+            <p>Internal errors not dismissed yet.</p>
+        </article>
+
+        <article class="{% if summary.active_404_count %}needs-attention{% endif %}">
+            <p class="eyebrow">Active 404s</p>
+            <h2>{{ summary.active_404_count or 0 }}</h2>
+            <p>Missing pages not dismissed yet.</p>
+        </article>
+
+        <article>
+            <p class="eyebrow">History</p>
+            <h2>{{ summary.historical_count or 0 }}</h2>
+            <p>{{ summary.dismissed_count or 0 }} dismissed / {{ summary.recent_count or 0 }} in last 24 hours.</p>
+        </article>
+    </div>
+
+    <div class="filter-row">
+        <a class="button small-button {% if view_filter == 'active' and not status_filter %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}">Active</a>
+        <a class="button small-button {% if view_filter == 'all' and not status_filter %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view=all">All</a>
+        <a class="button small-button {% if status_filter == '500' %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view={{ view_filter }}&status=500">500s</a>
+        <a class="button small-button {% if status_filter == '404' %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view={{ view_filter }}&status=404">404s</a>
+        <a class="button small-button {% if view_filter == 'recent' %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view=recent">Last 24 Hours</a>
+        <a class="button small-button {% if view_filter == 'dismissed' %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view=dismissed">Dismissed</a>
     </div>
 
     {% if errors %}
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Status</th>
-                        <th>Path</th>
-                        <th>Error</th>
-                        <th>User</th>
-                        <th>Visitor</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for error in errors %}
-                    <tr>
-                        <td>{{ error.created_at }}</td>
-                        <td>{{ error.status_code }}</td>
-                        <td>
-                            <code>{{ error.method }} {{ error.path }}</code>
+        <form method="post" action="/admin/error-logs/dismiss-visible" class="dismiss-visible-form">
+            {% for error in errors %}
+                {% if not error.dismissed_at %}
+                    <input type="hidden" name="error_ids" value="{{ error.id }}">
+                {% endif %}
+            {% endfor %}
+            <input type="hidden" name="dismiss_note" value="Dismissed from {{ view_filter }}{% if status_filter %} {{ status_filter }}{% endif %} filter.">
+            <button class="button secondary" type="submit">Dismiss all visible active errors</button>
+        </form>
+
+        <div class="admin-error-log-list">
+            {% for error in errors %}
+                <article class="admin-error-log-card {% if error.dismissed_at %}dismissed{% elif error.status_code == 500 %}urgent{% elif error.status_code == 404 %}needs-attention{% endif %}">
+                    <div class="error-log-topline">
+                        <div>
+                            <p class="eyebrow">{{ error.status_code }} · {{ error.method }}</p>
+                            <h2>{{ error.path }}</h2>
+                        </div>
+                        <time>{{ ledger_format_admin_datetime(error.created_at) }}</time>
+                    </div>
+
+                    <div class="error-main-grid">
+                        <div>
+                            <p>
+                                <strong>{{ error.error_type or "Unknown" }}</strong>
+                                {% if error.error_message %}
+                                    <br>{{ error.error_message }}
+                                {% endif %}
+                            </p>
+
                             {% if error.referrer %}
-                                <br><small>from {{ error.referrer }}</small>
+                                <p class="small-note">From: {{ error.referrer }}</p>
                             {% endif %}
-                        </td>
-                        <td>
-                            <strong>{{ error.error_type or "Unknown" }}</strong>
-                            {% if error.error_message %}
-                                <br><small>{{ error.error_message }}</small>
+                        </div>
+
+                        <div class="visitor-safe-box">
+                            <p class="eyebrow">General Visitor Location</p>
+                            <strong>{{ error.geo_label or "Location unavailable" }}</strong>
+                            <small>User: {{ error.user_id or "Public" }}</small>
+
+                            <details class="technical-details">
+                                <summary>Reveal technical visitor info</summary>
+                                <p><strong>IP:</strong> {{ error.remote_addr or "Unknown" }}</p>
+                                <p><strong>User Agent:</strong> {{ error.user_agent or "Unknown" }}</p>
+                            </details>
+                        </div>
+                    </div>
+
+                    {% if error.traceback_text %}
+                        <details class="traceback-details">
+                            <summary>Traceback</summary>
+                            <pre>{{ error.traceback_text }}</pre>
+                        </details>
+                    {% endif %}
+
+                    <div class="error-card-actions">
+                        {% if error.dismissed_at %}
+                            <small>Dismissed {{ ledger_format_admin_datetime(error.dismissed_at) }} by {{ error.dismissed_by or "admin" }}</small>
+                            {% if error.dismiss_note %}
+                                <small>Note: {{ error.dismiss_note }}</small>
                             {% endif %}
-                            {% if error.traceback_text %}
-                                <details>
-                                    <summary>Traceback</summary>
-                                    <pre>{{ error.traceback_text }}</pre>
-                                </details>
-                            {% endif %}
-                        </td>
-                        <td>{{ error.user_id or "Public" }}</td>
-                        <td>
-                            <small>{{ error.remote_addr }}</small>
-                            {% if error.user_agent %}
-                                <br><small>{{ error.user_agent[:120] }}</small>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                        {% else %}
+                            <form method="post" action="/admin/error-logs/{{ error.id }}/dismiss">
+                                <input type="hidden" name="dismiss_note" value="Dismissed from error inbox.">
+                                <button class="button small-button secondary" type="submit">Dismiss</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
         </div>
     {% else %}
         <div class="empty-state">
-            <h2>No errors logged yet.</h2>
-            <p>When visitors hit 404 or 500 pages, they will show up here.</p>
+            <h2>No errors found for this filter.</h2>
+            <p>Use “Test Logger” to confirm new errors are being written to the inbox.</p>
         </div>
     {% endif %}
 </section>
+
+<style>
+    .admin-error-summary-grid,
+    .admin-error-log-list {
+        display: grid;
+        gap: 14px;
+        margin-top: 18px;
+    }
+
+    .admin-error-summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .admin-error-summary-grid article,
+    .admin-error-log-card {
+        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
+        border-radius: 16px;
+        padding: 16px;
+        background: var(--card-bg, rgba(255,255,255,0.04));
+    }
+
+    .admin-error-summary-grid article.urgent,
+    .admin-error-log-card.urgent {
+        border-color: rgba(255, 77, 77, 0.65);
+        background: rgba(255, 77, 77, 0.08);
+    }
+
+    .admin-error-summary-grid article.needs-attention,
+    .admin-error-log-card.needs-attention {
+        border-color: rgba(236, 203, 89, 0.65);
+        background: rgba(236, 203, 89, 0.06);
+    }
+
+    .admin-error-log-card.dismissed {
+        opacity: 0.72;
+    }
+
+    .filter-row,
+    .dismiss-visible-form {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 18px 0;
+    }
+
+    .error-log-topline,
+    .error-main-grid,
+    .error-card-actions {
+        display: grid;
+        gap: 12px;
+    }
+
+    .error-log-topline {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+    }
+
+    .error-main-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(240px, 0.35fr);
+    }
+
+    .visitor-safe-box {
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 12px;
+        padding: 12px;
+        background: rgba(0,0,0,0.18);
+        display: grid;
+        gap: 6px;
+    }
+
+    .technical-details,
+    .traceback-details {
+        margin-top: 10px;
+    }
+
+    .traceback-details pre {
+        white-space: pre-wrap;
+        overflow-x: auto;
+        max-height: 420px;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(0,0,0,0.35);
+    }
+
+    time {
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 900px) {
+        .admin-error-summary-grid,
+        .error-main-grid,
+        .error-log-topline {
+            grid-template-columns: 1fr;
+        }
+
+        time {
+            white-space: normal;
+        }
+    }
+</style>
 {% endblock %}
