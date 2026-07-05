@@ -4,11 +4,11 @@
 
 {% block content %}
 <section class="admin-panel error-inbox-page">
-    <div class="admin-header section-heading-row">
+    <div class="admin-header section-heading-row compact-admin-header">
         <div>
             <p class="eyebrow">Admin</p>
             <h1>Error Inbox</h1>
-            <p>Compact error review. Visitor IPs stay hidden unless you reveal technical details.</p>
+            <p>Compact scroll table. IP addresses stay hidden unless you reveal technical details.</p>
         </div>
 
         <div class="hero-actions">
@@ -19,67 +19,57 @@
         </div>
     </div>
 
-    <div class="error-summary-strip">
-        <article class="{% if summary.active_500_count %}urgent{% endif %}">
-            <span>Active 500s</span>
-            <strong>{{ summary.active_500_count or 0 }}</strong>
-        </article>
+    <div class="error-inbox-toolbar">
+        <div class="error-count-line">
+            <strong>{{ summary.active_500_count or 0 }}</strong> active 500s
+            <span>·</span>
+            <strong>{{ summary.active_404_count or 0 }}</strong> active 404s
+            <span>·</span>
+            <strong>{{ summary.historical_count or 0 }}</strong> total
+            <span>·</span>
+            <strong>{{ summary.dismissed_count or 0 }}</strong> dismissed
+            <span>·</span>
+            <strong>{{ summary.recent_count or 0 }}</strong> last 24 hrs
+        </div>
 
-        <article class="{% if summary.active_404_count %}needs-attention{% endif %}">
-            <span>Active 404s</span>
-            <strong>{{ summary.active_404_count or 0 }}</strong>
-        </article>
+        <div class="filter-row">
+            <a class="button small-button {% if view_filter == 'active' and not status_filter %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}">Active</a>
+            <a class="button small-button {% if view_filter == 'all' and not status_filter %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view=all">All</a>
+            <a class="button small-button {% if status_filter == '500' %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view={{ view_filter }}&status=500">500s</a>
+            <a class="button small-button {% if status_filter == '404' %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view={{ view_filter }}&status=404">404s</a>
+            <a class="button small-button {% if view_filter == 'recent' %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view=recent">Last 24 Hours</a>
+            <a class="button small-button {% if view_filter == 'dismissed' %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view=dismissed">Dismissed</a>
+        </div>
 
-        <article>
-            <span>Total History</span>
-            <strong>{{ summary.historical_count or 0 }}</strong>
-        </article>
-
-        <article>
-            <span>Dismissed</span>
-            <strong>{{ summary.dismissed_count or 0 }}</strong>
-        </article>
-
-        <article>
-            <span>Last 24 Hours</span>
-            <strong>{{ summary.recent_count or 0 }}</strong>
-        </article>
+        {% if errors %}
+            <form method="post" action="/admin/error-logs/dismiss-visible" class="dismiss-visible-form">
+                {% for error in errors %}
+                    {% if not error.dismissed_at %}
+                        <input type="hidden" name="error_ids" value="{{ error.id }}">
+                    {% endif %}
+                {% endfor %}
+                <input type="hidden" name="dismiss_note" value="Dismissed from {{ view_filter }}{% if status_filter %} {{ status_filter }}{% endif %} filter.">
+                <button class="button secondary small-button" type="submit">Dismiss visible active errors</button>
+            </form>
+        {% endif %}
     </div>
 
-    <div class="filter-row">
-        <a class="button small-button {% if view_filter == 'active' and not status_filter %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}">Active</a>
-        <a class="button small-button {% if view_filter == 'all' and not status_filter %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view=all">All</a>
-        <a class="button small-button {% if status_filter == '500' %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view={{ view_filter }}&status=500">500s</a>
-        <a class="button small-button {% if status_filter == '404' %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view={{ view_filter }}&status=404">404s</a>
-        <a class="button small-button {% if view_filter == 'recent' %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view=recent">Last 24 Hours</a>
-        <a class="button small-button {% if view_filter == 'dismissed' %}primary{% else %}secondary{% endif %}" href="{{ url_for('admin_error_logs') }}?view=dismissed">Dismissed</a>
-    </div>
+    <div class="error-scroll-table" aria-label="Scrollable error inbox table">
+        <table class="error-inbox-table">
+            <thead>
+                <tr>
+                    <th class="error-id-col">Error #</th>
+                    <th class="status-col">Status</th>
+                    <th class="time-col">Time</th>
+                    <th class="path-col">Path</th>
+                    <th class="meaning-col">Meaning</th>
+                    <th class="location-col">Location</th>
+                    <th class="actions-col">Action</th>
+                </tr>
+            </thead>
 
-    {% if errors %}
-        <form method="post" action="/admin/error-logs/dismiss-visible" class="dismiss-visible-form">
-            {% for error in errors %}
-                {% if not error.dismissed_at %}
-                    <input type="hidden" name="error_ids" value="{{ error.id }}">
-                {% endif %}
-            {% endfor %}
-            <input type="hidden" name="dismiss_note" value="Dismissed from {{ view_filter }}{% if status_filter %} {{ status_filter }}{% endif %} filter.">
-            <button class="button secondary small-button" type="submit">Dismiss all visible active errors</button>
-        </form>
-
-        <div class="error-table-wrap">
-            <table class="error-inbox-table">
-                <thead>
-                    <tr>
-                        <th>Status</th>
-                        <th>Time</th>
-                        <th>Path</th>
-                        <th>Meaning</th>
-                        <th>Location</th>
-                        <th>Details / Action</th>
-                    </tr>
-                </thead>
-
-                <tbody>
+            <tbody>
+                {% if errors %}
                     {% for error in errors %}
                         {% if ledger_translate_error is defined %}
                             {% set explanation = ledger_translate_error(error) %}
@@ -94,12 +84,16 @@
                         {% endif %}
 
                         <tr class="{% if error.dismissed_at %}dismissed{% elif error.status_code == 500 %}urgent{% elif error.status_code == 404 %}needs-attention{% endif %}">
-                            <td>
+                            <td class="error-id-col">
+                                <strong>#{{ error.id }}</strong>
+                            </td>
+
+                            <td class="status-col">
                                 <span class="status-pill status-{{ error.status_code }}">{{ error.status_code }}</span>
                                 <small>{{ error.method }}</small>
                             </td>
 
-                            <td class="time-cell">
+                            <td class="time-col">
                                 {% if ledger_format_admin_datetime is defined %}
                                     {{ ledger_format_admin_datetime(error.created_at) }}
                                 {% else %}
@@ -107,65 +101,58 @@
                                 {% endif %}
                             </td>
 
-                            <td class="path-cell">
+                            <td class="path-col">
                                 <code>{{ error.path }}</code>
                                 {% if error.referrer %}
-                                    <small>From: {{ error.referrer }}</small>
+                                    <details class="mini-details">
+                                        <summary>From</summary>
+                                        <small>{{ error.referrer }}</small>
+                                    </details>
                                 {% endif %}
                             </td>
 
-                            <td class="meaning-cell">
+                            <td class="meaning-col">
                                 <strong>{{ explanation.category }}</strong>
                                 <small>{{ explanation.what_happened }}</small>
                                 <small class="fix-status">{{ explanation.fix_status }}</small>
+
+                                <details class="mini-details">
+                                    <summary>Explain</summary>
+                                    <div class="inline-detail-box">
+                                        <p><strong>Means:</strong> {{ explanation.what_it_means }}</p>
+                                        <p><strong>Fix:</strong> {{ explanation.suggested_fix }}</p>
+                                        {% if error.error_message %}
+                                            <p><strong>Raw:</strong> {{ error.error_message }}</p>
+                                        {% endif %}
+                                    </div>
+                                </details>
                             </td>
 
-                            <td class="location-cell">
+                            <td class="location-col">
                                 {% if ledger_error_location_label is defined %}
                                     {{ ledger_error_location_label(error) }}
                                 {% else %}
                                     {{ error.geo_label or "Location unavailable" }}
                                 {% endif %}
+
+                                <details class="mini-details">
+                                    <summary>Tech</summary>
+                                    <div class="inline-detail-box">
+                                        <p><strong>IP:</strong> {{ error.remote_addr or "Unknown" }}</p>
+                                        <p><strong>User:</strong> {{ error.user_id or "Public" }}</p>
+                                        <p><strong>Agent:</strong> {{ error.user_agent or "Unknown" }}</p>
+                                    </div>
+                                </details>
                             </td>
 
-                            <td class="action-cell">
-                                <details>
-                                    <summary>Open</summary>
-
-                                    <div class="error-details-panel">
-                                        <section>
-                                            <p class="eyebrow">Plain English</p>
-                                            <p><strong>What it means:</strong> {{ explanation.what_it_means }}</p>
-                                            <p><strong>Suggested fix:</strong> {{ explanation.suggested_fix }}</p>
-                                        </section>
-
-                                        <section>
-                                            <p class="eyebrow">Raw Error</p>
-                                            <p><strong>{{ error.error_type or "Unknown" }}</strong></p>
-                                            {% if error.error_message %}
-                                                <p>{{ error.error_message }}</p>
-                                            {% endif %}
-                                        </section>
-
-                                        <section>
-                                            <p class="eyebrow">Technical Visitor Info</p>
-                                            <details>
-                                                <summary>Reveal IP and user agent</summary>
-                                                <p><strong>IP:</strong> {{ error.remote_addr or "Unknown" }}</p>
-                                                <p><strong>User Agent:</strong> {{ error.user_agent or "Unknown" }}</p>
-                                            </details>
-                                        </section>
-
-                                        {% if error.traceback_text %}
-                                            <section>
-                                                <p class="eyebrow">Traceback</p>
-                                                <details>
-                                                    <summary>Show traceback</summary>
-                                                    <pre>{{ error.traceback_text }}</pre>
-                                                </details>
-                                            </section>
-                                        {% endif %}
-                                    </div>
+                            <td class="actions-col">
+                                <details class="mini-details">
+                                    <summary>Trace</summary>
+                                    {% if error.traceback_text %}
+                                        <pre>{{ error.traceback_text }}</pre>
+                                    {% else %}
+                                        <small>No traceback stored.</small>
+                                    {% endif %}
                                 </details>
 
                                 {% if error.dismissed_at %}
@@ -186,81 +173,80 @@
                             </td>
                         </tr>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <div class="empty-state">
-            <h2>No errors found for this filter.</h2>
-            <p>Use “Test Logger” to confirm new errors are being written to the inbox.</p>
-        </div>
-    {% endif %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="empty-table-row">
+                            No errors found for this filter. Use Test Logger to confirm new errors are being written.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
 </section>
 
 <style>
-    .error-summary-strip {
+    .error-inbox-page {
+        max-width: none;
+    }
+
+    .compact-admin-header {
+        margin-bottom: 8px;
+    }
+
+    .compact-admin-header h1 {
+        margin-bottom: 4px;
+    }
+
+    .error-inbox-toolbar {
         display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 10px;
-        margin: 18px 0;
+        gap: 8px;
+        margin: 8px 0 10px;
     }
 
-    .error-summary-strip article {
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 12px;
-        padding: 12px;
-        background: rgba(255,255,255,0.04);
-        display: grid;
-        gap: 4px;
+    .error-count-line {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-wrap: wrap;
+        font-size: 0.86rem;
+        opacity: 0.95;
     }
 
-    .error-summary-strip span {
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        opacity: 0.75;
-    }
-
-    .error-summary-strip strong {
-        font-size: 1.8rem;
-    }
-
-    .error-summary-strip article.urgent {
-        border-color: rgba(255, 77, 77, 0.65);
-        background: rgba(255, 77, 77, 0.08);
-    }
-
-    .error-summary-strip article.needs-attention {
-        border-color: rgba(236, 203, 89, 0.65);
-        background: rgba(236, 203, 89, 0.06);
+    .error-count-line strong {
+        color: var(--accent-color, #e8c65a);
     }
 
     .filter-row,
     .dismiss-visible-form {
         display: flex;
-        gap: 8px;
+        gap: 6px;
         flex-wrap: wrap;
-        margin: 14px 0;
     }
 
-    .error-table-wrap {
+    .error-scroll-table {
         width: 100%;
-        overflow-x: auto;
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 14px;
-        margin-top: 14px;
+        height: 560px;
+        overflow: auto;
+        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 10px;
+        background: rgba(255,255,255,0.025);
     }
 
     .error-inbox-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.92rem;
+        width: max-content;
+        min-width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.78rem;
+        line-height: 1.25;
     }
 
     .error-inbox-table th,
     .error-inbox-table td {
-        padding: 12px;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
+        padding: 6px 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.075);
+        border-right: 1px solid rgba(255,255,255,0.045);
         vertical-align: top;
         text-align: left;
     }
@@ -268,24 +254,81 @@
     .error-inbox-table th {
         position: sticky;
         top: 0;
+        z-index: 5;
         background: #080808;
-        z-index: 2;
-        font-size: 0.76rem;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
         color: var(--accent-color, #e8c65a);
+        font-size: 0.66rem;
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        white-space: nowrap;
+    }
+
+    .error-inbox-table tr {
+        height: 54px;
     }
 
     .error-inbox-table tr.urgent {
-        background: rgba(255, 77, 77, 0.07);
+        background: rgba(255, 77, 77, 0.055);
     }
 
     .error-inbox-table tr.needs-attention {
-        background: rgba(236, 203, 89, 0.045);
+        background: rgba(236, 203, 89, 0.035);
     }
 
     .error-inbox-table tr.dismissed {
-        opacity: 0.6;
+        opacity: 0.55;
+    }
+
+    .error-inbox-table tr:hover {
+        background: rgba(255,255,255,0.055);
+    }
+
+    .error-id-col {
+        width: 82px;
+        min-width: 82px;
+        text-align: center;
+        color: var(--accent-color, #e8c65a);
+        font-weight: 800;
+    }
+
+    .status-col {
+        width: 72px;
+        min-width: 72px;
+    }
+
+    .time-col {
+        width: 145px;
+        min-width: 145px;
+        white-space: normal;
+    }
+
+    .path-col {
+        width: 245px;
+        min-width: 245px;
+        max-width: 310px;
+    }
+
+    .meaning-col {
+        width: 335px;
+        min-width: 335px;
+        max-width: 380px;
+    }
+
+    .location-col {
+        width: 160px;
+        min-width: 160px;
+    }
+
+    .actions-col {
+        width: 130px;
+        min-width: 130px;
+    }
+
+    .path-col code {
+        display: block;
+        white-space: normal;
+        word-break: break-word;
+        font-size: 0.78rem;
     }
 
     .status-pill {
@@ -293,93 +336,88 @@
         align-items: center;
         justify-content: center;
         border-radius: 999px;
-        padding: 4px 8px;
+        padding: 2px 6px;
         font-weight: 800;
         border: 1px solid rgba(255,255,255,0.18);
-        margin-bottom: 4px;
+        margin-bottom: 2px;
+        font-size: 0.72rem;
     }
 
     .status-500 {
-        border-color: rgba(255, 77, 77, 0.7);
+        border-color: rgba(255, 77, 77, 0.75);
     }
 
     .status-404 {
-        border-color: rgba(236, 203, 89, 0.7);
+        border-color: rgba(236, 203, 89, 0.75);
     }
 
-    .time-cell {
-        min-width: 160px;
-        white-space: nowrap;
-    }
-
-    .path-cell {
-        min-width: 220px;
-    }
-
-    .path-cell code {
-        display: block;
-        white-space: normal;
-        word-break: break-word;
-    }
-
-    .path-cell small,
-    .meaning-cell small,
+    .status-col small,
+    .path-col small,
+    .meaning-col small,
     .dismissed-note,
-    .action-cell small {
+    .mini-details small {
         display: block;
-        margin-top: 4px;
-        opacity: 0.78;
+        margin-top: 2px;
+        opacity: 0.75;
     }
 
-    .meaning-cell {
-        min-width: 280px;
+    .meaning-col strong {
+        display: block;
+        margin-bottom: 2px;
     }
 
     .fix-status {
         color: var(--accent-color, #e8c65a);
     }
 
-    .location-cell {
-        min-width: 160px;
+    .mini-details {
+        margin-top: 3px;
     }
 
-    .action-cell {
-        min-width: 180px;
+    .mini-details summary {
+        cursor: pointer;
+        color: var(--accent-color, #e8c65a);
+        font-weight: 700;
+        font-size: 0.72rem;
     }
 
-    .action-cell details {
-        margin-bottom: 8px;
+    .inline-detail-box {
+        margin-top: 5px;
+        padding: 7px;
+        border-radius: 7px;
+        background: rgba(0,0,0,0.28);
+        border: 1px solid rgba(255,255,255,0.08);
+        max-width: 520px;
     }
 
-    .error-details-panel {
-        display: grid;
-        gap: 12px;
-        min-width: 360px;
-        max-width: 620px;
-        margin-top: 10px;
-        padding: 12px;
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 12px;
-        background: rgba(0,0,0,0.35);
+    .inline-detail-box p {
+        margin: 0 0 5px;
     }
 
-    .error-details-panel pre {
+    .actions-col pre {
         white-space: pre-wrap;
         overflow-x: auto;
-        max-height: 360px;
-        padding: 10px;
-        border-radius: 10px;
-        background: rgba(0,0,0,0.45);
+        max-height: 240px;
+        min-width: 420px;
+        padding: 8px;
+        border-radius: 8px;
+        background: rgba(0,0,0,0.4);
+        border: 1px solid rgba(255,255,255,0.08);
     }
 
-    @media (max-width: 900px) {
-        .error-summary-strip {
-            grid-template-columns: 1fr;
-        }
+    .actions-col form {
+        margin-top: 4px;
+    }
 
-        .time-cell {
-            white-space: normal;
-        }
+    .actions-col .small-button {
+        padding: 4px 8px;
+        font-size: 0.72rem;
+    }
+
+    .empty-table-row {
+        text-align: center;
+        padding: 20px;
+        opacity: 0.8;
     }
 </style>
 {% endblock %}
