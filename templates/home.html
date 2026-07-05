@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}The LiteFeet Ledger | LiteFeet Archive, Music, Battles, Calendar & Community Records{% endblock %}
-{% block meta_description %}The LiteFeet Ledger is a community-powered archive for LiteFeet history, dancers, teams, battles, music, calendar events, awards, and community records.{% endblock %}
+{% block title %}The LiteFeet Ledger | LiteFeet Archive, Music, Battles, Events & Community Records{% endblock %}
+{% block meta_description %}The LiteFeet Ledger is a community-powered archive for LiteFeet history, dancers, teams, battles, music, events, awards, and community records.{% endblock %}
 
 {% block content %}
 <section class="home-hero ledger-home-shell">
@@ -9,95 +9,14 @@
         <p class="eyebrow">The LiteFeet Ledger</p>
         <h1>A living archive for LiteFeet history.</h1>
         <p>
-            The LiteFeet Ledger tracks dancers, teams, battles, music, calendar events, awards,
+            The LiteFeet Ledger tracks dancers, teams, battles, music, events, awards,
             producers, organizers, and community knowledge connected to LiteFeet culture.
         </p>
     </div>
-
-    <div class="hero-actions">
-        <a href="{{ url_for('submit_info') }}" class="button primary">Add to the Ledger</a>
-        <a href="{{ url_for('dancers') }}" class="button secondary">People & Teams</a>
-        <a href="{{ url_for('litefeet_music') }}" class="button secondary">LiteFeet Music</a>
-    </div>
 </section>
 
-<section class="homepage-section home-calendar-preview">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Calendar</p>
-            <h2>Next Up</h2>
-        </div>
 
-        <a class="button secondary" href="{{ url_for('events') }}">Open Calendar</a>
-    </div>
 
-    <div class="home-calendar-grid">
-        {% if next_calendar_item %}
-            <article class="calendar-main-card">
-                <p class="eyebrow">Next Calendar Item</p>
-                <h3><a href="{{ next_calendar_item | event_public_url }}">{{ next_calendar_item["title"] }}</a></h3>
-
-                {% set next_date = next_calendar_item | detail_value("Event Date") %}
-                {% set next_time = next_calendar_item | detail_value("Event Time") %}
-                {% set next_location = next_calendar_item | detail_value("Event Location") %}
-
-                <p>
-                    {% if next_date %}<strong>{{ next_date }}</strong>{% endif %}
-                    {% if next_time %} · {{ next_time }}{% endif %}
-                    {% if next_location %}<br>{{ next_location }}{% endif %}
-                    {% if not next_date and not next_time and not next_location %}Details coming soon.{% endif %}
-                </p>
-
-                {% if next_calendar_item["related_to"] %}
-                    <p><strong>Organizer:</strong> {{ next_calendar_item["related_to"] }}</p>
-                {% endif %}
-
-                <a class="button small-button primary" href="{{ next_calendar_item | event_public_url }}">View Details</a>
-            </article>
-        {% else %}
-            <article class="calendar-main-card">
-                <p class="eyebrow">Next Calendar Item</p>
-                <h3>No upcoming calendar items yet</h3>
-                <p>
-                    Upcoming battles, classes, link-ups, performances, cyphers, workshops,
-                    and community events will appear here once they are added and supported by the Ledger.
-                </p>
-                <a class="button small-button primary" href="{{ url_for('submit_event') }}">Add Calendar Item</a>
-            </article>
-        {% endif %}
-
-        {% if homepage_calendar_items %}
-            {% for item in homepage_calendar_items %}
-                <article class="calendar-mini-card">
-                    {% set item_date = item | detail_value("Event Date") %}
-                    {% set item_time = item | detail_value("Event Time") %}
-                    {% set item_location = item | detail_value("Event Location") %}
-
-                    <p class="eyebrow">{{ item_date or "Upcoming" }}</p>
-                    <h3><a href="{{ item | event_public_url }}">{{ item["title"] }}</a></h3>
-
-                    <p>
-                        {% if item_time %}{{ item_time }}{% endif %}
-                        {% if item_location %}{% if item_time %}<br>{% endif %}{{ item_location }}{% endif %}
-                        {% if not item_time and not item_location %}Details coming soon.{% endif %}
-                    </p>
-                </article>
-            {% endfor %}
-        {% else %}
-            <article class="calendar-mini-card">
-                <p class="eyebrow">This Week</p>
-                <h3>More items coming soon</h3>
-                <p>Smaller upcoming items will sit here once the calendar has more active records.</p>
-            </article>
-
-            <article class="calendar-mini-card">
-                <p class="eyebrow">Community</p>
-                <h3>Submit what is missing</h3>
-                <p>Add battles, classes, link-ups, cyphers, workshops, performances, and community events.</p>
-            </article>
-        {% endif %}
-    </div>
-</section>
 
 <section class="homepage-section">
     <div class="section-heading-row">
@@ -164,21 +83,8 @@
 
 
 
-<section class="homepage-section home-submit-cta">
-    <div>
-        <p class="eyebrow">Build the Ledger</p>
-        <h2>Add what the archive is missing.</h2>
-        <p>
-            Submit a dancer, team, event, battle, song, producer, host, DJ, organizer, award,
-            correction, issue, question, or piece of community context.
-        </p>
-    </div>
 
-    <div class="hero-actions">
-        <a href="{{ url_for('submit_info') }}" class="button primary">Add to the Ledger</a>
-        <a href="{{ url_for('ask_archive') }}" class="button secondary">Ask the Ledger</a>
-    </div>
-</section>
+
 
 <style>
     .ledger-home-shell,

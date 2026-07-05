@@ -25701,3 +25701,262 @@ try:
 except Exception as exc:
     print(f"FINAL HOME PROMPT MISSING CLEANUP setup failed: {type(exc).__name__}: {exc}")
 
+# --- CLEAN HOME SOURCE ORDER PATCH ---
+# Home source order:
+# - disable old stacked home after_request handlers
+# - remove old prompt/next7 duplicates from rendered home
+# - order home as:
+#   1. A living archive
+#   2. Prompt
+#   3. Next 7 Days in LiteFeet
+#   4. Ledger Video Playlist
+
+import re as _cho_re
+
+
+def cho_disable_old_home_after_request_handlers():
+    old_names = {
+        "hp_inject_homepage_prompt",
+        "h7_inject_home_layout_cleanup",
+        "fh_force_home_prompt_and_remove_missing",
+        "fhp_final_home_prompt_cleanup",
+    }
+
+    try:
+        funcs = app.after_request_funcs.get(None, [])
+        kept = []
+
+        for func in funcs:
+            if getattr(func, "__name__", "") not in old_names:
+                kept.append(func)
+
+        app.after_request_funcs[None] = kept
+        print("Clean home order disabled old home after_request handlers.")
+    except Exception as exc:
+        print(f"CLEAN_HOME_DISABLE_OLD_HANDLERS_FAILED: {type(exc).__name__}: {exc}")
+
+
+cho_disable_old_home_after_request_handlers()
+
+
+def cho_strip_sections_by_class_or_text(html):
+    sections = _cho_re.findall(
+        r"<section\b[^>]*>.*?</section>",
+        html,
+        flags=_cho_re.IGNORECASE | _cho_re.DOTALL,
+    )
+
+    remove_phrases = [
+        "litefeet ledger question",
+        "next 7 days in litefeet",
+        "add what the archive is missing",
+        "submit what is missing",
+        "no upcoming calendar items yet",
+        "add calendar item",
+        "open calendar",
+    ]
+
+    remove_classes = [
+        "homepage-prompt-widget",
+        "final-home-prompt-widget",
+        "home-next7-section",
+        "home-calendar-preview",
+    ]
+
+    for section in sections:
+        lower = section.lower()
+
+        should_remove = any(item in lower for item in remove_classes)
+        should_remove = should_remove or any(item in lower for item in remove_phrases)
+
+        if should_remove:
+            html = html.replace(section, "", 1)
+
+    return html
+
+
+def cho_prompt_widget():
+    try:
+        return fhp_prompt_widget()
+    except Exception:
+        try:
+            return hp_home_widget()
+        except Exception as exc:
+            print(f"CLEAN_HOME_PROMPT_WIDGET_FAILED: {type(exc).__name__}: {exc}")
+            return ""
+
+
+def cho_next7_widget():
+    try:
+        section = h7_next7_section()
+    except Exception as exc:
+        print(f"CLEAN_HOME_NEXT7_WIDGET_FAILED: {type(exc).__name__}: {exc}")
+        return ""
+
+    return section + """
+    <style>
+        .home-next7-section {
+            max-width: 1120px;
+            margin: 26px auto 42px;
+            padding: 0 20px;
+        }
+
+        .home-next7-heading {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            align-items: end;
+            margin-bottom: 14px;
+        }
+
+        .home-next7-heading h2 {
+            margin: 4px 0 0;
+            color: var(--accent-color, #e8c65a);
+            font-size: clamp(1.65rem, 4vw, 3rem);
+        }
+
+        .home-next7-note {
+            max-width: 390px;
+            margin: 0;
+            opacity: 0.72;
+            text-align: right;
+        }
+
+        .home-next7-table-wrap {
+            border: 1px solid rgba(232, 198, 90, 0.22);
+            border-radius: 16px;
+            overflow: auto;
+            background: rgba(255, 255, 255, 0.032);
+        }
+
+        .home-next7-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.92rem;
+        }
+
+        .home-next7-table th,
+        .home-next7-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .home-next7-table th {
+            color: var(--accent-color, #e8c65a);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.72rem;
+            background: rgba(0,0,0,0.28);
+        }
+
+        .home-next7-table td strong {
+            color: var(--accent-color, #e8c65a);
+        }
+
+        .home-next7-table td small {
+            display: block;
+            margin-top: 3px;
+            opacity: 0.7;
+        }
+
+        .home-next7-table a {
+            color: var(--accent-color, #e8c65a);
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+        .home-next7-empty {
+            text-align: center;
+            opacity: 0.76;
+            padding: 22px !important;
+        }
+
+        @media (max-width: 800px) {
+            .home-next7-heading {
+                display: grid;
+            }
+
+            .home-next7-note {
+                text-align: left;
+            }
+
+            .home-next7-table {
+                min-width: 720px;
+            }
+        }
+    </style>
+    """
+
+
+def cho_find_hero_section(html):
+    sections = _cho_re.findall(
+        r"<section\b[^>]*>.*?</section>",
+        html,
+        flags=_cho_re.IGNORECASE | _cho_re.DOTALL,
+    )
+
+    for section in sections:
+        plain = _cho_re.sub(r"<[^>]+>", " ", section)
+        plain = _cho_re.sub(r"\s+", " ", plain).strip().lower()
+
+        if "a living archive for litefeet history" in plain:
+            return section
+
+    return ""
+
+
+@app.after_request
+def cho_clean_home_order(response):
+    try:
+        if request.method != "GET":
+            return response
+
+        if request.path not in {"/", ""}:
+            return response
+
+        if response.status_code != 200:
+            return response
+
+        if "text/html" not in response.headers.get("Content-Type", ""):
+            return response
+
+        html = response.get_data(as_text=True)
+
+        html = cho_strip_sections_by_class_or_text(html)
+
+        # Remove the first hero-actions block from home only.
+        html = _cho_re.sub(
+            r'\s*<div class="hero-actions">.*?</div>\s*',
+            "\n",
+            html,
+            count=1,
+            flags=_cho_re.IGNORECASE | _cho_re.DOTALL,
+        )
+
+        hero = cho_find_hero_section(html)
+        insert = "\n" + cho_prompt_widget() + "\n" + cho_next7_widget() + "\n"
+
+        if hero:
+            html = html.replace(hero, hero + insert, 1)
+        else:
+            main_match = _cho_re.search(r"<main[^>]*>", html, flags=_cho_re.IGNORECASE)
+
+            if main_match:
+                at = main_match.end()
+                html = html[:at] + insert + html[at:]
+            else:
+                html = insert + html
+
+        response.set_data(html)
+        response.headers["Content-Length"] = str(len(response.get_data()))
+    except Exception as exc:
+        print(f"CLEAN_HOME_ORDER_FAILED: {type(exc).__name__}: {exc}")
+
+    return response
+
+
+print("CLEAN HOME SOURCE ORDER active")
+
