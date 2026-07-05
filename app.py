@@ -22543,3 +22543,551 @@ try:
 except Exception as exc:
     print(f"PEOPLE TEAMS TABLE FIX failed: {type(exc).__name__}: {exc}")
 
+# --- MUSIC DUPLICATE FLAG REPORT PATCH ---
+# LiteFeet Music:
+# - keeps duplicate DB records separate
+# - detects duplicate-looking rows
+# - flags possible duplicates
+# - lets users report duplicates
+# - stores reports for review
+# - keeps long titles/descriptions wrapped in the table
+
+import re as _md_re
+from urllib.parse import urlparse as _md_urlparse, parse_qs as _md_parse_qs
+
+try:
+    from sqlalchemy import text as _md_text
+except Exception:
+    _md_text = text
+
+
+def md_execute(query, params=None):
+    try:
+        return execute_query(query, params or {})
+    except TypeError:
+        return execute_query(query)
+
+
+def md_fetch_all(query, params=None):
+    try:
+        return fetch_all(query, params or {})
+    except TypeError:
+        return fetch_all(query)
+    except Exception as exc:
+        print(f"MD_FETCH_ALL_FAILED: {type(exc).__name__}: {exc}")
+        return []
+
+
+def md_fetch_one(query, params=None):
+    rows = md_fetch_all(query, params or {})
+    return rows[0] if rows else None
+
+
+def md_table_exists(table_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            return bool(md_fetch_one(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_name = :table_name
+                LIMIT 1
+                """,
+                {"table_name": table_name},
+            ))
+
+        with engine.connect() as conn:
+            row = conn.execute(
+                _md_text("SELECT name FROM sqlite_master WHERE type='table' AND name=:name LIMIT 1"),
+                {"name": table_name},
+            ).mappings().first()
+            return bool(row)
+    except Exception:
+        return False
+
+
+def md_columns(table_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            rows = md_fetch_all(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+                """,
+                {"table_name": table_name},
+            )
+            return {row.get("column_name") for row in rows}
+
+        with engine.connect() as conn:
+            rows = conn.execute(_md_text(f"PRAGMA table_info({table_name})")).mappings().all()
+            return {row.get("name") for row in rows}
+    except Exception as exc:
+        print(f"MD_COLUMNS_FAILED {table_name}: {type(exc).__name__}: {exc}")
+        return set()
+
+
+def md_ensure_duplicate_reports_table():
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            md_execute("""
+                CREATE TABLE IF NOT EXISTS music_duplicate_reports (
+                    id SERIAL PRIMARY KEY,
+                    media_item_id INTEGER NOT NULL,
+                    possible_duplicate_id INTEGER,
+                    reporter_user_id TEXT,
+                    reporter_note TEXT,
+                    status TEXT DEFAULT 'open',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    reviewed_at TEXT,
+                    resolution_note TEXT
+                )
+            """)
+        else:
+            md_execute("""
+                CREATE TABLE IF NOT EXISTS music_duplicate_reports (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    media_item_id INTEGER NOT NULL,
+                    possible_duplicate_id INTEGER,
+                    reporter_user_id TEXT,
+                    reporter_note TEXT,
+                    status TEXT DEFAULT 'open',
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                    reviewed_at TEXT,
+                    resolution_note TEXT
+                )
+            """)
+
+        md_execute("CREATE INDEX IF NOT EXISTS idx_music_duplicate_reports_media_item_id ON music_duplicate_reports (media_item_id)")
+        md_execute("CREATE INDEX IF NOT EXISTS idx_music_duplicate_reports_status ON music_duplicate_reports (status)")
+        return True
+    except Exception as exc:
+        print(f"MD_DUPLICATE_REPORT_TABLE_FAILED: {type(exc).__name__}: {exc}")
+        return False
+
+
+def md_int(value):
+    try:
+        return int(value or 0)
+    except Exception:
+        return 0
+
+
+def md_float(value):
+    try:
+        return float(value or 0)
+    except Exception:
+        return 0.0
+
+
+def md_norm(value):
+    value = "" if value is None else str(value)
+    value = value.lower().strip()
+    value = _md_re.sub(r"[^a-z0-9]+", " ", value)
+    return _md_re.sub(r"\s+", " ", value).strip()
+
+
+def md_youtube_id(raw_url):
+    value = (raw_url or "").strip()
+
+    if not value:
+        return ""
+
+    if "://" not in value:
+        value = "https://" + value
+
+    try:
+        parsed = _md_urlparse(value)
+        host = (parsed.netloc or "").lower().replace("www.", "")
+        path = parsed.path or ""
+
+        if host == "youtu.be":
+            return path.strip("/").split("/")[0]
+
+        if "youtube.com" in host:
+            query = _md_parse_qs(parsed.query or "")
+
+            if query.get("v"):
+                return query["v"][0]
+
+            for prefix in ["/shorts/", "/embed/", "/live/"]:
+                if path.startswith(prefix):
+                    return path.replace(prefix, "", 1).strip("/").split("/")[0]
+    except Exception:
+        return ""
+
+    return ""
+
+
+def md_url_key(raw_url):
+    raw_url = (raw_url or "").strip()
+
+    if not raw_url:
+        return ""
+
+    youtube_id = md_youtube_id(raw_url)
+
+    if youtube_id:
+        return f"youtube:{youtube_id}"
+
+    try:
+        parsed = _md_urlparse(raw_url if "://" in raw_url else "https://" + raw_url)
+        host = (parsed.netloc or "").lower().replace("www.", "")
+        path = (parsed.path or "").rstrip("/")
+        return f"{host}{path}".lower()
+    except Exception:
+        return raw_url.lower()
+
+
+def md_duplicate_key(item):
+    url = item.get("playable_url") or item.get("url") or item.get("link") or item.get("external_url") or ""
+    url_key = md_url_key(url)
+
+    if url_key:
+        return f"url:{url_key}"
+
+    title = md_norm(item.get("title"))
+    creator = md_norm(
+        item.get("artist_or_creator")
+        or item.get("artist")
+        or item.get("artist_name")
+        or item.get("producer")
+        or item.get("producer_name")
+        or ""
+    )
+    platform = md_norm(item.get("platform"))
+
+    return f"text:{title}|{creator}|{platform}"
+
+
+def md_current_user_id():
+    try:
+        user = current_user()
+        if user:
+            return str(user.get("id") or "")
+    except Exception:
+        pass
+
+    try:
+        return str(session.get("user_id") or session.get("account_user_id") or "")
+    except Exception:
+        return ""
+
+
+def md_music_play_stats():
+    stats = {}
+
+    if not md_table_exists("music_play_events"):
+        return stats
+
+    try:
+        cols = md_columns("music_play_events")
+        id_col = "media_item_id" if "media_item_id" in cols else "item_id" if "item_id" in cols else None
+
+        if not id_col:
+            return stats
+
+        rows = md_fetch_all(
+            f"""
+            SELECT {id_col} AS media_item_id, COUNT(*) AS play_events
+            FROM music_play_events
+            GROUP BY {id_col}
+            """
+        )
+
+        for row in rows:
+            stats[row.get("media_item_id")] = md_int(row.get("play_events"))
+    except Exception as exc:
+        print(f"MD_PLAY_STATS_FAILED: {type(exc).__name__}: {exc}")
+
+    return stats
+
+
+def md_music_feedback_stats():
+    stats = {}
+
+    if not md_table_exists("music_feedback"):
+        return stats
+
+    try:
+        cols = md_columns("music_feedback")
+        id_col = "media_item_id" if "media_item_id" in cols else "item_id" if "item_id" in cols else None
+
+        if not id_col:
+            return stats
+
+        rows = md_fetch_all("SELECT * FROM music_feedback LIMIT 10000")
+
+        for row in rows:
+            media_id = row.get(id_col)
+
+            stats.setdefault(media_id, {
+                "feedback_count": 0,
+                "rating_sum": 0.0,
+                "rating_count": 0,
+            })
+
+            stats[media_id]["feedback_count"] += 1
+
+            if "rating" in cols and row.get("rating") not in [None, ""]:
+                stats[media_id]["rating_sum"] += md_float(row.get("rating"))
+                stats[media_id]["rating_count"] += 1
+
+        for media_id, stat in stats.items():
+            if stat["rating_count"]:
+                stat["avg_rating"] = stat["rating_sum"] / stat["rating_count"]
+            else:
+                stat["avg_rating"] = 0
+
+    except Exception as exc:
+        print(f"MD_FEEDBACK_STATS_FAILED: {type(exc).__name__}: {exc}")
+
+    return stats
+
+
+def md_open_duplicate_report_counts():
+    counts = {}
+
+    try:
+        md_ensure_duplicate_reports_table()
+
+        rows = md_fetch_all(
+            """
+            SELECT media_item_id, COUNT(*) AS open_reports
+            FROM music_duplicate_reports
+            WHERE status = 'open'
+            GROUP BY media_item_id
+            """
+        )
+
+        for row in rows:
+            counts[row.get("media_item_id")] = md_int(row.get("open_reports"))
+    except Exception as exc:
+        print(f"MD_REPORT_COUNTS_FAILED: {type(exc).__name__}: {exc}")
+
+    return counts
+
+
+def md_prepare_music_rows(records):
+    play_stats = md_music_play_stats()
+    feedback_stats = md_music_feedback_stats()
+    report_counts = md_open_duplicate_report_counts()
+
+    rows = []
+    groups = {}
+
+    for record in records:
+        item = dict(record)
+        media_id = item.get("id")
+
+        feedback = feedback_stats.get(media_id, {})
+        db_play_count = md_int(item.get("play_count") or item.get("plays"))
+        event_play_count = md_int(play_stats.get(media_id))
+
+        item["play_count"] = max(db_play_count, event_play_count)
+        item["feedback_count"] = md_int(
+            feedback.get("feedback_count")
+            or item.get("feedback_count")
+            or item.get("reaction_count")
+        )
+        item["avg_rating"] = md_float(feedback.get("avg_rating") or item.get("avg_rating"))
+
+        item["artist"] = item.get("artist") or item.get("artist_or_creator") or item.get("artist_name") or ""
+        item["producer"] = item.get("producer") or item.get("producer_name") or ""
+        item["url"] = item.get("playable_url") or item.get("url") or item.get("link") or item.get("external_url") or ""
+        item["media_type"] = item.get("media_type") or "music_release"
+        item["open_duplicate_reports"] = md_int(report_counts.get(media_id))
+
+        key = md_duplicate_key(item)
+        item["duplicate_key"] = key
+
+        groups.setdefault(key, [])
+        groups[key].append(item)
+
+        rows.append(item)
+
+    for item in rows:
+        group = groups.get(item.get("duplicate_key"), [])
+        possible_ids = [
+            str(other.get("id"))
+            for other in group
+            if other.get("id") and other.get("id") != item.get("id")
+        ]
+
+        item["possible_duplicate_count"] = max(0, len(group) - 1)
+        item["possible_duplicate_ids"] = ",".join(possible_ids)
+
+    return rows
+
+
+def litefeet_music_duplicate_flag_page():
+    q = (request.args.get("q") or "").strip().lower()
+    selected_platform = (request.args.get("platform") or "all").strip()
+    selected_type = (request.args.get("type") or "all").strip()
+
+    try:
+        ensure_media_items_table()
+    except Exception:
+        pass
+
+    md_ensure_duplicate_reports_table()
+
+    records = md_fetch_all(
+        """
+        SELECT *
+        FROM media_items
+        WHERE media_type = 'music_release'
+          AND status = 'Published'
+        ORDER BY
+            CASE
+                WHEN release_date IS NULL OR release_date = '' THEN created_at
+                ELSE release_date
+            END DESC,
+            created_at DESC,
+            id DESC
+        LIMIT 1000
+        """
+    )
+
+    rows = md_prepare_music_rows(records)
+
+    platforms = sorted({
+        str(item.get("platform") or "").strip()
+        for item in rows
+        if str(item.get("platform") or "").strip()
+    }, key=lambda value: value.lower())
+
+    music_types = sorted({
+        str(item.get("media_type") or "music_release").strip()
+        for item in rows
+        if str(item.get("media_type") or "music_release").strip()
+    }, key=lambda value: value.lower())
+
+    filtered = []
+
+    for item in rows:
+        platform = str(item.get("platform") or "").strip()
+        media_type = str(item.get("media_type") or "music_release").strip()
+
+        if selected_platform.lower() not in {"", "all", "all platforms"}:
+            if platform.lower() != selected_platform.lower():
+                continue
+
+        if selected_type.lower() not in {"", "all", "all music"}:
+            if media_type.lower() != selected_type.lower():
+                continue
+
+        search_text = " ".join([
+            str(item.get("title") or ""),
+            str(item.get("artist") or ""),
+            str(item.get("producer") or ""),
+            str(item.get("description") or ""),
+            str(platform),
+        ]).lower()
+
+        if q and q not in search_text:
+            continue
+
+        filtered.append(item)
+
+    return render_template(
+        "litefeet_music.html",
+        music_records=filtered,
+        records=filtered,
+        media_items=filtered,
+        releases=filtered,
+        latest_music_releases=filtered,
+        platforms=platforms,
+        music_types=music_types,
+        selected_q=request.args.get("q", ""),
+        selected_type=selected_type,
+        selected_platform=selected_platform,
+    )
+
+
+def litefeet_music_report_duplicate():
+    md_ensure_duplicate_reports_table()
+
+    media_item_id = request.form.get("media_item_id") or ""
+    possible_duplicate_id = request.form.get("possible_duplicate_id") or ""
+    reporter_note = (request.form.get("reporter_note") or "").strip()
+
+    try:
+        media_item_id = int(media_item_id)
+    except Exception:
+        media_item_id = 0
+
+    try:
+        possible_duplicate_id = int(possible_duplicate_id) if possible_duplicate_id else None
+    except Exception:
+        possible_duplicate_id = None
+
+    if not media_item_id:
+        return redirect(request.referrer or "/litefeet-music")
+
+    reporter_user_id = md_current_user_id() or "public"
+
+    existing = md_fetch_one(
+        """
+        SELECT id
+        FROM music_duplicate_reports
+        WHERE media_item_id = :media_item_id
+          AND COALESCE(possible_duplicate_id, 0) = COALESCE(:possible_duplicate_id, 0)
+          AND reporter_user_id = :reporter_user_id
+          AND status = 'open'
+        LIMIT 1
+        """,
+        {
+            "media_item_id": media_item_id,
+            "possible_duplicate_id": possible_duplicate_id or 0,
+            "reporter_user_id": reporter_user_id,
+        },
+    )
+
+    if not existing:
+        md_execute(
+            """
+            INSERT INTO music_duplicate_reports (
+                media_item_id,
+                possible_duplicate_id,
+                reporter_user_id,
+                reporter_note,
+                status,
+                created_at
+            )
+            VALUES (
+                :media_item_id,
+                :possible_duplicate_id,
+                :reporter_user_id,
+                :reporter_note,
+                'open',
+                CURRENT_TIMESTAMP
+            )
+            """,
+            {
+                "media_item_id": media_item_id,
+                "possible_duplicate_id": possible_duplicate_id,
+                "reporter_user_id": reporter_user_id,
+                "reporter_note": reporter_note,
+            },
+        )
+
+    return redirect(request.referrer or "/litefeet-music")
+
+
+try:
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/litefeet-music":
+            app.view_functions[rule.endpoint] = litefeet_music_duplicate_flag_page
+            print(f"MUSIC DUPLICATE FLAG REPORT active: {rule.endpoint}")
+
+    if "litefeet_music_report_duplicate" not in app.view_functions:
+        app.add_url_rule(
+            "/litefeet-music/report-duplicate",
+            "litefeet_music_report_duplicate",
+            litefeet_music_report_duplicate,
+            methods=["POST"],
+        )
+except Exception as exc:
+    print(f"MUSIC DUPLICATE FLAG REPORT setup failed: {type(exc).__name__}: {exc}")
+

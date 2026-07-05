@@ -21,7 +21,7 @@
     <form class="music-filter-form" method="get">
         <label>
             Search
-            <input type="search" name="q" value="{{ selected_q or query or search_query or '' }}" placeholder="Track, producer, artist">
+            <input type="search" name="q" value="{{ selected_q or '' }}" placeholder="Track, producer, artist">
         </label>
 
         <label>
@@ -38,7 +38,7 @@
             Platform
             <select name="platform">
                 <option value="all">All Platforms</option>
-                {% for item in platforms or platform_options or [] %}
+                {% for item in platforms or [] %}
                     <option value="{{ item }}" {% if selected_platform == item or selected_platform == item|lower %}selected{% endif %}>{{ item }}</option>
                 {% endfor %}
             </select>
@@ -50,7 +50,7 @@
 </section>
 
 <section class="content-section release-radar-table-section litefeet-music-records-section">
-    {% set rows = music_records or latest_music_releases or records or media_items or releases or release_radar or [] %}
+    {% set rows = music_records or latest_music_releases or records or media_items or releases or [] %}
 
     <div class="section-heading-row">
         <div>
@@ -71,8 +71,8 @@
         </div>
     </div>
 
-    <div class="release-table-wrap release-radar-table-wrap litefeet-music-table-wrap">
-        <table class="release-table release-radar-table compact-home-table litefeet-music-table">
+    <div class="release-table-wrap litefeet-music-table-wrap">
+        <table class="release-table litefeet-music-table">
             <thead>
                 <tr>
                     <th>Play</th>
@@ -82,6 +82,7 @@
                     <th>Platform</th>
                     <th>Plays</th>
                     <th>Reactions</th>
+                    <th>Duplicate?</th>
                 </tr>
             </thead>
 
@@ -94,8 +95,9 @@
                         {% set platform_name = item.platform or item_url|media_platform %}
                         {% set release_date = item.release_date or item.created_at or item.date %}
                         {% set avg_rating = item.avg_rating or 0 %}
+                        {% set first_possible_duplicate = (item.possible_duplicate_ids.split(',')[0] if item.possible_duplicate_ids else '') %}
 
-                        <tr data-release-row>
+                        <tr data-release-row class="{% if item.possible_duplicate_count %}possible-duplicate-row{% endif %}">
                             <td class="play-cell">
                                 <button
                                     type="button"
@@ -110,9 +112,7 @@
                                     data-player-embed-url="{{ embed_url }}"
                                     data-embed-url="{{ embed_url }}"
                                     aria-label="Play {{ item.title or 'music record' }}"
-                                >
-                                    ▶
-                                </button>
+                                >▶</button>
                             </td>
 
                             <td class="title-cell">
@@ -124,19 +124,24 @@
                                     <strong>{{ item.title or "Untitled music record" }}</strong>
                                 {% endif %}
 
+                                {% if item.possible_duplicate_count %}
+                                    <small class="duplicate-note">
+                                        Possible duplicate: {{ item.possible_duplicate_count }} similar record{% if item.possible_duplicate_count != 1 %}s{% endif %}
+                                    </small>
+                                {% endif %}
+
+                                {% if item.open_duplicate_reports %}
+                                    <small class="duplicate-note">
+                                        {{ item.open_duplicate_reports }} open duplicate report{% if item.open_duplicate_reports != 1 %}s{% endif %}
+                                    </small>
+                                {% endif %}
+
                                 {% if item.description %}
                                     <small class="music-description-clamp">{{ item.description }}</small>
                                 {% endif %}
                             </td>
 
-                            <td class="artist-cell">
-                                {{ artist_name }}
-                                {% if item.producer_name and item.producer_name != artist_name %}
-                                    <small>Producer: {{ item.producer_name }}</small>
-                                {% elif item.producer and item.producer != artist_name %}
-                                    <small>Producer: {{ item.producer }}</small>
-                                {% endif %}
-                            </td>
+                            <td class="artist-cell">{{ artist_name }}</td>
 
                             <td class="date-cell">
                                 {% if release_date %}
@@ -163,32 +168,30 @@
                                     {% endif %}
                                 </small>
 
-                                {% if item.would_lab_count or item.would_battle_count or item.would_shoot_video_count %}
-                                    <details class="reaction-breakdown">
-                                        <summary>Breakdown</summary>
-                                        <span>{{ item.would_lab_count or 0 }} lab</span>
-                                        <span>{{ item.would_battle_count or 0 }} battle</span>
-                                        <span>{{ item.would_shoot_video_count or 0 }} video</span>
-                                    </details>
-                                {% endif %}
-
                                 {% if item.id %}
-                                    <a class="small-note react-link" href="/litefeet-music/release/{{ item.id }}">
-                                        View / react
-                                    </a>
+                                    <a class="small-note react-link" href="/litefeet-music/release/{{ item.id }}">View / react</a>
                                 {% endif %}
 
                                 {% if item_url %}
                                     <a class="small-note source-link" href="{{ item_url }}" target="_blank" rel="noopener">Source</a>
                                 {% endif %}
                             </td>
+
+                            <td class="duplicate-cell">
+                                {% if item.id %}
+                                    <form method="post" action="/litefeet-music/report-duplicate" class="duplicate-report-form">
+                                        <input type="hidden" name="media_item_id" value="{{ item.id }}">
+                                        <input type="hidden" name="possible_duplicate_id" value="{{ first_possible_duplicate }}">
+                                        <input type="hidden" name="reporter_note" value="User flagged this music record as a duplicate from the LiteFeet Music table.">
+                                        <button class="button secondary duplicate-button" type="submit">Report duplicate</button>
+                                    </form>
+                                {% endif %}
+                            </td>
                         </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="7" class="empty-music-row">
-                            No music records yet. Add tracks, producer records, battle music, releases, or video links.
-                        </td>
+                        <td colspan="8" class="empty-music-row">No music records yet.</td>
                     </tr>
                 {% endif %}
             </tbody>
@@ -219,18 +222,18 @@
         min-height: 34px;
     }
 
-    .litefeet-music-records-section {
-        padding-top: 24px;
-    }
-
     .litefeet-music-table-wrap {
         max-height: 640px;
         overflow: auto;
+        border: 1px solid rgba(232, 198, 90, 0.22);
+        border-radius: 14px;
     }
 
     .litefeet-music-table {
         width: 100%;
         table-layout: fixed;
+        border-collapse: separate;
+        border-spacing: 0;
     }
 
     .litefeet-music-table th {
@@ -238,10 +241,17 @@
         top: 0;
         z-index: 4;
         background: #080808;
+        color: var(--accent-color, #e8c65a);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.72rem;
     }
 
-    .litefeet-music-table td,
-    .litefeet-music-table th {
+    .litefeet-music-table th,
+    .litefeet-music-table td {
+        padding: 12px 11px;
+        border-bottom: 1px solid rgba(232, 198, 90, 0.12);
+        text-align: left;
         vertical-align: top;
     }
 
@@ -250,35 +260,49 @@
     }
 
     .title-cell {
-        width: 34%;
-        max-width: 360px;
+        width: 28%;
+        max-width: 330px;
     }
 
     .artist-cell {
-        width: 17%;
+        width: 14%;
     }
 
     .date-cell {
-        width: 105px;
+        width: 115px;
     }
 
     .platform-cell {
-        width: 105px;
+        width: 95px;
     }
 
     .plays-cell {
-        width: 78px;
+        width: 75px;
         text-align: center;
     }
 
     .reactions-cell {
-        width: 126px;
+        width: 120px;
+    }
+
+    .duplicate-cell {
+        width: 135px;
+    }
+
+    .title-cell,
+    .artist-cell,
+    .music-title-link,
+    .music-description-clamp {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: normal;
     }
 
     .music-title-link {
         color: inherit;
         text-decoration: none;
         font-weight: 800;
+        display: inline;
     }
 
     .music-title-link:hover {
@@ -291,6 +315,15 @@
         opacity: 0.72;
     }
 
+    .duplicate-note {
+        color: var(--accent-color, #e8c65a);
+        opacity: 0.95 !important;
+    }
+
+    .possible-duplicate-row {
+        background: rgba(232, 198, 90, 0.035);
+    }
+
     .music-description-clamp {
         max-width: 100%;
         overflow: hidden;
@@ -298,29 +331,18 @@
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         line-height: 1.35;
-        word-break: break-word;
     }
 
-    .reaction-breakdown {
-        margin-top: 5px;
+    .duplicate-report-form {
+        margin: 0;
     }
 
-    .reaction-breakdown summary {
-        cursor: pointer;
-        color: var(--accent-color, #e8c65a);
-        font-size: 0.78rem;
-        font-weight: 800;
-    }
-
-    .reaction-breakdown span {
-        display: block;
-        margin-top: 3px;
-        opacity: 0.78;
-    }
-
-    .react-link,
-    .source-link {
-        margin-top: 6px;
+    .duplicate-button {
+        padding: 6px 9px;
+        line-height: 1.15;
+        white-space: normal;
+        width: 100%;
+        justify-content: center;
     }
 
     .empty-music-row {
@@ -335,7 +357,7 @@
         }
 
         .litefeet-music-table {
-            min-width: 900px;
+            min-width: 1060px;
         }
     }
 </style>
