@@ -1,6 +1,100 @@
 {% extends "base.html" %}
 
-{% block title %}Awards | The LiteFeet Ledger{% endblock %}
+{% block title %}Awards | The LiteFeet Ledger
+<script>
+(function () {
+    const grid = document.querySelector("[data-max-prior]");
+    if (grid) {
+        const max = Number(grid.dataset.maxPrior || 5);
+        const boxes = Array.from(grid.querySelectorAll('input[type="checkbox"]'));
+        const countEl = document.querySelector("[data-selected-prior-count]");
+
+        function syncPrior() {
+            const selected = boxes.filter(box => box.checked).length;
+
+            if (countEl) {
+                countEl.textContent = String(selected);
+            }
+
+            boxes.forEach(box => {
+                box.disabled = !box.checked && selected >= max;
+            });
+        }
+
+        boxes.forEach(box => box.addEventListener("change", syncPrior));
+        syncPrior();
+    }
+
+    const list = document.querySelector("[data-new-category-list]");
+    const addButton = document.querySelector("[data-add-category]");
+
+    if (list && addButton) {
+        function syncRemoveButtons() {
+            const items = Array.from(list.querySelectorAll(".dca-new-category-item"));
+            items.forEach((item, index) => {
+                const remove = item.querySelector("[data-remove-category]");
+                if (remove) {
+                    remove.style.display = items.length <= 1 ? "none" : "";
+                }
+            });
+        }
+
+        addButton.addEventListener("click", () => {
+            const first = list.querySelector(".dca-new-category-item");
+            if (!first) return;
+
+            const clone = first.cloneNode(true);
+            clone.querySelectorAll("input, textarea").forEach(field => {
+                field.value = "";
+            });
+
+            list.appendChild(clone);
+            syncRemoveButtons();
+        });
+
+        list.addEventListener("click", event => {
+            const button = event.target.closest("[data-remove-category]");
+            if (!button) return;
+
+            const items = Array.from(list.querySelectorAll(".dca-new-category-item"));
+            if (items.length <= 1) return;
+
+            button.closest(".dca-new-category-item").remove();
+            syncRemoveButtons();
+        });
+
+        syncRemoveButtons();
+    }
+
+    const lockCard = document.querySelector("[data-next-submit-at]");
+    const countdown = document.querySelector("[data-dca-countdown]");
+
+    if (lockCard && countdown) {
+        const nextAt = new Date(lockCard.dataset.nextSubmitAt);
+
+        function syncCountdown() {
+            const ms = nextAt.getTime() - Date.now();
+
+            if (Number.isNaN(ms) || ms <= 0) {
+                countdown.textContent = "now";
+                return;
+            }
+
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            countdown.textContent = `${hours}h ${minutes}m ${seconds}s`;
+        }
+
+        syncCountdown();
+        setInterval(syncCountdown, 1000);
+    }
+})();
+</script>
+
+{% endblock %}
 {% block meta_description %}Browse LiteFeet Awards and Dancer’s Choice Awards records, winners, nominees, categories, years, and public award history.{% endblock %}
 
 {% block content %}
@@ -127,6 +221,234 @@
             {% endif %}
         </div>
     </div>
+
+    {% if active_tab == "dancers-choice" %}
+        {% set round_stats = dca_round_stats if dca_round_stats is defined else {} %}
+        {% set round_lock = dca_round_lock if dca_round_lock is defined else {"locked": false} %}
+
+        <section class="dca-round-card">
+            <div class="dca-round-heading">
+                <div>
+                    <p class="eyebrow">This Year’s Dancer’s Choice Awards</p>
+                    <h3>Help build this year’s categories</h3>
+                    <p>
+                        The first Dancer’s Choice Awards had <strong>{{ dca_first_category_total or 36 }} categories</strong>,
+                        <strong>{{ dca_first_nominee_entries or 206 }} nominee entries</strong>,
+                        <strong>{{ dca_first_nomination_participants or 70 }} nomination participants</strong>,
+                        and <strong>{{ dca_first_voting_participants or 79 }} voting participants</strong>.
+                        This year, the community is helping decide how many categories make sense, which categories should return, and what new awards should be added.
+                    </p>
+                </div>
+            </div>
+
+            <div class="dca-round-stat-grid">
+                <article>
+                    <strong>
+                        {% if round_stats.average_category_count %}
+                            {{ round_stats.average_category_count }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </strong>
+                    <span>current average category count</span>
+                </article>
+
+                <article>
+                    <strong>{{ round_stats.category_count_responses or 0 }}</strong>
+                    <span>category count responses</span>
+                </article>
+
+                <article>
+                    <strong>{{ round_stats.total_new_suggestions or 0 }}</strong>
+                    <span>new category suggestions</span>
+                </article>
+
+                <article>
+                    <strong>{{ round_stats.total_submissions or 0 }}</strong>
+                    <span>total daily submissions</span>
+                </article>
+            </div>
+
+            {% if dca_round_saved %}
+                <div class="dca-round-alert success">
+                    Your category vote was saved. Check the results below to see how the suggestions are ranking.
+                </div>
+            {% endif %}
+
+            {% if dca_round_error == "invalid_email" %}
+                <div class="dca-round-alert">Enter a valid email address to participate.</div>
+            {% elif dca_round_error == "locked" %}
+                <div class="dca-round-alert">You already submitted today. The countdown below shows when you can vote again.</div>
+            {% elif dca_round_error == "missing_count" %}
+                <div class="dca-round-alert">Add how many categories you think this year should have.</div>
+            {% elif dca_round_error == "count_too_high" %}
+                <div class="dca-round-alert">Use a realistic category count. Keep it at 100 or below.</div>
+            {% elif dca_round_error == "too_many_prior" %}
+                <div class="dca-round-alert">Pick no more than {{ dca_round_prior_max or 5 }} old categories.</div>
+            {% elif dca_round_error == "incomplete_new_category" %}
+                <div class="dca-round-alert">Each new category idea needs both a name and a description.</div>
+            {% endif %}
+
+            {% if round_lock.locked %}
+                <div class="dca-round-lock-card" data-next-submit-at="{{ round_lock.next_at }}">
+                    <p class="eyebrow">Daily vote used</p>
+                    <h4>You can vote again in <span data-dca-countdown>calculating...</span></h4>
+                    <p>
+                        This lock checks your email, browser/session, and IP address so refreshing the page does not create another vote.
+                    </p>
+                </div>
+            {% else %}
+                <form method="post" action="/awards/dancers-choice/category-round" class="dca-round-form">
+                    <div class="dca-form-block">
+                        <p class="eyebrow">Required</p>
+                        <h4>Your email</h4>
+                        <label>
+                            Email address
+                            <input type="email" name="email" required placeholder="you@example.com">
+                        </label>
+                        <p class="small-note">
+                            Email is required so the category vote can be limited to one submission per day.
+                        </p>
+                    </div>
+
+                    <div class="dca-form-block">
+                        <p class="eyebrow">Question 1</p>
+                        <h4>How many categories should we do this year?</h4>
+                        <label>
+                            Category count
+                            <input type="number" name="suggested_category_count" min="1" max="100" step="1" required placeholder="Example: 24">
+                        </label>
+                        <p class="small-note">
+                            The current community average helps guide how many categories this year’s Dancer’s Choice Awards should have.
+                        </p>
+                    </div>
+
+                    <div class="dca-form-block">
+                        <p class="eyebrow">Question 2</p>
+                        <h4>Which 2023 categories should come back?</h4>
+                        <p class="small-note">
+                            Select up to {{ dca_round_prior_max or 5 }} old categories.
+                        </p>
+
+                        <div class="dca-prior-category-grid" data-max-prior="{{ dca_round_prior_max or 5 }}">
+                            {% for category in dca_prior_categories or [] %}
+                                <label class="dca-category-chip">
+                                    <input type="checkbox" name="prior_categories" value="{{ category }}">
+                                    <span>{{ category }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+
+                        <p class="small-note dca-category-count-note">
+                            <span data-selected-prior-count>0</span> / {{ dca_round_prior_max or 5 }} selected
+                        </p>
+                    </div>
+
+                    <div class="dca-form-block">
+                        <p class="eyebrow">Question 3</p>
+                        <h4>Suggest new categories</h4>
+                        <p class="small-note">
+                            Suggest as many as you want. Each idea needs a category name and a description explaining what the award highlights.
+                        </p>
+
+                        <div class="dca-new-category-list" data-new-category-list>
+                            <div class="dca-new-category-item">
+                                <label>
+                                    Category name
+                                    <input type="text" name="new_category_name" placeholder="Example: Best New Gen Battler">
+                                </label>
+
+                                <label>
+                                    What is this award for?
+                                    <textarea name="new_category_description" rows="4" placeholder="Explain what this award highlights, who or what qualifies, and why the community should recognize it."></textarea>
+                                </label>
+
+                                <button class="button secondary dca-remove-category-button" type="button" data-remove-category>Remove</button>
+                            </div>
+                        </div>
+
+                        <button class="button secondary" type="button" data-add-category>Add Another Category Idea</button>
+                    </div>
+
+                    <div class="dca-builder-actions">
+                        <button class="button primary" type="submit">Submit Category Vote</button>
+                    </div>
+                </form>
+            {% endif %}
+        </section>
+
+        <section class="dca-round-results-card">
+            <div class="dca-round-results-heading">
+                <p class="eyebrow">Live Results</p>
+                <h3>Category suggestion results</h3>
+                <p>
+                    These rankings update as people submit their daily category vote. Similar category ideas may still need to be merged during review.
+                </p>
+            </div>
+
+            <div class="dca-results-grid">
+                <article class="dca-results-panel">
+                    <h4>Top Returning 2023 Categories</h4>
+
+                    {% if round_stats.top_prior_categories %}
+                        <div class="release-table-wrap">
+                            <table class="release-table dca-results-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Category</th>
+                                        <th>Votes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in round_stats.top_prior_categories %}
+                                        <tr>
+                                            <td>{{ loop.index }}</td>
+                                            <td>{{ item.category }}</td>
+                                            <td><strong>{{ item.votes }}</strong></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="small-note">No returning category votes yet.</p>
+                    {% endif %}
+                </article>
+
+                <article class="dca-results-panel">
+                    <h4>Top New Category Suggestions</h4>
+
+                    {% if round_stats.top_new_categories %}
+                        <div class="release-table-wrap">
+                            <table class="release-table dca-results-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Suggestion</th>
+                                        <th>Support</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in round_stats.top_new_categories %}
+                                        <tr>
+                                            <td>{{ loop.index }}</td>
+                                            <td>{{ item.category_name }}</td>
+                                            <td><strong>{{ item.support }}</strong></td>
+                                            <td>{{ item.description[:140] }}{% if item.description|length > 140 %}...{% endif %}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="small-note">No new category suggestions yet.</p>
+                    {% endif %}
+                </article>
+            </div>
+        </section>
+    {% endif %}
 
     {% if active_tab == "dancers-choice" and dca_section_rows %}
         <details class="dca-year-card" open>
@@ -460,6 +782,232 @@
         padding: 2px 6px;
     }
 
+    .dca-round-card,
+    .dca-round-results-card {
+        border: 1px solid rgba(232, 198, 90, 0.26);
+        border-radius: 22px;
+        background: radial-gradient(circle at top left, rgba(232, 198, 90, 0.1), rgba(255,255,255,0.032) 38%, rgba(0,0,0,0.18));
+        padding: 20px;
+        margin-bottom: 20px;
+        display: grid;
+        gap: 18px;
+    }
+
+    .dca-round-heading h3,
+    .dca-round-results-heading h3 {
+        margin: 4px 0 8px;
+        color: var(--accent-color, #e8c65a);
+        font-size: clamp(1.5rem, 4vw, 2.5rem);
+    }
+
+    .dca-round-heading p,
+    .dca-round-results-heading p {
+        margin: 0;
+        max-width: 940px;
+        line-height: 1.5;
+        opacity: 0.86;
+    }
+
+    .dca-round-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .dca-round-stat-grid article {
+        border: 1px solid rgba(232, 198, 90, 0.18);
+        border-radius: 14px;
+        background: rgba(0,0,0,0.18);
+        padding: 12px;
+    }
+
+    .dca-round-stat-grid strong {
+        display: block;
+        color: var(--accent-color, #e8c65a);
+        font-size: 1.45rem;
+        line-height: 1;
+        margin-bottom: 5px;
+    }
+
+    .dca-round-stat-grid span {
+        opacity: 0.78;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+
+    .dca-round-alert {
+        border: 1px solid rgba(255, 120, 120, 0.4);
+        background: rgba(255, 120, 120, 0.08);
+        border-radius: 14px;
+        padding: 12px 14px;
+        font-weight: 900;
+    }
+
+    .dca-round-alert.success {
+        border-color: rgba(232, 198, 90, 0.35);
+        background: rgba(232, 198, 90, 0.08);
+        color: var(--accent-color, #e8c65a);
+    }
+
+    .dca-round-lock-card {
+        border: 1px solid rgba(232, 198, 90, 0.28);
+        background: rgba(232, 198, 90, 0.075);
+        border-radius: 16px;
+        padding: 16px;
+    }
+
+    .dca-round-lock-card h4 {
+        color: var(--accent-color, #e8c65a);
+        margin: 4px 0 8px;
+        font-size: 1.4rem;
+    }
+
+    .dca-round-lock-card p {
+        margin: 0;
+        opacity: 0.82;
+    }
+
+    .dca-round-form {
+        display: grid;
+        gap: 16px;
+    }
+
+    .dca-form-block {
+        border: 1px solid rgba(232, 198, 90, 0.16);
+        border-radius: 18px;
+        background: rgba(255,255,255,0.025);
+        padding: 16px;
+        display: grid;
+        gap: 12px;
+    }
+
+    .dca-form-block h4 {
+        margin: 0;
+        color: var(--accent-color, #e8c65a);
+        font-size: 1.25rem;
+    }
+
+    .dca-form-block label {
+        display: grid;
+        gap: 7px;
+        font-weight: 900;
+    }
+
+    .dca-form-block input,
+    .dca-form-block textarea {
+        width: 100%;
+        border: 1px solid rgba(232, 198, 90, 0.3);
+        border-radius: 12px;
+        background: rgba(0,0,0,0.3);
+        color: #fff;
+        padding: 10px 12px;
+        font: inherit;
+    }
+
+    .dca-form-block textarea {
+        resize: vertical;
+        min-height: 110px;
+    }
+
+    .dca-form-block input:focus,
+    .dca-form-block textarea:focus {
+        outline: none;
+        border-color: var(--accent-color, #e8c65a);
+        box-shadow: 0 0 0 3px rgba(232, 198, 90, 0.14);
+    }
+
+    .dca-prior-category-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .dca-category-chip {
+        cursor: pointer;
+        display: inline-flex;
+    }
+
+    .dca-category-chip input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .dca-category-chip span {
+        border: 1px solid rgba(232, 198, 90, 0.26);
+        border-radius: 999px;
+        padding: 7px 11px;
+        background: rgba(0,0,0,0.18);
+        font-size: 0.86rem;
+        font-weight: 900;
+        color: #f5f1e8;
+        transition: 0.15s ease;
+    }
+
+    .dca-category-chip input:checked + span {
+        background: rgba(232, 198, 90, 0.16);
+        border-color: var(--accent-color, #e8c65a);
+        color: var(--accent-color, #e8c65a);
+    }
+
+    .dca-category-chip input:disabled + span {
+        opacity: 0.38;
+        cursor: not-allowed;
+    }
+
+    .dca-category-count-note {
+        font-weight: 900;
+        color: var(--accent-color, #e8c65a);
+    }
+
+    .dca-new-category-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .dca-new-category-item {
+        border: 1px solid rgba(232, 198, 90, 0.14);
+        border-radius: 16px;
+        padding: 14px;
+        display: grid;
+        gap: 12px;
+        background: rgba(0,0,0,0.14);
+    }
+
+    .dca-remove-category-button {
+        width: max-content;
+    }
+
+    .dca-builder-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .dca-results-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .dca-results-panel {
+        border: 1px solid rgba(232, 198, 90, 0.16);
+        border-radius: 18px;
+        padding: 16px;
+        background: rgba(255,255,255,0.025);
+        display: grid;
+        gap: 12px;
+    }
+
+    .dca-results-panel h4 {
+        margin: 0;
+        color: var(--accent-color, #e8c65a);
+        font-size: 1.25rem;
+    }
+
+    .dca-results-table {
+        min-width: 720px;
+    }
+
     .dca-year-card {
         border: 1px solid rgba(232, 198, 90, 0.26);
         border-radius: 22px;
@@ -708,7 +1256,8 @@
         .award-card-grid,
         .dca-category-grid,
         .award-subnav,
-        .award-system-info-grid {
+        .award-system-info-grid,
+        .dca-round-stat-grid {
             grid-template-columns: 1fr;
         }
 
@@ -728,9 +1277,19 @@
             border-radius: 12px;
         }
 
-        .award-open-button {
+        .award-open-button,
+        .dca-builder-actions .button,
+        [data-add-category] {
             width: 100%;
             justify-content: center;
+        }
+
+        .dca-builder-actions {
+            justify-content: stretch;
+        }
+
+        .dca-remove-category-button {
+            width: 100%;
         }
     }
 </style>

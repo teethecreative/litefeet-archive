@@ -27062,3 +27062,644 @@ try:
 except Exception as exc:
     print(f"AWARDS LANDING AND DCA SECTIONS setup failed: {type(exc).__name__}: {exc}")
 
+# --- DCA CATEGORY VOTING ROUND PATCH ---
+# Dancer's Choice Awards current-year category voting round:
+# - required valid email format
+# - one submission per 24 hours
+# - lock checks email hash, IP hash, and browser/session visitor key
+# - category count average shown publicly
+# - returning 2023 categories ranked publicly
+# - unlimited new category suggestions ranked publicly
+
+import hashlib as _dcar_hashlib
+import json as _dcar_json
+import os as _dcar_os
+import re as _dcar_re
+from collections import Counter as _dcar_Counter, defaultdict as _dcar_defaultdict
+from datetime import datetime as _dcar_datetime, timedelta as _dcar_timedelta, timezone as _dcar_timezone
+
+try:
+    from sqlalchemy import text as _dcar_text
+except Exception:
+    _dcar_text = text
+
+
+DCA_ROUND_YEAR = str(_dcar_datetime.now().year)
+DCA_ROUND_COOLDOWN_HOURS = 24
+DCA_ROUND_PRIOR_MAX = 5
+
+DCA_FIRST_CATEGORY_TOTAL = 36
+DCA_FIRST_NOMINATION_PARTICIPANTS = 70
+DCA_FIRST_VOTING_PARTICIPANTS = 79
+DCA_FIRST_NOMINEE_ENTRIES = 206
+
+
+def dcar_now():
+    return _dcar_datetime.now(_dcar_timezone.utc)
+
+
+def dcar_salt():
+    try:
+        return str(app.config.get("SECRET_KEY") or _dcar_os.environ.get("SECRET_KEY") or "litefeet-ledger")
+    except Exception:
+        return str(_dcar_os.environ.get("SECRET_KEY") or "litefeet-ledger")
+
+
+def dcar_hash(value):
+    value = str(value or "").strip().lower()
+    if not value:
+        return ""
+    payload = f"{dcar_salt()}::{value}".encode("utf-8", errors="ignore")
+    return _dcar_hashlib.sha256(payload).hexdigest()
+
+
+def dcar_valid_email(email):
+    email = str(email or "").strip().lower()
+    if len(email) > 254:
+        return False
+    return bool(_dcar_re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email))
+
+
+def dcar_normalize_category(value):
+    value = str(value or "").strip().lower()
+    value = value.replace("&", "and")
+    value = _dcar_re.sub(r"[^a-z0-9]+", " ", value)
+    value = _dcar_re.sub(r"\s+", " ", value).strip()
+    return value
+
+
+def dcar_execute(query, params=None):
+    params = params or {}
+    with engine.begin() as conn:
+        conn.execute(_dcar_text(query), params)
+
+
+def dcar_fetch_all(query, params=None):
+    params = params or {}
+    try:
+        with engine.connect() as conn:
+            return [dict(row) for row in conn.execute(_dcar_text(query), params).mappings().all()]
+    except Exception as exc:
+        print(f"DCA_ROUND_FETCH_FAILED: {type(exc).__name__}: {exc}")
+        return []
+
+
+def dcar_ensure_tables():
+    if engine.dialect.name.startswith("postgres"):
+        dcar_execute("""
+            CREATE TABLE IF NOT EXISTS dca_category_round_submissions (
+                id SERIAL PRIMARY KEY,
+                award_year TEXT,
+                email TEXT,
+                email_hash TEXT,
+                ip_hash TEXT,
+                visitor_key TEXT,
+                suggested_category_count INTEGER,
+                selected_prior_categories TEXT,
+                user_agent TEXT,
+                status TEXT DEFAULT 'submitted',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        dcar_execute("""
+            CREATE TABLE IF NOT EXISTS dca_category_suggestion_items (
+                id SERIAL PRIMARY KEY,
+                submission_id INTEGER,
+                award_year TEXT,
+                category_name TEXT,
+                normalized_category_name TEXT,
+                category_description TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+    else:
+        dcar_execute("""
+            CREATE TABLE IF NOT EXISTS dca_category_round_submissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                award_year TEXT,
+                email TEXT,
+                email_hash TEXT,
+                ip_hash TEXT,
+                visitor_key TEXT,
+                suggested_category_count INTEGER,
+                selected_prior_categories TEXT,
+                user_agent TEXT,
+                status TEXT DEFAULT 'submitted',
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        dcar_execute("""
+            CREATE TABLE IF NOT EXISTS dca_category_suggestion_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                submission_id INTEGER,
+                award_year TEXT,
+                category_name TEXT,
+                normalized_category_name TEXT,
+                category_description TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+    dcar_execute("CREATE INDEX IF NOT EXISTS idx_dca_round_year ON dca_category_round_submissions (award_year)")
+    dcar_execute("CREATE INDEX IF NOT EXISTS idx_dca_round_email_hash ON dca_category_round_submissions (email_hash)")
+    dcar_execute("CREATE INDEX IF NOT EXISTS idx_dca_round_ip_hash ON dca_category_round_submissions (ip_hash)")
+    dcar_execute("CREATE INDEX IF NOT EXISTS idx_dca_round_visitor_key ON dca_category_round_submissions (visitor_key)")
+    dcar_execute("CREATE INDEX IF NOT EXISTS idx_dca_suggestion_year ON dca_category_suggestion_items (award_year)")
+    dcar_execute("CREATE INDEX IF NOT EXISTS idx_dca_suggestion_normalized ON dca_category_suggestion_items (normalized_category_name)")
+
+
+def dcar_request_ip():
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.remote_addr or ""
+
+
+def dcar_visitor_key():
+    try:
+        key = session.get("dca_round_visitor_key")
+        if not key:
+            raw = f"{dcar_now().isoformat()}::{dcar_request_ip()}::{request.headers.get('User-Agent', '')}"
+            key = "dcar-" + _dcar_hashlib.sha256(raw.encode("utf-8", errors="ignore")).hexdigest()[:32]
+            session["dca_round_visitor_key"] = key
+        return key
+    except Exception:
+        return ""
+
+
+def dcar_parse_datetime(value):
+    if not value:
+        return None
+
+    if isinstance(value, _dcar_datetime):
+        if value.tzinfo is None:
+            return value.replace(tzinfo=_dcar_timezone.utc)
+        return value.astimezone(_dcar_timezone.utc)
+
+    text_value = str(value).strip()
+
+    for fmt in ("%Y-%m-%d %H:%M:%S.%f%z", "%Y-%m-%d %H:%M:%S%z", "%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S"):
+        try:
+            dt = _dcar_datetime.strptime(text_value, fmt)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=_dcar_timezone.utc)
+            return dt.astimezone(_dcar_timezone.utc)
+        except Exception:
+            pass
+
+    try:
+        dt = _dcar_datetime.fromisoformat(text_value.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=_dcar_timezone.utc)
+        return dt.astimezone(_dcar_timezone.utc)
+    except Exception:
+        return None
+
+
+def dcar_latest_lock_row(email_hash="", ip_hash="", visitor_key=""):
+    clauses = []
+    params = {"award_year": DCA_ROUND_YEAR}
+
+    if email_hash:
+        clauses.append("email_hash = :email_hash")
+        params["email_hash"] = email_hash
+
+    if ip_hash:
+        clauses.append("ip_hash = :ip_hash")
+        params["ip_hash"] = ip_hash
+
+    if visitor_key:
+        clauses.append("visitor_key = :visitor_key")
+        params["visitor_key"] = visitor_key
+
+    if not clauses:
+        return None
+
+    rows = dcar_fetch_all(
+        f"""
+        SELECT *
+        FROM dca_category_round_submissions
+        WHERE award_year = :award_year
+          AND ({' OR '.join(clauses)})
+        ORDER BY created_at DESC
+        LIMIT 20
+        """,
+        params,
+    )
+
+    latest = None
+
+    for row in rows:
+        created = dcar_parse_datetime(row.get("created_at"))
+        if not created:
+            continue
+        if latest is None or created > latest:
+            latest = created
+
+    if latest is None:
+        return None
+
+    next_time = latest + _dcar_timedelta(hours=DCA_ROUND_COOLDOWN_HOURS)
+    seconds_left = int((next_time - dcar_now()).total_seconds())
+
+    if seconds_left > 0:
+        return {
+            "locked": True,
+            "created_at": latest.isoformat(),
+            "next_at": next_time.isoformat(),
+            "seconds_left": seconds_left,
+        }
+
+    return None
+
+
+def dcar_current_lock(email=""):
+    email_hash = dcar_hash(email) if email else ""
+    ip_hash = dcar_hash(dcar_request_ip())
+    visitor_key = dcar_visitor_key()
+
+    lock = dcar_latest_lock_row(email_hash=email_hash, ip_hash=ip_hash, visitor_key=visitor_key)
+
+    if lock:
+        return lock
+
+    return {
+        "locked": False,
+        "created_at": "",
+        "next_at": "",
+        "seconds_left": 0,
+    }
+
+
+def dcar_prior_categories():
+    categories = []
+
+    try:
+        groups = dcav_vote_groups("")
+        for group in groups:
+            category = str(group.get("category") or "").strip()
+            if category and category not in categories:
+                categories.append(category)
+    except Exception:
+        pass
+
+    if not categories:
+        categories = [
+            "Best Trickster",
+            "Best Hat Tricker",
+            "Best Shoe Tricker",
+            "Best Footwork",
+            "Best Battle Moment",
+            "Best Tag Team",
+            "Best Collab",
+            "Best Entertainer",
+            "Best Ankle Bender",
+            "Life of the Party",
+            "Best LiteFeet Energy",
+            "Best Team Video",
+            "Most Passionate",
+            "Most Versatile",
+            "Most Involved",
+            "Most Fearless",
+            "Most Improved",
+            "Most Improved Producer",
+            "Most Consistent Producer",
+            "Most Consistent Dancer",
+            "Battle Song of the Year",
+            "Content Song of the Year",
+            "Best Content Creator",
+            "Best Combo Dancer",
+            "Best Balance",
+            "Best Musicality",
+            "Best Out of State Dancer",
+            "Best Event",
+            "Best Big Man",
+            "Best Junior Dancer",
+            "Youngest in Charge",
+        ]
+
+    return categories
+
+
+def dcar_round_stats():
+    submissions = dcar_fetch_all(
+        """
+        SELECT *
+        FROM dca_category_round_submissions
+        WHERE award_year = :award_year
+        ORDER BY created_at DESC
+        """,
+        {"award_year": DCA_ROUND_YEAR},
+    )
+
+    suggestion_items = dcar_fetch_all(
+        """
+        SELECT *
+        FROM dca_category_suggestion_items
+        WHERE award_year = :award_year
+        ORDER BY created_at DESC
+        """,
+        {"award_year": DCA_ROUND_YEAR},
+    )
+
+    category_counts = []
+    prior_counter = _dcar_Counter()
+
+    for row in submissions:
+        try:
+            count_value = int(row.get("suggested_category_count") or 0)
+            if count_value > 0:
+                category_counts.append(count_value)
+        except Exception:
+            pass
+
+        try:
+            prior_list = _dcar_json.loads(row.get("selected_prior_categories") or "[]")
+        except Exception:
+            prior_list = []
+
+        for category in prior_list:
+            category = str(category or "").strip()
+            if category:
+                prior_counter[category] += 1
+
+    avg_count = None
+    if category_counts:
+        avg_count = round(sum(category_counts) / len(category_counts), 1)
+
+    grouped = {}
+
+    for item in suggestion_items:
+        normalized = str(item.get("normalized_category_name") or "").strip()
+        if not normalized:
+            continue
+
+        if normalized not in grouped:
+            grouped[normalized] = {
+                "category_name": item.get("category_name") or normalized.title(),
+                "normalized_category_name": normalized,
+                "support": 0,
+                "description": item.get("category_description") or "",
+                "latest_created_at": item.get("created_at"),
+            }
+
+        grouped[normalized]["support"] += 1
+
+        desc = str(item.get("category_description") or "").strip()
+        if desc and len(desc) > len(str(grouped[normalized].get("description") or "")):
+            grouped[normalized]["description"] = desc
+
+    top_new = sorted(
+        grouped.values(),
+        key=lambda item: (-int(item.get("support") or 0), str(item.get("category_name") or "").lower()),
+    )
+
+    top_prior = [
+        {"category": category, "votes": votes}
+        for category, votes in prior_counter.most_common()
+    ]
+
+    return {
+        "average_category_count": avg_count,
+        "category_count_responses": len(category_counts),
+        "total_submissions": len(submissions),
+        "top_prior_categories": top_prior[:30],
+        "top_new_categories": top_new[:30],
+        "total_new_suggestions": len(suggestion_items),
+    }
+
+
+def dcar_save_round_submission():
+    dcar_ensure_tables()
+
+    email = (request.form.get("email") or "").strip().lower()
+
+    if not dcar_valid_email(email):
+        return redirect("/awards/dancers-choice?dca_round_error=invalid_email")
+
+    lock = dcar_current_lock(email=email)
+    if lock.get("locked"):
+        return redirect("/awards/dancers-choice?dca_round_error=locked")
+
+    try:
+        suggested_count = int(request.form.get("suggested_category_count") or 0)
+    except Exception:
+        suggested_count = 0
+
+    if suggested_count <= 0:
+        return redirect("/awards/dancers-choice?dca_round_error=missing_count")
+
+    if suggested_count > 100:
+        return redirect("/awards/dancers-choice?dca_round_error=count_too_high")
+
+    selected_prior = [
+        value.strip()
+        for value in request.form.getlist("prior_categories")
+        if value.strip()
+    ]
+
+    if len(selected_prior) > DCA_ROUND_PRIOR_MAX:
+        return redirect("/awards/dancers-choice?dca_round_error=too_many_prior")
+
+    names = request.form.getlist("new_category_name")
+    descriptions = request.form.getlist("new_category_description")
+
+    new_items = []
+
+    for index, name in enumerate(names):
+        category_name = str(name or "").strip()
+        category_description = str(descriptions[index] if index < len(descriptions) else "").strip()
+
+        if not category_name and not category_description:
+            continue
+
+        if not category_name or not category_description:
+            return redirect("/awards/dancers-choice?dca_round_error=incomplete_new_category")
+
+        normalized = dcar_normalize_category(category_name)
+
+        if not normalized:
+            return redirect("/awards/dancers-choice?dca_round_error=incomplete_new_category")
+
+        new_items.append({
+            "category_name": category_name,
+            "normalized_category_name": normalized,
+            "category_description": category_description,
+        })
+
+    email_hash = dcar_hash(email)
+    ip_hash = dcar_hash(dcar_request_ip())
+    visitor_key = dcar_visitor_key()
+
+    with engine.begin() as conn:
+        result = conn.execute(
+            _dcar_text("""
+                INSERT INTO dca_category_round_submissions (
+                    award_year,
+                    email,
+                    email_hash,
+                    ip_hash,
+                    visitor_key,
+                    suggested_category_count,
+                    selected_prior_categories,
+                    user_agent,
+                    status,
+                    created_at
+                )
+                VALUES (
+                    :award_year,
+                    :email,
+                    :email_hash,
+                    :ip_hash,
+                    :visitor_key,
+                    :suggested_category_count,
+                    :selected_prior_categories,
+                    :user_agent,
+                    'submitted',
+                    CURRENT_TIMESTAMP
+                )
+            """),
+            {
+                "award_year": DCA_ROUND_YEAR,
+                "email": email,
+                "email_hash": email_hash,
+                "ip_hash": ip_hash,
+                "visitor_key": visitor_key,
+                "suggested_category_count": suggested_count,
+                "selected_prior_categories": _dcar_json.dumps(selected_prior),
+                "user_agent": str(request.headers.get("User-Agent", ""))[:500],
+            },
+        )
+
+        submission_id = None
+
+        try:
+            submission_id = result.inserted_primary_key[0]
+        except Exception:
+            pass
+
+        if submission_id is None:
+            lookup = conn.execute(
+                _dcar_text("""
+                    SELECT id
+                    FROM dca_category_round_submissions
+                    WHERE award_year = :award_year
+                      AND email_hash = :email_hash
+                      AND visitor_key = :visitor_key
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                """),
+                {
+                    "award_year": DCA_ROUND_YEAR,
+                    "email_hash": email_hash,
+                    "visitor_key": visitor_key,
+                },
+            ).mappings().first()
+
+            if lookup:
+                submission_id = lookup.get("id")
+
+        for item in new_items:
+            conn.execute(
+                _dcar_text("""
+                    INSERT INTO dca_category_suggestion_items (
+                        submission_id,
+                        award_year,
+                        category_name,
+                        normalized_category_name,
+                        category_description,
+                        created_at
+                    )
+                    VALUES (
+                        :submission_id,
+                        :award_year,
+                        :category_name,
+                        :normalized_category_name,
+                        :category_description,
+                        CURRENT_TIMESTAMP
+                    )
+                """),
+                {
+                    "submission_id": submission_id,
+                    "award_year": DCA_ROUND_YEAR,
+                    "category_name": item["category_name"],
+                    "normalized_category_name": item["normalized_category_name"],
+                    "category_description": item["category_description"],
+                },
+            )
+
+    return redirect("/awards/dancers-choice?dca_round_saved=1")
+
+
+def dcar_awards_dancers_choice():
+    query = request.args.get("q", "")
+
+    try:
+        sections = awx_dca_sections(query)
+    except Exception:
+        sections = []
+
+    try:
+        groups = awx_dca_groups(query)
+    except Exception:
+        try:
+            groups = dcav_vote_groups(query)
+        except Exception:
+            groups = []
+
+    try:
+        litefeet_records = awx_litefeet_records()
+    except Exception:
+        litefeet_records = []
+
+    return ledger_try_render(
+        "awards.html",
+        page_title="Dancer’s Choice Awards",
+        award_landing=False,
+        active_award_tab="dancers-choice",
+        award_records=[],
+        awards=[],
+        records=[],
+        dca_vote_groups=groups,
+        dca_sections=sections,
+        dca_prior_categories=dcar_prior_categories(),
+        dca_round_year=DCA_ROUND_YEAR,
+        dca_round_prior_max=DCA_ROUND_PRIOR_MAX,
+        dca_round_stats=dcar_round_stats(),
+        dca_round_lock=dcar_current_lock(),
+        dca_round_saved=(request.args.get("dca_round_saved") == "1"),
+        dca_round_error=request.args.get("dca_round_error", ""),
+        dca_first_category_total=DCA_FIRST_CATEGORY_TOTAL,
+        dca_first_nomination_participants=DCA_FIRST_NOMINATION_PARTICIPANTS,
+        dca_first_voting_participants=DCA_FIRST_VOTING_PARTICIPANTS,
+        dca_first_nominee_entries=DCA_FIRST_NOMINEE_ENTRIES,
+        selected_query=query,
+        selected_view=request.args.get("view", "cards"),
+        dancers_choice_count=len(sections),
+        litefeet_count=len(litefeet_records),
+        error=None,
+    )
+
+
+try:
+    dcar_ensure_tables()
+
+    if "dcar_save_round_submission" not in app.view_functions:
+        app.add_url_rule(
+            "/awards/dancers-choice/category-round",
+            "dcar_save_round_submission",
+            dcar_save_round_submission,
+            methods=["POST"],
+        )
+
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/awards/dancers-choice":
+            app.view_functions[rule.endpoint] = dcar_awards_dancers_choice
+            print(f"DCA CATEGORY VOTING ROUND active: /awards/dancers-choice -> {rule.endpoint}")
+
+    print("DCA CATEGORY VOTING ROUND active")
+except Exception as exc:
+    print(f"DCA CATEGORY VOTING ROUND setup failed: {type(exc).__name__}: {exc}")
+
