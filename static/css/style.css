@@ -4288,3 +4288,291 @@ hr,
     }
 }
 
+
+/* --- BLACK NAV + PALE GOLD CARD RESET ---
+   Replaces the blue/charcoal pass with black page/nav and pale gold cards.
+*/
+:root {
+    --bg: #080808;
+    --page-bg: #080808;
+    --deep-bg: #050505;
+    --panel: #F2E4B5;
+    --panel-soft: #E3C66A;
+    --surface: #F2E4B5;
+    --surface-strong: #E8D58A;
+    --gold: #E3C66A;
+    --gold-soft: #EBC634;
+    --gold-deep: #A57C00;
+    --text: #F2EFE6;
+    --muted: #D8D2C2;
+    --dark-text: #0A0A0A;
+    --border: rgba(227, 198, 106, 0.42);
+    --border-color: rgba(227, 198, 106, 0.42);
+    --card-bg: #F2E4B5;
+    --accent-color: #E3C66A;
+}
+
+html,
+body {
+    background: #080808 !important;
+    color: #F2EFE6 !important;
+    overflow-x: hidden !important;
+}
+
+body::before {
+    background:
+        radial-gradient(circle at top left, rgba(227, 198, 106, 0.08), transparent 26rem),
+        linear-gradient(180deg, rgba(0,0,0,0.08), transparent) !important;
+}
+
+.site-header,
+.main-header,
+header,
+nav.site-nav,
+.nav-shell,
+.navbar,
+.top-nav {
+    background: #050505 !important;
+    border-color: rgba(227, 198, 106, 0.22) !important;
+    color: #F2EFE6 !important;
+}
+
+.site-header a,
+.main-header a,
+header a,
+nav.site-nav a,
+.nav-shell a,
+.navbar a,
+.top-nav a {
+    color: #F2EFE6 !important;
+}
+
+.site-header a:hover,
+.main-header a:hover,
+header a:hover,
+nav.site-nav a:hover {
+    color: #E3C66A !important;
+}
+
+/* Stop the page from creating sideways scroll. */
+main,
+.site-main,
+.page,
+.container,
+.content-wrap,
+.content-section,
+.homepage-section {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.release-table-wrap,
+.music-record-table-wrap,
+.dca-nominee-table-wrap {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+}
+
+/* Keep the page background black; make actual cards pale gold. */
+.content-section,
+.homepage-section {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.card,
+.panel,
+.archive-card,
+.form-card,
+.table-card,
+.empty-state,
+.compact-empty,
+.release-table-wrap,
+.music-record-table-wrap,
+.award-system-info-card,
+.award-card,
+.dca-category-card,
+.dca-year-card,
+.dca-round-results-card,
+.dca-award-section,
+.dca-category-row,
+.dca-results-panel,
+.dca-form-block,
+.dca-new-category-item,
+.dca-round-stat-grid article,
+.stat-card,
+.metric-card {
+    background: #F2E4B5 !important;
+    color: #0A0A0A !important;
+    border-color: rgba(165, 124, 0, 0.38) !important;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28) !important;
+}
+
+/* Text inside pale cards should be black, not cream. */
+.card *,
+.panel *,
+.archive-card *,
+.form-card *,
+.table-card *,
+.empty-state *,
+.compact-empty *,
+.release-table-wrap *,
+.music-record-table-wrap *,
+.award-system-info-card *,
+.award-card *,
+.dca-category-card *,
+.dca-year-card *,
+.dca-round-results-card *,
+.dca-award-section *,
+.dca-category-row *,
+.dca-results-panel *,
+.dca-form-block *,
+.dca-new-category-item *,
+.dca-round-stat-grid article *,
+.stat-card *,
+.metric-card * {
+    color: #0A0A0A !important;
+}
+
+.award-system-info-card h2,
+.award-card h3,
+.dca-year-card h3,
+.dca-award-section h3,
+.dca-category-row h4,
+.dca-results-panel h4,
+.dca-form-block h4,
+.dca-round-stat-grid strong,
+.stat-card h2,
+.metric-card h2 {
+    color: #5E4500 !important;
+}
+
+.eyebrow,
+.dca-category-count-note {
+    color: #7A5A00 !important;
+}
+
+/* Keep page-level headings gold on black. */
+body > * h1,
+.content-section > .section-heading-row h1,
+.homepage-section > .section-heading-row h2,
+.awards-page h1,
+.awards-page h2,
+.dca-round-heading h3,
+.dca-round-results-heading h3 {
+    color: #E3C66A !important;
+}
+
+.awards-main-blurb,
+.dca-round-heading p,
+.dca-round-results-heading p,
+.section-heading-row p {
+    color: #F2EFE6 !important;
+}
+
+/* Inputs on pale cards. */
+.dca-form-block input,
+.dca-form-block textarea,
+.dca-form-block select,
+.card input,
+.card textarea,
+.card select,
+.panel input,
+.panel textarea,
+.panel select {
+    background: rgba(255,255,255,0.62) !important;
+    color: #0A0A0A !important;
+    border-color: rgba(94, 69, 0, 0.35) !important;
+}
+
+.dca-form-block input::placeholder,
+.dca-form-block textarea::placeholder,
+.card input::placeholder,
+.card textarea::placeholder {
+    color: rgba(10, 10, 10, 0.48) !important;
+}
+
+/* Tables on pale cards. */
+.release-table,
+.dca-nominee-table,
+.music-record-table {
+    color: #0A0A0A !important;
+}
+
+.release-table th,
+.dca-nominee-table th,
+.music-record-table th {
+    background: rgba(165, 124, 0, 0.16) !important;
+    color: #0A0A0A !important;
+    border-color: rgba(10, 10, 10, 0.14) !important;
+}
+
+.release-table td,
+.dca-nominee-table td,
+.music-record-table td {
+    color: #0A0A0A !important;
+    border-color: rgba(10, 10, 10, 0.12) !important;
+}
+
+.release-table tr:hover,
+.dca-nominee-table tr:hover,
+.music-record-table tr:hover {
+    background: rgba(165, 124, 0, 0.11) !important;
+}
+
+/* Buttons/chips */
+.button.primary,
+button.primary,
+input[type="submit"] {
+    background: #E3C66A !important;
+    color: #0A0A0A !important;
+    border-color: #E3C66A !important;
+}
+
+.button.secondary,
+button.secondary,
+.award-subnav-link,
+.dca-category-open-pill,
+.award-status-pill,
+.mini-result-pill,
+.dca-results-type-pill,
+.accordion-label {
+    background: #050505 !important;
+    color: #E3C66A !important;
+    border-color: rgba(227, 198, 106, 0.48) !important;
+}
+
+.button.secondary *,
+button.secondary *,
+.award-subnav-link *,
+.dca-category-open-pill *,
+.award-status-pill *,
+.mini-result-pill *,
+.dca-results-type-pill *,
+.accordion-label * {
+    color: #E3C66A !important;
+}
+
+/* Keep DCA voting intro flat on black, not a card. */
+.dca-round-card {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.dca-round-card .dca-round-heading,
+.dca-round-card .dca-round-heading * {
+    color: #F2EFE6 !important;
+}
+
+.dca-round-card .dca-round-heading h3 {
+    color: #E3C66A !important;
+}
+
+@media (max-width: 900px) {
+    html,
+    body {
+        overflow-x: hidden !important;
+    }
+}
+
