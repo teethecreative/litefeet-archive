@@ -2731,7 +2731,7 @@ def admin_media():
                         "media_type": media_type,
                         "title": title,
                         "artist_or_creator": artist_or_creator,
-                        "url": source_url,
+                        "url": url,
                         "platform": platform,
                         "release_date": release_date,
                         "event_name": event_name,
@@ -2788,19 +2788,8 @@ def home():
         LIMIT 6
         """
     )
+    latest_music_releases = []
 
-    latest_music_releases = fetch_all(
-        """
-        SELECT *
-        FROM media_items
-        WHERE media_type = 'music_release'
-          AND status = 'Published'
-        ORDER BY
-            CASE WHEN release_date IS NULL OR release_date = '' THEN created_at ELSE release_date END DESC,
-            created_at DESC
-        LIMIT 20
-        """
-    )
 
     approved_events = fetch_all(
         """
@@ -6399,7 +6388,7 @@ def submit_music_release():
                     {
                         "title": title,
                         "artist_or_creator": artist_or_creator,
-                        "url": source_url,
+                        "url": url,
                         "platform": platform,
                         "release_date": release_date,
                         "description": description,
@@ -6561,7 +6550,7 @@ def submit_music_project():
                         {
                             "title": title,
                             "artist_or_creator": artist_or_creator,
-                            "url": source_url,
+                            "url": url,
                             "platform": platform,
                             "release_date": release_date,
                             "description": description,
@@ -6637,7 +6626,7 @@ def submit_music_project():
                     {
                         "title": title,
                         "artist_or_creator": artist_or_creator,
-                        "url": source_url,
+                        "url": url,
                         "platform": platform,
                         "release_date": release_date,
                         "description": description,
@@ -6696,7 +6685,7 @@ def submit_music_project():
                         {
                             "track_title": track_title,
                             "artist_or_creator": artist_or_creator,
-                            "url": source_url,
+                            "url": url,
                             "platform": platform,
                             "release_date": release_date,
                             "event_name": title,
