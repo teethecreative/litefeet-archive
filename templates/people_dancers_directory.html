@@ -8,7 +8,7 @@
         <div>
             <p class="eyebrow">The LiteFeet Ledger</p>
             <h1>People & Teams</h1>
-            <p>Directory view with filters, recent profile activity, roles, teams, borough/scene, and linked battle details.</p>
+            <p>Directory view with filters, profile activity, roles, teams, borough/scene, and linked battle details.</p>
         </div>
     </div>
 </section>
@@ -18,9 +18,9 @@
         <label>
             Sort
             <select name="sort">
-                <option value="recent" {% if selected_sort == "recent" %}selected{% endif %}>Recently accessed</option>
                 <option value="az" {% if selected_sort == "az" %}selected{% endif %}>Name A–Z</option>
                 <option value="za" {% if selected_sort == "za" %}selected{% endif %}>Name Z–A</option>
+                <option value="recent" {% if selected_sort == "recent" %}selected{% endif %}>Most active</option>
             </select>
         </label>
 
@@ -54,14 +54,29 @@
             </select>
         </label>
 
+        <label>
+            Activity
+            <select name="activity_range">
+                <option value="7d" {% if selected_activity_range == "7d" %}selected{% endif %}>7 days</option>
+                <option value="30d" {% if selected_activity_range == "30d" %}selected{% endif %}>30 days</option>
+                <option value="1y" {% if selected_activity_range == "1y" %}selected{% endif %}>1 year</option>
+                <option value="custom" {% if selected_activity_range == "custom" %}selected{% endif %}>Custom</option>
+            </select>
+        </label>
+
+        <label>
+            Start
+            <input type="date" name="start" value="{{ custom_start or '' }}">
+        </label>
+
+        <label>
+            End
+            <input type="date" name="end" value="{{ custom_end or '' }}">
+        </label>
+
         <button class="button primary" type="submit">Apply</button>
         <a class="button secondary" href="/people/dancers">Reset</a>
     </form>
-
-    <p class="small-note">
-        Showing {{ filtered_count }} of {{ total_profiles }} profiles.
-        Default view puts recently accessed profiles first.
-    </p>
 </section>
 
 <section class="content-section people-table-section">
@@ -69,11 +84,16 @@
         <table class="people-directory-table">
             <thead>
                 <tr>
-                    <th>Name</th>
+                    <th>
+                        <a class="table-sort-link" href="{{ name_sort_url }}">Name</a>
+                    </th>
                     <th>Team / Affiliation</th>
                     <th>Borough / Scene</th>
                     <th>Roles</th>
-                    <th>Profile Activity</th>
+                    <th>
+                        Profile Activity
+                        <small>{{ activity_label }}</small>
+                    </th>
                     <th>Battle Details</th>
                     <th>Status</th>
                 </tr>
@@ -100,14 +120,9 @@
                             </td>
 
                             <td class="stats-cell">
-                                <strong>{{ profile.views_7d }}</strong>
-                                <small>views last 7 days</small>
-                                <span>{{ profile.total_views }} total views</span>
-                                {% if profile.last_accessed_at %}
-                                    <span>Last: {{ profile.last_accessed_at }}</span>
-                                {% else %}
-                                    <span>Not accessed yet</span>
-                                {% endif %}
+                                <div><strong>{{ profile.activity_views }}</strong> profile views</div>
+                                <div><strong>{{ profile.activity_comments }}</strong> comments</div>
+                                <div><strong>{{ profile.activity_flowers }}</strong> flowers</div>
                             </td>
 
                             <td class="stats-cell">
@@ -127,6 +142,12 @@
                 {% endif %}
             </tbody>
         </table>
+    </div>
+
+    <div class="people-table-summary">
+        <strong>{{ total_profiles }}</strong> total profiles
+        <span>·</span>
+        <strong>{{ claimed_profiles }}</strong> profiles claimed
     </div>
 </section>
 
@@ -148,9 +169,10 @@
         font-size: 0.86rem;
     }
 
-    .people-filter-form select {
+    .people-filter-form select,
+    .people-filter-form input {
         min-height: 34px;
-        min-width: 160px;
+        min-width: 135px;
     }
 
     .people-scroll-table {
@@ -190,12 +212,19 @@
         white-space: nowrap;
     }
 
-    .people-directory-table tr {
-        height: 54px;
+    .people-directory-table th small {
+        display: block;
+        margin-top: 3px;
+        color: #fff;
+        opacity: 0.68;
+        letter-spacing: 0;
+        text-transform: none;
+        font-size: 0.72rem;
     }
 
-    .people-directory-table tr:hover {
-        background: rgba(255,255,255,0.055);
+    .table-sort-link {
+        color: var(--accent-color, #e8c65a);
+        text-decoration: none;
     }
 
     .name-cell {
@@ -209,15 +238,10 @@
     }
 
     .name-cell small,
-    .stats-cell small,
-    .stats-cell span {
+    .stats-cell small {
         display: block;
         margin-top: 3px;
         opacity: 0.74;
-    }
-
-    .roles-cell {
-        min-width: 170px;
     }
 
     .role-chip,
@@ -233,11 +257,21 @@
         font-weight: 800;
     }
 
-    .stats-cell {
-        min-width: 145px;
+    .stats-cell strong {
+        color: var(--accent-color, #e8c65a);
     }
 
-    .stats-cell strong {
+    .people-table-summary {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 12px 4px 0;
+        font-weight: 800;
+    }
+
+    .people-table-summary strong {
         color: var(--accent-color, #e8c65a);
     }
 

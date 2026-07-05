@@ -22035,3 +22035,511 @@ try:
 except Exception as exc:
     print(f"FINAL people directory override failed: {type(exc).__name__}: {exc}")
 
+# --- PEOPLE TEAMS TABLE FIX PATCH ---
+# People & Teams:
+# - A-Z default
+# - Name header toggles A-Z/Z-A
+# - no explanatory "showing/default view" text above table
+# - activity range: 7d / 30d / 1y / custom
+# - profile activity rows: profile views, comments, flowers
+# - summary directly under table
+
+import re as _pt_re
+from datetime import datetime as _pt_datetime, timedelta as _pt_timedelta, timezone as _pt_timezone
+from urllib.parse import urlencode as _pt_urlencode
+
+try:
+    from sqlalchemy import text as _pt_text
+except Exception:
+    _pt_text = text
+
+
+def pt_fetch_all(query, params=None):
+    try:
+        return fetch_all(query, params or {})
+    except TypeError:
+        return fetch_all(query)
+    except Exception as exc:
+        print(f"PT_FETCH_ALL_FAILED: {type(exc).__name__}: {exc}")
+        return []
+
+
+def pt_table_exists(table_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            rows = pt_fetch_all(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_name = :table_name
+                LIMIT 1
+                """,
+                {"table_name": table_name},
+            )
+            return bool(rows)
+
+        with engine.connect() as conn:
+            row = conn.execute(
+                _pt_text("SELECT name FROM sqlite_master WHERE type='table' AND name=:name LIMIT 1"),
+                {"name": table_name},
+            ).mappings().first()
+            return bool(row)
+    except Exception:
+        return False
+
+
+def pt_columns(table_name):
+    try:
+        if engine.dialect.name.startswith("postgres"):
+            rows = pt_fetch_all(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+                """,
+                {"table_name": table_name},
+            )
+            return {row.get("column_name") for row in rows}
+
+        with engine.connect() as conn:
+            rows = conn.execute(_pt_text(f"PRAGMA table_info({table_name})")).mappings().all()
+            return {row.get("name") for row in rows}
+    except Exception as exc:
+        print(f"PT_COLUMNS_FAILED {table_name}: {type(exc).__name__}: {exc}")
+        return set()
+
+
+def pt_int(value):
+    try:
+        return int(value or 0)
+    except Exception:
+        return 0
+
+
+def pt_norm(value):
+    value = "" if value is None else str(value)
+    value = value.lower().strip()
+    value = _pt_re.sub(r"[^a-z0-9]+", " ", value)
+    return _pt_re.sub(r"\s+", " ", value).strip()
+
+
+def pt_parse_date(value):
+    if not value:
+        return None
+
+    raw = str(value).strip()
+
+    try:
+        normalized = raw.replace("Z", "+00:00")
+        if " " in normalized and "T" not in normalized:
+            normalized = normalized.replace(" ", "T", 1)
+        dt = _pt_datetime.fromisoformat(normalized)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=_pt_timezone.utc)
+        return dt.astimezone(_pt_timezone.utc)
+    except Exception:
+        pass
+
+    for fmt in ["%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%m/%d/%Y"]:
+        try:
+            return _pt_datetime.strptime(raw[:19], fmt).replace(tzinfo=_pt_timezone.utc)
+        except Exception:
+            continue
+
+    return None
+
+
+def pt_activity_range():
+    selected = (request.args.get("activity_range") or "7d").strip().lower()
+    now = _pt_datetime.now(_pt_timezone.utc)
+
+    custom_start = (request.args.get("start") or "").strip()
+    custom_end = (request.args.get("end") or "").strip()
+
+    if selected == "30d":
+        return "30d", "Last 30 days", now - _pt_timedelta(days=30), now, custom_start, custom_end
+
+    if selected in {"1y", "year"}:
+        return "1y", "Last 1 year", now - _pt_timedelta(days=365), now, custom_start, custom_end
+
+    if selected == "custom":
+        start_dt = pt_parse_date(custom_start)
+        end_dt = pt_parse_date(custom_end)
+
+        if start_dt and not end_dt:
+            end_dt = now
+        if end_dt:
+            end_dt = end_dt + _pt_timedelta(days=1)
+
+        if start_dt:
+            return "custom", "Custom range", start_dt, end_dt or now, custom_start, custom_end
+
+    return "7d", "Last 7 days", now - _pt_timedelta(days=7), now, custom_start, custom_end
+
+
+def pt_in_window(value, start_dt, end_dt):
+    dt = pt_parse_date(value)
+    if not dt:
+        return False
+    if start_dt and dt < start_dt:
+        return False
+    if end_dt and dt > end_dt:
+        return False
+    return True
+
+
+def pt_split_roles(value):
+    parts = _pt_re.split(r"[,;/|]+", value or "")
+    roles = []
+
+    for part in parts:
+        role = part.strip()
+        if role and role.lower() not in {existing.lower() for existing in roles}:
+            roles.append(role)
+
+    return roles
+
+
+def pt_profile_url(profile):
+    name = profile.get("dance_name") or profile.get("real_name") or profile.get("name") or ""
+    slug = profile.get("slug") or profile.get("profile_slug") or ""
+
+    if not slug:
+        slug = _pt_re.sub(r"[^a-z0-9]+", "-", str(name).lower()).strip("-")
+
+    if slug:
+        return f"/people/dancers/{slug}"
+
+    if profile.get("id"):
+        return f"/dancers/{profile.get('id')}"
+
+    return "/people/dancers"
+
+
+def pt_match_profile(row, cols, profile):
+    pid = profile.get("id")
+
+    for id_col in ["profile_id", "dancer_profile_id", "dancer_id", "person_id", "recipient_profile_id"]:
+        if id_col in cols and row.get(id_col) not in [None, ""]:
+            try:
+                if int(row.get(id_col)) == int(pid):
+                    return True
+            except Exception:
+                pass
+
+    names = [
+        profile.get("dance_name"),
+        profile.get("real_name"),
+        profile.get("name"),
+        profile.get("slug"),
+        profile.get("profile_slug"),
+    ]
+    names = [pt_norm(name) for name in names if str(name or "").strip()]
+
+    text_cols = [
+        "profile_slug",
+        "slug",
+        "profile_name",
+        "dancer_name",
+        "name",
+        "recipient_name",
+        "comment_for",
+        "target_name",
+    ]
+
+    row_text = pt_norm(" ".join(str(row.get(col) or "") for col in text_cols if col in cols))
+
+    return bool(row_text and any(name and name in row_text for name in names))
+
+
+def pt_count_activity_table(table_name, profiles, start_dt, end_dt):
+    counts = {profile.get("id"): 0 for profile in profiles}
+
+    if not pt_table_exists(table_name):
+        return counts
+
+    try:
+        cols = pt_columns(table_name)
+        rows = pt_fetch_all(f"SELECT * FROM {table_name} LIMIT 50000")
+
+        date_cols = [
+            col for col in [
+                "created_at",
+                "updated_at",
+                "submitted_at",
+                "timestamp",
+                "date",
+                "flowered_at",
+                "commented_at",
+                "viewed_at",
+            ]
+            if col in cols
+        ]
+
+        for row in rows:
+            if date_cols:
+                if not any(pt_in_window(row.get(col), start_dt, end_dt) for col in date_cols):
+                    continue
+
+            for profile in profiles:
+                if pt_match_profile(row, cols, profile):
+                    counts[profile.get("id")] += 1
+                    break
+
+    except Exception as exc:
+        print(f"PT_ACTIVITY_COUNT_FAILED {table_name}: {type(exc).__name__}: {exc}")
+
+    return counts
+
+
+def pt_claimed_profiles_count():
+    if not pt_table_exists("profile_claims"):
+        return 0
+
+    try:
+        cols = pt_columns("profile_claims")
+        rows = pt_fetch_all("SELECT * FROM profile_claims LIMIT 50000")
+        claimed = set()
+        good_statuses = {"approved", "accepted", "active", "claimed", "verified", "owner"}
+
+        for row in rows:
+            status = ""
+
+            for col in ["status", "claim_status", "review_status"]:
+                if col in cols and row.get(col):
+                    status = str(row.get(col)).strip().lower()
+                    break
+
+            if status and status not in good_statuses:
+                continue
+
+            for col in ["profile_id", "dancer_profile_id", "dancer_id"]:
+                if col in cols and row.get(col) not in [None, ""]:
+                    claimed.add(str(row.get(col)))
+                    break
+
+        return len(claimed)
+    except Exception as exc:
+        print(f"PT_CLAIMED_COUNT_FAILED: {type(exc).__name__}: {exc}")
+        return 0
+
+
+def pt_battle_stats(profiles):
+    stats = {
+        profile.get("id"): {
+            "battle_total": 0,
+            "battle_wins": 0,
+            "battle_losses": 0,
+        }
+        for profile in profiles
+    }
+
+    if not pt_table_exists("battle_records"):
+        return stats
+
+    try:
+        cols = pt_columns("battle_records")
+        rows = pt_fetch_all("SELECT * FROM battle_records LIMIT 10000")
+
+        participant_cols = [
+            col for col in cols
+            if any(term in col.lower() for term in [
+                "dancer",
+                "participant",
+                "competitor",
+                "opponent",
+                "challenger",
+                "player",
+                "name",
+            ])
+        ]
+
+        winner_cols = [col for col in cols if "winner" in col.lower() or col.lower() in {"win", "won_by"}]
+        loser_cols = [col for col in cols if "loser" in col.lower()]
+
+        for profile in profiles:
+            pid = profile.get("id")
+            names = [
+                pt_norm(profile.get("dance_name")),
+                pt_norm(profile.get("real_name")),
+                pt_norm(profile.get("name")),
+            ]
+            names = [name for name in names if name]
+
+            total = 0
+            wins = 0
+            losses = 0
+
+            for row in rows:
+                participant_text = pt_norm(" ".join(str(row.get(col) or "") for col in participant_cols))
+                winner_text = pt_norm(" ".join(str(row.get(col) or "") for col in winner_cols))
+                loser_text = pt_norm(" ".join(str(row.get(col) or "") for col in loser_cols))
+
+                appears = any(name in participant_text for name in names)
+                won = any(name in winner_text for name in names)
+                lost = any(name in loser_text for name in names)
+
+                if appears or won or lost:
+                    total += 1
+                if won:
+                    wins += 1
+                if lost:
+                    losses += 1
+
+            stats[pid] = {
+                "battle_total": total,
+                "battle_wins": wins,
+                "battle_losses": losses,
+            }
+
+    except Exception as exc:
+        print(f"PT_BATTLE_STATS_FAILED: {type(exc).__name__}: {exc}")
+
+    return stats
+
+
+def people_teams_table_fix_page():
+    selected_sort = (request.args.get("sort") or "az").strip().lower()
+    selected_team = (request.args.get("team") or "all").strip()
+    selected_borough = (request.args.get("borough") or "all").strip()
+    selected_role = (request.args.get("role") or "all").strip()
+
+    selected_range, activity_label, start_dt, end_dt, custom_start, custom_end = pt_activity_range()
+
+    profiles = [dict(row) for row in pt_fetch_all("SELECT * FROM dancer_profiles LIMIT 2000")]
+
+    allowed_statuses = {
+        "approved",
+        "verified",
+        "community supported",
+        "needs verification",
+        "ghost profile",
+        "active",
+        "",
+    }
+
+    profiles = [
+        profile for profile in profiles
+        if str(profile.get("status") or "").strip().lower() in allowed_statuses
+    ]
+
+    profile_views = pt_count_activity_table("profile_views", profiles, start_dt, end_dt)
+    comments = pt_count_activity_table("community_perspectives", profiles, start_dt, end_dt)
+    flowers = pt_count_activity_table("dancer_flowers", profiles, start_dt, end_dt)
+    battles = pt_battle_stats(profiles)
+
+    teams = []
+    boroughs = []
+    roles = []
+
+    for profile in profiles:
+        pid = profile.get("id")
+
+        display_name = profile.get("dance_name") or profile.get("real_name") or profile.get("name") or "Unnamed profile"
+        team = (profile.get("team_affiliation") or profile.get("team_name") or "").strip()
+        borough = (profile.get("borough_scene") or profile.get("borough") or profile.get("scene") or "").strip()
+        role_list = pt_split_roles(profile.get("role_tags") or profile.get("role") or "Dancer") or ["Dancer"]
+        battle = battles.get(pid, {})
+
+        profile["display_name"] = display_name
+        profile["display_team"] = team
+        profile["display_borough"] = borough
+        profile["role_list"] = role_list
+        profile["profile_url"] = pt_profile_url(profile)
+        profile["display_status"] = profile.get("activity_status") or profile.get("status") or "Active"
+
+        profile["activity_views"] = pt_int(profile_views.get(pid))
+        profile["activity_comments"] = pt_int(comments.get(pid))
+        profile["activity_flowers"] = pt_int(flowers.get(pid))
+
+        profile["battle_total"] = pt_int(battle.get("battle_total"))
+        profile["battle_wins"] = pt_int(battle.get("battle_wins"))
+        profile["battle_losses"] = pt_int(battle.get("battle_losses"))
+
+        if team and team not in teams:
+            teams.append(team)
+
+        if borough and borough not in boroughs:
+            boroughs.append(borough)
+
+        for role in role_list:
+            if role and role not in roles:
+                roles.append(role)
+
+    filtered = []
+
+    for profile in profiles:
+        if selected_team.lower() != "all" and (profile.get("display_team") or "").lower() != selected_team.lower():
+            continue
+
+        if selected_borough.lower() != "all" and (profile.get("display_borough") or "").lower() != selected_borough.lower():
+            continue
+
+        if selected_role.lower() != "all":
+            if not any(role.lower() == selected_role.lower() for role in profile.get("role_list", [])):
+                continue
+
+        filtered.append(profile)
+
+    if selected_sort == "za":
+        filtered.sort(key=lambda profile: (profile.get("display_name") or "").lower(), reverse=True)
+    elif selected_sort == "recent":
+        filtered.sort(
+            key=lambda profile: (
+                pt_int(profile.get("activity_views")),
+                pt_int(profile.get("activity_comments")),
+                pt_int(profile.get("activity_flowers")),
+                (profile.get("display_name") or "").lower(),
+            ),
+            reverse=True,
+        )
+    else:
+        selected_sort = "az"
+        filtered.sort(key=lambda profile: (profile.get("display_name") or "").lower())
+
+    params = {
+        "team": selected_team,
+        "borough": selected_borough,
+        "role": selected_role,
+        "activity_range": selected_range,
+    }
+
+    if custom_start:
+        params["start"] = custom_start
+
+    if custom_end:
+        params["end"] = custom_end
+
+    name_sort_url = "/people/dancers?" + _pt_urlencode({
+        **params,
+        "sort": "za" if selected_sort == "az" else "az",
+    })
+
+    return render_template(
+        "people_dancers_directory.html",
+        profiles=filtered,
+        total_profiles=len(profiles),
+        claimed_profiles=pt_claimed_profiles_count(),
+        teams=sorted(teams, key=lambda value: value.lower()),
+        boroughs=sorted(boroughs, key=lambda value: value.lower()),
+        roles=sorted(roles, key=lambda value: value.lower()),
+        selected_sort=selected_sort,
+        selected_team=selected_team,
+        selected_borough=selected_borough,
+        selected_role=selected_role,
+        selected_activity_range=selected_range,
+        activity_label=activity_label,
+        custom_start=custom_start,
+        custom_end=custom_end,
+        name_sort_url=name_sort_url,
+    )
+
+
+try:
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) in {"/people/dancers", "/dancers"}:
+            app.view_functions[rule.endpoint] = people_teams_table_fix_page
+            print(f"PEOPLE TEAMS TABLE FIX active: {rule.rule} -> {rule.endpoint}")
+except Exception as exc:
+    print(f"PEOPLE TEAMS TABLE FIX failed: {type(exc).__name__}: {exc}")
+
