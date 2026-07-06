@@ -1,6 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}People & Teams | The LiteFeet Ledger{% endblock %}
+{% block title %}People & Teams | The LiteFeet Ledger
+<script>
+(function () {
+    const form = document.querySelector(".people-filter-form");
+    if (!form) return;
+
+    const activity = form.querySelector('[name="activity_range"]');
+
+    function syncDateFields() {
+        const value = activity ? activity.value : "";
+        form.dataset.activityRange = value;
+    }
+
+    if (activity) {
+        activity.addEventListener("change", syncDateFields);
+        syncDateFields();
+    }
+})();
+</script>
+
+{% endblock %}
 
 {% block content %}
 <section class="content-section people-directory-page">
@@ -64,12 +84,12 @@
             </select>
         </label>
 
-        <label>
+        <label class="custom-date-field">
             Start
             <input type="date" name="start" value="{{ custom_start or '' }}">
         </label>
 
-        <label>
+        <label class="custom-date-field">
             End
             <input type="date" name="end" value="{{ custom_end or '' }}">
         </label>
@@ -104,18 +124,38 @@
                     {% for profile in profiles %}
                         <tr>
                             <td class="name-cell">
-                                <a href="{{ profile.profile_url }}">{{ profile.display_name }}</a>
+                                {% set profile_href = profile.profile_url or profile.public_url or (url_for('dancer_profile_detail_by_id', dancer_id=profile.id) if profile.id else '') %}
+
+                                {% if profile_href %}
+                                    <a class="profile-directory-link" href="{{ profile_href }}">{{ profile.display_name }}</a>
+                                {% else %}
+                                    <span class="profile-directory-name">{{ profile.display_name }}</span>
+                                {% endif %}
+
                                 {% if profile.real_name and profile.real_name != profile.display_name %}
                                     <small>{{ profile.real_name }}</small>
                                 {% endif %}
                             </td>
 
-                            <td>{{ profile.display_team or "—" }}</td>
-                            <td>{{ profile.display_borough or "—" }}</td>
+                            <td>
+                                {% if profile.display_team %}
+                                    <a class="people-filter-link" href="{{ url_for('dancers', team=profile.display_team, sort=selected_sort, borough=selected_borough, role=selected_role, activity_range=selected_activity_range) }}">{{ profile.display_team }}</a>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if profile.display_borough %}
+                                    <a class="people-filter-link" href="{{ url_for('dancers', borough=profile.display_borough, sort=selected_sort, team=selected_team, role=selected_role, activity_range=selected_activity_range) }}">{{ profile.display_borough }}</a>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
 
                             <td class="roles-cell">
                                 {% for role in profile.role_list %}
-                                    <span class="role-chip">{{ role }}</span>
+                                    <a class="role-chip" href="{{ url_for('dancers', role=role, sort=selected_sort, team=selected_team, borough=selected_borough, activity_range=selected_activity_range) }}">{{ role }}</a>
                                 {% endfor %}
                             </td>
 
@@ -294,5 +334,108 @@
             min-width: 1050px;
         }
     }
+
+    /* --- PEOPLE DIRECTORY COLOR + ROUTING FIX --- */
+    .people-directory-page,
+    .people-filter-section,
+    .people-table-section {
+        background: transparent !important;
+        color: #F2EFE6 !important;
+        box-shadow: none !important;
+    }
+
+    .people-filter-form select,
+    .people-filter-form input {
+        background: #F2EFE6 !important;
+        color: #0A0A0A !important;
+        border: 1px solid rgba(138, 111, 42, 0.55) !important;
+        border-radius: 8px !important;
+        padding: 6px 8px !important;
+    }
+
+    .custom-date-field {
+        display: none !important;
+    }
+
+    .people-filter-form[data-activity-range="custom"] .custom-date-field {
+        display: grid !important;
+    }
+
+    .people-scroll-table {
+        border: 1px solid rgba(138, 111, 42, 0.55) !important;
+        border-radius: 16px !important;
+        background: #F2EFE6 !important;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.32) !important;
+    }
+
+    .people-directory-table {
+        background: #F2EFE6 !important;
+        color: #0A0A0A !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+
+    .people-directory-table th {
+        background: #E3C66A !important;
+        color: #0A0A0A !important;
+        opacity: 1 !important;
+        border-bottom: 1px solid rgba(10,10,10,0.22) !important;
+        border-right: 1px solid rgba(10,10,10,0.12) !important;
+    }
+
+    .people-directory-table th,
+    .people-directory-table th *,
+    .people-directory-table td,
+    .people-directory-table td * {
+        color: #0A0A0A !important;
+    }
+
+    .people-directory-table td {
+        background: #F2EFE6 !important;
+        border-bottom: 1px solid rgba(10,10,10,0.12) !important;
+        border-right: 1px solid rgba(10,10,10,0.08) !important;
+    }
+
+    .people-directory-table tbody tr:nth-child(even) td {
+        background: #F7E9C6 !important;
+    }
+
+    .people-directory-table tbody tr:hover td {
+        background: rgba(227, 198, 106, 0.28) !important;
+    }
+
+    .profile-directory-link,
+    .profile-directory-name,
+    .people-filter-link,
+    .table-sort-link {
+        color: #8A6F2A !important;
+        font-weight: 1000 !important;
+        text-decoration: none !important;
+    }
+
+    .profile-directory-link:hover,
+    .people-filter-link:hover,
+    .table-sort-link:hover {
+        text-decoration: underline !important;
+        text-underline-offset: 3px !important;
+    }
+
+    .role-chip,
+    .status-pill {
+        background: #0A0A0A !important;
+        color: #E3C66A !important;
+        border-color: rgba(227, 198, 106, 0.52) !important;
+        text-decoration: none !important;
+    }
+
+    .stats-cell strong,
+    .people-table-summary strong {
+        color: #8A6F2A !important;
+    }
+
+    .people-table-summary {
+        color: #F2EFE6 !important;
+    }
+
 </style>
 {% endblock %}
