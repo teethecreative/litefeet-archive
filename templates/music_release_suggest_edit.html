@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Suggest Music Edit | LiteFeet Ledger{% endblock %}
+
+{% block content %}
+<section class="content-section music-page">
+    <p class="eyebrow">Suggest Edit</p>
+    <h1>Suggest an edit</h1>
+    <p class="small-note">Submit a correction for this LiteFeet Music record. Suggestions are reviewed before changing the public record.</p>
+
+    <form method="POST" class="form-card media-admin-form music-suggest-edit-form">
+        <label>
+            Track / Release Title
+            <input type="text" name="title" value="{{ item.get('title') or '' }}">
+        </label>
+
+        <label>
+            Producer / Artist
+            <input type="text" name="artist_or_creator" value="{{ item.get('artist_or_creator') or '' }}">
+        </label>
+
+        <label>
+            Source Link
+            <input type="url" name="url" value="{{ item.get('url') or '' }}">
+        </label>
+
+        <label>
+            Playable URL
+            <input type="url" name="playable_url" value="{{ item.get('playable_url') or '' }}">
+        </label>
+
+        <label>
+            Platform
+            <input type="text" name="platform" value="{{ item.get('platform') or '' }}">
+        </label>
+
+        <label>
+            Release Date
+            <input type="date" name="release_date" value="{{ item.get('release_date') or '' }}">
+        </label>
+
+        <label>
+            Notes / Metadata
+            <textarea name="description" rows="5">{{ item.get('description') or '' }}</textarea>
+        </label>
+
+        <div class="form-grid two-column-form-grid">
+            <label>
+                Your name / handle
+                <input type="text" name="submitter_name" placeholder="Optional">
+            </label>
+
+            <label>
+                Contact
+                <input type="text" name="submitter_contact" placeholder="Optional email or IG">
+            </label>
+        </div>
+
+        <button type="submit" class="button primary">Submit Edit Suggestion</button>
+        <a class="button secondary" href="{{ url_for('music_release_detail', item_id=item.get('id')) }}">Back to Release</a>
+    </form>
+</section>
+
+<style>
+    .music-suggest-edit-form {
+        display: grid;
+        gap: 14px;
+    }
+
+    .two-column-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    @media (max-width: 800px) {
+        .two-column-form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

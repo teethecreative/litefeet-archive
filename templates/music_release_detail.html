@@ -1,62 +1,401 @@
 {% extends "base.html" %}
 
-{% block title %}Behind the Music | {{ item["title"] }}
-<section class="homepage-section phase6-music-feedback-section">
-    <div class="section-heading-row">
+{% block title %}Behind the Music | {{ item.get("title") or "Music Release" }}{% endblock %}
+
+{% block content %}
+<section class="content-section music-page behind-music-page">
+    <div class="behind-music-heading-row">
         <div>
-            <p class="eyebrow">Community Feedback</p>
-            <h2>React to this release</h2>
-            <p>
-                Mark how this record connects to LiteFeet: battle track, lab track, video, classic, new release, or needs better info.
-            </p>
+            <p class="eyebrow">Behind the Music</p>
+            <h1>{{ item.get("title") or "Untitled release" }}</h1>
+        </div>
+
+        <div class="behind-music-actions">
+            <a class="button secondary small-button" href="{{ url_for('litefeet_music', period='all') }}">Back to Music</a>
+            <a class="button primary small-button" href="/litefeet-music/release/{{ item.get('id') }}/edit">Edit</a>
         </div>
     </div>
 
-    {% set feedback_counts = phase6_music_feedback_counts(item["id"]) if item and "id" in item.keys() else [] %}
+    {% set links = producer_links if producer_links is defined else music_release_producer_links(item.get("artist_or_creator")) %}
 
-    {% if feedback_counts %}
-        <div class="music-feedback-mini feedback-detail-counts">
-            {% for count in feedback_counts %}
-                <span>{{ count["label"] }}: {{ count["count"] }}</span>
-            {% endfor %}
-        </div>
-    {% endif %}
-
-    <form method="POST" action="{{ url_for('submit_music_feedback_phase6', item_id=item['id']) }}" class="form-card music-feedback-form">
-        <div class="form-grid two-column-form-grid">
-            <label>
-                Reaction
-                <select name="reaction_label">
-                    <option value="Battle Track">Battle Track</option>
-                    <option value="Lab Track">Lab Track</option>
-                    <option value="Classic">Classic</option>
-                    <option value="New Heat">New Heat</option>
-                    <option value="Video">Video</option>
-                    <option value="Needs Info">Needs Info</option>
-                </select>
-            </label>
-
-            <label>
-                Rating
-                <input type="number" name="rating_value" min="1" max="10" placeholder="1-10">
-            </label>
+    <div class="behind-music-play-strip">
+        <div>
+            <p class="eyebrow">Play</p>
+            <strong>{{ item.get("platform") or "Source" }}</strong>
         </div>
 
-        <label>
-            Feedback / context
-            <textarea name="feedback_text" rows="4" placeholder="Where was this played? Who used it? Is the artist/producer correct? Any missing info?"></textarea>
-        </label>
+        <div class="behind-music-play-inline">
+            {% if item.get("playable_url") %}
+                <audio controls preload="none" src="{{ item.get('playable_url') }}"></audio>
+            {% elif item.get("url") and (item.get("url")|media_embed_url) %}
+                <iframe
+                    src="{{ item.get('url')|media_embed_url }}"
+                    loading="lazy"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+            {% elif item.get("url") %}
+                <a class="button secondary small-button" href="{{ item.get('url') }}" target="_blank" rel="noopener">Open Source</a>
+            {% else %}
+                <span class="small-note">No playable source yet.</span>
+            {% endif %}
+        </div>
+    </div>
 
-        <input type="hidden" name="rating_category" value="Release Feedback">
+    <div class="behind-music-grid">
+        <div class="behind-music-main">
+            <article class="behind-music-card">
+                <h2>Release Information</h2>
 
-        <button class="button secondary" type="submit">Submit Feedback</button>
-    </form>
+                <dl class="release-info-list">
+                    <div>
+                        <dt>Title</dt>
+                        <dd>{{ item.get("title") or "Untitled release" }}</dd>
+                    </div>
+
+                    <div>
+                        <dt>Artist(s) / Producer(s)</dt>
+                        <dd class="producer-link-list">
+                            {% if links %}
+                                {% for producer in links %}
+                                    <a href="{{ producer.url }}">{{ producer.name }}</a>{% if not loop.last %}<span>,</span>{% endif %}
+                                {% endfor %}
+                            {% else %}
+                                Unknown
+                            {% endif %}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>Date</dt>
+                        <dd>{{ item.get("release_date")|music_release_date }}</dd>
+                    </div>
+
+                    <div>
+                        <dt>Platform</dt>
+                        <dd>{{ item.get("platform") or "Unknown" }}</dd>
+                    </div>
+
+                    <div>
+                        <dt>Source</dt>
+                        <dd>
+                            {% if item.get("url") %}
+                                <a href="{{ item.get('url') }}" target="_blank" rel="noopener">Open source</a>
+                            {% else %}
+                                Ledger only
+                            {% endif %}
+                        </dd>
+                    </div>
+                </dl>
+            </article>
+
+            <article class="behind-music-card">
+                <div class="section-heading-row compact-heading-row">
+                    <div>
+                        <p class="eyebrow">Stats</p>
+                        <h2>Release Stats</h2>
+                    </div>
+                </div>
+
+                <div class="release-stat-grid">
+                    <article>
+                        <span>Ledger Plays</span>
+                        <strong>{{ item.get("play_count") or 0 }}</strong>
+                    </article>
+
+                    <article>
+                        <span>Spotify</span>
+                        <strong>{{ item.get("spotify_streams") or 0 }}</strong>
+                    </article>
+
+                    <article>
+                        <span>Apple Music</span>
+                        <strong>{{ item.get("apple_music_plays") or 0 }}</strong>
+                    </article>
+
+                    <article>
+                        <span>SoundCloud</span>
+                        <strong>{{ item.get("soundcloud_plays") or 0 }}</strong>
+                    </article>
+
+                    <article>
+                        <span>YouTube</span>
+                        <strong>{{ item.get("youtube_views") or 0 }}</strong>
+                    </article>
+
+                    <article>
+                        <span>Rating</span>
+                        <strong>{{ "%.1f"|format(item.get("average_rating") or 0) }}/10</strong>
+                    </article>
+
+                    <article>
+                        <span>Lab</span>
+                        <strong>{{ item.get("lab_count") or 0 }}</strong>
+                    </article>
+
+                    <article>
+                        <span>Video</span>
+                        <strong>{{ item.get("video_count") or 0 }}</strong>
+                    </article>
+
+                    <article>
+                        <span>Battle</span>
+                        <strong>{{ item.get("battle_count") or 0 }}</strong>
+                    </article>
+                </div>
+
+                <p class="small-note stats-note">
+                    Platform stats are manually updated from screenshot proof.
+                    {% if item.get("platform_stats_verified") %}
+                        Verified.
+                    {% else %}
+                        Not yet verified.
+                    {% endif %}
+                </p>
+            </article>
+
+            {% if item.get("description") %}
+                <article class="behind-music-card">
+                    <h2>Notes</h2>
+                    <p>{{ item.get("description") }}</p>
+                </article>
+            {% endif %}
+        </div>
+
+        <aside class="behind-music-side">
+            <article class="behind-music-card edit-card">
+                <p class="eyebrow">Edit</p>
+                <h2>Improve this record</h2>
+
+                {% if can_direct_edit_music_release %}
+                    <p>Because you are connected to this release or logged in as admin, you can edit the release information directly.</p>
+                    <a class="button primary small-button" href="{{ url_for('admin_music_release_edit', item_id=item.get('id')) }}">Edit Release Information</a>
+                {% else %}
+                    <p>Suggest a correction if the title, producer, source, date, platform, or notes need to be updated.</p>
+                    <a class="button secondary small-button" href="{{ url_for('bm_music_release_suggest_edit', item_id=item.get('id')) }}">Suggest Edit</a>
+                {% endif %}
+            </article>
+        </aside>
+    </div>
+
+    <section class="homepage-section phase6-music-feedback-section">
+        <div class="section-heading-row">
+            <div>
+                <p class="eyebrow">Community Feedback</p>
+                <h2>React to this release</h2>
+                <p>Mark how this record connects to LiteFeet: battle track, lab track, video, classic, new release, or needs better info.</p>
+            </div>
+        </div>
+
+        {% set feedback_counts = phase6_music_feedback_counts(item.get("id")) if item and item.get("id") else [] %}
+
+        {% if feedback_counts %}
+            <div class="music-feedback-mini feedback-detail-counts">
+                {% for count in feedback_counts %}
+                    <span>{{ count["label"] }}: {{ count["count"] }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('submit_music_feedback_phase6', item_id=item.get('id')) }}" class="form-card music-feedback-form">
+            <div class="form-grid two-column-form-grid">
+                <label>
+                    Reaction
+                    <select name="reaction_label">
+                        <option value="Battle Track">Battle Track</option>
+                        <option value="Lab Track">Lab Track</option>
+                        <option value="Classic">Classic</option>
+                        <option value="New Heat">New Heat</option>
+                        <option value="Video">Video</option>
+                        <option value="Needs Info">Needs Info</option>
+                    </select>
+                </label>
+
+                <label>
+                    Rating
+                    <input type="number" name="rating_value" min="1" max="10" placeholder="1-10">
+                </label>
+            </div>
+
+            <label>
+                Feedback / context
+                <textarea name="feedback_text" rows="4" placeholder="Where was this played? Who used it? Is the artist/producer correct? Any missing info?"></textarea>
+            </label>
+
+            <input type="hidden" name="rating_category" value="Release Feedback">
+
+            <button class="button secondary" type="submit">Submit Feedback</button>
+        </form>
+    </section>
 </section>
 
 <style>
+    .behind-music-heading-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: flex-start;
+        margin-bottom: 18px;
+    }
+
+    .behind-music-heading-row h1 {
+        margin-bottom: 0;
+    }
+
+    .behind-music-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .behind-music-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 16px;
+        align-items: start;
+    }
+
+    .behind-music-main,
+    .behind-music-side {
+        display: grid;
+        gap: 16px;
+    }
+
+    .behind-music-card,
+    .behind-music-play-strip,
+    .form-card {
+        background: #F2EFE6 !important;
+        color: #0A0A0A !important;
+        border: 1px solid rgba(138, 111, 42, 0.46) !important;
+        border-radius: 18px;
+        box-shadow: 0 14px 32px rgba(0,0,0,0.30);
+    }
+
+    .behind-music-card {
+        padding: 18px;
+    }
+
+    .behind-music-card *,
+    .behind-music-play-strip *,
+    .form-card * {
+        color: #0A0A0A !important;
+    }
+
+    .behind-music-card h2,
+    .release-stat-grid strong {
+        color: #8A6F2A !important;
+    }
+
+    .behind-music-play-strip {
+        padding: 12px 14px;
+        display: grid;
+        grid-template-columns: 180px minmax(0, 1fr);
+        gap: 14px;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .behind-music-play-strip .eyebrow {
+        color: #8A6F2A !important;
+    }
+
+    .behind-music-play-inline {
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    .behind-music-play-inline audio {
+        width: min(100%, 520px);
+    }
+
+    .behind-music-play-inline iframe {
+        width: min(100%, 520px);
+        height: 96px;
+        border: 0;
+        border-radius: 12px;
+    }
+
+    .release-info-list {
+        display: grid;
+        gap: 12px;
+        margin: 0;
+    }
+
+    .release-info-list div {
+        display: grid;
+        gap: 4px;
+    }
+
+    .release-info-list dt {
+        color: #8A6F2A !important;
+        font-weight: 1000;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.75rem;
+    }
+
+    .release-info-list dd {
+        margin: 0;
+        font-weight: 800;
+    }
+
+    .producer-link-list {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .producer-link-list a {
+        color: #8A6F2A !important;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        font-weight: 1000;
+    }
+
+    .release-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .release-stat-grid article {
+        border: 1px solid rgba(138, 111, 42, 0.30);
+        border-radius: 14px;
+        padding: 12px;
+        background: rgba(227, 198, 106, 0.15);
+        display: grid;
+        gap: 8px;
+    }
+
+    .release-stat-grid span {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.72rem;
+        font-weight: 1000;
+    }
+
+    .release-stat-grid strong {
+        font-size: 1.7rem;
+        line-height: 1;
+    }
+
+    .stats-note {
+        margin-top: 12px;
+    }
+
+    .edit-card {
+        position: sticky;
+        top: 90px;
+    }
+
     .music-feedback-form {
         display: grid;
         gap: 14px;
+        padding: 16px;
     }
 
     .feedback-detail-counts {
@@ -70,125 +409,35 @@
         gap: 14px;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 1000px) {
+        .behind-music-heading-row,
+        .behind-music-actions {
+            display: grid;
+            justify-content: stretch;
+        }
+
+        .behind-music-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .behind-music-play-strip {
+            grid-template-columns: 1fr;
+        }
+
+        .behind-music-play-inline {
+            justify-content: flex-start;
+        }
+
+        .edit-card {
+            position: static;
+        }
+    }
+
+    @media (max-width: 700px) {
+        .release-stat-grid,
         .two-column-form-grid {
             grid-template-columns: 1fr;
         }
     }
 </style>
-
-{% endblock %}
-
-{% block content %}
-<section class="content-section music-page behind-music-page">
-    <p class="eyebrow">Behind the Music</p>
-    <h1>{{ item["title"] }}</h1>
-
-    <div class="behind-music-grid">
-        <div class="behind-music-main">
-            <div class="behind-music-card">
-                <h2>Release Information</h2>
-
-                <dl class="release-info-list">
-                    <div>
-                        <dt>Title</dt>
-                        <dd>{{ item["title"] }}</dd>
-                    </div>
-
-                    <div>
-                        <dt>Artist(s) / Producer</dt>
-                        <dd>
-                            {% if item.get("producer_profile") %}
-                                <a href="{{ url_for('dancer_profile_detail_by_id', dancer_id=item['producer_profile']['id']) }}">{{ item["artist_or_creator"] }}</a>
-                            {% else %}
-                                {{ item["artist_or_creator"] or "Unknown" }}
-                            {% endif %}
-                        </dd>
-                    </div>
-
-                    <div>
-                        <dt>Date</dt>
-                        <dd>{{ item["release_date"]|music_release_date }}</dd>
-                    </div>
-
-                    <div>
-                        <dt>Platform</dt>
-                        <dd>{{ item["platform"] or "Unknown" }}</dd>
-                    </div>
-
-                    <div>
-                        <dt>Source</dt>
-                        <dd>
-                            {% if item["url"] %}
-                                <a href="{{ item['url'] }}" target="_blank" rel="noopener">Open source</a>
-                            {% else %}
-                                Archived only
-                            {% endif %}
-                        </dd>
-                    </div>
-                </dl>
-            </div>
-
-            <div class="behind-music-card">
-                <h2>Stats</h2>
-
-                <div class="platform-stat-grid">
-                    <div><span>Ledger Plays</span><strong>{{ item["play_count"] or 0 }}</strong></div>
-                    <div><span>Spotify</span><strong>{{ item["spotify_streams"] or 0 }}</strong></div>
-                    <div><span>Apple Music</span><strong>{{ item["apple_music_plays"] or 0 }}</strong></div>
-                    <div><span>SoundCloud</span><strong>{{ item["soundcloud_plays"] or 0 }}</strong></div>
-                    <div><span>YouTube</span><strong>{{ item["youtube_views"] or 0 }}</strong></div>
-                    <div><span>Rating</span><strong>{{ "%.1f"|format(item["average_rating"] or 0) }}/10</strong></div>
-                    <div><span>Lab</span><strong>{{ item["lab_count"] or 0 }}</strong></div>
-                    <div><span>Video</span><strong>{{ item["video_count"] or 0 }}</strong></div>
-                    <div><span>Battle</span><strong>{{ item["battle_count"] or 0 }}</strong></div>
-                </div>
-
-                <p class="small-note">
-                    Platform stats are manually updated from screenshot proof.
-                    {% if item["platform_stats_verified"] %}
-                        Verified.
-                    {% else %}
-                        Not yet verified.
-                    {% endif %}
-                </p>
-            </div>
-
-            {% if item["description"] %}
-                <div class="behind-music-card">
-                    <h2>Notes</h2>
-                    <p>{{ item["description"] }}</p>
-                </div>
-            {% endif %}
-        </div>
-
-        <aside class="behind-music-side">
-            <div class="behind-music-card">
-                <h2>Play</h2>
-
-                {% if item.get("playable_url") %}
-                    <audio controls preload="none" src="{{ item['playable_url'] }}"></audio>
-                {% elif item["url"] and (item["url"]|media_embed_url) %}
-                    <iframe
-                        src="{{ item['url']|media_embed_url }}"
-                        loading="lazy"
-                        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                        allowfullscreen>
-                    </iframe>
-                {% elif item["url"] %}
-                    <a class="button small-button" href="{{ item['url'] }}" target="_blank" rel="noopener">Open Source</a>
-                {% else %}
-                    <p class="small-note">No playable source yet.</p>
-                {% endif %}
-            </div>
-
-            {% if session.get("admin_logged_in") %}
-                <div class="behind-music-card">
-                    <h2>Admin</h2>
-                    <a class="button small-button" href="{{ url_for('admin_music_release_edit', item_id=item['id']) }}">Edit Release</a>
-                </div>
-            {% endif %}
-        </aside>
-    </div>
-</section>
 {% endblock %}

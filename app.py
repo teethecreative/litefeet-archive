@@ -27731,3 +27731,416 @@ try:
 except Exception as exc:
     print(f"DCA CATEGORY VOTING ROUND setup failed: {type(exc).__name__}: {exc}")
 
+
+# --- MUSIC RELEASE DETAIL UX + EDIT ROUTING PATCH ---
+# Behind the Music improvements:
+# - producer names split by comma and link to profile/search
+# - play area is compact, not a large card
+# - stats render as stat cards
+# - public "Edit" route sends admins/producers to direct edit, everyone else to suggest edits
+# - admin edit preserves public status so releases do not disappear from the music table after editing
+
+from urllib.parse import quote as _bm_quote
+from datetime import datetime as _bm_datetime
+
+def bm_music_split_people(value):
+    raw = str(value or "").strip()
+    if not raw:
+        return []
+
+    parts = [part.strip() for part in raw.split(",")]
+    return [part for part in parts if part]
+
+
+def bm_normalize_name(value):
+    return " ".join(str(value or "").strip().lower().split())
+
+
+def bm_profile_search_url(name):
+    return "/people/dancers?q=" + _bm_quote(str(name or "").strip())
+
+
+def bm_profile_url_for_name(name):
+    clean = str(name or "").strip()
+
+    if not clean:
+        return ""
+
+    normalized = bm_normalize_name(clean)
+
+    lookup_attempts = [
+        ("dancer_profiles", ["name", "display_name", "stage_name", "profile_name"]),
+        ("people_profiles", ["name", "display_name", "stage_name", "profile_name"]),
+        ("profile_cards", ["name", "display_name", "stage_name", "profile_name"]),
+        ("dancers", ["name", "display_name", "stage_name", "profile_name"]),
+    ]
+
+    for table, columns in lookup_attempts:
+        for column in columns:
+            try:
+                rows = fetch_all(
+                    f"""
+                    SELECT id
+                    FROM {table}
+                    WHERE lower(trim({column})) = :name
+                    LIMIT 1
+                    """,
+                    {"name": normalized},
+                )
+
+                if rows:
+                    try:
+                        return url_for("dancer_profile_detail_by_id", dancer_id=rows[0]["id"])
+                    except Exception:
+                        return f"/people/dancers/{rows[0]['id']}"
+            except Exception:
+                pass
+
+    return bm_profile_search_url(clean)
+
+
+def bm_music_release_producer_links(value):
+    people = []
+
+    for name in bm_music_split_people(value):
+        people.append({
+            "name": name,
+            "url": bm_profile_url_for_name(name),
+        })
+
+    return people
+
+
+def bm_fetch_music_release(item_id):
+    try:
+        ensure_music_release_status_columns()
+    except Exception:
+        pass
+
+    attempts = [
+        """
+        SELECT *
+        FROM media_items
+        WHERE id = :id
+          AND COALESCE(media_type, '') = 'music_release'
+        LIMIT 1
+        """,
+        """
+        SELECT *
+        FROM media_items
+        WHERE id = :id
+        LIMIT 1
+        """,
+    ]
+
+    for sql in attempts:
+        try:
+            rows = fetch_all(sql, {"id": item_id})
+            if rows:
+                return rows[0]
+        except Exception:
+            pass
+
+    return None
+
+
+def bm_current_user_lookup_values():
+    values = []
+
+    for key in [
+        "user_email",
+        "account_email",
+        "email",
+        "username",
+        "display_name",
+        "nickname",
+        "name",
+        "account_name",
+        "user_name",
+    ]:
+        try:
+            value = session.get(key)
+            if value:
+                values.append(str(value))
+        except Exception:
+            pass
+
+    try:
+        account_id = session.get("account_id") or session.get("user_id") or session.get("account_user_id")
+    except Exception:
+        account_id = None
+
+    if account_id:
+        account_tables = [
+            ("accounts", ["email", "username", "display_name", "nickname", "name"]),
+            ("users", ["email", "username", "display_name", "nickname", "name"]),
+            ("user_accounts", ["email", "username", "display_name", "nickname", "name"]),
+        ]
+
+        for table, columns in account_tables:
+            for column in columns:
+                try:
+                    rows = fetch_all(
+                        f"SELECT {column} AS value FROM {table} WHERE id = :id LIMIT 1",
+                        {"id": account_id},
+                    )
+
+                    if rows and rows[0].get("value"):
+                        values.append(str(rows[0]["value"]))
+                except Exception:
+                    pass
+
+    cleaned = []
+
+    for value in values:
+        norm = bm_normalize_name(value)
+        if norm and norm not in cleaned:
+            cleaned.append(norm)
+
+    return cleaned
+
+
+def bm_user_can_direct_edit_music_release(item):
+    if session.get("admin_logged_in"):
+        return True
+
+    producer_names = [bm_normalize_name(name) for name in bm_music_split_people(item.get("artist_or_creator") or "")]
+    user_values = bm_current_user_lookup_values()
+
+    if not producer_names or not user_values:
+        return False
+
+    for producer in producer_names:
+        if producer in user_values:
+            return True
+
+    return False
+
+
+def bm_ensure_music_edit_suggestion_table():
+    if engine.dialect.name.startswith("postgres"):
+        ddl = """
+            CREATE TABLE IF NOT EXISTS music_release_edit_suggestions (
+                id SERIAL PRIMARY KEY,
+                release_id INTEGER,
+                suggested_title TEXT,
+                suggested_artist_or_creator TEXT,
+                suggested_url TEXT,
+                suggested_playable_url TEXT,
+                suggested_platform TEXT,
+                suggested_release_date TEXT,
+                suggested_description TEXT,
+                submitter_name TEXT,
+                submitter_contact TEXT,
+                status TEXT DEFAULT 'new',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """
+    else:
+        ddl = """
+            CREATE TABLE IF NOT EXISTS music_release_edit_suggestions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                release_id INTEGER,
+                suggested_title TEXT,
+                suggested_artist_or_creator TEXT,
+                suggested_url TEXT,
+                suggested_playable_url TEXT,
+                suggested_platform TEXT,
+                suggested_release_date TEXT,
+                suggested_description TEXT,
+                submitter_name TEXT,
+                submitter_contact TEXT,
+                status TEXT DEFAULT 'new',
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """
+
+    try:
+        with engine.begin() as conn:
+            conn.execute(text(ddl))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_music_release_edit_suggestions_release ON music_release_edit_suggestions (release_id)"))
+    except Exception as exc:
+        print(f"MUSIC_EDIT_SUGGESTION_TABLE_FAILED: {type(exc).__name__}: {exc}")
+
+
+def bm_music_release_detail(item_id):
+    item = bm_fetch_music_release(item_id)
+
+    if not item:
+        abort(404)
+
+    return render_template(
+        "music_release_detail.html",
+        item=item,
+        producer_links=bm_music_release_producer_links(item.get("artist_or_creator")),
+        can_direct_edit_music_release=bm_user_can_direct_edit_music_release(item),
+    )
+
+
+def bm_music_release_edit_router(item_id):
+    item = bm_fetch_music_release(item_id)
+
+    if not item:
+        abort(404)
+
+    if bm_user_can_direct_edit_music_release(item):
+        return redirect(url_for("admin_music_release_edit", item_id=item_id))
+
+    return redirect(url_for("bm_music_release_suggest_edit", item_id=item_id))
+
+
+def bm_music_release_suggest_edit(item_id):
+    item = bm_fetch_music_release(item_id)
+
+    if not item:
+        abort(404)
+
+    bm_ensure_music_edit_suggestion_table()
+
+    if request.method == "POST":
+        try:
+            with engine.begin() as conn:
+                conn.execute(
+                    text("""
+                        INSERT INTO music_release_edit_suggestions (
+                            release_id,
+                            suggested_title,
+                            suggested_artist_or_creator,
+                            suggested_url,
+                            suggested_playable_url,
+                            suggested_platform,
+                            suggested_release_date,
+                            suggested_description,
+                            submitter_name,
+                            submitter_contact,
+                            status,
+                            created_at
+                        )
+                        VALUES (
+                            :release_id,
+                            :suggested_title,
+                            :suggested_artist_or_creator,
+                            :suggested_url,
+                            :suggested_playable_url,
+                            :suggested_platform,
+                            :suggested_release_date,
+                            :suggested_description,
+                            :submitter_name,
+                            :submitter_contact,
+                            'new',
+                            CURRENT_TIMESTAMP
+                        )
+                    """),
+                    {
+                        "release_id": item_id,
+                        "suggested_title": request.form.get("title", "").strip(),
+                        "suggested_artist_or_creator": request.form.get("artist_or_creator", "").strip(),
+                        "suggested_url": request.form.get("url", "").strip(),
+                        "suggested_playable_url": request.form.get("playable_url", "").strip(),
+                        "suggested_platform": request.form.get("platform", "").strip(),
+                        "suggested_release_date": request.form.get("release_date", "").strip(),
+                        "suggested_description": request.form.get("description", "").strip(),
+                        "submitter_name": request.form.get("submitter_name", "").strip(),
+                        "submitter_contact": request.form.get("submitter_contact", "").strip(),
+                    },
+                )
+
+            flash("Edit suggestion submitted for review.", "success")
+            return redirect(url_for("music_release_detail", item_id=item_id))
+        except Exception as exc:
+            print(f"MUSIC_RELEASE_EDIT_SUGGESTION_FAILED: {type(exc).__name__}: {exc}")
+            flash("That edit suggestion could not be saved yet.", "error")
+
+    return render_template("music_release_suggest_edit.html", item=item)
+
+
+def bm_admin_music_release_edit_safe(item_id):
+    item = bm_fetch_music_release(item_id)
+
+    if not item:
+        abort(404)
+
+    if request.method == "POST":
+        current_status = (item.get("status") or "Published").strip() or "Published"
+        requested_status = (request.form.get("status") or current_status).strip() or current_status
+
+        if requested_status not in {"Published", "Ledgerd", "Draft"}:
+            requested_status = current_status
+
+        try:
+            with engine.begin() as conn:
+                conn.execute(
+                    text("""
+                        UPDATE media_items
+                        SET title = :title,
+                            artist_or_creator = :artist_or_creator,
+                            url = :url,
+                            playable_url = :playable_url,
+                            platform = :platform,
+                            release_date = :release_date,
+                            event_name = :event_name,
+                            track_number = :track_number,
+                            status = :status,
+                            description = :description
+                        WHERE id = :id
+                    """),
+                    {
+                        "id": item_id,
+                        "title": request.form.get("title", "").strip(),
+                        "artist_or_creator": request.form.get("artist_or_creator", "").strip(),
+                        "url": request.form.get("url", "").strip(),
+                        "playable_url": request.form.get("playable_url", "").strip(),
+                        "platform": request.form.get("platform", "").strip(),
+                        "release_date": request.form.get("release_date", "").strip(),
+                        "event_name": request.form.get("event_name", "").strip(),
+                        "track_number": request.form.get("track_number") or None,
+                        "status": requested_status,
+                        "description": request.form.get("description", "").strip(),
+                    },
+                )
+
+            flash("Release information saved.", "success")
+            return redirect(url_for("music_release_detail", item_id=item_id))
+        except Exception as exc:
+            print(f"SAFE_MUSIC_RELEASE_EDIT_FAILED: {type(exc).__name__}: {exc}")
+            flash("Release could not be saved.", "error")
+
+    item = bm_fetch_music_release(item_id) or item
+    return render_template("admin_music_release_edit.html", item=item)
+
+
+try:
+    app.jinja_env.globals["music_release_producer_links"] = bm_music_release_producer_links
+    app.jinja_env.globals["music_split_people"] = bm_music_split_people
+
+    bm_ensure_music_edit_suggestion_table()
+
+    if "bm_music_release_edit_router" not in app.view_functions:
+        app.add_url_rule(
+            "/litefeet-music/release/<int:item_id>/edit",
+            "bm_music_release_edit_router",
+            bm_music_release_edit_router,
+            methods=["GET"],
+        )
+
+    if "bm_music_release_suggest_edit" not in app.view_functions:
+        app.add_url_rule(
+            "/litefeet-music/release/<int:item_id>/suggest-edit",
+            "bm_music_release_suggest_edit",
+            bm_music_release_suggest_edit,
+            methods=["GET", "POST"],
+        )
+
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/litefeet-music/release/<int:item_id>":
+            app.view_functions[rule.endpoint] = bm_music_release_detail
+            print(f"Behind Music detail override active: {rule.endpoint}")
+
+        if str(rule.rule) == "/admin/music/release/<int:item_id>/edit":
+            app.view_functions[rule.endpoint] = bm_admin_music_release_edit_safe
+            print(f"Safe music release edit override active: {rule.endpoint}")
+
+    print("MUSIC RELEASE DETAIL UX + EDIT ROUTING active")
+except Exception as exc:
+    print(f"MUSIC RELEASE DETAIL UX + EDIT ROUTING setup failed: {type(exc).__name__}: {exc}")
+
