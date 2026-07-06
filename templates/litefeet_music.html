@@ -1,6 +1,58 @@
 {% extends "base.html" %}
 
-{% block title %}LiteFeet Music | The LiteFeet Ledger{% endblock %}
+{% block title %}LiteFeet Music | The LiteFeet Ledger
+<script>
+(function () {
+    const tables = Array.from(document.querySelectorAll("table.release-table, table.music-record-table"));
+
+    const emailPattern = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+    const maxDescriptionLength = 130;
+
+    function cleanTitleCell(cell) {
+        if (!cell) return;
+
+        const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+        const textNodes = [];
+
+        while (walker.nextNode()) {
+            textNodes.push(walker.currentNode);
+        }
+
+        textNodes.forEach((node) => {
+            const original = node.nodeValue || "";
+            let cleaned = original.replace(emailPattern, "");
+            cleaned = cleaned.replace(/\s+/g, " ");
+
+            if (cleaned.trim().length > maxDescriptionLength) {
+                const shortText = cleaned.trim().slice(0, maxDescriptionLength).replace(/\s+\S*$/, "") + "…";
+                node.nodeValue = shortText;
+                cell.setAttribute("title", cleaned.trim());
+            } else {
+                node.nodeValue = cleaned;
+            }
+        });
+    }
+
+    tables.forEach((table) => {
+        const headerText = Array.from(table.querySelectorAll("th"))
+            .map((th) => th.textContent.trim().toLowerCase())
+            .join(" ");
+
+        const looksLikeMusicTable =
+            headerText.includes("artist") &&
+            headerText.includes("platform") &&
+            headerText.includes("duplicate");
+
+        if (!looksLikeMusicTable) return;
+
+        Array.from(table.querySelectorAll("tbody tr")).forEach((row) => {
+            cleanTitleCell(row.cells[1]);
+        });
+    });
+})();
+</script>
+
+{% endblock %}
 
 {% block content %}
 <section class="content-section litefeet-music-page">
@@ -360,5 +412,135 @@
             min-width: 1060px;
         }
     }
+
+/* --- LITEFEET MUSIC TABLE READABILITY FIX --- */
+.release-table,
+.music-record-table {
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+
+.release-table th,
+.release-table td,
+.music-record-table th,
+.music-record-table td {
+    vertical-align: top !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    line-height: 1.28 !important;
+}
+
+.release-table th:nth-child(1),
+.release-table td:nth-child(1),
+.music-record-table th:nth-child(1),
+.music-record-table td:nth-child(1) {
+    width: 76px !important;
+    text-align: center !important;
+}
+
+.release-table th:nth-child(2),
+.release-table td:nth-child(2),
+.music-record-table th:nth-child(2),
+.music-record-table td:nth-child(2) {
+    width: 25% !important;
+    max-width: 280px !important;
+}
+
+.release-table th:nth-child(3),
+.release-table td:nth-child(3),
+.music-record-table th:nth-child(3),
+.music-record-table td:nth-child(3) {
+    width: 14% !important;
+}
+
+.release-table th:nth-child(4),
+.release-table td:nth-child(4),
+.music-record-table th:nth-child(4),
+.music-record-table td:nth-child(4) {
+    width: 14% !important;
+}
+
+.release-table th:nth-child(5),
+.release-table td:nth-child(5),
+.music-record-table th:nth-child(5),
+.music-record-table td:nth-child(5) {
+    width: 11% !important;
+}
+
+.release-table th:nth-child(6),
+.release-table td:nth-child(6),
+.music-record-table th:nth-child(6),
+.music-record-table td:nth-child(6) {
+    width: 9% !important;
+}
+
+.release-table th:nth-child(7),
+.release-table td:nth-child(7),
+.music-record-table th:nth-child(7),
+.music-record-table td:nth-child(7) {
+    width: 12% !important;
+}
+
+.release-table th:nth-child(8),
+.release-table td:nth-child(8),
+.music-record-table th:nth-child(8),
+.music-record-table td:nth-child(8) {
+    width: 13% !important;
+}
+
+.release-table td:nth-child(2) strong,
+.release-table td:nth-child(2) b,
+.release-table td:nth-child(2) a,
+.music-record-table td:nth-child(2) strong,
+.music-record-table td:nth-child(2) b,
+.music-record-table td:nth-child(2) a {
+    display: block !important;
+    margin-bottom: 4px !important;
+    font-size: 0.98rem !important;
+    line-height: 1.18 !important;
+}
+
+.release-table td:nth-child(2) p,
+.release-table td:nth-child(2) small,
+.release-table td:nth-child(2) .description,
+.release-table td:nth-child(2) .music-description,
+.release-table td:nth-child(2) .release-description,
+.release-table td:nth-child(2) .record-description,
+.music-record-table td:nth-child(2) p,
+.music-record-table td:nth-child(2) small,
+.music-record-table td:nth-child(2) .description,
+.music-record-table td:nth-child(2) .music-description,
+.music-record-table td:nth-child(2) .release-description,
+.music-record-table td:nth-child(2) .record-description {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    max-height: 4.1em !important;
+    opacity: 0.82 !important;
+}
+
+.release-table td:nth-child(8) .button,
+.release-table td:nth-child(8) button,
+.music-record-table td:nth-child(8) .button,
+.music-record-table td:nth-child(8) button {
+    white-space: nowrap !important;
+    width: max-content !important;
+    max-width: 100% !important;
+}
+
+.release-table-wrap,
+.music-record-table-wrap {
+    overflow-x: auto !important;
+    max-width: 100% !important;
+}
+
+@media (max-width: 900px) {
+    .release-table,
+    .music-record-table {
+        min-width: 980px !important;
+    }
+}
+
 </style>
 {% endblock %}
