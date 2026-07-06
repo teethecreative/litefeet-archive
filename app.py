@@ -28144,3 +28144,400 @@ try:
 except Exception as exc:
     print(f"MUSIC RELEASE DETAIL UX + EDIT ROUTING setup failed: {type(exc).__name__}: {exc}")
 
+
+# --- CLEAN MUSIC PROJECT SAVE FIX ---
+# Fixes /litefeet-music/submit for project submissions.
+# Saves:
+# 1. project metadata into music_projects
+# 2. track rows into music_project_tracks
+# 3. project + tracks into media_items so they show in the music table
+
+from datetime import datetime as _project_save_datetime
+
+_project_save_original_submit = None
+_project_save_endpoint = None
+
+for _rule in list(app.url_map.iter_rules()):
+    if str(_rule.rule) == "/litefeet-music/submit":
+        _project_save_endpoint = _rule.endpoint
+        _project_save_original_submit = app.view_functions.get(_rule.endpoint)
+        break
+
+
+def project_save_now():
+    return _project_save_datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def project_save_is_postgres():
+    return engine.dialect.name.startswith("postgres")
+
+
+def project_save_columns(table_name):
+    try:
+        if project_save_is_postgres():
+            rows = fetch_all(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE table_name = :table_name
+                """,
+                {"table_name": table_name},
+            )
+            return {row["column_name"] for row in rows}
+
+        with engine.connect() as conn:
+            rows = conn.execute(text(f"PRAGMA table_info({table_name})")).fetchall()
+            return {row[1] for row in rows}
+    except Exception:
+        return set()
+
+
+def project_save_add_column(table_name, column_name, column_sql):
+    if column_name in project_save_columns(table_name):
+        return
+
+    try:
+        with engine.begin() as conn:
+            if project_save_is_postgres():
+                conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_sql}"))
+            else:
+                conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_sql}"))
+    except Exception as exc:
+        print(f"PROJECT_SAVE_ADD_COLUMN_FAILED {table_name}.{column_name}: {type(exc).__name__}: {exc}")
+
+
+def project_save_ensure_tables():
+    if project_save_is_postgres():
+        projects_sql = """
+            CREATE TABLE IF NOT EXISTS music_projects (
+                id SERIAL PRIMARY KEY,
+                title TEXT,
+                artist_or_creator TEXT,
+                url TEXT,
+                platform TEXT,
+                release_date TEXT,
+                description TEXT,
+                status TEXT DEFAULT 'Published',
+                track_count INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """
+
+        tracks_sql = """
+            CREATE TABLE IF NOT EXISTS music_project_tracks (
+                id SERIAL PRIMARY KEY,
+                music_project_id INTEGER,
+                media_item_id INTEGER,
+                track_number INTEGER,
+                title TEXT,
+                track_title TEXT,
+                url TEXT,
+                platform TEXT,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """
+    else:
+        projects_sql = """
+            CREATE TABLE IF NOT EXISTS music_projects (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
+                artist_or_creator TEXT,
+                url TEXT,
+                platform TEXT,
+                release_date TEXT,
+                description TEXT,
+                status TEXT DEFAULT 'Published',
+                track_count INTEGER DEFAULT 0,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """
+
+        tracks_sql = """
+            CREATE TABLE IF NOT EXISTS music_project_tracks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                music_project_id INTEGER,
+                media_item_id INTEGER,
+                track_number INTEGER,
+                title TEXT,
+                track_title TEXT,
+                url TEXT,
+                platform TEXT,
+                notes TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """
+
+    with engine.begin() as conn:
+        conn.execute(text(projects_sql))
+        conn.execute(text(tracks_sql))
+
+    for column_name, column_sql in {
+        "title": "TEXT",
+        "artist_or_creator": "TEXT",
+        "url": "TEXT",
+        "platform": "TEXT",
+        "release_date": "TEXT",
+        "description": "TEXT",
+        "status": "TEXT",
+        "track_count": "INTEGER DEFAULT 0",
+        "created_at": "TEXT",
+    }.items():
+        project_save_add_column("music_projects", column_name, column_sql)
+
+    for column_name, column_sql in {
+        "music_project_id": "INTEGER",
+        "media_item_id": "INTEGER",
+        "track_number": "INTEGER",
+        "title": "TEXT",
+        "track_title": "TEXT",
+        "url": "TEXT",
+        "platform": "TEXT",
+        "notes": "TEXT",
+        "created_at": "TEXT",
+    }.items():
+        project_save_add_column("music_project_tracks", column_name, column_sql)
+
+    for column_name, column_sql in {
+        "music_project_id": "INTEGER",
+        "project_id": "INTEGER",
+        "track_number": "INTEGER",
+        "release_type": "TEXT",
+        "playable_url": "TEXT",
+        "artist_name": "TEXT",
+        "producer_name": "TEXT",
+        "review_status": "TEXT",
+        "release_stage": "TEXT",
+        "play_count": "INTEGER DEFAULT 0",
+        "last_played_at": "TEXT",
+    }.items():
+        project_save_add_column("media_items", column_name, column_sql)
+
+
+def project_save_insert(conn, table_name, values):
+    columns = project_save_columns(table_name)
+    clean_values = {key: value for key, value in values.items() if key in columns}
+
+    if not clean_values:
+        raise RuntimeError(f"No matching columns for {table_name}")
+
+    field_names = list(clean_values.keys())
+    params = {f"v_{name}": clean_values[name] for name in field_names}
+
+    field_sql = ", ".join(field_names)
+    value_sql = ", ".join(f":v_{name}" for name in field_names)
+
+    if project_save_is_postgres():
+        row = conn.execute(
+            text(f"INSERT INTO {table_name} ({field_sql}) VALUES ({value_sql}) RETURNING id"),
+            params,
+        ).mappings().first()
+        return row["id"] if row else None
+
+    conn.execute(
+        text(f"INSERT INTO {table_name} ({field_sql}) VALUES ({value_sql})"),
+        params,
+    )
+
+    return conn.execute(text("SELECT last_insert_rowid() AS id")).mappings().first()["id"]
+
+
+def project_save_platform_from_url(url_value):
+    url_value = str(url_value or "").lower()
+
+    if "soundcloud.com" in url_value:
+        return "SoundCloud"
+    if "youtube.com" in url_value or "youtu.be" in url_value:
+        return "YouTube"
+    if "spotify.com" in url_value:
+        return "Spotify"
+    if "music.apple.com" in url_value:
+        return "Apple Music"
+    if "bandcamp.com" in url_value:
+        return "Bandcamp"
+    if "audiomack.com" in url_value:
+        return "Audiomack"
+
+    return "Other"
+
+
+def project_save_form_list(*names):
+    values = []
+
+    for name in names:
+        for item in request.form.getlist(name):
+            values.append((item or "").strip())
+
+    return values
+
+
+def project_save_submit_music():
+    project_save_ensure_tables()
+
+    if request.method == "GET":
+        return render_template("submit_music.html", error=request.args.get("error"))
+
+    submission_kind = (request.form.get("submission_kind") or "single").strip().lower()
+
+    if submission_kind != "project":
+        if callable(_project_save_original_submit) and _project_save_original_submit is not project_save_submit_music:
+            return _project_save_original_submit()
+
+        return render_template("submit_music.html", error="Single submission route is unavailable.")
+
+    project_title = (
+        request.form.get("project_name")
+        or request.form.get("title")
+        or ""
+    ).strip()
+
+    project_artist = (
+        request.form.get("project_producers")
+        or request.form.get("artist_or_creator")
+        or request.form.get("producer")
+        or ""
+    ).strip()
+
+    project_url = (
+        request.form.get("main_music_link")
+        or request.form.get("url")
+        or ""
+    ).strip()
+
+    project_date = (
+        request.form.get("project_release_date")
+        or request.form.get("release_date")
+        or ""
+    ).strip()
+
+    project_description = (
+        request.form.get("project_description")
+        or request.form.get("description")
+        or ""
+    ).strip()
+
+    if not project_title or not project_artist:
+        return render_template("submit_music.html", error="Add a project name and producer(s).")
+
+    track_titles = project_save_form_list("track_title", "track_titles[]")
+    track_urls = project_save_form_list("track_url", "track_urls[]")
+    track_platforms = project_save_form_list("track_platform", "track_platforms[]")
+    track_notes = project_save_form_list("track_notes", "track_notes[]")
+
+    row_count = max(len(track_titles), len(track_urls), len(track_platforms), len(track_notes))
+    tracks = []
+
+    for index in range(row_count):
+        title_value = track_titles[index] if index < len(track_titles) else ""
+        url_value = track_urls[index] if index < len(track_urls) else ""
+        platform_value = track_platforms[index] if index < len(track_platforms) else ""
+        notes_value = track_notes[index] if index < len(track_notes) else ""
+
+        if not title_value and not url_value:
+            continue
+
+        track_number = len(tracks) + 1
+
+        tracks.append({
+            "track_number": track_number,
+            "title": title_value or f"{project_title} - Track {track_number}",
+            "url": url_value,
+            "platform": platform_value or project_save_platform_from_url(url_value or project_url),
+            "notes": notes_value,
+        })
+
+    try:
+        manual_track_count = int(request.form.get("project_track_count") or 0)
+    except Exception:
+        manual_track_count = 0
+
+    track_count = len(tracks) or manual_track_count
+
+    with engine.begin() as conn:
+        project_id = project_save_insert(conn, "music_projects", {
+            "title": project_title,
+            "artist_or_creator": project_artist,
+            "url": project_url,
+            "platform": project_save_platform_from_url(project_url) if project_url else "Project",
+            "release_date": project_date,
+            "description": project_description,
+            "status": "Published",
+            "track_count": track_count,
+            "created_at": project_save_now(),
+        })
+
+        project_media_id = project_save_insert(conn, "media_items", {
+            "media_type": "music_project",
+            "title": project_title,
+            "artist_or_creator": project_artist,
+            "artist_name": project_artist,
+            "producer_name": project_artist,
+            "url": project_url,
+            "playable_url": "",
+            "platform": "Project",
+            "release_date": project_date,
+            "event_name": project_title,
+            "description": project_description,
+            "status": "Published",
+            "review_status": "Community Submitted",
+            "release_stage": "released",
+            "music_project_id": project_id,
+            "project_id": project_id,
+            "release_type": "project",
+            "play_count": 0,
+            "created_at": project_save_now(),
+        })
+
+        for track in tracks:
+            media_item_id = project_save_insert(conn, "media_items", {
+                "media_type": "music_release",
+                "title": track["title"],
+                "artist_or_creator": project_artist,
+                "artist_name": project_artist,
+                "producer_name": project_artist,
+                "url": track["url"],
+                "playable_url": track["url"],
+                "platform": track["platform"],
+                "release_date": project_date,
+                "event_name": project_title,
+                "description": track["notes"] or project_description,
+                "status": "Published",
+                "review_status": "Community Submitted",
+                "release_stage": "released",
+                "music_project_id": project_id,
+                "project_id": project_id,
+                "release_type": "project_track",
+                "track_number": track["track_number"],
+                "play_count": 0,
+                "created_at": project_save_now(),
+            })
+
+            project_save_insert(conn, "music_project_tracks", {
+                "music_project_id": project_id,
+                "media_item_id": media_item_id,
+                "track_number": track["track_number"],
+                "title": track["title"],
+                "track_title": track["title"],
+                "url": track["url"],
+                "platform": track["platform"],
+                "notes": track["notes"],
+                "created_at": project_save_now(),
+            })
+
+    try:
+        return redirect(url_for("music_project_detail_phase6e", project_id=project_id))
+    except Exception:
+        return redirect(url_for("litefeet_music", submitted=1, period="all"))
+
+
+try:
+    project_save_ensure_tables()
+
+    if _project_save_endpoint:
+        app.view_functions[_project_save_endpoint] = project_save_submit_music
+        print(f"CLEAN MUSIC PROJECT SAVE FIX active on endpoint: {_project_save_endpoint}")
+    else:
+        print("CLEAN MUSIC PROJECT SAVE FIX could not find /litefeet-music/submit endpoint.")
+except Exception as exc:
+    print(f"CLEAN MUSIC PROJECT SAVE FIX failed: {type(exc).__name__}: {exc}")
+
