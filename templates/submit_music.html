@@ -1,6 +1,171 @@
 {% extends "base.html" %}
 
-{% block title %}Submit Music | The LiteFeet Ledger{% endblock %}
+{% block title %}Submit Music | The LiteFeet Ledger
+<script>
+/* --- PROJECT PULL INFO FRONTEND --- */
+(function () {
+    const form = document.querySelector("[data-music-intake-form]");
+    if (!form) return;
+
+    const mainLink = form.querySelector("[data-main-music-link]");
+    const pullButton = form.querySelector("[data-pull-main-info]");
+    const status = form.querySelector("[data-link-pull-status]");
+
+    const titleField = form.querySelector("[data-title-field]");
+    const artistField = form.querySelector("[data-artist-field]");
+    const platformField = form.querySelector("[data-platform-field]");
+
+    const projectName = form.querySelector("[data-project-name]");
+    const projectProducers = form.querySelector("[data-project-producers]");
+    const projectDescription = form.querySelector("[data-project-description]");
+    const projectTrackCount = form.querySelector("[data-project-track-count]");
+
+    const trackList = form.querySelector("[data-track-list]");
+
+    function setStatus(message) {
+        if (status) status.textContent = message;
+    }
+
+    function setKind(kind) {
+        const radio = form.querySelector(`[data-submission-kind][value="${kind}"]`);
+
+        if (radio) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+    }
+
+    function getFirstTrackRow() {
+        return trackList ? trackList.querySelector("[data-track-row]") : null;
+    }
+
+    function clearTracks() {
+        if (!trackList) return;
+
+        const first = getFirstTrackRow();
+        if (!first) return;
+
+        trackList.innerHTML = "";
+        trackList.appendChild(first);
+
+        first.querySelectorAll("input").forEach((input) => {
+            input.value = "";
+        });
+    }
+
+    function fillTrackRow(row, track, index) {
+        if (!row) return;
+
+        const pill = row.querySelector(".track-number-pill");
+        const title = row.querySelector('[name="track_title"]');
+        const url = row.querySelector('[name="track_url"]');
+        const platform = row.querySelector('[name="track_platform"]');
+        const notes = row.querySelector('[name="track_notes"]');
+
+        if (pill) pill.textContent = `Track ${index + 1}`;
+        if (title) title.value = track.title || "";
+        if (url) url.value = track.url || "";
+        if (platform) platform.value = track.platform || "SoundCloud";
+        if (notes) notes.value = track.notes || "";
+    }
+
+    function addPulledTracks(tracks) {
+        if (!trackList || !tracks || !tracks.length) return;
+
+        clearTracks();
+
+        tracks.forEach((track, index) => {
+            let row;
+
+            if (index === 0) {
+                row = getFirstTrackRow();
+            } else {
+                const first = getFirstTrackRow();
+                row = first ? first.cloneNode(true) : null;
+
+                if (row) {
+                    row.querySelectorAll("input").forEach((input) => {
+                        input.value = "";
+                    });
+                    trackList.appendChild(row);
+                }
+            }
+
+            fillTrackRow(row, track, index);
+        });
+    }
+
+    function applyPreview(data) {
+        if (!data || data.ok === false) {
+            setStatus((data && data.error) || "Could not pull info from that link.");
+            return;
+        }
+
+        const tracks = Array.isArray(data.tracks) ? data.tracks : [];
+        const isProject = data.kind === "project" || tracks.length > 1;
+
+        if (isProject) {
+            setKind("project");
+
+            if (projectName && data.title) projectName.value = data.title;
+            if (projectProducers && data.artist_or_creator) projectProducers.value = data.artist_or_creator;
+            if (projectDescription && data.description) projectDescription.value = data.description;
+            if (projectTrackCount) projectTrackCount.value = tracks.length || "";
+
+            if (tracks.length) {
+                addPulledTracks(tracks);
+                setStatus(`Pulled project info and ${tracks.length} possible tracks. Review before submitting.`);
+            } else {
+                setStatus("Pulled project info. SoundCloud did not expose the full track list, so add tracks manually.");
+            }
+        } else {
+            setKind("single");
+
+            if (titleField && data.title) titleField.value = data.title;
+            if (artistField && data.artist_or_creator) artistField.value = data.artist_or_creator;
+            if (platformField && data.platform) platformField.value = data.platform;
+
+            setStatus("Pulled single release info. Review before submitting.");
+        }
+
+        form.dispatchEvent(new Event("input", { bubbles: true }));
+        form.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    async function pullInfo() {
+        const sourceUrl = mainLink ? mainLink.value.trim() : "";
+
+        if (!sourceUrl) {
+            setStatus("Paste a link first.");
+            return;
+        }
+
+        setStatus("Pulling info...");
+
+        try {
+            const response = await fetch("/litefeet-music/link-preview", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ url: sourceUrl })
+            });
+
+            const data = await response.json();
+            applyPreview(data);
+        } catch (error) {
+            console.error(error);
+            setStatus("Could not pull info from that link. You can still enter it manually.");
+        }
+    }
+
+    if (pullButton) {
+        pullButton.addEventListener("click", pullInfo);
+    }
+})();
+</script>
+
+{% endblock %}
 
 {% block content %}
 <section class="content-section submit-music-page">

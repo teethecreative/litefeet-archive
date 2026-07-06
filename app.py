@@ -28541,3 +28541,327 @@ try:
 except Exception as exc:
     print(f"CLEAN MUSIC PROJECT SAVE FIX failed: {type(exc).__name__}: {exc}")
 
+
+# --- MUSIC PROJECT PULL INFO FIX ---
+# Makes Pull Info detect SoundCloud sets/playlists when possible and return editable track metadata.
+# The endpoint returns:
+# {
+#   ok, kind, platform, title, artist_or_creator, description, tracks: [{title, url, platform, notes}]
+# }
+
+import json as _pull_json
+import re as _pull_re
+import html as _pull_html
+from urllib.parse import urlencode as _pull_urlencode, urlparse as _pull_urlparse
+from urllib.request import Request as _pull_Request, urlopen as _pull_urlopen
+
+
+def pull_music_remote_get(url, timeout=10):
+    req = _pull_Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0 LiteFeetLedger/1.0",
+            "Accept": "text/html,application/json;q=0.9,*/*;q=0.8",
+        },
+    )
+
+    with _pull_urlopen(req, timeout=timeout) as resp:
+        return resp.read().decode("utf-8", errors="replace")
+
+
+def pull_music_platform_from_url(value):
+    value = str(value or "").lower()
+
+    if "soundcloud.com" in value:
+        return "SoundCloud"
+    if "youtube.com" in value or "youtu.be" in value:
+        return "YouTube"
+    if "spotify.com" in value:
+        return "Spotify"
+    if "music.apple.com" in value:
+        return "Apple Music"
+    if "bandcamp.com" in value:
+        return "Bandcamp"
+    if "audiomack.com" in value:
+        return "Audiomack"
+
+    return "Other"
+
+
+def pull_music_clean_text(value, limit=220):
+    value = _pull_html.unescape(str(value or ""))
+    value = value.replace("\\/", "/")
+    value = value.replace('\\"', '"')
+    value = _pull_re.sub(r"\s+", " ", value)
+    value = value.strip(" -–—|•\n\t ")
+
+    if len(value) > limit:
+        value = value[:limit].strip()
+
+    return value
+
+
+def pull_music_meta(html_text, key):
+    patterns = [
+        rf'<meta[^>]+property=["\']{_pull_re.escape(key)}["\'][^>]+content=["\']([^"\']+)["\']',
+        rf'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']{_pull_re.escape(key)}["\']',
+        rf'<meta[^>]+name=["\']{_pull_re.escape(key)}["\'][^>]+content=["\']([^"\']+)["\']',
+    ]
+
+    for pattern in patterns:
+        match = _pull_re.search(pattern, html_text, flags=_pull_re.I | _pull_re.S)
+        if match:
+            return pull_music_clean_text(match.group(1))
+
+    return ""
+
+
+def pull_music_is_project_url(source_url):
+    parsed = _pull_urlparse(str(source_url or ""))
+    path = parsed.path.lower()
+
+    return (
+        "/sets/" in path
+        or "/playlists/" in path
+        or "playlist" in path
+        or "album" in path
+        or "sets" in path
+    )
+
+
+def pull_music_track_from_soundcloud_dict(track):
+    if not isinstance(track, dict):
+        return None
+
+    title = pull_music_clean_text(track.get("title") or track.get("track_title") or "")
+    url = pull_music_clean_text(track.get("permalink_url") or track.get("uri") or track.get("url") or "")
+
+    if not title:
+        return None
+
+    blocked = [
+        "soundcloud",
+        "cookie",
+        "javascript",
+        "followers",
+        "following",
+        "repost",
+        "likes",
+        "comments",
+        "playlist",
+        "privacy",
+    ]
+
+    if any(word in title.lower() for word in blocked):
+        return None
+
+    return {
+        "title": title,
+        "url": url if url.startswith("http") else "",
+        "platform": "SoundCloud",
+        "notes": "",
+    }
+
+
+def pull_music_walk_for_tracks(obj, tracks):
+    if len(tracks) >= 100:
+        return
+
+    if isinstance(obj, dict):
+        # Most useful SoundCloud playlist hydration shape.
+        if isinstance(obj.get("tracks"), list):
+            for item in obj.get("tracks") or []:
+                track = pull_music_track_from_soundcloud_dict(item)
+                if track:
+                    tracks.append(track)
+
+        # Some SoundCloud structures keep the playlist under data.
+        for value in obj.values():
+            pull_music_walk_for_tracks(value, tracks)
+
+    elif isinstance(obj, list):
+        for value in obj:
+            pull_music_walk_for_tracks(value, tracks)
+
+
+def pull_music_soundcloud_hydration_tracks(html_text):
+    tracks = []
+
+    # Modern SoundCloud page hydration.
+    hydration_match = _pull_re.search(
+        r"window\.__sc_hydration\s*=\s*(\[.*?\]);",
+        html_text,
+        flags=_pull_re.S,
+    )
+
+    if hydration_match:
+        try:
+            data = _pull_json.loads(hydration_match.group(1))
+            pull_music_walk_for_tracks(data, tracks)
+        except Exception as exc:
+            print(f"SOUNDCLOUD_HYDRATION_PARSE_FAILED: {type(exc).__name__}: {exc}")
+
+    # Fallback: title keys in embedded JSON.
+    if not tracks:
+        seen = set()
+
+        for match in _pull_re.finditer(r'"title"\s*:\s*"([^"]{2,180})"', html_text):
+            title = pull_music_clean_text(match.group(1))
+
+            if not title:
+                continue
+
+            lowered = title.lower()
+
+            if lowered in seen:
+                continue
+
+            if any(word in lowered for word in ["soundcloud", "playlist", "cookie", "javascript", "followers", "likes", "comments"]):
+                continue
+
+            seen.add(lowered)
+            tracks.append({
+                "title": title,
+                "url": "",
+                "platform": "SoundCloud",
+                "notes": "",
+            })
+
+            if len(tracks) >= 80:
+                break
+
+    # Dedupe while keeping order.
+    deduped = []
+    seen_titles = set()
+
+    for track in tracks:
+        key = pull_music_clean_text(track.get("title")).lower()
+
+        if not key or key in seen_titles:
+            continue
+
+        seen_titles.add(key)
+        deduped.append(track)
+
+    return deduped
+
+
+def pull_music_soundcloud_oembed(source_url):
+    payload = {}
+
+    try:
+        oembed_url = "https://soundcloud.com/oembed?" + _pull_urlencode({
+            "format": "json",
+            "url": source_url,
+        })
+
+        payload = _pull_json.loads(pull_music_remote_get(oembed_url, timeout=10))
+    except Exception as exc:
+        print(f"SOUNDCLOUD_OEMBED_FAILED: {type(exc).__name__}: {exc}")
+
+    title = pull_music_clean_text(payload.get("title") or "")
+    author = pull_music_clean_text(payload.get("author_name") or "")
+    description = pull_music_clean_text(payload.get("description") or "", limit=600)
+
+    return title, author, description
+
+
+def pull_music_preview_payload(source_url):
+    source_url = str(source_url or "").strip()
+
+    if not source_url:
+        return {
+            "ok": False,
+            "error": "Paste a music link first.",
+        }
+
+    platform = pull_music_platform_from_url(source_url)
+    is_project = pull_music_is_project_url(source_url)
+
+    result = {
+        "ok": True,
+        "url": source_url,
+        "kind": "project" if is_project else "single",
+        "platform": platform,
+        "title": "",
+        "artist_or_creator": "",
+        "description": "",
+        "tracks": [],
+    }
+
+    if platform == "SoundCloud":
+        title, author, description = pull_music_soundcloud_oembed(source_url)
+
+        result["title"] = title
+        result["artist_or_creator"] = author
+        result["description"] = description
+
+    try:
+        html_text = pull_music_remote_get(source_url, timeout=10)
+
+        result["title"] = result["title"] or pull_music_meta(html_text, "og:title")
+        result["description"] = result["description"] or pull_music_meta(html_text, "og:description")
+
+        if platform == "SoundCloud":
+            tracks = pull_music_soundcloud_hydration_tracks(html_text)
+
+            # Remove project title from track list if SoundCloud repeats it.
+            project_title_key = pull_music_clean_text(result["title"]).lower()
+            tracks = [
+                track for track in tracks
+                if pull_music_clean_text(track.get("title")).lower() != project_title_key
+            ]
+
+            if tracks:
+                result["tracks"] = tracks
+                result["kind"] = "project" if len(tracks) > 1 or is_project else result["kind"]
+
+    except Exception as exc:
+        print(f"PULL_MUSIC_HTML_FAILED: {type(exc).__name__}: {exc}")
+
+    if result["tracks"]:
+        result["kind"] = "project"
+
+    return result
+
+
+def pull_music_link_preview_route():
+    try:
+        if request.is_json:
+            source_url = (request.get_json(silent=True) or {}).get("url", "")
+        else:
+            source_url = (
+                request.form.get("url")
+                or request.form.get("main_music_link")
+                or request.args.get("url")
+                or ""
+            )
+
+        return jsonify(pull_music_preview_payload(source_url))
+    except Exception as exc:
+        print(f"PULL_MUSIC_PREVIEW_FAILED: {type(exc).__name__}: {exc}")
+        return jsonify({"ok": False, "error": "Pull info failed. You can still enter it manually."}), 500
+
+
+try:
+    found_preview_route = False
+
+    for rule in list(app.url_map.iter_rules()):
+        if str(rule.rule) == "/litefeet-music/link-preview":
+            app.view_functions[rule.endpoint] = pull_music_link_preview_route
+            found_preview_route = True
+            print(f"MUSIC PROJECT PULL INFO override active: {rule.endpoint}")
+
+    if not found_preview_route:
+        app.add_url_rule(
+            "/litefeet-music/link-preview",
+            "pull_music_link_preview_route",
+            pull_music_link_preview_route,
+            methods=["GET", "POST"],
+        )
+        print("MUSIC PROJECT PULL INFO route added.")
+
+    print("MUSIC PROJECT PULL INFO FIX active")
+except Exception as exc:
+    print(f"MUSIC PROJECT PULL INFO setup failed: {type(exc).__name__}: {exc}")
+
