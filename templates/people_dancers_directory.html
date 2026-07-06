@@ -124,7 +124,17 @@
                     {% for profile in profiles %}
                         <tr>
                             <td class="name-cell">
-                                {% set profile_href = profile.profile_url or profile.public_url or (url_for('dancer_profile_detail_by_id', dancer_id=profile.id) if profile.id else '') %}
+                                {% set profile_id = profile.id or profile.profile_id or profile.dancer_id or profile.dancer_profile_id %}
+                                {% set profile_slug = profile.profile_slug or profile.slug %}
+                                {% set profile_href = profile.profile_url or profile.public_url or "" %}
+
+                                {% if not profile_href and profile_id %}
+                                    {% set profile_href = url_for('dancer_profile_detail_by_id', dancer_id=profile_id) %}
+                                {% endif %}
+
+                                {% if not profile_href and profile_slug %}
+                                    {% set profile_href = url_for('dancer_profile_detail', profile_slug=profile_slug) %}
+                                {% endif %}
 
                                 {% if profile_href %}
                                     <a class="profile-directory-link" href="{{ profile_href }}">{{ profile.display_name }}</a>
@@ -435,6 +445,128 @@
 
     .people-table-summary {
         color: #F2EFE6 !important;
+    }
+
+
+    /* --- PEOPLE DIRECTORY HARD VISIBILITY + LINK FIX --- */
+
+    .people-scroll-table {
+        background: #F2EFE6 !important;
+        border: 1px solid rgba(138, 111, 42, 0.55) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.32) !important;
+        overflow: auto !important;
+    }
+
+    .people-directory-table {
+        background: #F2EFE6 !important;
+        color: #0A0A0A !important;
+        width: 100% !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+
+    .people-directory-table thead,
+    .people-directory-table thead tr,
+    .people-directory-table thead th {
+        background: #E3C66A !important;
+        color: #0A0A0A !important;
+        opacity: 1 !important;
+    }
+
+    .people-directory-table th,
+    .people-directory-table td {
+        color: #0A0A0A !important;
+        border-bottom: 1px solid rgba(10,10,10,0.12) !important;
+        border-right: 1px solid rgba(10,10,10,0.08) !important;
+    }
+
+    .people-directory-table tbody td {
+        background: #F2EFE6 !important;
+        color: #0A0A0A !important;
+    }
+
+    .people-directory-table tbody tr:nth-child(even) td {
+        background: #F7E9C6 !important;
+    }
+
+    .people-directory-table tbody tr:hover td {
+        background: rgba(227, 198, 106, 0.28) !important;
+    }
+
+    .people-directory-table .profile-directory-link,
+    .people-directory-table .profile-directory-link:link,
+    .people-directory-table .profile-directory-link:visited,
+    .people-directory-table .profile-directory-name,
+    .people-directory-table .people-filter-link,
+    .people-directory-table .people-filter-link:link,
+    .people-directory-table .people-filter-link:visited,
+    .people-directory-table .table-sort-link,
+    .people-directory-table .table-sort-link:link,
+    .people-directory-table .table-sort-link:visited {
+        color: #8A6F2A !important;
+        font-weight: 1000 !important;
+        text-decoration: none !important;
+    }
+
+    .people-directory-table .profile-directory-link:hover,
+    .people-directory-table .people-filter-link:hover,
+    .people-directory-table .table-sort-link:hover {
+        text-decoration: underline !important;
+        text-underline-offset: 3px !important;
+    }
+
+    .people-directory-table .role-chip,
+    .people-directory-table .role-chip:link,
+    .people-directory-table .role-chip:visited,
+    .people-directory-table .status-pill {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 58px !important;
+        background: #0A0A0A !important;
+        color: #E3C66A !important;
+        border: 1px solid rgba(227, 198, 106, 0.60) !important;
+        border-radius: 999px !important;
+        padding: 4px 9px !important;
+        margin: 0 4px 4px 0 !important;
+        font-size: 0.76rem !important;
+        font-weight: 900 !important;
+        line-height: 1.1 !important;
+        text-decoration: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    .people-directory-table .role-chip *,
+    .people-directory-table .status-pill * {
+        color: #E3C66A !important;
+    }
+
+    .people-directory-table .stats-cell strong,
+    .people-table-summary strong {
+        color: #8A6F2A !important;
+    }
+
+    .people-directory-table .name-cell small,
+    .people-directory-table .stats-cell small {
+        color: rgba(10, 10, 10, 0.68) !important;
+    }
+
+    .people-filter-form select,
+    .people-filter-form input {
+        background: #F2EFE6 !important;
+        color: #0A0A0A !important;
+        border: 1px solid rgba(138, 111, 42, 0.55) !important;
+        border-radius: 8px !important;
+    }
+
+    .people-table-summary {
+        color: #F2EFE6 !important;
+    }
+
+    .people-table-summary span {
+        color: rgba(242, 239, 230, 0.75) !important;
     }
 
 </style>
