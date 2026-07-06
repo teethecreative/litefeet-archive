@@ -3,585 +3,521 @@
 {% block title %}Submit Music | The LiteFeet Ledger{% endblock %}
 
 {% block content %}
-<section class="page-hero submit-music-hero">
-    <div class="submit-music-hero-grid">
+<section class="content-section submit-music-page">
+    <div class="submit-music-heading">
         <div>
             <p class="eyebrow">LiteFeet Music</p>
             <h1>Submit Music</h1>
-            <p>
-                Paste a music link, let the Ledger pull what it can, edit the details, then submit it as a single song or project.
-            </p>
+            <p>Paste a music link, let the Ledger pull what it can, then clean up the details before submitting.</p>
         </div>
 
-        <div class="hero-actions">
-            <a class="button secondary" href="/litefeet-music">Back to LiteFeet Music</a>
-        </div>
+        <a class="button secondary" href="{{ url_for('litefeet_music') }}">Back to LiteFeet Music</a>
     </div>
-</section>
 
-<section class="submit-music-shell">
-    {% if error %}
-        <div class="submit-alert">{{ error }}</div>
-    {% endif %}
-
-    <form method="POST" class="submit-music-form" id="submitMusicForm">
-        <div class="music-form-card">
-            <div class="music-form-card-header">
-                <p class="eyebrow">Step 1</p>
+    <form method="POST" action="{{ request.path }}" class="music-intake-form" data-music-intake-form>
+        <section class="music-intake-card step-card step-link-card">
+            <div class="step-heading">
+                <span>Step 1</span>
                 <h2>Paste the link first</h2>
-                <p>The site will try YouTube/SoundCloud public info first. You can still edit everything before submitting.</p>
+                <p>Use the main YouTube or SoundCloud link. You can edit everything before submitting.</p>
             </div>
 
-            <label class="full">
-                <span>Main music / project link</span>
-                <div class="link-preview-row">
-                    <input id="musicUrlInput" type="url" name="url" placeholder="Paste SoundCloud, YouTube, Spotify, Apple Music, Audiomack, etc.">
-                    <button class="button secondary" type="button" id="fetchMusicInfo">Pull info</button>
-                </div>
-                <small class="form-help" id="musicPreviewStatus">Paste a link, then press Pull info.</small>
-            </label>
-        </div>
-
-        <div class="music-form-card">
-            <div class="music-form-card-header">
-                <p class="eyebrow">Step 2</p>
-                <h2>Single or Project?</h2>
-                <p>Choose single song for one track. Choose project if you need track 1, track 2, track 3, etc.</p>
-            </div>
-
-            <div class="submission-type-grid">
-                <label class="type-option">
-                    <input type="radio" name="submission_kind" value="single" checked>
-                    <span>
-                        <strong>Single song</strong>
-                        <small>One track, producer drop, remix, battle song, or video link.</small>
-                    </span>
-                </label>
-
-                <label class="type-option">
-                    <input type="radio" name="submission_kind" value="project">
-                    <span>
-                        <strong>Project</strong>
-                        <small>Album, EP, tape, playlist, or grouped release with multiple track links.</small>
-                    </span>
-                </label>
-            </div>
-        </div>
-
-        <div class="music-form-card">
-            <div class="music-form-card-header">
-                <p class="eyebrow">Step 3</p>
-                <h2>Release Details</h2>
-                <p>Review what was pulled from the link and fix anything that is missing.</p>
-            </div>
-
-            <div class="music-form-grid two">
+            <div class="link-pull-row">
                 <label>
-                    <span>Title</span>
-                    <input type="text" name="title" placeholder="Track or project title" required>
+                    Main music / project link
+                    <input type="url" name="main_music_link" data-main-music-link placeholder="https://soundcloud.com/..." value="{{ request.form.get('main_music_link', '') }}">
+                </label>
+
+                <button class="button secondary" type="button" data-pull-main-info>Pull info</button>
+            </div>
+
+            <p class="small-note" data-link-pull-status>Info pulled. Review and edit before submitting.</p>
+        </section>
+
+        <section class="music-intake-card step-card step-kind-card">
+            <div class="step-heading">
+                <span>Step 2</span>
+                <h2>Single or project?</h2>
+                <p>Choose single for one track. Choose project for albums, EPs, tapes, playlists, or grouped releases.</p>
+            </div>
+
+            <div class="music-kind-toggle">
+                <label class="kind-option">
+                    <input type="radio" name="submission_kind" value="single" data-submission-kind {% if request.form.get('submission_kind', 'single') != 'project' %}checked{% endif %}>
+                    <strong>Single song</strong>
+                    <span>One track, producer drop, remix, battle song, or video link.</span>
+                </label>
+
+                <label class="kind-option">
+                    <input type="radio" name="submission_kind" value="project" data-submission-kind {% if request.form.get('submission_kind') == 'project' %}checked{% endif %}>
+                    <strong>Project</strong>
+                    <span>Album, EP, tape, playlist, or grouped release with multiple track links.</span>
+                </label>
+            </div>
+        </section>
+
+        <section class="music-intake-card step-card single-details-section" data-single-details>
+            <div class="step-heading">
+                <span>Step 3</span>
+                <h2>Release details</h2>
+                <p>For a single, this is the main record information.</p>
+            </div>
+
+            <div class="music-form-grid">
+                <label>
+                    Title
+                    <input type="text" name="title" data-title-field value="{{ request.form.get('title', '') }}">
                 </label>
 
                 <label>
-                    <span>Artist / Producer / Creator</span>
-                    <input type="text" name="artist_or_creator" placeholder="Name connected to the release" required>
+                    Artist / Producer / Creator
+                    <input type="text" name="artist_or_creator" data-artist-field value="{{ request.form.get('artist_or_creator', '') }}">
                 </label>
 
                 <label>
-                    <span>Producer name, if different</span>
-                    <input type="text" name="producer_name" placeholder="Optional">
+                    Producer name, if different
+                    <input type="text" name="producer" value="{{ request.form.get('producer', '') }}">
                 </label>
 
                 <label>
-                    <span>Platform</span>
-                    <select name="platform">
-                        <option value="">Choose platform</option>
-                        <option>SoundCloud</option>
-                        <option>YouTube</option>
-                        <option>Spotify</option>
-                        <option>Apple Music</option>
-                        <option>Audiomack</option>
-                        <option>Bandcamp</option>
-                        <option>Other</option>
+                    Platform
+                    <select name="platform" data-platform-field>
+                        {% set selected_platform = request.form.get('platform', '') %}
+                        {% for platform in ["SoundCloud", "YouTube", "Spotify", "Apple Music", "Bandcamp", "Audiomack", "Other"] %}
+                            <option value="{{ platform }}" {% if selected_platform == platform %}selected{% endif %}>{{ platform }}</option>
+                        {% endfor %}
                     </select>
                 </label>
 
                 <label>
-                    <span>Release date</span>
-                    <input type="date" name="release_date">
+                    Release date
+                    <input type="date" name="release_date" value="{{ request.form.get('release_date', '') }}">
                 </label>
 
                 <label>
-                    <span>Status</span>
-                    <select name="release_stage">
-                        <option value="released">Released</option>
-                        <option value="upcoming">Upcoming</option>
-                        <option value="archival">Archival / older record</option>
+                    Status
+                    <select name="status">
+                        {% set selected_status = request.form.get('status', 'Released') %}
+                        {% for status in ["Released", "Upcoming", "Unreleased", "Draft"] %}
+                            <option value="{{ status }}" {% if selected_status == status %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
                     </select>
                 </label>
             </div>
 
-            <label class="full">
-                <span>Context / notes</span>
-                <textarea name="description" rows="6" placeholder="Credits, where it came from, why it matters, battle/event context, or anything that helps verify the record."></textarea>
+            <label>
+                Context / notes
+                <textarea name="description" rows="5">{{ request.form.get('description', '') }}</textarea>
             </label>
-        </div>
+        </section>
 
-        <div class="music-form-card project-track-card" id="projectTracksCard" hidden>
-            <div class="music-form-card-header">
-                <p class="eyebrow">Project Tracks</p>
-                <h2>Track Links</h2>
+        <section class="music-intake-card step-card project-meta-section" data-project-meta hidden>
+            <div class="step-heading">
+                <span>Step 3</span>
+                <h2>Project metadata</h2>
+                <p>Add the project-level information first. Track links come next.</p>
+            </div>
+
+            <div class="music-form-grid">
+                <label>
+                    Project name
+                    <input type="text" name="project_name" data-project-name value="{{ request.form.get('project_name', request.form.get('title', '')) }}">
+                </label>
+
+                <label>
+                    Producer(s)
+                    <input type="text" name="project_producers" data-project-producers value="{{ request.form.get('project_producers', request.form.get('artist_or_creator', '')) }}">
+                </label>
+
+                <label>
+                    Release date
+                    <input type="date" name="project_release_date" data-project-release-date value="{{ request.form.get('project_release_date', request.form.get('release_date', '')) }}">
+                </label>
+
+                <label>
+                    Number of tracks
+                    <input type="number" name="project_track_count" data-project-track-count min="1" step="1" value="{{ request.form.get('project_track_count', '') }}">
+                </label>
+            </div>
+
+            <label>
+                Description / context <span class="optional-text">(optional)</span>
+                <textarea name="project_description" rows="4" data-project-description>{{ request.form.get('project_description', request.form.get('description', '')) }}</textarea>
+            </label>
+
+            <input type="hidden" name="title" data-shared-title value="{{ request.form.get('title', '') }}">
+            <input type="hidden" name="artist_or_creator" data-shared-artist value="{{ request.form.get('artist_or_creator', '') }}">
+            <input type="hidden" name="release_date" data-shared-release-date value="{{ request.form.get('release_date', '') }}">
+            <input type="hidden" name="description" data-shared-description value="{{ request.form.get('description', '') }}">
+        </section>
+
+        <section class="music-intake-card step-card project-tracks-section" data-project-tracks hidden>
+            <div class="step-heading">
+                <span>Step 4</span>
+                <h2>Track links</h2>
                 <p>Add each track link. Pull info can fill track titles when the source supports it.</p>
             </div>
 
-            <div id="projectTracksList" class="project-tracks-list"></div>
+            <div class="track-list" data-track-list>
+                <div class="track-row" data-track-row>
+                    <div class="track-number-pill">Track 1</div>
 
-            <button class="button secondary" type="button" id="addProjectTrack">Add another track</button>
-        </div>
+                    <label>
+                        Track title
+                        <input type="text" name="track_title">
+                    </label>
 
-        <div class="music-form-card">
-            <div class="music-form-card-header">
-                <p class="eyebrow">Submitted By</p>
-                <h2>Contact</h2>
-                <p>This helps the Ledger follow up if the record needs verification.</p>
+                    <label>
+                        Track URL
+                        <input type="url" name="track_url">
+                    </label>
+
+                    <label>
+                        Platform
+                        <input type="text" name="track_platform" placeholder="Auto or type">
+                    </label>
+
+                    <label>
+                        Notes
+                        <input type="text" name="track_notes">
+                    </label>
+
+                    <div class="track-actions">
+                        <button class="button secondary" type="button" data-pull-track-info>Pull</button>
+                        <button class="button secondary" type="button" data-remove-track>Remove</button>
+                    </div>
+                </div>
             </div>
 
-            <div class="music-form-grid two">
-                <label>
-                    <span>Your name / handle</span>
-                    <input type="text" name="submitter_name" placeholder="Optional">
-                </label>
+            <button class="button secondary add-track-button" type="button" data-add-track>Add another track</button>
+        </section>
 
-                <label>
-                    <span>Contact</span>
-                    <input type="text" name="submitter_contact" placeholder="Optional email or IG">
-                </label>
-            </div>
-        </div>
-
-        <div class="music-form-actions">
+        <div class="music-intake-submit-row">
             <button class="button primary" type="submit">Submit Music</button>
-            <a class="button secondary" href="/litefeet-music">Cancel</a>
         </div>
     </form>
 </section>
 
-<template id="projectTrackTemplate">
-    <div class="project-track-row">
-        <div class="track-number-pill">Track <span data-track-number>1</span></div>
-
-        <label>
-            <span>Track title</span>
-            <input type="text" name="track_titles[]" placeholder="Track title">
-        </label>
-
-        <label>
-            <span>Track URL</span>
-            <div class="link-preview-row">
-                <input type="url" name="track_urls[]" placeholder="Paste track URL">
-                <button class="button secondary track-fetch-button" type="button">Pull</button>
-            </div>
-        </label>
-
-        <label>
-            <span>Platform</span>
-            <input type="text" name="track_platforms[]" placeholder="Auto or manual">
-        </label>
-
-        <label>
-            <span>Notes</span>
-            <input type="text" name="track_notes[]" placeholder="Optional">
-        </label>
-
-        <button class="button secondary remove-track-button" type="button">Remove</button>
-    </div>
-</template>
-
 <style>
-    .submit-music-hero {
-        padding-bottom: 28px;
+    .submit-music-page {
+        max-width: 1100px;
+        margin-inline: auto;
     }
 
-    .submit-music-hero-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 24px;
-        align-items: end;
-    }
-
-    .submit-music-shell {
-        max-width: 1040px;
-        margin: 0 auto;
-        padding: 0 0 48px;
-    }
-
-    .submit-alert {
-        border: 1px solid rgba(255, 85, 85, 0.7);
-        background: rgba(255, 85, 85, 0.08);
-        border-radius: 14px;
-        padding: 14px 16px;
-        margin-bottom: 18px;
-        font-weight: 800;
-    }
-
-    .submit-music-form {
-        display: grid;
-        gap: 20px;
-    }
-
-    .music-form-card {
-        border: 1px solid rgba(232, 198, 90, 0.24);
-        background: rgba(255, 255, 255, 0.035);
-        border-radius: 18px;
-        padding: 20px;
-        display: grid;
+    .submit-music-heading {
+        display: flex;
+        justify-content: space-between;
         gap: 18px;
-        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+        align-items: flex-start;
+        margin-bottom: 20px;
     }
 
-    .music-form-card-header {
+    .music-intake-form {
         display: grid;
-        gap: 6px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .music-form-card-header h2 {
-        margin: 0;
-        color: var(--accent-color, #e8c65a);
-        font-size: clamp(1.5rem, 3vw, 2.25rem);
-    }
-
-    .music-form-card-header p {
-        margin: 0;
-        opacity: 0.82;
-    }
-
-    .music-form-grid,
-    .submission-type-grid {
-        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 16px;
     }
 
-    .music-form-grid.two,
-    .submission-type-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .music-intake-card {
+        background: #F2EFE6 !important;
+        color: #0A0A0A !important;
+        border: 1px solid rgba(138, 111, 42, 0.46) !important;
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 14px 32px rgba(0,0,0,0.30);
     }
 
-    .submit-music-form label {
-        display: grid;
-        gap: 7px;
-        font-weight: 800;
+    .music-intake-card *,
+    .music-intake-card label {
+        color: #0A0A0A !important;
     }
 
-    .submit-music-form label span {
-        color: #f5f1e8;
+    .step-heading {
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(138, 111, 42, 0.24);
     }
 
-    .submit-music-form input,
-    .submit-music-form select,
-    .submit-music-form textarea {
-        width: 100%;
-        min-height: 46px;
-        border-radius: 12px;
-        border: 1px solid rgba(232, 198, 90, 0.35);
-        background: rgba(0, 0, 0, 0.28);
-        color: #fff;
-        padding: 10px 12px;
-        font: inherit;
-    }
-
-    .submit-music-form textarea {
-        min-height: 145px;
-        resize: vertical;
-        line-height: 1.45;
-    }
-
-    .submit-music-form input::placeholder,
-    .submit-music-form textarea::placeholder {
-        color: rgba(255, 255, 255, 0.48);
-    }
-
-    .submit-music-form input:focus,
-    .submit-music-form select:focus,
-    .submit-music-form textarea:focus {
-        outline: none;
-        border-color: var(--accent-color, #e8c65a);
-        box-shadow: 0 0 0 3px rgba(232, 198, 90, 0.14);
-    }
-
-    .link-preview-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 10px;
-    }
-
-    .form-help {
-        opacity: 0.72;
-        font-weight: 700;
-    }
-
-    .type-option {
-        border: 1px solid rgba(232, 198, 90, 0.24);
-        background: rgba(0, 0, 0, 0.18);
-        border-radius: 16px;
-        padding: 14px;
-        display: grid !important;
-        grid-template-columns: auto 1fr;
-        align-items: start;
-        gap: 12px;
-        cursor: pointer;
-    }
-
-    .type-option input {
-        width: auto;
-        min-height: auto;
-        margin-top: 4px;
-    }
-
-    .type-option strong {
+    .step-heading span,
+    .step-heading .eyebrow {
         display: block;
-        color: var(--accent-color, #e8c65a);
+        color: #8A6F2A !important;
+        font-weight: 1000;
+        text-transform: uppercase;
+        letter-spacing: 0.11em;
+        font-size: 0.76rem;
         margin-bottom: 4px;
     }
 
-    .type-option small {
-        display: block;
-        opacity: 0.76;
-        line-height: 1.35;
+    .step-heading h2 {
+        color: #8A6F2A !important;
+        margin: 0 0 4px;
+        font-size: clamp(1.6rem, 3vw, 2.25rem);
+        line-height: 1;
     }
 
-    .project-tracks-list {
-        display: grid;
-        gap: 14px;
+    .step-heading p {
+        color: rgba(10,10,10,0.72) !important;
+        margin: 0;
     }
 
-    .project-track-row {
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        background: rgba(0, 0, 0, 0.18);
-        border-radius: 16px;
-        padding: 14px;
+    .step-card label {
         display: grid;
-        grid-template-columns: 90px minmax(0, 1.2fr) minmax(0, 1.5fr) minmax(0, 0.8fr) minmax(0, 1fr) auto;
+        gap: 6px;
+        font-weight: 900;
+    }
+
+    .step-card input,
+    .step-card select,
+    .step-card textarea {
+        width: 100%;
+        background: rgba(10,10,10,0.055) !important;
+        color: #0A0A0A !important;
+        border: 1px solid rgba(138, 111, 42, 0.46) !important;
+        border-radius: 10px;
+        padding: 10px 11px;
+        font: inherit;
+    }
+
+    .link-pull-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
         gap: 10px;
         align-items: end;
     }
 
-    .track-number-pill {
-        align-self: center;
-        border: 1px solid rgba(232, 198, 90, 0.32);
-        border-radius: 999px;
-        padding: 8px 10px;
-        color: var(--accent-color, #e8c65a);
-        font-weight: 900;
-        text-align: center;
+    .music-kind-toggle {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
     }
 
-    .remove-track-button,
-    .track-fetch-button {
-        white-space: nowrap;
+    .kind-option {
+        border: 1px solid rgba(138,111,42,0.40);
+        border-radius: 14px;
+        padding: 14px;
+        cursor: pointer;
+        background: rgba(227,198,106,0.10);
     }
 
-    .full {
+    .kind-option input {
+        width: auto;
+        margin: 0 8px 0 0;
+    }
+
+    .kind-option strong {
+        color: #8A6F2A !important;
+        display: inline-block;
+        margin-bottom: 4px;
+    }
+
+    .kind-option span {
+        display: block;
+        color: rgba(10,10,10,0.70) !important;
+        font-size: 0.92rem;
+        line-height: 1.25;
+    }
+
+    .kind-option:has(input:checked) {
+        background: rgba(227,198,106,0.28);
+        border-color: #8A6F2A;
+    }
+
+    .music-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .single-details-section,
+    .project-meta-section,
+    .project-tracks-section {
         grid-column: 1 / -1;
     }
 
-    .music-form-actions {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: flex-end;
+    .track-list {
+        display: grid;
+        gap: 10px;
     }
 
-    .music-form-actions .button {
-        min-width: 150px;
+    .track-row {
+        display: grid;
+        grid-template-columns: 86px minmax(160px, 1fr) minmax(220px, 1.4fr) minmax(120px, 0.8fr) minmax(160px, 1fr) auto;
+        gap: 10px;
+        align-items: end;
+        border: 1px solid rgba(138,111,42,0.32);
+        border-radius: 14px;
+        padding: 12px;
+        background: rgba(227,198,106,0.10);
+    }
+
+    .track-number-pill {
+        background: #0A0A0A;
+        color: #E3C66A !important;
+        border-radius: 999px;
+        padding: 9px 12px;
+        font-weight: 1000;
+        text-align: center;
+        align-self: center;
+    }
+
+    .track-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .add-track-button {
+        margin-top: 12px;
+        width: 100%;
         justify-content: center;
     }
 
-    @media (max-width: 1000px) {
-        .project-track-row {
-            grid-template-columns: 1fr;
-        }
-
-        .track-number-pill {
-            width: max-content;
-        }
+    .music-intake-submit-row {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: flex-end;
     }
 
-    @media (max-width: 760px) {
-        .submit-music-hero-grid,
-        .music-form-grid.two,
-        .submission-type-grid,
-        .link-preview-row {
+    .optional-text {
+        color: rgba(10,10,10,0.55) !important;
+        font-weight: 700;
+    }
+
+    [hidden] {
+        display: none !important;
+    }
+
+    @media (max-width: 1000px) {
+        .music-intake-form,
+        .music-kind-toggle,
+        .music-form-grid,
+        .link-pull-row {
             grid-template-columns: 1fr;
         }
 
-        .music-form-actions {
-            justify-content: stretch;
+        .submit-music-heading {
+            display: grid;
         }
 
-        .music-form-actions .button {
-            width: 100%;
+        .track-row {
+            grid-template-columns: 1fr;
+        }
+
+        .track-actions {
+            display: grid;
         }
     }
 </style>
 
 <script>
 (function () {
-    const form = document.getElementById("submitMusicForm");
-    const urlInput = document.getElementById("musicUrlInput");
-    const fetchButton = document.getElementById("fetchMusicInfo");
-    const statusEl = document.getElementById("musicPreviewStatus");
-    const projectCard = document.getElementById("projectTracksCard");
-    const addTrackButton = document.getElementById("addProjectTrack");
-    const tracksList = document.getElementById("projectTracksList");
-    const template = document.getElementById("projectTrackTemplate");
+    const form = document.querySelector("[data-music-intake-form]");
+    if (!form) return;
 
-    function field(name) {
-        return form.querySelector(`[name="${name}"]`);
+    const singleSection = form.querySelector("[data-single-details]");
+    const projectMeta = form.querySelector("[data-project-meta]");
+    const projectTracks = form.querySelector("[data-project-tracks]");
+
+    const sharedTitle = form.querySelector("[data-shared-title]");
+    const sharedArtist = form.querySelector("[data-shared-artist]");
+    const sharedDate = form.querySelector("[data-shared-release-date]");
+    const sharedDescription = form.querySelector("[data-shared-description]");
+
+    const projectName = form.querySelector("[data-project-name]");
+    const projectProducers = form.querySelector("[data-project-producers]");
+    const projectDate = form.querySelector("[data-project-release-date]");
+    const projectDescription = form.querySelector("[data-project-description]");
+    const projectTrackCount = form.querySelector("[data-project-track-count]");
+
+    const titleField = form.querySelector("[data-title-field]");
+    const artistField = form.querySelector("[data-artist-field]");
+
+    function currentKind() {
+        const checked = form.querySelector('[data-submission-kind]:checked');
+        return checked ? checked.value : "single";
     }
 
-    function fillIfEmpty(name, value) {
-        const el = field(name);
-        if (el && !el.value && value) {
-            el.value = value;
-        }
+    function syncProjectHiddenFields() {
+        if (currentKind() !== "project") return;
+
+        if (sharedTitle && projectName) sharedTitle.value = projectName.value || "";
+        if (sharedArtist && projectProducers) sharedArtist.value = projectProducers.value || "";
+        if (sharedDate && projectDate) sharedDate.value = projectDate.value || "";
+        if (sharedDescription && projectDescription) sharedDescription.value = projectDescription.value || "";
     }
 
-    function setSelectIfOption(name, value) {
-        const el = field(name);
-        if (!el || !value) return;
+    function syncFlow() {
+        const isProject = currentKind() === "project";
 
-        const match = Array.from(el.options).find(option => {
-            return option.value.toLowerCase() === value.toLowerCase() || option.textContent.toLowerCase() === value.toLowerCase();
-        });
+        if (singleSection) singleSection.hidden = isProject;
+        if (projectMeta) projectMeta.hidden = !isProject;
+        if (projectTracks) projectTracks.hidden = !isProject;
 
-        if (match && !el.value) {
-            el.value = match.value || match.textContent;
-        }
+        if (titleField) titleField.disabled = isProject;
+        if (artistField) artistField.disabled = isProject;
+
+        if (isProject) syncProjectHiddenFields();
     }
 
-    async function previewUrl(url) {
-        const response = await fetch(`/litefeet-music/link-preview?url=${encodeURIComponent(url)}`);
-        const data = await response.json();
-
-        if (!response.ok || !data.ok) {
-            throw new Error(data.error || "Could not pull info from this link.");
-        }
-
-        return data;
-    }
-
-    async function pullMainInfo() {
-        const url = urlInput.value.trim();
-
-        if (!url) {
-            statusEl.textContent = "Paste a link first.";
-            return;
-        }
-
-        statusEl.textContent = "Pulling info...";
-
-        try {
-            const data = await previewUrl(url);
-
-            fillIfEmpty("title", data.title);
-            fillIfEmpty("artist_or_creator", data.artist_or_creator);
-            setSelectIfOption("platform", data.platform);
-
-            statusEl.textContent = data.source === "oembed"
-                ? "Info pulled. Review and edit before submitting."
-                : "Basic info pulled from the URL. Review and edit before submitting.";
-        } catch (error) {
-            statusEl.textContent = error.message || "Could not pull info. You can still enter it manually.";
-        }
-    }
-
-    function renumberTracks() {
-        tracksList.querySelectorAll(".project-track-row").forEach((row, index) => {
-            const numberEl = row.querySelector("[data-track-number]");
-            if (numberEl) numberEl.textContent = String(index + 1);
-        });
-    }
-
-    function addTrack(urlValue = "") {
-        const fragment = template.content.cloneNode(true);
-        const row = fragment.querySelector(".project-track-row");
-
-        if (urlValue) {
-            const urlField = row.querySelector('[name="track_urls[]"]');
-            if (urlField) urlField.value = urlValue;
-        }
-
-        row.querySelector(".remove-track-button").addEventListener("click", () => {
-            row.remove();
-
-            if (!tracksList.children.length) {
-                addTrack();
-            }
-
-            renumberTracks();
-        });
-
-        row.querySelector(".track-fetch-button").addEventListener("click", async () => {
-            const trackUrl = row.querySelector('[name="track_urls[]"]');
-            const trackTitle = row.querySelector('[name="track_titles[]"]');
-            const trackPlatform = row.querySelector('[name="track_platforms[]"]');
-
-            if (!trackUrl.value.trim()) {
-                trackUrl.focus();
-                return;
-            }
-
-            row.classList.add("is-loading");
-
-            try {
-                const data = await previewUrl(trackUrl.value.trim());
-
-                if (trackTitle && !trackTitle.value && data.title) {
-                    trackTitle.value = data.title;
-                }
-
-                if (trackPlatform && !trackPlatform.value && data.platform) {
-                    trackPlatform.value = data.platform;
-                }
-            } catch (error) {
-                console.warn(error);
-            } finally {
-                row.classList.remove("is-loading");
-            }
-        });
-
-        tracksList.appendChild(fragment);
-        renumberTracks();
-    }
-
-    function syncSubmissionType() {
-        const selected = form.querySelector('[name="submission_kind"]:checked');
-        const isProject = selected && selected.value === "project";
-
-        projectCard.hidden = !isProject;
-
-        if (isProject && !tracksList.children.length) {
-            addTrack(urlInput.value.trim());
-        }
-    }
-
-    fetchButton.addEventListener("click", pullMainInfo);
-
-    urlInput.addEventListener("paste", () => {
-        window.setTimeout(() => {
-            if (urlInput.value.trim()) pullMainInfo();
-        }, 150);
+    form.querySelectorAll("[data-submission-kind]").forEach((radio) => {
+        radio.addEventListener("change", syncFlow);
     });
 
-    form.querySelectorAll('[name="submission_kind"]').forEach(input => {
-        input.addEventListener("change", syncSubmissionType);
+    [projectName, projectProducers, projectDate, projectDescription].forEach((field) => {
+        if (field) field.addEventListener("input", syncProjectHiddenFields);
     });
 
-    addTrackButton.addEventListener("click", () => addTrack());
+    const trackList = form.querySelector("[data-track-list]");
+    const addTrack = form.querySelector("[data-add-track]");
 
-    syncSubmissionType();
+    function updateTrackNumbers() {
+        if (!trackList) return;
+
+        const rows = Array.from(trackList.querySelectorAll("[data-track-row]"));
+
+        rows.forEach((row, index) => {
+            const pill = row.querySelector(".track-number-pill");
+            if (pill) pill.textContent = `Track ${index + 1}`;
+        });
+
+        if (projectTrackCount && currentKind() === "project") {
+            projectTrackCount.value = rows.length;
+        }
+    }
+
+    if (trackList && addTrack) {
+        addTrack.addEventListener("click", () => {
+            const first = trackList.querySelector("[data-track-row]");
+            if (!first) return;
+
+            const clone = first.cloneNode(true);
+
+            clone.querySelectorAll("input").forEach((input) => {
+                input.value = "";
+            });
+
+            trackList.appendChild(clone);
+            updateTrackNumbers();
+        });
+
+        trackList.addEventListener("click", (event) => {
+            const remove = event.target.closest("[data-remove-track]");
+            if (!remove) return;
+
+            const rows = Array.from(trackList.querySelectorAll("[data-track-row]"));
+            if (rows.length <= 1) return;
+
+            remove.closest("[data-track-row]").remove();
+            updateTrackNumbers();
+        });
+    }
+
+    form.addEventListener("submit", syncProjectHiddenFields);
+
+    syncFlow();
+    updateTrackNumbers();
 })();
 </script>
 {% endblock %}
