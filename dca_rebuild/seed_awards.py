@@ -65,7 +65,16 @@ def get_or_create_edition(db, year):
     if edition:
         return edition
 
-    edition = DCAEdition(year=year)
+    title = (
+        "Dancer's Choice Awards 2023"
+        if year == 2023
+        else "Dancer's Choice Awards 2026"
+    )
+
+    edition = DCAEdition(
+        year=year,
+        title=title,
+    )
 
     db.add(edition)
     db.flush()
@@ -98,10 +107,17 @@ def seed():
             if name in existing:
                 continue
 
+            normalized_name = " ".join(
+                name.lower().split()
+            )
+
             db.add(
                 DCACategory(
                     edition_id=historical.id,
                     name=name,
+                    normalized_name=normalized_name,
+                    source_type="historical_2023",
+                    status="candidate",
                 )
             )
 
