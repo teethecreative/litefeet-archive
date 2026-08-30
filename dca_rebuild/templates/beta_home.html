@@ -139,17 +139,58 @@
         WHAT'S BEING TESTED
     </h2>
 
+    {% if beta_features %}
+
+    <div class="beta-feature-grid">
+        {% for feature in beta_features %}
+
+        <article class="beta-feature-card">
+            <div class="beta-feature-card__status">
+                {% if feature.visibility == "beta" %}
+                    TESTING NOW
+                {% elif feature.visibility == "public" %}
+                    PUBLIC
+                {% else %}
+                    IN DEVELOPMENT
+                {% endif %}
+            </div>
+
+            <h3>
+                {{ feature.name }}
+            </h3>
+
+            <p>
+                {{ feature.description }}
+            </p>
+
+            {% if feature.visibility == "beta" %}
+                <span class="beta-feature-badge">
+                    BETA
+                </span>
+            {% elif feature.visibility == "placeholder" %}
+                <span class="beta-feature-badge">
+                    IN DEVELOPMENT
+                </span>
+            {% endif %}
+        </article>
+
+        {% endfor %}
+    </div>
+
+    {% else %}
+
     <div class="beta-empty-state">
         <strong>
-            THE NEXT LEDGER FEATURES
-            ARE BEING PREPARED.
+            NO BETA FEATURES ARE OPEN RIGHT NOW.
         </strong>
 
         <p>
-            Testing areas will appear here
-            as they're opened.
+            Check back as new Ledger systems
+            enter testing.
         </p>
     </div>
+
+    {% endif %}
 
 </section>
 

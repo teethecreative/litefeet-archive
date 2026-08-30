@@ -3049,3 +3049,126 @@ main a:not(.site-nav a):not(.ledger-footer a):hover,
         flex-direction: column;
     }
 }
+
+
+/* LITEFEET LEDGER — BETA FEATURE FLAGS */
+
+.beta-feature-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+    margin-top: 22px;
+}
+
+.beta-feature-card {
+    min-height: 205px;
+    padding: 22px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+}
+
+.beta-feature-card h3 {
+    margin: 16px 0 10px;
+}
+
+.beta-feature-card p {
+    line-height: 1.5;
+}
+
+.beta-feature-card__status,
+.beta-feature-badge {
+    display: inline-flex;
+    padding: 5px 8px;
+    border: 1px solid var(--gold);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .1em;
+}
+
+.beta-feature-badge {
+    margin-top: 12px;
+    color: #071a38;
+    background: var(--gold);
+}
+
+.beta-admin-legend {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.beta-admin-legend > div {
+    display: grid;
+    gap: 6px;
+    padding: 15px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 12px;
+}
+
+.beta-admin-list {
+    display: grid;
+    gap: 12px;
+}
+
+.beta-admin-feature {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr) minmax(180px, 260px);
+    gap: 24px;
+    align-items: center;
+    padding: 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.beta-admin-feature h2 {
+    margin: 8px 0;
+}
+
+.beta-admin-feature code {
+    font-size: 10px;
+}
+
+.beta-admin-feature__form {
+    display: grid;
+    gap: 10px;
+}
+
+.beta-admin-feature__form label {
+    display: grid;
+    gap: 7px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+
+.beta-admin-feature__form select,
+.beta-admin-feature__form button {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.beta-admin-feature__form button {
+    color: #071a38;
+    background: var(--gold);
+    border-color: var(--gold);
+    cursor: pointer;
+}
+
+@media (max-width: 700px) {
+    .beta-admin-feature {
+        grid-template-columns: 1fr;
+    }
+}

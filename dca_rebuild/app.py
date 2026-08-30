@@ -19,6 +19,7 @@ from dca_rebuild.models import (
     DCAEdition,
     LFAArchiveSubmission,
     LFARecord,
+    BetaFeatureFlag,
     NewsletterSubscriber,
 )
 
@@ -1850,21 +1851,336 @@ def hypeitup_awards():
 
 
 
+
+BETA_FEATURE_DEFINITIONS = [
+    {
+        "key": "archive",
+        "name": "Archive",
+        "description": (
+            "Explore verified LiteFeet history, "
+            "records, people, groups, and sources."
+        ),
+        "sort_order": 10,
+    },
+    {
+        "key": "timeline",
+        "name": "Timeline",
+        "description": (
+            "Explore LiteFeet history across "
+            "dates, years, and eras."
+        ),
+        "sort_order": 20,
+    },
+    {
+        "key": "directory",
+        "name": "Directory",
+        "description": (
+            "Browse people, teams, collectives, "
+            "organizations, and other groups."
+        ),
+        "sort_order": 30,
+    },
+    {
+        "key": "people",
+        "name": "People",
+        "description": (
+            "Historical records for dancers, "
+            "producers, organizers, and contributors."
+        ),
+        "sort_order": 40,
+    },
+    {
+        "key": "groups",
+        "name": "Groups",
+        "description": (
+            "Records for LiteFeet teams, producer "
+            "teams, fams, collectives, and organizations."
+        ),
+        "sort_order": 50,
+    },
+    {
+        "key": "contributions",
+        "name": "Contributions",
+        "description": (
+            "Submit structured history and evidence "
+            "for review by the Ledger."
+        ),
+        "sort_order": 60,
+    },
+    {
+        "key": "claims",
+        "name": "Claims",
+        "description": (
+            "Future identity and authority workflows "
+            "for people and groups."
+        ),
+        "sort_order": 70,
+    },
+    {
+        "key": "community_board",
+        "name": "Community Board",
+        "description": (
+            "Community discussion for LiteFeet, "
+            "battles, events, music, and history."
+        ),
+        "sort_order": 80,
+    },
+    {
+        "key": "search",
+        "name": "Search",
+        "description": (
+            "Search verified Ledger records and "
+            "community discussions."
+        ),
+        "sort_order": 90,
+    },
+    {
+        "key": "from_the_ledger",
+        "name": "From the Ledger",
+        "description": (
+            "Discover verified facts and records "
+            "from across LiteFeet history."
+        ),
+        "sort_order": 100,
+    },
+    {
+        "key": "on_this_day",
+        "name": "On This Day",
+        "description": (
+            "Surface verified LiteFeet history "
+            "connected to today's date."
+        ),
+        "sort_order": 110,
+    },
+    {
+        "key": "community_opinion",
+        "name": "Community Opinion",
+        "description": (
+            "Clearly separated community perspectives "
+            "and opinion-based features."
+        ),
+        "sort_order": 120,
+    },
+    {
+        "key": "ask_the_archive",
+        "name": "Ask the Archive",
+        "description": (
+            "Ask questions grounded in verified "
+            "Ledger records and sources."
+        ),
+        "sort_order": 130,
+    },
+    {
+        "key": "events",
+        "name": "Events",
+        "description": (
+            "Explore documented LiteFeet events "
+            "and their historical context."
+        ),
+        "sort_order": 140,
+    },
+    {
+        "key": "battles",
+        "name": "Battles",
+        "description": (
+            "Document battles, participants, "
+            "results, footage, and history."
+        ),
+        "sort_order": 150,
+    },
+    {
+        "key": "music",
+        "name": "Music",
+        "description": (
+            "Document LiteFeet music, producers, "
+            "tracks, and cultural context."
+        ),
+        "sort_order": 160,
+    },
+    {
+        "key": "media",
+        "name": "Media",
+        "description": (
+            "Organize important LiteFeet footage "
+            "and media references."
+        ),
+        "sort_order": 170,
+    },
+]
+
+
+def ensure_beta_feature_flags(db):
+    existing = {
+        item.feature_key: item
+        for item in db.query(BetaFeatureFlag).all()
+    }
+
+    changed = False
+
+    for definition in BETA_FEATURE_DEFINITIONS:
+        item = existing.get(definition["key"])
+
+        if item is None:
+            item = BetaFeatureFlag(
+                feature_key=definition["key"],
+                name=definition["name"],
+                description=definition["description"],
+                visibility="placeholder",
+                sort_order=definition["sort_order"],
+            )
+
+            db.add(item)
+            changed = True
+
+    if changed:
+        db.commit()
+
+
+def beta_feature_accessible(feature, beta_active=False):
+    if feature.visibility == "public":
+        return True
+
+    if feature.visibility == "placeholder":
+        return True
+
+    if (
+        feature.visibility == "beta"
+        and beta_active
+    ):
+        return True
+
+    return False
+
+
+
+# ============================================================
+# LITEFEET LEDGER — ADMIN BETA CONTROLS
+# ============================================================
+
+@app.route("/admin/beta")
+@admin_login_required
+def admin_beta_features():
+    db = SessionLocal()
+
+    try:
+        ensure_beta_feature_flags(db)
+
+        features = (
+            db.query(BetaFeatureFlag)
+            .order_by(
+                BetaFeatureFlag.sort_order.asc(),
+                BetaFeatureFlag.name.asc(),
+            )
+            .all()
+        )
+
+        return render_template(
+            "admin_beta_features.html",
+            features=features,
+        )
+
+    finally:
+        db.close()
+
+
+@app.route(
+    "/admin/beta/<int:feature_id>/visibility",
+    methods=["POST"]
+)
+@admin_login_required
+def admin_beta_visibility(feature_id):
+    db = SessionLocal()
+
+    try:
+        feature = db.get(
+            BetaFeatureFlag,
+            feature_id
+        )
+
+        if not feature:
+            abort(404)
+
+        visibility = (
+            request.form.get("visibility") or ""
+        ).strip().lower()
+
+        allowed = {
+            "private",
+            "placeholder",
+            "beta",
+            "public",
+        }
+
+        if visibility not in allowed:
+            flash("Invalid feature visibility.")
+
+            return redirect(
+                url_for("admin_beta_features")
+            )
+
+        feature.visibility = visibility
+
+        db.commit()
+
+        flash(
+            f"{feature.name} is now "
+            f"{visibility.upper()}."
+        )
+
+        return redirect(
+            url_for("admin_beta_features")
+        )
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
+
+
 # ============================================================
 # LITEFEET LEDGER — BETA MODE
 # ============================================================
 
 @app.route("/beta")
 def beta_home():
-    return render_template(
-        "beta_home.html",
-        beta_active=bool(
+    db = SessionLocal()
+
+    try:
+        ensure_beta_feature_flags(db)
+
+        features = (
+            db.query(BetaFeatureFlag)
+            .order_by(
+                BetaFeatureFlag.sort_order.asc(),
+                BetaFeatureFlag.name.asc(),
+            )
+            .all()
+        )
+
+        beta_active = bool(
             session.get("ledger_beta_active")
-        ),
-        beta_email=session.get(
-            "ledger_beta_email"
-        ),
-    )
+        )
+
+        return render_template(
+            "beta_home.html",
+            beta_active=beta_active,
+            beta_email=session.get(
+                "ledger_beta_email"
+            ),
+            beta_features=[
+                item
+                for item in features
+                if beta_feature_accessible(
+                    item,
+                    beta_active=beta_active
+                )
+            ],
+        )
+
+    finally:
+        db.close()
 
 
 @app.route("/beta/enter", methods=["POST"])

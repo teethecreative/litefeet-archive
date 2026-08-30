@@ -1,0 +1,148 @@
+<!doctype html>
+<html data-theme="dark">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>Beta Controls — LiteFeet Ledger Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+</head>
+
+<body class="ledger-admin">
+
+{% include "_admin_navigation.html" %}
+
+<main class="admin-control-room">
+
+<header class="admin-control-room__header">
+    <div class="label">
+        LITEFEET LEDGER · ADMIN
+    </div>
+
+    <h1>
+        BETA<br>
+        CONTROLS
+    </h1>
+
+    <p class="lead">
+        Control which developing Ledger systems
+        are private, visible as placeholders,
+        open to Beta participants, or public.
+    </p>
+</header>
+
+
+{% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+        <div class="flash">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endwith %}
+
+
+<section class="admin-module-section">
+
+    <div class="beta-admin-legend">
+        <div>
+            <strong>PRIVATE</strong>
+            Hidden from visitors.
+        </div>
+
+        <div>
+            <strong>PLACEHOLDER</strong>
+            Visible as an upcoming feature.
+        </div>
+
+        <div>
+            <strong>BETA</strong>
+            Available only in Beta Mode.
+        </div>
+
+        <div>
+            <strong>PUBLIC</strong>
+            Available to everyone.
+        </div>
+    </div>
+
+
+    <div class="beta-admin-list">
+
+        {% for feature in features %}
+
+        <article class="beta-admin-feature">
+
+            <div class="beta-admin-feature__copy">
+                <div class="label">
+                    {{ feature.visibility|upper }}
+                </div>
+
+                <h2>
+                    {{ feature.name }}
+                </h2>
+
+                <p>
+                    {{ feature.description }}
+                </p>
+
+                <code>
+                    {{ feature.feature_key }}
+                </code>
+            </div>
+
+
+            <form
+                method="post"
+                action="{{ url_for(
+                    'admin_beta_visibility',
+                    feature_id=feature.id
+                ) }}"
+                class="beta-admin-feature__form"
+            >
+                <label>
+                    VISIBILITY
+
+                    <select name="visibility">
+                        {% for option in [
+                            "private",
+                            "placeholder",
+                            "beta",
+                            "public"
+                        ] %}
+                        <option
+                            value="{{ option }}"
+                            {% if feature.visibility == option %}
+                            selected
+                            {% endif %}
+                        >
+                            {{ option|upper }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <button type="submit">
+                    UPDATE
+                </button>
+            </form>
+
+        </article>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+</main>
+
+</body>
+</html>

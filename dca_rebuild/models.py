@@ -474,6 +474,52 @@ class LFARecord(Base):
 
 
 # ============================================================
+# LITEFEET LEDGER — BETA FEATURE FLAGS
+# ============================================================
+
+class BetaFeatureFlag(Base):
+    __tablename__ = "ledger_beta_feature_flags"
+
+    id = Column(Integer, primary_key=True)
+
+    feature_key = Column(
+        String(100),
+        nullable=False,
+        unique=True,
+        index=True
+    )
+
+    name = Column(
+        String(150),
+        nullable=False
+    )
+
+    description = Column(
+        Text,
+        nullable=True
+    )
+
+    visibility = Column(
+        String(20),
+        nullable=False,
+        default="private"
+    )
+
+    sort_order = Column(
+        Integer,
+        nullable=False,
+        default=0
+    )
+
+    updated_at = Column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
+
+
+# ============================================================
 # LITEFEET LEDGER — NEWSLETTER SUBSCRIBERS
 # ============================================================
 
