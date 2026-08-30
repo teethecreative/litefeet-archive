@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>LiteFeet Ledger</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/dca.css') }}">
+
+    <style>
+        .ledger-home {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 72px 24px 90px;
+        }
+
+        .ledger-hero {
+            text-align: center;
+            padding: 58px 24px 64px;
+        }
+
+        .ledger-kicker {
+            font-size: .8rem;
+            font-weight: 800;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            color: var(--gold, #c99a2e);
+            margin-bottom: 16px;
+        }
+
+        .ledger-hero h1 {
+            font-size: clamp(3rem, 8vw, 6.5rem);
+            line-height: .92;
+            margin: 0;
+            letter-spacing: -.055em;
+        }
+
+        .ledger-hero p {
+            max-width: 720px;
+            margin: 24px auto 0;
+            font-size: 1.12rem;
+            line-height: 1.7;
+            opacity: .82;
+        }
+
+        .ledger-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 22px;
+        }
+
+        .ledger-card {
+            border: 1px solid rgba(180, 140, 45, .55);
+            border-radius: 18px;
+            padding: 30px;
+            min-height: 340px;
+            display: flex;
+            flex-direction: column;
+            background: var(--card-bg, rgba(255,255,255,.04));
+        }
+
+        .ledger-card-label {
+            color: var(--gold, #c99a2e);
+            text-transform: uppercase;
+            letter-spacing: .13em;
+            font-weight: 800;
+            font-size: .73rem;
+            margin-bottom: 15px;
+        }
+
+        .ledger-card h2 {
+            font-size: 1.8rem;
+            line-height: 1.08;
+            margin: 0 0 17px;
+        }
+
+        .ledger-card p {
+            line-height: 1.65;
+            opacity: .82;
+            margin: 0 0 24px;
+        }
+
+        .ledger-card-actions {
+            margin-top: auto;
+        }
+
+        .ledger-button {
+            display: inline-block;
+            padding: 13px 18px;
+            border-radius: 9px;
+            text-decoration: none;
+            font-weight: 800;
+            background: var(--gold, #c99a2e);
+            color: #07182e;
+        }
+
+        .ledger-button-secondary {
+            background: transparent;
+            color: inherit;
+            border: 1px solid var(--gold, #c99a2e);
+        }
+
+        .ledger-archive-note {
+            margin-top: 60px;
+            padding: 34px;
+            border-top: 1px solid rgba(180, 140, 45, .45);
+            text-align: center;
+        }
+
+        .ledger-archive-note h2 {
+            margin-top: 0;
+        }
+
+        .ledger-archive-note p {
+            max-width: 760px;
+            margin: 0 auto;
+            line-height: 1.7;
+            opacity: .78;
+        }
+
+        @media (max-width: 900px) {
+            .ledger-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .ledger-card {
+                min-height: 0;
+            }
+
+            .ledger-home {
+                padding-top: 38px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+{% include "_navigation.html" %}
+
+<main class="ledger-home">
+
+    <section class="ledger-hero">
+
+        <div class="ledger-kicker">
+            THE LITEFEET ARCHIVE
+        </div>
+
+        <h1>
+            LITEFEET<br>LEDGER
+        </h1>
+
+        <p>
+            A living record of LiteFeet history, awards and community
+            contributions — preserving what happened while documenting
+            what happens next.
+        </p>
+
+    </section>
+
+
+    <section class="ledger-grid">
+
+        <article class="ledger-card">
+
+            <div class="ledger-card-label">
+                CURRENTLY ACTIVE
+            </div>
+
+            <h2>
+                Dancer's Choice Awards
+            </h2>
+
+            <p>
+                The 2026 Dancer's Choice Awards process is underway.
+                Help decide which categories should return and suggest
+                categories for this year's awards.
+            </p>
+
+            <div class="ledger-card-actions">
+                <a class="ledger-button"
+                   href="{{ url_for('round1') }}">
+                    Suggest 2026 Categories
+                </a>
+            </div>
+
+        </article>
+
+
+        <article class="ledger-card">
+
+            <div class="ledger-card-label">
+                BUILDING THE RECORD
+            </div>
+
+            <h2>
+                LiteFeet Awards
+            </h2>
+
+            <p>
+                Historical LiteFeet Awards results are being gathered
+                and verified. If you know a year, category or winner,
+                you can contribute information to the archive.
+            </p>
+
+            <div class="ledger-card-actions">
+                <a class="ledger-button"
+                   href="{{ url_for('lfa_home') }}">
+                    Explore & Contribute
+                </a>
+            </div>
+
+        </article>
+
+
+        <article class="ledger-card">
+
+            <div class="ledger-card-label">
+                COMING SOON
+            </div>
+
+            <h2>
+                HypeItUpTV Awards
+            </h2>
+
+            <p>
+                The HypeItUpTV Awards section of the Ledger is coming
+                soon. Follow Hype It Up TV on Instagram and subscribe
+                on YouTube for updates.
+            </p>
+
+            <div class="ledger-card-actions">
+                <a class="ledger-button ledger-button-secondary"
+                   href="{{ url_for('hypeitup_awards') }}">
+                    View Coming Soon
+                </a>
+            </div>
+
+        </article>
+
+    </section>
+
+
+    <section class="ledger-archive-note">
+
+        <div class="ledger-card-label">
+            THE ARCHIVE
+        </div>
+
+        <h2>
+            More LiteFeet history is coming back.
+        </h2>
+
+        <p>
+            LiteFeet Ledger is being rebuilt from the previous
+            LiteFeet Archive. Historical records and community
+            contributions are being preserved and will return as
+            they are reviewed, organized and verified.
+        </p>
+
+    </section>
+
+</main>
+
+</body>
+</html>

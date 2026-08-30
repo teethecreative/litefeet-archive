@@ -41,8 +41,7 @@ def client_ip():
 
 @app.route("/")
 def index():
-    return redirect(url_for("round1"))
-
+    return render_template("ledger_home.html")
 
 @app.route("/awards/dancers-choice/category-suggestions", methods=["GET", "POST"])
 def round1():
@@ -1076,6 +1075,129 @@ def lfa_submit():
 @app.route("/awards/hypeitup")
 def hypeitup_awards():
     return render_template("hypeitup_awards.html")
+
+
+
+
+# ============================================================
+# LITEFEET LEDGER — SHORT PUBLIC URLS
+# ============================================================
+
+@app.route("/dca")
+@app.route("/dca/2026")
+def short_dca_home():
+    return redirect(
+        url_for("dca_2026_home"),
+        code=302,
+    )
+
+
+@app.route("/dca/2026/categories")
+def short_dca_categories():
+    return redirect(
+        url_for("round1"),
+        code=302,
+    )
+
+
+@app.route("/dca/2023")
+def short_dca_2023():
+    return redirect(
+        url_for("dca_2023_home"),
+        code=302,
+    )
+
+
+@app.route("/litefeet-awards")
+def short_litefeet_awards():
+    return redirect(
+        url_for("lfa_home"),
+        code=302,
+    )
+
+
+@app.route("/hypeitup-awards")
+def short_hypeitup_awards():
+    return redirect(
+        url_for("hypeitup_awards"),
+        code=302,
+    )
+
+
+# ============================================================
+# LITEFEET LEDGER — LEGACY ARCHIVE URL COMPATIBILITY
+# ============================================================
+
+LEGACY_HOME_ROUTES = [
+    "/about",
+    "/contributor",
+    "/event-affiliates",
+    "/submit",
+    "/submit/success",
+    "/submit/start",
+    "/calendar",
+    "/events",
+    "/dancers",
+    "/people",
+    "/people/dancers",
+    "/people/dancers/create",
+    "/people-teams",
+    "/people-and-teams",
+    "/people/producers",
+    "/people/teams",
+    "/producers",
+    "/teams",
+    "/battles",
+    "/ledger-review",
+    "/verify",
+    "/ask",
+    "/community-perspectives",
+    "/litefeet-music",
+    "/releases/submit",
+]
+
+
+def legacy_archive_redirect():
+    return redirect(url_for("index"), code=302)
+
+
+for legacy_route in LEGACY_HOME_ROUTES:
+
+    # Do not overwrite a route that the rebuild
+    # already owns.
+    existing = {
+        rule.rule
+        for rule in app.url_map.iter_rules()
+    }
+
+    if legacy_route not in existing:
+        endpoint = (
+            "legacy_"
+            + legacy_route
+                .strip("/")
+                .replace("/", "_")
+                .replace("-", "_")
+        )
+
+        app.add_url_rule(
+            legacy_route,
+            endpoint,
+            legacy_archive_redirect,
+            methods=["GET"],
+        )
+
+
+@app.route("/dancers/<path:legacy_path>")
+@app.route("/people/<path:legacy_path>")
+@app.route("/events/<path:legacy_path>")
+@app.route("/teams/<path:legacy_path>")
+@app.route("/battles/<path:legacy_path>")
+@app.route("/litefeet-music/<path:legacy_path>")
+@app.route("/music/<path:legacy_path>")
+@app.route("/verify/<path:legacy_path>")
+@app.route("/ask/<path:legacy_path>")
+def legacy_archive_detail_redirect(legacy_path):
+    return redirect(url_for("index"), code=302)
 
 
 if __name__ == "__main__":
