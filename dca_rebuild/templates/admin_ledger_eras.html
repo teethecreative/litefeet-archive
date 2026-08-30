@@ -1,0 +1,150 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>
+        Eras · LiteFeet Ledger Admin
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+</head>
+
+<body>
+
+{% include "_admin_navigation.html" %}
+
+<main class="admin-control-room">
+
+    <header class="admin-control-room__header">
+
+        <div class="label">
+            LITEFEET LEDGER · ARCHIVE
+        </div>
+
+        <h1>ERAS</h1>
+
+        <p class="lead">
+            Define historical periods without
+            forcing exact dates onto records
+            that do not have them.
+        </p>
+
+        {% include "_admin_archive_nav.html" %}
+
+        <a
+            href="{{ url_for('admin_ledger_era_new') }}"
+            class="submit"
+        >
+            ADD ERA →
+        </a>
+
+    </header>
+
+
+    <section class="admin-module-section">
+
+        {% if eras %}
+
+            <div class="ledger-era-list">
+
+                {% for era in eras %}
+
+                    <article class="ledger-era-card">
+
+                        <div class="ledger-era-meta">
+                            <span>
+                                {{ era.status|upper }}
+                            </span>
+
+                            <span>
+                                ORDER {{ era.sort_order }}
+                            </span>
+                        </div>
+
+                        <h2>
+                            {{ era.name }}
+                        </h2>
+
+                        <p class="ledger-era-years">
+
+                            {% if era.start_year and era.end_year %}
+
+                                {{ era.start_year }}
+                                —
+                                {{ era.end_year }}
+
+                            {% elif era.start_year %}
+
+                                {{ era.start_year }}
+                                —
+                                UNKNOWN
+
+                            {% elif era.end_year %}
+
+                                UNKNOWN
+                                —
+                                {{ era.end_year }}
+
+                            {% else %}
+
+                                DATES NOT YET DEFINED
+
+                            {% endif %}
+
+                        </p>
+
+                        {% if era.description %}
+                            <p>
+                                {{ era.description }}
+                            </p>
+                        {% endif %}
+
+                        <a
+                            href="{{ url_for(
+                                'admin_ledger_era_edit',
+                                era_id=era.id
+                            ) }}"
+                            class="archive-link"
+                        >
+                            EDIT ERA →
+                        </a>
+
+                    </article>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="archive-status-card">
+
+                <h2>
+                    NO ERAS DEFINED YET
+                </h2>
+
+                <p>
+                    Create historical periods only
+                    where the Archive can support
+                    them. Dates may remain unknown.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </section>
+
+</main>
+
+</body>
+</html>

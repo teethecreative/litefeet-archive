@@ -640,3 +640,78 @@ class NewsletterSubscriber(Base):
         DateTime,
         nullable=True
     )
+
+# ============================================================
+# LITEFEET LEDGER — ARCHIVE FOUNDATION
+# ============================================================
+
+class LedgerEra(Base):
+    __tablename__ = "ledger_eras"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+    )
+
+    name = Column(
+        String(150),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    slug = Column(
+        String(160),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+
+    description = Column(
+        Text,
+        nullable=True,
+    )
+
+    start_year = Column(
+        Integer,
+        nullable=True,
+        index=True,
+    )
+
+    end_year = Column(
+        Integer,
+        nullable=True,
+        index=True,
+    )
+
+    sort_order = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        index=True,
+    )
+
+    status = Column(
+        String(30),
+        nullable=False,
+        default="draft",
+        index=True,
+    )
+
+    source_notes = Column(
+        Text,
+        nullable=True,
+    )
+
+    created_at = Column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+    updated_at = Column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )

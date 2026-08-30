@@ -1,3 +1,4 @@
+import re
 from functools import wraps
 from datetime import datetime, timedelta
 import hashlib
@@ -24,6 +25,7 @@ from dca_rebuild.models import (
     BetaChangelog,
     NewsletterSubscriber,
 )
+from dca_rebuild.models import LedgerEra
 
 app = Flask(__name__)
 app.secret_key = (
@@ -3241,6 +3243,345 @@ def beta_placeholder(feature_key):
             definition=definition,
             beta_active=beta_active,
         )
+
+    finally:
+        db.close()
+
+# ============================================================
+# LITEFEET LEDGER — ERA ADMIN
+# ============================================================
+
+def ledger_era_slug(value):
+    value = (value or "").strip().lower()
+
+    value = re.sub(
+        r"[^a-z0-9]+",
+        "-",
+        value,
+    )
+
+    return value.strip("-")
+
+
+def ledger_optional_year(value):
+    value = (value or "").strip()
+
+    if not value:
+        return None
+
+    try:
+        year = int(value)
+    except ValueError:
+        raise ValueError(
+            "Year must be a number."
+        )
+
+    if year < 1800 or year > 2200:
+        raise ValueError(
+            "Year must be between 1800 and 2200."
+        )
+
+    return year
+
+
+@app.route("/admin/archive/eras")
+@admin_login_required
+def admin_ledger_eras():
+    db = SessionLocal()
+
+    try:
+        eras = (
+            db.query(LedgerEra)
+            .order_by(
+                LedgerEra.sort_order.asc(),
+                LedgerEra.start_year.asc(),
+                LedgerEra.name.asc(),
+            )
+            .all()
+        )
+
+        return render_template(
+            "admin_ledger_eras.html",
+            eras=eras,
+        )
+
+    finally:
+        db.close()
+
+
+@app.route(
+    "/admin/archive/eras/new",
+    methods=["GET", "POST"],
+)
+@admin_login_required
+def admin_ledger_era_new():
+    if request.method == "GET":
+        return render_template(
+            "admin_ledger_era_form.html",
+            era=None,
+        )
+
+    name = (
+        request.form.get("name") or ""
+    ).strip()
+
+    if not name:
+        flash("Era name is required.")
+
+        return redirect(
+            url_for("admin_ledger_era_new")
+        )
+
+    try:
+        start_year = ledger_optional_year(
+            request.form.get("start_year")
+        )
+
+        end_year = ledger_optional_year(
+            request.form.get("end_year")
+        )
+
+        sort_order = int(
+            request.form.get("sort_order") or 0
+        )
+
+    except ValueError as exc:
+        flash(str(exc))
+
+        return redirect(
+            url_for("admin_ledger_era_new")
+        )
+
+    if (
+        start_year is not None
+        and end_year is not None
+        and end_year < start_year
+    ):
+        flash(
+            "End year cannot be before start year."
+        )
+
+        return redirect(
+            url_for("admin_ledger_era_new")
+        )
+
+    slug = ledger_era_slug(name)
+
+    if not slug:
+        flash(
+            "Era name could not create a valid slug."
+        )
+
+        return redirect(
+            url_for("admin_ledger_era_new")
+        )
+
+    status = (
+        request.form.get("status") or "draft"
+    ).strip().lower()
+
+    if status not in {
+        "draft",
+        "published",
+    }:
+        status = "draft"
+
+    db = SessionLocal()
+
+    try:
+        duplicate = (
+            db.query(LedgerEra)
+            .filter(
+                (LedgerEra.name == name)
+                | (LedgerEra.slug == slug)
+            )
+            .first()
+        )
+
+        if duplicate:
+            flash(
+                "An era with that name already exists."
+            )
+
+            return redirect(
+                url_for("admin_ledger_era_new")
+            )
+
+        era = LedgerEra(
+            name=name,
+            slug=slug,
+            description=(
+                request.form.get("description")
+                or ""
+            ).strip() or None,
+            start_year=start_year,
+            end_year=end_year,
+            sort_order=sort_order,
+            status=status,
+            source_notes=(
+                request.form.get("source_notes")
+                or ""
+            ).strip() or None,
+        )
+
+        db.add(era)
+        db.commit()
+
+        flash("Era created.")
+
+        return redirect(
+            url_for("admin_ledger_eras")
+        )
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
+
+
+@app.route(
+    "/admin/archive/eras/<int:era_id>/edit",
+    methods=["GET", "POST"],
+)
+@admin_login_required
+def admin_ledger_era_edit(era_id):
+    db = SessionLocal()
+
+    try:
+        era = db.get(
+            LedgerEra,
+            era_id,
+        )
+
+        if not era:
+            abort(404)
+
+        if request.method == "GET":
+            return render_template(
+                "admin_ledger_era_form.html",
+                era=era,
+            )
+
+        name = (
+            request.form.get("name") or ""
+        ).strip()
+
+        if not name:
+            flash("Era name is required.")
+
+            return redirect(
+                url_for(
+                    "admin_ledger_era_edit",
+                    era_id=era.id,
+                )
+            )
+
+        try:
+            start_year = ledger_optional_year(
+                request.form.get("start_year")
+            )
+
+            end_year = ledger_optional_year(
+                request.form.get("end_year")
+            )
+
+            sort_order = int(
+                request.form.get("sort_order") or 0
+            )
+
+        except ValueError as exc:
+            flash(str(exc))
+
+            return redirect(
+                url_for(
+                    "admin_ledger_era_edit",
+                    era_id=era.id,
+                )
+            )
+
+        if (
+            start_year is not None
+            and end_year is not None
+            and end_year < start_year
+        ):
+            flash(
+                "End year cannot be before start year."
+            )
+
+            return redirect(
+                url_for(
+                    "admin_ledger_era_edit",
+                    era_id=era.id,
+                )
+            )
+
+        slug = ledger_era_slug(name)
+
+        duplicate = (
+            db.query(LedgerEra)
+            .filter(
+                LedgerEra.id != era.id
+            )
+            .filter(
+                (LedgerEra.name == name)
+                | (LedgerEra.slug == slug)
+            )
+            .first()
+        )
+
+        if duplicate:
+            flash(
+                "Another era already uses that name."
+            )
+
+            return redirect(
+                url_for(
+                    "admin_ledger_era_edit",
+                    era_id=era.id,
+                )
+            )
+
+        status = (
+            request.form.get("status") or "draft"
+        ).strip().lower()
+
+        if status not in {
+            "draft",
+            "published",
+        }:
+            status = "draft"
+
+        era.name = name
+        era.slug = slug
+
+        era.description = (
+            request.form.get("description")
+            or ""
+        ).strip() or None
+
+        era.start_year = start_year
+        era.end_year = end_year
+        era.sort_order = sort_order
+        era.status = status
+
+        era.source_notes = (
+            request.form.get("source_notes")
+            or ""
+        ).strip() or None
+
+        db.commit()
+
+        flash("Era updated.")
+
+        return redirect(
+            url_for("admin_ledger_eras")
+        )
+
+    except Exception:
+        db.rollback()
+        raise
 
     finally:
         db.close()

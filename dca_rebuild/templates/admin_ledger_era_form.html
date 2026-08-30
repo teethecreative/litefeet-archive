@@ -1,0 +1,192 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>
+        {% if era %}Edit{% else %}Add{% endif %}
+        Era · LiteFeet Ledger Admin
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+</head>
+
+<body>
+
+{% include "_admin_navigation.html" %}
+
+<main class="admin-control-room">
+
+    <header class="admin-control-room__header">
+
+        <div class="label">
+            LITEFEET LEDGER · ARCHIVE
+        </div>
+
+        <h1>
+            {% if era %}
+                EDIT ERA
+            {% else %}
+                ADD ERA
+            {% endif %}
+        </h1>
+
+        <p class="lead">
+            Era boundaries may stay unknown
+            until the historical record supports
+            something more precise.
+        </p>
+
+        {% include "_admin_archive_nav.html" %}
+
+    </header>
+
+
+    <section class="admin-module-section">
+
+        <form
+            method="post"
+            class="ledger-admin-form"
+        >
+
+            <label>
+                ERA NAME
+
+                <input
+                    type="text"
+                    name="name"
+                    value="{{ era.name if era else '' }}"
+                    required
+                >
+            </label>
+
+
+            <label>
+                DESCRIPTION
+
+                <textarea
+                    name="description"
+                >{{ era.description if era and era.description else '' }}</textarea>
+            </label>
+
+
+            <div class="ledger-admin-form-grid">
+
+                <label>
+                    START YEAR
+
+                    <input
+                        type="number"
+                        name="start_year"
+                        min="1800"
+                        max="2200"
+                        value="{{ era.start_year if era and era.start_year else '' }}"
+                    >
+                </label>
+
+                <label>
+                    END YEAR
+
+                    <input
+                        type="number"
+                        name="end_year"
+                        min="1800"
+                        max="2200"
+                        value="{{ era.end_year if era and era.end_year else '' }}"
+                    >
+                </label>
+
+            </div>
+
+
+            <p class="ledger-admin-form-note">
+                Leave a boundary blank when it is
+                not historically supported yet.
+            </p>
+
+
+            <div class="ledger-admin-form-grid">
+
+                <label>
+                    SORT ORDER
+
+                    <input
+                        type="number"
+                        name="sort_order"
+                        value="{{ era.sort_order if era else 0 }}"
+                    >
+                </label>
+
+
+                <label>
+                    STATUS
+
+                    <select name="status">
+
+                        <option
+                            value="draft"
+                            {% if not era or era.status == "draft" %}
+                            selected
+                            {% endif %}
+                        >
+                            DRAFT
+                        </option>
+
+                        <option
+                            value="published"
+                            {% if era and era.status == "published" %}
+                            selected
+                            {% endif %}
+                        >
+                            PUBLISHED
+                        </option>
+
+                    </select>
+                </label>
+
+            </div>
+
+
+            <label>
+                SOURCE / RESEARCH NOTES
+
+                <textarea
+                    name="source_notes"
+                >{{ era.source_notes if era and era.source_notes else '' }}</textarea>
+            </label>
+
+
+            <div class="ledger-admin-form-actions">
+
+                <button type="submit">
+                    {% if era %}
+                        SAVE ERA →
+                    {% else %}
+                        CREATE ERA →
+                    {% endif %}
+                </button>
+
+                <a
+                    href="{{ url_for('admin_ledger_eras') }}"
+                >
+                    CANCEL
+                </a>
+
+            </div>
+
+        </form>
+
+    </section>
+
+</main>
+
+</body>
+</html>
