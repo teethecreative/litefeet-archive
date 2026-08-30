@@ -8,7 +8,7 @@
         content="width=device-width,initial-scale=1"
     >
 
-    <title>Edit LFA Submission — Admin</title>
+    <title>{{ form_title }} — LFA Admin</title>
 
     <link
         rel="stylesheet"
@@ -27,14 +27,22 @@
         LITEFEET AWARDS · ADMIN
     </div>
 
-    <h1>
-        EDIT &<br>
-        APPROVE
-    </h1>
+    <h1>{{ form_title }}</h1>
 
     {% include "_admin_lfa_nav.html" %}
 </header>
 
+
+{% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+        <div class="flash">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endwith %}
+
+
+<section>
 
 <form
     method="post"
@@ -45,6 +53,14 @@
         TYPE
 
         <select name="record_type" required>
+            <option value="">
+                Choose record type
+            </option>
+
+            {% set current_type =
+                record.record_type if record else ""
+            %}
+
             {% set types = [
                 ("nomination", "Nomination"),
                 ("award_winner", "Award Winner"),
@@ -56,7 +72,7 @@
             {% for value, label in types %}
             <option
                 value="{{ value }}"
-                {% if submission.submission_type == value %}
+                {% if current_type == value %}
                 selected
                 {% endif %}
             >
@@ -70,12 +86,24 @@
     <label>
         YEAR
 
-        <input
-            type="number"
-            name="year"
-            value="{{ submission.year }}"
-            required
-        >
+        <select name="year" required>
+            <option value="">Choose year</option>
+
+            {% set current_year =
+                record.year if record else none
+            %}
+
+            {% for year in [2026, 2025, 2024, 2023] %}
+            <option
+                value="{{ year }}"
+                {% if current_year == year %}
+                selected
+                {% endif %}
+            >
+                {{ year }}
+            </option>
+            {% endfor %}
+        </select>
     </label>
 
 
@@ -85,7 +113,7 @@
         <input
             type="text"
             name="category_name"
-            value="{{ submission.category_name }}"
+            value="{{ record.category_name if record else '' }}"
             required
         >
     </label>
@@ -97,7 +125,7 @@
         <input
             type="text"
             name="person_name"
-            value="{{ submission.winner_name }}"
+            value="{{ record.person_name if record else '' }}"
             required
         >
     </label>
@@ -109,7 +137,7 @@
         <input
             type="text"
             name="team_name"
-            value="{{ submission.team_name or '' }}"
+            value="{{ record.team_name or '' if record else '' }}"
         >
     </label>
 
@@ -119,7 +147,7 @@
 
         <textarea
             name="additional_details"
-        >{{ submission.additional_details or '' }}</textarea>
+        >{{ record.additional_details or '' if record else '' }}</textarea>
     </label>
 
 
@@ -128,15 +156,17 @@
 
         <textarea
             name="source_information"
-        >{{ submission.source_information or '' }}</textarea>
+        >{{ record.source_information or '' if record else '' }}</textarea>
     </label>
 
 
     <button type="submit">
-        SAVE & APPROVE →
+        {{ submit_label }}
     </button>
 
 </form>
+
+</section>
 
 </main>
 

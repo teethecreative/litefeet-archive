@@ -1573,6 +1573,236 @@ def admin_lfa_edit_approve(submission_id):
         db.close()
 
 
+
+@app.route(
+    "/admin/lfa/records/new",
+    methods=["GET", "POST"]
+)
+@admin_login_required
+def admin_lfa_new_record():
+    db = SessionLocal()
+
+    try:
+        if request.method == "POST":
+            year_raw = (
+                request.form.get("year") or ""
+            ).strip()
+
+            record_type = (
+                request.form.get("record_type") or ""
+            ).strip()
+
+            category_name = (
+                request.form.get("category_name") or ""
+            ).strip()
+
+            person_name = (
+                request.form.get("person_name") or ""
+            ).strip()
+
+            team_name = (
+                request.form.get("team_name") or ""
+            ).strip()
+
+            additional_details = (
+                request.form.get("additional_details") or ""
+            ).strip()
+
+            source_information = (
+                request.form.get("source_information") or ""
+            ).strip()
+
+            allowed_types = {
+                "nomination",
+                "award_winner",
+                "hall_of_fame",
+                "litefeet_achievement",
+                "litefeet_humanitarian",
+            }
+
+            try:
+                year = int(year_raw)
+            except ValueError:
+                year = 0
+
+            if year not in {2023, 2024, 2025, 2026}:
+                flash("Choose a valid year.")
+                return redirect(
+                    url_for("admin_lfa_new_record")
+                )
+
+            if record_type not in allowed_types:
+                flash("Choose a valid record type.")
+                return redirect(
+                    url_for("admin_lfa_new_record")
+                )
+
+            if not category_name or not person_name:
+                flash(
+                    "Category/Honor and Person are required."
+                )
+                return redirect(
+                    url_for("admin_lfa_new_record")
+                )
+
+            record = LFARecord(
+                year=year,
+                record_type=record_type,
+                category_name=category_name,
+                person_name=person_name,
+                team_name=team_name or None,
+                additional_details=additional_details or None,
+                source_information=source_information or None,
+                source_submission_id=None,
+            )
+
+            db.add(record)
+            db.commit()
+
+            flash("Verified LFA record created.")
+
+            return redirect(
+                url_for("admin_lfa_records")
+            )
+
+        return render_template(
+            "admin_lfa_record_form.html",
+            record=None,
+            form_title="ADD VERIFIED RECORD",
+            submit_label="CREATE RECORD →",
+        )
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
+
+
+@app.route(
+    "/admin/lfa/records/<int:record_id>/edit",
+    methods=["GET", "POST"]
+)
+@admin_login_required
+def admin_lfa_edit_record(record_id):
+    db = SessionLocal()
+
+    try:
+        record = db.get(
+            LFARecord,
+            record_id
+        )
+
+        if not record:
+            abort(404)
+
+        if request.method == "POST":
+            year_raw = (
+                request.form.get("year") or ""
+            ).strip()
+
+            record_type = (
+                request.form.get("record_type") or ""
+            ).strip()
+
+            category_name = (
+                request.form.get("category_name") or ""
+            ).strip()
+
+            person_name = (
+                request.form.get("person_name") or ""
+            ).strip()
+
+            team_name = (
+                request.form.get("team_name") or ""
+            ).strip()
+
+            additional_details = (
+                request.form.get("additional_details") or ""
+            ).strip()
+
+            source_information = (
+                request.form.get("source_information") or ""
+            ).strip()
+
+            allowed_types = {
+                "nomination",
+                "award_winner",
+                "hall_of_fame",
+                "litefeet_achievement",
+                "litefeet_humanitarian",
+            }
+
+            try:
+                year = int(year_raw)
+            except ValueError:
+                year = 0
+
+            if year not in {2023, 2024, 2025, 2026}:
+                flash("Choose a valid year.")
+                return redirect(
+                    url_for(
+                        "admin_lfa_edit_record",
+                        record_id=record.id
+                    )
+                )
+
+            if record_type not in allowed_types:
+                flash("Choose a valid record type.")
+                return redirect(
+                    url_for(
+                        "admin_lfa_edit_record",
+                        record_id=record.id
+                    )
+                )
+
+            if not category_name or not person_name:
+                flash(
+                    "Category/Honor and Person are required."
+                )
+                return redirect(
+                    url_for(
+                        "admin_lfa_edit_record",
+                        record_id=record.id
+                    )
+                )
+
+            record.year = year
+            record.record_type = record_type
+            record.category_name = category_name
+            record.person_name = person_name
+            record.team_name = team_name or None
+            record.additional_details = (
+                additional_details or None
+            )
+            record.source_information = (
+                source_information or None
+            )
+
+            db.commit()
+
+            flash("Verified LFA record updated.")
+
+            return redirect(
+                url_for("admin_lfa_records")
+            )
+
+        return render_template(
+            "admin_lfa_record_form.html",
+            record=record,
+            form_title="EDIT VERIFIED RECORD",
+            submit_label="SAVE CHANGES →",
+        )
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
+
+
 @app.route("/admin/lfa/records")
 @admin_login_required
 def admin_lfa_records():
