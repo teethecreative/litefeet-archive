@@ -17,6 +17,7 @@ from dca_rebuild.models import (
     DCAReturnCategoryVote,
     DCAEdition,
     LFAArchiveSubmission,
+    NewsletterSubscriber,
 )
 
 app = Flask(__name__)
@@ -27,6 +28,14 @@ app.secret_key = (
 )
 
 engine = create_engine(DATABASE_URL)
+
+
+@app.context_processor
+def ledger_template_globals():
+    return {
+        "current_year": datetime.utcnow().year
+    }
+
 Base.metadata.create_all(engine)
 SessionLocal = sessionmaker(bind=engine)
 
@@ -1086,6 +1095,89 @@ def hypeitup_awards():
 
 
 
+
+
+
+# ============================================================
+# LITEFEET LEDGER — NEWSLETTER SIGNUP
+# ============================================================
+
+@app.route("/newsletter/subscribe", methods=["POST"])
+def newsletter_subscribe():
+    email = (
+        request.form.get("email", "")
+        .strip()
+        .lower()
+    )
+
+    if (
+        not email
+        or "@" not in email
+        or "." not in email.rsplit("@", 1)[-1]
+        or len(email) > 255
+    ):
+        return {
+            "ok": False,
+            "message": "Enter a valid email address."
+        }, 400
+
+    db = SessionLocal()
+
+    try:
+        subscriber = (
+            db.query(NewsletterSubscriber)
+            .filter(
+                func.lower(
+                    NewsletterSubscriber.email
+                ) == email
+            )
+            .first()
+        )
+
+        if subscriber:
+            if subscriber.is_active:
+                return {
+                    "ok": True,
+                    "message": "You're already subscribed."
+                }
+
+            subscriber.is_active = True
+            subscriber.unsubscribed_at = None
+            subscriber.subscribed_at = datetime.utcnow()
+
+            db.commit()
+
+            return {
+                "ok": True,
+                "message": "You're subscribed again."
+            }
+
+        subscriber = NewsletterSubscriber(
+            email=email,
+            is_active=True
+        )
+
+        db.add(subscriber)
+        db.commit()
+
+        return {
+            "ok": True,
+            "message": "You're on the list."
+        }
+
+    except Exception:
+        db.rollback()
+
+        return {
+            "ok": False,
+            "message": (
+                "We couldn't save that email right now. "
+                "Please try again."
+            )
+        }, 500
+
+    finally:
+        db.close()
 
 # ============================================================
 # LITEFEET LEDGER — SHORT PUBLIC URLS

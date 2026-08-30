@@ -416,3 +416,38 @@ class LFAArchiveSubmission(Base):
         nullable=False,
         default=datetime.utcnow
     )
+
+
+
+# ============================================================
+# LITEFEET LEDGER — NEWSLETTER SUBSCRIBERS
+# ============================================================
+
+class NewsletterSubscriber(Base):
+    __tablename__ = "ledger_newsletter_subscribers"
+
+    id = Column(Integer, primary_key=True)
+
+    email = Column(
+        String(255),
+        nullable=False,
+        unique=True,
+        index=True
+    )
+
+    is_active = Column(
+        Boolean,
+        nullable=False,
+        default=True
+    )
+
+    subscribed_at = Column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+
+    unsubscribed_at = Column(
+        DateTime,
+        nullable=True
+    )

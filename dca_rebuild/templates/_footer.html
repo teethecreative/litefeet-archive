@@ -1,0 +1,135 @@
+<footer class="ledger-footer">
+    <div class="ledger-footer-inner">
+
+        <div class="ledger-footer-brand">
+            <a href="{{ url_for('ledger_home') }}">
+                LITEFEET LEDGER
+            </a>
+
+            <p>
+                Preserving LiteFeet history, awards and community contributions.
+            </p>
+        </div>
+
+        <div class="ledger-footer-newsletter">
+            <div class="ledger-footer-heading">
+                STAY UPDATED
+            </div>
+
+            <p>
+                Get updates from LiteFeet Ledger.
+            </p>
+
+            <form
+                class="ledger-newsletter-form"
+                id="ledger-newsletter-form"
+                action="{{ url_for('newsletter_subscribe') }}"
+                method="post"
+            >
+                <label
+                    class="sr-only"
+                    for="ledger-newsletter-email"
+                >
+                    Email address
+                </label>
+
+                <input
+                    id="ledger-newsletter-email"
+                    name="email"
+                    type="email"
+                    autocomplete="email"
+                    placeholder="EMAIL ADDRESS"
+                    required
+                >
+
+                <button type="submit">
+                    SUBSCRIBE
+                </button>
+            </form>
+
+            <p
+                class="ledger-newsletter-message"
+                id="ledger-newsletter-message"
+                aria-live="polite"
+            ></p>
+        </div>
+
+        <div class="ledger-footer-links">
+            <a href="{{ url_for('dca_2026_home') }}">
+                Dancer's Choice Awards
+            </a>
+
+            <a href="{{ url_for('lfa_home') }}">
+                LiteFeet Awards
+            </a>
+
+            <a href="{{ url_for('hypeitup_awards') }}">
+                HypeItUpTV Awards
+            </a>
+        </div>
+
+    </div>
+
+    <div class="ledger-footer-bottom">
+        <span>© {{ current_year }} LiteFeet Ledger</span>
+
+        <span>
+            Built to document the culture.
+        </span>
+    </div>
+</footer>
+
+<script>
+(function () {
+    const form = document.getElementById(
+        "ledger-newsletter-form"
+    );
+
+    const message = document.getElementById(
+        "ledger-newsletter-message"
+    );
+
+    if (!form || !message) {
+        return;
+    }
+
+    form.addEventListener(
+        "submit",
+        async function (event) {
+            event.preventDefault();
+
+            const button =
+                form.querySelector("button");
+
+            button.disabled = true;
+            message.textContent = "Saving...";
+
+            try {
+                const response = await fetch(
+                    form.action,
+                    {
+                        method: "POST",
+                        body: new FormData(form),
+                        headers: {
+                            "Accept": "application/json"
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                message.textContent = data.message;
+
+                if (response.ok && data.ok) {
+                    form.reset();
+                }
+            } catch (error) {
+                message.textContent =
+                    "We couldn't save that email right now. Please try again.";
+            } finally {
+                button.disabled = false;
+            }
+        }
+    );
+})();
+</script>
