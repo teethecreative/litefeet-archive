@@ -72,7 +72,7 @@ class DCACategory(Base):
 
     edition_id = Column(
         Integer,
-        ForeignKey("dca_editions.id"),
+        ForeignKey("ledger_dca_editions.id"),
         nullable=False,
     )
 
@@ -90,7 +90,7 @@ class DCACategory(Base):
     # this points back to it.
     source_category_id = Column(
         Integer,
-        ForeignKey("dca_categories.id"),
+        ForeignKey("ledger_dca_categories.id"),
         nullable=True,
     )
 
@@ -137,7 +137,7 @@ class DCACategorySuggestionSubmission(Base):
 
     edition_id = Column(
         Integer,
-        ForeignKey("dca_editions.id"),
+        ForeignKey("ledger_dca_editions.id"),
         nullable=False,
     )
 
@@ -180,13 +180,13 @@ class DCAReturnCategoryVote(Base):
 
     submission_id = Column(
         Integer,
-        ForeignKey("dca_category_suggestion_submissions.id"),
+        ForeignKey("ledger_dca_category_suggestion_submissions.id"),
         nullable=False,
     )
 
     category_id = Column(
         Integer,
-        ForeignKey("dca_categories.id"),
+        ForeignKey("ledger_dca_categories.id"),
         nullable=False,
     )
 
@@ -217,7 +217,7 @@ class DCANewCategorySuggestion(Base):
 
     submission_id = Column(
         Integer,
-        ForeignKey("dca_category_suggestion_submissions.id"),
+        ForeignKey("ledger_dca_category_suggestion_submissions.id"),
         nullable=False,
     )
 
@@ -235,7 +235,7 @@ class DCANewCategorySuggestion(Base):
     # are determined to represent the same category.
     merged_into_id = Column(
         Integer,
-        ForeignKey("dca_new_category_suggestions.id"),
+        ForeignKey("ledger_dca_new_category_suggestions.id"),
         nullable=True,
     )
 
@@ -267,7 +267,7 @@ class DCACategoryBallot(Base):
 
     edition_id = Column(
         Integer,
-        ForeignKey("dca_editions.id"),
+        ForeignKey("ledger_dca_editions.id"),
         nullable=False,
     )
 
@@ -299,7 +299,7 @@ class DCACategoryBallotSubmission(Base):
 
     ballot_id = Column(
         Integer,
-        ForeignKey("dca_category_ballots.id"),
+        ForeignKey("ledger_dca_category_ballots.id"),
         nullable=False,
     )
 
@@ -331,13 +331,13 @@ class DCACategoryBallotVote(Base):
 
     submission_id = Column(
         Integer,
-        ForeignKey("dca_category_ballot_submissions.id"),
+        ForeignKey("ledger_dca_category_ballot_submissions.id"),
         nullable=False,
     )
 
     category_id = Column(
         Integer,
-        ForeignKey("dca_categories.id"),
+        ForeignKey("ledger_dca_categories.id"),
         nullable=False,
     )
 
@@ -366,7 +366,7 @@ class DCARoundRecord(Base):
 
     edition_id = Column(
         Integer,
-        ForeignKey("dca_editions.id"),
+        ForeignKey("ledger_dca_editions.id"),
         nullable=False,
     )
 
