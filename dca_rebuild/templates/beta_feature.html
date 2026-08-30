@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>
+        {{ feature.name }} — LiteFeet Ledger
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/dca.css'
+        ) }}"
+    >
+</head>
+
+<body>
+
+{% include "_navigation.html" %}
+
+{% include "_beta_bar.html" %}
+
+<main class="ledger-feature-page">
+
+    <section class="ledger-feature-hero">
+
+        <div class="label">
+            LITEFEET LEDGER
+        </div>
+
+        {% if feature.visibility == "beta" %}
+            <div class="ledger-feature-status">
+                BETA
+            </div>
+        {% elif feature.visibility == "public" %}
+            <div class="ledger-feature-status">
+                PUBLIC
+            </div>
+        {% else %}
+            <div class="ledger-feature-status">
+                IN DEVELOPMENT
+            </div>
+        {% endif %}
+
+        <h1>
+            {{ feature.name }}
+        </h1>
+
+        <p class="lead">
+            {{ feature.description }}
+        </p>
+
+    </section>
+
+
+    <section class="ledger-feature-placeholder">
+
+        {% if feature.visibility == "placeholder" %}
+
+            <div class="label">
+                COMING TO THE LEDGER
+            </div>
+
+            <h2>
+                THIS PART OF THE ARCHIVE
+                IS BEING BUILT.
+            </h2>
+
+            <p>
+                This page establishes the future
+                home for {{ feature.name }} without
+                publishing unfinished records or
+                tools.
+            </p>
+
+        {% elif feature.visibility == "beta" %}
+
+            <div class="label">
+                BETA ACCESS
+            </div>
+
+            <h2>
+                YOU'RE INSIDE THE TEST.
+            </h2>
+
+            <p>
+                {{ feature.name }} has been opened
+                to Beta participants. Features and
+                records here may still change while
+                the Ledger is being developed.
+            </p>
+
+        {% else %}
+
+            <div class="label">
+                LITEFEET LEDGER
+            </div>
+
+            <h2>
+                {{ feature.name|upper }}
+            </h2>
+
+            <p>
+                This Ledger section is public.
+            </p>
+
+        {% endif %}
+
+
+        <div class="ledger-feature-actions">
+
+            <a href="{{ url_for('beta_home') }}">
+                WHAT'S BEING TESTED
+            </a>
+
+            <a href="{{ url_for('index') }}">
+                BACK TO LEDGER
+            </a>
+
+        </div>
+
+    </section>
+
+</main>
+
+{% include "_footer.html" %}
+
+</body>
+</html>

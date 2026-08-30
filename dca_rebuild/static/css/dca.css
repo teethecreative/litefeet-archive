@@ -3172,3 +3172,78 @@ main a:not(.site-nav a):not(.ledger-footer a):hover,
         grid-template-columns: 1fr;
     }
 }
+
+
+/* LITEFEET LEDGER — FEATURE PLACEHOLDERS */
+
+.ledger-feature-page {
+    width: min(1100px, calc(100% - 36px));
+    margin: 0 auto;
+    padding: 70px 0 90px;
+}
+
+.ledger-feature-hero {
+    max-width: 780px;
+    margin-bottom: 42px;
+}
+
+.ledger-feature-hero h1 {
+    margin: 10px 0 16px;
+    font-size: clamp(42px, 8vw, 92px);
+    line-height: .92;
+    text-transform: uppercase;
+}
+
+.ledger-feature-status {
+    display: inline-flex;
+    margin-top: 18px;
+    padding: 6px 9px;
+    color: #071a38;
+    background: var(--gold);
+    border: 1px solid var(--gold);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .12em;
+}
+
+.ledger-feature-placeholder {
+    max-width: 760px;
+    padding: 30px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.ledger-feature-placeholder h2 {
+    max-width: 620px;
+    margin: 10px 0 14px;
+}
+
+.ledger-feature-placeholder p {
+    max-width: 650px;
+    line-height: 1.6;
+}
+
+.ledger-feature-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 26px;
+}
+
+.ledger-feature-actions a,
+.beta-feature-card__action a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 11px 15px;
+    color: #071a38;
+    background: var(--gold);
+    border: 1px solid var(--gold);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.beta-feature-card__action {
+    margin-top: 18px;
+}

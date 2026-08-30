@@ -2183,6 +2183,56 @@ def beta_home():
         db.close()
 
 
+
+@app.route("/beta/feature/<feature_key>")
+def beta_feature_page(feature_key):
+    db = SessionLocal()
+
+    try:
+        ensure_beta_feature_flags(db)
+
+        feature = (
+            db.query(BetaFeatureFlag)
+            .filter(
+                BetaFeatureFlag.feature_key
+                == feature_key
+            )
+            .first()
+        )
+
+        if feature is None:
+            abort(404)
+
+        beta_active = bool(
+            session.get("ledger_beta_active")
+        )
+
+        if feature.visibility == "private":
+            abort(404)
+
+        if (
+            feature.visibility == "beta"
+            and not beta_active
+        ):
+            flash(
+                "Enter Beta Mode to access "
+                "this feature."
+            )
+
+            return redirect(
+                url_for("beta_home")
+            )
+
+        return render_template(
+            "beta_feature.html",
+            feature=feature,
+            beta_active=beta_active,
+        )
+
+    finally:
+        db.close()
+
+
 @app.route("/beta/enter", methods=["POST"])
 def beta_enter():
     email = (

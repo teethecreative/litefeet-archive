@@ -172,6 +172,15 @@
                     IN DEVELOPMENT
                 </span>
             {% endif %}
+
+            <div class="beta-feature-card__action">
+                <a href="{{ url_for(
+                    'beta_feature_page',
+                    feature_key=feature.feature_key
+                ) }}">
+                    OPEN {{ feature.name|upper }} →
+                </a>
+            </div>
         </article>
 
         {% endfor %}
