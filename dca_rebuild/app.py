@@ -214,11 +214,9 @@ def round1():
     methods=["GET", "POST"],
 )
 def round2():
-
     db = SessionLocal()
 
     try:
-
         historical = (
             db.query(DCAEdition)
             .filter_by(year=2023)
@@ -231,6 +229,17 @@ def round2():
             .first()
         )
 
+        if not historical or not current:
+            return render_template(
+                "round2.html",
+                category_items=[],
+                approved_suggestions=[],
+                method_results=[],
+                round1_submission_count=0,
+                round1_winner=None,
+                round1_method_tied=False,
+            )
+
         categories = (
             db.query(DCACategory)
             .filter(
@@ -240,20 +249,6 @@ def round2():
             .all()
         )
 
-
-        category_items = []
-
-        for category in categories:
-
-            category_items.append({
-                "category": category,
-                "meta": get_category_meta(
-                    category.name
-                ),
-            })
-
-
-        # Threshold is based on completed Round 1 submissions.
         round1_submission_count = (
             db.query(
                 DCACategorySuggestionSubmission
@@ -265,11 +260,170 @@ def round2():
             .count()
         )
 
-        threshold = round1_submission_count
+        # ----------------------------------------------------
+        # RETURNING CATEGORY LIVE RESULTS
+        # ----------------------------------------------------
 
+        vote_rows = (
+            db.query(
+                DCAReturnCategoryVote.category_id,
+                DCAReturnCategoryVote.bring_back,
+                func.count(
+                    DCAReturnCategoryVote.id
+                ),
+            )
+            .join(
+                DCACategorySuggestionSubmission,
+                DCACategorySuggestionSubmission.id
+                == DCAReturnCategoryVote.submission_id,
+            )
+            .filter(
+                DCACategorySuggestionSubmission.edition_id
+                == current.id
+            )
+            .group_by(
+                DCAReturnCategoryVote.category_id,
+                DCAReturnCategoryVote.bring_back,
+            )
+            .all()
+        )
 
-        # Determine preliminary Round 1 method winner.
-        method_counts = dict(
+        vote_map = {}
+
+        for category_id, bring_back, count in vote_rows:
+            if category_id not in vote_map:
+                vote_map[category_id] = {
+                    "keep": 0,
+                    "remove": 0,
+                }
+
+            if bring_back:
+                vote_map[category_id]["keep"] = count
+            else:
+                vote_map[category_id]["remove"] = count
+
+        category_items = []
+
+        for category in categories:
+            counts = vote_map.get(
+                category.id,
+                {
+                    "keep": 0,
+                    "remove": 0,
+                },
+            )
+
+            keep_count = counts["keep"]
+            remove_count = counts["remove"]
+            total = keep_count + remove_count
+
+            if total:
+                keep_percent = round(
+                    (keep_count / total) * 100
+                )
+                remove_percent = 100 - keep_percent
+            else:
+                keep_percent = 0
+                remove_percent = 0
+
+            # We deliberately do NOT assign an elimination
+            # threshold here. That rule has not been finalized.
+            if total == 0:
+                status = "Waiting for community votes"
+            elif keep_count > remove_count:
+                status = "Currently favored to return"
+            elif remove_count > keep_count:
+                status = "Currently trailing"
+            else:
+                status = "Currently tied"
+
+            category_items.append({
+                "category": category,
+                "meta": get_category_meta(
+                    category.name
+                ),
+                "keep_count": keep_count,
+                "remove_count": remove_count,
+                "total": total,
+                "keep_percent": keep_percent,
+                "remove_percent": remove_percent,
+                "status": status,
+            })
+
+        # Most-supported categories first.
+        category_items.sort(
+            key=lambda item: (
+                -item["keep_percent"],
+                -item["keep_count"],
+                item["category"].name.lower(),
+            )
+        )
+
+        # ----------------------------------------------------
+        # APPROVED / MODERATED NEW CATEGORY SUGGESTIONS
+        # ----------------------------------------------------
+
+        suggestions = (
+            db.query(DCANewCategorySuggestion)
+            .join(
+                DCACategorySuggestionSubmission,
+                DCACategorySuggestionSubmission.id
+                == DCANewCategorySuggestion.submission_id,
+            )
+            .filter(
+                DCACategorySuggestionSubmission.edition_id
+                == current.id,
+                DCANewCategorySuggestion.moderation_status.in_(
+                    ["approved", "merged"]
+                ),
+            )
+            .order_by(
+                DCANewCategorySuggestion.created_at.asc()
+            )
+            .all()
+        )
+
+        suggestion_groups = {}
+
+        for suggestion in suggestions:
+            if (
+                suggestion.moderation_status == "merged"
+                and suggestion.merged_into_id
+            ):
+                canonical_id = suggestion.merged_into_id
+            else:
+                canonical_id = suggestion.id
+
+            if canonical_id not in suggestion_groups:
+                canonical = (
+                    db.query(DCANewCategorySuggestion)
+                    .filter_by(id=canonical_id)
+                    .first()
+                )
+
+                if not canonical:
+                    canonical = suggestion
+
+                suggestion_groups[canonical_id] = {
+                    "name": canonical.category_name,
+                    "count": 0,
+                }
+
+            suggestion_groups[canonical_id]["count"] += 1
+
+        approved_suggestions = sorted(
+            suggestion_groups.values(),
+            key=lambda item: (
+                -item["count"],
+                item["name"].lower(),
+            ),
+        )
+
+        # ----------------------------------------------------
+        # ROUND 1 CATEGORY-COUNT PREFERENCE
+        # ----------------------------------------------------
+
+        raw_method_counts = dict(
             db.query(
                 DCACategorySuggestionSubmission
                 .category_count_preference,
@@ -288,94 +442,70 @@ def round2():
             .all()
         )
 
-
-        labels = {
+        method_labels = {
             "top_25": "Top 25",
-            "threshold": f"Threshold: {threshold} Votes",
+            "threshold": "Threshold",
             "all": "All Categories",
         }
 
+        method_results = []
 
-        round1_winner_key = None
+        for key in [
+            "top_25",
+            "threshold",
+            "all",
+        ]:
+            count = raw_method_counts.get(key, 0)
+
+            if round1_submission_count:
+                percent = round(
+                    count
+                    / round1_submission_count
+                    * 100
+                )
+            else:
+                percent = 0
+
+            method_results.append({
+                "key": key,
+                "label": method_labels[key],
+                "count": count,
+                "percent": percent,
+            })
+
         round1_winner = None
         round1_method_tied = False
 
-        if method_counts:
-
-            highest = max(method_counts.values())
+        if raw_method_counts:
+            highest = max(
+                raw_method_counts.values()
+            )
 
             winners = [
                 key
-                for key, value in method_counts.items()
-                if value == highest
+                for key, count
+                in raw_method_counts.items()
+                if count == highest
             ]
 
             if len(winners) == 1:
-                round1_winner_key = winners[0]
-                round1_winner = labels[round1_winner_key]
+                round1_winner = (
+                    method_labels[winners[0]]
+                )
             else:
                 round1_method_tied = True
-                round1_winner = "Tied Preliminary Vote"
-
-
-        # Round 2 final-method ballot:
-        #
-        # Top 25 wins Round 1:
-        #   Top 25 / Threshold / All
-        #
-        # Threshold wins Round 1:
-        #   Threshold / All
-        #
-        # All wins Round 1:
-        #   All / Threshold
-        #
-        # If Round 1 is tied or has no submissions yet,
-        # admin preview shows all three but the result
-        # remains unresolved.
-        if round1_winner_key == "threshold":
-            final_method_options = [
-                "threshold",
-                "all",
-            ]
-
-        elif round1_winner_key == "all":
-            final_method_options = [
-                "all",
-                "threshold",
-            ]
-
-        else:
-            final_method_options = [
-                "top_25",
-                "threshold",
-                "all",
-            ]
-
-
-        # Round 2 remains preview-only until we deliberately
-        # finalize Round 1 and create the official ballot.
-        preview = True
-
-
-        if request.method == "POST":
-
-            flash(
-                "Round 2 is not open yet."
-            )
-
-            return redirect(
-                url_for("round2")
-            )
-
+                round1_winner = (
+                    "Currently tied"
+                )
 
         return render_template(
             "round2.html",
             category_items=category_items,
-            threshold=threshold,
+            approved_suggestions=approved_suggestions,
+            method_results=method_results,
+            round1_submission_count=round1_submission_count,
             round1_winner=round1_winner,
             round1_method_tied=round1_method_tied,
-            final_method_options=final_method_options,
-            preview=preview,
         )
 
     finally:

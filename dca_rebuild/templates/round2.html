@@ -2,16 +2,15 @@
 <html data-theme="dark">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
 
-    <title>DCA 2026 — Category Voting</title>
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
 
-    <script>
-        const savedTheme = localStorage.getItem("dca-theme");
-        if (savedTheme) {
-            document.documentElement.dataset.theme = savedTheme;
-        }
-    </script>
+    <title>
+        DCA 2026 — Round 2 Preview
+    </title>
 
     <link
         rel="stylesheet"
@@ -23,239 +22,208 @@
 
 {% include "_navigation.html" %}
 
-
-<div class="theme-toggle">
-    <button id="lightButton" type="button" onclick="setTheme('light')">
-        LIGHT
-    </button>
-
-    <button id="darkButton" type="button" onclick="setTheme('dark')">
-        DARK
-    </button>
-</div>
-
 <main>
 
 <header>
-    <div class="label">DANCER'S CHOICE AWARDS · 2026</div>
-    <div class="round">ROUND 02</div>
+    <div class="label">
+        DANCER'S CHOICE AWARDS · 2026
+    </div>
+
+    <div class="round">
+        ROUND 02
+    </div>
 
     <h1>
         CATEGORY<br>
         VOTING
     </h1>
 
+    <div class="round2-live-preview-label">
+        PREVIEW
+    </div>
+
     <p class="lead">
-        Choose the categories you want to become official
-        Dancer's Choice Awards categories.
+        Round 1 is currently in progress. This preview
+        updates as the community votes and shows what the
+        Round 2 ballot could look like based on results
+        so far.
     </p>
 
-    {% if preview %}
     <p class="preview-warning">
-        ADMIN PREVIEW — ROUND 2 IS NOT OPEN
+        ROUND 2 VOTING HAS NOT STARTED
     </p>
-    {% else %}
-    <p class="notice">
-        ONE COMPLETED SUBMISSION EVERY 24 HOURS
-    </p>
-    {% endif %}
 </header>
 
 
-{% with messages = get_flashed_messages() %}
-    {% for message in messages %}
-        <div class="flash">{{ message }}</div>
-    {% endfor %}
-{% endwith %}
-
-
-<form method="post">
-
-<section>
+<section class="round2-preview-summary">
 
     <div class="number">01</div>
 
-    <h2>CHOOSE YOUR CATEGORIES</h2>
+    <h2>
+        ROUND 1 RIGHT NOW
+    </h2>
 
     <p class="description">
-        Select every category you think should continue
-        to the 2026 Dancer's Choice Awards.
+        {{ round1_submission_count }}
+        completed Round 1
+        submission{% if round1_submission_count != 1 %}s{% endif %}
+        are currently represented below.
     </p>
 
-    <div class="round2-counter">
-        <strong id="selectedCount">0</strong>
-        <span>CATEGORIES SELECTED</span>
+    {% if round1_winner %}
+    <div class="community-choice">
+        <span>
+            CURRENT CATEGORY-LIST PREFERENCE
+        </span>
+
+        <strong>
+            {{ round1_winner }}
+        </strong>
+
+        {% if round1_method_tied %}
+        <small>
+            The preliminary community vote is currently tied.
+        </small>
+        {% endif %}
     </div>
-
-
-    <div class="categories round2-categories">
-
-        {% for item in category_items %}
-
-        {% set category = item.category %}
-        {% set meta = item.meta %}
-
-        <label class="category round2-category">
-
-            <input
-                class="category-checkbox"
-                type="checkbox"
-                name="category"
-                value="{{ category.id }}"
-            >
-
-            <div class="round2-card-content">
-
-                <div class="origin">
-                    {% if meta.get('winners') %}
-                        2023 AWARD CATEGORY
-                    {% else %}
-                        ADDITIONAL 2023 CATEGORY
-                    {% endif %}
-                </div>
-
-                <h3>{{ category.name }}</h3>
-
-                <p class="category-description">
-                    {{ meta.get('description') }}
-                </p>
-
-
-                {% if meta.get('winners') %}
-
-                <div class="past-winner">
-
-                    <small>
-                        2023 WINNER{% if meta.get('winners')|length > 1 %}S{% endif %}
-                    </small>
-
-                    {% for winner in meta.get('winners') %}
-
-                    <div class="winner-entry">
-
-                        <strong>{{ winner.name }}</strong>
-
-                        {% if winner.team %}
-                        <div class="winner-detail">
-                            {{ winner.team }}
-                        </div>
-                        {% endif %}
-
-                        {% if winner.location %}
-                        <div class="winner-detail">
-                            {{ winner.location }}
-                        </div>
-                        {% endif %}
-
-                    </div>
-
-                    {% endfor %}
-
-                </div>
-
-                {% else %}
-
-                <div class="past-winner no-winner-box">
-                    <span class="no-winner">
-                        No Previous Winners
-                    </span>
-                </div>
-
-                {% endif %}
-
-
-                <div class="select-category">
-                    <span class="unchecked-text">
-                        SELECT CATEGORY
-                    </span>
-
-                    <span class="checked-text">
-                        ✓ SELECTED
-                    </span>
-                </div>
-
-            </div>
-
-        </label>
-
-        {% endfor %}
-
-    </div>
+    {% endif %}
 
 </section>
-
 
 
 <section>
 
     <div class="number">02</div>
 
-    <h2>HOW SHOULD THE FINAL LIST BE DECIDED?</h2>
+    <h2>
+        RETURNING CATEGORY RESULTS
+    </h2>
 
     <p class="description">
-        This vote is binding. The option receiving the most
-        community votes will determine how the final category
-        list is created.
+        These are live Round 1 results for categories
+        previously considered in the Dancer's Choice
+        Awards process. Results can change while Round 1
+        remains open.
     </p>
 
+    <div class="round2-preview-grid">
 
-    {% if round1_winner %}
-    <div class="community-choice">
-        <span>ROUND 1 COMMUNITY CHOICE</span>
-        <strong>{{ round1_winner }}</strong>
-    </div>
-    {% endif %}
+        {% for item in category_items %}
 
+        {% set category = item.category %}
+        {% set meta = item.meta %}
 
-    <div class="methods">
+        <article class="round2-preview-card">
 
-        {% for method in final_method_options %}
+            <div class="round2-preview-card-top">
 
-        <label class="method">
+                <div>
+                    {% if meta.get('winners') %}
+                    <span class="round2-history-label">
+                        2023 AWARD CATEGORY
+                    </span>
+                    {% else %}
+                    <span class="round2-history-label">
+                        NO PREVIOUS WINNER
+                    </span>
+                    {% endif %}
 
-            <input
-                type="radio"
-                name="final_method_vote"
-                value="{{ method }}"
-                required
-            >
+                    <h3>
+                        {{ category.name }}
+                    </h3>
+                </div>
 
-            <div>
-
-                {% if method == "top_25" %}
-
-                    <strong>TOP 25</strong>
-
-                    <p>
-                        Only the 25 categories receiving the most
-                        Category Voting votes become official.
-                    </p>
-
-                {% elif method == "threshold" %}
-
-                    <strong>
-                        THRESHOLD: {{ threshold }} VOTES
-                    </strong>
-
-                    <p>
-                        Every category receiving at least
-                        {{ threshold }} votes becomes official.
-                    </p>
-
-                {% elif method == "all" %}
-
-                    <strong>ALL CATEGORIES</strong>
-
-                    <p>
-                        Every category appearing on the Category
-                        Voting ballot becomes official.
-                    </p>
-
-                {% endif %}
+                <span class="round2-status">
+                    {{ item.status }}
+                </span>
 
             </div>
 
-        </label>
+
+            {% if meta.get('winners') %}
+
+            <div class="past-winner">
+                <small>
+                    2023 WINNER{% if meta.get('winners')|length > 1 %}S{% endif %}
+                </small>
+
+                {% for winner in meta.get('winners') %}
+
+                <div class="winner-entry">
+                    <strong>
+                        {{ winner.name }}
+                    </strong>
+
+                    {% if winner.team %}
+                    <div class="winner-detail">
+                        {{ winner.team }}
+                    </div>
+                    {% endif %}
+
+                    {% if winner.location %}
+                    <div class="winner-detail">
+                        {{ winner.location }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% endfor %}
+            </div>
+
+            {% else %}
+
+            <div class="past-winner no-winner-box">
+                <span class="no-winner">
+                    No Previous Winners
+                </span>
+            </div>
+
+            {% endif %}
+
+
+            <div class="round2-result-row">
+
+                <div class="round2-result keep">
+                    <span>KEEP</span>
+
+                    <strong>
+                        {{ item.keep_percent }}%
+                    </strong>
+
+                    <small>
+                        {{ item.keep_count }}
+                        vote{% if item.keep_count != 1 %}s{% endif %}
+                    </small>
+                </div>
+
+                <div class="round2-result remove">
+                    <span>REMOVE</span>
+
+                    <strong>
+                        {{ item.remove_percent }}%
+                    </strong>
+
+                    <small>
+                        {{ item.remove_count }}
+                        vote{% if item.remove_count != 1 %}s{% endif %}
+                    </small>
+                </div>
+
+            </div>
+
+            <div class="round2-result-bar">
+                <span
+                    class="round2-result-bar-keep"
+                    style="width: {{ item.keep_percent }}%"
+                ></span>
+            </div>
+
+            <div class="round2-response-count">
+                {{ item.total }}
+                total response{% if item.total != 1 %}s{% endif %}
+            </div>
+
+        </article>
 
         {% endfor %}
 
@@ -264,98 +232,136 @@
 </section>
 
 
-
 <section>
 
     <div class="number">03</div>
 
-    <h2>LOCK IN YOUR CATEGORY VOTE.</h2>
-
-    {% if preview %}
+    <h2>
+        NEW CATEGORY SUGGESTIONS
+    </h2>
 
     <p class="description">
-        This is an admin preview. Submissions are disabled until
-        Round 1 closes and the Round 2 ballot is finalized.
+        Only suggestions that have been reviewed are shown
+        here. Pending or rejected submissions are never
+        displayed in this public preview.
     </p>
 
-    <button class="submit preview-submit" type="button" disabled>
-        ROUND 2 NOT OPEN
-    </button>
+    {% if approved_suggestions %}
+
+    <div class="round2-suggestion-list">
+
+        {% for suggestion in approved_suggestions %}
+
+        <div class="round2-suggestion-item">
+            <strong>
+                {{ suggestion.name }}
+            </strong>
+
+            {% if suggestion.count > 1 %}
+            <span>
+                {{ suggestion.count }}
+                merged suggestions
+            </span>
+            {% else %}
+            <span>
+                Community suggestion
+            </span>
+            {% endif %}
+        </div>
+
+        {% endfor %}
+
+    </div>
 
     {% else %}
 
-    <p class="description">
-        Enter your email to submit your Category Voting ballot.
-        You can submit one completed ballot every 24 hours
-        during this round.
-    </p>
-
-    <input
-        class="email"
-        type="email"
-        name="email"
-        placeholder="Email address"
-        required
-    >
-
-    <button class="submit" type="submit">
-        SUBMIT CATEGORY VOTE →
-    </button>
+    <div class="round2-empty-state">
+        No reviewed community suggestions are ready
+        to display yet.
+    </div>
 
     {% endif %}
 
 </section>
 
-</form>
+
+<section>
+
+    <div class="number">04</div>
+
+    <h2>
+        HOW SHOULD THE FINAL LIST BE DECIDED?
+    </h2>
+
+    <p class="description">
+        This is the current Round 1 preference survey.
+        It is preliminary. The binding decision will
+        happen during Round 2.
+    </p>
+
+    <div class="round2-method-results">
+
+        {% for method in method_results %}
+
+        <div class="round2-method-result">
+
+            <div class="round2-method-heading">
+                <strong>
+                    {{ method.label }}
+                </strong>
+
+                <span>
+                    {{ method.percent }}%
+                </span>
+            </div>
+
+            <div class="round2-method-bar">
+                <span
+                    style="width: {{ method.percent }}%"
+                ></span>
+            </div>
+
+            <small>
+                {{ method.count }}
+                vote{% if method.count != 1 %}s{% endif %}
+            </small>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+<section class="round2-preview-footer">
+
+    <div class="number">05</div>
+
+    <h2>
+        WHAT HAPPENS NEXT?
+    </h2>
+
+    <p class="description">
+        Round 1 results are still developing. After
+        Round 1 closes, the category list will be
+        reviewed and the official Round 2 ballot will
+        be finalized.
+    </p>
+
+    <a
+        class="submit"
+        href="{{ url_for('round1') }}"
+    >
+        PARTICIPATE IN ROUND 1 →
+    </a>
+
+</section>
 
 </main>
 
+{% include "_footer.html" %}
 
-<script>
-
-function setTheme(theme) {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem("dca-theme", theme);
-    updateThemeButtons();
-}
-
-function updateThemeButtons() {
-    const theme = document.documentElement.dataset.theme;
-
-    document
-        .getElementById("lightButton")
-        .classList.toggle("active", theme === "light");
-
-    document
-        .getElementById("darkButton")
-        .classList.toggle("active", theme === "dark");
-}
-
-function updateSelectedCount() {
-    const selected =
-        document.querySelectorAll(
-            ".category-checkbox:checked"
-        ).length;
-
-    document.getElementById("selectedCount").textContent =
-        selected;
-}
-
-document
-    .querySelectorAll(".category-checkbox")
-    .forEach((checkbox) => {
-        checkbox.addEventListener(
-            "change",
-            updateSelectedCount
-        );
-    });
-
-updateThemeButtons();
-updateSelectedCount();
-
-</script>
-
-
-    {% include "_footer.html" %}
 </body>
 </html>
