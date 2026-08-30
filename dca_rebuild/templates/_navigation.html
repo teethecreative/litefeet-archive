@@ -1,16 +1,30 @@
 <nav class="awards-global-nav">
-
     <a
         class="awards-brand"
-        href="{{ url_for('dca_2026_home') }}"
+        href="{{ url_for('ledger_home') }}"
     >
         LITEFEET LEDGER
     </a>
 
+    <button
+        class="mobile-nav-toggle"
+        type="button"
+        aria-label="Open navigation"
+        aria-expanded="false"
+    >
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
     <div class="awards-nav-groups">
 
         <div class="nav-dropdown">
-            <button class="nav-dropdown-button" type="button">
+            <button
+                class="nav-dropdown-button"
+                type="button"
+                aria-expanded="false"
+            >
                 DANCER'S CHOICE AWARDS
                 <span>▾</span>
             </button>
@@ -26,14 +40,12 @@
             </div>
         </div>
 
-
         <a
             class="nav-direct-link"
             href="{{ url_for('lfa_home') }}"
         >
             LITEFEET AWARDS
         </a>
-
 
         <a
             class="nav-direct-link"
@@ -42,9 +54,12 @@
             HYPEITUPTV AWARDS
         </a>
 
-
         <div class="nav-dropdown">
-            <button class="nav-dropdown-button" type="button">
+            <button
+                class="nav-dropdown-button"
+                type="button"
+                aria-expanded="false"
+            >
                 ADMIN
                 <span>▾</span>
             </button>
@@ -56,9 +71,7 @@
             </div>
         </div>
 
-
         <div class="global-theme-control">
-
             <span>LIGHT</span>
 
             <button
@@ -72,17 +85,16 @@
             </button>
 
             <span>DARK</span>
-
         </div>
 
     </div>
-
 </nav>
 
 <script>
 (function () {
-
     const root = document.documentElement;
+    const nav = document.querySelector(".awards-global-nav");
+    const menuToggle = document.querySelector(".mobile-nav-toggle");
     const storageKey = "litefeet-awards-theme";
 
     function applyTheme(theme) {
@@ -90,19 +102,14 @@
         localStorage.setItem(storageKey, theme);
     }
 
-    const saved =
-        localStorage.getItem(storageKey) || "light";
+    applyTheme(
+        localStorage.getItem(storageKey) || "light"
+    );
 
-    applyTheme(saved);
-
-    document.querySelectorAll(
-        ".global-theme-toggle"
-    ).forEach(function (button) {
-
-        button.addEventListener(
-            "click",
-            function () {
-
+    document
+        .querySelectorAll(".global-theme-toggle")
+        .forEach(function (button) {
+            button.addEventListener("click", function () {
                 const current =
                     root.dataset.theme || "light";
 
@@ -111,52 +118,136 @@
                         ? "light"
                         : "dark"
                 );
-            }
-        );
+            });
+        });
 
-    });
-
-    document.querySelectorAll(
-        ".nav-dropdown-button"
-    ).forEach(function (button) {
-
-        button.addEventListener(
+    if (menuToggle && nav) {
+        menuToggle.addEventListener(
             "click",
             function (event) {
-
                 event.stopPropagation();
 
-                const parent =
-                    button.closest(".nav-dropdown");
+                const open =
+                    nav.classList.toggle(
+                        "mobile-nav-open"
+                    );
 
-                document.querySelectorAll(
-                    ".nav-dropdown.open"
-                ).forEach(function (dropdown) {
-
-                    if (dropdown !== parent) {
-                        dropdown.classList.remove("open");
-                    }
-
-                });
-
-                parent.classList.toggle("open");
+                menuToggle.setAttribute(
+                    "aria-expanded",
+                    open ? "true" : "false"
+                );
             }
         );
+    }
 
-    });
+    document
+        .querySelectorAll(".nav-dropdown-button")
+        .forEach(function (button) {
+            button.addEventListener(
+                "click",
+                function (event) {
+                    event.stopPropagation();
+
+                    const parent =
+                        button.closest(".nav-dropdown");
+
+                    document
+                        .querySelectorAll(
+                            ".nav-dropdown.open"
+                        )
+                        .forEach(function (dropdown) {
+                            if (dropdown !== parent) {
+                                dropdown.classList.remove(
+                                    "open"
+                                );
+
+                                const otherButton =
+                                    dropdown.querySelector(
+                                        ".nav-dropdown-button"
+                                    );
+
+                                if (otherButton) {
+                                    otherButton.setAttribute(
+                                        "aria-expanded",
+                                        "false"
+                                    );
+                                }
+                            }
+                        });
+
+                    const open =
+                        parent.classList.toggle("open");
+
+                    button.setAttribute(
+                        "aria-expanded",
+                        open ? "true" : "false"
+                    );
+                }
+            );
+        });
+
+    document
+        .querySelectorAll(".nav-dropdown-menu a")
+        .forEach(function (link) {
+            link.addEventListener(
+                "click",
+                function () {
+                    if (nav) {
+                        nav.classList.remove(
+                            "mobile-nav-open"
+                        );
+                    }
+
+                    if (menuToggle) {
+                        menuToggle.setAttribute(
+                            "aria-expanded",
+                            "false"
+                        );
+                    }
+                }
+            );
+        });
 
     document.addEventListener(
         "click",
-        function () {
+        function (event) {
+            if (
+                nav &&
+                nav.classList.contains("mobile-nav-open") &&
+                !nav.contains(event.target)
+            ) {
+                nav.classList.remove(
+                    "mobile-nav-open"
+                );
 
-            document.querySelectorAll(
-                ".nav-dropdown.open"
-            ).forEach(function (dropdown) {
-                dropdown.classList.remove("open");
-            });
+                if (menuToggle) {
+                    menuToggle.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
+                }
+            }
 
+            document
+                .querySelectorAll(".nav-dropdown.open")
+                .forEach(function (dropdown) {
+                    if (!dropdown.contains(event.target)) {
+                        dropdown.classList.remove("open");
+
+                        const button =
+                            dropdown.querySelector(
+                                ".nav-dropdown-button"
+                            );
+
+                        if (button) {
+                            button.setAttribute(
+                                "aria-expanded",
+                                "false"
+                            );
+                        }
+                    }
+                });
         }
     );
-
 })();
 </script>

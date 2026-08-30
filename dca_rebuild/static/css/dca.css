@@ -1732,672 +1732,43 @@ html[data-theme="light"] .dca-admin-dropdown a.active {
 
 
 /* ==========================================================
-   AWARDS GLOBAL NAVIGATION
+   LITEFEET LEDGER — GLOBAL NAVIGATION
    ========================================================== */
-
-.awards-nav {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 30px;
-
-    width: min(1500px, calc(100% - 48px));
-    box-sizing: border-box;
-
-    margin: 0 auto;
-    padding: 13px 18px;
-
-    background: #061a38;
-    border-bottom: 3px solid var(--gold);
-
-    box-shadow: 0 8px 30px rgba(0,0,0,.2);
-}
-
-.awards-brand {
-    color: var(--gold-light);
-    text-decoration: none;
-
-    font-size: 12px;
-    font-weight: 950;
-    letter-spacing: .13em;
-
-    white-space: nowrap;
-}
-
-.awards-nav-groups {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.nav-dropdown {
-    position: relative;
-}
-
-.nav-dropdown-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    padding: 10px 12px;
-
-    color: #e5edf9;
-    background: transparent;
-
-    border: 1px solid transparent;
-
-    font: inherit;
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: .07em;
-
-    cursor: pointer;
-}
-
-.nav-dropdown-button:hover,
-.nav-dropdown.open .nav-dropdown-button {
-    color: #07111f;
-    background: var(--gold-light);
-    border-color: var(--gold);
-}
-
-.nav-dropdown-button span {
-    font-size: 10px;
-}
-
-.nav-dropdown.open
-.nav-dropdown-button span {
-    transform: rotate(180deg);
-}
-
-
-/* DROPDOWNS */
-
-.nav-dropdown-panel {
-    position: absolute;
-
-    top: calc(100% + 8px);
-    left: 0;
-
-    display: none;
-
-    width: 260px;
-    box-sizing: border-box;
-
-    padding: 8px;
-
-    background: #061a38;
-
-    border: 1px solid var(--gold);
-
-    box-shadow: 0 20px 50px rgba(0,0,0,.4);
-}
-
-.nav-admin .nav-dropdown-panel {
-    right: 0;
-    left: auto;
-}
-
-.nav-dropdown.open
-.nav-dropdown-panel {
-    display: block;
-}
-
-.nav-dropdown-heading {
-    padding: 9px 11px;
-
-    color: var(--gold);
-
-    font-size: 9px;
-    font-weight: 900;
-    letter-spacing: .14em;
-}
-
-.nav-dropdown-panel a {
-    display: block;
-
-    padding: 12px;
-
-    color: #ffffff;
-
-    text-decoration: none;
-
-    border-left: 3px solid transparent;
-}
-
-.nav-dropdown-panel a + a {
-    border-top:
-        1px solid
-        rgba(255,255,255,.08);
-}
-
-.nav-dropdown-panel a:hover {
-    background: rgba(255,255,255,.07);
-    border-left-color: var(--gold);
-}
-
-.nav-dropdown-panel strong {
-    display: block;
-
-    font-size: 13px;
-    letter-spacing: .05em;
-}
-
-.nav-dropdown-panel small {
-    display: block;
-
-    margin-top: 3px;
-
-    color: #aebed5;
-
-    font-size: 10px;
-}
-
-.nav-coming-soon {
-    padding: 12px;
-
-    color: #8293ab;
-
-    font-size: 10px;
-    line-height: 1.5;
-
-    border-top:
-        1px solid
-        rgba(255,255,255,.08);
-}
-
-
-/* ==========================================================
-   YEAR LANDING PAGES
-   ========================================================== */
-
-.award-landing {
-    width: min(1400px, calc(100% - 48px));
-
-    margin: 0 auto;
-    padding: 70px 0 100px;
-}
-
-.award-landing-hero {
-    padding-bottom: 35px;
-
-    border-bottom:
-        1px solid
-        rgba(201,162,39,.4);
-}
-
-.award-eyebrow,
-.status-label {
-    color: var(--gold);
-
-    font-size: 10px;
-    font-weight: 950;
-    letter-spacing: .18em;
-}
-
-.award-landing-hero h1 {
-    margin: 7px 0 5px;
-
-    font-size: clamp(55px, 9vw, 120px);
-    line-height: .9;
-}
-
-.award-landing-subtitle {
-    max-width: 650px;
-
-    font-size: 17px;
-    opacity: .75;
-}
-
-.award-year-status,
-.archive-build-card {
-    margin-top: 35px;
-    padding: 35px;
-
-    border: 1px solid rgba(201,162,39,.5);
-}
-
-.archive-build-card {
-    position: relative;
-    overflow: hidden;
-
-    min-height: 300px;
-}
-
-.archive-build-card h2 {
-    max-width: 700px;
-
-    margin: 12px 0 15px;
-
-    font-size: clamp(25px, 4vw, 45px);
-}
-
-.archive-build-card p {
-    position: relative;
-    z-index: 2;
-
-    max-width: 700px;
-
-    line-height: 1.7;
-}
-
-.archive-year-mark {
-    position: absolute;
-
-    right: 20px;
-    bottom: -25px;
-
-    font-size: clamp(100px, 18vw, 240px);
-    font-weight: 950;
-
-    color: rgba(201,162,39,.08);
-
-    line-height: 1;
-}
-
-.year-actions {
-    display: grid;
-
-    grid-template-columns:
-        repeat(2, minmax(0,1fr));
-
-    gap: 18px;
-
-    margin-top: 25px;
-}
-
-.year-action-card {
-    display: block;
-
-    padding: 28px;
-
-    color: inherit;
-    text-decoration: none;
-
-    border: 1px solid rgba(201,162,39,.45);
-}
-
-.year-action-card:hover {
-    border-color: var(--gold);
-    transform: translateY(-2px);
-}
-
-.year-action-card > span {
-    color: var(--gold);
-
-    font-size: 9px;
-    font-weight: 900;
-    letter-spacing: .15em;
-}
-
-.year-action-card h3 {
-    margin: 9px 0;
-
-    font-size: 24px;
-}
-
-.year-action-card p {
-    line-height: 1.6;
-    opacity: .75;
-}
-
-.year-action-card strong {
-    display: block;
-
-    margin-top: 22px;
-
-    color: var(--gold-light);
-
-    font-size: 10px;
-    letter-spacing: .1em;
-}
-
-
-/* LIGHT MODE */
-
-html[data-theme="light"]
-.awards-nav {
-    background: #092b63;
-}
-
-html[data-theme="light"]
-.nav-dropdown-panel {
-    background: #ffffff;
-}
-
-html[data-theme="light"]
-.nav-dropdown-panel a {
-    color: #071a38;
-}
-
-html[data-theme="light"]
-.nav-dropdown-panel small {
-    color: #617086;
-}
-
-
-/* MOBILE */
-
-@media (max-width: 760px) {
-
-    .awards-nav {
-        align-items: flex-start;
-        flex-direction: column;
-
-        gap: 10px;
-
-        width: calc(100% - 24px);
-    }
-
-    .awards-nav-groups {
-        width: 100%;
-
-        overflow-x: auto;
-    }
-
-    .nav-dropdown {
-        flex-shrink: 0;
-    }
-
-    .nav-dropdown-panel {
-        position: fixed;
-
-        top: 105px;
-        right: 12px;
-        left: 12px;
-
-        width: auto;
-    }
-
-    .year-actions {
-        grid-template-columns: 1fr;
-    }
-
-    .award-landing {
-        width: calc(100% - 30px);
-        padding-top: 45px;
-    }
-}
-
-
-:root,
-html[data-theme="light"] {
-    --awards-bg: #f4f7fb;
-    --awards-surface: #ffffff;
-    --awards-surface-alt: #eaf0f7;
-    --awards-text: #071a38;
-    --awards-muted: #5e6d82;
-    --awards-blue: #092b63;
-    --awards-blue-bright: #0d3d83;
-    --awards-gold: #c9a227;
-    --awards-gold-light: #e7cb68;
-    --awards-border: rgba(9, 43, 99, .18);
-    --gold: var(--awards-gold);
-    --gold-light: var(--awards-gold-light);
-}
-
-html[data-theme="dark"] {
-    --awards-bg: #030914;
-    --awards-surface: #071426;
-    --awards-surface-alt: #0b1d35;
-    --awards-text: #f5f8fc;
-    --awards-muted: #a8b5c8;
-    --awards-blue: #0b2d62;
-    --awards-blue-bright: #1550a1;
-    --awards-gold: #d0aa32;
-    --awards-gold-light: #f0d77a;
-    --awards-border: rgba(255, 255, 255, .12);
-    --gold: var(--awards-gold);
-    --gold-light: var(--awards-gold-light);
-}
-
-html,
-body {
-    color: var(--awards-text);
-    background: var(--awards-bg);
-}
-
-body,
-.category-card,
-.round-card,
-.admin-card,
-.archive-build-card,
-.award-year-status,
-.year-action-card,
-.lfa-year-card,
-.lfa-community-call,
-input,
-select,
-textarea {
-    transition:
-        background-color .18s ease,
-        color .18s ease,
-        border-color .18s ease;
-}
-
-.category-card,
-.round-card,
-.admin-card,
-.archive-build-card,
-.award-year-status,
-.year-action-card,
-.lfa-year-card,
-.lfa-community-call {
-    color: var(--awards-text);
-    background: var(--awards-surface);
-}
-
-.awards-nav {
-    color: #ffffff;
-    background: var(--awards-blue);
-    border-bottom-color: var(--awards-gold);
-}
-
-.awards-brand {
-    color: var(--awards-gold-light);
-}
-
-.nav-dropdown-button {
-    color: #ffffff;
-}
-
-.nav-dropdown-button:hover,
-.nav-dropdown.open .nav-dropdown-button {
-    color: #07111f;
-    background: var(--awards-gold-light);
-    border-color: var(--awards-gold);
-}
-
-.nav-dropdown-panel {
-    color: var(--awards-text);
-    background: var(--awards-surface);
-    border-color: var(--awards-gold);
-}
-
-.nav-dropdown-panel a {
-    color: var(--awards-text);
-}
-
-.nav-dropdown-panel a:hover {
-    background: var(--awards-surface-alt);
-    border-left-color: var(--awards-gold);
-}
-
-.nav-dropdown-panel small {
-    color: var(--awards-muted);
-}
-
-.global-theme-control {
-    display: flex;
-    align-items: center;
-}
-
-.global-theme-toggle {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-
-    min-height: 38px;
-    padding: 7px 9px;
-
-    color: #ffffff;
-    background: transparent;
-
-    border: 1px solid rgba(231, 203, 104, .45);
-
-    font: inherit;
-    font-size: 8px;
-    font-weight: 900;
-    letter-spacing: .08em;
-
-    cursor: pointer;
-}
-
-.global-theme-toggle:hover {
-    border-color: var(--awards-gold);
-}
-
-.theme-toggle-track {
-    position: relative;
-
-    width: 32px;
-    height: 17px;
-
-    background: rgba(255, 255, 255, .18);
-    border: 1px solid rgba(255, 255, 255, .35);
-    border-radius: 20px;
-}
-
-.theme-toggle-dot {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-
-    width: 11px;
-    height: 11px;
-
-    background: var(--awards-gold-light);
-    border-radius: 50%;
-
-    transition: transform .18s ease;
-}
-
-html[data-theme="dark"] .theme-toggle-dot {
-    transform: translateX(15px);
-}
-
-html[data-theme="light"] .theme-sun,
-html[data-theme="dark"] .theme-moon {
-    color: var(--awards-gold-light);
-}
-
-input,
-select,
-textarea {
-    color: var(--awards-text);
-    background: var(--awards-surface);
-    border-color: var(--awards-border);
-}
-
-input::placeholder,
-textarea::placeholder {
-    color: var(--awards-muted);
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-    border-color: var(--awards-gold);
-    outline-color: var(--awards-gold);
-}
-
-.choice,
-.vote-choice,
-.radio-option,
-.method-option {
-    color: var(--awards-text);
-    background: var(--awards-surface-alt);
-    border-color: var(--awards-border);
-}
-
-.choice:hover,
-.vote-choice:hover,
-.radio-option:hover,
-.method-option:hover {
-    border-color: var(--awards-gold);
-}
-
-button[type="submit"],
-.submit,
-.lfa-submit-button {
-    color: #07111f;
-    background: var(--awards-gold-light);
-    border-color: var(--awards-gold);
-}
-
-@media (max-width: 760px) {
-    .global-theme-toggle {
-        flex-shrink: 0;
-    }
-}
-
-
-/* =========================================================
-   LITEFEET LEDGER — GLOBAL NAV REPAIR
-   ========================================================= */
 
 .awards-global-nav {
     position: relative;
     z-index: 1000;
-
-    width: 100%;
-    min-height: 72px;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 28px;
-
-    padding: 0 32px;
-
+    width: 100%;
+    min-height: 68px;
+    padding: 0 28px;
     box-sizing: border-box;
-
-    background: var(--awards-nav-bg, #071a38);
+    background: #0b2c5f;
     border-bottom: 2px solid var(--awards-gold, #d8ad27);
 }
 
 .awards-brand {
     flex: 0 0 auto;
-
-    color: var(--awards-gold, #d8ad27) !important;
-
-    font-size: 15px;
+    color: var(--awards-gold-light, #f0d778);
+    font-size: 14px;
     font-weight: 900;
-    letter-spacing: .12em;
+    letter-spacing: .11em;
     line-height: 1;
-
-    text-decoration: none !important;
+    text-decoration: none;
     white-space: nowrap;
 }
 
 .awards-nav-groups {
-    flex: 1;
-
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 22px;
-
-    min-width: 0;
+    gap: 20px;
 }
 
 .nav-dropdown {
     position: relative;
-    flex: 0 0 auto;
 }
 
 .nav-dropdown-button,
@@ -2405,50 +1776,40 @@ button[type="submit"],
     display: inline-flex;
     align-items: center;
     gap: 7px;
-
-    padding: 25px 0 22px;
-
+    min-height: 68px;
+    padding: 0;
+    color: #ffffff;
+    background: transparent;
     border: 0;
     border-bottom: 3px solid transparent;
-
-    color: var(--awards-nav-text, #ffffff) !important;
-    background: transparent;
-
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: .045em;
     line-height: 1;
-
-    text-decoration: none !important;
+    text-decoration: none;
     white-space: nowrap;
-
     cursor: pointer;
 }
 
 .nav-dropdown-button:hover,
-.nav-direct-link:hover {
-    color: var(--awards-gold, #d8ad27) !important;
+.nav-direct-link:hover,
+.nav-dropdown.open .nav-dropdown-button {
+    color: var(--awards-gold-light, #f0d778);
     border-bottom-color: var(--awards-gold, #d8ad27);
 }
 
 .nav-dropdown-menu {
     position: absolute;
-    top: calc(100% - 2px);
+    top: 100%;
     left: 0;
-
     z-index: 1100;
-
-    min-width: 220px;
-
     display: none;
-
-    padding: 8px;
-
-    background: var(--awards-nav-bg, #071a38);
+    min-width: 220px;
+    padding: 7px;
+    background: #0b2c5f;
     border: 1px solid var(--awards-gold, #d8ad27);
-
-    box-shadow: 0 14px 30px rgba(0, 0, 0, .18);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, .22);
 }
 
 .nav-dropdown.open .nav-dropdown-menu {
@@ -2457,211 +1818,191 @@ button[type="submit"],
 
 .nav-dropdown-menu a {
     display: block;
-
     padding: 12px 13px;
-
-    color: var(--awards-nav-text, #ffffff) !important;
-
+    color: #ffffff;
     font-size: 11px;
     font-weight: 800;
     letter-spacing: .04em;
-
-    text-decoration: none !important;
+    text-decoration: none;
     white-space: nowrap;
 }
 
 .nav-dropdown-menu a:hover {
-    color: var(--awards-gold, #d8ad27) !important;
-    background: rgba(216, 173, 39, .10);
+    color: #071a38;
+    background: var(--awards-gold-light, #f0d778);
 }
 
 .global-theme-control {
-    flex: 0 0 auto;
-
     display: flex;
     align-items: center;
-    gap: 8px;
-
-    color: var(--awards-nav-text, #ffffff);
-
-    font-size: 10px;
+    gap: 7px;
+    color: #ffffff;
+    font-size: 9px;
     font-weight: 800;
     letter-spacing: .05em;
-
     white-space: nowrap;
 }
 
 .global-theme-toggle {
     display: flex;
     align-items: center;
-
     padding: 0;
-
-    border: 0;
     background: transparent;
-
+    border: 0;
     cursor: pointer;
 }
 
 .theme-toggle-track {
     position: relative;
-
     display: block;
-
-    width: 38px;
-    height: 20px;
-
+    width: 36px;
+    height: 19px;
     border: 1px solid var(--awards-gold, #d8ad27);
     border-radius: 20px;
 }
 
 .theme-toggle-dot {
     position: absolute;
-    top: 3px;
-    left: 3px;
-
-    width: 12px;
-    height: 12px;
-
+    top: 2px;
+    left: 2px;
+    width: 13px;
+    height: 13px;
+    background: var(--awards-gold-light, #f0d778);
     border-radius: 50%;
-
-    background: var(--awards-gold, #d8ad27);
-
     transition: transform .2s ease;
 }
 
 html[data-theme="dark"] .theme-toggle-dot {
-    transform: translateX(18px);
+    transform: translateX(17px);
 }
 
-
-/* Light mode still keeps the navigation legible. */
-
-html[data-theme="light"] .awards-global-nav {
-    background: #0b2c5f;
+.mobile-nav-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 5px;
+    width: 42px;
+    height: 42px;
+    padding: 9px;
+    background: transparent;
+    border: 1px solid var(--awards-gold, #d8ad27);
+    cursor: pointer;
 }
 
-html[data-theme="light"] .nav-dropdown-button,
-html[data-theme="light"] .nav-direct-link,
-html[data-theme="light"] .global-theme-control {
-    color: #ffffff !important;
+.mobile-nav-toggle span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: var(--awards-gold-light, #f0d778);
+    transition: transform .2s ease, opacity .2s ease;
 }
 
-html[data-theme="light"] .nav-dropdown-menu {
-    background: #0b2c5f;
-}
-
-html[data-theme="light"] .nav-dropdown-menu a {
-    color: #ffffff !important;
-}
-
-
-/* Smaller screens can scroll the nav instead of destroying it. */
-
-@media (max-width: 1050px) {
-
+@media (max-width: 1180px) {
     .awards-global-nav {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 0;
+        min-height: 64px;
+        padding: 0 20px;
+    }
 
-        padding: 18px 22px 0;
+    .awards-brand {
+        font-size: 13px;
+    }
+
+    .mobile-nav-toggle {
+        display: flex;
     }
 
     .awards-nav-groups {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
         width: 100%;
-
-        justify-content: flex-start;
-        gap: 20px;
-
-        overflow-x: auto;
-        overflow-y: visible;
-
-        scrollbar-width: none;
+        max-height: calc(100vh - 64px);
+        padding: 8px 20px 18px;
+        box-sizing: border-box;
+        overflow-y: auto;
+        background: #0b2c5f;
+        border-bottom: 2px solid var(--awards-gold, #d8ad27);
+        box-shadow: 0 18px 35px rgba(0, 0, 0, .24);
     }
 
-    .awards-nav-groups::-webkit-scrollbar {
-        display: none;
+    .awards-global-nav.mobile-nav-open .awards-nav-groups {
+        display: flex;
+    }
+
+    .awards-nav-groups > * {
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .nav-dropdown-button,
     .nav-direct-link {
-        padding-top: 18px;
-        padding-bottom: 18px;
+        justify-content: space-between;
+        width: 100%;
+        min-height: 50px;
+        border-bottom: 1px solid rgba(255, 255, 255, .13);
+        font-size: 11px;
+        text-align: left;
+    }
+
+    .nav-dropdown-menu {
+        position: static;
+        width: 100%;
+        min-width: 0;
+        margin: 0 0 6px;
+        padding: 3px 0 3px 12px;
+        box-sizing: border-box;
+        border: 0;
+        border-left: 2px solid var(--awards-gold, #d8ad27);
+        box-shadow: none;
     }
 
     .global-theme-control {
-        min-height: 48px;
+        min-height: 54px;
+    }
+
+    .awards-global-nav.mobile-nav-open
+    .mobile-nav-toggle span:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+    }
+
+    .awards-global-nav.mobile-nav-open
+    .mobile-nav-toggle span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .awards-global-nav.mobile-nav-open
+    .mobile-nav-toggle span:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
     }
 }
 
+@media (max-width: 520px) {
+    .awards-global-nav {
+        min-height: 60px;
+        padding: 0 14px;
+    }
 
-/* =========================================================
-   NAV DROPDOWN FINAL REPAIR
-   ========================================================= */
+    .awards-brand {
+        font-size: 11px;
+        letter-spacing: .08em;
+    }
 
-.awards-global-nav {
-    overflow: visible !important;
+    .mobile-nav-toggle {
+        width: 38px;
+        height: 38px;
+    }
+
+    .awards-nav-groups {
+        max-height: calc(100vh - 60px);
+        padding: 6px 14px 16px;
+    }
 }
-
-.awards-nav-groups {
-    overflow: visible !important;
-}
-
-.nav-dropdown {
-    position: relative !important;
-}
-
-.nav-dropdown-menu {
-    position: absolute !important;
-    top: calc(100% + 1px) !important;
-    left: 0 !important;
-
-    z-index: 9999 !important;
-
-    display: none !important;
-
-    width: max-content !important;
-    min-width: 210px !important;
-
-    margin: 0 !important;
-    padding: 7px !important;
-
-    background: #0b2c5f !important;
-    border: 1px solid var(--awards-gold, #d8ad27) !important;
-
-    box-shadow: 0 12px 30px rgba(0, 0, 0, .22) !important;
-}
-
-.nav-dropdown.open .nav-dropdown-menu {
-    display: block !important;
-}
-
-.nav-dropdown-menu a {
-    display: block !important;
-
-    width: auto !important;
-
-    margin: 0 !important;
-    padding: 12px 14px !important;
-
-    color: #ffffff !important;
-    background: transparent !important;
-
-    border: 0 !important;
-
-    font-size: 11px !important;
-    font-weight: 800 !important;
-    letter-spacing: .06em !important;
-
-    text-decoration: none !important;
-}
-
-.nav-dropdown-menu a:hover {
-    color: #071a38 !important;
-    background: var(--awards-gold, #d8ad27) !important;
-}
-
 
 /* =========================================================
    LITEFEET AWARDS — ARCHIVE CONTRIBUTION FORM
