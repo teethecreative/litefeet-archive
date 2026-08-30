@@ -420,6 +420,60 @@ class LFAArchiveSubmission(Base):
 
 
 # ============================================================
+# LITEFEET AWARDS — VERIFIED ARCHIVE RECORDS
+# ============================================================
+
+class LFARecord(Base):
+    __tablename__ = "ledger_lfa_records"
+
+    id = Column(Integer, primary_key=True)
+
+    year = Column(Integer, nullable=False)
+
+    record_type = Column(
+        String(30),
+        nullable=False
+    )
+
+    category_name = Column(
+        String(255),
+        nullable=False
+    )
+
+    person_name = Column(
+        String(255),
+        nullable=False
+    )
+
+    team_name = Column(
+        String(255),
+        nullable=True
+    )
+
+    additional_details = Column(
+        Text,
+        nullable=True
+    )
+
+    source_information = Column(
+        Text,
+        nullable=True
+    )
+
+    source_submission_id = Column(
+        Integer,
+        nullable=True,
+        index=True
+    )
+
+    created_at = Column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+
+
+# ============================================================
 # LITEFEET LEDGER — NEWSLETTER SUBSCRIBERS
 # ============================================================
 

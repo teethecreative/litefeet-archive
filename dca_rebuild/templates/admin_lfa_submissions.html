@@ -1,0 +1,177 @@
+<!doctype html>
+<html data-theme="dark">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>LFA Submissions — Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+</head>
+
+<body>
+
+{% include "_navigation.html" %}
+
+<main>
+
+<header>
+    <div class="label">
+        LITEFEET AWARDS · ADMIN
+    </div>
+
+    <h1>
+        ARCHIVE<br>
+        SUBMISSIONS
+    </h1>
+
+    <p class="lead">
+        Review community-submitted LiteFeet Awards history
+        before it becomes part of the verified archive.
+    </p>
+
+    <p>
+        <a href="{{ url_for('admin_lfa_records') }}">
+            VIEW VERIFIED RECORDS →
+        </a>
+    </p>
+</header>
+
+
+{% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+        <div class="flash">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endwith %}
+
+
+<section>
+    {% if submissions %}
+
+    <div class="admin-lfa-table-wrap">
+        <table class="admin-lfa-table">
+            <thead>
+                <tr>
+                    <th>YEAR</th>
+                    <th>TYPE</th>
+                    <th>PERSON</th>
+                    <th>CATEGORY / HONOR</th>
+                    <th>TEAM</th>
+                    <th>SUBMITTED</th>
+                    <th>STATUS</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in submissions %}
+                <tr>
+                    <td>{{ item.year }}</td>
+
+                    <td>
+                        {{ item.submission_type
+                            |replace("_", " ")
+                            |title }}
+                    </td>
+
+                    <td>
+                        <strong>
+                            {{ item.winner_name }}
+                        </strong>
+                    </td>
+
+                    <td>
+                        {{ item.category_name }}
+                    </td>
+
+                    <td>
+                        {{ item.team_name or "—" }}
+                    </td>
+
+                    <td>
+                        {{ item.created_at.strftime("%b %d, %Y") }}
+                    </td>
+
+                    <td>
+                        {{ item.status|upper }}
+                    </td>
+
+                    <td>
+                        {% if item.status == "pending" %}
+
+                        <div class="admin-lfa-actions">
+                            <form
+                                method="post"
+                                action="{{ url_for(
+                                    'admin_lfa_approve',
+                                    submission_id=item.id
+                                ) }}"
+                            >
+                                <button type="submit">
+                                    APPROVE
+                                </button>
+                            </form>
+
+                            <a href="{{ url_for(
+                                'admin_lfa_edit_approve',
+                                submission_id=item.id
+                            ) }}">
+                                EDIT & APPROVE
+                            </a>
+
+                            <form
+                                method="post"
+                                action="{{ url_for(
+                                    'admin_lfa_reject',
+                                    submission_id=item.id
+                                ) }}"
+                            >
+                                <button type="submit">
+                                    REJECT
+                                </button>
+                            </form>
+                        </div>
+
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+
+    <div class="archive-status-card">
+        <div class="label">
+            REVIEW QUEUE
+        </div>
+
+        <h2>
+            NO SUBMISSIONS YET
+        </h2>
+
+        <p>
+            New LiteFeet Awards archive contributions
+            will appear here for review.
+        </p>
+    </div>
+
+    {% endif %}
+</section>
+
+</main>
+
+</body>
+</html>

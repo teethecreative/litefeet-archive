@@ -1,0 +1,114 @@
+<!doctype html>
+<html data-theme="dark">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>LFA Records — Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+</head>
+
+<body>
+
+{% include "_navigation.html" %}
+
+<main>
+
+<header>
+    <div class="label">
+        LITEFEET AWARDS · ADMIN
+    </div>
+
+    <h1>
+        VERIFIED<br>
+        RECORDS
+    </h1>
+
+    <p>
+        <a href="{{ url_for('admin_lfa_submissions') }}">
+            ← REVIEW SUBMISSIONS
+        </a>
+    </p>
+</header>
+
+
+<section>
+
+{% if records %}
+
+<div class="admin-lfa-table-wrap">
+<table class="admin-lfa-table">
+
+<thead>
+<tr>
+    <th>YEAR</th>
+    <th>TYPE</th>
+    <th>PERSON</th>
+    <th>CATEGORY / HONOR</th>
+    <th>TEAM</th>
+</tr>
+</thead>
+
+<tbody>
+{% for record in records %}
+<tr>
+    <td>{{ record.year }}</td>
+
+    <td>
+        {{ record.record_type
+            |replace("_", " ")
+            |title }}
+    </td>
+
+    <td>
+        <strong>
+            {{ record.person_name }}
+        </strong>
+    </td>
+
+    <td>
+        {{ record.category_name }}
+    </td>
+
+    <td>
+        {{ record.team_name or "—" }}
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+
+</table>
+</div>
+
+{% else %}
+
+<div class="archive-status-card">
+    <div class="label">
+        VERIFIED ARCHIVE
+    </div>
+
+    <h2>
+        NO VERIFIED RECORDS YET
+    </h2>
+
+    <p>
+        Approved submissions will appear here.
+    </p>
+</div>
+
+{% endif %}
+
+</section>
+
+</main>
+
+</body>
+</html>

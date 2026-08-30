@@ -18,6 +18,7 @@ from dca_rebuild.models import (
     DCAReturnCategoryVote,
     DCAEdition,
     LFAArchiveSubmission,
+    LFARecord,
     NewsletterSubscriber,
 )
 
@@ -1306,6 +1307,290 @@ def lfa_submit():
 
         return render_template(
             "lfa_submission_success.html"
+        )
+
+    finally:
+        db.close()
+
+
+
+# ============================================================
+# LITEFEET AWARDS — ADMIN
+# ============================================================
+
+@app.route("/admin/lfa/submissions")
+@admin_login_required
+def admin_lfa_submissions():
+    db = SessionLocal()
+
+    try:
+        submissions = (
+            db.query(LFAArchiveSubmission)
+            .order_by(
+                LFAArchiveSubmission.created_at.desc()
+            )
+            .all()
+        )
+
+        return render_template(
+            "admin_lfa_submissions.html",
+            submissions=submissions,
+        )
+
+    finally:
+        db.close()
+
+
+@app.route(
+    "/admin/lfa/submissions/<int:submission_id>/approve",
+    methods=["POST"]
+)
+@admin_login_required
+def admin_lfa_approve(submission_id):
+    db = SessionLocal()
+
+    try:
+        submission = db.get(
+            LFAArchiveSubmission,
+            submission_id
+        )
+
+        if not submission:
+            abort(404)
+
+        if submission.status == "approved":
+            flash("This submission is already approved.")
+            return redirect(
+                url_for("admin_lfa_submissions")
+            )
+
+        record = LFARecord(
+            year=submission.year,
+            record_type=submission.submission_type,
+            category_name=submission.category_name,
+            person_name=submission.winner_name,
+            team_name=submission.team_name,
+            additional_details=submission.additional_details,
+            source_information=submission.source_information,
+            source_submission_id=submission.id,
+        )
+
+        db.add(record)
+
+        submission.status = "approved"
+
+        db.commit()
+
+        flash("LFA submission approved.")
+
+        return redirect(
+            url_for("admin_lfa_submissions")
+        )
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
+
+
+@app.route(
+    "/admin/lfa/submissions/<int:submission_id>/reject",
+    methods=["POST"]
+)
+@admin_login_required
+def admin_lfa_reject(submission_id):
+    db = SessionLocal()
+
+    try:
+        submission = db.get(
+            LFAArchiveSubmission,
+            submission_id
+        )
+
+        if not submission:
+            abort(404)
+
+        if submission.status == "approved":
+            flash(
+                "Approved records cannot be rejected "
+                "from the submission queue."
+            )
+
+            return redirect(
+                url_for("admin_lfa_submissions")
+            )
+
+        submission.status = "rejected"
+
+        db.commit()
+
+        flash("LFA submission rejected.")
+
+        return redirect(
+            url_for("admin_lfa_submissions")
+        )
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
+
+
+@app.route(
+    "/admin/lfa/submissions/<int:submission_id>/edit-approve",
+    methods=["GET", "POST"]
+)
+@admin_login_required
+def admin_lfa_edit_approve(submission_id):
+    db = SessionLocal()
+
+    try:
+        submission = db.get(
+            LFAArchiveSubmission,
+            submission_id
+        )
+
+        if not submission:
+            abort(404)
+
+        if request.method == "POST":
+            year_raw = (
+                request.form.get("year") or ""
+            ).strip()
+
+            record_type = (
+                request.form.get("record_type") or ""
+            ).strip()
+
+            category_name = (
+                request.form.get("category_name") or ""
+            ).strip()
+
+            person_name = (
+                request.form.get("person_name") or ""
+            ).strip()
+
+            team_name = (
+                request.form.get("team_name") or ""
+            ).strip()
+
+            additional_details = (
+                request.form.get("additional_details") or ""
+            ).strip()
+
+            source_information = (
+                request.form.get("source_information") or ""
+            ).strip()
+
+            allowed_types = {
+                "nomination",
+                "award_winner",
+                "hall_of_fame",
+                "litefeet_achievement",
+                "litefeet_humanitarian",
+            }
+
+            try:
+                year = int(year_raw)
+            except ValueError:
+                year = 0
+
+            if year not in {2023, 2024, 2025, 2026}:
+                flash("Choose a valid year.")
+
+                return redirect(
+                    url_for(
+                        "admin_lfa_edit_approve",
+                        submission_id=submission.id,
+                    )
+                )
+
+            if record_type not in allowed_types:
+                flash("Choose a valid record type.")
+
+                return redirect(
+                    url_for(
+                        "admin_lfa_edit_approve",
+                        submission_id=submission.id,
+                    )
+                )
+
+            if not category_name or not person_name:
+                flash(
+                    "Category/Honor and Person are required."
+                )
+
+                return redirect(
+                    url_for(
+                        "admin_lfa_edit_approve",
+                        submission_id=submission.id,
+                    )
+                )
+
+            record = LFARecord(
+                year=year,
+                record_type=record_type,
+                category_name=category_name,
+                person_name=person_name,
+                team_name=team_name or None,
+                additional_details=(
+                    additional_details or None
+                ),
+                source_information=(
+                    source_information or None
+                ),
+                source_submission_id=submission.id,
+            )
+
+            db.add(record)
+
+            submission.status = "approved"
+
+            db.commit()
+
+            flash(
+                "LFA submission edited and approved."
+            )
+
+            return redirect(
+                url_for("admin_lfa_submissions")
+            )
+
+        return render_template(
+            "admin_lfa_edit_submission.html",
+            submission=submission,
+        )
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
+
+
+@app.route("/admin/lfa/records")
+@admin_login_required
+def admin_lfa_records():
+    db = SessionLocal()
+
+    try:
+        records = (
+            db.query(LFARecord)
+            .order_by(
+                LFARecord.year.desc(),
+                LFARecord.created_at.desc(),
+            )
+            .all()
+        )
+
+        return render_template(
+            "admin_lfa_records.html",
+            records=records,
         )
 
     finally:

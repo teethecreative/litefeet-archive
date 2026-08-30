@@ -1,0 +1,142 @@
+<!doctype html>
+<html data-theme="dark">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>Edit LFA Submission — Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+</head>
+
+<body>
+
+{% include "_navigation.html" %}
+
+<main>
+
+<header>
+    <div class="label">
+        LITEFEET AWARDS · ADMIN
+    </div>
+
+    <h1>
+        EDIT &<br>
+        APPROVE
+    </h1>
+</header>
+
+
+<form
+    method="post"
+    class="lfa-contribution-form"
+>
+
+    <label>
+        TYPE
+
+        <select name="record_type" required>
+            {% set types = [
+                ("nomination", "Nomination"),
+                ("award_winner", "Award Winner"),
+                ("hall_of_fame", "Hall of Fame"),
+                ("litefeet_achievement", "LiteFeet Achievement"),
+                ("litefeet_humanitarian", "LiteFeet Humanitarian")
+            ] %}
+
+            {% for value, label in types %}
+            <option
+                value="{{ value }}"
+                {% if submission.submission_type == value %}
+                selected
+                {% endif %}
+            >
+                {{ label }}
+            </option>
+            {% endfor %}
+        </select>
+    </label>
+
+
+    <label>
+        YEAR
+
+        <input
+            type="number"
+            name="year"
+            value="{{ submission.year }}"
+            required
+        >
+    </label>
+
+
+    <label>
+        CATEGORY / HONOR
+
+        <input
+            type="text"
+            name="category_name"
+            value="{{ submission.category_name }}"
+            required
+        >
+    </label>
+
+
+    <label>
+        PERSON / WINNER / HONOREE
+
+        <input
+            type="text"
+            name="person_name"
+            value="{{ submission.winner_name }}"
+            required
+        >
+    </label>
+
+
+    <label>
+        TEAM
+
+        <input
+            type="text"
+            name="team_name"
+            value="{{ submission.team_name or '' }}"
+        >
+    </label>
+
+
+    <label>
+        ADDITIONAL DETAILS
+
+        <textarea
+            name="additional_details"
+        >{{ submission.additional_details or '' }}</textarea>
+    </label>
+
+
+    <label>
+        SOURCE / EVIDENCE
+
+        <textarea
+            name="source_information"
+        >{{ submission.source_information or '' }}</textarea>
+    </label>
+
+
+    <button type="submit">
+        SAVE & APPROVE →
+    </button>
+
+</form>
+
+</main>
+
+</body>
+</html>
