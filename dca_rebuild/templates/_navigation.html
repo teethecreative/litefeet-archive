@@ -54,22 +54,12 @@
             HYPEITUPTV AWARDS
         </a>
 
-        <div class="nav-dropdown">
-            <button
-                class="nav-dropdown-button"
-                type="button"
-                aria-expanded="false"
-            >
-                ADMIN
-                <span>▾</span>
-            </button>
-
-            <div class="nav-dropdown-menu">
-                <a href="{{ url_for('admin_round1') }}">
-                    DCA 2026 CATEGORY SUGGESTIONS
-                </a>
-            </div>
-        </div>
+        <a
+            class="nav-direct-link"
+            href="{{ url_for('admin_login') }}"
+        >
+            ADMIN
+        </a>
 
         <div class="global-theme-control">
             <span>LIGHT</span>

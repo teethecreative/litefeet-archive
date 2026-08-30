@@ -1,0 +1,81 @@
+<!doctype html>
+<html data-theme="dark">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>Admin Login — LiteFeet Ledger</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+</head>
+
+<body>
+
+{% include "_navigation.html" %}
+
+<main>
+    <section class="ledger-admin-login">
+
+        <div class="label">
+            LITEFEET LEDGER
+        </div>
+
+        <h1>
+            ADMIN LOGIN
+        </h1>
+
+        <p class="description">
+            Sign in to access Ledger administration.
+        </p>
+
+        {% if error %}
+        <div class="flash">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="post">
+
+            <label>
+                <span>USERNAME</span>
+
+                <input
+                    type="text"
+                    name="username"
+                    autocomplete="username"
+                    required
+                >
+            </label>
+
+            <label>
+                <span>PASSWORD</span>
+
+                <input
+                    type="password"
+                    name="password"
+                    autocomplete="current-password"
+                    required
+                >
+            </label>
+
+            <button
+                class="submit"
+                type="submit"
+            >
+                SIGN IN →
+            </button>
+
+        </form>
+
+    </section>
+</main>
+
+</body>
+</html>

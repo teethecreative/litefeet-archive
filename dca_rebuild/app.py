@@ -1,9 +1,10 @@
+from functools import wraps
 from datetime import datetime, timedelta
 import hashlib
 import os
 import secrets
 
-from flask import Flask, flash, redirect, render_template, request, url_for, abort
+from flask import Flask, flash, redirect, render_template, request, url_for, abort, session
 from sqlalchemy import create_engine, func, or_
 from sqlalchemy.orm import sessionmaker
 
@@ -765,7 +766,86 @@ def admin_round1_old():
 # ============================================================
 
 
+
+# ============================================================
+# LITEFEET LEDGER — ADMIN AUTHENTICATION
+# ============================================================
+
+def admin_login_required(view):
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if not session.get("ledger_admin_authenticated"):
+            return redirect(url_for("admin_login"))
+        return view(*args, **kwargs)
+
+    return wrapped_view
+
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    if session.get("ledger_admin_authenticated"):
+        return redirect(url_for("admin_round1"))
+
+    error = None
+
+    if request.method == "POST":
+        username = (
+            request.form.get("username", "")
+            .strip()
+        )
+
+        password = request.form.get("password", "")
+
+        expected_username = os.environ.get(
+            "ADMIN_USERNAME",
+            ""
+        )
+
+        expected_password = os.environ.get(
+            "ADMIN_PASSWORD",
+            ""
+        )
+
+        username_ok = (
+            expected_username
+            and secrets.compare_digest(
+                username,
+                expected_username,
+            )
+        )
+
+        password_ok = (
+            expected_password
+            and secrets.compare_digest(
+                password,
+                expected_password,
+            )
+        )
+
+        if username_ok and password_ok:
+            session.clear()
+            session["ledger_admin_authenticated"] = True
+
+            return redirect(
+                url_for("admin_round1")
+            )
+
+        error = "Invalid username or password."
+
+    return render_template(
+        "admin_login.html",
+        error=error,
+    )
+
+
+@app.route("/admin/logout", methods=["POST"])
+def admin_logout():
+    session.clear()
+    return redirect(url_for("admin_login"))
+
+
 @app.route("/admin/round1")
+@admin_login_required
 def admin_round1():
 
     db = SessionLocal()
@@ -912,6 +992,7 @@ def admin_round1():
 # ============================================================
 
 @app.route("/admin/round1/build-round2", methods=["POST"])
+@admin_login_required
 def build_round2_ballot():
 
     db = SessionLocal()
