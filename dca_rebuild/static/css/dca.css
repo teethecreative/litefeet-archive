@@ -2561,3 +2561,156 @@ html[data-theme="dark"] .lfa-contribution-form textarea {
         gap: 5px;
     }
 }
+
+/* LITEFEET LEDGER — AWARDS CONTROL RESTORE */
+
+/* DCA text/action links */
+main a:not(.site-nav a):not(.ledger-footer a),
+.round-link,
+.archive-link,
+.round2-preview-footer .submit {
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    min-height: 44px;
+    padding: 11px 16px;
+    color: #071a38;
+    background: var(--awards-gold, var(--gold, #d8ad27));
+    border: 1px solid var(--awards-gold, var(--gold, #d8ad27));
+    text-decoration: none;
+    font-weight: 900;
+    line-height: 1.15;
+    cursor: pointer;
+}
+
+main a:not(.site-nav a):not(.ledger-footer a):hover,
+.round-link:hover,
+.archive-link:hover,
+.round2-preview-footer .submit:hover {
+    background: var(--awards-gold-light, var(--gold-light, #f0d778));
+    text-decoration: none;
+}
+
+/* DCA category KEEP / REMOVE controls */
+.choices {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.choices label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50px;
+    padding: 13px 16px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.choices label:hover,
+.choices label:has(input:checked) {
+    color: #071a38;
+    background: var(--gold-light);
+    border-color: var(--gold);
+}
+
+.choices input {
+    width: auto;
+    margin: 0 8px 0 0;
+    accent-color: var(--gold);
+}
+
+/* DCA add/remove suggestion buttons */
+.add,
+.suggestion button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 12px 18px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--gold);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+/* DCA submit */
+.submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 54px;
+    margin-top: 15px;
+    padding: 16px 22px;
+    color: #071a38;
+    background: var(--gold-light);
+    border: 1px solid var(--gold);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* LFA fields */
+.lfa-contribution-form input,
+.lfa-contribution-form select,
+.lfa-contribution-form textarea {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 52px;
+    margin: 0;
+    padding: 15px 16px;
+    color: var(--awards-text);
+    background: var(--awards-surface-alt);
+    border: 1px solid var(--awards-border);
+    border-radius: 0;
+    font: inherit;
+    font-size: 15px;
+}
+
+.lfa-contribution-form select {
+    appearance: auto;
+}
+
+.lfa-contribution-form textarea {
+    min-height: 125px;
+}
+
+/* LFA submit */
+.lfa-contribution-form button[type="submit"] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 54px;
+    margin-top: 8px;
+    padding: 16px 22px;
+    color: #071a38;
+    background: var(--awards-gold, #d8ad27);
+    border: 1px solid var(--awards-gold, #d8ad27);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .09em;
+    cursor: pointer;
+}
+
+@media (max-width: 620px) {
+    .choices {
+        grid-template-columns: 1fr;
+    }
+}
+

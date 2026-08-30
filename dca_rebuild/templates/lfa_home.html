@@ -83,9 +83,43 @@
             action="{{ url_for('lfa_submit') }}"
             class="lfa-contribution-form"
         >
+            <label>
+                WHAT ARE YOU SUBMITTING?
+
+                <select
+                    name="submission_type"
+                    id="lfaSubmissionType"
+                    required
+                >
+                    <option value="">
+                        Choose a submission type
+                    </option>
+
+                    <option value="nomination">
+                        Nomination
+                    </option>
+
+                    <option value="award_winner">
+                        Award Winner
+                    </option>
+
+                    <option value="hall_of_fame">
+                        Hall of Fame
+                    </option>
+
+                    <option value="litefeet_achievement">
+                        LiteFeet Achievement
+                    </option>
+
+                    <option value="litefeet_humanitarian">
+                        LiteFeet Humanitarian
+                    </option>
+                </select>
+            </label>
 
             <label>
                 YEAR
+
                 <select name="year" required>
                     <option value="">Choose a year</option>
                     <option value="2026">2026</option>
@@ -96,27 +130,36 @@
             </label>
 
             <label>
-                CATEGORY
+                <span id="lfaCategoryLabel">
+                    CATEGORY / HONOR
+                </span>
+
                 <input
                     type="text"
                     name="category_name"
-                    placeholder="Award category"
+                    id="lfaCategoryInput"
+                    placeholder="Category or honor"
                     required
                 >
             </label>
 
             <label>
-                WINNER
+                <span id="lfaPersonLabel">
+                    PERSON / WINNER / HONOREE
+                </span>
+
                 <input
                     type="text"
                     name="winner_name"
-                    placeholder="Winner name"
+                    id="lfaPersonInput"
+                    placeholder="Name"
                     required
                 >
             </label>
 
             <label>
                 TEAM
+
                 <input
                     type="text"
                     name="team_name"
@@ -126,6 +169,7 @@
 
             <label class="lfa-email-field">
                 EMAIL
+
                 <input
                     type="email"
                     name="submitter_email"
@@ -134,9 +178,8 @@
             </label>
 
             <button type="submit">
-                SUBMIT AWARD INFORMATION →
+                SUBMIT FOR REVIEW →
             </button>
-
         </form>
 
     </section>
@@ -145,5 +188,105 @@
 
 
     {% include "_footer.html" %}
+
+<script>
+(function () {
+    const type =
+        document.getElementById("lfaSubmissionType");
+
+    const categoryLabel =
+        document.getElementById("lfaCategoryLabel");
+
+    const categoryInput =
+        document.getElementById("lfaCategoryInput");
+
+    const personLabel =
+        document.getElementById("lfaPersonLabel");
+
+    const personInput =
+        document.getElementById("lfaPersonInput");
+
+    if (!type) {
+        return;
+    }
+
+    const labels = {
+        nomination: {
+            category: "CATEGORY",
+            categoryPlaceholder: "Nomination category",
+            person: "NOMINEE",
+            personPlaceholder: "Nominee name"
+        },
+
+        award_winner: {
+            category: "AWARD CATEGORY",
+            categoryPlaceholder: "Award category",
+            person: "WINNER",
+            personPlaceholder: "Winner name"
+        },
+
+        hall_of_fame: {
+            category: "HALL OF FAME HONOR",
+            categoryPlaceholder: "Hall of Fame honor",
+            person: "HONOREE",
+            personPlaceholder: "Honoree name"
+        },
+
+        litefeet_achievement: {
+            category: "ACHIEVEMENT / HONOR",
+            categoryPlaceholder: "Achievement or honor",
+            person: "RECIPIENT",
+            personPlaceholder: "Recipient name"
+        },
+
+        litefeet_humanitarian: {
+            category: "HUMANITARIAN HONOR",
+            categoryPlaceholder: "Humanitarian honor",
+            person: "RECIPIENT",
+            personPlaceholder: "Recipient name"
+        }
+    };
+
+    function updateFields() {
+        const config = labels[type.value];
+
+        if (!config) {
+            categoryLabel.textContent =
+                "CATEGORY / HONOR";
+
+            categoryInput.placeholder =
+                "Category or honor";
+
+            personLabel.textContent =
+                "PERSON / WINNER / HONOREE";
+
+            personInput.placeholder =
+                "Name";
+
+            return;
+        }
+
+        categoryLabel.textContent =
+            config.category;
+
+        categoryInput.placeholder =
+            config.categoryPlaceholder;
+
+        personLabel.textContent =
+            config.person;
+
+        personInput.placeholder =
+            config.personPlaceholder;
+    }
+
+    type.addEventListener(
+        "change",
+        updateFields
+    );
+
+    updateFields();
+})();
+</script>
+
 </body>
 </html>
