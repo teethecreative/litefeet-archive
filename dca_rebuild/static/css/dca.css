@@ -3805,3 +3805,56 @@ main a:not(.site-nav a):not(.ledger-footer a):hover,
     font-weight: 900;
     text-decoration: none;
 }
+
+/* LITEFEET LEDGER — CONTROL ROOM HIERARCHY */
+
+.admin-system-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 20px;
+}
+
+.admin-system-status span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .05em;
+}
+
+.admin-module-section--primary {
+    border-top-width: 3px;
+}
+
+.admin-module-subsystems {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    opacity: .65;
+}
+
+.admin-module-card--development {
+    border-style: solid;
+}
+
+.admin-module-grid--compact {
+    grid-template-columns:
+        repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.admin-module-grid--compact
+.admin-module-card {
+    min-height: 170px;
+}
+
+.admin-module-section {
+    scroll-margin-top: 140px;
+}

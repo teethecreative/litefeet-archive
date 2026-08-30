@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
 <head>
+
 <script>
 (function () {
     const key = "litefeet-ledger-theme";
@@ -14,19 +15,22 @@
 })();
 </script>
 
-    <meta charset="utf-8">
+<meta charset="utf-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width,initial-scale=1"
-    >
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+>
 
-    <title>Admin Control Room — LiteFeet Ledger</title>
+<title>
+    Admin Control Room — LiteFeet Ledger
+</title>
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/dca.css') }}"
-    >
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/dca.css') }}"
+>
+
 </head>
 
 <body class="ledger-admin">
@@ -35,252 +39,790 @@
 
 <main class="admin-control-room">
 
-<header class="admin-control-room__header">
-    <div class="label">
-        LITEFEET LEDGER · ADMIN
-    </div>
+    <header class="admin-control-room__header">
 
-    <h1>
-        CONTROL<br>
-        ROOM
-    </h1>
-
-    <p class="lead">
-        Manage the Ledger, its awards systems,
-        archive workflows, community tools,
-        and site features from one place.
-    </p>
-</header>
-
-
-<section class="admin-module-section">
-
-    <div class="admin-section-heading">
         <div class="label">
-            ACTIVE SYSTEMS
+            LITEFEET LEDGER · ADMIN
         </div>
 
-        <h2>
-            MANAGE THE LEDGER
-        </h2>
-    </div>
+        <h1>
+            CONTROL<br>
+            ROOM
+        </h1>
+
+        <p class="lead">
+            Manage the systems that power
+            the LiteFeet Ledger.
+        </p>
 
 
-    <div class="admin-module-grid">
+        <div class="admin-system-status">
 
-        <article class="admin-module-card">
-            <div class="admin-module-card__status">
-                ACTIVE
-            </div>
+            <span>
+                DCA · ACTIVE
+            </span>
 
-            <h3>
-                DANCER'S CHOICE AWARDS
-            </h3>
+            <span>
+                LFA · ACTIVE
+            </span>
 
-            <p>
-                Manage the community-driven DCA
-                voting process and category rounds.
-            </p>
+            <span>
+                BETA · ACTIVE
+            </span>
 
-            <a href="{{ url_for('admin_round1') }}">
-                OPEN DCA ADMIN →
-            </a>
-        </article>
+            <span>
+                ARCHIVE · IN DEVELOPMENT
+            </span>
 
-
-        <article class="admin-module-card">
-            <div class="admin-module-card__status">
-                ACTIVE
-            </div>
-
-            <h3>
-                LITEFEET AWARDS
-            </h3>
-
-            <p>
-                Review archive submissions and manage
-                verified LiteFeet Awards records.
-            </p>
-
-            <a href="{{ url_for('admin_lfa_submissions') }}">
-                OPEN LFA ADMIN →
-            </a>
-        </article>
-
-
-        <article class="admin-module-card admin-module-card--planned">
-            <div class="admin-module-card__status">
-                PLANNED
-            </div>
-
-            <h3>
-                HYPEITUP AWARDS
-            </h3>
-
-            <p>
-                Awards management will live here
-                when the HypeItUp system is built.
-            </p>
-        </article>
-
-    </div>
-</section>
-
-
-<section class="admin-module-section">
-
-    <div class="admin-section-heading">
-        <div class="label">
-            LEDGER SYSTEMS
         </div>
 
-        <h2>
-            CONTROL ROOM MODULES
-        </h2>
-    </div>
+    </header>
 
 
-    <div class="admin-module-grid">
+    <!-- ================================================= -->
+    <!-- 01 ARCHIVE                                        -->
+    <!-- ================================================= -->
 
-        <article class="admin-module-card admin-module-card--planned">
-            <div class="admin-module-card__status">
-                NEXT
+    <section
+        id="archive"
+        class="
+            admin-module-section
+            admin-module-section--primary
+        "
+    >
+
+        <div class="admin-section-heading">
+
+            <div class="label">
+                01 · ARCHIVE & HISTORY
             </div>
 
-            <h3>
-                BETA & FEEDBACK
-            </h3>
+            <h2>
+                THE ARCHIVE
+            </h2>
 
             <p>
-                Feature flags, Beta access,
-                testing status, feedback,
-                and changelog controls.
+                Build, research, organize,
+                and maintain the historical
+                record of LiteFeet culture.
             </p>
 
-            <a href="{{ url_for('admin_beta_features') }}">
-                OPEN BETA CONTROLS →
-            </a>
-        </article>
+        </div>
 
 
-        <article class="admin-module-card admin-module-card--planned">
-            <div class="admin-module-card__status">
-                PLANNED
+        <div class="admin-module-grid">
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--development
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    IN DEVELOPMENT
+                </div>
+
+                <h3>
+                    TIMELINE
+                </h3>
+
+                <p>
+                    Historical events and eras
+                    with exact, partial, yearly,
+                    era-level, or unknown
+                    date precision.
+                </p>
+
+                <div class="admin-module-subsystems">
+                    ENTRIES · ERAS · DATE PRECISION
+                </div>
+
+            </article>
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--development
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    IN DEVELOPMENT
+                </div>
+
+                <h3>
+                    DIRECTORY
+                </h3>
+
+                <p>
+                    People, teams, fams,
+                    collectives, organizations,
+                    aliases, roles, and rosters.
+                </p>
+
+                <div class="admin-module-subsystems">
+                    PEOPLE · GROUPS · ALIASES · ROSTERS
+                </div>
+
+            </article>
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--planned
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+
+                <h3>
+                    CONTRIBUTIONS
+                </h3>
+
+                <p>
+                    Review historical information
+                    submitted by the community
+                    before it becomes part of
+                    the Archive.
+                </p>
+
+            </article>
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--development
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    FOUNDATION
+                </div>
+
+                <h3>
+                    SOURCES
+                </h3>
+
+                <p>
+                    Provenance, references,
+                    firsthand accounts,
+                    research notes, conflicts,
+                    and evidence.
+                </p>
+
+            </article>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- 02 AWARDS                                         -->
+    <!-- ================================================= -->
+
+    <section
+        id="awards"
+        class="admin-module-section"
+    >
+
+        <div class="admin-section-heading">
+
+            <div class="label">
+                02 · AWARDS
             </div>
 
-            <h3>
-                ARCHIVE
-            </h3>
+            <h2>
+                AWARDS SYSTEMS
+            </h2>
 
             <p>
-                People, groups, timeline,
-                sources, records, and archive
-                contributions.
+                Manage each awards program
+                independently while preserving
+                its records in the Ledger.
             </p>
-        </article>
+
+        </div>
 
 
-        <article class="admin-module-card admin-module-card--planned">
-            <div class="admin-module-card__status">
-                PLANNED
+        <div class="admin-module-grid">
+
+
+            <article class="admin-module-card">
+
+                <div class="admin-module-card__status">
+                    ACTIVE
+                </div>
+
+                <h3>
+                    DANCER'S CHOICE
+                </h3>
+
+                <p>
+                    Category voting,
+                    moderation, rounds,
+                    results, and DCA records.
+                </p>
+
+                <a href="{{ url_for('admin_round1') }}">
+                    OPEN DCA →
+                </a>
+
+            </article>
+
+
+            <article class="admin-module-card">
+
+                <div class="admin-module-card__status">
+                    ACTIVE
+                </div>
+
+                <h3>
+                    LITEFEET AWARDS
+                </h3>
+
+                <p>
+                    Review submissions and
+                    manage LiteFeet Awards
+                    records.
+                </p>
+
+                <a
+                    href="{{ url_for('admin_lfa_submissions') }}"
+                >
+                    OPEN LFA →
+                </a>
+
+            </article>
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--planned
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+
+                <h3>
+                    HYPEITUP AWARDS
+                </h3>
+
+                <p>
+                    HypeItUp award history,
+                    records, and administration.
+                </p>
+
+            </article>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- 03 COMMUNITY                                      -->
+    <!-- ================================================= -->
+
+    <section
+        id="community"
+        class="admin-module-section"
+    >
+
+        <div class="admin-section-heading">
+
+            <div class="label">
+                03 · COMMUNITY & IDENTITY
             </div>
 
-            <h3>
-                CONTRIBUTIONS
-            </h3>
+            <h2>
+                COMMUNITY
+            </h2>
 
             <p>
-                Review structured community
-                submissions before they enter
-                verified Ledger records.
+                Participation, identity,
+                moderation, and authority
+                systems for the Ledger.
             </p>
-        </article>
+
+        </div>
 
 
-        <article class="admin-module-card admin-module-card--planned">
-            <div class="admin-module-card__status">
-                PLANNED
+        <div class="admin-module-grid">
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--planned
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+
+                <h3>
+                    COMMUNITY BOARD
+                </h3>
+
+                <p>
+                    Discussions, replies,
+                    reactions, reports,
+                    moderation, and
+                    deletion requests.
+                </p>
+
+                <div class="admin-module-subsystems">
+                    POSTS · REPORTS · MODERATION
+                </div>
+
+            </article>
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--planned
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+
+                <h3>
+                    ACCOUNTS
+                </h3>
+
+                <p>
+                    User accounts,
+                    guest identities,
+                    account recovery,
+                    and identity continuity.
+                </p>
+
+            </article>
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--planned
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+
+                <h3>
+                    CLAIMS & AUTHORITY
+                </h3>
+
+                <p>
+                    Person claims,
+                    team authority,
+                    verification,
+                    and historical corrections.
+                </p>
+
+            </article>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- 04 BETA                                           -->
+    <!-- ================================================= -->
+
+    <section
+        id="beta"
+        class="admin-module-section"
+    >
+
+        <div class="admin-section-heading">
+
+            <div class="label">
+                04 · BETA & DEVELOPMENT
             </div>
 
-            <h3>
-                COMMUNITY BOARD
-            </h3>
+            <h2>
+                BETA
+            </h2>
 
             <p>
-                Moderation, reports,
-                deletion requests, and
-                community activity.
+                Control what is being tested,
+                collect feedback, and track
+                changes to the Ledger.
             </p>
-        </article>
+
+        </div>
 
 
-        <article class="admin-module-card admin-module-card--planned">
-            <div class="admin-module-card__status">
-                PLANNED
+        <div class="admin-module-grid">
+
+
+            <article class="admin-module-card">
+
+                <div class="admin-module-card__status">
+                    ACTIVE
+                </div>
+
+                <h3>
+                    FEATURE CONTROLS
+                </h3>
+
+                <p>
+                    Set features to Private,
+                    Placeholder, Beta,
+                    or Public.
+                </p>
+
+                <a
+                    href="{{ url_for('admin_beta_features') }}"
+                >
+                    MANAGE FEATURES →
+                </a>
+
+            </article>
+
+
+            <article class="admin-module-card">
+
+                <div class="admin-module-card__status">
+                    ACTIVE
+                </div>
+
+                <h3>
+                    FEEDBACK
+                </h3>
+
+                <p>
+                    Review Beta feedback
+                    and move reports through
+                    the development queue.
+                </p>
+
+                <a
+                    href="{{ url_for('admin_beta_feedback') }}"
+                >
+                    OPEN FEEDBACK →
+                </a>
+
+            </article>
+
+
+            <article class="admin-module-card">
+
+                <div class="admin-module-card__status">
+                    ACTIVE
+                </div>
+
+                <h3>
+                    CHANGELOG
+                </h3>
+
+                <p>
+                    Publish Beta and public
+                    development updates.
+                </p>
+
+                <a
+                    href="{{ url_for('admin_beta_changelog') }}"
+                >
+                    OPEN CHANGELOG →
+                </a>
+
+            </article>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- 05 ARCHIVE EXPERIENCES                             -->
+    <!-- ================================================= -->
+
+    <section class="admin-module-section">
+
+        <div class="admin-section-heading">
+
+            <div class="label">
+                05 · ARCHIVE EXPERIENCES
             </div>
 
-            <h3>
-                ACCOUNTS & CLAIMS
-            </h3>
+            <h2>
+                DISCOVERY
+            </h2>
 
             <p>
-                Account administration,
-                identity claims, and
-                authority workflows.
+                Ways people will explore,
+                question, and interact with
+                the historical record.
             </p>
-        </article>
+
+        </div>
 
 
-        <article class="admin-module-card admin-module-card--planned">
-            <div class="admin-module-card__status">
-                PLANNED
+        <div class="admin-module-grid admin-module-grid--compact">
+
+
+            <article class="admin-module-card admin-module-card--planned">
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+                <h3>SEARCH</h3>
+                <p>
+                    Search across Ledger records.
+                </p>
+            </article>
+
+
+            <article class="admin-module-card admin-module-card--planned">
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+                <h3>FROM THE LEDGER</h3>
+                <p>
+                    Curated stories and records
+                    surfaced from the Archive.
+                </p>
+            </article>
+
+
+            <article class="admin-module-card admin-module-card--planned">
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+                <h3>ON THIS DAY</h3>
+                <p>
+                    Surface historical moments
+                    by calendar date.
+                </p>
+            </article>
+
+
+            <article class="admin-module-card admin-module-card--planned">
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+                <h3>COMMUNITY OPINION</h3>
+                <p>
+                    Keep community opinion
+                    distinct from archival fact.
+                </p>
+            </article>
+
+
+            <article class="admin-module-card admin-module-card--planned">
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+                <h3>ASK THE ARCHIVE</h3>
+                <p>
+                    Ask questions grounded
+                    in Ledger records.
+                </p>
+            </article>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- 06 CULTURE DATABASES                               -->
+    <!-- ================================================= -->
+
+    <section class="admin-module-section">
+
+        <div class="admin-section-heading">
+
+            <div class="label">
+                06 · CULTURE DATABASES
             </div>
 
-            <h3>
-                NEWSLETTER
-            </h3>
+            <h2>
+                CULTURE
+            </h2>
 
             <p>
-                Subscriber management and
-                future Ledger communications.
+                Structured records for major
+                parts of LiteFeet culture.
             </p>
-        </article>
+
+        </div>
 
 
-        <article class="admin-module-card admin-module-card--planned">
-            <div class="admin-module-card__status">
-                PLANNED
+        <div class="admin-module-grid admin-module-grid--compact">
+
+
+            <article class="admin-module-card admin-module-card--planned">
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+                <h3>EVENTS</h3>
+                <p>
+                    Events, dates, organizers,
+                    locations, and relationships.
+                </p>
+            </article>
+
+
+            <article class="admin-module-card admin-module-card--planned">
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+                <h3>BATTLES</h3>
+                <p>
+                    Battle records,
+                    participants, results,
+                    and footage.
+                </p>
+            </article>
+
+
+            <article class="admin-module-card admin-module-card--planned">
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+                <h3>MUSIC</h3>
+                <p>
+                    Tracks, producers,
+                    releases, and cultural use.
+                </p>
+            </article>
+
+
+            <article class="admin-module-card admin-module-card--planned">
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+                <h3>MEDIA</h3>
+                <p>
+                    Footage, photographs,
+                    interviews, and other media.
+                </p>
+            </article>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- 07 OPERATIONS                                      -->
+    <!-- ================================================= -->
+
+    <section
+        id="system"
+        class="admin-module-section"
+    >
+
+        <div class="admin-section-heading">
+
+            <div class="label">
+                07 · COMMUNICATIONS & SYSTEM
             </div>
 
-            <h3>
-                SITE CONTROLS
-            </h3>
+            <h2>
+                OPERATIONS
+            </h2>
 
-            <p>
-                Feature visibility,
-                site-wide notices,
-                and publishing controls.
-            </p>
-        </article>
+        </div>
 
 
-        <article class="admin-module-card admin-module-card--planned">
-            <div class="admin-module-card__status">
-                FUTURE
-            </div>
+        <div class="admin-module-grid">
 
-            <h3>
-                ADMIN MANAGEMENT
-            </h3>
 
-            <p>
-                Admin roles, permissions,
-                access scopes, and audit tools.
-            </p>
-        </article>
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--planned
+                "
+            >
 
-    </div>
-</section>
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+
+                <h3>
+                    NEWSLETTER
+                </h3>
+
+                <p>
+                    Subscriber management
+                    and Ledger communications.
+                </p>
+
+            </article>
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--planned
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+
+                <h3>
+                    SITE NOTICES
+                </h3>
+
+                <p>
+                    Site-wide notices,
+                    announcements,
+                    and operational messaging.
+                </p>
+
+            </article>
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--planned
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    FUTURE
+                </div>
+
+                <h3>
+                    ADMIN MANAGEMENT
+                </h3>
+
+                <p>
+                    Roles, permissions,
+                    access scopes,
+                    and administrative
+                    audit tools.
+                </p>
+
+            </article>
+
+        </div>
+
+    </section>
 
 </main>
 

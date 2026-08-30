@@ -1,12 +1,20 @@
-<nav class="ledger-admin-nav" aria-label="Ledger Admin">
+<nav
+    class="ledger-admin-nav"
+    aria-label="Ledger Admin"
+>
+
     <div class="ledger-admin-nav__top">
+
         <a
             class="ledger-admin-nav__brand"
             href="{{ url_for('admin_dashboard') }}"
         >
             LITEFEET LEDGER
-            <span>ADMIN CONTROL ROOM</span>
+            <span>
+                ADMIN CONTROL ROOM
+            </span>
         </a>
+
 
         <form
             method="post"
@@ -19,27 +27,52 @@
                 LOG OUT
             </button>
         </form>
+
     </div>
 
+
     <div class="ledger-admin-nav__links">
+
         <a href="{{ url_for('admin_dashboard') }}">
             OVERVIEW
         </a>
 
-        <a href="{{ url_for('admin_round1') }}">
-            DCA
+        <a
+            href="{{ url_for('admin_dashboard') }}#archive"
+            data-admin-section="archive"
+        >
+            ARCHIVE
         </a>
 
-        <a href="{{ url_for('admin_lfa_submissions') }}">
-            LFA
+        <a
+            href="{{ url_for('admin_dashboard') }}#awards"
+            data-admin-section="awards"
+        >
+            AWARDS
+        </a>
+
+        <a
+            href="{{ url_for('admin_dashboard') }}#community"
+            data-admin-section="community"
+        >
+            COMMUNITY
         </a>
 
         <a href="{{ url_for('admin_beta_features') }}">
             BETA
         </a>
 
+        <a
+            href="{{ url_for('admin_dashboard') }}#system"
+            data-admin-section="system"
+        >
+            SYSTEM
+        </a>
+
         <a href="{{ url_for('index') }}">
             VIEW SITE ↗
         </a>
+
     </div>
+
 </nav>
