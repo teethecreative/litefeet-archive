@@ -1849,6 +1849,92 @@ def hypeitup_awards():
 
 
 
+
+# ============================================================
+# LITEFEET LEDGER — BETA MODE
+# ============================================================
+
+@app.route("/beta")
+def beta_home():
+    return render_template(
+        "beta_home.html",
+        beta_active=bool(
+            session.get("ledger_beta_active")
+        ),
+        beta_email=session.get(
+            "ledger_beta_email"
+        ),
+    )
+
+
+@app.route("/beta/enter", methods=["POST"])
+def beta_enter():
+    email = (
+        request.form.get("email") or ""
+    ).strip().lower()
+
+    if (
+        not email
+        or "@" not in email
+        or "." not in email.rsplit("@", 1)[-1]
+    ):
+        flash(
+            "Enter a valid email address to join Beta."
+        )
+
+        return redirect(
+            url_for("beta_home")
+        )
+
+    session["ledger_beta_active"] = True
+    session["ledger_beta_email"] = email
+
+    flash("Beta Mode is now on.")
+
+    next_url = (
+        request.form.get("next") or ""
+    ).strip()
+
+    if (
+        next_url.startswith("/")
+        and not next_url.startswith("//")
+    ):
+        return redirect(next_url)
+
+    return redirect(
+        url_for("beta_home")
+    )
+
+
+@app.route("/beta/exit", methods=["POST"])
+def beta_exit():
+    session.pop(
+        "ledger_beta_active",
+        None
+    )
+
+    session.pop(
+        "ledger_beta_email",
+        None
+    )
+
+    flash("Beta Mode is now off.")
+
+    next_url = (
+        request.form.get("next") or ""
+    ).strip()
+
+    if (
+        next_url.startswith("/")
+        and not next_url.startswith("//")
+    ):
+        return redirect(next_url)
+
+    return redirect(
+        url_for("index")
+    )
+
+
 # ============================================================
 # LITEFEET LEDGER — NEWSLETTER SIGNUP
 # ============================================================

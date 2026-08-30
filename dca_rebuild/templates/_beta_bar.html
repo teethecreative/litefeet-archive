@@ -1,0 +1,29 @@
+{% if session.get("ledger_beta_active") %}
+<div class="ledger-beta-bar">
+    <div class="ledger-beta-bar__status">
+        <span class="ledger-beta-dot"></span>
+        BETA MODE ON
+    </div>
+
+    <div class="ledger-beta-bar__actions">
+        <a href="{{ url_for('beta_home') }}#feedback">
+            GIVE FEEDBACK
+        </a>
+
+        <form
+            method="post"
+            action="{{ url_for('beta_exit') }}"
+        >
+            <input
+                type="hidden"
+                name="next"
+                value="{{ request.path }}"
+            >
+
+            <button type="submit">
+                EXIT BETA
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}

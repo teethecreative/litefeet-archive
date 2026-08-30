@@ -1,0 +1,180 @@
+<!doctype html>
+<html data-theme="dark">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>Beta Mode — LiteFeet Ledger</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+</head>
+
+<body>
+
+{% include "_navigation.html" %}
+{% include "_beta_bar.html" %}
+
+<main class="beta-page">
+
+<header class="beta-hero">
+    <div class="label">
+        LITEFEET LEDGER
+    </div>
+
+    <h1>
+        BETA<br>
+        MODE
+    </h1>
+
+    <p class="lead">
+        Get early access to Ledger features
+        while they're being built and help
+        shape how they work.
+    </p>
+</header>
+
+
+{% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+        <div class="flash">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endwith %}
+
+
+{% if beta_active %}
+
+<section class="beta-status-panel">
+
+    <div class="label">
+        YOUR ACCESS
+    </div>
+
+    <h2>
+        YOU'RE IN BETA
+    </h2>
+
+    <p>
+        Beta access is active for
+        <strong>{{ beta_email }}</strong>.
+    </p>
+
+    <p>
+        Features currently being tested
+        will become available here as
+        they're opened to Beta participants.
+    </p>
+
+    <form
+        method="post"
+        action="{{ url_for('beta_exit') }}"
+    >
+        <button type="submit" class="submit">
+            EXIT BETA MODE
+        </button>
+    </form>
+
+</section>
+
+{% else %}
+
+<section class="beta-status-panel">
+
+    <div class="label">
+        EARLY ACCESS
+    </div>
+
+    <h2>
+        ENTER BETA MODE
+    </h2>
+
+    <p>
+        Beta Mode lets you see and test
+        selected Ledger features before
+        their public release.
+    </p>
+
+    <form
+        method="post"
+        action="{{ url_for('beta_enter') }}"
+        class="beta-enter-form"
+    >
+        <label>
+            EMAIL
+
+            <input
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+            >
+        </label>
+
+        <button type="submit" class="submit">
+            ENTER BETA MODE →
+        </button>
+    </form>
+
+</section>
+
+{% endif %}
+
+
+<section class="beta-testing-section">
+
+    <div class="label">
+        BETA PROGRAM
+    </div>
+
+    <h2>
+        WHAT'S BEING TESTED
+    </h2>
+
+    <div class="beta-empty-state">
+        <strong>
+            THE NEXT LEDGER FEATURES
+            ARE BEING PREPARED.
+        </strong>
+
+        <p>
+            Testing areas will appear here
+            as they're opened.
+        </p>
+    </div>
+
+</section>
+
+
+<section
+    class="beta-feedback-preview"
+    id="feedback"
+>
+    <div class="label">
+        FEEDBACK
+    </div>
+
+    <h2>
+        HELP BUILD THE LEDGER
+    </h2>
+
+    <p>
+        Beta feedback tools are coming
+        in the next Beta build.
+    </p>
+</section>
+
+</main>
+
+{% include "_footer.html" %}
+
+</body>
+</html>

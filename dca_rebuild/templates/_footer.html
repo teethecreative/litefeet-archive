@@ -77,6 +77,18 @@
             Built to document the culture.
         </span>
     </div>
+
+    <div class="ledger-footer__beta">
+        {% if session.get("ledger_beta_active") %}
+            <a href="{{ url_for('beta_home') }}">
+                BETA MODE
+            </a>
+        {% else %}
+            <a href="{{ url_for('beta_home') }}">
+                ENTER BETA MODE
+            </a>
+        {% endif %}
+    </div>
 </footer>
 
 <script>

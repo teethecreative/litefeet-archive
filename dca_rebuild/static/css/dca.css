@@ -2928,3 +2928,124 @@ main a:not(.site-nav a):not(.ledger-footer a):hover,
     font-weight: 900;
     cursor: pointer;
 }
+
+
+/* LITEFEET LEDGER — BETA MODE */
+
+.ledger-beta-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 9px clamp(18px, 4vw, 52px);
+    color: #071a38;
+    background: var(--gold);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+
+.ledger-beta-bar__status,
+.ledger-beta-bar__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ledger-beta-dot {
+    width: 7px;
+    height: 7px;
+    background: #071a38;
+    border-radius: 50%;
+}
+
+.ledger-beta-bar a,
+.ledger-beta-bar button {
+    color: #071a38;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    font-size: inherit;
+    font-weight: 900;
+    letter-spacing: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.ledger-beta-bar form {
+    margin: 0;
+}
+
+.beta-page {
+    width: min(1050px, calc(100% - 36px));
+    margin: 0 auto;
+    padding-bottom: 70px;
+}
+
+.beta-hero {
+    padding-top: 58px;
+}
+
+.beta-status-panel,
+.beta-testing-section,
+.beta-feedback-preview {
+    margin-top: 36px;
+    padding: clamp(22px, 4vw, 38px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.beta-status-panel h2,
+.beta-testing-section h2,
+.beta-feedback-preview h2 {
+    margin-top: 10px;
+}
+
+.beta-enter-form {
+    max-width: 620px;
+    margin-top: 24px;
+}
+
+.beta-enter-form label {
+    display: grid;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .07em;
+}
+
+.beta-enter-form input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 52px;
+    padding: 14px 16px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    font: inherit;
+    font-size: 15px;
+}
+
+.beta-empty-state {
+    margin-top: 20px;
+    padding: 22px;
+    border: 1px dashed var(--border);
+}
+
+.ledger-footer__beta {
+    margin-top: 18px;
+}
+
+.ledger-footer__beta a {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+
+@media (max-width: 620px) {
+    .ledger-beta-bar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
