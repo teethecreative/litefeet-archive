@@ -20,7 +20,11 @@ from dca_rebuild.models import (
 )
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("DCA_SECRET_KEY", "local-dev-secret")
+app.secret_key = (
+    os.environ.get("DCA_SECRET_KEY")
+    or os.environ.get("SECRET_KEY")
+    or "local-dev-secret"
+)
 
 engine = create_engine(DATABASE_URL)
 Base.metadata.create_all(engine)
@@ -28,7 +32,11 @@ SessionLocal = sessionmaker(bind=engine)
 
 
 def private_hash(value):
-    salt = os.environ.get("DCA_HASH_SALT", "local-dev-salt")
+    salt = (
+        os.environ.get("DCA_HASH_SALT")
+        or os.environ.get("SECRET_KEY")
+        or "local-dev-salt"
+    )
     return hashlib.sha256(f"{salt}:{value}".encode()).hexdigest()
 
 
