@@ -216,10 +216,164 @@
         HELP BUILD THE LEDGER
     </h2>
 
+    {% if beta_active %}
+
     <p>
-        Beta feedback tools are coming
-        in the next Beta build.
+        Tell us what worked, what didn't,
+        what was confusing, or what the
+        Ledger should consider next.
     </p>
+
+    <form
+        method="post"
+        action="{{ url_for('beta_submit_feedback') }}"
+        class="beta-feedback-form"
+    >
+
+        <label>
+            FEATURE
+
+            <select name="feature_key">
+                <option value="">
+                    General Beta feedback
+                </option>
+
+                {% for feature in beta_features %}
+                <option
+                    value="{{ feature.feature_key }}"
+                >
+                    {{ feature.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+
+
+        <label>
+            FEEDBACK TYPE
+
+            <select
+                name="feedback_type"
+                required
+            >
+                <option value="general">
+                    General
+                </option>
+
+                <option value="bug">
+                    Something is broken
+                </option>
+
+                <option value="confusing">
+                    Something is confusing
+                </option>
+
+                <option value="idea">
+                    Idea / suggestion
+                </option>
+            </select>
+        </label>
+
+
+        <label>
+            YOUR FEEDBACK
+
+            <textarea
+                name="message"
+                placeholder="Tell us what you noticed..."
+                required
+            ></textarea>
+        </label>
+
+
+        <input
+            type="hidden"
+            name="page_path"
+            value="{{ request.path }}"
+        >
+
+
+        <button
+            type="submit"
+            class="submit"
+        >
+            SEND FEEDBACK →
+        </button>
+
+    </form>
+
+    {% else %}
+
+    <p>
+        Enter Beta Mode to test features
+        and send feedback.
+    </p>
+
+    {% endif %}
+
+</section>
+
+
+<section class="beta-changelog-section">
+
+    <div class="label">
+        BETA CHANGELOG
+    </div>
+
+    <h2>
+        WHAT CHANGED
+    </h2>
+
+
+    {% if beta_changelog %}
+
+    <div class="beta-changelog-list">
+
+        {% for entry in beta_changelog %}
+
+        <article class="beta-changelog-card">
+
+            <div class="beta-feature-card__status">
+                {{ entry.visibility|upper }}
+            </div>
+
+            <h3>
+                {{ entry.title }}
+            </h3>
+
+            <p>
+                {{ entry.details }}
+            </p>
+
+            <small>
+                {{ entry.created_at.strftime(
+                    "%b %d, %Y"
+                ) }}
+            </small>
+
+        </article>
+
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <div class="beta-empty-state">
+
+        <strong>
+            NO CHANGELOG ENTRIES YET.
+        </strong>
+
+        <p>
+            Updates will appear here as
+            Beta testing progresses.
+        </p>
+
+    </div>
+
+    {% endif %}
+
 </section>
 
 </main>

@@ -520,6 +520,95 @@ class BetaFeatureFlag(Base):
 
 
 # ============================================================
+# LITEFEET LEDGER — BETA FEEDBACK
+# ============================================================
+
+class BetaFeedback(Base):
+    __tablename__ = "ledger_beta_feedback"
+
+    id = Column(Integer, primary_key=True)
+
+    email = Column(
+        String(255),
+        nullable=False,
+        index=True
+    )
+
+    feature_key = Column(
+        String(100),
+        nullable=True,
+        index=True
+    )
+
+    feedback_type = Column(
+        String(30),
+        nullable=False,
+        default="general"
+    )
+
+    message = Column(
+        Text,
+        nullable=False
+    )
+
+    page_path = Column(
+        String(500),
+        nullable=True
+    )
+
+    status = Column(
+        String(30),
+        nullable=False,
+        default="new",
+        index=True
+    )
+
+    created_at = Column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+
+
+# ============================================================
+# LITEFEET LEDGER — BETA CHANGELOG
+# ============================================================
+
+class BetaChangelog(Base):
+    __tablename__ = "ledger_beta_changelog"
+
+    id = Column(Integer, primary_key=True)
+
+    title = Column(
+        String(255),
+        nullable=False
+    )
+
+    details = Column(
+        Text,
+        nullable=False
+    )
+
+    visibility = Column(
+        String(20),
+        nullable=False,
+        default="beta"
+    )
+
+    is_published = Column(
+        Boolean,
+        nullable=False,
+        default=True
+    )
+
+    created_at = Column(
+        DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+
+
+# ============================================================
 # LITEFEET LEDGER — NEWSLETTER SUBSCRIBERS
 # ============================================================
 

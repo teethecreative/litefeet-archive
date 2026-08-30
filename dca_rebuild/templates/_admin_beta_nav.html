@@ -1,0 +1,24 @@
+<nav
+    class="admin-beta-nav"
+    aria-label="Beta Administration"
+>
+    <a href="{{ url_for('admin_beta_features') }}">
+        FEATURE FLAGS
+    </a>
+
+    <a href="{{ url_for('admin_beta_feedback') }}">
+        FEEDBACK
+    </a>
+
+    <a href="{{ url_for('admin_beta_changelog') }}">
+        CHANGELOG
+    </a>
+
+    <a
+        href="{{ url_for('beta_home') }}"
+        target="_blank"
+        rel="noopener"
+    >
+        PREVIEW BETA ↗
+    </a>
+</nav>

@@ -3247,3 +3247,152 @@ main a:not(.site-nav a):not(.ledger-footer a):hover,
 .beta-feature-card__action {
     margin-top: 18px;
 }
+
+
+/* LITEFEET LEDGER — BETA FEEDBACK + CHANGELOG */
+
+.admin-beta-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 22px;
+}
+
+.admin-beta-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 9px 12px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .06em;
+}
+
+.admin-beta-nav a:hover {
+    color: #071a38;
+    background: var(--gold);
+    border-color: var(--gold);
+}
+
+.beta-feedback-form,
+.beta-changelog-form {
+    display: grid;
+    gap: 16px;
+    max-width: 720px;
+    margin-top: 22px;
+}
+
+.beta-feedback-form label,
+.beta-changelog-form label {
+    display: grid;
+    gap: 7px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+
+.beta-feedback-form select,
+.beta-feedback-form textarea,
+.beta-changelog-form input,
+.beta-changelog-form select,
+.beta-changelog-form textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 14px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    font: inherit;
+    font-size: 14px;
+}
+
+.beta-feedback-form textarea,
+.beta-changelog-form textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+.beta-feedback-admin-list,
+.beta-changelog-list {
+    display: grid;
+    gap: 14px;
+    margin-top: 22px;
+}
+
+.beta-feedback-admin-card,
+.beta-changelog-card {
+    padding: 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.beta-feedback-admin-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.beta-feedback-admin-card__meta span {
+    display: inline-flex;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+
+.beta-feedback-message {
+    white-space: pre-wrap;
+    line-height: 1.55;
+}
+
+.beta-feedback-status-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: end;
+    margin-top: 18px;
+}
+
+.beta-feedback-status-form label {
+    display: grid;
+    gap: 6px;
+    min-width: 180px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+
+.beta-feedback-status-form select,
+.beta-feedback-status-form button,
+.beta-changelog-form button,
+.beta-changelog-card button {
+    min-height: 42px;
+    padding: 10px 12px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    font: inherit;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.beta-feedback-status-form button,
+.beta-changelog-form button {
+    color: #071a38;
+    background: var(--gold);
+    border-color: var(--gold);
+    cursor: pointer;
+}
+
+.beta-changelog-section {
+    margin-top: 36px;
+    padding: clamp(22px, 4vw, 38px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+}

@@ -20,6 +20,8 @@ from dca_rebuild.models import (
     LFAArchiveSubmission,
     LFARecord,
     BetaFeatureFlag,
+    BetaFeedback,
+    BetaChangelog,
     NewsletterSubscriber,
 )
 
@@ -2139,6 +2141,214 @@ def admin_beta_visibility(feature_id):
         db.close()
 
 
+
+# ============================================================
+# LITEFEET LEDGER — ADMIN BETA FEEDBACK
+# ============================================================
+
+@app.route("/admin/beta/feedback")
+@admin_login_required
+def admin_beta_feedback():
+    db = SessionLocal()
+
+    try:
+        feedback = (
+            db.query(BetaFeedback)
+            .order_by(
+                BetaFeedback.created_at.desc()
+            )
+            .all()
+        )
+
+        return render_template(
+            "admin_beta_feedback.html",
+            feedback=feedback,
+        )
+
+    finally:
+        db.close()
+
+
+@app.route(
+    "/admin/beta/feedback/<int:feedback_id>/status",
+    methods=["POST"]
+)
+@admin_login_required
+def admin_beta_feedback_status(feedback_id):
+    db = SessionLocal()
+
+    try:
+        item = db.get(
+            BetaFeedback,
+            feedback_id
+        )
+
+        if not item:
+            abort(404)
+
+        status = (
+            request.form.get("status") or ""
+        ).strip().lower()
+
+        allowed = {
+            "new",
+            "reviewing",
+            "planned",
+            "resolved",
+            "closed",
+        }
+
+        if status not in allowed:
+            flash("Invalid feedback status.")
+
+            return redirect(
+                url_for("admin_beta_feedback")
+            )
+
+        item.status = status
+
+        db.commit()
+
+        flash("Feedback status updated.")
+
+        return redirect(
+            url_for("admin_beta_feedback")
+        )
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
+
+
+# ============================================================
+# LITEFEET LEDGER — ADMIN BETA CHANGELOG
+# ============================================================
+
+@app.route(
+    "/admin/beta/changelog",
+    methods=["GET", "POST"]
+)
+@admin_login_required
+def admin_beta_changelog():
+    db = SessionLocal()
+
+    try:
+        if request.method == "POST":
+            title = (
+                request.form.get("title") or ""
+            ).strip()
+
+            details = (
+                request.form.get("details") or ""
+            ).strip()
+
+            visibility = (
+                request.form.get("visibility") or ""
+            ).strip().lower()
+
+            allowed_visibility = {
+                "beta",
+                "public",
+            }
+
+            if not title or not details:
+                flash(
+                    "Title and changelog details "
+                    "are required."
+                )
+
+                return redirect(
+                    url_for("admin_beta_changelog")
+                )
+
+            if visibility not in allowed_visibility:
+                flash(
+                    "Choose Beta or Public visibility."
+                )
+
+                return redirect(
+                    url_for("admin_beta_changelog")
+                )
+
+            entry = BetaChangelog(
+                title=title,
+                details=details,
+                visibility=visibility,
+                is_published=True,
+            )
+
+            db.add(entry)
+            db.commit()
+
+            flash("Changelog entry published.")
+
+            return redirect(
+                url_for("admin_beta_changelog")
+            )
+
+        entries = (
+            db.query(BetaChangelog)
+            .order_by(
+                BetaChangelog.created_at.desc()
+            )
+            .all()
+        )
+
+        return render_template(
+            "admin_beta_changelog.html",
+            entries=entries,
+        )
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
+
+
+@app.route(
+    "/admin/beta/changelog/<int:entry_id>/toggle",
+    methods=["POST"]
+)
+@admin_login_required
+def admin_beta_changelog_toggle(entry_id):
+    db = SessionLocal()
+
+    try:
+        entry = db.get(
+            BetaChangelog,
+            entry_id
+        )
+
+        if not entry:
+            abort(404)
+
+        entry.is_published = (
+            not entry.is_published
+        )
+
+        db.commit()
+
+        flash(
+            "Changelog publication status updated."
+        )
+
+        return redirect(
+            url_for("admin_beta_changelog")
+        )
+
+    except Exception:
+        db.rollback()
+        raise
+
+    finally:
+        db.close()
+
+
 # ============================================================
 # LITEFEET LEDGER — BETA MODE
 # ============================================================
@@ -2163,25 +2373,48 @@ def beta_home():
             session.get("ledger_beta_active")
         )
 
+        visible_features = [
+            item
+            for item in features
+            if beta_feature_accessible(
+                item,
+                beta_active=beta_active
+            )
+        ]
+
+        changelog_query = (
+            db.query(BetaChangelog)
+            .filter(
+                BetaChangelog.is_published.is_(True)
+            )
+        )
+
+        if not beta_active:
+            changelog_query = changelog_query.filter(
+                BetaChangelog.visibility == "public"
+            )
+
+        changelog = (
+            changelog_query
+            .order_by(
+                BetaChangelog.created_at.desc()
+            )
+            .limit(20)
+            .all()
+        )
+
         return render_template(
             "beta_home.html",
             beta_active=beta_active,
             beta_email=session.get(
                 "ledger_beta_email"
             ),
-            beta_features=[
-                item
-                for item in features
-                if beta_feature_accessible(
-                    item,
-                    beta_active=beta_active
-                )
-            ],
+            beta_features=visible_features,
+            beta_changelog=changelog,
         )
 
     finally:
         db.close()
-
 
 
 @app.route("/beta/feature/<feature_key>")
@@ -2228,6 +2461,98 @@ def beta_feature_page(feature_key):
             feature=feature,
             beta_active=beta_active,
         )
+
+    finally:
+        db.close()
+
+
+
+@app.route("/beta/feedback", methods=["POST"])
+def beta_submit_feedback():
+    if not session.get("ledger_beta_active"):
+        flash(
+            "Enter Beta Mode before sending feedback."
+        )
+
+        return redirect(
+            url_for("beta_home") + "#feedback"
+        )
+
+    email = (
+        session.get("ledger_beta_email") or ""
+    ).strip().lower()
+
+    feature_key = (
+        request.form.get("feature_key") or ""
+    ).strip()
+
+    feedback_type = (
+        request.form.get("feedback_type") or ""
+    ).strip().lower()
+
+    message = (
+        request.form.get("message") or ""
+    ).strip()
+
+    page_path = (
+        request.form.get("page_path") or ""
+    ).strip()
+
+    allowed_types = {
+        "bug",
+        "idea",
+        "confusing",
+        "general",
+    }
+
+    if feedback_type not in allowed_types:
+        feedback_type = "general"
+
+    if not email:
+        flash(
+            "Your Beta email could not be found."
+        )
+
+        return redirect(
+            url_for("beta_home") + "#feedback"
+        )
+
+    if not message:
+        flash(
+            "Tell us what you noticed first."
+        )
+
+        return redirect(
+            url_for("beta_home") + "#feedback"
+        )
+
+    db = SessionLocal()
+
+    try:
+        feedback = BetaFeedback(
+            email=email,
+            feature_key=feature_key or None,
+            feedback_type=feedback_type,
+            message=message,
+            page_path=page_path or None,
+            status="new",
+        )
+
+        db.add(feedback)
+        db.commit()
+
+        flash(
+            "Feedback received. Thank you for "
+            "helping build the Ledger."
+        )
+
+        return redirect(
+            url_for("beta_home") + "#feedback"
+        )
+
+    except Exception:
+        db.rollback()
+        raise
 
     finally:
         db.close()

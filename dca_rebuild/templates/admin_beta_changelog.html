@@ -1,0 +1,196 @@
+<!doctype html>
+<html data-theme="dark">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>
+        Beta Changelog — LiteFeet Ledger Admin
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/dca.css'
+        ) }}"
+    >
+</head>
+
+<body class="ledger-admin">
+
+{% include "_admin_navigation.html" %}
+
+<main class="admin-control-room">
+
+<header class="admin-control-room__header">
+
+    <div class="label">
+        LITEFEET LEDGER · ADMIN
+    </div>
+
+    <h1>
+        BETA<br>
+        CHANGELOG
+    </h1>
+
+    <p class="lead">
+        Publish short updates about what changed
+        while the Ledger is being tested.
+    </p>
+
+    {% include "_admin_beta_nav.html" %}
+
+</header>
+
+
+{% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+        <div class="flash">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endwith %}
+
+
+<section class="admin-module-section">
+
+    <form
+        method="post"
+        class="beta-changelog-form"
+    >
+
+        <label>
+            TITLE
+
+            <input
+                type="text"
+                name="title"
+                required
+            >
+        </label>
+
+
+        <label>
+            WHAT CHANGED?
+
+            <textarea
+                name="details"
+                required
+            ></textarea>
+        </label>
+
+
+        <label>
+            VISIBILITY
+
+            <select
+                name="visibility"
+                required
+            >
+                <option value="beta">
+                    BETA PARTICIPANTS
+                </option>
+
+                <option value="public">
+                    EVERYONE
+                </option>
+            </select>
+        </label>
+
+
+        <button type="submit">
+            PUBLISH UPDATE →
+        </button>
+
+    </form>
+
+</section>
+
+
+<section class="admin-module-section">
+
+    <div class="label">
+        CHANGELOG HISTORY
+    </div>
+
+    {% if entries %}
+
+    <div class="beta-changelog-list">
+
+    {% for entry in entries %}
+
+        <article class="beta-changelog-card">
+
+            <div class="beta-feedback-admin-card__meta">
+                <span>
+                    {{ entry.visibility|upper }}
+                </span>
+
+                <span>
+                    {% if entry.is_published %}
+                        PUBLISHED
+                    {% else %}
+                        HIDDEN
+                    {% endif %}
+                </span>
+            </div>
+
+            <h2>
+                {{ entry.title }}
+            </h2>
+
+            <p>
+                {{ entry.details }}
+            </p>
+
+            <p>
+                {{ entry.created_at.strftime(
+                    "%b %d, %Y"
+                ) }}
+            </p>
+
+            <form
+                method="post"
+                action="{{ url_for(
+                    'admin_beta_changelog_toggle',
+                    entry_id=entry.id
+                ) }}"
+            >
+                <button type="submit">
+                    {% if entry.is_published %}
+                        HIDE ENTRY
+                    {% else %}
+                        PUBLISH ENTRY
+                    {% endif %}
+                </button>
+            </form>
+
+        </article>
+
+    {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <div class="archive-status-card">
+
+        <h2>
+            NO CHANGELOG ENTRIES YET
+        </h2>
+
+    </div>
+
+    {% endif %}
+
+</section>
+
+</main>
+
+</body>
+</html>
