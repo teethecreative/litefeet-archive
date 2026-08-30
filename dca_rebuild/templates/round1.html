@@ -69,6 +69,94 @@
 
 
 <form method="post">
+{% if returning_submission %}
+
+<section
+    class="dca-returning-voter"
+    data-dca-cooldown="{{ returning_seconds }}"
+>
+    <div class="label">
+        YOUR VOTE IS IN
+    </div>
+
+    <h2>
+        SEE HOW ROUND 1 IS MOVING.
+    </h2>
+
+    <p>
+        You've already completed a Round 1
+        submission during the current
+        24-hour voting window.
+    </p>
+
+    <div class="dca-vote-countdown">
+        <span>
+            YOU CAN VOTE AGAIN IN
+        </span>
+
+        <strong
+            id="dcaCooldownClock"
+            aria-live="polite"
+        >
+            --
+        </strong>
+    </div>
+
+    <a
+        class="submit"
+        href="{{ url_for('round2') }}"
+    >
+        VIEW LIVE RESULTS + ROUND 2 PREVIEW →
+    </a>
+</section>
+
+{% else %}
+
+<section
+    class="dca-email-gate"
+    id="dcaEmailGate"
+>
+    <div class="label">
+        BEFORE YOU VOTE
+    </div>
+
+    <h2>
+        ENTER YOUR EMAIL.
+    </h2>
+
+    <p>
+        Your email is used to enforce the
+        one completed submission every
+        24 hours rule.
+    </p>
+
+    <label for="dcaEmailGateInput">
+        EMAIL
+    </label>
+
+    <input
+        id="dcaEmailGateInput"
+        type="email"
+        autocomplete="email"
+        placeholder="you@example.com"
+        required
+    >
+
+    <button
+        type="button"
+        id="dcaEmailContinue"
+        class="submit"
+    >
+        CONTINUE TO BALLOT →
+    </button>
+</section>
+
+<div
+    id="dcaBallot"
+    class="dca-ballot-gated"
+    hidden
+>
+
 
 <section>
 
@@ -454,6 +542,9 @@
 </section>
 
 
+
+</div>
+{% endif %}
 </form>
 
 </main>
@@ -529,5 +620,155 @@ updateRound1VoteCount();
 
 
     {% include "_footer.html" %}
+
+<script>
+/* DCA_EMAIL_FIRST_FLOW */
+
+(function () {
+    const gate = document.getElementById(
+        "dcaEmailGate"
+    );
+
+    if (!gate) {
+        return;
+    }
+
+    const gateEmail = document.getElementById(
+        "dcaEmailGateInput"
+    );
+
+    const continueButton = document.getElementById(
+        "dcaEmailContinue"
+    );
+
+    const ballot = document.getElementById(
+        "dcaBallot"
+    );
+
+    const form = gate.closest("form");
+
+    if (!form || !gateEmail || !ballot) {
+        return;
+    }
+
+    const realEmail = form.querySelector(
+        'input[name="email"]'
+    );
+
+    if (!realEmail) {
+        console.error(
+            "DCA email field could not be found."
+        );
+        return;
+    }
+
+    const revealBallot = function () {
+        const email = gateEmail.value.trim();
+
+        gateEmail.setCustomValidity("");
+
+        if (!email) {
+            gateEmail.reportValidity();
+            return;
+        }
+
+        if (!gateEmail.checkValidity()) {
+            gateEmail.reportValidity();
+            return;
+        }
+
+        realEmail.value = email;
+
+        gate.hidden = true;
+        ballot.hidden = false;
+
+        realEmail.readOnly = true;
+
+        ballot.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    };
+
+    continueButton.addEventListener(
+        "click",
+        revealBallot
+    );
+
+    gateEmail.addEventListener(
+        "keydown",
+        function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                revealBallot();
+            }
+        }
+    );
+
+    if (realEmail.value) {
+        gateEmail.value = realEmail.value;
+    }
+})();
+</script>
+
+
+<script>
+/* DCA_COOLDOWN_COUNTDOWN */
+
+(function () {
+    const state = document.querySelector(
+        "[data-dca-cooldown]"
+    );
+
+    const clock = document.getElementById(
+        "dcaCooldownClock"
+    );
+
+    if (!state || !clock) {
+        return;
+    }
+
+    let remaining = Number(
+        state.dataset.dcaCooldown || 0
+    );
+
+    const render = function () {
+        if (remaining <= 0) {
+            clock.textContent = "00:00:00";
+
+            window.location.reload();
+            return;
+        }
+
+        const hours = Math.floor(
+            remaining / 3600
+        );
+
+        const minutes = Math.floor(
+            (remaining % 3600) / 60
+        );
+
+        const seconds = Math.floor(
+            remaining % 60
+        );
+
+        clock.textContent = [
+            String(hours).padStart(2, "0"),
+            String(minutes).padStart(2, "0"),
+            String(seconds).padStart(2, "0")
+        ].join(":");
+
+        remaining -= 1;
+    };
+
+    render();
+
+    window.setInterval(
+        render,
+        1000
+    );
+})();
+</script>
+
 </body>
 </html>

@@ -3434,3 +3434,69 @@ main a:not(.site-nav a):not(.ledger-footer a):hover,
         display: none;
     }
 }
+
+
+/* LITEFEET LEDGER — DCA EMAIL FIRST + COOLDOWN */
+
+.dca-email-gate,
+.dca-returning-voter {
+    max-width: 720px;
+    margin: 28px auto;
+    padding: clamp(24px, 5vw, 42px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.dca-email-gate h2,
+.dca-returning-voter h2 {
+    margin: 10px 0 12px;
+}
+
+.dca-email-gate label {
+    display: block;
+    margin: 24px 0 7px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+
+.dca-email-gate input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 52px;
+    padding: 12px 14px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    font: inherit;
+}
+
+.dca-email-gate .submit {
+    margin-top: 12px;
+}
+
+.dca-ballot-gated[hidden],
+.dca-email-gate[hidden] {
+    display: none !important;
+}
+
+.dca-vote-countdown {
+    display: grid;
+    gap: 7px;
+    margin: 26px 0;
+    padding: 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+}
+
+.dca-vote-countdown span {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+
+.dca-vote-countdown strong {
+    font-size: clamp(32px, 8vw, 58px);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}

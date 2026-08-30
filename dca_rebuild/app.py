@@ -65,11 +65,94 @@ def client_ip():
 def index():
     return render_template("ledger_home.html")
 
+
+# ============================================================
+# LITEFEET LEDGER — DCA RETURNING VOTER
+# ============================================================
+
+DCA_VOTER_SESSION_KEY = "dca_round1_last_submission_id"
+
+
+def dca_round1_remaining_seconds(submission):
+    if not submission or not submission.submitted_at:
+        return 0
+
+    created_at = submission.submitted_at
+
+    if created_at.tzinfo is not None:
+        created_at = created_at.replace(tzinfo=None)
+
+    unlock_at = created_at + timedelta(
+        hours=DCA_ROUND_COOLDOWN_HOURS
+    )
+
+    return max(
+        0,
+        int(
+            (
+                unlock_at - datetime.utcnow()
+            ).total_seconds()
+        ),
+    )
+
+
+def dca_round1_session_submission(db):
+    submission_id = session.get(
+        DCA_VOTER_SESSION_KEY
+    )
+
+    if not submission_id:
+        return None
+
+    try:
+        submission_id = int(submission_id)
+    except (TypeError, ValueError):
+        session.pop(
+            DCA_VOTER_SESSION_KEY,
+            None
+        )
+        return None
+
+    submission = db.get(
+        DCACategorySuggestionSubmission,
+        submission_id,
+    )
+
+    if not submission:
+        session.pop(
+            DCA_VOTER_SESSION_KEY,
+            None
+        )
+        return None
+
+    if dca_round1_remaining_seconds(
+        submission
+    ) <= 0:
+        session.pop(
+            DCA_VOTER_SESSION_KEY,
+            None
+        )
+        return None
+
+    return submission
+
+
 @app.route("/awards/dancers-choice/category-suggestions", methods=["GET", "POST"])
 def round1():
     db = SessionLocal()
 
     try:
+        returning_submission = (
+            dca_round1_session_submission(db)
+        )
+
+        returning_seconds = (
+            dca_round1_remaining_seconds(
+                returning_submission
+            )
+            if returning_submission
+            else 0
+        )
         historical = db.query(DCAEdition).filter_by(year=2023).first()
         current = db.query(DCAEdition).filter_by(year=2026).first()
 
@@ -174,6 +257,8 @@ def round1():
                 )
 
             db.commit()
+            session[DCA_VOTER_SESSION_KEY] = submission.id
+
             return render_template("round1_success.html")
 
         award_categories = []
@@ -199,6 +284,8 @@ def round1():
             categories=categories,
             award_categories=award_categories,
             suggested_categories=suggested_categories,
+            returning_submission=returning_submission,
+            returning_seconds=returning_seconds,
         )
 
     finally:
