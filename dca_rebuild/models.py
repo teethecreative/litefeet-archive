@@ -115,7 +115,7 @@ class DCACategory(Base):
         UniqueConstraint(
             "edition_id",
             "normalized_name",
-            name="uq_dca_category_edition_name",
+            name="ledger_uq_dca_category_edition_name",
         ),
     )
 
@@ -201,7 +201,7 @@ class DCAReturnCategoryVote(Base):
         UniqueConstraint(
             "submission_id",
             "category_id",
-            name="uq_dca_return_vote_submission_category",
+            name="ledger_uq_dca_return_vote_submission_category",
         ),
     )
 
@@ -347,7 +347,7 @@ class DCACategoryBallotVote(Base):
         UniqueConstraint(
             "submission_id",
             "category_id",
-            name="uq_dca_ballot_vote_submission_category",
+            name="ledger_uq_dca_ballot_vote_submission_category",
         ),
     )
 
