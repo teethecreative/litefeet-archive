@@ -329,6 +329,7 @@ def round1():
                 if answer in {"yes", "no"}:
                     votes[category.id] = answer == "yes"
             submission = DCACategorySuggestionSubmission(
+            email_address=verified_email,
                 edition_id=current.id,
                 email_hash=email_hash,
                 ip_hash=ip_hash,
@@ -824,6 +825,50 @@ def moderate_round1_suggestion(suggestion_id):
         db.close()
 
 
+
+# ============================================================
+# DCA ROUND 1 — PRIVATE EMAIL COLUMN COMPATIBILITY
+# ============================================================
+
+def ensure_dca_round1_email_column():
+    """
+    Preserve normalized Round 1 email addresses privately
+    for admin participation reporting.
+
+    Historical hash-only submissions remain valid.
+    """
+
+    from sqlalchemy import inspect, text as sql_text
+
+    table_name = (
+        DCACategorySuggestionSubmission.__tablename__
+    )
+
+    inspector = inspect(engine)
+
+    if table_name not in inspector.get_table_names():
+        return
+
+    columns = {
+        column["name"]
+        for column in inspector.get_columns(table_name)
+    }
+
+    if "email_address" in columns:
+        return
+
+    with engine.begin() as connection:
+        connection.execute(
+            sql_text(
+                f'ALTER TABLE "{table_name}" '
+                'ADD COLUMN email_address VARCHAR(320)'
+            )
+        )
+
+
+ensure_dca_round1_email_column()
+
+
 # ============================================================
 # DCA ROUND 1 — CURRENT ADMIN DASHBOARD
 # ============================================================
@@ -1080,6 +1125,47 @@ def admin_round1():
             .count()
         )
 
+        voter_rows = (
+            db.query(
+                DCACategorySuggestionSubmission.email_address,
+                DCACategorySuggestionSubmission.email_hash,
+            )
+            .filter(
+                DCACategorySuggestionSubmission.edition_id
+                == edition.id
+            )
+            .order_by(
+                DCACategorySuggestionSubmission.submitted_at.desc()
+            )
+            .all()
+        )
+
+        voter_activity_map = {}
+        historical_unknown_count = 0
+
+        for email_address, email_hash in voter_rows:
+            if email_address:
+                key = email_address.strip().lower()
+
+                if key not in voter_activity_map:
+                    voter_activity_map[key] = {
+                        "email": key,
+                        "count": 0,
+                    }
+
+                voter_activity_map[key]["count"] += 1
+            else:
+                historical_unknown_count += 1
+
+        voter_activity = sorted(
+            voter_activity_map.values(),
+            key=lambda row: (
+                -row["count"],
+                row["email"],
+            ),
+        )
+
+
         threshold = submission_count
 
         suggestions = (
@@ -1190,6 +1276,8 @@ def admin_round1():
             method_counts=method_counts,
             method_labels=method_labels,
             merge_targets=merge_targets,
+            voter_activity=voter_activity,
+            historical_unknown_count=historical_unknown_count,
         )
 
     finally:

@@ -186,7 +186,7 @@
         during Category Suggestions.
     </p>
 
-    <div class="admin-results">
+    <div class="admin-results admin-results--scroll">
 
         {% for result in return_results %}
 
@@ -214,6 +214,83 @@
 
 </section>
 
+
+
+<!-- DCA_VOTER_ACTIVITY_TABLE -->
+
+<section class="admin-voter-activity">
+
+    <div class="number">
+        VOTERS
+    </div>
+
+    <h2>
+        VOTER ACTIVITY
+    </h2>
+
+    <p class="description">
+        Completed Round 1 submissions grouped by email.
+    </p>
+
+    <div class="admin-voter-table-wrap">
+
+        <table class="admin-voter-table">
+
+            <thead>
+                <tr>
+                    <th>EMAIL</th>
+                    <th>VOTES</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for voter in voter_activity %}
+
+                <tr>
+                    <td>{{ voter.email }}</td>
+                    <td>{{ voter.count }}</td>
+                </tr>
+
+                {% endfor %}
+
+
+                {% if historical_unknown_count %}
+
+                <tr class="admin-voter-table__historical">
+
+                    <td>
+                        Earlier submissions —
+                        email unavailable
+                    </td>
+
+                    <td>
+                        {{ historical_unknown_count }}
+                    </td>
+
+                </tr>
+
+                {% endif %}
+
+
+                {% if not voter_activity
+                      and not historical_unknown_count %}
+
+                <tr>
+                    <td colspan="2">
+                        No completed submissions yet.
+                    </td>
+                </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
 
 <section>
 

@@ -3895,3 +3895,63 @@ main a:not(.site-nav a):not(.ledger-footer a):hover,
 .admin-archive-nav__planned {
     opacity: .45;
 }
+
+/* DCA ADMIN — COMPACT RESULTS + VOTER ACTIVITY */
+
+.admin-results--scroll {
+    max-height: 285px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+
+.admin-results--scroll .admin-result {
+    margin-bottom: 10px;
+}
+
+.admin-results--scroll .admin-result:last-child {
+    margin-bottom: 0;
+}
+
+.admin-voter-table-wrap {
+    max-height: 340px;
+    margin-top: 22px;
+    overflow: auto;
+    border: 1px solid var(--border);
+}
+
+.admin-voter-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-voter-table th,
+.admin-voter-table td {
+    padding: 13px 15px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+}
+
+.admin-voter-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--surface);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+
+.admin-voter-table th:last-child,
+.admin-voter-table td:last-child {
+    width: 130px;
+    text-align: center;
+}
+
+.admin-voter-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.admin-voter-table__historical {
+    opacity: .65;
+}

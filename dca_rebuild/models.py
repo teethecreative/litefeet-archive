@@ -144,6 +144,15 @@ class DCACategorySuggestionSubmission(Base):
     # Never displayed publicly.
     email_hash = Column(String(128), nullable=False)
 
+
+
+    # Private admin-only copy of the normalized email.
+    # email_hash remains the authoritative cooldown identifier.
+    email_address = Column(
+        String(320),
+        nullable=True,
+        index=True,
+    )
     # Additional anti-abuse identifiers.
     ip_hash = Column(String(128))
     visitor_key = Column(String(128))
