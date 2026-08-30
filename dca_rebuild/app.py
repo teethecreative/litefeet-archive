@@ -1225,10 +1225,20 @@ def lfa_home():
     methods=["POST"]
 )
 def lfa_submit():
-
     db = SessionLocal()
 
     try:
+        allowed_types = {
+            "nomination",
+            "award_winner",
+            "hall_of_fame",
+            "litefeet_achievement",
+            "litefeet_humanitarian",
+        }
+
+        submission_type = (
+            request.form.get("submission_type") or ""
+        ).strip()
 
         year_raw = (
             request.form.get("year") or ""
@@ -1250,32 +1260,38 @@ def lfa_submit():
             request.form.get("submitter_email") or ""
         ).strip().lower()
 
+        if submission_type not in allowed_types:
+            flash("Choose what type of LiteFeet Awards information you're submitting.")
+            return redirect(
+                url_for("lfa_home") + "#contribute"
+            )
+
         try:
             year = int(year_raw)
         except ValueError:
             year = 0
 
         if year not in {2023, 2024, 2025, 2026}:
-            flash("Choose an award year.")
+            flash("Choose a year.")
             return redirect(
                 url_for("lfa_home") + "#contribute"
             )
 
         if not category_name:
-            flash("Enter the award category.")
+            flash("Enter the category or honor.")
             return redirect(
                 url_for("lfa_home") + "#contribute"
             )
 
         if not winner_name:
-            flash("Enter the winner.")
+            flash("Enter the person, winner, or honoree.")
             return redirect(
                 url_for("lfa_home") + "#contribute"
             )
 
         submission = LFAArchiveSubmission(
             year=year,
-            submission_type="award_information",
+            submission_type=submission_type,
             category_name=category_name,
             winner_name=winner_name,
             team_name=team_name or None,
