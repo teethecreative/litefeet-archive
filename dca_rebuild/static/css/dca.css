@@ -3396,3 +3396,41 @@ main a:not(.site-nav a):not(.ledger-footer a):hover,
     background: var(--surface);
     border: 1px solid var(--border);
 }
+
+
+/* LITEFEET LEDGER — HEADER THEME CONTROL */
+
+.global-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-left: auto;
+}
+
+.global-header-controls .global-theme-control {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+}
+
+.global-header-controls .global-theme-control > span {
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    white-space: nowrap;
+}
+
+.global-header-controls .global-theme-toggle {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 720px) {
+    .global-header-controls {
+        gap: 9px;
+    }
+
+    .global-header-controls .global-theme-control > span {
+        display: none;
+    }
+}

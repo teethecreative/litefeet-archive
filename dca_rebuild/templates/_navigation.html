@@ -6,7 +6,24 @@
         LITEFEET LEDGER
     </a>
 
-    <button
+
+<div class="global-header-controls">
+<div class="global-theme-control">
+            <span>LIGHT</span>
+
+            <button
+                class="global-theme-toggle"
+                type="button"
+                aria-label="Switch between light and dark mode"
+            >
+                <span class="theme-toggle-track">
+                    <span class="theme-toggle-dot"></span>
+                </span>
+            </button>
+
+            <span>DARK</span>
+        </div>
+<button
         class="mobile-nav-toggle"
         type="button"
         aria-label="Open navigation"
@@ -16,6 +33,7 @@
         <span></span>
         <span></span>
     </button>
+</div>
 
     <div class="awards-nav-groups">
 
@@ -61,22 +79,6 @@
             ADMIN
         </a>
 
-        <div class="global-theme-control">
-            <span>LIGHT</span>
-
-            <button
-                class="global-theme-toggle"
-                type="button"
-                aria-label="Switch between light and dark mode"
-            >
-                <span class="theme-toggle-track">
-                    <span class="theme-toggle-dot"></span>
-                </span>
-            </button>
-
-            <span>DARK</span>
-        </div>
-
     </div>
 </nav>
 
@@ -85,7 +87,7 @@
     const root = document.documentElement;
     const nav = document.querySelector(".awards-global-nav");
     const menuToggle = document.querySelector(".mobile-nav-toggle");
-    const storageKey = "litefeet-awards-theme";
+    const storageKey = "litefeet-ledger-theme";
 
     function applyTheme(theme) {
         root.dataset.theme = theme;
