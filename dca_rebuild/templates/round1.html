@@ -112,6 +112,7 @@
 
 {% else %}
 
+{% if not verified_email %}
 <section
     class="dca-email-gate"
     id="dcaEmailGate"
@@ -140,22 +141,24 @@
         autocomplete="email"
         placeholder="you@example.com"
         required
-    >
+
+        name="email">
 
     <button
-        type="button"
+type="submit"
         id="dcaEmailContinue"
         class="submit"
+
+        formaction="{{ url_for('dca_round1_check_email') }}"
+        formmethod="post"
     >
-        CONTINUE TO BALLOT →
+        CHECK ELIGIBILITY →
     </button>
 </section>
+{% endif %}
 
-<div
-    id="dcaBallot"
-    class="dca-ballot-gated"
-    hidden
->
+{% if verified_email %}
+<div id="dcaBallot">
 
 
 <section>
@@ -526,7 +529,7 @@
     <input
         class="email"
         type="email"
-        name="email"
+        data-dca-legacy-email="true"
         placeholder="Email address"
         required
     >
@@ -619,97 +622,11 @@ updateRound1VoteCount();
 </script>
 
 
-    {% include "_footer.html" %}
+    {% endif %}
 
-<script>
-/* DCA_EMAIL_FIRST_FLOW */
+{% include "_footer.html" %}
 
-(function () {
-    const gate = document.getElementById(
-        "dcaEmailGate"
-    );
 
-    if (!gate) {
-        return;
-    }
-
-    const gateEmail = document.getElementById(
-        "dcaEmailGateInput"
-    );
-
-    const continueButton = document.getElementById(
-        "dcaEmailContinue"
-    );
-
-    const ballot = document.getElementById(
-        "dcaBallot"
-    );
-
-    const form = gate.closest("form");
-
-    if (!form || !gateEmail || !ballot) {
-        return;
-    }
-
-    const realEmail = form.querySelector(
-        'input[name="email"]'
-    );
-
-    if (!realEmail) {
-        console.error(
-            "DCA email field could not be found."
-        );
-        return;
-    }
-
-    const revealBallot = function () {
-        const email = gateEmail.value.trim();
-
-        gateEmail.setCustomValidity("");
-
-        if (!email) {
-            gateEmail.reportValidity();
-            return;
-        }
-
-        if (!gateEmail.checkValidity()) {
-            gateEmail.reportValidity();
-            return;
-        }
-
-        realEmail.value = email;
-
-        gate.hidden = true;
-        ballot.hidden = false;
-
-        realEmail.readOnly = true;
-
-        ballot.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
-    };
-
-    continueButton.addEventListener(
-        "click",
-        revealBallot
-    );
-
-    gateEmail.addEventListener(
-        "keydown",
-        function (event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                revealBallot();
-            }
-        }
-    );
-
-    if (realEmail.value) {
-        gateEmail.value = realEmail.value;
-    }
-})();
-</script>
 
 
 <script>

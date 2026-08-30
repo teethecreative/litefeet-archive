@@ -71,6 +71,7 @@ def index():
 # ============================================================
 
 DCA_VOTER_SESSION_KEY = "dca_round1_last_submission_id"
+DCA_ROUND_COOLDOWN_HOURS = 24
 
 
 def dca_round1_remaining_seconds(submission):
@@ -137,6 +138,98 @@ def dca_round1_session_submission(db):
     return submission
 
 
+
+# ============================================================
+# LITEFEET LEDGER — DCA EMAIL ELIGIBILITY
+# ============================================================
+
+DCA_EMAIL_SESSION_KEY = "dca_round1_verified_email"
+
+
+@app.route(
+    "/awards/dancers-choice/category-suggestions/check-email",
+    methods=["POST"],
+)
+def dca_round1_check_email():
+    email = (
+        request.form.get("email") or ""
+    ).strip().lower()
+
+    if not email or "@" not in email:
+        flash("Enter a valid email address.")
+
+        return redirect(
+            url_for("round1")
+        )
+
+    db = SessionLocal()
+
+    try:
+        current = (
+            db.query(DCAEdition)
+            .filter_by(year=2026)
+            .first()
+        )
+
+        if not current:
+            abort(404)
+
+        now = datetime.utcnow()
+        email_hash = private_hash(email)
+
+        last = (
+            db.query(DCACategorySuggestionSubmission)
+            .filter(
+                DCACategorySuggestionSubmission.edition_id
+                == current.id,
+                DCACategorySuggestionSubmission.email_hash
+                == email_hash,
+            )
+            .order_by(
+                DCACategorySuggestionSubmission
+                .submitted_at.desc()
+            )
+            .first()
+        )
+
+        if (
+            last
+            and now
+            < last.submitted_at
+            + timedelta(
+                hours=DCA_ROUND_COOLDOWN_HOURS
+            )
+        ):
+            session[
+                DCA_VOTER_SESSION_KEY
+            ] = last.id
+
+            session.pop(
+                DCA_EMAIL_SESSION_KEY,
+                None,
+            )
+
+            return redirect(
+                url_for("round1")
+            )
+
+        session.pop(
+            DCA_VOTER_SESSION_KEY,
+            None,
+        )
+
+        session[
+            DCA_EMAIL_SESSION_KEY
+        ] = email
+
+        return redirect(
+            url_for("round1")
+        )
+
+    finally:
+        db.close()
+
+
 @app.route("/awards/dancers-choice/category-suggestions", methods=["GET", "POST"])
 def round1():
     db = SessionLocal()
@@ -153,6 +246,17 @@ def round1():
             if returning_submission
             else 0
         )
+
+        verified_email = session.get(
+            DCA_EMAIL_SESSION_KEY
+        )
+
+        if returning_submission:
+            verified_email = None
+            session.pop(
+                DCA_EMAIL_SESSION_KEY,
+                None,
+            )
         historical = db.query(DCAEdition).filter_by(year=2023).first()
         current = db.query(DCAEdition).filter_by(year=2026).first()
 
@@ -164,7 +268,10 @@ def round1():
         )
 
         if request.method == "POST":
-            email = (request.form.get("email") or "").strip().lower()
+            email = (
+                session.get(DCA_EMAIL_SESSION_KEY)
+                or ""
+            ).strip().lower()
 
             if not email or "@" not in email:
                 flash("Enter a valid email address.")
@@ -193,11 +300,18 @@ def round1():
                 hours = int(remaining.total_seconds() // 3600)
                 minutes = int((remaining.total_seconds() % 3600) // 60)
 
-                flash(
-                    f"You already submitted this round. "
-                    f"Try again in {hours}h {minutes}m."
+                session[
+                    DCA_VOTER_SESSION_KEY
+                ] = last.id
+
+                session.pop(
+                    DCA_EMAIL_SESSION_KEY,
+                    None,
                 )
-                return redirect(url_for("round1"))
+
+                return redirect(
+                    url_for("round1")
+                )
 
             method = request.form.get("category_count_preference")
 
@@ -258,6 +372,10 @@ def round1():
 
             db.commit()
             session[DCA_VOTER_SESSION_KEY] = submission.id
+            session.pop(
+                DCA_EMAIL_SESSION_KEY,
+                None,
+            )
 
             return render_template("round1_success.html")
 
@@ -286,6 +404,7 @@ def round1():
             suggested_categories=suggested_categories,
             returning_submission=returning_submission,
             returning_seconds=returning_seconds,
+            verified_email=verified_email,
         )
 
     finally:
