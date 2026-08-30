@@ -68,7 +68,6 @@
     </p>
 </header>
 
-
 <section class="round2-preview-summary">
 
     <div class="number">01</div>
@@ -104,7 +103,6 @@
 
 </section>
 
-
 <section>
 
     <div class="number">02</div>
@@ -137,9 +135,7 @@
                         2023 AWARD CATEGORY
                     </span>
                     {% else %}
-                    <span class="round2-history-label">
-                        NO PREVIOUS WINNER
-                    </span>
+
                     {% endif %}
 
                     <h3>
@@ -153,47 +149,11 @@
 
             </div>
 
-
             {% if meta.get('winners') %}
-
-            <div class="past-winner">
-                <small>
-                    2023 WINNER{% if meta.get('winners')|length > 1 %}S{% endif %}
-                </small>
-
-                {% for winner in meta.get('winners') %}
-
-                <div class="winner-entry">
-                    <strong>
-                        {{ winner.name }}
-                    </strong>
-
-                    {% if winner.team %}
-                    <div class="winner-detail">
-                        {{ winner.team }}
-                    </div>
-                    {% endif %}
-
-                    {% if winner.location %}
-                    <div class="winner-detail">
-                        {{ winner.location }}
-                    </div>
-                    {% endif %}
-                </div>
-
-                {% endfor %}
-            </div>
 
             {% else %}
 
-            <div class="past-winner no-winner-box">
-                <span class="no-winner">
-                    No Previous Winners
-                </span>
-            </div>
-
             {% endif %}
-
 
             <div class="round2-result-row">
 
@@ -244,7 +204,6 @@
     </div>
 
 </section>
-
 
 <section>
 
@@ -298,7 +257,6 @@
 
 </section>
 
-
 <section>
 
     <div class="number">04</div>
@@ -347,7 +305,6 @@
     </div>
 
 </section>
-
 
 <section class="round2-preview-footer">
 
