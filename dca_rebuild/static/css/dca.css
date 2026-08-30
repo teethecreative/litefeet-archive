@@ -3569,3 +3569,120 @@ main a:not(.site-nav a):not(.ledger-footer a):hover,
     color: inherit;
     text-decoration: none;
 }
+
+/* LITEFEET LEDGER — BETA FEEDBACK ADMIN */
+
+.admin-beta-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 22px 0;
+}
+
+.admin-beta-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 9px 12px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.beta-public-feedback {
+    width: min(100% - 32px, 900px);
+    margin: 50px auto;
+    padding: clamp(24px, 5vw, 42px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.beta-feedback-form,
+.beta-changelog-form {
+    display: grid;
+    gap: 16px;
+    max-width: 720px;
+    margin-top: 24px;
+}
+
+.beta-feedback-form label,
+.beta-changelog-form label {
+    display: grid;
+    gap: 7px;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.beta-feedback-form select,
+.beta-feedback-form textarea,
+.beta-changelog-form input,
+.beta-changelog-form select,
+.beta-changelog-form textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px 14px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    font: inherit;
+}
+
+.beta-feedback-form textarea,
+.beta-changelog-form textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+.beta-admin-list {
+    display: grid;
+    gap: 14px;
+    margin-top: 22px;
+}
+
+.beta-admin-card {
+    padding: 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.beta-admin-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.beta-admin-meta span {
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    font-size: 9px;
+    font-weight: 900;
+}
+
+.beta-feedback-message {
+    white-space: pre-wrap;
+    line-height: 1.55;
+}
+
+.beta-admin-status-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.beta-admin-status-form select,
+.beta-admin-status-form button,
+.beta-changelog-form button,
+.beta-admin-card button {
+    min-height: 42px;
+    padding: 10px 12px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    font: inherit;
+    font-size: 10px;
+    font-weight: 900;
+}

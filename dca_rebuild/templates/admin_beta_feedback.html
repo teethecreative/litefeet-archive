@@ -1,197 +1,139 @@
 <!doctype html>
 <html>
 <head>
-<script>
-(function () {
-    const key = "litefeet-ledger-theme";
-    const saved = localStorage.getItem(key);
-
-    if (saved === "light" || saved === "dark") {
-        document.documentElement.dataset.theme = saved;
-    } else {
-        document.documentElement.dataset.theme = "light";
-    }
-})();
-</script>
-
     <meta charset="utf-8">
-
     <meta
         name="viewport"
         content="width=device-width,initial-scale=1"
     >
 
     <title>
-        Beta Feedback — LiteFeet Ledger Admin
+        Beta Feedback · LiteFeet Ledger Admin
     </title>
 
     <link
         rel="stylesheet"
-        href="{{ url_for(
-            'static',
-            filename='css/dca.css'
-        ) }}"
+        href="{{ url_for('static', filename='css/dca.css') }}"
     >
 </head>
 
-<body class="ledger-admin">
+<body>
 
 {% include "_admin_navigation.html" %}
 
 <main class="admin-control-room">
 
-<header class="admin-control-room__header">
-
-    <div class="label">
-        LITEFEET LEDGER · ADMIN
-    </div>
-
-    <h1>
-        BETA<br>
-        FEEDBACK
-    </h1>
-
-    <p class="lead">
-        Review what Beta participants are
-        finding, requesting, and questioning.
-    </p>
-
-    {% include "_admin_beta_nav.html" %}
-
-</header>
-
-
-{% with messages = get_flashed_messages() %}
-    {% for message in messages %}
-        <div class="flash">
-            {{ message }}
+    <header class="admin-control-room__header">
+        <div class="label">
+            LITEFEET LEDGER · ADMIN
         </div>
-    {% endfor %}
-{% endwith %}
+
+        <h1>
+            BETA FEEDBACK
+        </h1>
+
+        <p class="lead">
+            Review what Beta participants are
+            finding, requesting, and questioning.
+        </p>
+
+        {% include "_admin_beta_nav.html" %}
+    </header>
 
 
-<section class="admin-module-section">
+    <section class="admin-module-section">
 
-{% if feedback %}
+        {% if feedback %}
 
-<div class="beta-feedback-admin-list">
+            <div class="beta-admin-list">
 
-{% for item in feedback %}
+            {% for item in feedback %}
 
-<article class="beta-feedback-admin-card">
+                <article class="beta-admin-card">
 
-    <div class="beta-feedback-admin-card__meta">
+                    <div class="beta-admin-meta">
+                        <span>
+                            {{ item.feedback_type|upper }}
+                        </span>
 
-        <span>
-            {{ item.feedback_type|upper }}
-        </span>
+                        <span>
+                            {{ item.status|upper }}
+                        </span>
 
-        <span>
-            {{ item.status|upper }}
-        </span>
+                        {% if item.feature_key %}
+                        <span>
+                            {{ item.feature_key
+                                |replace("_", " ")
+                                |upper }}
+                        </span>
+                        {% endif %}
+                    </div>
 
-        {% if item.feature_key %}
-        <span>
-            {{ item.feature_key
-                |replace("_", " ")
-                |upper }}
-        </span>
+                    <h2>
+                        {{ item.email }}
+                    </h2>
+
+                    <p class="beta-feedback-message">
+                        {{ item.message }}
+                    </p>
+
+                    {% if item.page_path %}
+                    <p>
+                        PAGE: {{ item.page_path }}
+                    </p>
+                    {% endif %}
+
+                    <form
+                        method="post"
+                        action="{{ url_for(
+                            'admin_beta_feedback_status',
+                            feedback_id=item.id
+                        ) }}"
+                        class="beta-admin-status-form"
+                    >
+                        <select name="status">
+                            {% for status in [
+                                "new",
+                                "reviewing",
+                                "planned",
+                                "resolved",
+                                "closed"
+                            ] %}
+                                <option
+                                    value="{{ status }}"
+                                    {% if item.status == status %}
+                                    selected
+                                    {% endif %}
+                                >
+                                    {{ status|upper }}
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                        <button type="submit">
+                            UPDATE
+                        </button>
+                    </form>
+
+                </article>
+
+            {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="archive-status-card">
+                <h2>NO FEEDBACK YET</h2>
+
+                <p>
+                    New Beta feedback will appear here.
+                </p>
+            </div>
+
         {% endif %}
 
-    </div>
-
-    <h2>
-        {{ item.email }}
-    </h2>
-
-    <p class="beta-feedback-message">
-        {{ item.message }}
-    </p>
-
-    {% if item.page_path %}
-    <p>
-        <strong>PAGE:</strong>
-        {{ item.page_path }}
-    </p>
-    {% endif %}
-
-    <p>
-        {{ item.created_at.strftime(
-            "%b %d, %Y · %I:%M %p"
-        ) }}
-    </p>
-
-
-    <form
-        method="post"
-        action="{{ url_for(
-            'admin_beta_feedback_status',
-            feedback_id=item.id
-        ) }}"
-        class="beta-feedback-status-form"
-    >
-
-        <label>
-            STATUS
-
-            <select name="status">
-
-                {% for status in [
-                    "new",
-                    "reviewing",
-                    "planned",
-                    "resolved",
-                    "closed"
-                ] %}
-
-                <option
-                    value="{{ status }}"
-                    {% if item.status == status %}
-                    selected
-                    {% endif %}
-                >
-                    {{ status|upper }}
-                </option>
-
-                {% endfor %}
-
-            </select>
-        </label>
-
-        <button type="submit">
-            UPDATE STATUS
-        </button>
-
-    </form>
-
-</article>
-
-{% endfor %}
-
-</div>
-
-{% else %}
-
-<div class="archive-status-card">
-
-    <div class="label">
-        FEEDBACK QUEUE
-    </div>
-
-    <h2>
-        NO FEEDBACK YET
-    </h2>
-
-    <p>
-        Beta feedback will appear here
-        when participants submit it.
-    </p>
-
-</div>
-
-{% endif %}
-
-</section>
+    </section>
 
 </main>
 
