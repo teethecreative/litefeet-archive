@@ -117,18 +117,14 @@ def round1():
             if method not in {"top_25", "threshold", "all"}:
                 flash("Choose how you think the final category list should be decided.")
                 return redirect(url_for("round1"))
-
             votes = {}
 
             for category in categories:
                 answer = request.form.get(f"category_{category.id}")
 
-                if answer not in {"yes", "no"}:
-                    flash("Vote Yes or No on every old category.")
-                    return redirect(url_for("round1"))
-
-                votes[category.id] = answer == "yes"
-
+                # Skipping a category means no vote.
+                if answer in {"yes", "no"}:
+                    votes[category.id] = answer == "yes"
             submission = DCACategorySuggestionSubmission(
                 edition_id=current.id,
                 email_hash=email_hash,

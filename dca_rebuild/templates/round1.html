@@ -69,10 +69,18 @@
     <h2>WHAT SHOULD COME BACK?</h2>
 
     <p class="description">
-        Vote on categories from the original Dancer's Choice Awards
-        process. Every category requires a Yes or No.
+        Vote on as many or as few categories as you want.
+        Skip anything you don't have an opinion on.
     </p>
 
+
+    <div class="round1-vote-progress">
+        <strong id="round1VoteCount">0</strong>
+        <span>
+            OF {{ (award_categories|length) + (suggested_categories|length) }}
+            CATEGORIES VOTED ON
+        </span>
+    </div>
 
     <div class="category-group-title">
         2023 Award Categories
@@ -155,7 +163,6 @@
                         type="radio"
                         name="category_{{ category.id }}"
                         value="yes"
-                        required
                     >
 
                     <span>
@@ -169,7 +176,6 @@
                         type="radio"
                         name="category_{{ category.id }}"
                         value="no"
-                        required
                     >
 
                     <span>
@@ -235,7 +241,6 @@
                         type="radio"
                         name="category_{{ category.id }}"
                         value="yes"
-                        required
                     >
 
                     <span>
@@ -249,7 +254,6 @@
                         type="radio"
                         name="category_{{ category.id }}"
                         value="no"
-                        required
                     >
 
                     <span>
@@ -449,14 +453,9 @@
 
 
 <script>
-
 function addCategory() {
-
-    const holder =
-        document.getElementById("suggestions");
-
-    const row =
-        document.createElement("div");
+    const holder = document.getElementById("suggestions");
+    const row = document.createElement("div");
 
     row.className = "suggestion";
 
@@ -466,7 +465,6 @@ function addCategory() {
             name="new_category"
             placeholder="Another category name"
         >
-
         <button
             type="button"
             onclick="this.parentElement.remove()"
@@ -479,12 +477,46 @@ function addCategory() {
 }
 
 
+function updateRound1VoteCount() {
+    const checked = document.querySelectorAll(
+        'input[type="radio"][name^="category_"]:checked'
+    );
 
+    const count = document.getElementById(
+        "round1VoteCount"
+    );
+
+    if (count) {
+        count.textContent = checked.length;
+    }
 }
 
 
+document.querySelectorAll(
+    'input[type="radio"][name^="category_"]'
+).forEach(function (input) {
+    input.dataset.wasChecked = "false";
 
+    input.addEventListener("mousedown", function () {
+        input.dataset.wasChecked =
+            input.checked ? "true" : "false";
+    });
 
+    input.addEventListener("click", function () {
+        if (input.dataset.wasChecked === "true") {
+            input.checked = false;
+            input.dataset.wasChecked = "false";
+        }
+
+        updateRound1VoteCount();
+    });
+
+    input.addEventListener("change", function () {
+        updateRound1VoteCount();
+    });
+});
+
+updateRound1VoteCount();
 </script>
 
 
