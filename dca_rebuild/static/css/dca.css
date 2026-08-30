@@ -2714,3 +2714,217 @@ main a:not(.site-nav a):not(.ledger-footer a):hover,
     }
 }
 
+
+
+/* LITEFEET LEDGER — ADMIN CONTROL ROOM */
+
+.ledger-admin-nav {
+    padding: 18px clamp(18px, 4vw, 52px);
+    color: var(--text);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.ledger-admin-nav__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.ledger-admin-nav__brand {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 900;
+    letter-spacing: .05em;
+}
+
+.ledger-admin-nav__brand span {
+    color: var(--gold);
+    font-size: 10px;
+    letter-spacing: .14em;
+}
+
+.ledger-admin-nav__logout {
+    padding: 9px 12px;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.ledger-admin-nav__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin-top: 18px;
+}
+
+.ledger-admin-nav__links a {
+    color: var(--text);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .07em;
+}
+
+.ledger-admin-nav__links a:hover {
+    color: var(--gold);
+}
+
+.admin-control-room {
+    width: min(1180px, calc(100% - 36px));
+    margin: 0 auto;
+    padding-bottom: 80px;
+}
+
+.admin-control-room__header {
+    padding-top: 56px;
+}
+
+.admin-module-section {
+    margin-top: 54px;
+}
+
+.admin-section-heading {
+    margin-bottom: 20px;
+}
+
+.admin-module-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.admin-module-card {
+    min-height: 230px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.admin-module-card h3 {
+    margin: 18px 0 10px;
+    font-size: 20px;
+}
+
+.admin-module-card p {
+    margin-bottom: 22px;
+    line-height: 1.55;
+}
+
+.admin-module-card > a {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    padding: 10px 14px;
+    color: #071a38;
+    background: var(--gold);
+    border: 1px solid var(--gold);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.admin-module-card__status {
+    display: inline-flex;
+    padding: 5px 8px;
+    color: #071a38;
+    background: var(--gold);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .12em;
+}
+
+.admin-module-card--planned {
+    opacity: .72;
+}
+
+.admin-module-card--planned
+.admin-module-card__status {
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border);
+}
+
+.admin-lfa-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 22px;
+}
+
+.admin-lfa-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 9px 12px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .06em;
+}
+
+.admin-lfa-nav a:hover {
+    color: #071a38;
+    background: var(--gold);
+    border-color: var(--gold);
+}
+
+.admin-lfa-table-wrap {
+    overflow-x: auto;
+}
+
+.admin-lfa-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-lfa-table th,
+.admin-lfa-table td {
+    padding: 13px;
+    border: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.admin-lfa-table th {
+    font-size: 10px;
+    letter-spacing: .08em;
+}
+
+.admin-lfa-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.admin-lfa-actions form {
+    margin: 0;
+}
+
+.admin-lfa-actions button,
+.admin-lfa-actions a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 8px 10px;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    font: inherit;
+    font-size: 9px;
+    font-weight: 900;
+    cursor: pointer;
+}

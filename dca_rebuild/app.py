@@ -1318,6 +1318,19 @@ def lfa_submit():
 # LITEFEET AWARDS — ADMIN
 # ============================================================
 
+
+# ============================================================
+# LITEFEET LEDGER — ADMIN CONTROL ROOM
+# ============================================================
+
+@app.route("/admin")
+@admin_login_required
+def admin_dashboard():
+    return render_template(
+        "admin_dashboard.html"
+    )
+
+
 @app.route("/admin/lfa/submissions")
 @admin_login_required
 def admin_lfa_submissions():

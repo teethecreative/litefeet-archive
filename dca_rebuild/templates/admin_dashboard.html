@@ -1,0 +1,271 @@
+<!doctype html>
+<html data-theme="dark">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>Admin Control Room — LiteFeet Ledger</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+</head>
+
+<body class="ledger-admin">
+
+{% include "_admin_navigation.html" %}
+
+<main class="admin-control-room">
+
+<header class="admin-control-room__header">
+    <div class="label">
+        LITEFEET LEDGER · ADMIN
+    </div>
+
+    <h1>
+        CONTROL<br>
+        ROOM
+    </h1>
+
+    <p class="lead">
+        Manage the Ledger, its awards systems,
+        archive workflows, community tools,
+        and site features from one place.
+    </p>
+</header>
+
+
+<section class="admin-module-section">
+
+    <div class="admin-section-heading">
+        <div class="label">
+            ACTIVE SYSTEMS
+        </div>
+
+        <h2>
+            MANAGE THE LEDGER
+        </h2>
+    </div>
+
+
+    <div class="admin-module-grid">
+
+        <article class="admin-module-card">
+            <div class="admin-module-card__status">
+                ACTIVE
+            </div>
+
+            <h3>
+                DANCER'S CHOICE AWARDS
+            </h3>
+
+            <p>
+                Manage the community-driven DCA
+                voting process and category rounds.
+            </p>
+
+            <a href="{{ url_for('admin_round1') }}">
+                OPEN DCA ADMIN →
+            </a>
+        </article>
+
+
+        <article class="admin-module-card">
+            <div class="admin-module-card__status">
+                ACTIVE
+            </div>
+
+            <h3>
+                LITEFEET AWARDS
+            </h3>
+
+            <p>
+                Review archive submissions and manage
+                verified LiteFeet Awards records.
+            </p>
+
+            <a href="{{ url_for('admin_lfa_submissions') }}">
+                OPEN LFA ADMIN →
+            </a>
+        </article>
+
+
+        <article class="admin-module-card admin-module-card--planned">
+            <div class="admin-module-card__status">
+                PLANNED
+            </div>
+
+            <h3>
+                HYPEITUP AWARDS
+            </h3>
+
+            <p>
+                Awards management will live here
+                when the HypeItUp system is built.
+            </p>
+        </article>
+
+    </div>
+</section>
+
+
+<section class="admin-module-section">
+
+    <div class="admin-section-heading">
+        <div class="label">
+            LEDGER SYSTEMS
+        </div>
+
+        <h2>
+            CONTROL ROOM MODULES
+        </h2>
+    </div>
+
+
+    <div class="admin-module-grid">
+
+        <article class="admin-module-card admin-module-card--planned">
+            <div class="admin-module-card__status">
+                NEXT
+            </div>
+
+            <h3>
+                BETA & FEEDBACK
+            </h3>
+
+            <p>
+                Feature flags, Beta access,
+                testing status, feedback,
+                and changelog controls.
+            </p>
+        </article>
+
+
+        <article class="admin-module-card admin-module-card--planned">
+            <div class="admin-module-card__status">
+                PLANNED
+            </div>
+
+            <h3>
+                ARCHIVE
+            </h3>
+
+            <p>
+                People, groups, timeline,
+                sources, records, and archive
+                contributions.
+            </p>
+        </article>
+
+
+        <article class="admin-module-card admin-module-card--planned">
+            <div class="admin-module-card__status">
+                PLANNED
+            </div>
+
+            <h3>
+                CONTRIBUTIONS
+            </h3>
+
+            <p>
+                Review structured community
+                submissions before they enter
+                verified Ledger records.
+            </p>
+        </article>
+
+
+        <article class="admin-module-card admin-module-card--planned">
+            <div class="admin-module-card__status">
+                PLANNED
+            </div>
+
+            <h3>
+                COMMUNITY BOARD
+            </h3>
+
+            <p>
+                Moderation, reports,
+                deletion requests, and
+                community activity.
+            </p>
+        </article>
+
+
+        <article class="admin-module-card admin-module-card--planned">
+            <div class="admin-module-card__status">
+                PLANNED
+            </div>
+
+            <h3>
+                ACCOUNTS & CLAIMS
+            </h3>
+
+            <p>
+                Account administration,
+                identity claims, and
+                authority workflows.
+            </p>
+        </article>
+
+
+        <article class="admin-module-card admin-module-card--planned">
+            <div class="admin-module-card__status">
+                PLANNED
+            </div>
+
+            <h3>
+                NEWSLETTER
+            </h3>
+
+            <p>
+                Subscriber management and
+                future Ledger communications.
+            </p>
+        </article>
+
+
+        <article class="admin-module-card admin-module-card--planned">
+            <div class="admin-module-card__status">
+                PLANNED
+            </div>
+
+            <h3>
+                SITE CONTROLS
+            </h3>
+
+            <p>
+                Feature visibility,
+                site-wide notices,
+                and publishing controls.
+            </p>
+        </article>
+
+
+        <article class="admin-module-card admin-module-card--planned">
+            <div class="admin-module-card__status">
+                FUTURE
+            </div>
+
+            <h3>
+                ADMIN MANAGEMENT
+            </h3>
+
+            <p>
+                Admin roles, permissions,
+                access scopes, and audit tools.
+            </p>
+        </article>
+
+    </div>
+</section>
+
+</main>
+
+</body>
+</html>
