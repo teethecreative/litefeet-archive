@@ -34,134 +34,339 @@
 
 {% include "_navigation.html" %}
 
-<main class="award-landing">
+<main class="dca-cycle-hub">
 
-    <section class="award-landing-hero">
+    <section class="dca-cycle-hero">
 
-        <div class="award-eyebrow">
-            {{ eyebrow }}
+        <div class="label">
+            DANCER'S CHOICE AWARDS · 2026
         </div>
 
-        <h1>{{ title }}</h1>
+        <h1>
+            THE BALLOT IS<br>
+            IN YOUR HANDS.
+        </h1>
 
-        {% if subtitle %}
-        <p class="award-landing-subtitle">
-            {{ subtitle }}
+        <p class="dca-cycle-hero__lead">
+            The Dancer's Choice Awards are built by the
+            culture and run by the culture. Follow the
+            2026 awards process from category selection
+            through the final ballot and winners.
         </p>
-        {% endif %}
+
+        <div class="dca-cycle-status">
+
+            <span class="dca-cycle-status__label">
+                CURRENT STAGE
+            </span>
+
+            <strong>
+                CATEGORY SELECTION
+            </strong>
+
+        </div>
 
     </section>
 
 
-    {% if page_type == "dca-2026" %}
+    <section class="dca-cycle-section">
 
-    <section class="award-year-status">
+        <div class="dca-cycle-section__heading">
 
-        <div>
-            <span class="status-label">CURRENT YEAR</span>
-            <h2>DANCER'S CHOICE AWARDS 2026</h2>
+            <div class="label">
+                2026 AWARDS CYCLE
+            </div>
+
+            <h2>
+                CATEGORY SELECTION
+            </h2>
 
             <p>
-                The 2026 Dancer's Choice Awards process is
-                currently being built and managed here.
+                The first stage determines which award
+                categories move forward into the 2026
+                Dancer's Choice Awards.
             </p>
+
+        </div>
+
+
+        <div class="dca-stage-grid">
+
+
+            <article
+                class="
+                    dca-stage-card
+                    dca-stage-card--active
+                "
+            >
+
+                <div class="dca-stage-card__top">
+
+                    <span class="dca-stage-card__number">
+                        01
+                    </span>
+
+                    <span class="dca-stage-card__status">
+                        OPEN
+                    </span>
+
+                </div>
+
+                <div>
+
+                    <div class="dca-stage-card__eyebrow">
+                        ROUND 1
+                    </div>
+
+                    <h3>
+                        CATEGORY<br>
+                        SUGGESTIONS
+                    </h3>
+
+                    <p>
+                        Review returning categories,
+                        vote Yes or No, suggest new
+                        categories, and choose how the
+                        final category list should be
+                        determined.
+                    </p>
+
+                </div>
+
+                <a
+                    class="dca-stage-card__action"
+                    href="{{ url_for('round1') }}"
+                >
+                    ENTER ROUND 1 →
+                </a>
+
+            </article>
+
+
+            <article
+                class="
+                    dca-stage-card
+                    dca-stage-card--preview
+                "
+            >
+
+                <div class="dca-stage-card__top">
+
+                    <span class="dca-stage-card__number">
+                        02
+                    </span>
+
+                    <span class="dca-stage-card__status">
+                        LIVE PREVIEW
+                    </span>
+
+                </div>
+
+                <div>
+
+                    <div class="dca-stage-card__eyebrow">
+                        ROUND 2
+                    </div>
+
+                    <h3>
+                        CATEGORY<br>
+                        VOTING
+                    </h3>
+
+                    <p>
+                        See the live Round 1 results and
+                        preview the categories currently
+                        positioned to move forward.
+                    </p>
+
+                </div>
+
+                <a
+                    class="dca-stage-card__action"
+                    href="{{ url_for('round2') }}"
+                >
+                    VIEW LIVE RESULTS →
+                </a>
+
+            </article>
+
         </div>
 
     </section>
 
 
-    <section class="year-actions">
+    <section class="dca-cycle-section">
 
-        <a
-            class="year-action-card"
-            href="{{ url_for('round1') }}"
-        >
-            <span>ROUND 01</span>
+        <div class="dca-cycle-section__heading">
 
-            <h3>Category Suggestions</h3>
+            <div class="label">
+                WHAT COMES NEXT
+            </div>
+
+            <h2>
+                THE ROAD TO THE BALLOT
+            </h2>
 
             <p>
-                Review returning categories and suggest
-                categories for the 2026 awards.
+                Each stage builds the 2026 awards from
+                community participation into the final
+                Dancer's Choice ballot.
             </p>
 
-            <strong>VIEW ROUND →</strong>
-        </a>
+        </div>
 
 
-        <a
-            class="year-action-card"
-            href="{{ url_for('round2') }}"
-        >
-            <span>ROUND 02</span>
-
-            <h3>Category Voting</h3>
-
-            <p>
-                Preview the next stage of the 2026
-                category-selection process.
-            </p>
-
-            <strong>VIEW PREVIEW →</strong>
-        </a>
-
-    </section>
+        <div class="dca-roadmap">
 
 
-    {% elif page_type == "dca-2023" %}
+            <article class="dca-roadmap-step">
 
-    <section class="archive-build-card">
+                <span>01</span>
 
-        <span class="status-label">
-            ARCHIVE IN PROGRESS
-        </span>
+                <div>
+                    <strong>
+                        CATEGORY SUGGESTIONS
+                    </strong>
 
-        <h2>THE 2023 DCA ARCHIVE IS BEING BUILT.</h2>
+                    <p>
+                        Returning categories,
+                        community suggestions,
+                        and category-method voting.
+                    </p>
+                </div>
 
-        <p>
-            We're organizing the original Dancer's Choice
-            Awards categories, winners and historical
-            information into a permanent archive.
-        </p>
+            </article>
 
-        <div class="archive-year-mark">
-            2023
+
+            <article class="dca-roadmap-step">
+
+                <span>02</span>
+
+                <div>
+                    <strong>
+                        CATEGORY VOTING
+                    </strong>
+
+                    <p>
+                        The category pool is narrowed
+                        into the final awards list.
+                    </p>
+                </div>
+
+            </article>
+
+
+            <article
+                class="
+                    dca-roadmap-step
+                    dca-roadmap-step--future
+                "
+            >
+
+                <span>03</span>
+
+                <div>
+                    <strong>
+                        FINAL CATEGORIES
+                    </strong>
+
+                    <p>
+                        The official 2026 categories
+                        are locked.
+                    </p>
+                </div>
+
+            </article>
+
+
+            <article
+                class="
+                    dca-roadmap-step
+                    dca-roadmap-step--future
+                "
+            >
+
+                <span>04</span>
+
+                <div>
+                    <strong>
+                        NOMINATIONS
+                    </strong>
+
+                    <p>
+                        The community nominates dancers,
+                        creators, music, teams, events,
+                        and other eligible choices.
+                    </p>
+                </div>
+
+            </article>
+
+
+            <article
+                class="
+                    dca-roadmap-step
+                    dca-roadmap-step--future
+                "
+            >
+
+                <span>05</span>
+
+                <div>
+                    <strong>
+                        FINAL BALLOT
+                    </strong>
+
+                    <p>
+                        Public voting determines the
+                        2026 Dancer's Choice winners.
+                    </p>
+                </div>
+
+            </article>
+
+
+            <article
+                class="
+                    dca-roadmap-step
+                    dca-roadmap-step--future
+                "
+            >
+
+                <span>06</span>
+
+                <div>
+                    <strong>
+                        WINNERS
+                    </strong>
+
+                    <p>
+                        The 2026 results become part
+                        of the permanent Dancer's
+                        Choice archive.
+                    </p>
+                </div>
+
+            </article>
+
+
         </div>
 
     </section>
 
 
-    {% elif page_type == "lfa" %}
+    <section class="dca-cycle-manifesto">
 
-    <section class="archive-build-card">
-
-        <span class="status-label">
-            HISTORICAL ARCHIVE IN PROGRESS
-        </span>
-
-        <h2>
-            LITEFEET AWARDS {{ year }}
-        </h2>
-
-        <p>
-            We're building the Litefeet Awards archive and
-            tracking the winners from each year of the
-            awards.
-        </p>
-
-        <p>
-            2026 marks the fourth year of the Litefeet
-            Awards. The complete four-year winner history
-            will be added as the archive is completed.
-        </p>
-
-        <div class="archive-year-mark">
-            {{ year }}
+        <div class="label">
+            DANCER'S CHOICE
         </div>
 
-    </section>
+        <p>
+            BUILT BY THE CULTURE.<br>
+            RUN BY THE CULTURE.
+        </p>
 
-    {% endif %}
+    </section>
 
 </main>
 

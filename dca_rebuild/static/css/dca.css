@@ -3955,3 +3955,217 @@ main a:not(.site-nav a):not(.ledger-footer a):hover,
 .admin-voter-table__historical {
     opacity: .65;
 }
+
+/* DCA 2026 — PUBLIC CYCLE HUB */
+
+.dca-cycle-hub {
+    width: min(1120px, calc(100% - 48px));
+    margin: 0 auto;
+    padding: 46px 0 80px;
+}
+
+.dca-cycle-hero,
+.dca-cycle-section,
+.dca-cycle-manifesto {
+    margin-bottom: 24px;
+    padding: clamp(30px, 5vw, 58px);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--gold);
+    background: var(--surface);
+}
+
+.dca-cycle-hero h1 {
+    max-width: 850px;
+    margin: 12px 0 18px;
+    font-size: clamp(48px, 7vw, 88px);
+    line-height: .88;
+    letter-spacing: -.055em;
+}
+
+.dca-cycle-hero__lead {
+    max-width: 720px;
+    margin: 0;
+    font-size: clamp(16px, 2vw, 20px);
+    line-height: 1.55;
+}
+
+.dca-cycle-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 28px;
+    padding: 10px 13px;
+    border: 1px solid var(--gold);
+}
+
+.dca-cycle-status__label {
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    opacity: .65;
+}
+
+.dca-cycle-status strong {
+    font-size: 11px;
+    letter-spacing: .05em;
+}
+
+.dca-cycle-section__heading {
+    max-width: 760px;
+    margin-bottom: 30px;
+}
+
+.dca-cycle-section__heading h2 {
+    margin: 9px 0 10px;
+    font-size: clamp(30px, 4vw, 48px);
+    line-height: .95;
+}
+
+.dca-cycle-section__heading p {
+    margin: 0;
+    line-height: 1.55;
+}
+
+.dca-stage-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.dca-stage-card {
+    display: flex;
+    min-height: 410px;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 26px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+}
+
+.dca-stage-card--active {
+    border-top: 5px solid var(--gold);
+}
+
+.dca-stage-card--preview {
+    border-top: 5px solid var(--blue);
+}
+
+.dca-stage-card__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 40px;
+}
+
+.dca-stage-card__number {
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.dca-stage-card__status {
+    padding: 6px 8px;
+    border: 1px solid currentColor;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+
+.dca-stage-card__eyebrow {
+    margin-bottom: 8px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    opacity: .65;
+}
+
+.dca-stage-card h3 {
+    margin: 0 0 18px;
+    font-size: clamp(32px, 4vw, 48px);
+    line-height: .9;
+}
+
+.dca-stage-card p {
+    max-width: 430px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.dca-stage-card__action {
+    display: flex;
+    width: 100%;
+    min-height: 50px;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 32px;
+    padding: 12px 14px;
+    border: 1px solid var(--gold);
+    color: var(--text);
+    font-weight: 900;
+    text-decoration: none;
+}
+
+.dca-stage-card__action:hover {
+    background: var(--gold);
+    color: #071a38;
+}
+
+.dca-roadmap {
+    border-top: 1px solid var(--border);
+}
+
+.dca-roadmap-step {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    gap: 20px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.dca-roadmap-step > span {
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.dca-roadmap-step strong {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 15px;
+}
+
+.dca-roadmap-step p {
+    max-width: 650px;
+    margin: 0;
+    line-height: 1.45;
+}
+
+.dca-roadmap-step--future {
+    opacity: .55;
+}
+
+.dca-cycle-manifesto p {
+    margin: 12px 0 0;
+    font-size: clamp(36px, 6vw, 70px);
+    font-weight: 900;
+    line-height: .9;
+    letter-spacing: -.045em;
+}
+
+@media (max-width: 760px) {
+    .dca-cycle-hub {
+        width: min(100% - 24px, 1120px);
+        padding-top: 20px;
+    }
+
+    .dca-stage-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dca-stage-card {
+        min-height: 360px;
+    }
+
+    .dca-roadmap-step {
+        grid-template-columns: 44px 1fr;
+    }
+}
