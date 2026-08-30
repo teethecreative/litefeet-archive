@@ -22,7 +22,7 @@ Base = declarative_base()
 # ============================================================
 
 class DCAEdition(Base):
-    __tablename__ = "dca_editions"
+    __tablename__ = "ledger_dca_editions"
 
     id = Column(Integer, primary_key=True)
     year = Column(Integer, nullable=False, unique=True)
@@ -66,7 +66,7 @@ class DCAEdition(Base):
 # ============================================================
 
 class DCACategory(Base):
-    __tablename__ = "dca_categories"
+    __tablename__ = "ledger_dca_categories"
 
     id = Column(Integer, primary_key=True)
 
@@ -131,7 +131,7 @@ class DCACategory(Base):
 # ============================================================
 
 class DCACategorySuggestionSubmission(Base):
-    __tablename__ = "dca_category_suggestion_submissions"
+    __tablename__ = "ledger_dca_category_suggestion_submissions"
 
     id = Column(Integer, primary_key=True)
 
@@ -174,7 +174,7 @@ class DCACategorySuggestionSubmission(Base):
 # ============================================================
 
 class DCAReturnCategoryVote(Base):
-    __tablename__ = "dca_return_category_votes"
+    __tablename__ = "ledger_dca_return_category_votes"
 
     id = Column(Integer, primary_key=True)
 
@@ -211,7 +211,7 @@ class DCAReturnCategoryVote(Base):
 # ============================================================
 
 class DCANewCategorySuggestion(Base):
-    __tablename__ = "dca_new_category_suggestions"
+    __tablename__ = "ledger_dca_new_category_suggestions"
 
     id = Column(Integer, primary_key=True)
 
@@ -261,7 +261,7 @@ class DCANewCategorySuggestion(Base):
 # ============================================================
 
 class DCACategoryBallot(Base):
-    __tablename__ = "dca_category_ballots"
+    __tablename__ = "ledger_dca_category_ballots"
 
     id = Column(Integer, primary_key=True)
 
@@ -293,7 +293,7 @@ class DCACategoryBallot(Base):
 # ============================================================
 
 class DCACategoryBallotSubmission(Base):
-    __tablename__ = "dca_category_ballot_submissions"
+    __tablename__ = "ledger_dca_category_ballot_submissions"
 
     id = Column(Integer, primary_key=True)
 
@@ -325,7 +325,7 @@ class DCACategoryBallotSubmission(Base):
 # ============================================================
 
 class DCACategoryBallotVote(Base):
-    __tablename__ = "dca_category_ballot_votes"
+    __tablename__ = "ledger_dca_category_ballot_votes"
 
     id = Column(Integer, primary_key=True)
 
@@ -360,7 +360,7 @@ class DCACategoryBallotVote(Base):
 # ============================================================
 
 class DCARoundRecord(Base):
-    __tablename__ = "dca_round_records"
+    __tablename__ = "ledger_dca_round_records"
 
     id = Column(Integer, primary_key=True)
 
@@ -384,7 +384,7 @@ class DCARoundRecord(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 class LFAArchiveSubmission(Base):
-    __tablename__ = "lfa_archive_submissions"
+    __tablename__ = "ledger_lfa_archive_submissions"
 
     id = Column(Integer, primary_key=True)
 
