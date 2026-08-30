@@ -1,13 +1,24 @@
 <nav
     class="admin-archive-nav"
-    aria-label="Archive controls"
+    aria-label="Archive Administration"
 >
-    <a href="{{ url_for('admin_ledger_eras') }}">
-        ERAS
+
+    <a
+        href="{{ url_for('admin_archive_timeline') }}"
+    >
+        TIMELINE
     </a>
 
-    <span>PEOPLE · NEXT</span>
-    <span>GROUPS · NEXT</span>
-    <span>SOURCES · NEXT</span>
-    <span>TIMELINE · NEXT</span>
+    <span class="admin-archive-nav__planned">
+        DIRECTORY
+    </span>
+
+    <span class="admin-archive-nav__planned">
+        CONTRIBUTIONS
+    </span>
+
+    <span class="admin-archive-nav__planned">
+        SOURCES
+    </span>
+
 </nav>

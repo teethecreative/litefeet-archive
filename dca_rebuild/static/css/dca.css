@@ -3858,3 +3858,40 @@ main a:not(.site-nav a):not(.ledger-footer a):hover,
 .admin-module-section {
     scroll-margin-top: 140px;
 }
+
+/* LITEFEET LEDGER — ARCHIVE ADMIN NAV */
+
+.admin-archive-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.admin-archive-nav a,
+.admin-archive-nav__planned {
+    display: inline-flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 8px 11px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .06em;
+}
+
+.admin-archive-nav a {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.admin-archive-nav a:hover {
+    color: #071a38;
+    background: var(--gold);
+    border-color: var(--gold);
+}
+
+.admin-archive-nav__planned {
+    opacity: .45;
+}

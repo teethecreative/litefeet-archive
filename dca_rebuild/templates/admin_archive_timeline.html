@@ -1,0 +1,213 @@
+<!doctype html>
+<html>
+
+<head>
+
+<script>
+(function () {
+    const key = "litefeet-ledger-theme";
+    const saved = localStorage.getItem(key);
+
+    if (saved === "light" || saved === "dark") {
+        document.documentElement.dataset.theme = saved;
+    } else {
+        document.documentElement.dataset.theme = "light";
+    }
+})();
+</script>
+
+<meta charset="utf-8">
+
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+>
+
+<title>
+    Timeline Admin — LiteFeet Ledger
+</title>
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/dca.css') }}"
+>
+
+</head>
+
+
+<body class="ledger-admin">
+
+{% include "_admin_navigation.html" %}
+
+<main class="admin-control-room">
+
+    <header class="admin-control-room__header">
+
+        <div class="label">
+            ARCHIVE · TIMELINE
+        </div>
+
+        <h1>
+            TIMELINE
+        </h1>
+
+        <p class="lead">
+            Build the chronological record
+            of LiteFeet history without
+            inventing precision that the
+            source material does not provide.
+        </p>
+
+        {% include "_admin_archive_nav.html" %}
+
+    </header>
+
+
+    <section class="admin-module-section">
+
+        <div class="admin-section-heading">
+
+            <div class="label">
+                TIMELINE FOUNDATION
+            </div>
+
+            <h2>
+                HISTORICAL TIME
+            </h2>
+
+            <p>
+                Timeline records will support
+                exact dates, month and year,
+                year-only dates, era-level
+                placement, and unknown dates.
+            </p>
+
+        </div>
+
+
+        <div class="admin-module-grid">
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--development
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    IN DEVELOPMENT
+                </div>
+
+                <h3>
+                    TIMELINE ENTRIES
+                </h3>
+
+                <p>
+                    Historical events,
+                    milestones, moments,
+                    and other dated records.
+                </p>
+
+                <div class="admin-module-subsystems">
+                    EXACT DATE · MONTH/YEAR · YEAR · ERA · UNKNOWN
+                </div>
+
+            </article>
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--development
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    INFRASTRUCTURE
+                </div>
+
+                <h3>
+                    ERAS
+                </h3>
+
+                <p>
+                    Era boundaries help place
+                    historical records when
+                    exact dates are not known.
+                </p>
+
+                {% if era_admin_available %}
+
+                <a href="{{ url_for('admin_ledger_eras') }}">
+                    MANAGE ERA DATA →
+                </a>
+
+                {% else %}
+
+                <div class="admin-module-subsystems">
+                    ERA DATA FOUNDATION NOT YET INSTALLED
+                </div>
+
+                {% endif %}
+
+            </article>
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--planned
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+
+                <h3>
+                    RELATIONSHIPS
+                </h3>
+
+                <p>
+                    Connect timeline entries
+                    to people, groups,
+                    awards, events, battles,
+                    music, and media.
+                </p>
+
+            </article>
+
+
+            <article
+                class="
+                    admin-module-card
+                    admin-module-card--planned
+                "
+            >
+
+                <div class="admin-module-card__status">
+                    PLANNED
+                </div>
+
+                <h3>
+                    SOURCES
+                </h3>
+
+                <p>
+                    Connect each historical
+                    claim to its provenance,
+                    evidence, and conflicts.
+                </p>
+
+            </article>
+
+        </div>
+
+    </section>
+
+</main>
+
+</body>
+
+</html>

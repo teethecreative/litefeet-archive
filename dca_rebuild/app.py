@@ -3585,3 +3585,20 @@ def admin_ledger_era_edit(era_id):
 
     finally:
         db.close()
+
+# ============================================================
+# LITEFEET LEDGER — TIMELINE ADMIN
+# ============================================================
+
+@app.route("/admin/archive/timeline")
+@admin_login_required
+def admin_archive_timeline():
+    era_admin_available = (
+        "admin_ledger_eras"
+        in app.view_functions
+    )
+
+    return render_template(
+        "admin_archive_timeline.html",
+        era_admin_available=era_admin_available,
+    )
