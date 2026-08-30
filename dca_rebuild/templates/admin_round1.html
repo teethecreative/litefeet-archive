@@ -1,0 +1,423 @@
+<!doctype html>
+<html data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>DCA Admin — Round 1</title>
+
+    <script>
+        const savedTheme = localStorage.getItem("dca-theme");
+        if (savedTheme) {
+            document.documentElement.dataset.theme = savedTheme;
+        }
+    </script>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/dca.css') }}">
+</head>
+
+
+<body>
+
+{% include "_navigation.html" %}
+
+
+<nav class="dca-admin-nav">
+
+    <div class="dca-admin-menu">
+
+        <button
+            class="dca-admin-menu-button"
+            type="button"
+            aria-expanded="false"
+        >
+            DCA ADMIN
+            <span class="admin-chevron">▾</span>
+        </button>
+
+        <div class="dca-admin-dropdown">
+
+            <div class="admin-dropdown-label">
+                ADMIN
+            </div>
+
+            <a
+                class="active"
+                href="{{ url_for('admin_round1') }}"
+            >
+                <span>ROUND 01</span>
+                Category Suggestions
+            </a>
+
+            <a
+                class="disabled"
+                href="#"
+                onclick="return false;"
+            >
+                <span>ROUND 02</span>
+                Category Voting
+            </a>
+
+            <a
+                class="disabled"
+                href="#"
+                onclick="return false;"
+            >
+                <span>NEXT</span>
+                Nominations
+            </a>
+
+            <a
+                class="disabled"
+                href="#"
+                onclick="return false;"
+            >
+                <span>NEXT</span>
+                Final Voting
+            </a>
+
+            <a
+                class="disabled"
+                href="#"
+                onclick="return false;"
+            >
+                <span>ARCHIVE</span>
+                Winners & Results
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="dca-admin-links">
+
+        <a
+            href="{{ url_for('round1') }}"
+            target="_blank"
+        >
+            ROUND 1 PUBLIC
+        </a>
+
+        <a
+            href="{{ url_for('round2') }}"
+            target="_blank"
+        >
+            ROUND 2 PREVIEW
+        </a>
+
+    </div>
+
+</nav>
+
+
+<div class="theme-toggle">
+    <button id="lightButton" onclick="setTheme('light')">LIGHT</button>
+    <button id="darkButton" onclick="setTheme('dark')">DARK</button>
+</div>
+
+<main>
+
+<header>
+    <div class="label">DANCER'S CHOICE AWARDS · ADMIN</div>
+    <div class="round">ROUND 01</div>
+
+    <h1>
+        CATEGORY<br>
+        MODERATION
+    </h1>
+
+    <p class="lead">
+        Review Category Suggestions results and prepare the
+        Category Voting ballot.
+    </p>
+</header>
+
+
+{% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+        <div class="flash">{{ message }}</div>
+    {% endfor %}
+{% endwith %}
+
+
+<section>
+
+    <div class="number">01</div>
+    <h2>ROUND 1 OVERVIEW</h2>
+
+    <div class="admin-stats">
+
+        <div class="admin-stat">
+            <strong>{{ submission_count }}</strong>
+            <span>COMPLETED SUBMISSIONS</span>
+        </div>
+
+        <div class="admin-stat">
+            <strong>{{ suggestion_count }}</strong>
+            <span>NEW CATEGORY SUGGESTIONS</span>
+        </div>
+
+        <div class="admin-stat">
+            <strong>{{ threshold }}</strong>
+            <span>ROUND 2 THRESHOLD</span>
+        </div>
+
+    </div>
+
+</section>
+
+
+<section>
+
+    <div class="number">02</div>
+    <h2>RETURNING CATEGORY RESULTS</h2>
+
+    <p class="description">
+        These are the Yes / No results for categories considered
+        during Category Suggestions.
+    </p>
+
+    <div class="admin-results">
+
+        {% for result in return_results %}
+
+        <div class="admin-result">
+
+            <div>
+                <strong>{{ result.name }}</strong>
+            </div>
+
+            <div class="vote-numbers">
+                <span class="yes-count">
+                    YES {{ result.yes }}
+                </span>
+
+                <span class="no-count">
+                    NO {{ result.no }}
+                </span>
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+<section>
+
+    <div class="number">03</div>
+    <h2>NEW CATEGORY SUGGESTIONS</h2>
+
+    <p class="description">
+        Review community suggestions before they can appear
+        on the Round 2 ballot.
+    </p>
+
+
+    {% if suggestions %}
+
+        <div class="moderation-list">
+
+        {% for suggestion in suggestions %}
+
+            <form
+                class="moderation-card"
+                method="post"
+                action="{{ url_for('moderate_round1_suggestion', suggestion_id=suggestion.id) }}"
+            >
+
+                <div class="origin">
+                    COMMUNITY SUGGESTION
+                </div>
+
+                <h3>{{ suggestion.category_name }}</h3>
+
+                <div class="moderation-status">
+                    CURRENT STATUS:
+                    <strong>{{ suggestion.status|upper }}</strong>
+                </div>
+
+
+                <label class="admin-label">
+                    CATEGORY NAME
+                </label>
+
+                <input
+                    class="admin-input"
+                    type="text"
+                    name="category_name"
+                    value="{{ suggestion.category_name }}"
+                    required
+                >
+
+
+                <label class="admin-label">
+                    MODERATION DECISION
+                </label>
+
+                <select
+                    class="admin-input"
+                    name="decision"
+                    required
+                >
+                    <option value="">Choose decision</option>
+
+                    <option value="approved">
+                        Approve for Round 2
+                    </option>
+
+                    <option value="rejected">
+                        Reject
+                    </option>
+
+                    <option value="merged">
+                        Merge as duplicate
+                    </option>
+                </select>
+
+
+                <label class="admin-label">
+                    MERGE INTO
+                </label>
+
+                <select
+                    class="admin-input"
+                    name="merge_target_id"
+                >
+                    <option value="">
+                        Not merging
+                    </option>
+
+                    {% for category in merge_targets %}
+                    <option value="{{ category.id }}">
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+
+                <button
+                    class="admin-save"
+                    type="submit"
+                >
+                    SAVE DECISION
+                </button>
+
+            </form>
+
+        {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div class="empty-admin">
+            No new category suggestions yet.
+        </div>
+
+    {% endif %}
+
+</section>
+
+
+<section>
+
+    <div class="number">04</div>
+    <h2>CATEGORY COUNT SURVEY</h2>
+
+    <div class="admin-results">
+
+        {% for key, label in method_labels.items() %}
+
+        <div class="admin-result">
+
+            <strong>{{ label }}</strong>
+
+            <div class="vote-numbers">
+                {{ method_counts.get(key, 0) }} VOTES
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+<section>
+
+    <div class="number">05</div>
+    <h2>ROUND 2 PREVIEW</h2>
+
+    <p class="description">
+        Review the Category Voting page before Round 2 opens.
+    </p>
+
+    <a
+        class="submit admin-preview-link"
+        href="{{ url_for('round2') }}"
+    >
+        OPEN ROUND 2 PREVIEW →
+    </a>
+
+</section>
+
+</main>
+
+
+<script>
+function setTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("dca-theme", theme);
+    updateThemeButtons();
+}
+
+function updateThemeButtons() {
+    const theme = document.documentElement.dataset.theme;
+
+    document
+        .getElementById("lightButton")
+        .classList.toggle("active", theme === "light");
+
+    document
+        .getElementById("darkButton")
+        .classList.toggle("active", theme === "dark");
+}
+
+updateThemeButtons();
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const menu = document.querySelector(".dca-admin-menu");
+    const button = document.querySelector(".dca-admin-menu-button");
+
+    if (!menu || !button) return;
+
+    button.addEventListener("click", function (event) {
+        event.stopPropagation();
+
+        const open = menu.classList.toggle("open");
+        button.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+
+    document.addEventListener("click", function (event) {
+        if (!menu.contains(event.target)) {
+            menu.classList.remove("open");
+            button.setAttribute("aria-expanded", "false");
+        }
+    });
+
+});
+</script>
+
+</body>
+</html>

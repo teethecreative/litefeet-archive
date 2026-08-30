@@ -1,0 +1,162 @@
+<nav class="awards-global-nav">
+
+    <a
+        class="awards-brand"
+        href="{{ url_for('dca_2026_home') }}"
+    >
+        LITEFEET LEDGER
+    </a>
+
+    <div class="awards-nav-groups">
+
+        <div class="nav-dropdown">
+            <button class="nav-dropdown-button" type="button">
+                DANCER'S CHOICE AWARDS
+                <span>▾</span>
+            </button>
+
+            <div class="nav-dropdown-menu">
+                <a href="{{ url_for('dca_2026_home') }}">
+                    2026
+                </a>
+
+                <a href="{{ url_for('dca_2023_home') }}">
+                    2023
+                </a>
+            </div>
+        </div>
+
+
+        <a
+            class="nav-direct-link"
+            href="{{ url_for('lfa_home') }}"
+        >
+            LITEFEET AWARDS
+        </a>
+
+
+        <a
+            class="nav-direct-link"
+            href="{{ url_for('hypeitup_awards') }}"
+        >
+            HYPEITUPTV AWARDS
+        </a>
+
+
+        <div class="nav-dropdown">
+            <button class="nav-dropdown-button" type="button">
+                ADMIN
+                <span>▾</span>
+            </button>
+
+            <div class="nav-dropdown-menu">
+                <a href="{{ url_for('admin_round1') }}">
+                    DCA 2026 CATEGORY SUGGESTIONS
+                </a>
+            </div>
+        </div>
+
+
+        <div class="global-theme-control">
+
+            <span>LIGHT</span>
+
+            <button
+                class="global-theme-toggle"
+                type="button"
+                aria-label="Switch between light and dark mode"
+            >
+                <span class="theme-toggle-track">
+                    <span class="theme-toggle-dot"></span>
+                </span>
+            </button>
+
+            <span>DARK</span>
+
+        </div>
+
+    </div>
+
+</nav>
+
+<script>
+(function () {
+
+    const root = document.documentElement;
+    const storageKey = "litefeet-awards-theme";
+
+    function applyTheme(theme) {
+        root.dataset.theme = theme;
+        localStorage.setItem(storageKey, theme);
+    }
+
+    const saved =
+        localStorage.getItem(storageKey) || "light";
+
+    applyTheme(saved);
+
+    document.querySelectorAll(
+        ".global-theme-toggle"
+    ).forEach(function (button) {
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                const current =
+                    root.dataset.theme || "light";
+
+                applyTheme(
+                    current === "dark"
+                        ? "light"
+                        : "dark"
+                );
+            }
+        );
+
+    });
+
+    document.querySelectorAll(
+        ".nav-dropdown-button"
+    ).forEach(function (button) {
+
+        button.addEventListener(
+            "click",
+            function (event) {
+
+                event.stopPropagation();
+
+                const parent =
+                    button.closest(".nav-dropdown");
+
+                document.querySelectorAll(
+                    ".nav-dropdown.open"
+                ).forEach(function (dropdown) {
+
+                    if (dropdown !== parent) {
+                        dropdown.classList.remove("open");
+                    }
+
+                });
+
+                parent.classList.toggle("open");
+            }
+        );
+
+    });
+
+    document.addEventListener(
+        "click",
+        function () {
+
+            document.querySelectorAll(
+                ".nav-dropdown.open"
+            ).forEach(function (dropdown) {
+                dropdown.classList.remove("open");
+            });
+
+        }
+    );
+
+})();
+</script>

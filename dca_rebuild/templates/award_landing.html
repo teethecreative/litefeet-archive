@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>{{ page_title }}</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+
+</head>
+
+<body>
+
+{% include "_navigation.html" %}
+
+<main class="award-landing">
+
+    <section class="award-landing-hero">
+
+        <div class="award-eyebrow">
+            {{ eyebrow }}
+        </div>
+
+        <h1>{{ title }}</h1>
+
+        {% if subtitle %}
+        <p class="award-landing-subtitle">
+            {{ subtitle }}
+        </p>
+        {% endif %}
+
+    </section>
+
+
+    {% if page_type == "dca-2026" %}
+
+    <section class="award-year-status">
+
+        <div>
+            <span class="status-label">CURRENT YEAR</span>
+            <h2>DANCER'S CHOICE AWARDS 2026</h2>
+
+            <p>
+                The 2026 Dancer's Choice Awards process is
+                currently being built and managed here.
+            </p>
+        </div>
+
+    </section>
+
+
+    <section class="year-actions">
+
+        <a
+            class="year-action-card"
+            href="{{ url_for('round1') }}"
+        >
+            <span>ROUND 01</span>
+
+            <h3>Category Suggestions</h3>
+
+            <p>
+                Review returning categories and suggest
+                categories for the 2026 awards.
+            </p>
+
+            <strong>VIEW ROUND →</strong>
+        </a>
+
+
+        <a
+            class="year-action-card"
+            href="{{ url_for('round2') }}"
+        >
+            <span>ROUND 02</span>
+
+            <h3>Category Voting</h3>
+
+            <p>
+                Preview the next stage of the 2026
+                category-selection process.
+            </p>
+
+            <strong>VIEW PREVIEW →</strong>
+        </a>
+
+    </section>
+
+
+    {% elif page_type == "dca-2023" %}
+
+    <section class="archive-build-card">
+
+        <span class="status-label">
+            ARCHIVE IN PROGRESS
+        </span>
+
+        <h2>THE 2023 DCA ARCHIVE IS BEING BUILT.</h2>
+
+        <p>
+            We're organizing the original Dancer's Choice
+            Awards categories, winners and historical
+            information into a permanent archive.
+        </p>
+
+        <div class="archive-year-mark">
+            2023
+        </div>
+
+    </section>
+
+
+    {% elif page_type == "lfa" %}
+
+    <section class="archive-build-card">
+
+        <span class="status-label">
+            HISTORICAL ARCHIVE IN PROGRESS
+        </span>
+
+        <h2>
+            LITEFEET AWARDS {{ year }}
+        </h2>
+
+        <p>
+            We're building the Litefeet Awards archive and
+            tracking the winners from each year of the
+            awards.
+        </p>
+
+        <p>
+            2026 marks the fourth year of the Litefeet
+            Awards. The complete four-year winner history
+            will be added as the archive is completed.
+        </p>
+
+        <div class="archive-year-mark">
+            {{ year }}
+        </div>
+
+    </section>
+
+    {% endif %}
+
+</main>
+
+</body>
+</html>

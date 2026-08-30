@@ -1,0 +1,359 @@
+<!doctype html>
+<html data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <title>DCA 2026 — Category Voting</title>
+
+    <script>
+        const savedTheme = localStorage.getItem("dca-theme");
+        if (savedTheme) {
+            document.documentElement.dataset.theme = savedTheme;
+        }
+    </script>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+</head>
+
+<body>
+
+{% include "_navigation.html" %}
+
+
+<div class="theme-toggle">
+    <button id="lightButton" type="button" onclick="setTheme('light')">
+        LIGHT
+    </button>
+
+    <button id="darkButton" type="button" onclick="setTheme('dark')">
+        DARK
+    </button>
+</div>
+
+<main>
+
+<header>
+    <div class="label">DANCER'S CHOICE AWARDS · 2026</div>
+    <div class="round">ROUND 02</div>
+
+    <h1>
+        CATEGORY<br>
+        VOTING
+    </h1>
+
+    <p class="lead">
+        Choose the categories you want to become official
+        Dancer's Choice Awards categories.
+    </p>
+
+    {% if preview %}
+    <p class="preview-warning">
+        ADMIN PREVIEW — ROUND 2 IS NOT OPEN
+    </p>
+    {% else %}
+    <p class="notice">
+        ONE COMPLETED SUBMISSION EVERY 24 HOURS
+    </p>
+    {% endif %}
+</header>
+
+
+{% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+        <div class="flash">{{ message }}</div>
+    {% endfor %}
+{% endwith %}
+
+
+<form method="post">
+
+<section>
+
+    <div class="number">01</div>
+
+    <h2>CHOOSE YOUR CATEGORIES</h2>
+
+    <p class="description">
+        Select every category you think should continue
+        to the 2026 Dancer's Choice Awards.
+    </p>
+
+    <div class="round2-counter">
+        <strong id="selectedCount">0</strong>
+        <span>CATEGORIES SELECTED</span>
+    </div>
+
+
+    <div class="categories round2-categories">
+
+        {% for item in category_items %}
+
+        {% set category = item.category %}
+        {% set meta = item.meta %}
+
+        <label class="category round2-category">
+
+            <input
+                class="category-checkbox"
+                type="checkbox"
+                name="category"
+                value="{{ category.id }}"
+            >
+
+            <div class="round2-card-content">
+
+                <div class="origin">
+                    {% if meta.get('winners') %}
+                        2023 AWARD CATEGORY
+                    {% else %}
+                        ADDITIONAL 2023 CATEGORY
+                    {% endif %}
+                </div>
+
+                <h3>{{ category.name }}</h3>
+
+                <p class="category-description">
+                    {{ meta.get('description') }}
+                </p>
+
+
+                {% if meta.get('winners') %}
+
+                <div class="past-winner">
+
+                    <small>
+                        2023 WINNER{% if meta.get('winners')|length > 1 %}S{% endif %}
+                    </small>
+
+                    {% for winner in meta.get('winners') %}
+
+                    <div class="winner-entry">
+
+                        <strong>{{ winner.name }}</strong>
+
+                        {% if winner.team %}
+                        <div class="winner-detail">
+                            {{ winner.team }}
+                        </div>
+                        {% endif %}
+
+                        {% if winner.location %}
+                        <div class="winner-detail">
+                            {{ winner.location }}
+                        </div>
+                        {% endif %}
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+                {% else %}
+
+                <div class="past-winner no-winner-box">
+                    <span class="no-winner">
+                        No Previous Winners
+                    </span>
+                </div>
+
+                {% endif %}
+
+
+                <div class="select-category">
+                    <span class="unchecked-text">
+                        SELECT CATEGORY
+                    </span>
+
+                    <span class="checked-text">
+                        ✓ SELECTED
+                    </span>
+                </div>
+
+            </div>
+
+        </label>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+
+<section>
+
+    <div class="number">02</div>
+
+    <h2>HOW SHOULD THE FINAL LIST BE DECIDED?</h2>
+
+    <p class="description">
+        This vote is binding. The option receiving the most
+        community votes will determine how the final category
+        list is created.
+    </p>
+
+
+    {% if round1_winner %}
+    <div class="community-choice">
+        <span>ROUND 1 COMMUNITY CHOICE</span>
+        <strong>{{ round1_winner }}</strong>
+    </div>
+    {% endif %}
+
+
+    <div class="methods">
+
+        {% for method in final_method_options %}
+
+        <label class="method">
+
+            <input
+                type="radio"
+                name="final_method_vote"
+                value="{{ method }}"
+                required
+            >
+
+            <div>
+
+                {% if method == "top_25" %}
+
+                    <strong>TOP 25</strong>
+
+                    <p>
+                        Only the 25 categories receiving the most
+                        Category Voting votes become official.
+                    </p>
+
+                {% elif method == "threshold" %}
+
+                    <strong>
+                        THRESHOLD: {{ threshold }} VOTES
+                    </strong>
+
+                    <p>
+                        Every category receiving at least
+                        {{ threshold }} votes becomes official.
+                    </p>
+
+                {% elif method == "all" %}
+
+                    <strong>ALL CATEGORIES</strong>
+
+                    <p>
+                        Every category appearing on the Category
+                        Voting ballot becomes official.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        </label>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+
+<section>
+
+    <div class="number">03</div>
+
+    <h2>LOCK IN YOUR CATEGORY VOTE.</h2>
+
+    {% if preview %}
+
+    <p class="description">
+        This is an admin preview. Submissions are disabled until
+        Round 1 closes and the Round 2 ballot is finalized.
+    </p>
+
+    <button class="submit preview-submit" type="button" disabled>
+        ROUND 2 NOT OPEN
+    </button>
+
+    {% else %}
+
+    <p class="description">
+        Enter your email to submit your Category Voting ballot.
+        You can submit one completed ballot every 24 hours
+        during this round.
+    </p>
+
+    <input
+        class="email"
+        type="email"
+        name="email"
+        placeholder="Email address"
+        required
+    >
+
+    <button class="submit" type="submit">
+        SUBMIT CATEGORY VOTE →
+    </button>
+
+    {% endif %}
+
+</section>
+
+</form>
+
+</main>
+
+
+<script>
+
+function setTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("dca-theme", theme);
+    updateThemeButtons();
+}
+
+function updateThemeButtons() {
+    const theme = document.documentElement.dataset.theme;
+
+    document
+        .getElementById("lightButton")
+        .classList.toggle("active", theme === "light");
+
+    document
+        .getElementById("darkButton")
+        .classList.toggle("active", theme === "dark");
+}
+
+function updateSelectedCount() {
+    const selected =
+        document.querySelectorAll(
+            ".category-checkbox:checked"
+        ).length;
+
+    document.getElementById("selectedCount").textContent =
+        selected;
+}
+
+document
+    .querySelectorAll(".category-checkbox")
+    .forEach((checkbox) => {
+        checkbox.addEventListener(
+            "change",
+            updateSelectedCount
+        );
+    });
+
+updateThemeButtons();
+updateSelectedCount();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Submission Received | Litefeet Awards</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+
+</head>
+
+<body>
+
+{% include "_navigation.html" %}
+
+<main class="lfa-home">
+
+    <section class="archive-build-card">
+
+        <span class="status-label">
+            SUBMISSION RECEIVED
+        </span>
+
+        <h2>
+            THANK YOU FOR HELPING BUILD THE ARCHIVE.
+        </h2>
+
+        <p>
+            Your submission has been saved for review.
+            Information submitted by the community will not
+            automatically change the official archive.
+        </p>
+
+        <a
+            class="lfa-submit-button success-return"
+            href="{{ url_for('lfa_home') }}"
+        >
+            RETURN TO LITEFEET AWARDS →
+        </a>
+
+    </section>
+
+</main>
+
+</body>
+</html>

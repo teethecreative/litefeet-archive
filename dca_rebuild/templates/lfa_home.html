@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>
+        LiteFeet Awards — LiteFeet Ledger
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+</head>
+
+<body>
+
+{% include "_navigation.html" %}
+
+<main class="award-landing">
+
+    <section class="award-landing-hero">
+
+        <div class="section-kicker">
+            LITEFEET LEDGER
+        </div>
+
+        <h1>
+            LITEFEET<br>
+            AWARDS
+        </h1>
+
+        <div class="gold-rule"></div>
+
+        <p class="award-landing-lead">
+            The historical LiteFeet Awards results
+            are still being gathered and verified.
+        </p>
+
+    </section>
+
+
+    <section
+        id="contribute"
+        class="archive-status-card"
+    >
+
+        <div class="number">
+            HELP BUILD THE ARCHIVE
+        </div>
+
+        <h2>
+            WHAT DO YOU KNOW?
+        </h2>
+
+        <p>
+            We're collecting information from previous
+            years of the LiteFeet Awards so the results
+            can be preserved accurately.
+        </p>
+
+        <p>
+            If you know an award category, winner,
+            team, year, correction, or other result,
+            submit what you know for review.
+        </p>
+
+        <p>
+            Community submissions are not automatically
+            treated as verified results. Information
+            will be reviewed before being added to the
+            archive.
+        </p>
+
+        <form
+            method="post"
+            action="{{ url_for('lfa_submit') }}"
+            class="lfa-contribution-form"
+        >
+
+            <label>
+                YEAR
+                <select name="year" required>
+                    <option value="">Choose a year</option>
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                </select>
+            </label>
+
+            <label>
+                CATEGORY
+                <input
+                    type="text"
+                    name="category_name"
+                    placeholder="Award category"
+                    required
+                >
+            </label>
+
+            <label>
+                WINNER
+                <input
+                    type="text"
+                    name="winner_name"
+                    placeholder="Winner name"
+                    required
+                >
+            </label>
+
+            <label>
+                TEAM
+                <input
+                    type="text"
+                    name="team_name"
+                    placeholder="Team, if known"
+                >
+            </label>
+
+            <label class="lfa-email-field">
+                EMAIL
+                <input
+                    type="email"
+                    name="submitter_email"
+                    placeholder="Optional"
+                >
+            </label>
+
+            <button type="submit">
+                SUBMIT AWARD INFORMATION →
+            </button>
+
+        </form>
+
+    </section>
+
+</main>
+
+</body>
+</html>

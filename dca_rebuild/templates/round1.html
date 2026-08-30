@@ -1,0 +1,491 @@
+<!doctype html>
+<html data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <title>DCA 2026 — Category Suggestions</title>
+
+    <script>
+        const savedTheme = localStorage.getItem("dca-theme");
+
+        if (savedTheme) {
+            document.documentElement.dataset.theme = savedTheme;
+        }
+    </script>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+</head>
+
+<body>
+
+{% include "_navigation.html" %}
+
+
+
+
+
+<main>
+
+<header>
+    <div class="label">DANCER'S CHOICE AWARDS · 2026</div>
+
+    <div class="round">ROUND 01</div>
+
+    <h1>
+        CATEGORY<br>
+        SUGGESTIONS
+    </h1>
+
+    <p class="lead">
+        The community decides what comes back, what gets left behind,
+        and what deserves a place in the next Dancer's Choice Awards.
+    </p>
+
+    <p class="notice">
+        ONE COMPLETED SUBMISSION EVERY 24 HOURS
+    </p>
+</header>
+
+
+{% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+        <div class="flash">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endwith %}
+
+
+<form method="post">
+
+<section>
+
+    <div class="number">01</div>
+
+    <h2>WHAT SHOULD COME BACK?</h2>
+
+    <p class="description">
+        Vote on categories from the original Dancer's Choice Awards
+        process. Every category requires a Yes or No.
+    </p>
+
+
+    <div class="category-group-title">
+        2023 Award Categories
+    </div>
+
+    <div class="categories">
+
+        {% for item in award_categories %}
+
+        {% set category = item.category %}
+        {% set meta = item.meta %}
+
+        <article
+            class="category
+            {% if meta.get('winner') %}historical-winner{% endif %}"
+        >
+
+            <div class="origin">
+                2023 DCA
+            </div>
+
+            <h3>
+                {{ category.name }}
+            </h3>
+
+            <p class="category-description">
+                {{ meta.get('description') }}
+            </p>
+
+
+            {% if meta.get('winners') %}
+
+            <div class="past-winner">
+
+                <small>
+                    2023 WINNER{% if meta.get('winners')|length > 1 %}S{% endif %}
+                </small>
+
+                {% for winner in meta.get('winners') %}
+
+                    <div class="winner-entry">
+
+                        <strong>
+                            {{ winner.name }}
+                        </strong>
+
+                        {% if winner.team %}
+                        <div class="winner-detail">
+                            {{ winner.team }}
+                        </div>
+                        {% endif %}
+
+                        {% if winner.location %}
+                        <div class="winner-detail">
+                            {{ winner.location }}
+                        </div>
+                        {% endif %}
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+            {% else %}
+
+            <div class="past-winner no-winner-box">
+                <span class="no-winner">
+                    No Previous Winners
+                </span>
+            </div>
+
+            {% endif %}
+
+
+            <div class="choices">
+
+                <label>
+                    <input
+                        type="radio"
+                        name="category_{{ category.id }}"
+                        value="yes"
+                        required
+                    >
+
+                    <span>
+                        BRING IT BACK
+                    </span>
+                </label>
+
+
+                <label>
+                    <input
+                        type="radio"
+                        name="category_{{ category.id }}"
+                        value="no"
+                        required
+                    >
+
+                    <span>
+                        LEAVE IT OUT
+                    </span>
+                </label>
+
+            </div>
+
+        </article>
+
+        {% endfor %}
+
+    </div>
+
+
+
+    <div class="category-group-title">
+        Additional 2023 Community Suggestions
+    </div>
+
+    <p class="description">
+        These were suggested by the community during the original
+        DCA process but were not part of the fixed category list.
+    </p>
+
+
+    <div class="categories">
+
+        {% for item in suggested_categories %}
+
+        {% set category = item.category %}
+        {% set meta = item.meta %}
+
+        <article class="category suggested-category">
+
+            <div class="origin">
+                2023 COMMUNITY SUGGESTION
+            </div>
+
+            <h3>
+                {{ category.name }}
+            </h3>
+
+            <p class="category-description">
+                {{ meta.get('description') }}
+            </p>
+
+
+            <div class="past-winner">
+
+                <span class="no-winner">
+                    No Previous Winners
+                </span>
+
+            </div>
+
+
+            <div class="choices">
+
+                <label>
+                    <input
+                        type="radio"
+                        name="category_{{ category.id }}"
+                        value="yes"
+                        required
+                    >
+
+                    <span>
+                        BRING IT BACK
+                    </span>
+                </label>
+
+
+                <label>
+                    <input
+                        type="radio"
+                        name="category_{{ category.id }}"
+                        value="no"
+                        required
+                    >
+
+                    <span>
+                        LEAVE IT OUT
+                    </span>
+                </label>
+
+            </div>
+
+        </article>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+
+<section>
+
+    <div class="number">02</div>
+
+    <h2>WHAT ARE WE MISSING?</h2>
+
+    <p class="description">
+        Suggest a category that isn't already listed above.
+        You can submit as many new category ideas as you want.
+    </p>
+
+
+    <div id="suggestions">
+
+        <div class="suggestion">
+
+            <input
+                type="text"
+                name="new_category"
+                placeholder="New category name"
+            >
+
+        </div>
+
+    </div>
+
+
+    <button
+        class="add"
+        type="button"
+        onclick="addCategory()"
+    >
+        + ADD ANOTHER CATEGORY
+    </button>
+
+</section>
+
+
+
+<section>
+
+    <div class="number">03</div>
+
+    <h2>
+        HOW SHOULD THE FINAL CATEGORY LIST BE DECIDED?
+    </h2>
+
+    <p class="description">
+        This is the preliminary community vote.
+        The final method will be decided during Category Voting.
+    </p>
+
+
+    <div class="methods">
+
+
+        <label class="method">
+
+            <input
+                type="radio"
+                name="category_count_preference"
+                value="top_25"
+                required
+            >
+
+            <div>
+
+                <strong>
+                    TOP 25
+                </strong>
+
+                <p>
+                    The 25 categories with the most votes during
+                    Category Voting become official DCA categories.
+                </p>
+
+            </div>
+
+        </label>
+
+
+
+        <label class="method">
+
+            <input
+                type="radio"
+                name="category_count_preference"
+                value="threshold"
+                required
+            >
+
+            <div>
+
+                <strong>
+                    THRESHOLD #
+                </strong>
+
+                <p>
+                    A category must receive a minimum number of votes
+                    to become official. The threshold will be based
+                    on participation in this round.
+                </p>
+
+            </div>
+
+        </label>
+
+
+
+        <label class="method">
+
+            <input
+                type="radio"
+                name="category_count_preference"
+                value="all"
+                required
+            >
+
+            <div>
+
+                <strong>
+                    ALL CATEGORIES
+                </strong>
+
+                <p>
+                    Every category that reaches the Category Voting
+                    ballot becomes an official DCA category.
+                </p>
+
+            </div>
+
+        </label>
+
+
+    </div>
+
+</section>
+
+
+
+<section>
+
+    <div class="number">04</div>
+
+    <h2>
+        LOCK IT IN.
+    </h2>
+
+    <p class="description">
+        Enter your email to submit your Round 1 ballot.
+        Your email will not be displayed publicly.
+    </p>
+
+
+    <input
+        class="email"
+        type="email"
+        name="email"
+        placeholder="Email address"
+        required
+    >
+
+
+    <button
+        class="submit"
+        type="submit"
+    >
+        SUBMIT CATEGORY SUGGESTIONS →
+    </button>
+
+</section>
+
+
+</form>
+
+</main>
+
+
+
+<script>
+
+function addCategory() {
+
+    const holder =
+        document.getElementById("suggestions");
+
+    const row =
+        document.createElement("div");
+
+    row.className = "suggestion";
+
+    row.innerHTML = `
+        <input
+            type="text"
+            name="new_category"
+            placeholder="Another category name"
+        >
+
+        <button
+            type="button"
+            onclick="this.parentElement.remove()"
+        >
+            REMOVE
+        </button>
+    `;
+
+    holder.appendChild(row);
+}
+
+
+
+}
+
+
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>DCA — Round 1 Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+</head>
+
+<body>
+<main>
+
+<header>
+    <div class="label">DCA ADMIN · ROUND 01</div>
+    <h1>{{ submissions }}<br>SUBMISSIONS</h1>
+</header>
+
+<section>
+    <h2>CATEGORY COUNT VOTE</h2>
+
+    <div class="stats">
+        <div><strong>{{ method_results.get('top_25',0) }}</strong> TOP 25</div>
+        <div><strong>{{ method_results.get('threshold',0) }}</strong> THRESHOLD</div>
+        <div><strong>{{ method_results.get('all',0) }}</strong> ALL</div>
+    </div>
+</section>
+
+<section>
+    <h2>RETURNING CATEGORY VOTES</h2>
+
+    {% for name, yes, no in results %}
+    <div class="result">
+        <strong>{{ name }}</strong>
+        <span>YES {{ yes }}</span>
+        <span>NO {{ no }}</span>
+    </div>
+    {% endfor %}
+</section>
+
+<section>
+    <h2>NEW SUGGESTIONS</h2>
+
+    {% for suggestion in suggestions %}
+    <div class="result">
+        <strong>{{ suggestion.category_name }}</strong>
+        <span>{{ suggestion.moderation_status }}</span>
+    </div>
+    {% else %}
+    <p>No suggestions yet.</p>
+    {% endfor %}
+</section>
+
+</main>
+</body>
+</html>
