@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <script>
+    (function () {
+        const key = "litefeet-ledger-theme";
+        const saved = localStorage.getItem(key);
+
+        document.documentElement.dataset.theme =
+            saved === "dark" ? "dark" : "light";
+    })();
+    </script>
+
+    <title>
+        {{ definition.title }} · LiteFeet Ledger
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dca.css') }}"
+    >
+</head>
+
+<body>
+
+{% include "_navigation.html" %}
+
+{% include "_beta_bar.html" %}
+
+<main class="ledger-placeholder-page">
+
+    <section class="ledger-placeholder-hero">
+
+        <div class="label">
+            {{ definition.eyebrow }}
+        </div>
+
+        <h1>
+            {{ definition.title }}
+        </h1>
+
+        {% if feature.visibility == "beta" %}
+            <span class="ledger-feature-badge">
+                BETA
+            </span>
+        {% else %}
+            <span class="ledger-feature-badge">
+                IN DEVELOPMENT
+            </span>
+        {% endif %}
+
+        <p class="ledger-placeholder-description">
+            {{ definition.description }}
+        </p>
+
+        <div class="ledger-placeholder-status">
+
+            {% if feature.visibility == "beta" %}
+
+                <strong>
+                    CURRENTLY IN BETA
+                </strong>
+
+                <p>
+                    This part of the Ledger is being
+                    actively tested. The structure,
+                    records, and experience may change
+                    as the Archive develops.
+                </p>
+
+            {% elif feature.visibility == "placeholder" %}
+
+                <strong>
+                    IN DEVELOPMENT
+                </strong>
+
+                <p>
+                    This feature is part of the LiteFeet
+                    Ledger roadmap. This page is here so
+                    you can see where it fits before the
+                    full system is released.
+                </p>
+
+            {% else %}
+
+                <strong>
+                    NOW AVAILABLE
+                </strong>
+
+                <p>
+                    This Ledger feature is publicly
+                    accessible.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+        <div class="ledger-placeholder-actions">
+
+            <a
+                href="{{ url_for('beta_home') }}"
+                class="submit"
+            >
+                WHAT'S BEING TESTED →
+            </a>
+
+            <a
+                href="{{ url_for('index') }}"
+                class="archive-link"
+            >
+                BACK TO LEDGER
+            </a>
+
+        </div>
+
+    </section>
+
+</main>
+
+{% include "_footer.html" %}
+
+</body>
+</html>

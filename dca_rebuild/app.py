@@ -2923,3 +2923,205 @@ if __name__ == "__main__":
 # ============================================================
 # DCA ROUND 1 — CURRENT ADMIN DASHBOARD
 # ============================================================
+
+
+# ============================================================
+# LITEFEET LEDGER — BETA PLACEHOLDER PAGES
+# ============================================================
+
+BETA_PLACEHOLDER_PAGES = {
+    "archive": {
+        "title": "ARCHIVE",
+        "eyebrow": "THE RECORD",
+        "description": (
+            "Explore the documented history of LiteFeet "
+            "through people, teams, events, awards, "
+            "battles, music, media, and sourced records."
+        ),
+    },
+    "timeline": {
+        "title": "TIMELINE",
+        "eyebrow": "THROUGH THE YEARS",
+        "description": (
+            "Follow LiteFeet history across exact dates, "
+            "years, eras, major moments, and documented "
+            "changes in the culture."
+        ),
+    },
+    "directory": {
+        "title": "DIRECTORY",
+        "eyebrow": "PEOPLE + GROUPS",
+        "description": (
+            "Browse the people, teams, producer groups, "
+            "fams, collectives, and organizations that "
+            "make up the LiteFeet record."
+        ),
+    },
+    "people": {
+        "title": "PEOPLE",
+        "eyebrow": "THE CULTURE",
+        "description": (
+            "Historical records for dancers, producers, "
+            "organizers, creators, and other contributors "
+            "to LiteFeet."
+        ),
+    },
+    "groups": {
+        "title": "GROUPS",
+        "eyebrow": "TEAMS + COLLECTIVES",
+        "description": (
+            "Explore LiteFeet teams, producer teams, "
+            "fams, collectives, organizations, and their "
+            "documented histories."
+        ),
+    },
+    "contributions": {
+        "title": "CONTRIBUTE",
+        "eyebrow": "HELP BUILD THE RECORD",
+        "description": (
+            "Submit history, corrections, sources, "
+            "relationships, events, awards, and other "
+            "records for Archive review."
+        ),
+    },
+    "claims": {
+        "title": "CLAIMS",
+        "eyebrow": "RECORD AUTHORITY",
+        "description": (
+            "A future system for requesting authority "
+            "over eligible person and group records "
+            "without turning the Archive into social profiles."
+        ),
+    },
+    "community_board": {
+        "title": "COMMUNITY BOARD",
+        "eyebrow": "TALK ABOUT THE CULTURE",
+        "description": (
+            "A lightweight discussion board for LiteFeet "
+            "history, battles, events, music, and general "
+            "community conversation."
+        ),
+    },
+    "search": {
+        "title": "SEARCH",
+        "eyebrow": "FIND THE RECORD",
+        "description": (
+            "Search Ledger records across people, groups, "
+            "awards, events, battles, music, media, "
+            "aliases, and historical references."
+        ),
+    },
+    "from_the_ledger": {
+        "title": "FROM THE LEDGER",
+        "eyebrow": "DISCOVER SOMETHING",
+        "description": (
+            "Verified facts and records surfaced from "
+            "across the LiteFeet Ledger with their "
+            "supporting provenance."
+        ),
+    },
+    "on_this_day": {
+        "title": "ON THIS DAY",
+        "eyebrow": "LITEFEET HISTORY",
+        "description": (
+            "Documented LiteFeet moments connected to "
+            "today's date, backed by records in the Archive."
+        ),
+    },
+    "community_opinion": {
+        "title": "COMMUNITY OPINION",
+        "eyebrow": "WHAT DOES THE CULTURE THINK?",
+        "description": (
+            "Community responses and opinion prompts kept "
+            "separate from verified historical facts."
+        ),
+    },
+    "ask_the_archive": {
+        "title": "ASK THE ARCHIVE",
+        "eyebrow": "EXPLORE THE RECORD",
+        "description": (
+            "Ask questions about LiteFeet history and "
+            "receive answers grounded in Ledger records "
+            "and documented sources."
+        ),
+    },
+    "events": {
+        "title": "EVENTS",
+        "eyebrow": "WHAT HAPPENED + WHAT'S NEXT",
+        "description": (
+            "Document LiteFeet events and eventually "
+            "explore both historical and upcoming "
+            "community events."
+        ),
+    },
+    "battles": {
+        "title": "BATTLES",
+        "eyebrow": "THE BATTLE RECORD",
+        "description": (
+            "A future structured record of LiteFeet "
+            "battles, participants, events, results, "
+            "footage, and documented moments."
+        ),
+    },
+    "music": {
+        "title": "MUSIC",
+        "eyebrow": "THE SOUND OF LITEFEET",
+        "description": (
+            "Document the tracks, producers, projects, "
+            "and music connected to LiteFeet culture."
+        ),
+    },
+    "media": {
+        "title": "MEDIA",
+        "eyebrow": "WATCH THE RECORD",
+        "description": (
+            "A future home for documented LiteFeet media, "
+            "footage, interviews, highlights, and other "
+            "historical references."
+        ),
+    },
+}
+
+
+@app.route("/explore/<feature_key>")
+def beta_placeholder(feature_key):
+    definition = BETA_PLACEHOLDER_PAGES.get(
+        feature_key
+    )
+
+    if not definition:
+        abort(404)
+
+    db = SessionLocal()
+
+    try:
+        ensure_beta_feature_flags(db)
+
+        flag = (
+            db.query(BetaFeatureFlag)
+            .filter_by(feature_key=feature_key)
+            .first()
+        )
+
+        if not flag:
+            abort(404)
+
+        beta_active = bool(
+            session.get("ledger_beta_active")
+        )
+
+        if not beta_feature_accessible(
+            flag,
+            beta_active=beta_active,
+        ):
+            abort(404)
+
+        return render_template(
+            "beta_placeholder.html",
+            feature=flag,
+            definition=definition,
+            beta_active=beta_active,
+        )
+
+    finally:
+        db.close()

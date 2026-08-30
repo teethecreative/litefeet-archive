@@ -157,7 +157,7 @@
     <div class="beta-feature-grid">
         {% for feature in beta_features %}
 
-        <article class="beta-feature-card">
+        <a href="{{ url_for('beta_placeholder', feature_key=feature.feature_key) }}" class="beta-feature-link"><article class="beta-feature-card">
             <div class="beta-feature-card__status">
                 {% if feature.visibility == "beta" %}
                     TESTING NOW
@@ -194,7 +194,7 @@
                     OPEN {{ feature.name|upper }} →
                 </a>
             </div>
-        </article>
+        </article></a>
 
         {% endfor %}
     </div>
