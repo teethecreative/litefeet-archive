@@ -1543,6 +1543,14 @@ def lfa_submit():
             request.form.get("team_name") or ""
         ).strip()
 
+        additional_details = (
+            request.form.get("additional_details") or ""
+        ).strip()
+
+        source_information = (
+            request.form.get("source_information") or ""
+        ).strip()
+
         submitter_email = (
             request.form.get("submitter_email") or ""
         ).strip().lower()
@@ -1582,8 +1590,8 @@ def lfa_submit():
             category_name=category_name,
             winner_name=winner_name,
             team_name=team_name or None,
-            additional_details=None,
-            source_information=None,
+            additional_details=additional_details or None,
+            source_information=source_information or None,
             submitter_email=submitter_email or None,
             status="pending",
         )

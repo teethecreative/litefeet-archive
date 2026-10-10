@@ -34,6 +34,7 @@
 
 {% include "_navigation.html" %}
 
+{% if page_type == "dca-2026" %}
 <main class="dca-cycle-hub">
 
     <section class="dca-cycle-hero">
@@ -369,6 +370,28 @@
     </section>
 
 </main>
+{% else %}
+<!-- PHASE 3A: HISTORICAL AWARDS -->
+<main class="dca-cycle-hub">
+    <section class="dca-cycle-hero">
+        <div class="label">{{ eyebrow }} · {{ title }}</div>
+        <h1>{{ page_title }}</h1>
+        <p class="dca-cycle-hero__lead">{{ subtitle }}</p>
+    </section>
+
+    <section class="dca-cycle-section">
+        <h2>HISTORICAL ARCHIVE</h2>
+        <p>
+            Historical categories, nominees, and winners
+            are being collected and verified.
+        </p>
+        <a href="{{ url_for('lfa_home') }}#contribute">
+            CONTRIBUTE HISTORICAL INFORMATION →
+        </a>
+    </section>
+</main>
+{% endif %}
+
 
 
     {% include "_footer.html" %}
