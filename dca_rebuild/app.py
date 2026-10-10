@@ -39,8 +39,14 @@ engine = create_engine(DATABASE_URL)
 
 @app.context_processor
 def ledger_template_globals():
+    if session.get("ledger_admin_authenticated"):
+        if "dca_moderation_csrf" not in session:
+            session["dca_moderation_csrf"] = secrets.token_urlsafe(32)
     return {
-        "current_year": datetime.utcnow().year
+        "current_year": datetime.utcnow().year,
+        "dca_moderation_csrf": session.get(
+            "dca_moderation_csrf", ""
+        ),
     }
 
 Base.metadata.create_all(engine)
@@ -730,100 +736,80 @@ def round2():
     "/admin/dca/round1/suggestion/<int:suggestion_id>",
     methods=["POST"],
 )
+@admin_login_required
 def moderate_round1_suggestion(suggestion_id):
+    expected = session.get("dca_moderation_csrf", "")
+    provided = request.form.get("csrf_token", "")
+
+    if not expected or not secrets.compare_digest(
+        expected, provided
+    ):
+        abort(400, description="Invalid moderation token")
+
+    decision = request.form.get("decision", "").strip()
+    category_name = request.form.get(
+        "category_name", ""
+    ).strip()
+    merge_raw = request.form.get(
+        "merge_target_id", ""
+    ).strip()
+
+    if decision not in {"approved", "rejected", "merged"}:
+        abort(400, description="Invalid moderation decision")
+
+    if not category_name or len(category_name) > 250:
+        abort(400, description="Invalid category name")
 
     db = SessionLocal()
-
     try:
+        suggestion = db.query(
+            DCANewCategorySuggestion
+        ).filter_by(id=suggestion_id).first()
 
-        suggestion = (
-            db.query(DCANewCategorySuggestion)
-            .filter_by(id=suggestion_id)
-            .first()
-        )
+        if suggestion is None:
+            abort(404)
 
-        if not suggestion:
-            flash("Suggestion not found.")
-            return redirect(url_for("admin_round1"))
-
-
-        decision = request.form.get(
-            "decision",
-            ""
-        ).strip()
-
-        category_name = request.form.get(
-            "category_name",
-            ""
-        ).strip()
-
-        merge_target_id = request.form.get(
-            "merge_target_id",
-            ""
-        ).strip()
-
-
-        if decision not in {
-            "approved",
-            "rejected",
-            "merged",
-        }:
-            flash("Choose a moderation decision.")
-            return redirect(url_for("admin_round1"))
-
-
-        if not category_name:
-            flash("Category name cannot be empty.")
-            return redirect(url_for("admin_round1"))
-
-
-        suggestion.category_name = category_name
-
-        suggestion.normalized_name = (
-            " ".join(
-                category_name
-                .lower()
-                .strip()
-                .split()
-            )
-        )
-
-        suggestion.status = decision
-
+        target = None
 
         if decision == "merged":
+            try:
+                target_id = int(merge_raw)
+            except (TypeError, ValueError):
+                abort(400, description="Invalid merge target")
 
-            if not merge_target_id:
-                flash(
-                    "Choose the category this suggestion "
-                    "should merge into."
-                )
+            if target_id == suggestion_id:
+                abort(400, description="Cannot merge into itself")
 
-                return redirect(
-                    url_for("admin_round1")
-                )
+            target = db.query(
+                DCANewCategorySuggestion
+            ).filter_by(id=target_id).first()
 
-            suggestion.merge_target_category_id = int(
-                merge_target_id
-            )
+            if (
+                target is None
+                or target.moderation_status == "merged"
+                or target.submission.edition_id
+                != suggestion.submission.edition_id
+            ):
+                abort(400, description="Invalid merge target")
 
-        else:
-            suggestion.merge_target_category_id = None
-
+        suggestion.category_name = category_name
+        suggestion.normalized_name = " ".join(
+            category_name.casefold().split()
+        )
+        suggestion.moderation_status = decision
+        suggestion.merged_into_id = (
+            target.id if target else None
+        )
 
         db.commit()
+        flash(f'"{category_name}" updated.')
+        return redirect(url_for("admin_round1"))
 
-        flash(
-            f'"{category_name}" updated.'
-        )
-
-        return redirect(
-            url_for("admin_round1")
-        )
-
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
-
 
 
 # ============================================================
@@ -997,7 +983,7 @@ def admin_round1_old():
             "all": "All Categories",
         }
 
-        merge_targets = categories
+        merge_targets = suggestions
 
         return render_template(
             "admin_round1.html",
@@ -1264,7 +1250,7 @@ def admin_round1():
             "all": "All Categories",
         }
 
-        merge_targets = categories
+        merge_targets = suggestions
 
         return render_template(
             "admin_round1.html",

@@ -315,6 +315,7 @@
                 action="{{ url_for('moderate_round1_suggestion', suggestion_id=suggestion.id) }}"
             >
 
+                <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">
                 <div class="origin">
                     COMMUNITY SUGGESTION
                 </div>
@@ -323,7 +324,7 @@
 
                 <div class="moderation-status">
                     CURRENT STATUS:
-                    <strong>{{ suggestion.status|upper }}</strong>
+                    <strong>{{ suggestion.moderation_status|upper }}</strong>
                 </div>
 
 
@@ -377,9 +378,9 @@
                         Not merging
                     </option>
 
-                    {% for category in merge_targets %}
+                    {% for category in merge_targets if category.id != suggestion.id and category.moderation_status != "merged" and category.submission.edition_id == suggestion.submission.edition_id %}
                     <option value="{{ category.id }}">
-                        {{ category.name }}
+                        {{ category.category_name }}
                     </option>
                     {% endfor %}
                 </select>
