@@ -728,6 +728,17 @@ def round2():
         db.close()
 
 
+def admin_login_required(view):
+    @wraps(view)
+    def wrapped_view(*args, **kwargs):
+        if not session.get("ledger_admin_authenticated"):
+            return redirect(url_for("admin_login"))
+        return view(*args, **kwargs)
+
+    return wrapped_view
+
+
+
 # ============================================================
 # DCA ROUND 1 ADMIN MODERATION
 # ============================================================
@@ -1009,16 +1020,6 @@ def admin_round1_old():
 # ============================================================
 # LITEFEET LEDGER — ADMIN AUTHENTICATION
 # ============================================================
-
-def admin_login_required(view):
-    @wraps(view)
-    def wrapped_view(*args, **kwargs):
-        if not session.get("ledger_admin_authenticated"):
-            return redirect(url_for("admin_login"))
-        return view(*args, **kwargs)
-
-    return wrapped_view
-
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
