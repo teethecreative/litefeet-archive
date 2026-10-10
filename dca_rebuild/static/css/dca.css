@@ -4169,3 +4169,137 @@ main a:not(.site-nav a):not(.ledger-footer a):hover,
         grid-template-columns: 44px 1fr;
     }
 }
+
+/* LITEFEET PHASE 2: CONSISTENT PUBLIC FORMS */
+
+:root {
+    --lf-field-background: var(--surface-2);
+    --lf-field-text: var(--text);
+    --lf-field-border: var(--border);
+    --lf-field-focus: var(--gold);
+}
+
+html[data-theme="dark"] {
+    --lf-field-background: var(--surface-2);
+    --lf-field-text: var(--text);
+    --lf-field-border: var(--border);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="url"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
+    font-family: inherit;
+}
+
+.ledger-admin-login {
+    width: 100%;
+    max-width: 520px;
+    margin-inline: auto;
+}
+
+.ledger-admin-login form {
+    display: grid;
+    gap: 16px;
+    width: 100%;
+    max-width: 420px;
+}
+
+.ledger-admin-login form label {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+}
+
+.ledger-admin-login form input {
+    display: block;
+    width: 100%;
+    min-height: 46px;
+    padding: 12px 14px;
+    border: 1px solid var(--lf-field-border);
+    border-radius: 3px;
+    background: var(--lf-field-background);
+    color: var(--lf-field-text);
+    font: inherit;
+    font-size: 16px;
+}
+
+.lfa-contribution-form,
+.ledger-admin-form {
+    min-width: 0;
+}
+
+.lfa-contribution-form input,
+.lfa-contribution-form select,
+.lfa-contribution-form textarea,
+.ledger-admin-form input,
+.ledger-admin-form select,
+.ledger-admin-form textarea,
+.admin-input {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    border: 1px solid var(--lf-field-border);
+    background: var(--lf-field-background);
+    color: var(--lf-field-text);
+    font-family: inherit;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.lfa-contribution-form input,
+.lfa-contribution-form select,
+.ledger-admin-form input,
+.ledger-admin-form select,
+.admin-input {
+    min-height: 46px;
+}
+
+.lfa-contribution-form textarea,
+.ledger-admin-form textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.lfa-contribution-form :is(input, select, textarea):focus-visible,
+.ledger-admin-form :is(input, select, textarea):focus-visible,
+.ledger-admin-login input:focus-visible,
+.admin-input:focus-visible {
+    outline: 2px solid var(--lf-field-focus);
+    outline-offset: 2px;
+    border-color: var(--lf-field-focus);
+}
+
+.lfa-contribution-form :is(input, textarea)::placeholder,
+.ledger-admin-form :is(input, textarea)::placeholder,
+.ledger-admin-login input::placeholder {
+    color: var(--muted);
+    opacity: 1;
+}
+
+@media (max-width: 640px) {
+    .ledger-admin-login {
+        max-width: 100%;
+    }
+
+    .ledger-admin-login form {
+        max-width: 100%;
+    }
+
+    .lfa-contribution-form,
+    .ledger-admin-form {
+        width: 100%;
+    }
+
+    .ledger-admin-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
