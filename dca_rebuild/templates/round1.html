@@ -68,6 +68,21 @@
 {% endwith %}
 
 
+{% if categories_closed %}
+<section class="dca-email-gate">
+    <div class="label">ROUND 01 COMPLETE</div>
+    <h2>CATEGORY SUGGESTIONS ARE CLOSED.</h2>
+    <p>
+        Submissions closed October 31, 2026.
+        We're reviewing the community's suggestions
+        and preparing the official category list.
+    </p>
+    <p>
+        Nominee suggestions will open after
+        the categories are finalized.
+    </p>
+</section>
+{% else %}
 <form method="post">
 {% if returning_submission %}
 
@@ -549,6 +564,7 @@ type="submit"
 </div>
 {% endif %}
 </form>
+{% endif %}
 
 </main>
 

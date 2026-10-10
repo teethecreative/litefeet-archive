@@ -1,6 +1,7 @@
 import re
 from functools import wraps
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import hashlib
 import os
 import secrets
@@ -238,6 +239,16 @@ def dca_round1_check_email():
         db.close()
 
 
+DCA_CATEGORY_DEADLINE = datetime(
+    2026, 11, 1, 0, 0,
+    tzinfo=ZoneInfo("America/New_York"),
+)
+
+
+def dca_categories_closed():
+    return datetime.now(ZoneInfo("America/New_York")) >= DCA_CATEGORY_DEADLINE
+
+
 @app.route("/awards/dancers-choice/category-suggestions", methods=["GET", "POST"])
 def round1():
     db = SessionLocal()
@@ -276,6 +287,9 @@ def round1():
         )
 
         if request.method == "POST":
+            if dca_categories_closed():
+                flash("Category suggestions closed October 31, 2026.")
+                return redirect(url_for("round1"))
             email = (
                 session.get(DCA_EMAIL_SESSION_KEY)
                 or ""
@@ -414,6 +428,7 @@ def round1():
             returning_submission=returning_submission,
             returning_seconds=returning_seconds,
             verified_email=verified_email,
+            categories_closed=dca_categories_closed(),
         )
 
     finally:
