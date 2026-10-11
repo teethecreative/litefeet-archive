@@ -1,0 +1,143 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visitor Directory | The LiteFeet Vault</title>
+<script>
+(function () {
+    const theme = localStorage.getItem("litefeet-ledger-theme");
+    document.documentElement.dataset.theme =
+        theme === "dark" ? "dark" : "light";
+})();
+</script>
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/dca.css') }}">
+</head>
+<body class="ledger-admin">
+{% include "_admin_navigation.html" %}
+
+<main class="admin-control-room ledger-analytics">
+<header class="admin-control-room__header">
+    <div class="label">THE LITEFEET VAULT · ANALYTICS</div>
+    <h1>VISITOR<br>DIRECTORY</h1>
+    <p class="lead">
+        Search and explore recorded browser-session activity.
+    </p>
+    <p><a href="{{ url_for('admin_analytics') }}">
+        ← ANALYTICS OVERVIEW
+    </a></p>
+</header>
+
+<section class="admin-module-section">
+    <div class="admin-section-heading">
+        <div class="label">01 · SESSION RECORDS</div>
+        <h2>EXPLORE VISITORS</h2>
+        <p>
+            {{ total }} matching sessions.
+            These are anonymous browser-session identifiers,
+            not identified individuals.
+        </p>
+    </div>
+
+    <form method="get" class="analytics-directory-filters">
+        <label>
+            SEARCH SESSION OR PAGE
+            <input name="q" value="{{ search }}"
+                   placeholder="Session ID or page path">
+        </label>
+        <label>
+            SORT BY
+            <select name="sort">
+                <option value="recent"
+                    {% if sort == 'recent' %}selected{% endif %}>
+                    MOST RECENT
+                </option>
+                <option value="views"
+                    {% if sort == 'views' %}selected{% endif %}>
+                    MOST PAGE VIEWS
+                </option>
+                <option value="visits"
+                    {% if sort == 'visits' %}selected{% endif %}>
+                    MOST VISITS
+                </option>
+            </select>
+        </label>
+        <label>
+            MINIMUM VIEWS
+            <input type="number" name="min_views"
+                   min="1" max="100000" value="{{ minimum }}">
+        </label>
+        <button type="submit">APPLY →</button>
+    </form>
+
+    <div class="analytics-table-wrap">
+        <table class="analytics-table">
+            <thead>
+                <tr>
+                    <th>SESSION</th>
+                    <th>VIEWS</th>
+                    <th>VISITS</th>
+                    <th>FIRST SEEN · NY</th>
+                    <th>LAST SEEN · NY</th>
+                    <th>DETAILS</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for visitor in visitors %}
+                <tr>
+                    <td><code>{{ visitor.visitor_id[:12] }}…</code></td>
+                    <td>{{ visitor.views }}</td>
+                    <td>{{ visitor.visits }}</td>
+                    <td>
+                        {{ visitor.first_seen.replace(
+                            tzinfo=utc_timezone
+                        ).astimezone(ny_timezone).strftime(
+                            '%b %d, %Y · %I:%M %p'
+                        ) }}
+                    </td>
+                    <td>
+                        {{ visitor.last_seen.replace(
+                            tzinfo=utc_timezone
+                        ).astimezone(ny_timezone).strftime(
+                            '%b %d, %Y · %I:%M %p'
+                        ) }}
+                    </td>
+                    <td>
+                        <a href="{{ url_for(
+                            'admin_analytics_visitor',
+                            visitor_id=visitor.visitor_id
+                        ) }}">VIEW ACTIVITY →</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6">NO MATCHING SESSIONS</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="analytics-pagination">
+        {% if page > 1 %}
+        <a href="{{ url_for(
+            'admin_analytics_visitors',
+            page=page-1, sort=sort, q=search,
+            min_views=minimum
+        ) }}">← PREVIOUS</a>
+        {% endif %}
+        <span>PAGE {{ page }} OF {{ total_pages }}</span>
+        {% if page < total_pages %}
+        <a href="{{ url_for(
+            'admin_analytics_visitors',
+            page=page+1, sort=sort, q=search,
+            min_views=minimum
+        ) }}">NEXT →</a>
+        {% endif %}
+    </div>
+</section>
+</main>
+</body>
+</html>

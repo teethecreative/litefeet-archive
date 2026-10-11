@@ -4053,3 +4053,183 @@ def admin_analytics():
         )
     finally:
         db.close()
+
+
+@app.route("/admin/analytics/visitors")
+@admin_login_required
+def admin_analytics_visitors():
+    from sqlalchemy import case
+
+    page = max(1, min(request.args.get("page", 1, type=int) or 1, 100000))
+    sort = request.args.get("sort", "recent")
+    if sort not in ("recent", "views", "visits"):
+        sort = "recent"
+
+    search = request.args.get("q", "").strip()[:100]
+    minimum = max(
+        1, min(request.args.get("min_views", 1, type=int) or 1, 100000)
+    )
+    per_page = 25
+
+    db = SessionLocal()
+    try:
+        grouped = (
+            db.query(
+                LedgerPageView.visitor_id.label("visitor_id"),
+                func.count(LedgerPageView.id).label("views"),
+                func.sum(
+                    case(
+                        (LedgerPageView.is_new_visit.is_(True), 1),
+                        else_=0,
+                    )
+                ).label("visits"),
+                func.min(LedgerPageView.viewed_at).label("first_seen"),
+                func.max(LedgerPageView.viewed_at).label("last_seen"),
+            )
+            .group_by(LedgerPageView.visitor_id)
+            .having(func.count(LedgerPageView.id) >= minimum)
+        )
+
+        if search:
+            matching_ids = (
+                db.query(LedgerPageView.visitor_id)
+                .filter(
+                    or_(
+                        LedgerPageView.visitor_id.ilike("%" + search + "%"),
+                        LedgerPageView.path.ilike("%" + search + "%"),
+                    )
+                )
+                .distinct()
+            )
+            grouped = grouped.filter(
+                LedgerPageView.visitor_id.in_(matching_ids)
+            )
+
+        results = grouped.subquery()
+        total = db.query(func.count()).select_from(results).scalar() or 0
+        query = db.query(results)
+
+        if sort == "views":
+            query = query.order_by(
+                results.c.views.desc(),
+                results.c.last_seen.desc(),
+                results.c.visitor_id,
+            )
+        elif sort == "visits":
+            query = query.order_by(
+                results.c.visits.desc(),
+                results.c.last_seen.desc(),
+                results.c.visitor_id,
+            )
+        else:
+            query = query.order_by(
+                results.c.last_seen.desc(),
+                results.c.visitor_id,
+            )
+
+        total_pages = max(1, (total + per_page - 1) // per_page)
+        page = min(page, total_pages)
+        visitors = (
+            query.offset((page - 1) * per_page)
+            .limit(per_page)
+            .all()
+        )
+
+        return render_template(
+            "admin_analytics_visitors.html",
+            visitors=visitors,
+            total=total,
+            page=page,
+            total_pages=total_pages,
+            sort=sort,
+            search=search,
+            minimum=minimum,
+            ny_timezone=ZoneInfo("America/New_York"),
+            utc_timezone=ZoneInfo("UTC"),
+        )
+    finally:
+        db.close()
+
+
+@app.route("/admin/analytics/visitors/<visitor_id>")
+@admin_login_required
+def admin_analytics_visitor(visitor_id):
+    if (
+        len(visitor_id) != 32
+        or any(c not in "0123456789abcdef" for c in visitor_id)
+    ):
+        abort(404)
+
+    page = max(1, min(request.args.get("page", 1, type=int) or 1, 100000))
+    per_page = 50
+
+    db = SessionLocal()
+    try:
+        base = db.query(LedgerPageView).filter(
+            LedgerPageView.visitor_id == visitor_id
+        )
+        total = base.count()
+        if not total:
+            abort(404)
+
+        visits = (
+            db.query(func.count(LedgerPageView.id))
+            .filter(
+                LedgerPageView.visitor_id == visitor_id,
+                LedgerPageView.is_new_visit.is_(True),
+            )
+            .scalar()
+        ) or 0
+
+        first_seen = (
+            db.query(func.min(LedgerPageView.viewed_at))
+            .filter(LedgerPageView.visitor_id == visitor_id)
+            .scalar()
+        )
+        last_seen = (
+            db.query(func.max(LedgerPageView.viewed_at))
+            .filter(LedgerPageView.visitor_id == visitor_id)
+            .scalar()
+        )
+
+        top_pages = (
+            db.query(
+                LedgerPageView.path,
+                func.count(LedgerPageView.id).label("views"),
+            )
+            .filter(LedgerPageView.visitor_id == visitor_id)
+            .group_by(LedgerPageView.path)
+            .order_by(func.count(LedgerPageView.id).desc())
+            .limit(20)
+            .all()
+        )
+
+        total_pages = max(1, (total + per_page - 1) // per_page)
+        page = min(page, total_pages)
+
+        activity = (
+            base.order_by(
+                LedgerPageView.viewed_at.desc(),
+                LedgerPageView.id.desc(),
+            )
+            .offset((page - 1) * per_page)
+            .limit(per_page)
+            .all()
+        )
+
+        return render_template(
+            "admin_analytics_visitor.html",
+            visitor_id=visitor_id,
+            total=total,
+            visits=visits,
+            first_seen=first_seen,
+            last_seen=last_seen,
+            top_pages=top_pages,
+            activity=activity,
+            page=page,
+            total_pages=total_pages,
+            ny_timezone=ZoneInfo("America/New_York"),
+            utc_timezone=ZoneInfo("UTC"),
+        )
+    finally:
+        db.close()

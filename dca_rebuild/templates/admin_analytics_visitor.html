@@ -1,0 +1,155 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session Activity | The LiteFeet Vault</title>
+<script>
+(function () {
+    const theme = localStorage.getItem("litefeet-ledger-theme");
+    document.documentElement.dataset.theme =
+        theme === "dark" ? "dark" : "light";
+})();
+</script>
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/dca.css') }}">
+</head>
+<body class="ledger-admin">
+{% include "_admin_navigation.html" %}
+
+<main class="admin-control-room ledger-analytics">
+<header class="admin-control-room__header">
+    <div class="label">THE LITEFEET VAULT · ANALYTICS</div>
+    <h1>SESSION<br>ACTIVITY</h1>
+    <p class="lead">
+        Page-by-page activity for an anonymous browser session.
+    </p>
+    <p><a href="{{ url_for('admin_analytics_visitors') }}">
+        ← VISITOR DIRECTORY
+    </a></p>
+</header>
+
+<section class="admin-module-section">
+    <div class="admin-section-heading">
+        <div class="label">01 · SESSION OVERVIEW</div>
+        <h2>ACTIVITY SUMMARY</h2>
+    </div>
+
+    <p class="analytics-session-id">
+        SESSION ID: <code>{{ visitor_id }}</code>
+    </p>
+
+    <div class="analytics-metrics">
+        <article class="analytics-metric">
+            <div class="label">PAGE VIEWS</div>
+            <strong>{{ total }}</strong>
+        </article>
+        <article class="analytics-metric">
+            <div class="label">VISITS</div>
+            <strong>{{ visits }}</strong>
+        </article>
+        <article class="analytics-metric">
+            <div class="label">FIRST SEEN</div>
+            <span>
+                {{ first_seen.replace(
+                    tzinfo=utc_timezone
+                ).astimezone(ny_timezone).strftime(
+                    '%b %d, %Y · %I:%M %p'
+                ) }}
+            </span>
+        </article>
+        <article class="analytics-metric">
+            <div class="label">LAST SEEN</div>
+            <span>
+                {{ last_seen.replace(
+                    tzinfo=utc_timezone
+                ).astimezone(ny_timezone).strftime(
+                    '%b %d, %Y · %I:%M %p'
+                ) }}
+            </span>
+        </article>
+    </div>
+</section>
+
+<section class="admin-module-section">
+    <div class="admin-section-heading">
+        <div class="label">02 · CONTENT INTEREST</div>
+        <h2>MOST VIEWED PAGES</h2>
+    </div>
+
+    <div class="analytics-table-wrap">
+        <table class="analytics-table">
+            <thead><tr><th>PAGE</th><th>VIEWS</th></tr></thead>
+            <tbody>
+            {% for path, views in top_pages %}
+                <tr><td>{{ path }}</td><td>{{ views }}</td></tr>
+            {% else %}
+                <tr><td colspan="2">NO ACTIVITY</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="admin-module-section">
+    <div class="admin-section-heading">
+        <div class="label">03 · ENGAGEMENT HISTORY</div>
+        <h2>ACTIVITY TIMELINE</h2>
+        <p>Times shown in New York local time.</p>
+    </div>
+
+    <div class="analytics-table-wrap">
+        <table class="analytics-table">
+            <thead>
+                <tr>
+                    <th>DATE & TIME</th>
+                    <th>PAGE</th>
+                    <th>ACTIVITY</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in activity %}
+                <tr>
+                    <td>
+                        {{ item.viewed_at.replace(
+                            tzinfo=utc_timezone
+                        ).astimezone(ny_timezone).strftime(
+                            '%b %d, %Y · %I:%M %p'
+                        ) }}
+                    </td>
+                    <td>{{ item.path }}</td>
+                    <td>
+                        {% if item.is_new_visit %}
+                            VISIT START
+                        {% else %}
+                            PAGE VIEW
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="3">NO ACTIVITY</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="analytics-pagination">
+        {% if page > 1 %}
+        <a href="{{ url_for(
+            'admin_analytics_visitor',
+            visitor_id=visitor_id, page=page-1
+        ) }}">← PREVIOUS</a>
+        {% endif %}
+        <span>PAGE {{ page }} OF {{ total_pages }}</span>
+        {% if page < total_pages %}
+        <a href="{{ url_for(
+            'admin_analytics_visitor',
+            visitor_id=visitor_id, page=page+1
+        ) }}">NEXT →</a>
+        {% endif %}
+    </div>
+</section>
+</main>
+</body>
+</html>

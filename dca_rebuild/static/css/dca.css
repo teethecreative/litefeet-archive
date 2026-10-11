@@ -4507,3 +4507,67 @@ html[data-theme="dark"]
         padding: 7px 9px;
     }
 }
+
+
+/* PHASE 6C VISITOR DIRECTORY */
+
+.ledger-analytics .analytics-directory-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: end;
+    margin: 25px 0;
+}
+
+.ledger-analytics .analytics-directory-filters label {
+    display: grid;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .08em;
+}
+
+.ledger-analytics .analytics-directory-filters input,
+.ledger-analytics .analytics-directory-filters select {
+    padding: 12px;
+    max-width: 100%;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.ledger-analytics .analytics-directory-filters button {
+    padding: 13px 20px;
+    background: var(--blue);
+    color: white;
+    border: 0;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.ledger-analytics .analytics-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    margin-top: 25px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .06em;
+}
+
+.ledger-analytics .analytics-pagination a {
+    color: var(--blue-2);
+}
+
+.ledger-analytics .analytics-session-id {
+    overflow-wrap: anywhere;
+    font-size: 12px;
+    margin-bottom: 22px;
+}
+
+.ledger-analytics .analytics-table a {
+    font-weight: 900;
+    font-size: 12px;
+}
