@@ -12,6 +12,7 @@ from sqlalchemy.orm import sessionmaker
 
 from dca_rebuild.config import DATABASE_URL
 from dca_rebuild.category_metadata import get_category_meta
+from dca_rebuild.nomination_service import add_nomination
 from dca_rebuild.models import (
     Base,
     DCACategory,
@@ -1691,13 +1692,73 @@ def build_round2_ballot():
 # DCA NOMINATIONS — ADMIN REVIEW, PUBLIC ACCESS CLOSED
 # ============================================================
 
+def dca_nomination_gate(db):
+    """Two independent switches: explicit configuration and finalized edition."""
+    edition = db.query(DCAEdition).filter_by(year=2026).first()
+    if not edition or edition.phase != "nominations":
+        return None, []
+    if os.environ.get("DCA_2026_NOMINATIONS_ENABLED") != "true":
+        return None, []
+    # Never open before the category-suggestion deadline has passed in NYC.
+    if datetime.now(ZoneInfo("America/New_York")) <= datetime(2026, 10, 31, 23, 59, tzinfo=ZoneInfo("America/New_York")):
+        return None, []
+    categories = (db.query(DCACategory)
+                  .filter_by(edition_id=edition.id, status="official")
+                  .order_by(DCACategory.name.asc()).all())
+    if not categories:
+        return None, []
+    return edition, categories
+
+
 @app.route("/awards/dancers-choice/nominations", methods=["GET", "POST"])
 def dca_nominations_closed():
-    # This endpoint deliberately does not accept public nominations.
-    # A future phase must explicitly implement the opening procedure.
-    if request.method == "POST":
-        abort(403, description="Nominations are not open")
-    return render_template("dca_nominations_closed.html"), 200
+    db = SessionLocal()
+    try:
+        edition, categories = dca_nomination_gate(db)
+        if edition is None:
+            if request.method == "POST":
+                abort(403, description="Nominations are not open")
+            return render_template("dca_nominations_closed.html"), 200
+        if "dca_nomination_csrf" not in session:
+            session["dca_nomination_csrf"] = secrets.token_urlsafe(32)
+        if request.method == "POST":
+            token = request.form.get("csrf_token", "")
+            if not token or not secrets.compare_digest(session["dca_nomination_csrf"], token):
+                abort(400, description="Invalid submission token")
+            try:
+                category_id = int(request.form.get("category_id", ""))
+            except (TypeError, ValueError):
+                abort(400, description="Choose a valid category")
+            if category_id not in {c.id for c in categories}:
+                abort(400, description="Category is not open for nominations")
+            name = request.form.get("name", "")
+            email = request.form.get("email", "").strip().casefold()
+            reason = request.form.get("reason", "").strip()
+            if len(email) > 254 or not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
+                abort(400, description="Enter a valid email")
+            if len(reason) > 2000:
+                abort(400, description="Reason is too long")
+            if len(name) > 250:
+                abort(400, description="Nominee name is too long")
+            try:
+                nominee, created = add_nomination(
+                    db, edition_id=edition.id, category_id=category_id,
+                    name=name, submitter_hash=private_hash("dca-nomination:" + email),
+                    description=reason or None,
+                )
+                db.commit()
+            except ValueError as exc:
+                db.rollback()
+                abort(400, description=str(exc))
+            except Exception:
+                db.rollback()
+                raise
+            flash("Nomination received." if created else "You've already nominated this nominee in this category.")
+            return redirect(url_for("dca_nominations_closed"))
+        return render_template("dca_nominations_form.html", categories=categories,
+                               csrf_token=session["dca_nomination_csrf"])
+    finally:
+        db.close()
 
 
 @app.route("/admin/dca/nominations/preview", methods=["GET", "POST"])
