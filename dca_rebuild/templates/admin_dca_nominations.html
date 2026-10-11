@@ -10,12 +10,26 @@
 .dca-nom-table form{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .dca-nom-table select,.dca-nom-table button{padding:8px}
 @media(max-width:700px){.dca-nom-table{display:block;overflow-x:auto}}
+.lf-nom-filters{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin:1.5rem 0}
+.lf-nom-filters label{display:grid;gap:6px;min-width:170px;flex:1}
+.lf-nom-filters input,.lf-nom-filters select,.lf-nom-filters button{padding:10px;background:transparent;color:inherit;border:1px solid currentColor}
+.lf-nom-pagination{display:flex;justify-content:space-between;gap:15px;align-items:center;margin:1.5rem 0 3rem;flex-wrap:wrap}
+.lf-nom-pagination a{border:1px solid currentColor;padding:10px 16px;text-decoration:none}
 </style></head><body>{% include "_admin_navigation.html" %}
 <main class="dca-nominations-admin"><p>DCA 2026 · ADMIN</p><h1>NOMINATION REVIEW</h1>
 <p>Public nominations are closed. This page lets you review nominations once submissions are enabled in a later phase.</p>
 <p><a href="{{ url_for('admin_round1') }}">← Category management</a></p>
 <p><a href="{{ url_for('admin_dca_nomination_preview') }}">Preview nomination form →</a></p>
 
+<form method="get" class="lf-nom-filters" role="search">
+<label>SEARCH <input name="q" maxlength="100" value="{{ search }}" placeholder="Nominee or category"></label>
+<label>STATUS <select name="status">
+{% for option in ['all','pending','approved','rejected'] %}
+<option value="{{ option }}" {% if status == option %}selected{% endif %}>{{ option|upper }}</option>
+{% endfor %}</select></label>
+<button type="submit">FILTER</button>
+</form>
+<p class="lf-nom-summary">{{ total }} matching nominees · Showing up to 15 per page</p>
 {% if rows %}
 <table class="dca-nom-table"><thead><tr><th>Category</th><th>Nominee</th><th>Submissions</th><th>Review</th></tr></thead><tbody>
 {% for nominee, category_name, total in rows %}
@@ -30,4 +44,9 @@
 {% endfor %}</select><button type="submit">Save</button></form>
 </td></tr>{% endfor %}</tbody></table>
 {% else %}<p>No nominations have been submitted yet. This is expected while public nominations are closed.</p>{% endif %}
+<nav class="lf-nom-pagination" aria-label="Nomination review pages">
+{% if page > 1 %}<a href="{{ url_for('admin_dca_nominations', page=page-1, q=search, status=status) }}">← PREVIOUS</a>{% endif %}
+<span>PAGE {{ page }} OF {{ pages }}</span>
+{% if page < pages %}<a href="{{ url_for('admin_dca_nominations', page=page+1, q=search, status=status) }}">NEXT →</a>{% endif %}
+</nav>
 </main></body></html>

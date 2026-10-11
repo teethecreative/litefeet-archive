@@ -22,6 +22,7 @@
 
     <link rel="stylesheet"
           href="{{ url_for('static', filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/compact-collections.css') }}">
 </head>
 
 
@@ -240,7 +241,7 @@
 
     <div class="admin-voter-table-wrap">
 
-        <table class="admin-voter-table">
+        <div class="lf-compact-host" data-lf-compact="tbody tr"><table class="admin-voter-table">
 
             <thead>
                 <tr>
@@ -292,7 +293,7 @@
 
             </tbody>
 
-        </table>
+        </table></div>
 
     </div>
 
@@ -332,7 +333,7 @@
 
     {% if suggestions %}
 
-        <div class="moderation-list">
+        <div class="moderation-list" data-lf-compact=".moderation-card">
 
         {% for suggestion in suggestions %}
 
@@ -657,5 +658,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+<script defer src="{{ url_for('static', filename='js/compact-collections.js') }}"></script>
 </body>
 </html>

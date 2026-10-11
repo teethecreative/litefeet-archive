@@ -29,6 +29,7 @@
         rel="stylesheet"
         href="{{ url_for('static', filename='css/dca.css') }}"
     >
+<link rel="stylesheet" href="{{ url_for('static', filename='css/compact-collections.css') }}">
 </head>
 
 <body>
@@ -118,7 +119,7 @@
         remains open.
     </p>
 
-    <div class="round2-preview-grid">
+    <div class="round2-preview-grid" data-lf-compact=".round2-preview-card">
 
         {% for item in category_items %}
 
@@ -219,7 +220,7 @@
 
     {% if approved_suggestions %}
 
-    <div class="round2-suggestion-list">
+    <div class="round2-suggestion-list" data-lf-compact=".round2-suggestion-item">
 
         {% for suggestion in approved_suggestions %}
 
@@ -336,5 +337,6 @@
 
 {% include "_footer.html" %}
 
+<script defer src="{{ url_for('static', filename='js/compact-collections.js') }}"></script>
 </body>
 </html>

@@ -16,6 +16,7 @@
         rel="stylesheet"
         href="{{ url_for('static', filename='css/dca.css') }}"
     >
+<link rel="stylesheet" href="{{ url_for('static', filename='css/compact-collections.css') }}">
 </head>
 
 <body>
@@ -54,7 +55,7 @@
 
         {% if eras %}
 
-            <div class="ledger-era-list">
+            <div class="ledger-era-list" data-lf-compact=".ledger-era-card">
 
                 {% for era in eras %}
 
@@ -146,5 +147,6 @@
 
 </main>
 
+<script defer src="{{ url_for('static', filename='js/compact-collections.js') }}"></script>
 </body>
 </html>

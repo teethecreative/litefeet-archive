@@ -1759,18 +1759,45 @@ def admin_dca_nominations():
                 abort(400, description="Unsupported action")
             return redirect(url_for("admin_dca_nominations"))
 
-        rows = (
+        # Server-side pagination: do not render the full nomination archive.
+        from sqlalchemy import or_
+        search = request.args.get("q", "").strip()[:100]
+        status = request.args.get("status", "all").strip().lower()
+        if status not in {"all", "pending", "approved", "rejected"}:
+            status = "all"
+        try:
+            page = max(1, min(int(request.args.get("page", "1")), 100000))
+        except (TypeError, ValueError):
+            page = 1
+        page_size = 15
+        query = (
             db.query(DCANominee, DCACategory.name, func.count(DCANominationSubmission.id))
             .join(DCACategory, DCACategory.id == DCANominee.category_id)
             .outerjoin(DCANominationSubmission,
                        DCANominationSubmission.nominee_id == DCANominee.id)
             .filter(DCANominee.edition_id == edition.id,
                     DCACategory.edition_id == edition.id)
-            .group_by(DCANominee.id, DCACategory.name)
-            .order_by(DCACategory.name.asc(), DCANominee.name.asc())
-            .all()
         )
-        return render_template("admin_dca_nominations.html", rows=rows)
+        if status != "all":
+            query = query.filter(DCANominee.moderation_status == status)
+        if search:
+            pattern = "%" + search.replace("%", "\\%").replace("_", "\\_") + "%"
+            query = query.filter(or_(
+                DCANominee.name.ilike(pattern, escape="\\"),
+                DCACategory.name.ilike(pattern, escape="\\"),
+            ))
+        total = query.with_entities(func.count(func.distinct(DCANominee.id))).scalar() or 0
+        pages = max(1, (total + page_size - 1) // page_size)
+        page = min(page, pages)
+        rows = (
+            query.group_by(DCANominee.id, DCACategory.name)
+            .order_by(DCACategory.name.asc(), DCANominee.name.asc(), DCANominee.id.asc())
+            .offset((page - 1) * page_size).limit(page_size).all()
+        )
+        return render_template(
+            "admin_dca_nominations.html", rows=rows, search=search,
+            status=status, page=page, pages=pages, total=total,
+        )
     finally:
         db.close()
 

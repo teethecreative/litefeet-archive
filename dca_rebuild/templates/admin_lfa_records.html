@@ -27,6 +27,7 @@
         rel="stylesheet"
         href="{{ url_for('static', filename='css/dca.css') }}"
     >
+<link rel="stylesheet" href="{{ url_for('static', filename='css/compact-collections.css') }}">
 </head>
 
 <body>
@@ -59,7 +60,7 @@
 
 {% if records %}
 
-<div class="admin-lfa-table-wrap">
+<div class="admin-lfa-table-wrap" data-lf-compact="tbody tr">
 <table class="admin-lfa-table">
 
 <thead>
@@ -135,5 +136,6 @@
 
 </main>
 
+<script defer src="{{ url_for('static', filename='js/compact-collections.js') }}"></script>
 </body>
 </html>
