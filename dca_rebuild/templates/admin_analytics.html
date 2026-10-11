@@ -1,146 +1,266 @@
-
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Visitor Analytics | The LiteFeet Vault</title>
-<style>
-body {
-    font-family: system-ui, sans-serif;
-    max-width: 1100px;
-    margin: 32px auto;
-    padding: 0 18px;
-    background: #111;
-    color: #f5f5f5;
-}
-a { color: #a9caff; }
-h1, h2 { margin-top: 28px; }
-.cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 14px;
-}
-.card {
-    background: #202020;
-    border: 1px solid #383838;
-    border-radius: 12px;
-    padding: 18px;
-}
-.number { font-size: 28px; font-weight: 700; }
-form { margin: 20px 0; }
-input, select, button {
-    padding: 10px;
-    margin: 4px;
-    border-radius: 6px;
-}
-table { width: 100%; border-collapse: collapse; }
-th, td {
-    text-align: left;
-    padding: 12px 8px;
-    border-bottom: 1px solid #383838;
-    overflow-wrap: anywhere;
-}
-th { color: #ccc; }
-.note { color: #aaa; }
-.table-wrap { overflow-x: auto; }
-</style>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Analytics | The LiteFeet Vault</title>
+<script>
+(function () {
+    const saved = localStorage.getItem("litefeet-ledger-theme");
+    document.documentElement.dataset.theme =
+        saved === "dark" ? "dark" : "light";
+})();
+</script>
+<link rel="stylesheet"
+href="{{ url_for('static', filename='css/dca.css') }}">
 </head>
-<body>
-<a href="{{ url_for('admin_round1') }}">Back to DCA Admin</a>
-<h1>Visitor Analytics</h1>
-<p class="note">
-Session-based website analytics. Data collection began
-when Phase 6A was deployed.
-</p>
+<body class="ledger-admin">
 
-<form method="get">
-<label for="period">Period</label>
-<select id="period" name="period">
-{% for value, label in [
-    ('day','Today'), ('week','Last 7 days'),
-    ('month','This month'), ('year','This year'),
-    ('custom','Custom')
-] %}
-<option value="{{ value }}"
-{% if period == value %}selected{% endif %}>{{ label }}</option>
-{% endfor %}
-</select>
-<label for="start">Start</label>
-<input id="start" type="date" name="start"
-value="{{ start_day.isoformat() }}">
-<label for="end">End</label>
-<input id="end" type="date" name="end"
-value="{{ end_day.isoformat() }}">
-<button type="submit">Apply</button>
-</form>
+{% include "_admin_navigation.html" %}
 
-<p>{{ start_day }} through {{ end_day }}</p>
-<div class="cards">
-<div class="card">
-<div>Page views</div>
-<div class="number">{{ total_views }}</div>
-</div>
-<div class="card">
-<div>Visits</div>
-<div class="number">{{ total_visits }}</div>
-</div>
-<div class="card">
-<div>Session visitors</div>
-<div class="number">{{ unique_visitors }}</div>
-</div>
-</div>
+<main class="admin-control-room ledger-analytics">
 
-<h2>Most Viewed Pages</h2>
-<div class="table-wrap">
-<table>
-<thead><tr><th>Page</th><th>Views</th></tr></thead>
-<tbody>
-{% for path, count in popular_pages %}
-<tr><td>{{ path }}</td><td>{{ count }}</td></tr>
-{% else %}
-<tr><td colspan="2">No page views recorded in this period.</td></tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
+<header class="admin-control-room__header">
+    <div class="label">THE LITEFEET VAULT · ADMIN</div>
+    <h1>VISITOR<br>ANALYTICS</h1>
+    <p class="lead">
+        Understand how visitors explore the Vault,
+        its awards, archives, and public content.
+    </p>
+    <div class="analytics-header-links">
+        <a href="{{ url_for('admin_dashboard') }}">
+            ← CONTROL ROOM
+        </a>
+        <span>SESSION-BASED ANALYTICS</span>
+    </div>
+</header>
 
-<h2>Visitor Directory</h2>
-<form method="get">
-<input type="hidden" name="period" value="{{ period }}">
-<input type="hidden" name="start" value="{{ start_day }}">
-<input type="hidden" name="end" value="{{ end_day }}">
-<input name="q" value="{{ search }}"
-placeholder="Search visitor ID or top page">
-<button type="submit">Search</button>
-</form>
+<section class="admin-module-section">
+    <div class="admin-section-heading">
+        <div class="label">01 · TRAFFIC OVERVIEW</div>
+        <h2>OVERVIEW</h2>
+        <p>Explore recorded website activity by date.</p>
+    </div>
 
-<p class="note">
-Showing up to 100 session identifiers.
-First and last activity are within the selected date range.
-</p>
-<div class="table-wrap">
-<table>
-<thead>
-<tr>
-<th>Visitor ID</th><th>Views</th><th>Visits</th>
-<th>Most Viewed</th><th>Last Activity (UTC)</th>
-</tr>
-</thead>
-<tbody>
-{% for visitor in visitors %}
-<tr>
-<td>{{ visitor.id[:12] }}...</td>
-<td>{{ visitor.views }}</td>
-<td>{{ visitor.visits }}</td>
-<td>{{ visitor.top_page }}</td>
-<td>{{ visitor.last.strftime('%Y-%m-%d %H:%M') }}</td>
-</tr>
-{% else %}
-<tr><td colspan="5">No matching visitors.</td></tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
+    <form method="get" class="analytics-filters">
+        <label>
+            PERIOD
+            <select id="analytics-period" name="period">
+                {% for value, label in [
+                    ('day','Today'),
+                    ('week','Last 7 days'),
+                    ('month','This month'),
+                    ('year','This year'),
+                    ('custom','Custom dates')
+                ] %}
+                <option value="{{ value }}"
+                {% if period == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <div id="analytics-custom-dates"
+             class="analytics-date-fields"
+             {% if period != 'custom' %}hidden{% endif %}>
+            <label>
+                FROM
+                <input type="date" name="start"
+                       value="{{ start_day.isoformat() }}">
+            </label>
+            <label>
+                THROUGH
+                <input type="date" name="end"
+                       value="{{ end_day.isoformat() }}">
+            </label>
+        </div>
+
+        <button type="submit">APPLY →</button>
+    </form>
+
+    <p class="analytics-period-label">
+        {{ start_day }} — {{ end_day }} · NEW YORK TIME
+    </p>
+
+    <div class="analytics-metrics">
+        <article class="analytics-metric">
+            <div class="label">PAGE VIEWS</div>
+            <strong>{{ total_views }}</strong>
+            <span>Public pages loaded</span>
+        </article>
+
+        <article class="analytics-metric">
+            <div class="label">VISITS</div>
+            <strong>{{ total_visits }}</strong>
+            <span>Recorded visit starts</span>
+        </article>
+
+        <article class="analytics-metric">
+            <div class="label">SESSION VISITORS</div>
+            <strong>{{ unique_visitors }}</strong>
+            <span>Distinct session identifiers</span>
+        </article>
+
+        <article class="analytics-metric">
+            <div class="label">PAGES PER VISIT</div>
+            <strong>
+                {% if total_visits %}
+                    {{ "%.2f"|format(total_views / total_visits) }}
+                {% else %}
+                    —
+                {% endif %}
+            </strong>
+            <span>Views divided by recorded visits</span>
+        </article>
+    </div>
+</section>
+
+<section class="admin-module-section">
+    <div class="admin-section-heading">
+        <div class="label">02 · ACTIVITY</div>
+        <h2>TRAFFIC TREND</h2>
+        <p>Daily page views within the selected period.</p>
+    </div>
+
+    {% set max_views = analytics_daily
+        |map(attribute='views')|max if analytics_daily else 0 %}
+
+    <div class="analytics-chart" role="img"
+         aria-label="Daily page views">
+        {% for day in analytics_daily %}
+        <div class="analytics-chart-column"
+             title="{{ day.date }}: {{ day.views }} views">
+            <div class="analytics-chart-bar"
+                 style="height:{{ (
+                    day.views / max_views * 100
+                    if max_views else 0
+                 )|round(1) }}%">
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="analytics-chart-axis">
+        <span>{{ start_day }}</span>
+        <span>{{ end_day }}</span>
+    </div>
+
+    {% if not total_views %}
+    <p class="analytics-empty">
+        No recorded page views for this period.
+    </p>
+    {% endif %}
+</section>
+
+<section class="admin-module-section">
+    <div class="admin-section-heading">
+        <div class="label">03 · CONTENT PERFORMANCE</div>
+        <h2>TOP PAGES</h2>
+        <p>Public pages ranked by recorded views.</p>
+    </div>
+
+    <div class="analytics-table-wrap">
+        <table class="analytics-table">
+            <thead>
+                <tr>
+                    <th>PAGE</th>
+                    <th>VIEWS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for path, count in popular_pages %}
+                <tr>
+                    <td>{{ path }}</td>
+                    <td>{{ count }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2">NO ACTIVITY RECORDED</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="admin-module-section">
+    <div class="admin-section-heading">
+        <div class="label">04 · VISITOR ACTIVITY</div>
+        <h2>VISITOR DIRECTORY</h2>
+        <p>
+            Anonymous browser-session activity.
+            These records do not identify individual people.
+        </p>
+    </div>
+
+    <form method="get" class="analytics-search">
+        <input type="hidden" name="period" value="{{ period }}">
+        <input type="hidden" name="start" value="{{ start_day }}">
+        <input type="hidden" name="end" value="{{ end_day }}">
+        <label>
+            SEARCH SESSION OR PAGE
+            <input name="q" value="{{ search }}"
+                   placeholder="Visitor ID or page path">
+        </label>
+        <button type="submit">SEARCH →</button>
+    </form>
+
+    <div class="analytics-table-wrap">
+        <table class="analytics-table">
+            <thead>
+                <tr>
+                    <th>SESSION</th>
+                    <th>VIEWS</th>
+                    <th>VISITS</th>
+                    <th>TOP PAGE</th>
+                    <th>LAST ACTIVITY · NY</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for visitor in visitors %}
+                <tr>
+                    <td>
+                        <code>{{ visitor.id[:12] }}…</code>
+                    </td>
+                    <td>{{ visitor.views }}</td>
+                    <td>{{ visitor.visits }}</td>
+                    <td>{{ visitor.top_page }}</td>
+                    <td>
+                        {{ visitor.last.replace(
+                            tzinfo=utc_timezone
+                        ).astimezone(
+                            ny_timezone
+                        ).strftime('%b %d, %Y · %I:%M %p') }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">NO MATCHING SESSIONS</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <p class="analytics-footnote">
+        Displaying up to 100 sessions. Detailed filtering,
+        pagination, and session profiles are planned for Phase 6C.
+    </p>
+</section>
+
+</main>
+
+<script>
+(function () {
+    const period = document.getElementById("analytics-period");
+    const dates = document.getElementById("analytics-custom-dates");
+    function updateDates() {
+        dates.hidden = period.value !== "custom";
+    }
+    period.addEventListener("change", updateDates);
+    updateDates();
+})();
+</script>
 </body>
 </html>

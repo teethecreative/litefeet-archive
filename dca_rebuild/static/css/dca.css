@@ -4303,3 +4303,167 @@ textarea {
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
+
+/* LEDGER ANALYTICS */
+.ledger-analytics .analytics-header-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 25px;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .08em;
+}
+.ledger-analytics .analytics-header-links a {
+    color: var(--gold-light);
+}
+.ledger-analytics .analytics-filters,
+.ledger-analytics .analytics-search {
+    display: flex;
+    align-items: end;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin: 22px 0;
+}
+.ledger-analytics .analytics-filters label,
+.ledger-analytics .analytics-search label {
+    display: grid;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .1em;
+}
+.ledger-analytics .analytics-date-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.ledger-analytics .analytics-date-fields[hidden] {
+    display: none;
+}
+.ledger-analytics input,
+.ledger-analytics select {
+    max-width: 100%;
+    padding: 12px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+}
+.ledger-analytics button {
+    padding: 13px 20px;
+    background: var(--blue);
+    color: white;
+    border: 0;
+    border-radius: 5px;
+    font-weight: 900;
+    cursor: pointer;
+}
+.ledger-analytics .analytics-period-label,
+.ledger-analytics .analytics-footnote {
+    color: var(--muted);
+    font-size: 12px;
+}
+.ledger-analytics .analytics-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 25px;
+}
+.ledger-analytics .analytics-metric {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--gold);
+    padding: 20px;
+    display: grid;
+    gap: 10px;
+}
+.ledger-analytics .analytics-metric .label {
+    color: var(--muted);
+}
+.ledger-analytics .analytics-metric strong {
+    font-size: clamp(25px, 3vw, 42px);
+    color: var(--text);
+}
+.ledger-analytics .analytics-metric span {
+    color: var(--muted);
+    font-size: 12px;
+}
+.ledger-analytics .analytics-chart {
+    height: 210px;
+    display: flex;
+    align-items: end;
+    gap: 3px;
+    border-bottom: 1px solid var(--border);
+    background: repeating-linear-gradient(
+        to top,
+        transparent 0,
+        transparent 51px,
+        var(--border) 52px
+    );
+    margin-top: 24px;
+}
+.ledger-analytics .analytics-chart-column {
+    height: 100%;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: end;
+}
+.ledger-analytics .analytics-chart-bar {
+    width: 100%;
+    background: var(--blue-2);
+    min-height: 0;
+}
+html[data-theme="dark"]
+.ledger-analytics .analytics-chart-bar {
+    background: var(--gold);
+}
+.ledger-analytics .analytics-chart-axis {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.ledger-analytics .analytics-empty {
+    color: var(--muted);
+}
+.ledger-analytics .analytics-table-wrap {
+    overflow-x: auto;
+    margin-top: 18px;
+}
+.ledger-analytics .analytics-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.ledger-analytics .analytics-table th,
+.ledger-analytics .analytics-table td {
+    text-align: left;
+    padding: 15px 12px;
+    border-bottom: 1px solid var(--border);
+    overflow-wrap: anywhere;
+}
+.ledger-analytics .analytics-table th {
+    font-size: 11px;
+    letter-spacing: .1em;
+    color: var(--muted);
+}
+.ledger-analytics .analytics-table code {
+    color: var(--text);
+}
+@media (max-width: 800px) {
+    .ledger-analytics .analytics-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 480px) {
+    .ledger-analytics .analytics-metrics {
+        grid-template-columns: 1fr;
+    }
+    .ledger-analytics .analytics-chart {
+        height: 150px;
+    }
+}

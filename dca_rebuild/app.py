@@ -4016,6 +4016,24 @@ def admin_analytics():
                 or search in record["top_page"].lower()
             ]
 
+        daily_counts = Counter(
+            row.viewed_at.replace(
+                tzinfo=ZoneInfo("UTC")
+            ).astimezone(
+                timezone
+            ).date()
+            for row in rows
+        )
+
+        analytics_daily = []
+        current_day = start_day
+        while current_day <= end_day:
+            analytics_daily.append({
+                "date": current_day.isoformat(),
+                "views": daily_counts.get(current_day, 0),
+            })
+            current_day += timedelta(days=1)
+
         return render_template(
             "admin_analytics.html",
             period=period,
@@ -4027,6 +4045,9 @@ def admin_analytics():
             ),
             unique_visitors=len(visitor_data),
             popular_pages=page_counts.most_common(20),
+            analytics_daily=analytics_daily,
+            utc_timezone=ZoneInfo("UTC"),
+            ny_timezone=timezone,
             visitors=visitors[:100],
             search=search,
         )
