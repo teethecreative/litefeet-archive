@@ -497,6 +497,45 @@
 </section>
 
 
+
+<section class="admin-final-review">
+    <h2>FINAL CATEGORY REVIEW</h2>
+    <p>
+        This is a preview of your saved category selections.
+        Nothing has been finalized or published.
+    </p>
+
+    <p>
+        <strong>{{ final_review|length }}</strong>
+        categories currently selected.
+    </p>
+
+    {% if final_review_has_duplicates %}
+    <p>
+        WARNING: Duplicate category names detected.
+        Resolve these before finalization.
+    </p>
+    {% endif %}
+
+    {% for item in final_review %}
+    <div class="moderation-card">
+        <strong>{{ item.name }}</strong>
+        <p>{{ item.source }}</p>
+
+        {% if item.duplicate_warning %}
+        <p>POSSIBLE DUPLICATE — REVIEW</p>
+        {% endif %}
+    </div>
+    {% else %}
+    <p>No categories selected yet.</p>
+    {% endfor %}
+
+    <p>
+        Finalization is not enabled yet.
+        Review your draft selections above.
+    </p>
+</section>
+
 </main>
 
 

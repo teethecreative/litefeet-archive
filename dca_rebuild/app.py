@@ -1309,6 +1309,33 @@ def admin_round1():
                 item["key"], item["default_selected"]
             )
 
+
+        # Read-only final review of currently eligible draft selections.
+        final_review = [
+            item for item in shortlist if item["selected"]
+        ]
+
+        name_counts = {}
+        for item in final_review:
+            normalized = " ".join(
+                item["name"].casefold().split()
+            )
+            name_counts[normalized] = (
+                name_counts.get(normalized, 0) + 1
+            )
+
+        for item in final_review:
+            normalized = " ".join(
+                item["name"].casefold().split()
+            )
+            item["duplicate_warning"] = (
+                name_counts[normalized] > 1
+            )
+
+        final_review_has_duplicates = any(
+            item["duplicate_warning"] for item in final_review
+        )
+
         return render_template(
             "admin_round1.html",
             submission_count=submission_count,
@@ -1317,6 +1344,8 @@ def admin_round1():
             return_results=return_results,
             suggestions=suggestions,
             shortlist=shortlist,
+            final_review=final_review,
+            final_review_has_duplicates=final_review_has_duplicates,
             method_counts=method_counts,
             method_labels=method_labels,
             merge_targets=merge_targets,
