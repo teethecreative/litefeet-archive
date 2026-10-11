@@ -3910,3 +3910,125 @@ def admin_archive_timeline():
         "admin_archive_timeline.html",
         era_admin_available=era_admin_available,
     )
+
+
+@app.route("/admin/analytics")
+@admin_login_required
+def admin_analytics():
+    from collections import Counter
+    from datetime import date
+
+    period = request.args.get("period", "week")
+    today = datetime.now(ZoneInfo("America/New_York")).date()
+
+    if period == "day":
+        start_day = today
+        end_day = today
+    elif period == "month":
+        start_day = today.replace(day=1)
+        end_day = today
+    elif period == "year":
+        start_day = today.replace(month=1, day=1)
+        end_day = today
+    elif period == "custom":
+        try:
+            start_day = date.fromisoformat(request.args["start"])
+            end_day = date.fromisoformat(request.args["end"])
+        except (KeyError, ValueError):
+            abort(400)
+        if start_day > end_day or (end_day - start_day).days > 366:
+            abort(400)
+    else:
+        period = "week"
+        start_day = today - timedelta(days=6)
+        end_day = today
+
+    timezone = ZoneInfo("America/New_York")
+    start_local = datetime.combine(
+        start_day, datetime.min.time(), tzinfo=timezone
+    )
+    end_local = datetime.combine(
+        end_day + timedelta(days=1),
+        datetime.min.time(),
+        tzinfo=timezone,
+    )
+    start_utc = start_local.astimezone(
+        ZoneInfo("UTC")
+    ).replace(tzinfo=None)
+    end_utc = end_local.astimezone(
+        ZoneInfo("UTC")
+    ).replace(tzinfo=None)
+
+    db = SessionLocal()
+    try:
+        rows = (
+            db.query(LedgerPageView)
+            .filter(
+                LedgerPageView.viewed_at >= start_utc,
+                LedgerPageView.viewed_at < end_utc,
+            )
+            .order_by(LedgerPageView.viewed_at.desc())
+            .all()
+        )
+
+        page_counts = Counter(row.path for row in rows)
+        visitor_data = {}
+
+        for row in rows:
+            record = visitor_data.setdefault(
+                row.visitor_id,
+                {
+                    "id": row.visitor_id,
+                    "views": 0,
+                    "visits": 0,
+                    "paths": Counter(),
+                    "first": row.viewed_at,
+                    "last": row.viewed_at,
+                },
+            )
+            record["views"] += 1
+            record["visits"] += int(row.is_new_visit)
+            record["paths"][row.path] += 1
+            record["first"] = min(
+                record["first"], row.viewed_at
+            )
+            record["last"] = max(
+                record["last"], row.viewed_at
+            )
+
+        visitors = []
+        for record in visitor_data.values():
+            record["top_page"] = (
+                record["paths"].most_common(1)[0][0]
+            )
+            visitors.append(record)
+
+        visitors.sort(
+            key=lambda record: record["last"],
+            reverse=True,
+        )
+
+        search = request.args.get("q", "").strip().lower()
+        if search:
+            visitors = [
+                record for record in visitors
+                if search in record["id"].lower()
+                or search in record["top_page"].lower()
+            ]
+
+        return render_template(
+            "admin_analytics.html",
+            period=period,
+            start_day=start_day,
+            end_day=end_day,
+            total_views=len(rows),
+            total_visits=sum(
+                int(row.is_new_visit) for row in rows
+            ),
+            unique_visitors=len(visitor_data),
+            popular_pages=page_counts.most_common(20),
+            visitors=visitors[:100],
+            search=search,
+        )
+    finally:
+        db.close()

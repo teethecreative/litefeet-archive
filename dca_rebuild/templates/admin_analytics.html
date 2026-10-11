@@ -1,0 +1,146 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visitor Analytics | The LiteFeet Vault</title>
+<style>
+body {
+    font-family: system-ui, sans-serif;
+    max-width: 1100px;
+    margin: 32px auto;
+    padding: 0 18px;
+    background: #111;
+    color: #f5f5f5;
+}
+a { color: #a9caff; }
+h1, h2 { margin-top: 28px; }
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+}
+.card {
+    background: #202020;
+    border: 1px solid #383838;
+    border-radius: 12px;
+    padding: 18px;
+}
+.number { font-size: 28px; font-weight: 700; }
+form { margin: 20px 0; }
+input, select, button {
+    padding: 10px;
+    margin: 4px;
+    border-radius: 6px;
+}
+table { width: 100%; border-collapse: collapse; }
+th, td {
+    text-align: left;
+    padding: 12px 8px;
+    border-bottom: 1px solid #383838;
+    overflow-wrap: anywhere;
+}
+th { color: #ccc; }
+.note { color: #aaa; }
+.table-wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<a href="{{ url_for('admin_round1') }}">Back to DCA Admin</a>
+<h1>Visitor Analytics</h1>
+<p class="note">
+Session-based website analytics. Data collection began
+when Phase 6A was deployed.
+</p>
+
+<form method="get">
+<label for="period">Period</label>
+<select id="period" name="period">
+{% for value, label in [
+    ('day','Today'), ('week','Last 7 days'),
+    ('month','This month'), ('year','This year'),
+    ('custom','Custom')
+] %}
+<option value="{{ value }}"
+{% if period == value %}selected{% endif %}>{{ label }}</option>
+{% endfor %}
+</select>
+<label for="start">Start</label>
+<input id="start" type="date" name="start"
+value="{{ start_day.isoformat() }}">
+<label for="end">End</label>
+<input id="end" type="date" name="end"
+value="{{ end_day.isoformat() }}">
+<button type="submit">Apply</button>
+</form>
+
+<p>{{ start_day }} through {{ end_day }}</p>
+<div class="cards">
+<div class="card">
+<div>Page views</div>
+<div class="number">{{ total_views }}</div>
+</div>
+<div class="card">
+<div>Visits</div>
+<div class="number">{{ total_visits }}</div>
+</div>
+<div class="card">
+<div>Session visitors</div>
+<div class="number">{{ unique_visitors }}</div>
+</div>
+</div>
+
+<h2>Most Viewed Pages</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Page</th><th>Views</th></tr></thead>
+<tbody>
+{% for path, count in popular_pages %}
+<tr><td>{{ path }}</td><td>{{ count }}</td></tr>
+{% else %}
+<tr><td colspan="2">No page views recorded in this period.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<h2>Visitor Directory</h2>
+<form method="get">
+<input type="hidden" name="period" value="{{ period }}">
+<input type="hidden" name="start" value="{{ start_day }}">
+<input type="hidden" name="end" value="{{ end_day }}">
+<input name="q" value="{{ search }}"
+placeholder="Search visitor ID or top page">
+<button type="submit">Search</button>
+</form>
+
+<p class="note">
+Showing up to 100 session identifiers.
+First and last activity are within the selected date range.
+</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Visitor ID</th><th>Views</th><th>Visits</th>
+<th>Most Viewed</th><th>Last Activity (UTC)</th>
+</tr>
+</thead>
+<tbody>
+{% for visitor in visitors %}
+<tr>
+<td>{{ visitor.id[:12] }}...</td>
+<td>{{ visitor.views }}</td>
+<td>{{ visitor.visits }}</td>
+<td>{{ visitor.top_page }}</td>
+<td>{{ visitor.last.strftime('%Y-%m-%d %H:%M') }}</td>
+</tr>
+{% else %}
+<tr><td colspan="5">No matching visitors.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</body>
+</html>
