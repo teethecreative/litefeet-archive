@@ -490,79 +490,96 @@
 
 
 
-<section class="admin-shortlist-preview">
-    <h2>DCA CATEGORY SELECTION DRAFT</h2>
-    <p>
-        Select the categories you want to keep.
-        This is a draft only. Saving does not finalize or publish anything.
-    </p>
-
-    <form method="post"
-          action="{{ url_for('save_dca_category_draft') }}">
-        <input type="hidden" name="csrf_token"
-               value="{{ dca_moderation_csrf }}">
-
-        {% for item in shortlist %}
-        <label class="moderation-card">
-            <input type="checkbox"
-                   name="category_key"
-                   value="{{ item.key }}"
-                   {% if item.selected %}checked{% endif %}>
-            <strong>{{ item.name }}</strong>
-            <span>{{ item.source }}</span>
-
-            {% if item.source == "RETURNING" %}
-            <span>YES {{ item.yes }} / NO {{ item.no }}</span>
-            {% endif %}
-        </label>
-        {% else %}
-        <p>No eligible categories available.</p>
-        {% endfor %}
-
-        <button type="submit">SAVE CATEGORY DRAFT</button>
-    </form>
-</section>
-
-
-
-<section class="admin-final-review">
-    <h2>FINAL CATEGORY REVIEW</h2>
-    <p>
-        This is a preview of your saved category selections.
-        Nothing has been finalized or published.
-    </p>
-
-    <p>
-        <strong>{{ final_review|length }}</strong>
-        categories currently selected.
-    </p>
-
-    {% if final_review_has_duplicates %}
-    <p>
-        WARNING: Duplicate category names detected.
-        Resolve these before finalization.
-    </p>
-    {% endif %}
-
-    {% for item in final_review %}
-    <div class="moderation-card">
-        <strong>{{ item.name }}</strong>
-        <p>{{ item.source }}</p>
-
-        {% if item.duplicate_warning %}
-        <p>POSSIBLE DUPLICATE — REVIEW</p>
-        {% endif %}
-    </div>
+<style id="dca-compact-admin-v1">
+.dca-compact-section {box-sizing:border-box;max-width:100%;min-width:0;overflow:hidden}
+.dca-compact-section *, .dca-compact-section *::before,.dca-compact-section *::after{box-sizing:border-box}
+.dca-compact-section .dca-compact-toolbar{display:flex;flex-wrap:wrap;gap:12px;margin:20px 0;align-items:center}
+.dca-compact-section .dca-compact-toolbar input,.dca-compact-section .dca-compact-toolbar select{flex:1 1 180px;min-width:0;width:auto;max-width:100%;padding:12px;border:1px solid #b7c2d0;background:var(--input-bg,#f0f3f7);color:var(--text,#0a1932);font:inherit}
+.dca-compact-section .dca-compact-list{display:block;max-height:420px;overflow-y:auto;overflow-x:hidden;border:1px solid #b7c2d0;border-top:3px solid #cca224;background:transparent}
+.dca-compact-section .dca-compact-row{display:flex!important;align-items:center;gap:12px;min-width:0;width:100%;max-width:100%;padding:12px 14px!important;margin:0!important;border:0!important;border-bottom:1px solid #b7c2d0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;min-height:0!important;position:static!important;float:none!important;transform:none!important}
+.dca-compact-section .dca-compact-row:last-child{border-bottom:0!important}
+.dca-compact-section .dca-compact-row input[type=checkbox]{flex:0 0 18px;width:18px;height:18px;margin:0;position:static;appearance:auto}
+.dca-compact-section .dca-compact-info{display:flex;flex:1 1 auto;flex-direction:column;min-width:0;gap:4px;overflow-wrap:anywhere}
+.dca-compact-section .dca-compact-name{font-size:1rem;line-height:1.4;font-weight:700}
+.dca-compact-section .dca-compact-meta{font-size:.75rem;line-height:1.4;letter-spacing:.03em;opacity:.75}
+.dca-compact-section .dca-compact-actions{display:flex;justify-content:flex-end;margin-top:16px}
+.dca-compact-section .dca-compact-actions button{padding:12px 20px;max-width:100%;background:#cca224;color:#091932;border:0;font-weight:800;cursor:pointer}
+.dca-compact-section .dca-compact-review{margin-top:16px;border:1px solid #b7c2d0;max-width:100%;overflow:hidden}
+.dca-compact-section .dca-compact-review summary{padding:15px;cursor:pointer;font-weight:700;background:transparent}
+.dca-compact-section .dca-compact-review ul{list-style:none;margin:0;padding:0;max-height:360px;overflow-y:auto}
+.dca-compact-section .dca-compact-review li{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;padding:10px 15px;border-top:1px solid #b7c2d0;overflow-wrap:anywhere}
+.dca-compact-section .dca-compact-review small{font-size:.75rem;opacity:.75}
+.dca-compact-section .dca-compact-empty{padding:14px;margin:0}
+@media(max-width:600px){.dca-compact-section .dca-compact-toolbar{flex-direction:column;align-items:stretch}.dca-compact-section .dca-compact-toolbar input,.dca-compact-section .dca-compact-toolbar select{flex:auto;width:100%}}
+</style>
+<section class="admin-shortlist-preview dca-compact-section">
+  <h2>DCA CATEGORY SELECTION DRAFT</h2>
+  <p>Review the category shortlist. Changes are saved only when you select Save Category Draft. Nothing is published.</p>
+  <div class="dca-compact-toolbar">
+    <input type="search" id="dca-category-search" placeholder="Search categories" aria-label="Search categories">
+    <select id="dca-category-filter" aria-label="Filter categories">
+      <option value="all">All categories</option>
+      <option value="RETURNING">Returning</option>
+      <option value="NEW">New suggestions</option>
+      <option value="selected">Selected only</option>
+    </select>
+  </div>
+  <form method="post" action="{{ url_for('save_dca_category_draft') }}">
+    <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">
+    <div class="dca-compact-list" id="dca-category-list">
+    {% for item in shortlist %}
+      <label class="dca-compact-row" data-name="{{ item.name|lower|e }}" data-source="{{ item.source|e }}">
+        <input type="checkbox" name="category_key" value="{{ item.key }}" {% if item.selected %}checked{% endif %}>
+        <span class="dca-compact-info">
+          <span class="dca-compact-name">{{ item.name }}</span>
+          <span class="dca-compact-meta">{{ item.source }}{% if item.yes is not none and item.no is not none %} · YES {{ item.yes }} / NO {{ item.no }}{% endif %}</span>
+        </span>
+      </label>
     {% else %}
-    <p>No categories selected yet.</p>
+      <p class="dca-compact-empty">No eligible categories available.</p>
     {% endfor %}
-
-    <p>
-        Finalization is not enabled yet.
-        Review your draft selections above.
-    </p>
+    </div>
+    <p id="dca-category-visible-count" aria-live="polite"></p>
+    <div class="dca-compact-actions"><button type="submit">SAVE CATEGORY DRAFT</button></div>
+  </form>
 </section>
-
+<section class="admin-final-review dca-compact-section">
+  <h2>FINAL CATEGORY REVIEW</h2>
+  <p><strong>{{ final_review|length }}</strong> categories currently selected. This is a preview, not a published list.</p>
+  {% if final_review_has_duplicates %}<p><strong>WARNING:</strong> Duplicate selected category names need review.</p>{% endif %}
+  <details class="dca-compact-review">
+    <summary>VIEW SELECTED CATEGORIES ({{ final_review|length }})</summary>
+    <ul>
+      {% for item in final_review %}
+      <li><span>{{ item.name }}{% if item.duplicate_warning %} — POSSIBLE DUPLICATE{% endif %}</span><small>{{ item.source }}</small></li>
+      {% else %}<li>No categories selected yet.</li>{% endfor %}
+    </ul>
+  </details>
+  <p>Finalization remains locked. Saving this draft does not open nominations.</p>
+</section>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const search=document.getElementById('dca-category-search');
+  const filter=document.getElementById('dca-category-filter');
+  const rows=Array.from(document.querySelectorAll('#dca-category-list .dca-compact-row'));
+  const count=document.getElementById('dca-category-visible-count');
+  if(!search||!filter||!count)return;
+  function update(){
+    const q=search.value.trim().toLowerCase();let shown=0;
+    rows.forEach(function(row){
+      const cb=row.querySelector('input[type=checkbox]');
+      const match=row.dataset.name.includes(q)&&(filter.value==='all'||(filter.value==='selected'?cb.checked:row.dataset.source===filter.value));
+      row.hidden=!match;
+      row.style.display=match?'flex':'none';
+      if(match)shown++;
+    });
+    count.textContent=shown+' of '+rows.length+' categories shown';
+  }
+  search.addEventListener('input',update);filter.addEventListener('change',update);
+  rows.forEach(row=>row.querySelector('input').addEventListener('change',update));
+  update();
+});
+</script>
 
 <section class="admin-finalization-readiness">
   <h2>FINALIZATION READINESS</h2>
