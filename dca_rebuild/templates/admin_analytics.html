@@ -48,7 +48,10 @@ href="{{ url_for('static', filename='css/dca.css') }}">
             <select id="analytics-period" name="period">
                 {% for value, label in [
                     ('day','Today'),
+                    ('yesterday','Yesterday'),
                     ('week','Last 7 days'),
+                    ('30days','Last 30 days'),
+                    ('90days','Last 90 days'),
                     ('month','This month'),
                     ('year','This year'),
                     ('custom','Custom dates')
@@ -120,12 +123,23 @@ href="{{ url_for('static', filename='css/dca.css') }}">
     <div class="admin-section-heading">
         <div class="label">02 · ACTIVITY</div>
         <h2>TRAFFIC TREND</h2>
-        <p>Daily page views within the selected period.</p>
+        <p>Page views and visit starts within the selected period.</p>
     </div>
 
     {% set max_views = analytics_daily
         |map(attribute='views')|max if analytics_daily else 0 %}
 
+    <div class="analytics-trend-tabs">
+        <button type="button" class="is-active"
+                data-trend="daily">DAILY</button>
+        <button type="button"
+                data-trend="weekly">WEEKLY</button>
+        <button type="button"
+                data-trend="monthly">MONTHLY</button>
+    </div>
+
+    <div class="analytics-trend-panel"
+         data-trend-panel="daily">
     <div class="analytics-chart" role="img"
          aria-label="Daily page views">
         {% for day in analytics_daily %}
@@ -145,6 +159,55 @@ href="{{ url_for('static', filename='css/dca.css') }}">
         <span>{{ start_day }}</span>
         <span>{{ end_day }}</span>
     </div>
+    </div>
+    <div class="analytics-trend-panel"
+         data-trend-panel="weekly" hidden>
+        {% set max_week = analytics_weekly
+            |map(attribute='views')|max
+            if analytics_weekly else 0 %}
+        <div class="analytics-chart"
+             role="img" aria-label="Weekly page views">
+            {% for item in analytics_weekly %}
+            <div class="analytics-chart-column"
+                 title="{{ item.label }}: {{ item.views }} views">
+                <div class="analytics-chart-bar"
+                     style="height:{{ (
+                        item.views / max_week * 100
+                        if max_week else 0
+                     )|round(1) }}%"></div>
+            </div>
+            {% endfor %}
+        </div>
+        <p class="analytics-footnote">
+            Weekly totals use Monday–Sunday weeks,
+            clipped to the selected date range.
+        </p>
+    </div>
+
+    <div class="analytics-trend-panel"
+         data-trend-panel="monthly" hidden>
+        {% set max_month = analytics_monthly
+            |map(attribute='views')|max
+            if analytics_monthly else 0 %}
+        <div class="analytics-chart"
+             role="img" aria-label="Monthly page views">
+            {% for item in analytics_monthly %}
+            <div class="analytics-chart-column"
+                 title="{{ item.label }}: {{ item.views }} views">
+                <div class="analytics-chart-bar"
+                     style="height:{{ (
+                        item.views / max_month * 100
+                        if max_month else 0
+                     )|round(1) }}%"></div>
+            </div>
+            {% endfor %}
+        </div>
+        <p class="analytics-footnote">
+            Monthly totals include only days in
+            the selected date range.
+        </p>
+    </div>
+
 
     {% if not total_views %}
     <p class="analytics-empty">
@@ -184,9 +247,134 @@ href="{{ url_for('static', filename='css/dca.css') }}">
     </div>
 </section>
 
+
 <section class="admin-module-section">
     <div class="admin-section-heading">
-        <div class="label">04 · VISITOR ACTIVITY</div>
+        <div class="label">04 · ENGAGEMENT</div>
+        <h2>SESSION ACTIVITY</h2>
+        <p>
+            First-seen and previously recorded browser
+            identifiers within the selected period.
+        </p>
+    </div>
+
+    <div class="analytics-metrics">
+        <article class="analytics-metric">
+            <div class="label">FIRST-SEEN SESSIONS</div>
+            <strong>{{ first_session_count }}</strong>
+            <span>No earlier recorded page view</span>
+        </article>
+        <article class="analytics-metric">
+            <div class="label">RETURNING SESSIONS</div>
+            <strong>{{ repeat_session_count }}</strong>
+            <span>Previously recorded browser identifier</span>
+        </article>
+        <article class="analytics-metric">
+            <div class="label">REPEAT SHARE</div>
+            <strong>
+                {% if unique_visitors %}
+                    {{ "%.1f"|format(
+                        repeat_session_count /
+                        unique_visitors * 100
+                    ) }}%
+                {% else %}
+                    0%
+                {% endif %}
+            </strong>
+            <span>Share of active session identifiers</span>
+        </article>
+    </div>
+
+    <p class="analytics-footnote">
+        Session identifiers are browser-based. Clearing cookies,
+        using another browser, or private browsing can create
+        a different identifier for the same person.
+    </p>
+</section>
+
+<section class="admin-module-section">
+    <div class="admin-section-heading">
+        <div class="label">05 · AUDIENCE PATTERNS</div>
+        <h2>BUSIEST HOURS</h2>
+        <p>Page views by hour in New York local time.</p>
+    </div>
+
+    {% set peak = analytics_hours
+        |map(attribute='views')|max
+        if analytics_hours else 0 %}
+
+    <div class="analytics-hours">
+        {% for item in analytics_hours %}
+        <div class="analytics-hour"
+             title="{{ '%02d:00'|format(item.hour) }}:
+                    {{ item.views }} views">
+            <div class="analytics-hour-bar"
+                 style="height:{{ (
+                    item.views / peak * 100
+                    if peak else 0
+                 )|round(1) }}%"></div>
+            <span>
+                {{ '%02d'|format(item.hour) }}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="analytics-table-wrap">
+        <table class="analytics-table">
+            <thead>
+                <tr><th>BUSIEST HOUR</th><th>VIEWS</th></tr>
+            </thead>
+            <tbody>
+            {% for item in busiest_hours if item.views %}
+                <tr>
+                    <td>{{ '%02d:00'|format(item.hour) }}
+                        – {{ '%02d:00'|format(
+                            (item.hour + 1) % 24
+                        ) }}</td>
+                    <td>{{ item.views }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="2">NO ACTIVITY RECORDED</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="admin-module-section">
+    <div class="admin-section-heading">
+        <div class="label">06 · PEAK TRAFFIC</div>
+        <h2>BUSIEST DAYS</h2>
+        <p>Highest-traffic dates in the selected period.</p>
+    </div>
+
+    <div class="analytics-table-wrap">
+        <table class="analytics-table">
+            <thead>
+                <tr><th>DATE</th><th>VIEWS</th></tr>
+            </thead>
+            <tbody>
+            {% for item in busiest_days if item.views %}
+                <tr>
+                    <td>{{ item.date }}</td>
+                    <td>{{ item.views }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="2">NO ACTIVITY RECORDED</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="admin-module-section">
+    <div class="admin-section-heading">
+        <div class="label">07 · VISITOR ACTIVITY</div>
         <h2>VISITOR DIRECTORY</h2>
         <p>
             <a href="{{ url_for('admin_analytics_visitors') }}">
@@ -226,7 +414,12 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                 {% for visitor in visitors %}
                 <tr>
                     <td>
-                        <code>{{ visitor.id[:12] }}…</code>
+                        <a href="{{ url_for(
+                            'admin_analytics_visitor',
+                            visitor_id=visitor.id
+                        ) }}">
+                            <code>{{ visitor.id[:12] }}…</code>
+                        </a>
                     </td>
                     <td>{{ visitor.views }}</td>
                     <td>{{ visitor.visits }}</td>
@@ -249,8 +442,9 @@ href="{{ url_for('static', filename='css/dca.css') }}">
     </div>
 
     <p class="analytics-footnote">
-        Displaying up to 100 sessions. Detailed filtering,
-        pagination, and session profiles are planned for Phase 6C.
+        Displaying up to 100 sessions for this date range.
+        Open a session above for its activity profile,
+        or use the full directory for sorting and pagination.
     </p>
 </section>
 
@@ -265,6 +459,31 @@ href="{{ url_for('static', filename='css/dca.css') }}">
     }
     period.addEventListener("change", updateDates);
     updateDates();
+
+    const trendButtons = document.querySelectorAll(
+        "[data-trend]"
+    );
+    const trendPanels = document.querySelectorAll(
+        "[data-trend-panel]"
+    );
+
+    trendButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+            const selected = button.dataset.trend;
+
+            trendButtons.forEach(function (item) {
+                item.classList.toggle(
+                    "is-active",
+                    item === button
+                );
+            });
+
+            trendPanels.forEach(function (panel) {
+                panel.hidden =
+                    panel.dataset.trendPanel !== selected;
+            });
+        });
+    });
 })();
 </script>
 </body>

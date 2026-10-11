@@ -3924,11 +3924,20 @@ def admin_analytics():
     if period == "day":
         start_day = today
         end_day = today
+    elif period == "yesterday":
+        start_day = today - timedelta(days=1)
+        end_day = start_day
     elif period == "month":
         start_day = today.replace(day=1)
         end_day = today
     elif period == "year":
         start_day = today.replace(month=1, day=1)
+        end_day = today
+    elif period == "30days":
+        start_day = today - timedelta(days=29)
+        end_day = today
+    elif period == "90days":
+        start_day = today - timedelta(days=89)
         end_day = today
     elif period == "custom":
         try:
@@ -3936,7 +3945,11 @@ def admin_analytics():
             end_day = date.fromisoformat(request.args["end"])
         except (KeyError, ValueError):
             abort(400)
-        if start_day > end_day or (end_day - start_day).days > 366:
+        if (
+            start_day > end_day
+            or (end_day - start_day).days > 366
+            or end_day > today
+        ):
             abort(400)
     else:
         period = "week"
@@ -4034,6 +4047,118 @@ def admin_analytics():
             })
             current_day += timedelta(days=1)
 
+        # PHASE 6D ENGAGEMENT
+        from collections import defaultdict
+
+        hourly_counts = Counter()
+        weekly_counts = Counter()
+        monthly_counts = Counter()
+        daily_visits = Counter()
+        first_session_ids = set()
+        repeat_session_ids = set()
+
+        for row in rows:
+            local_time = row.viewed_at.replace(
+                tzinfo=ZoneInfo("UTC")
+            ).astimezone(timezone)
+
+            hourly_counts[local_time.hour] += 1
+
+            week_start = (
+                local_time.date()
+                - timedelta(days=local_time.weekday())
+            )
+            weekly_counts[week_start] += 1
+
+            month_key = local_time.strftime("%Y-%m")
+            monthly_counts[month_key] += 1
+
+            if row.is_new_visit:
+                daily_visits[local_time.date()] += 1
+
+        all_session_ids = set(visitor_data)
+        previous_session_ids = set()
+
+        if all_session_ids:
+            previous_session_ids = {
+                visitor_id
+                for (visitor_id,) in (
+                    db.query(LedgerPageView.visitor_id)
+                    .filter(
+                        LedgerPageView.viewed_at < start_utc,
+                        LedgerPageView.visitor_id.in_(
+                            all_session_ids
+                        ),
+                    )
+                    .distinct()
+                    .all()
+                )
+            }
+
+        first_session_ids = (
+            all_session_ids - previous_session_ids
+        )
+        repeat_session_ids = previous_session_ids
+
+        analytics_hours = [
+            {"hour": hour, "views": hourly_counts[hour]}
+            for hour in range(24)
+        ]
+
+        analytics_weekly = []
+        week_cursor = (
+            start_day - timedelta(days=start_day.weekday())
+        )
+        while week_cursor <= end_day:
+            analytics_weekly.append({
+                "label": week_cursor.strftime("%b %d"),
+                "views": weekly_counts[week_cursor],
+            })
+            week_cursor += timedelta(days=7)
+
+        analytics_monthly = []
+        month_cursor = start_day.replace(day=1)
+        while month_cursor <= end_day:
+            key = month_cursor.strftime("%Y-%m")
+            analytics_monthly.append({
+                "label": month_cursor.strftime("%b %Y"),
+                "views": monthly_counts[key],
+            })
+            if month_cursor.month == 12:
+                month_cursor = month_cursor.replace(
+                    year=month_cursor.year + 1,
+                    month=1,
+                )
+            else:
+                month_cursor = month_cursor.replace(
+                    month=month_cursor.month + 1
+                )
+
+        analytics_daily_visits = []
+        day_cursor = start_day
+        while day_cursor <= end_day:
+            analytics_daily_visits.append({
+                "date": day_cursor.isoformat(),
+                "visits": daily_visits[day_cursor],
+            })
+            day_cursor += timedelta(days=1)
+
+        busiest_hours = sorted(
+            analytics_hours,
+            key=lambda item: (
+                -item["views"],
+                item["hour"],
+            ),
+        )[:5]
+
+        busiest_days = sorted(
+            analytics_daily,
+            key=lambda item: (
+                -item["views"],
+                item["date"],
+            ),
+        )[:5]
+
         return render_template(
             "admin_analytics.html",
             period=period,
@@ -4046,6 +4171,14 @@ def admin_analytics():
             unique_visitors=len(visitor_data),
             popular_pages=page_counts.most_common(20),
             analytics_daily=analytics_daily,
+            analytics_daily_visits=analytics_daily_visits,
+            analytics_weekly=analytics_weekly,
+            analytics_monthly=analytics_monthly,
+            analytics_hours=analytics_hours,
+            busiest_hours=busiest_hours,
+            busiest_days=busiest_days,
+            first_session_count=len(first_session_ids),
+            repeat_session_count=len(repeat_session_ids),
             utc_timezone=ZoneInfo("UTC"),
             ny_timezone=timezone,
             visitors=visitors[:100],
