@@ -17,6 +17,8 @@ from dca_rebuild.models import (
     DCACategory,
     DCACategorySuggestionSubmission,
     DCANewCategorySuggestion,
+    DCANewCategoryVote,
+    DCACategoryBallot,
     DCAReturnCategoryVote,
     DCAEdition,
     LFAArchiveSubmission,
@@ -308,6 +310,77 @@ def dca_categories_closed():
     return datetime.now(ZoneInfo("America/New_York")) >= DCA_CATEGORY_DEADLINE
 
 
+
+
+def dca_new_category_groups(db, edition_id):
+    """Visible suggestions grouped by normalized name and admin merges.
+
+    Votes follow merged aliases, including votes cast before the merge.
+    Rejected canonical groups are hidden from public results.
+    """
+    suggestions = (db.query(DCANewCategorySuggestion)
+        .join(DCACategorySuggestionSubmission,
+              DCANewCategorySuggestion.submission_id ==
+              DCACategorySuggestionSubmission.id)
+        .filter(DCACategorySuggestionSubmission.edition_id == edition_id)
+        .order_by(DCANewCategorySuggestion.id).all())
+    by_id = {s.id: s for s in suggestions}
+
+    def canonical(s):
+        seen = set()
+        while s.moderation_status == "merged" and s.merged_into_id in by_id:
+            if s.id in seen:
+                break
+            seen.add(s.id)
+            s = by_id[s.merged_into_id]
+        return s
+
+    groups = {}
+    id_to_key = {}
+    for s in suggestions:
+        target = canonical(s)
+        if s.moderation_status == "rejected" or target.moderation_status == "rejected":
+            continue
+        key = " ".join(target.category_name.casefold().split())
+        if not key:
+            continue
+        group = groups.setdefault(key, {
+            "id": target.id, "name": target.category_name,
+            "count": 0, "yes": 0, "no": 0,
+            "ids": set(), "status": target.moderation_status,
+        })
+        group["count"] += 1
+        group["ids"].add(s.id)
+        id_to_key[s.id] = key
+
+    if id_to_key:
+        votes = (db.query(DCANewCategoryVote)
+            .join(DCACategorySuggestionSubmission,
+                  DCANewCategoryVote.submission_id ==
+                  DCACategorySuggestionSubmission.id)
+            .filter(DCACategorySuggestionSubmission.edition_id == edition_id,
+                    DCANewCategoryVote.suggestion_id.in_(list(id_to_key)))
+            .order_by(DCANewCategoryVote.id).all())
+        # One vote per group per submission, even after aliases are merged.
+        seen_votes = set()
+        for vote in votes:
+            key = id_to_key[vote.suggestion_id]
+            unique = (vote.submission_id, key)
+            if unique in seen_votes:
+                continue
+            seen_votes.add(unique)
+            groups[key]["yes" if vote.supports else "no"] += 1
+
+    result = []
+    for group in groups.values():
+        total = group["yes"] + group["no"]
+        group["total"] = total
+        group["yes_percent"] = round(group["yes"] * 100 / total) if total else 0
+        group["no_percent"] = 100 - group["yes_percent"] if total else 0
+        group["default_selected"] = group["yes"] > group["no"]
+        result.append(group)
+    return sorted(result, key=lambda g: (-g["yes"], g["name"].casefold()))
+
 @app.route("/awards/dancers-choice/category-suggestions", methods=["GET", "POST"])
 def round1():
     db = SessionLocal()
@@ -429,6 +502,15 @@ def round1():
                     )
                 )
 
+            for group in dca_new_category_groups(db, current.id):
+                answer = request.form.get(f"new_category_vote_{group['id']}")
+                if answer in {"yes", "no"}:
+                    db.add(DCANewCategoryVote(
+                        submission_id=submission.id,
+                        suggestion_id=group["id"],
+                        supports=(answer == "yes"),
+                    ))
+
             seen = set()
 
             for raw in request.form.getlist("new_category"):
@@ -488,6 +570,7 @@ def round1():
             returning_seconds=returning_seconds,
             verified_email=verified_email,
             categories_closed=dca_categories_closed(),
+            new_category_groups=dca_new_category_groups(db, current.id),
         )
 
     finally:
@@ -653,61 +736,7 @@ def round2():
         # APPROVED / MODERATED NEW CATEGORY SUGGESTIONS
         # ----------------------------------------------------
 
-        suggestions = (
-            db.query(DCANewCategorySuggestion)
-            .join(
-                DCACategorySuggestionSubmission,
-                DCACategorySuggestionSubmission.id
-                == DCANewCategorySuggestion.submission_id,
-            )
-            .filter(
-                DCACategorySuggestionSubmission.edition_id
-                == current.id,
-                DCANewCategorySuggestion.moderation_status.in_(
-                    ["approved", "merged"]
-                ),
-            )
-            .order_by(
-                DCANewCategorySuggestion.created_at.asc()
-            )
-            .all()
-        )
-
-        suggestion_groups = {}
-
-        for suggestion in suggestions:
-            if (
-                suggestion.moderation_status == "merged"
-                and suggestion.merged_into_id
-            ):
-                canonical_id = suggestion.merged_into_id
-            else:
-                canonical_id = suggestion.id
-
-            if canonical_id not in suggestion_groups:
-                canonical = (
-                    db.query(DCANewCategorySuggestion)
-                    .filter_by(id=canonical_id)
-                    .first()
-                )
-
-                if not canonical:
-                    canonical = suggestion
-
-                suggestion_groups[canonical_id] = {
-                    "name": canonical.category_name,
-                    "count": 0,
-                }
-
-            suggestion_groups[canonical_id]["count"] += 1
-
-        approved_suggestions = sorted(
-            suggestion_groups.values(),
-            key=lambda item: (
-                -item["count"],
-                item["name"].lower(),
-            ),
-        )
+        approved_suggestions = dca_new_category_groups(db, current.id)
 
         # ----------------------------------------------------
         # ROUND 1 CATEGORY-COUNT PREFERENCE
@@ -1346,16 +1375,15 @@ def admin_round1():
                 "default_selected": yes > no,
             })
 
-        for suggestion in suggestions:
-            if suggestion.moderation_status == "approved":
-                shortlist.append({
-                    "key": f"new:{suggestion.id}",
-                    "name": suggestion.category_name,
-                    "source": "NEW",
-                    "yes": None,
-                    "no": None,
-                    "default_selected": True,
-                })
+        for group in dca_new_category_groups(db, edition.id):
+            shortlist.append({
+                "key": f"new:{group['id']}",
+                "name": group["name"],
+                "source": "NEW",
+                "yes": group["yes"],
+                "no": group["no"],
+                "default_selected": group["default_selected"],
+            })
 
         saved_rows = db.query(DCACategoryDraftSelection).filter_by(
             edition_id=edition.id
@@ -1421,10 +1449,8 @@ def admin_round1():
                 "Saved selections no longer eligible: "
                 + ", ".join(stale_selected)
             )
-        readiness_issues.append(
-            "Community voting on suggested categories "
-            "has not been implemented yet."
-        )
+        if not dca_categories_closed():
+            readiness_issues.append("Round 1 is still open until October 31.")
         finalization_readiness = {
             "returning": selected_returning,
             "new": selected_new,
@@ -1502,6 +1528,9 @@ def save_dca_category_draft():
 @app.route("/admin/round1/build-round2", methods=["POST"])
 @admin_login_required
 def build_round2_ballot():
+    if not dca_categories_closed():
+        flash("Round 1 must close before building the Round 2 ballot.")
+        return redirect(url_for("admin_round1"))
 
     db = SessionLocal()
 
@@ -1629,7 +1658,7 @@ def build_round2_ballot():
             )
             .filter(
                 DCACategorySuggestionSubmission.edition_id == current.id,
-                DCANewCategorySuggestion.status == "approved",
+                DCANewCategorySuggestion.moderation_status == "approved",
             )
             .all()
         )

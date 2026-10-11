@@ -269,6 +269,20 @@ class DCANewCategorySuggestion(Base):
 # the candidate category list.
 # ============================================================
 
+class DCANewCategoryVote(Base):
+    __tablename__ = "ledger_dca_new_category_votes"
+
+    id = Column(Integer, primary_key=True)
+    submission_id = Column(Integer, ForeignKey(
+        "ledger_dca_category_suggestion_submissions.id"), nullable=False)
+    suggestion_id = Column(Integer, ForeignKey(
+        "ledger_dca_new_category_suggestions.id"), nullable=False)
+    supports = Column(Boolean, nullable=False)
+    __table_args__ = (UniqueConstraint(
+        "submission_id", "suggestion_id",
+        name="ledger_uq_dca_new_category_vote_submission_suggestion"),)
+
+
 class DCACategoryBallot(Base):
     __tablename__ = "ledger_dca_category_ballots"
 

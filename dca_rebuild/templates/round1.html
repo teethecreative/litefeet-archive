@@ -404,6 +404,25 @@ type="submit"
 
     <h2>WHAT ARE WE MISSING?</h2>
 
+    <p class="description">Vote YES or NO on new categories suggested by the community. You can skip any category.</p>
+    {% if new_category_groups %}
+    <div class="categories">
+      {% for group in new_category_groups %}
+      <article class="category suggested-category">
+        <div class="origin">2026 COMMUNITY SUGGESTION</div>
+        <h3>{{ group.name }}</h3>
+        <div class="choices">
+          <label><input type="radio" name="new_category_vote_{{ group.id }}" value="yes"><span>YES</span></label>
+          <label><input type="radio" name="new_category_vote_{{ group.id }}" value="no"><span>NO</span></label>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="description">Be the first to suggest a new category.</p>
+    {% endif %}
+
+
     <p class="description">
         Suggest a category that isn't already listed above.
         You can submit as many new category ideas as you want.
