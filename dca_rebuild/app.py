@@ -28,6 +28,8 @@ from dca_rebuild.models import (
     BetaChangelog,
     NewsletterSubscriber,
     DCACategoryDraftSelection,
+    DCANominee,
+    DCANominationSubmission,
     LedgerPageView,
 )
 from dca_rebuild.models import LedgerEra
@@ -1672,6 +1674,72 @@ def build_round2_ballot():
 # ============================================================
 # AWARDS LANDING PAGES
 # ============================================================
+
+# ============================================================
+# DCA NOMINATIONS — ADMIN REVIEW, PUBLIC ACCESS CLOSED
+# ============================================================
+
+@app.route("/awards/dancers-choice/nominations", methods=["GET", "POST"])
+def dca_nominations_closed():
+    # This endpoint deliberately does not accept public nominations.
+    # A future phase must explicitly implement the opening procedure.
+    if request.method == "POST":
+        abort(403, description="Nominations are not open")
+    return render_template("dca_nominations_closed.html"), 200
+
+
+@app.route("/admin/dca/nominations", methods=["GET", "POST"])
+@admin_login_required
+def admin_dca_nominations():
+    db = SessionLocal()
+    try:
+        edition = db.query(DCAEdition).filter_by(year=2026).first()
+        if edition is None:
+            abort(404, description="DCA 2026 edition not found")
+
+        if request.method == "POST":
+            expected = session.get("dca_moderation_csrf", "")
+            provided = request.form.get("csrf_token", "")
+            if not expected or not secrets.compare_digest(expected, provided):
+                abort(400, description="Invalid moderation token")
+
+            action = request.form.get("action", "").strip()
+            if action == "review":
+                try:
+                    nominee_id = int(request.form.get("nominee_id", ""))
+                except ValueError:
+                    abort(400, description="Invalid nominee")
+                decision = request.form.get("decision", "").strip()
+                if decision not in {"pending", "approved", "rejected"}:
+                    abort(400, description="Invalid review decision")
+                nominee = db.query(DCANominee).filter_by(
+                    id=nominee_id, edition_id=edition.id
+                ).first()
+                if nominee is None:
+                    abort(404)
+                nominee.moderation_status = decision
+                nominee.reviewed_at = datetime.utcnow() if decision != "pending" else None
+                db.commit()
+                flash("Nominee review updated. Public nominations remain closed.")
+            else:
+                abort(400, description="Unsupported action")
+            return redirect(url_for("admin_dca_nominations"))
+
+        rows = (
+            db.query(DCANominee, DCACategory.name, func.count(DCANominationSubmission.id))
+            .join(DCACategory, DCACategory.id == DCANominee.category_id)
+            .outerjoin(DCANominationSubmission,
+                       DCANominationSubmission.nominee_id == DCANominee.id)
+            .filter(DCANominee.edition_id == edition.id,
+                    DCACategory.edition_id == edition.id)
+            .group_by(DCANominee.id, DCACategory.name)
+            .order_by(DCACategory.name.asc(), DCANominee.name.asc())
+            .all()
+        )
+        return render_template("admin_dca_nominations.html", rows=rows)
+    finally:
+        db.close()
+
 
 @app.route("/awards")
 def awards_home():
