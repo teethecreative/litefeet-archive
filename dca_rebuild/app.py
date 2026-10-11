@@ -26,6 +26,7 @@ from dca_rebuild.models import (
     BetaChangelog,
     NewsletterSubscriber,
     DCACategoryDraftSelection,
+    LedgerPageView,
 )
 from dca_rebuild.models import LedgerEra
 
@@ -53,6 +54,63 @@ def ledger_template_globals():
 
 Base.metadata.create_all(engine)
 SessionLocal = sessionmaker(bind=engine)
+
+
+# Public analytics only. Browser-session identifier, not a user identity.
+LEDGER_ANALYTICS_SESSION_KEY = "ledger_analytics_visitor_id"
+
+
+@app.after_request
+def record_ledger_page_view(response):
+    if request.method != "GET" or response.status_code != 200:
+        return response
+
+    if request.path.startswith((
+        "/admin", "/static", "/health", "/favicon"
+    )):
+        return response
+
+    if "text/html" not in response.content_type.lower():
+        return response
+
+    if request.headers.get("Sec-Purpose") == "prefetch":
+        return response
+
+    visitor_id = session.get(LEDGER_ANALYTICS_SESSION_KEY)
+    if not visitor_id:
+        visitor_id = secrets.token_hex(16)
+        session[LEDGER_ANALYTICS_SESSION_KEY] = visitor_id
+
+    db = SessionLocal()
+    try:
+        now = datetime.utcnow()
+        previous = (
+            db.query(LedgerPageView)
+            .filter_by(visitor_id=visitor_id)
+            .order_by(LedgerPageView.viewed_at.desc())
+            .first()
+        )
+
+        new_visit = (
+            previous is None
+            or now - previous.viewed_at >= timedelta(minutes=30)
+        )
+
+        db.add(LedgerPageView(
+            visitor_id=visitor_id,
+            path=request.path[:500],
+            viewed_at=now,
+            is_new_visit=new_visit,
+        ))
+        db.commit()
+    except Exception:
+        db.rollback()
+        app.logger.exception("Public analytics recording failed")
+    finally:
+        db.close()
+
+    return response
+
 
 
 def private_hash(value):

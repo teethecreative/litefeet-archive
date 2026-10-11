@@ -733,3 +733,16 @@ class DCACategoryDraftSelection(Base):
     edition_id = Column(Integer, nullable=False)
     category_key = Column(String(100), nullable=False)
     selected = Column(Boolean, nullable=False, default=False)
+
+
+# Anonymous, session-scoped public website analytics.
+class LedgerPageView(Base):
+    __tablename__ = "ledger_page_views"
+
+    id = Column(Integer, primary_key=True)
+    visitor_id = Column(String(64), nullable=False, index=True)
+    path = Column(String(500), nullable=False, index=True)
+    viewed_at = Column(
+        DateTime, nullable=False, default=datetime.utcnow, index=True
+    )
+    is_new_visit = Column(Boolean, nullable=False, default=False)
