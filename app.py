@@ -10,7 +10,7 @@ from urllib.parse import urlparse, parse_qs, quote
 from urllib.request import Request, urlopen
 from datetime import datetime, timedelta
 
-from flask import abort, Flask, flash, redirect, render_template, request, session, url_for, Response
+from flask import g, abort, Flask, flash, redirect, render_template, request, session, url_for, Response
 from sqlalchemy import create_engine, inspect, text
 from werkzeug.security import check_password_hash, generate_password_hash
 from markupsafe import Markup, escape
@@ -1557,6 +1557,7 @@ def ensure_admin_analytics_tables():
                     referrer TEXT,
                     user_agent TEXT,
                     ip_hash TEXT,
+                    visitor_id TEXT,
                     created_at TEXT
                 )
             """))
@@ -1587,6 +1588,7 @@ def ensure_admin_analytics_tables():
                     referrer TEXT,
                     user_agent TEXT,
                     ip_hash TEXT,
+                    visitor_id TEXT,
                     created_at TEXT
                 )
             """))
@@ -1606,6 +1608,39 @@ def ensure_admin_analytics_tables():
                     created_at TEXT
                 )
             """))
+
+
+    # Existing production tables need the new column too. Never drop historical rows.
+    with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            conn.execute(text("ALTER TABLE site_visits ADD COLUMN IF NOT EXISTS visitor_id TEXT"))
+        else:
+            columns = {row[1] for row in conn.execute(text("PRAGMA table_info(site_visits)"))}
+            if "visitor_id" not in columns:
+                conn.execute(text("ALTER TABLE site_visits ADD COLUMN visitor_id TEXT"))
+
+
+def lf_analytics_visitor_id():
+    """Random first-party browser identifier, not an IP/device fingerprint."""
+    value = request.cookies.get("lf_visitor_id", "")
+    if len(value) == 32 and all(c in "0123456789abcdef" for c in value):
+        return value
+    value = getattr(g, "lf_analytics_new_visitor_id", None)
+    if not value:
+        value = secrets.token_hex(16)
+        g.lf_analytics_new_visitor_id = value
+    return value
+
+
+@app.after_request
+def lf_analytics_set_visitor_cookie(response):
+    value = getattr(g, "lf_analytics_new_visitor_id", None)
+    if value:
+        response.set_cookie(
+            "lf_visitor_id", value, max_age=60 * 60 * 24 * 365,
+            secure=request.is_secure, httponly=True, samesite="Lax", path="/"
+        )
+    return response
 
 
 def anonymous_ip_hash():
@@ -1838,6 +1873,7 @@ def track_public_site_visit():
                     referrer,
                     user_agent,
                     ip_hash,
+                    visitor_id,
                     created_at
                 )
                 VALUES (
@@ -1848,6 +1884,7 @@ def track_public_site_visit():
                     :referrer,
                     :user_agent,
                     :ip_hash,
+                    :visitor_id,
                     :created_at
                 )
             """),
@@ -1859,6 +1896,7 @@ def track_public_site_visit():
                 "referrer": request.referrer or "",
                 "user_agent": request.headers.get("User-Agent", "")[:500],
                 "ip_hash": anonymous_ip_hash(),
+                "visitor_id": lf_analytics_visitor_id(),
                 "created_at": datetime.now().isoformat(timespec="seconds"),
             },
         )
