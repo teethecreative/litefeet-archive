@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DCA 2026 — Nomination Form Preview</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+<style>
+.dca-nom-preview{max-width:760px;margin:3rem auto;padding:0 1.25rem 5rem}
+.dca-nom-preview form{display:grid;gap:1.15rem;margin-top:2rem}
+.dca-nom-preview label{display:grid;gap:.4rem;font-weight:600}
+.dca-nom-preview input,.dca-nom-preview select,.dca-nom-preview textarea{width:100%;padding:.8rem;border:1px solid currentColor;border-radius:4px;background:transparent;color:inherit;font:inherit}
+.dca-nom-preview button{padding:.9rem 1.5rem;border:1px solid currentColor;background:transparent;color:inherit;opacity:.55;cursor:not-allowed}
+.dca-nom-preview .note{border-left:3px solid currentColor;padding:.8rem 1rem}
+</style></head><body>{% include "_admin_navigation.html" %}
+<main class="dca-nom-preview">
+<p>DANCER'S CHOICE AWARDS · 2026 · ADMIN PREVIEW</p>
+<h1>NOMINATE A DANCER</h1>
+<p class="note">Design preview only. The public form is not live, and no nomination can be submitted from this page. Category options shown are existing 2026 records, not a finalized ballot.</p>
+<p><a href="{{ url_for('admin_dca_nominations') }}">← Nomination review</a></p>
+<form aria-label="Nomination form preview">
+<label>Category<select disabled><option value="">Choose a category</option>{% for category in categories %}<option value="{{ category.id }}">{{ category.name }}</option>{% endfor %}</select></label>
+<label>Nominee name<input type="text" placeholder="Name of dancer, team, or nominee" maxlength="250" disabled></label>
+<label>Why are you nominating them? <span style="font-weight:normal">(optional)</span><textarea rows="4" maxlength="2000" placeholder="Tell us why this nominee deserves recognition" disabled></textarea></label>
+<label>Your email<input type="email" placeholder="name@example.com" disabled></label>
+<p>When submissions open, nominee names will be normalized for duplicate detection within each category. Multiple people can support the same nominee without creating duplicate nominee records.</p>
+<button type="button" disabled>SUBMISSIONS NOT OPEN</button>
+</form></main></body></html>

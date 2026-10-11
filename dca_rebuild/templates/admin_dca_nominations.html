@@ -14,6 +14,8 @@
 <main class="dca-nominations-admin"><p>DCA 2026 · ADMIN</p><h1>NOMINATION REVIEW</h1>
 <p>Public nominations are closed. This page lets you review nominations once submissions are enabled in a later phase.</p>
 <p><a href="{{ url_for('admin_round1') }}">← Category management</a></p>
+<p><a href="{{ url_for('admin_dca_nomination_preview') }}">Preview nomination form →</a></p>
+
 {% if rows %}
 <table class="dca-nom-table"><thead><tr><th>Category</th><th>Nominee</th><th>Submissions</th><th>Review</th></tr></thead><tbody>
 {% for nominee, category_name, total in rows %}

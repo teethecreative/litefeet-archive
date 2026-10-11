@@ -1688,6 +1688,28 @@ def dca_nominations_closed():
     return render_template("dca_nominations_closed.html"), 200
 
 
+@app.route("/admin/dca/nominations/preview", methods=["GET", "POST"])
+@admin_login_required
+def admin_dca_nomination_preview():
+    # Admin-only design preview. Even an authenticated admin cannot submit here.
+    if request.method == "POST":
+        abort(403, description="Nomination submissions are not enabled")
+    db = SessionLocal()
+    try:
+        edition = db.query(DCAEdition).filter_by(year=2026).first()
+        if edition is None:
+            abort(404, description="DCA 2026 edition not found")
+        categories = (
+            db.query(DCACategory)
+            .filter(DCACategory.edition_id == edition.id)
+            .order_by(DCACategory.name.asc())
+            .all()
+        )
+        return render_template("admin_dca_nomination_preview.html", categories=categories)
+    finally:
+        db.close()
+
+
 @app.route("/admin/dca/nominations", methods=["GET", "POST"])
 @admin_login_required
 def admin_dca_nominations():
