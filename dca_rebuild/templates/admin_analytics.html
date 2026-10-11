@@ -31,7 +31,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
         <a href="{{ url_for('admin_dashboard') }}">
             ← CONTROL ROOM
         </a>
-        <span>SESSION-BASED ANALYTICS</span>
+        <span>BROWSER-BASED ANALYTICS</span>
     </div>
 </header>
 
@@ -100,9 +100,9 @@ href="{{ url_for('static', filename='css/dca.css') }}">
         </article>
 
         <article class="analytics-metric">
-            <div class="label">SESSION VISITORS</div>
+            <div class="label">UNIQUE BROWSERS</div>
             <strong>{{ unique_visitors }}</strong>
-            <span>Distinct session identifiers</span>
+            <span>Distinct browser identifiers · not verified people</span>
         </article>
 
         <article class="analytics-metric">

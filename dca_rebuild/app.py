@@ -80,10 +80,22 @@ def record_ledger_page_view(response):
     if request.headers.get("Sec-Purpose") == "prefetch":
         return response
 
-    visitor_id = session.get(LEDGER_ANALYTICS_SESSION_KEY)
-    if not visitor_id:
+    # First-party browser identity survives a new Flask session. Retain the
+    # existing session ID when upgrading so earlier views stay connected.
+    visitor_id = request.cookies.get("lf_ledger_visitor", "")
+    valid = len(visitor_id) == 32 and all(c in "0123456789abcdef" for c in visitor_id)
+    if not valid:
+        visitor_id = session.get(LEDGER_ANALYTICS_SESSION_KEY, "")
+        valid = len(visitor_id) == 32 and all(c in "0123456789abcdef" for c in visitor_id)
+    if not valid:
         visitor_id = secrets.token_hex(16)
+    if session.get(LEDGER_ANALYTICS_SESSION_KEY) != visitor_id:
         session[LEDGER_ANALYTICS_SESSION_KEY] = visitor_id
+    if request.cookies.get("lf_ledger_visitor") != visitor_id:
+        response.set_cookie(
+            "lf_ledger_visitor", visitor_id, max_age=365 * 24 * 60 * 60,
+            secure=request.is_secure, httponly=True, samesite="Lax", path="/",
+        )
 
     db = SessionLocal()
     try:
@@ -4268,7 +4280,7 @@ def admin_analytics():
             repeat_session_count=len(repeat_session_ids),
             utc_timezone=ZoneInfo("UTC"),
             ny_timezone=timezone,
-            visitors=visitors[:100],
+            visitors=visitors[:15],
             search=search,
             ledger_analytics_hour_label=ledger_analytics_hour_label,
         )
@@ -4290,7 +4302,7 @@ def admin_analytics_visitors():
     minimum = max(
         1, min(request.args.get("min_views", 1, type=int) or 1, 100000)
     )
-    per_page = 25
+    per_page = 15
     date_scope = ledger_analytics_date_scope()
 
     db = SessionLocal()
