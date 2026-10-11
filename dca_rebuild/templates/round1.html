@@ -57,6 +57,17 @@
         ONE COMPLETED SUBMISSION EVERY 24 HOURS
     </p>
 </header>
+{% if not categories_closed %}
+<section class="dca-vote-countdown"
+         data-dca-deadline="2026-11-01T04:00:00Z">
+    <span>CATEGORY SUGGESTIONS CLOSE IN</span>
+    <strong id="dcaDeadlineClock" aria-live="off">
+        --D --:--:--
+    </strong>
+    <p>October 31, 2026 · 11:59 PM Eastern</p>
+</section>
+{% endif %}
+
 
 
 {% with messages = get_flashed_messages() %}
@@ -121,7 +132,7 @@
         class="submit"
         href="{{ url_for('round2') }}"
     >
-        VIEW LIVE RESULTS + ROUND 2 PREVIEW →
+        VIEW CATEGORY SUGGESTION RESULTS →
     </a>
 </section>
 
@@ -436,7 +447,7 @@ type="submit"
 
     <p class="description">
         This is the preliminary community vote.
-        The final method will be decided during Category Voting.
+        Your feedback will help guide the final category selection.
     </p>
 
 
@@ -459,8 +470,7 @@ type="submit"
                 </strong>
 
                 <p>
-                    The 25 categories with the most votes during
-                    Category Voting become official DCA categories.
+                    Prioritize the 25 categories with the strongest community support.
                 </p>
 
             </div>
@@ -512,8 +522,7 @@ type="submit"
                 </strong>
 
                 <p>
-                    Every category that reaches the Category Voting
-                    ballot becomes an official DCA category.
+                    Consider all eligible categories for the official awards list.
                 </p>
 
             </div>
@@ -536,18 +545,12 @@ type="submit"
     </h2>
 
     <p class="description">
-        Enter your email to submit your Round 1 ballot.
+        Your eligibility has already been checked. Submit your category suggestions below.
         Your email will not be displayed publicly.
     </p>
 
 
-    <input
-        class="email"
-        type="email"
-        data-dca-legacy-email="true"
-        placeholder="Email address"
-        required
-    >
+
 
 
     <button
@@ -700,6 +703,39 @@ updateRound1VoteCount();
         render,
         1000
     );
+})();
+</script>
+
+
+<script>
+(function () {
+    const section = document.querySelector("[data-dca-deadline]");
+    const clock = document.getElementById("dcaDeadlineClock");
+    if (!section || !clock) return;
+
+    const deadline = Date.parse(section.dataset.dcaDeadline);
+
+    function updateDeadline() {
+        const remaining = Math.max(0, deadline - Date.now());
+        const totalSeconds = Math.floor(remaining / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        clock.textContent =
+            days + "D " +
+            [hours, minutes, seconds]
+                .map(n => String(n).padStart(2, "0"))
+                .join(":");
+
+        if (remaining <= 0) {
+            window.location.reload();
+        }
+    }
+
+    updateDeadline();
+    window.setInterval(updateDeadline, 1000);
 })();
 </script>
 
