@@ -225,6 +225,7 @@
 
         <div class="round2-suggestion-item">
             <strong>{{ suggestion.name }}</strong>
+            {% if suggestion.description %}<p class="description">{{ suggestion.description }}</p>{% endif %}
             <div class="round2-result-row">
               <div class="round2-result keep"><span>YES</span><strong>{{ suggestion.yes_percent }}%</strong><small>{{ suggestion.yes }} votes</small></div>
               <div class="round2-result remove"><span>NO</span><strong>{{ suggestion.no_percent }}%</strong><small>{{ suggestion.no }} votes</small></div>

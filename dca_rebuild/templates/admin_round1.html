@@ -194,6 +194,12 @@
 
             <div>
                 <strong>{{ result.name }}</strong>
+                <form method="post" action="{{ url_for('update_dca_returning_category_description', category_id=result.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">
+                    <textarea class="admin-input" name="category_description" rows="2" maxlength="500"
+                              placeholder="Briefly describe this award">{{ result.description or '' }}</textarea>
+                    <button type="submit" class="admin-save">SAVE DESCRIPTION</button>
+                </form>
             </div>
 
             <div class="vote-numbers">
@@ -309,6 +315,20 @@
         on the official 2026 category shortlist.
     </p>
 
+
+    {% if suggestion_vote_groups %}
+        <div class="admin-results">
+        {% for group in suggestion_vote_groups %}
+            <div class="admin-result">
+                <div><strong>{{ group.name }}</strong>
+                {% if group.description %}<p class="description">{{ group.description }}</p>{% endif %}
+                </div>
+                <div class="vote-numbers"><span class="yes-count">YES {{ group.yes }}</span>
+                <span class="no-count">NO {{ group.no }}</span></div>
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
 
     {% if suggestions %}
 

@@ -345,10 +345,12 @@ def dca_new_category_groups(db, edition_id):
         if not key:
             continue
         group = groups.setdefault(key, {
-            "id": target.id, "name": target.category_name, "description": target.description,
+            "id": target.id, "name": target.category_name, "description": target.description or s.description,
             "count": 0, "yes": 0, "no": 0,
             "ids": set(), "status": target.moderation_status,
         })
+        if not group["description"] and s.description:
+            group["description"] = s.description
         group["count"] += 1
         group["ids"].add(s.id)
         id_to_key[s.id] = key
@@ -513,8 +515,17 @@ def round1():
 
             seen = set()
 
-            for raw in request.form.getlist("new_category"):
+            raw_names = request.form.getlist("new_category")
+            raw_descriptions = request.form.getlist("new_category_description")
+            for index, raw in enumerate(raw_names):
                 name = " ".join(raw.strip().split())
+                description = " ".join(
+                    (raw_descriptions[index] if index < len(raw_descriptions) else "").split()
+                )
+                if len(name) > 250 or len(description) > 300:
+                    flash("Category names must be 250 characters or fewer and descriptions 300 or fewer.")
+                    db.rollback()
+                    return redirect(url_for("round1"))
 
                 if not name:
                     continue
@@ -531,6 +542,7 @@ def round1():
                         submission_id=submission.id,
                         category_name=name,
                         normalized_name=normalized,
+                        description=description or None,
                     )
                 )
 
@@ -1180,6 +1192,33 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 
+@app.route("/admin/dca/returning-category/<int:category_id>/description", methods=["POST"])
+@admin_login_required
+def update_dca_returning_category_description(category_id):
+    expected = session.get("dca_moderation_csrf", "")
+    supplied = request.form.get("csrf_token", "")
+    if not expected or not secrets.compare_digest(expected, supplied):
+        abort(400, description="Invalid moderation token")
+    description = " ".join(request.form.get("category_description", "").split())
+    if len(description) > 500:
+        abort(400, description="Description must be 500 characters or fewer")
+    db = SessionLocal()
+    try:
+        category = db.get(DCACategory, category_id)
+        historical = db.query(DCAEdition).filter_by(year=2023).first()
+        if not category or not historical or category.edition_id != historical.id:
+            abort(404)
+        category.description = description or None
+        db.commit()
+        flash(f'Description saved for "{category.name}".')
+        return redirect(url_for("admin_round1"))
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
 @app.route("/admin/round1")
 @admin_login_required
 def admin_round1():
@@ -1318,6 +1357,8 @@ def admin_round1():
             )
 
             return_results.append({
+                "id": category.id,
+                "description": category.description,
                 "name": category.name,
                 "yes": yes_count,
                 "no": no_count,
@@ -1459,6 +1500,7 @@ def admin_round1():
             threshold=threshold,
             return_results=return_results,
             suggestions=suggestions,
+            suggestion_vote_groups=dca_new_category_groups(db, edition.id),
             shortlist=shortlist,
             final_review=final_review,
             finalization_readiness=finalization_readiness,
