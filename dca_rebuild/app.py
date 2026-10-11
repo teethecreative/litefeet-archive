@@ -1520,42 +1520,53 @@ def admin_round1():
 # ============================================================
 
 
+def dca_eligible_draft_entries(db, current, historical):
+    """Canonical, eligible draft keys and category metadata."""
+    entries = {}
+    for category in db.query(DCACategory).filter_by(edition_id=historical.id).all():
+        entries[f"returning:{category.id}"] = {
+            "name": category.name, "description": category.description,
+            "source_type": "returning", "source_category_id": category.id,
+        }
+    for group in dca_new_category_groups(db, current.id):
+        entries[f"new:{group['id']}"] = {
+            "name": group["name"], "description": group["description"],
+            "source_type": "new", "source_category_id": None,
+        }
+    return entries
+
+
 @app.route("/admin/dca/category-draft/save", methods=["POST"])
 @admin_login_required
 def save_dca_category_draft():
     expected = session.get("dca_moderation_csrf", "")
     provided = request.form.get("csrf_token", "")
-
     if not expected or not secrets.compare_digest(expected, provided):
         abort(400)
 
     db = SessionLocal()
     try:
-        edition = db.query(DCAEdition).filter_by(year=2026).first()
-        if not edition:
+        current = db.query(DCAEdition).filter_by(year=2026).first()
+        historical = db.query(DCAEdition).filter_by(year=2023).first()
+        if not current or not historical:
             abort(404)
+        eligible = dca_eligible_draft_entries(db, current, historical)
+        selected = set(request.form.getlist("category_key"))
+        if not selected.issubset(eligible):
+            abort(400, description="Unknown or outdated category selection. Refresh and try again.")
 
-        selected_keys = set(request.form.getlist("category_key"))
-
-        existing = db.query(DCACategoryDraftSelection).filter_by(
-            edition_id=edition.id
-        ).all()
-
+        existing = db.query(DCACategoryDraftSelection).filter_by(edition_id=current.id).all()
         for row in existing:
-            row.selected = row.category_key in selected_keys
-
+            row.selected = row.category_key in selected and row.category_key in eligible
         existing_keys = {row.category_key for row in existing}
-
-        for key in selected_keys - existing_keys:
-            db.add(DCACategoryDraftSelection(
-                edition_id=edition.id,
-                category_key=key,
-                selected=True,
-            ))
-
+        for key in selected - existing_keys:
+            db.add(DCACategoryDraftSelection(edition_id=current.id, category_key=key, selected=True))
         db.commit()
         flash("Category selection draft saved.")
         return redirect(url_for("admin_round1"))
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 
@@ -1563,176 +1574,88 @@ def save_dca_category_draft():
 @app.route("/admin/round1/build-round2", methods=["POST"])
 @admin_login_required
 def build_round2_ballot():
+    """Create a CLOSED ballot from the saved, validated draft only."""
+    expected = session.get("dca_moderation_csrf", "")
+    provided = request.form.get("csrf_token", "")
+    if not expected or not secrets.compare_digest(expected, provided):
+        abort(400)
     if not dca_categories_closed():
         flash("Round 1 must close before building the Round 2 ballot.")
         return redirect(url_for("admin_round1"))
 
     db = SessionLocal()
-
     try:
         current = db.query(DCAEdition).filter_by(year=2026).first()
         historical = db.query(DCAEdition).filter_by(year=2023).first()
-
         if not current or not historical:
-            flash("DCA editions are missing.")
+            abort(404)
+        eligible = dca_eligible_draft_entries(db, current, historical)
+        saved = db.query(DCACategoryDraftSelection).filter_by(edition_id=current.id).all()
+        if not saved:
+            flash("Save a category draft before building the ballot.")
+            return redirect(url_for("admin_round1"))
+        selected_keys = {row.category_key for row in saved if row.selected}
+        if not selected_keys or not selected_keys.issubset(eligible):
+            flash("The draft is empty or contains outdated categories. Review and save it again.")
             return redirect(url_for("admin_round1"))
 
-        # ----------------------------------------------------
-        # Get or create the 2026 Round 2 ballot
-        # ----------------------------------------------------
+        selected = [eligible[key] for key in sorted(selected_keys)]
+        names = [" ".join(item["name"].casefold().split()) for item in selected]
+        if any(not name for name in names) or len(set(names)) != len(names):
+            flash("Resolve duplicate or empty category names before building the ballot.")
+            return redirect(url_for("admin_round1"))
 
-        ballot = (
-            db.query(DCACategoryBallot)
-            .filter(
-                DCACategoryBallot.edition_id == current.id
-            )
-            .first()
-        )
+        ballot = db.query(DCACategoryBallot).filter_by(edition_id=current.id).first()
+        if ballot and (ballot.is_open or ballot.opened_at):
+            flash("The Round 2 ballot has already opened. It cannot be rebuilt.")
+            return redirect(url_for("admin_round1"))
 
-        if not ballot:
-            ballot = DCACategoryBallot(
-                edition_id=current.id,
-                is_open=False,
-            )
-            db.add(ballot)
-            db.flush()
-
-        # ----------------------------------------------------
-        # Determine Round 1 preliminary method winner
-        # ----------------------------------------------------
-
-        method_counts = dict(
-            db.query(
-                DCACategorySuggestionSubmission.category_count_preference,
-                func.count(DCACategorySuggestionSubmission.id),
-            )
-            .filter(
-                DCACategorySuggestionSubmission.edition_id == current.id
-            )
-            .group_by(
-                DCACategorySuggestionSubmission.category_count_preference
-            )
-            .all()
-        )
-
-        ballot.round_one_winning_method = None
-
-        if method_counts:
-            highest = max(method_counts.values())
-
-            winners = [
-                method
-                for method, count in method_counts.items()
-                if count == highest
-            ]
-
-            if len(winners) == 1:
-                ballot.round_one_winning_method = winners[0]
-
-        # Threshold = completed Round 1 submissions.
-        ballot.threshold_number = (
-            db.query(DCACategorySuggestionSubmission)
-            .filter(
-                DCACategorySuggestionSubmission.edition_id == current.id
-            )
-            .count()
-        )
-
-        # ----------------------------------------------------
-        # Create 2026 category copies for the Round 2 ballot
-        # ----------------------------------------------------
-
-        historical_categories = (
-            db.query(DCACategory)
-            .filter(
-                DCACategory.edition_id == historical.id
-            )
-            .order_by(DCACategory.name.asc())
-            .all()
-        )
+        existing = db.query(DCACategory).filter_by(edition_id=current.id).all()
+        existing_by_name = {row.normalized_name: row for row in existing}
+        if len(existing_by_name) != len(existing):
+            flash("Duplicate 2026 category records require review before building.")
+            return redirect(url_for("admin_round1"))
+        chosen_names = set(names)
+        for row in existing:
+            if row.status == "round2_ballot" and row.normalized_name not in chosen_names:
+                row.status = "candidate"
 
         added = 0
-
-        for source in historical_categories:
-
-            existing = (
-                db.query(DCACategory)
-                .filter(
-                    DCACategory.edition_id == current.id,
-                    DCACategory.normalized_name == source.normalized_name,
-                )
-                .first()
-            )
-
-            if not existing:
-                existing = DCACategory(
-                    edition_id=current.id,
-                    name=source.name,
-                    normalized_name=source.normalized_name,
-                    description=source.description,
-                    source_type="returning",
-                    source_category_id=source.id,
-                    status="round2_ballot",
-                )
-
-                db.add(existing)
+        for item, normalized in zip(selected, names):
+            row = existing_by_name.get(normalized)
+            if row is None:
+                row = DCACategory(edition_id=current.id, normalized_name=normalized,
+                                  name=item["name"], source_type=item["source_type"],
+                                  source_category_id=item["source_category_id"],
+                                  description=item["description"], status="round2_ballot")
+                db.add(row)
                 added += 1
             else:
-                existing.status = "round2_ballot"
+                row.name = item["name"]
+                row.description = item["description"]
+                row.source_type = item["source_type"]
+                row.source_category_id = item["source_category_id"]
+                row.status = "round2_ballot"
 
-        # ----------------------------------------------------
-        # Add APPROVED new Round 1 suggestions
-        # ----------------------------------------------------
-
-        approved = (
-            db.query(DCANewCategorySuggestion)
-            .join(
-                DCACategorySuggestionSubmission,
-                DCANewCategorySuggestion.submission_id
-                == DCACategorySuggestionSubmission.id,
-            )
-            .filter(
-                DCACategorySuggestionSubmission.edition_id == current.id,
-                DCANewCategorySuggestion.moderation_status == "approved",
-            )
-            .all()
-        )
-
-        for suggestion in approved:
-
-            existing = (
-                db.query(DCACategory)
-                .filter(
-                    DCACategory.edition_id == current.id,
-                    DCACategory.normalized_name
-                    == suggestion.normalized_name,
-                )
-                .first()
-            )
-
-            if not existing:
-                db.add(
-                    DCACategory(
-                        edition_id=current.id,
-                        name=suggestion.category_name,
-                        normalized_name=suggestion.normalized_name,
-                        source_type="new",
-                        status="round2_ballot",
-                    )
-                )
-                added += 1
-            else:
-                existing.status = "round2_ballot"
-
+        if ballot is None:
+            ballot = DCACategoryBallot(edition_id=current.id, is_open=False)
+            db.add(ballot)
+        ballot.is_open = False
+        method_counts = dict(db.query(
+            DCACategorySuggestionSubmission.category_count_preference,
+            func.count(DCACategorySuggestionSubmission.id),
+        ).filter(DCACategorySuggestionSubmission.edition_id == current.id)
+         .group_by(DCACategorySuggestionSubmission.category_count_preference).all())
+        highest = max(method_counts.values()) if method_counts else 0
+        winners = [key for key, count in method_counts.items() if count == highest]
+        ballot.round_one_winning_method = winners[0] if len(winners) == 1 else None
+        ballot.threshold_number = db.query(DCACategorySuggestionSubmission).filter_by(edition_id=current.id).count()
         db.commit()
-
-        flash(
-            f"Round 2 ballot built. "
-            f"{added} new ballot records created."
-        )
-
+        flash(f"Closed Round 2 ballot prepared from {len(selected)} saved categories ({added} new records).")
         return redirect(url_for("admin_round1"))
-
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 
