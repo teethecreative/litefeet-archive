@@ -1336,6 +1336,45 @@ def admin_round1():
             item["duplicate_warning"] for item in final_review
         )
 
+
+        # Finalization readiness: diagnostics only, no writes.
+        eligible_keys = {item["key"] for item in shortlist}
+        stale_selected = sorted(
+            key for key, selected in saved_map.items()
+            if selected and key not in eligible_keys
+        )
+        selected_returning = sum(
+            item["source"] == "RETURNING"
+            for item in final_review
+        )
+        selected_new = sum(
+            item["source"] == "NEW"
+            for item in final_review
+        )
+        readiness_issues = []
+        if not final_review:
+            readiness_issues.append("No categories selected.")
+        if final_review_has_duplicates:
+            readiness_issues.append(
+                "Duplicate selected category names."
+            )
+        if stale_selected:
+            readiness_issues.append(
+                "Saved selections no longer eligible: "
+                + ", ".join(stale_selected)
+            )
+        readiness_issues.append(
+            "Community voting on suggested categories "
+            "has not been implemented yet."
+        )
+        finalization_readiness = {
+            "returning": selected_returning,
+            "new": selected_new,
+            "stale": stale_selected,
+            "issues": readiness_issues,
+            "locked": True,
+        }
+
         return render_template(
             "admin_round1.html",
             submission_count=submission_count,
@@ -1345,6 +1384,7 @@ def admin_round1():
             suggestions=suggestions,
             shortlist=shortlist,
             final_review=final_review,
+            finalization_readiness=finalization_readiness,
             final_review_has_duplicates=final_review_has_duplicates,
             method_counts=method_counts,
             method_labels=method_labels,

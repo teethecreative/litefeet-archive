@@ -536,6 +536,31 @@
     </p>
 </section>
 
+
+<section class="admin-finalization-readiness">
+  <h2>FINALIZATION READINESS</h2>
+  <p><strong>Finalization locked.</strong>
+     This report does not publish categories or open nominations.</p>
+  <p>
+    Selected returning categories:
+    {{ finalization_readiness.returning }}
+  </p>
+  <p>
+    Selected new categories:
+    {{ finalization_readiness.new }}
+  </p>
+  <h3>Items to resolve</h3>
+  <ul>
+  {% for issue in finalization_readiness.issues %}
+    <li>{{ issue }}</li>
+  {% endfor %}
+  </ul>
+  <p>
+    Finalization will be enabled in a later phase,
+    after community category voting is implemented and reviewed.
+  </p>
+</section>
+
 </main>
 
 
