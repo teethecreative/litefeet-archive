@@ -4651,3 +4651,42 @@ html[data-theme="dark"]
         writing-mode: vertical-rl;
     }
 }
+
+
+/* PHASE 6F FINAL CLEANUP */
+
+.ledger-analytics .analytics-hour span {
+    font-size: 9px;
+    white-space: nowrap;
+}
+
+.ledger-analytics .analytics-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.ledger-analytics .analytics-table {
+    min-width: 580px;
+}
+
+.ledger-analytics .analytics-metric strong {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+    .ledger-analytics .analytics-hours {
+        overflow-x: auto;
+        grid-template-columns: repeat(24, minmax(28px, 1fr));
+    }
+
+    .ledger-analytics .analytics-hour span {
+        font-size: 8px;
+        writing-mode: vertical-rl;
+    }
+
+    .ledger-analytics .analytics-trend-tabs button {
+        flex: 1;
+        min-width: 85px;
+        padding: 10px;
+    }
+}

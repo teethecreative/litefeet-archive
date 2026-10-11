@@ -314,7 +314,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                     if peak else 0
                  )|round(1) }}%"></div>
             <span>
-                {{ item.hour % 12 or 12 }}
+                {{ ledger_analytics_hour_label(item.hour) }}
             </span>
         </div>
         {% endfor %}
