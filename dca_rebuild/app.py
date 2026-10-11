@@ -1407,6 +1407,7 @@ def admin_round1():
                 "yes": yes,
                 "no": no,
                 "default_selected": yes > no,
+                "description": category.description,
             })
 
         for group in dca_new_category_groups(db, edition.id):
@@ -1417,6 +1418,7 @@ def admin_round1():
                 "yes": group["yes"],
                 "no": group["no"],
                 "default_selected": group["default_selected"],
+                "description": group["description"],
             })
 
         saved_rows = db.query(DCACategoryDraftSelection).filter_by(
@@ -1482,6 +1484,14 @@ def admin_round1():
             readiness_issues.append(
                 "Saved selections no longer eligible: "
                 + ", ".join(stale_selected)
+            )
+        missing_descriptions = [
+            item["name"] for item in final_review
+            if not (item.get("description") or "").strip()
+        ]
+        if missing_descriptions:
+            readiness_issues.append(
+                f"{len(missing_descriptions)} selected categories need descriptions."
             )
         if not dca_categories_closed():
             readiness_issues.append("Round 1 is still open until October 31.")

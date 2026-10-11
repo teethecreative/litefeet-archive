@@ -581,28 +581,29 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 
-<section class="admin-finalization-readiness">
+<style id="dca-readiness-compact-v1">
+.dca-readiness-compact{margin-top:24px}
+.dca-readiness-compact .dca-readiness-summary{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:12px 0}
+.dca-readiness-compact .dca-readiness-summary span{display:inline-block;padding:8px 12px;border:1px solid currentColor;border-radius:4px;font-size:.85rem}
+.dca-readiness-compact details{border:1px solid currentColor;border-radius:4px;overflow:hidden;margin-top:12px}
+.dca-readiness-compact summary{padding:12px 15px;cursor:pointer;font-weight:700}
+.dca-readiness-compact ul{padding:0 18px 12px 36px;margin:0}
+.dca-readiness-compact li{padding:5px 0;overflow-wrap:anywhere}
+</style>
+<section class="admin-finalization-readiness dca-readiness-compact">
   <h2>FINALIZATION READINESS</h2>
-  <p><strong>Finalization locked.</strong>
-     This report does not publish categories or open nominations.</p>
-  <p>
-    Selected returning categories:
-    {{ finalization_readiness.returning }}
-  </p>
-  <p>
-    Selected new categories:
-    {{ finalization_readiness.new }}
-  </p>
-  <h3>Items to resolve</h3>
-  <ul>
-  {% for issue in finalization_readiness.issues %}
-    <li>{{ issue }}</li>
-  {% endfor %}
-  </ul>
-  <p>
-    Finalization will be enabled in a later phase,
-    after community category voting is implemented and reviewed.
-  </p>
+  <p><strong>Finalization is locked.</strong> This review does not publish categories or open nominations.</p>
+  <div class="dca-readiness-summary">
+    <span>RETURNING {{ finalization_readiness.returning }}</span>
+    <span>NEW {{ finalization_readiness.new }}</span>
+    <span>ITEMS TO REVIEW {{ finalization_readiness.issues|length }}</span>
+  </div>
+  <details {% if finalization_readiness.issues %}open{% endif %}>
+    <summary>REVIEW REQUIREMENTS ({{ finalization_readiness.issues|length }})</summary>
+    {% if finalization_readiness.issues %}
+    <ul>{% for issue in finalization_readiness.issues %}<li>{{ issue }}</li>{% endfor %}</ul>
+    {% else %}<p style="padding:0 15px">No draft validation issues found. Finalization is still disabled.</p>{% endif %}
+  </details>
 </section>
 
 </main>
