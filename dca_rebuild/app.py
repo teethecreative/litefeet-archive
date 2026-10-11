@@ -25,6 +25,7 @@ from dca_rebuild.models import (
     BetaFeedback,
     BetaChangelog,
     NewsletterSubscriber,
+    DCACategoryDraftSelection,
 )
 from dca_rebuild.models import LedgerEra
 
@@ -1269,21 +1270,44 @@ def admin_round1():
         merge_targets = suggestions
 
 
+
         shortlist = []
-        seen = set()
-        for result in return_results:
-            key = " ".join(result["name"].casefold().split())
-            shortlist.append(dict(name=result["name"], source="RETURNING",
-                                  yes=result["yes"], no=result["no"],
-                                  duplicate=key in seen))
-            seen.add(key)
+        for category in categories:
+            votes = next(
+                (r for r in return_results if r["name"] == category.name),
+                None,
+            )
+            yes = votes["yes"] if votes else 0
+            no = votes["no"] if votes else 0
+            shortlist.append({
+                "key": f"returning:{category.id}",
+                "name": category.name,
+                "source": "RETURNING",
+                "yes": yes,
+                "no": no,
+                "default_selected": yes > no,
+            })
+
         for suggestion in suggestions:
             if suggestion.moderation_status == "approved":
-                key = " ".join(suggestion.category_name.casefold().split())
-                shortlist.append(dict(name=suggestion.category_name,
-                                      source="NEW", yes=None, no=None,
-                                      duplicate=key in seen))
-                seen.add(key)
+                shortlist.append({
+                    "key": f"new:{suggestion.id}",
+                    "name": suggestion.category_name,
+                    "source": "NEW",
+                    "yes": None,
+                    "no": None,
+                    "default_selected": True,
+                })
+
+        saved_rows = db.query(DCACategoryDraftSelection).filter_by(
+            edition_id=edition.id
+        ).all()
+        saved_map = {row.category_key: row.selected for row in saved_rows}
+
+        for item in shortlist:
+            item["selected"] = saved_map.get(
+                item["key"], item["default_selected"]
+            )
 
         return render_template(
             "admin_round1.html",
@@ -1306,6 +1330,47 @@ def admin_round1():
 # ============================================================
 # DCA ROUND 1 — BUILD ROUND 2 BALLOT
 # ============================================================
+
+
+@app.route("/admin/dca/category-draft/save", methods=["POST"])
+@admin_login_required
+def save_dca_category_draft():
+    expected = session.get("dca_moderation_csrf", "")
+    provided = request.form.get("csrf_token", "")
+
+    if not expected or not secrets.compare_digest(expected, provided):
+        abort(400)
+
+    db = SessionLocal()
+    try:
+        edition = db.query(DCAEdition).filter_by(year=2026).first()
+        if not edition:
+            abort(404)
+
+        selected_keys = set(request.form.getlist("category_key"))
+
+        existing = db.query(DCACategoryDraftSelection).filter_by(
+            edition_id=edition.id
+        ).all()
+
+        for row in existing:
+            row.selected = row.category_key in selected_keys
+
+        existing_keys = {row.category_key for row in existing}
+
+        for key in selected_keys - existing_keys:
+            db.add(DCACategoryDraftSelection(
+                edition_id=edition.id,
+                category_key=key,
+                selected=True,
+            ))
+
+        db.commit()
+        flash("Category selection draft saved.")
+        return redirect(url_for("admin_round1"))
+    finally:
+        db.close()
+
 
 @app.route("/admin/round1/build-round2", methods=["POST"])
 @admin_login_required

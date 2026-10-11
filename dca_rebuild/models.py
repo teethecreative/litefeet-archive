@@ -724,3 +724,12 @@ class LedgerEra(Base):
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
     )
+
+
+class DCACategoryDraftSelection(Base):
+    __tablename__ = "ledger_dca_category_draft_selections"
+
+    id = Column(Integer, primary_key=True)
+    edition_id = Column(Integer, nullable=False)
+    category_key = Column(String(100), nullable=False)
+    selected = Column(Boolean, nullable=False, default=False)

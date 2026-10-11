@@ -462,22 +462,40 @@
 </section>
 
 
+
 <section class="admin-shortlist-preview">
-<h2>2026 CATEGORY SHORTLIST</h2>
-<p>Working preview only. Nothing is finalized.</p>
-{% for item in shortlist %}
-<div class="moderation-card">
-<strong>{{ item.name }}</strong>
-<p>{{ item.source }}</p>
-{% if item.source == "RETURNING" %}
-<p>YES: {{ item.yes }} | NO: {{ item.no }}</p>
-{% endif %}
-{% if item.duplicate %}<p>POSSIBLE DUPLICATE — REVIEW</p>{% endif %}
-</div>
-{% else %}
-<p>No categories available for preview.</p>
-{% endfor %}
+    <h2>DCA CATEGORY SELECTION DRAFT</h2>
+    <p>
+        Select the categories you want to keep.
+        This is a draft only. Saving does not finalize or publish anything.
+    </p>
+
+    <form method="post"
+          action="{{ url_for('save_dca_category_draft') }}">
+        <input type="hidden" name="csrf_token"
+               value="{{ dca_moderation_csrf }}">
+
+        {% for item in shortlist %}
+        <label class="moderation-card">
+            <input type="checkbox"
+                   name="category_key"
+                   value="{{ item.key }}"
+                   {% if item.selected %}checked{% endif %}>
+            <strong>{{ item.name }}</strong>
+            <span>{{ item.source }}</span>
+
+            {% if item.source == "RETURNING" %}
+            <span>YES {{ item.yes }} / NO {{ item.no }}</span>
+            {% endif %}
+        </label>
+        {% else %}
+        <p>No eligible categories available.</p>
+        {% endfor %}
+
+        <button type="submit">SAVE CATEGORY DRAFT</button>
+    </form>
 </section>
+
 
 </main>
 
