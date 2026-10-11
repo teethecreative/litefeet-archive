@@ -741,6 +741,45 @@ class LedgerEra(Base):
     )
 
 
+# ============================================================
+# DCA 2026 NOMINATIONS — FOUNDATION (NOT PUBLICLY OPEN)
+# ============================================================
+
+class DCANominee(Base):
+    __tablename__ = "ledger_dca_nominees"
+
+    id = Column(Integer, primary_key=True)
+    edition_id = Column(Integer, ForeignKey("ledger_dca_editions.id"), nullable=False, index=True)
+    category_id = Column(Integer, ForeignKey("ledger_dca_categories.id"), nullable=False, index=True)
+    name = Column(String(250), nullable=False)
+    normalized_name = Column(String(250), nullable=False)
+    description = Column(Text)
+    # pending / approved / rejected; approval does not open voting
+    moderation_status = Column(String(30), nullable=False, default="pending")
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    reviewed_at = Column(DateTime)
+
+    __table_args__ = (
+        UniqueConstraint("category_id", "normalized_name", name="ledger_uq_dca_nominee_category_name"),
+    )
+
+
+class DCANominationSubmission(Base):
+    __tablename__ = "ledger_dca_nomination_submissions"
+
+    id = Column(Integer, primary_key=True)
+    edition_id = Column(Integer, ForeignKey("ledger_dca_editions.id"), nullable=False, index=True)
+    nominee_id = Column(Integer, ForeignKey("ledger_dca_nominees.id"), nullable=False, index=True)
+    # Privacy-preserving identifiers, never a raw email or IP address.
+    submitter_hash = Column(String(128), nullable=False)
+    ip_hash = Column(String(128))
+    submitted_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("nominee_id", "submitter_hash", name="ledger_uq_dca_nomination_submitter_nominee"),
+    )
+
+
 class DCACategoryDraftSelection(Base):
     __tablename__ = "ledger_dca_category_draft_selections"
 
