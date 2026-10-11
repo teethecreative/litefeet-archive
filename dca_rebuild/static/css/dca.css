@@ -4467,3 +4467,43 @@ html[data-theme="dark"]
         height: 150px;
     }
 }
+
+
+/* PHASE 6B.2 CONTROL ROOM FIXES */
+
+.ledger-admin .admin-control-room__header
+.admin-system-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ledger-admin .admin-control-room__header
+.admin-system-status span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 7px 12px;
+    color: #10213b;
+    -webkit-text-fill-color: #10213b;
+    font-size: 11px;
+    font-weight: 900;
+    line-height: 1.4;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    white-space: normal;
+    opacity: 1;
+}
+
+.ledger-admin #analytics .admin-module-card a {
+    display: inline-block;
+    margin-top: 12px;
+}
+
+@media (max-width: 600px) {
+    .ledger-admin .admin-control-room__header
+    .admin-system-status span {
+        font-size: 10px;
+        padding: 7px 9px;
+    }
+}
