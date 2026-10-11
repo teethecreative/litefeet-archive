@@ -345,7 +345,7 @@ def dca_new_category_groups(db, edition_id):
         if not key:
             continue
         group = groups.setdefault(key, {
-            "id": target.id, "name": target.category_name,
+            "id": target.id, "name": target.category_name, "description": target.description,
             "count": 0, "yes": 0, "no": 0,
             "ids": set(), "status": target.moderation_status,
         })
@@ -854,76 +854,53 @@ def admin_login_required(view):
 def moderate_round1_suggestion(suggestion_id):
     expected = session.get("dca_moderation_csrf", "")
     provided = request.form.get("csrf_token", "")
-
-    if not expected or not secrets.compare_digest(
-        expected, provided
-    ):
+    if not expected or not secrets.compare_digest(expected, provided):
         abort(400, description="Invalid moderation token")
 
     decision = request.form.get("decision", "").strip()
-    category_name = request.form.get(
-        "category_name", ""
-    ).strip()
-    merge_raw = request.form.get(
-        "merge_target_id", ""
-    ).strip()
-
-    if decision not in {"approved", "rejected", "merged"}:
-        abort(400, description="Invalid moderation decision")
-
-    if not category_name or len(category_name) > 250:
+    name = " ".join(request.form.get("category_name", "").split())
+    description = " ".join(request.form.get("category_description", "").split())
+    merge_raw = request.form.get("merge_target_id", "").strip()
+    if not name or len(name) > 250:
         abort(400, description="Invalid category name")
+    if len(description) > 500:
+        abort(400, description="Description must be 500 characters or fewer")
+    if decision not in {"update", "approved", "rejected", "merged"}:
+        abort(400, description="Invalid moderation decision")
 
     db = SessionLocal()
     try:
-        suggestion = db.query(
-            DCANewCategorySuggestion
-        ).filter_by(id=suggestion_id).first()
-
+        suggestion = db.get(DCANewCategorySuggestion, suggestion_id)
         if suggestion is None:
             abort(404)
-
         target = None
-
         if decision == "merged":
             try:
                 target_id = int(merge_raw)
             except (TypeError, ValueError):
-                abort(400, description="Invalid merge target")
-
+                abort(400, description="Select a merge target")
             if target_id == suggestion_id:
                 abort(400, description="Cannot merge into itself")
-
-            target = db.query(
-                DCANewCategorySuggestion
-            ).filter_by(id=target_id).first()
-
-            if (
-                target is None
-                or target.moderation_status == "merged"
-                or target.submission.edition_id
-                != suggestion.submission.edition_id
-            ):
+            target = db.get(DCANewCategorySuggestion, target_id)
+            if (target is None or target.moderation_status in {"merged", "rejected"}
+                    or target.submission.edition_id != suggestion.submission.edition_id):
                 abort(400, description="Invalid merge target")
 
-        suggestion.category_name = category_name
-        suggestion.normalized_name = " ".join(
-            category_name.casefold().split()
-        )
-        suggestion.moderation_status = decision
-        suggestion.merged_into_id = (
-            target.id if target else None
-        )
-
+        suggestion.category_name = name
+        suggestion.normalized_name = " ".join(name.casefold().split())
+        suggestion.description = description or None
+        if decision != "update":
+            suggestion.moderation_status = decision
+            suggestion.merged_into_id = target.id if target else None
         db.commit()
-        flash(f'"{category_name}" updated.')
+        flash(f'"{name}" saved.')
         return redirect(url_for("admin_round1"))
-
     except Exception:
         db.rollback()
         raise
     finally:
         db.close()
+
 
 
 # ============================================================
@@ -967,6 +944,22 @@ def ensure_dca_round1_email_column():
 
 
 ensure_dca_round1_email_column()
+
+
+def ensure_dca_suggestion_description_column():
+    from sqlalchemy import inspect, text as sql_text
+    table = DCANewCategorySuggestion.__tablename__
+    inspector = inspect(engine)
+    if table in inspector.get_table_names():
+        names = {c["name"] for c in inspector.get_columns(table)}
+        if "description" not in names:
+            with engine.begin() as connection:
+                connection.execute(sql_text(
+                    f'ALTER TABLE "{table}" ADD COLUMN description TEXT'
+                ))
+
+
+ensure_dca_suggestion_description_column()
 
 
 # ============================================================

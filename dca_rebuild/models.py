@@ -232,6 +232,7 @@ class DCANewCategorySuggestion(Base):
 
     category_name = Column(String(250), nullable=False)
     normalized_name = Column(String(250), nullable=False)
+    description = Column(Text, nullable=True)
 
     # pending / approved / merged / rejected
     moderation_status = Column(

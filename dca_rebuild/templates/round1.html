@@ -410,7 +410,8 @@ type="submit"
       {% for group in new_category_groups %}
       <article class="category suggested-category">
         <div class="origin">2026 COMMUNITY SUGGESTION</div>
-        <h3>{{ group.name }}</h3>
+        <h3>{{ group.name }}
+{% if group.description %}<p class="description">{{ group.description }}</p>{% endif %}</h3>
         <div class="choices">
           <label><input type="radio" name="new_category_vote_{{ group.id }}" value="yes"><span>YES</span></label>
           <label><input type="radio" name="new_category_vote_{{ group.id }}" value="no"><span>NO</span></label>

@@ -348,6 +348,13 @@
                 >
 
 
+                <label class="admin-label" for="description-{{ suggestion.id }}">
+                    CATEGORY DESCRIPTION
+                </label>
+                <textarea class="admin-input" id="description-{{ suggestion.id }}"
+                          name="category_description" rows="3" maxlength="500"
+                          placeholder="Briefly explain what this award recognizes.">{{ suggestion.description or '' }}</textarea>
+
                 <label class="admin-label">
                     MODERATION DECISION
                 </label>
@@ -357,7 +364,7 @@
                     name="decision"
                     required
                 >
-                    <option value="">Choose decision</option>
+                    <option value="update" selected>Update name / description (keep current status)</option>
 
                     <option value="approved">
                         Approve for final category review
@@ -397,7 +404,7 @@
                     class="admin-save"
                     type="submit"
                 >
-                    SAVE DECISION
+                    SAVE CHANGES
                 </button>
 
             </form>
