@@ -4183,6 +4183,7 @@ def admin_analytics():
             ny_timezone=timezone,
             visitors=visitors[:100],
             search=search,
+            ledger_analytics_hour_label=ledger_analytics_hour_label,
         )
     finally:
         db.close()
@@ -4203,11 +4204,20 @@ def admin_analytics_visitors():
         1, min(request.args.get("min_views", 1, type=int) or 1, 100000)
     )
     per_page = 25
+    date_scope = ledger_analytics_date_scope()
 
     db = SessionLocal()
     try:
+        scoped_views = db.query(LedgerPageView)
+
+        if date_scope:
+            scoped_views = scoped_views.filter(
+                LedgerPageView.viewed_at >= date_scope["start_utc"],
+                LedgerPageView.viewed_at < date_scope["end_utc"],
+            )
+
         grouped = (
-            db.query(
+            scoped_views.with_entities(
                 LedgerPageView.visitor_id.label("visitor_id"),
                 func.count(LedgerPageView.id).label("views"),
                 func.sum(
@@ -4225,7 +4235,9 @@ def admin_analytics_visitors():
 
         if search:
             matching_ids = (
-                db.query(LedgerPageView.visitor_id)
+                scoped_views.with_entities(
+                    LedgerPageView.visitor_id
+                )
                 .filter(
                     or_(
                         LedgerPageView.visitor_id.ilike("%" + search + "%"),
@@ -4277,6 +4289,7 @@ def admin_analytics_visitors():
             sort=sort,
             search=search,
             minimum=minimum,
+            date_scope=date_scope,
             ny_timezone=ZoneInfo("America/New_York"),
             utc_timezone=ZoneInfo("UTC"),
         )
@@ -4295,42 +4308,40 @@ def admin_analytics_visitor(visitor_id):
 
     page = max(1, min(request.args.get("page", 1, type=int) or 1, 100000))
     per_page = 50
+    date_scope = ledger_analytics_date_scope()
 
     db = SessionLocal()
     try:
         base = db.query(LedgerPageView).filter(
             LedgerPageView.visitor_id == visitor_id
         )
+        if date_scope:
+            base = base.filter(
+                LedgerPageView.viewed_at >= date_scope["start_utc"],
+                LedgerPageView.viewed_at < date_scope["end_utc"],
+            )
+
         total = base.count()
         if not total:
             abort(404)
 
-        visits = (
-            db.query(func.count(LedgerPageView.id))
-            .filter(
-                LedgerPageView.visitor_id == visitor_id,
-                LedgerPageView.is_new_visit.is_(True),
-            )
-            .scalar()
-        ) or 0
+        visits = base.filter(
+            LedgerPageView.is_new_visit.is_(True)
+        ).count()
 
-        first_seen = (
-            db.query(func.min(LedgerPageView.viewed_at))
-            .filter(LedgerPageView.visitor_id == visitor_id)
-            .scalar()
-        )
-        last_seen = (
-            db.query(func.max(LedgerPageView.viewed_at))
-            .filter(LedgerPageView.visitor_id == visitor_id)
-            .scalar()
-        )
+        first_seen = base.with_entities(
+            func.min(LedgerPageView.viewed_at)
+        ).scalar()
+
+        last_seen = base.with_entities(
+            func.max(LedgerPageView.viewed_at)
+        ).scalar()
 
         top_pages = (
-            db.query(
+            base.with_entities(
                 LedgerPageView.path,
                 func.count(LedgerPageView.id).label("views"),
             )
-            .filter(LedgerPageView.visitor_id == visitor_id)
             .group_by(LedgerPageView.path)
             .order_by(func.count(LedgerPageView.id).desc())
             .limit(20)
@@ -4361,8 +4372,66 @@ def admin_analytics_visitor(visitor_id):
             activity=activity,
             page=page,
             total_pages=total_pages,
+            date_scope=date_scope,
             ny_timezone=ZoneInfo("America/New_York"),
             utc_timezone=ZoneInfo("UTC"),
         )
     finally:
         db.close()
+
+
+# PHASE 6E.1 UNIFIED DATE FILTERS
+def ledger_analytics_date_scope():
+    from datetime import date
+
+    start_text = request.args.get("start", "").strip()
+    end_text = request.args.get("end", "").strip()
+
+    if not start_text and not end_text:
+        return None
+
+    if not start_text or not end_text:
+        abort(400)
+
+    try:
+        start_day = date.fromisoformat(start_text)
+        end_day = date.fromisoformat(end_text)
+    except ValueError:
+        abort(400)
+
+    today = datetime.now(ZoneInfo("America/New_York")).date()
+
+    if (
+        start_day > end_day
+        or (end_day - start_day).days > 366
+        or end_day > today
+    ):
+        abort(400)
+
+    timezone = ZoneInfo("America/New_York")
+    utc = ZoneInfo("UTC")
+
+    start_local = datetime.combine(
+        start_day, datetime.min.time(), tzinfo=timezone
+    )
+    end_local = datetime.combine(
+        end_day + timedelta(days=1),
+        datetime.min.time(),
+        tzinfo=timezone,
+    )
+
+    return {
+        "start_day": start_day,
+        "end_day": end_day,
+        "start_utc": start_local.astimezone(utc).replace(
+            tzinfo=None
+        ),
+        "end_utc": end_local.astimezone(utc).replace(
+            tzinfo=None
+        ),
+    }
+
+
+def ledger_analytics_hour_label(hour):
+    hour = int(hour) % 24
+    return f"{hour % 12 or 12}:00 {'AM' if hour < 12 else 'PM'}"

@@ -306,7 +306,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
     <div class="analytics-hours">
         {% for item in analytics_hours %}
         <div class="analytics-hour"
-             title="{{ '%02d:00'|format(item.hour) }}:
+             title="{{ ledger_analytics_hour_label(item.hour) }}:
                     {{ item.views }} views">
             <div class="analytics-hour-bar"
                  style="height:{{ (
@@ -314,7 +314,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                     if peak else 0
                  )|round(1) }}%"></div>
             <span>
-                {{ '%02d'|format(item.hour) }}
+                {{ item.hour % 12 or 12 }}
             </span>
         </div>
         {% endfor %}
@@ -328,9 +328,9 @@ href="{{ url_for('static', filename='css/dca.css') }}">
             <tbody>
             {% for item in busiest_hours if item.views %}
                 <tr>
-                    <td>{{ '%02d:00'|format(item.hour) }}
-                        – {{ '%02d:00'|format(
-                            (item.hour + 1) % 24
+                    <td>{{ ledger_analytics_hour_label(item.hour) }}
+                        – {{ ledger_analytics_hour_label(
+                            item.hour + 1
                         ) }}</td>
                     <td>{{ item.views }}</td>
                 </tr>
@@ -377,8 +377,8 @@ href="{{ url_for('static', filename='css/dca.css') }}">
         <div class="label">07 · VISITOR ACTIVITY</div>
         <h2>VISITOR DIRECTORY</h2>
         <p>
-            <a href="{{ url_for('admin_analytics_visitors') }}">
-                OPEN FULL VISITOR DIRECTORY →
+            <a href="{{ url_for('admin_analytics_visitors', start=start_day.isoformat(), end=end_day.isoformat()) }}">
+                OPEN FILTERED VISITOR DIRECTORY →
             </a>
         </p>
         <p>
@@ -417,7 +417,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                         <a href="{{ url_for(
                             'admin_analytics_visitor',
                             visitor_id=visitor.id
-                        ) }}">
+                        , start=start_day.isoformat(), end=end_day.isoformat()) }}">
                             <code>{{ visitor.id[:12] }}…</code>
                         </a>
                     </td>

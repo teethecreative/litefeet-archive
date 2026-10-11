@@ -25,7 +25,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
     <p class="lead">
         Page-by-page activity for an anonymous browser session.
     </p>
-    <p><a href="{{ url_for('admin_analytics_visitors') }}">
+    <p><a href="{{ url_for('admin_analytics_visitors', start=date_scope.start_day.isoformat() if date_scope else None, end=date_scope.end_day.isoformat() if date_scope else None) }}">
         ← VISITOR DIRECTORY
     </a></p>
 </header>
@@ -35,6 +35,23 @@ href="{{ url_for('static', filename='css/dca.css') }}">
         <div class="label">01 · SESSION OVERVIEW</div>
         <h2>ACTIVITY SUMMARY</h2>
     </div>
+
+    {% if date_scope %}
+    <p class="analytics-period-label">
+        {{ date_scope.start_day }} —
+        {{ date_scope.end_day }} · NEW YORK TIME
+    </p>
+    <p>
+        <a href="{{ url_for(
+            'admin_analytics_visitor',
+            visitor_id=visitor_id
+        ) }}">VIEW ALL-TIME ACTIVITY →</a>
+    </p>
+    {% else %}
+    <p class="analytics-period-label">
+        ALL RECORDED DATES
+    </p>
+    {% endif %}
 
     <p class="analytics-session-id">
         SESSION ID: <code>{{ visitor_id }}</code>
@@ -139,14 +156,14 @@ href="{{ url_for('static', filename='css/dca.css') }}">
         <a href="{{ url_for(
             'admin_analytics_visitor',
             visitor_id=visitor_id, page=page-1
-        ) }}">← PREVIOUS</a>
+        , start=date_scope.start_day.isoformat() if date_scope else None, end=date_scope.end_day.isoformat() if date_scope else None) }}">← PREVIOUS</a>
         {% endif %}
         <span>PAGE {{ page }} OF {{ total_pages }}</span>
         {% if page < total_pages %}
         <a href="{{ url_for(
             'admin_analytics_visitor',
             visitor_id=visitor_id, page=page+1
-        ) }}">NEXT →</a>
+        , start=date_scope.start_day.isoformat() if date_scope else None, end=date_scope.end_day.isoformat() if date_scope else None) }}">NEXT →</a>
         {% endif %}
     </div>
 </section>

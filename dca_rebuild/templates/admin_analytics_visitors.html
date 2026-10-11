@@ -25,9 +25,16 @@ href="{{ url_for('static', filename='css/dca.css') }}">
     <p class="lead">
         Search and explore recorded browser-session activity.
     </p>
-    <p><a href="{{ url_for('admin_analytics') }}">
-        ← ANALYTICS OVERVIEW
-    </a></p>
+    <p>
+        <a href="{{ url_for(
+            'admin_analytics',
+            period='custom',
+            start=date_scope.start_day.isoformat(),
+            end=date_scope.end_day.isoformat()
+        ) if date_scope else url_for('admin_analytics') }}">
+            ← ANALYTICS OVERVIEW
+        </a>
+    </p>
 </header>
 
 <section class="admin-module-section">
@@ -41,7 +48,25 @@ href="{{ url_for('static', filename='css/dca.css') }}">
         </p>
     </div>
 
+    {% if date_scope %}
+    <p class="analytics-period-label">
+        {{ date_scope.start_day }} —
+        {{ date_scope.end_day }} · NEW YORK TIME
+        <a href="{{ url_for('admin_analytics_visitors') }}">
+            CLEAR DATE FILTER
+        </a>
+    </p>
+    {% else %}
+    <p class="analytics-period-label">ALL RECORDED DATES</p>
+    {% endif %}
+
     <form method="get" class="analytics-directory-filters">
+        {% if date_scope %}
+        <input type="hidden" name="start"
+               value="{{ date_scope.start_day }}">
+        <input type="hidden" name="end"
+               value="{{ date_scope.end_day }}">
+        {% endif %}
         <label>
             SEARCH SESSION OR PAGE
             <input name="q" value="{{ search }}"
@@ -108,7 +133,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                         <a href="{{ url_for(
                             'admin_analytics_visitor',
                             visitor_id=visitor.visitor_id
-                        ) }}">VIEW ACTIVITY →</a>
+                        , start=date_scope.start_day.isoformat() if date_scope else None, end=date_scope.end_day.isoformat() if date_scope else None) }}">VIEW ACTIVITY →</a>
                     </td>
                 </tr>
             {% else %}
@@ -126,7 +151,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
             'admin_analytics_visitors',
             page=page-1, sort=sort, q=search,
             min_views=minimum
-        ) }}">← PREVIOUS</a>
+        , start=date_scope.start_day.isoformat() if date_scope else None, end=date_scope.end_day.isoformat() if date_scope else None) }}">← PREVIOUS</a>
         {% endif %}
         <span>PAGE {{ page }} OF {{ total_pages }}</span>
         {% if page < total_pages %}
@@ -134,7 +159,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
             'admin_analytics_visitors',
             page=page+1, sort=sort, q=search,
             min_views=minimum
-        ) }}">NEXT →</a>
+        , start=date_scope.start_day.isoformat() if date_scope else None, end=date_scope.end_day.isoformat() if date_scope else None) }}">NEXT →</a>
         {% endif %}
     </div>
 </section>
