@@ -1268,6 +1268,23 @@ def admin_round1():
 
         merge_targets = suggestions
 
+
+        shortlist = []
+        seen = set()
+        for result in return_results:
+            key = " ".join(result["name"].casefold().split())
+            shortlist.append(dict(name=result["name"], source="RETURNING",
+                                  yes=result["yes"], no=result["no"],
+                                  duplicate=key in seen))
+            seen.add(key)
+        for suggestion in suggestions:
+            if suggestion.moderation_status == "approved":
+                key = " ".join(suggestion.category_name.casefold().split())
+                shortlist.append(dict(name=suggestion.category_name,
+                                      source="NEW", yes=None, no=None,
+                                      duplicate=key in seen))
+                seen.add(key)
+
         return render_template(
             "admin_round1.html",
             submission_count=submission_count,
@@ -1275,6 +1292,7 @@ def admin_round1():
             threshold=threshold,
             return_results=return_results,
             suggestions=suggestions,
+            shortlist=shortlist,
             method_counts=method_counts,
             method_labels=method_labels,
             merge_targets=merge_targets,

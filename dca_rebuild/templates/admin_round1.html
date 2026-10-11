@@ -461,6 +461,24 @@
 
 </section>
 
+
+<section class="admin-shortlist-preview">
+<h2>2026 CATEGORY SHORTLIST</h2>
+<p>Working preview only. Nothing is finalized.</p>
+{% for item in shortlist %}
+<div class="moderation-card">
+<strong>{{ item.name }}</strong>
+<p>{{ item.source }}</p>
+{% if item.source == "RETURNING" %}
+<p>YES: {{ item.yes }} | NO: {{ item.no }}</p>
+{% endif %}
+{% if item.duplicate %}<p>POSSIBLE DUPLICATE — REVIEW</p>{% endif %}
+</div>
+{% else %}
+<p>No categories available for preview.</p>
+{% endfor %}
+</section>
+
 </main>
 
 
