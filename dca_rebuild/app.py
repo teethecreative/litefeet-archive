@@ -4863,3 +4863,7 @@ def ledger_analytics_hour_label(hour):
 # LITEFEET_PHASE9C_ADMIN_WORKSPACE_2026
 
 # LITEFEET_PHASE9D_TOP25_NOMINATIONS
+
+# LITEFEET_SEO_PHASE_1
+from dca_rebuild.seo import register_seo
+register_seo(app)
