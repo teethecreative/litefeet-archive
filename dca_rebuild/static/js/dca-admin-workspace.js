@@ -16,6 +16,16 @@
     const rows = Array.from(tbody.rows);
     const sort = document.getElementById('lf-' + prefix + '-sort');
     let page = 1;
+    const stateKey = 'lf-dca-9d-table-' + prefix;
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(stateKey) || 'null');
+      if (saved && typeof saved === 'object') {
+        search.value = typeof saved.search === 'string' ? saved.search : '';
+        if (Array.from(filter.options).some(opt => opt.value === saved.filter)) filter.value = saved.filter;
+        if (sort && Array.from(sort.options).some(opt => opt.value === saved.sort)) sort.value = saved.sort;
+        page = Math.max(1, Number(saved.page) || 1);
+      }
+    } catch (_) { /* A disabled store should never block the table. */ }
     function matches(row) {
       const q = search.value.trim().toLocaleLowerCase();
       const f = filter.value;
@@ -47,6 +57,9 @@
       if (empty) empty.hidden = total !== 0;
       range.textContent = total ? (start + 1) + '–' + Math.min(start + size, total) + ' of ' + total : '0 results';
       pageLabel.textContent = 'Page ' + page + ' of ' + pages;
+      try { sessionStorage.setItem(stateKey, JSON.stringify({
+        search: search.value, filter: filter.value, sort: sort ? sort.value : null, page: page
+      })); } catch (_) {}
       pager.querySelectorAll('button[data-page-action]').forEach(function (button) {
         const action = button.dataset.pageAction;
         button.disabled = total === 0 || ((action === 'first' || action === 'prev') && page === 1) || ((action === 'next' || action === 'last') && page === pages);
@@ -157,5 +170,39 @@
         // Native form-associated checkboxes include selections on every page.
       });
     }
+  });
+})();
+
+/* LITEFEET_PHASE9D_RESTORE_AND_FIRST25 */
+(function () {
+  'use strict';
+  document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('lf-first25-form');
+    if (form) {
+      var count = document.getElementById('lf-first25-count');
+      var button = document.getElementById('lf-first25-submit');
+      var phrase = form.elements.namedItem('confirmation');
+      function refresh() {
+        var total = form.querySelectorAll('input[name="category_key"]:checked').length;
+        count.textContent = String(total);
+        button.disabled = total !== 25 || !phrase || phrase.value.trim() !== 'PUBLISH FIRST 25';
+      }
+      form.addEventListener('change', refresh);
+      form.addEventListener('input', refresh);
+      refresh();
+    }
+    var restored = sessionStorage.getItem('lf-dca-9d-scroll');
+    if (restored !== null) {
+      sessionStorage.removeItem('lf-dca-9d-scroll');
+      var y = Number(restored);
+      if (Number.isFinite(y) && y >= 0) {
+        window.requestAnimationFrame(function () { window.scrollTo(0, y); });
+      }
+    }
+    document.querySelectorAll('#lf-category-table form, #lf-draft-form, #lf-bulk-form').forEach(function (editForm) {
+      editForm.addEventListener('submit', function () {
+        sessionStorage.setItem('lf-dca-9d-scroll', String(window.scrollY));
+      });
+    });
   });
 })();

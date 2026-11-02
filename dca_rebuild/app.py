@@ -1559,6 +1559,20 @@ def admin_round1():
             })
         category_rows.sort(key=lambda row: (row["name"].casefold(), row["key"]))
 
+        # A curated, saved first 25 may launch before final category-method voting.
+        # This order is only a suggestion; the administrator chooses exactly 25.
+        first25_candidates = [item for item in shortlist if item["selected"]]
+        first25_candidates.sort(key=lambda item: (
+            -(item["yes"] or 0), -((item["yes"] or 0) - (item["no"] or 0)),
+            item["name"].casefold(),
+        ))
+        first25_complete = [item for item in first25_candidates
+                            if (item.get("description") or "").strip()]
+        first25_default_keys = {item["key"] for item in first25_candidates[:25]}
+        first25_official_count = db.query(DCACategory).filter_by(
+            edition_id=edition.id, status="official"
+        ).count()
+        first25_publish_locked = bool(first25_official_count or edition.phase == "nominations" or ballot_opened)
         return render_template(
             "admin_round1.html",
             submission_count=submission_count,
@@ -1569,6 +1583,12 @@ def admin_round1():
             suggestion_vote_groups=dca_new_category_groups(db, edition.id),
             shortlist=shortlist,
             category_rows=category_rows,
+            first25_candidates=first25_candidates,
+            first25_default_keys=first25_default_keys,
+            first25_complete_count=len(first25_complete),
+            first25_official_count=first25_official_count,
+            first25_publish_locked=first25_publish_locked,
+            first25_host_enabled=os.environ.get("DCA_2026_NOMINATIONS_ENABLED") == "true",
             final_review=final_review,
             finalization_readiness=finalization_readiness,
             ballot_prepared=ballot_prepared,
@@ -1844,9 +1864,85 @@ def dca_nomination_gate(db):
     categories = (db.query(DCACategory)
                   .filter_by(edition_id=edition.id, status="official")
                   .order_by(DCACategory.name.asc()).all())
-    if not categories:
+    # Phase 9D is the FIRST 25 only. Additional categories are a future stage.
+    if len(categories) != 25:
         return None, []
     return edition, categories
+
+
+@app.route("/admin/dca/nominations/publish-first-25", methods=["POST"])
+@admin_login_required
+def publish_dca_first_25():
+    """Explicit admin publish: selected, described Round 1 draft entries only.
+
+    This opens just the first set of 25, not the final Round 2 method.
+    The independent environment flag still controls public availability.
+    """
+    token = request.form.get("csrf_token", "")
+    expected = session.get("dca_moderation_csrf", "")
+    if not token or not expected or not secrets.compare_digest(token, expected):
+        abort(400, description="Invalid admin token")
+    if request.form.get("confirmation", "") != "PUBLISH FIRST 25":
+        abort(400, description="Confirm the first 25 explicitly")
+    keys = request.form.getlist("category_key")
+    if len(keys) != 25 or len(set(keys)) != 25:
+        abort(400, description="Select exactly 25 distinct categories")
+    if not dca_categories_closed():
+        abort(409, description="Category suggestions are still open")
+
+    db = SessionLocal()
+    try:
+        edition = db.query(DCAEdition).filter_by(year=2026).first()
+        historical = db.query(DCAEdition).filter_by(year=2023).first()
+        if not edition or not historical:
+            abort(404, description="Required DCA editions are missing")
+        if edition.phase == "nominations":
+            abort(409, description="Nominations have already been staged")
+        if db.query(DCACategory).filter_by(edition_id=edition.id, status="official").count():
+            abort(409, description="Official categories already exist; do not overwrite")
+        ballot = db.query(DCACategoryBallot).filter_by(edition_id=edition.id).first()
+        if ballot and (ballot.is_open or ballot.opened_at):
+            abort(409, description="Cannot publish over an opened Round 2 ballot")
+
+        eligible = dca_eligible_draft_entries(db, edition, historical)
+        saved = db.query(DCACategoryDraftSelection).filter_by(edition_id=edition.id, selected=True).all()
+        allowed = {row.category_key for row in saved}
+        if not set(keys).issubset(allowed) or not set(keys).issubset(eligible):
+            abort(409, description="All 25 must be saved, eligible category selections")
+        entries = [eligible[key] for key in keys]
+        normalized = [" ".join(item["name"].casefold().split()) for item in entries]
+        if any(not name for name in normalized) or len(set(normalized)) != 25:
+            abort(409, description="Resolve duplicate or empty category names")
+
+        existing = db.query(DCACategory).filter_by(edition_id=edition.id).all()
+        by_name = {row.normalized_name: row for row in existing}
+        if len(by_name) != len(existing):
+            abort(409, description="Duplicate 2026 category records must be resolved")
+        for item, name in zip(entries, normalized):
+            row = by_name.get(name)
+            if row is None:
+                row = DCACategory(
+                    edition_id=edition.id, name=item["name"], normalized_name=name,
+                    source_type=item["source_type"],
+                    source_category_id=item["source_category_id"],
+                    description=item["description"], status="official",
+                )
+                db.add(row)
+            else:
+                row.name = item["name"]
+                row.description = item["description"]
+                row.source_type = item["source_type"]
+                row.source_category_id = item["source_category_id"]
+                row.status = "official"
+        edition.phase = "nominations"
+        db.commit()
+        flash("First 25 category nominations staged. The public page opens only when DCA_2026_NOMINATIONS_ENABLED=true is configured on the host.")
+        return redirect(url_for("admin_round1") + "#lf-launch-first25")
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 
 @app.route("/awards/dancers-choice/nominations", methods=["GET", "POST"])
@@ -4765,3 +4861,5 @@ def ledger_analytics_hour_label(hour):
 # LITEFEET_PHASE9B_RESULTS_AND_CLOSED_BALLOT_2026
 
 # LITEFEET_PHASE9C_ADMIN_WORKSPACE_2026
+
+# LITEFEET_PHASE9D_TOP25_NOMINATIONS

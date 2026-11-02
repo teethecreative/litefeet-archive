@@ -1,24 +1,32 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dancer's Choice Awards 2026 — Nominations</title>
+<title>Dancer's Choice Awards 2026 — Nominate</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
-<style>
-.lf-nom-form{max-width:720px;margin:3rem auto;padding:0 1.25rem 4rem}
-.lf-nom-form form{display:grid;gap:1.2rem}
-.lf-nom-form label{display:grid;gap:.45rem;font-weight:600}
-.lf-nom-form input,.lf-nom-form select,.lf-nom-form textarea{width:100%;box-sizing:border-box;padding:.85rem;border:1px solid currentColor;border-radius:4px;background:transparent;color:inherit;font:inherit}
-.lf-nom-form button{padding:1rem;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer}
-.lf-nom-form .lf-note{opacity:.85}
-</style></head><body>{% include "_navigation.html" %}
-<main class="lf-nom-form"><p>DANCER'S CHOICE AWARDS · 2026</p><h1>NOMINATE</h1>
-<p class="lf-note">One nominee record per name and category. Other people can support the same nominee. Submissions are reviewed before approval.</p>
-{% with messages = get_flashed_messages() %}{% if messages %}<p role="status">{{ messages[-1] }}</p>{% endif %}{% endwith %}
-<form method="post" action="{{ url_for('dca_nominations_closed') }}">
-<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-<label>Category<select name="category_id" required><option value="">Choose a category</option>{% for category in categories %}<option value="{{ category.id }}">{{ category.name }}</option>{% endfor %}</select></label>
-<label>Nominee name<input name="name" maxlength="250" minlength="2" required autocomplete="off" placeholder="Dancer, team, or nominee"></label>
-<label>Why are you nominating them? (optional)<textarea name="reason" maxlength="2000" rows="3"></textarea></label>
-<label>Your email<input type="email" name="email" maxlength="254" required autocomplete="email"></label>
-<p class="lf-note">Your email is used to prevent duplicate submissions and is not displayed publicly.</p>
-<button type="submit">SUBMIT NOMINATION</button>
-</form></main>{% include "_footer.html" %}</body></html>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dca-nominations-2026.css') }}">
+</head><body>{% include "_navigation.html" %}
+<main class="lf-nom-2026">
+  <p class="lf-nom-eyebrow">DANCER'S CHOICE AWARDS · 2026</p>
+  <h1>YOUR CHOICE.<br>YOUR NOMINEE.</h1>
+  <p class="lf-nom-intro">Nominations are open for the first 25 categories. Choose an award and nominate a dancer, creator, team, event, or other eligible nominee. Other approved categories may be considered in a later stage.</p>
+  {% with messages = get_flashed_messages() %}{% if messages %}<p role="status" class="lf-nom-note">{{ messages[-1] }}</p>{% endif %}{% endwith %}
+  <form method="post" action="{{ url_for('dca_nominations_closed') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <h2 class="lf-nom-label">01 / CHOOSE A CATEGORY ({{ categories|length }})</h2>
+    <div class="lf-nom-grid" role="radiogroup" aria-label="Nomination category">
+      {% for category in categories %}
+      <label class="lf-nom-card">
+        <span class="lf-nom-card-head"><input type="radio" name="category_id" value="{{ category.id }}" required><strong>{{ category.name }}</strong></span>
+        {% if category.description %}<span class="lf-nom-desc">{{ category.description }}</span>{% endif %}
+      </label>
+      {% endfor %}
+    </div>
+    <h2 class="lf-nom-label">02 / YOUR NOMINATION</h2>
+    <div class="lf-nom-entry">
+      <label>Nominee name <input name="name" maxlength="250" minlength="2" required autocomplete="off" placeholder="Dancer, team, or nominee"></label>
+      <label>Why are you nominating them? (optional) <textarea name="reason" maxlength="2000" rows="4" placeholder="Tell us what makes them stand out"></textarea></label>
+      <label>Your email <input type="email" name="email" maxlength="254" required autocomplete="email" placeholder="you@example.com"></label>
+      <p class="lf-nom-note">Your email is used to reduce duplicate submissions and is not shown publicly. Nominations are reviewed before approval; multiple supporters can nominate the same person.</p>
+      <button type="submit">SUBMIT NOMINATION</button>
+    </div>
+  </form>
+</main>{% include "_footer.html" %}</body></html>

@@ -24,6 +24,7 @@
           href="{{ url_for('static', filename='css/dca.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/compact-collections.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dca-admin-workspace.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dca-nominations-2026.css') }}">
 </head>
 
 
@@ -32,93 +33,7 @@
 {% include "_admin_navigation.html" %}
 
 
-<nav class="dca-admin-nav">
 
-    <div class="dca-admin-menu">
-
-        <button
-            class="dca-admin-menu-button"
-            type="button"
-            aria-expanded="false"
-        >
-            DCA ADMIN
-            <span class="admin-chevron">▾</span>
-        </button>
-
-        <div class="dca-admin-dropdown">
-
-            <div class="admin-dropdown-label">
-                ADMIN
-            </div>
-
-            <a
-                class="active"
-                href="{{ url_for('admin_round1') }}"
-            >
-                <span>ROUND 01</span>
-                Category Suggestions
-            </a>
-
-            <a
-                class="disabled"
-                href="#"
-                onclick="return false;"
-            >
-                <span>ROUND 02</span>
-                Category Voting
-            </a>
-
-            <a
-                class="disabled"
-                href="#"
-                onclick="return false;"
-            >
-                <span>NEXT</span>
-                Nominations
-            </a>
-
-            <a
-                class="disabled"
-                href="#"
-                onclick="return false;"
-            >
-                <span>NEXT</span>
-                Final Voting
-            </a>
-
-            <a
-                class="disabled"
-                href="#"
-                onclick="return false;"
-            >
-                <span>ARCHIVE</span>
-                Winners & Results
-            </a>
-
-        </div>
-
-    </div>
-
-
-    <div class="dca-admin-links">
-
-        <a
-            href="{{ url_for('round1') }}"
-            target="_blank"
-        >
-            ROUND 1 PUBLIC
-        </a>
-
-        <a
-            href="{{ url_for('round2') }}"
-            target="_blank"
-        >
-            ROUND 2 PREVIEW
-        </a>
-
-    </div>
-
-</nav>
 
 
 <div class="theme-toggle">
@@ -398,6 +313,43 @@
       </div>
     </details>
   </section>
+<section class="lf-ws-panel" id="lf-launch-first25" aria-labelledby="lf-launch-first25-title">
+  <div class="lf-ws-panel-heading">
+    <div>
+      <div class="lf-ws-number">05 / NOMINATIONS</div>
+      <h2 id="lf-launch-first25-title">Launch the first 25 categories</h2>
+      <p>Start public nominations with a curated first set of 25. The community's Top 25 / Threshold / All Categories choice remains preliminary until the next voting stage. Remaining categories stay saved for later consideration.</p>
+    </div>
+    <span class="lf-ws-count">{{ first25_complete_count }} WITH DESCRIPTIONS</span>
+  </div>
+  {% if first25_publish_locked %}
+    <div class="lf-ws-alert">{% if first25_official_count %}{{ first25_official_count }} official categories are already staged. Do not publish over existing nominees.{% elif ballot_opened %}Round 2 has already opened.{% else %}The nomination stage is already active.{% endif %}</div>
+  {% else %}
+  <p><strong>Choose exactly 25.</strong> Your saved draft is the eligible pool. Listed in order of Yes votes (ties use net votes and category name); nothing is automatically approved or published.</p>
+  <form method="post" action="{{ url_for('publish_dca_first_25') }}" id="lf-first25-form" onsubmit="return confirm('Publish these 25 as the initial official categories? This changes the 2026 edition phase and is not automatically reversible.')">
+    <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">
+    <div class="lf-9d-select-list">
+      {% for item in first25_candidates %}
+      <label class="lf-9d-select-row">
+        <input type="checkbox" name="category_key" value="{{ item.key }}" {% if item.key in first25_default_keys %}checked{% endif %}>
+        <span class="lf-9d-select-name"><strong>{{ item.name }}</strong><small>{{ item.source }} · Yes {{ item.yes }} / No {{ item.no }}</small></span>
+        <span class="lf-9d-select-note">{% if item.description %}{{ item.description }}{% else %}<strong>Description required</strong>{% endif %}</span>
+      </label>
+      {% else %}
+      <p>No saved categories are eligible. Review the Category Management table and save the draft first.</p>
+      {% endfor %}
+    </div>
+    <p class="lf-ws-footnote"><strong id="lf-first25-count">0</strong> of 25 selected. Missing descriptions may be added later. This action creates official category records; it does not change historical votes.</p>
+    <label class="lf-9d-confirm">To confirm, type <strong>PUBLISH FIRST 25</strong>
+      <input type="text" name="confirmation" required autocomplete="off" placeholder="PUBLISH FIRST 25" aria-label="Publish confirmation phrase">
+    </label>
+    <button class="lf-ws-primary" id="lf-first25-submit" type="submit" disabled>PUBLISH FIRST 25 CATEGORIES</button>
+  </form>
+  {% endif %}
+  <div class="lf-ws-footnote">Host nominations switch: <strong>{% if first25_host_enabled %}Enabled{% else %}Disabled{% endif %}</strong>. The public page will remain closed until both this approval and the host's DCA_2026_NOMINATIONS_ENABLED=true setting are in effect.</div>
+  <p><a href="{{ url_for('dca_nominations_closed') }}" target="_blank" rel="noopener">Preview public nomination page ↗</a></p>
+</section>
+
 </main>
 
 

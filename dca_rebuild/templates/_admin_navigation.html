@@ -44,12 +44,16 @@
             ARCHIVE
         </a>
 
-        <a
-            href="{{ url_for('admin_dashboard') }}#awards"
-            data-admin-section="awards"
-        >
-            AWARDS
-        </a>
+        <details class="lf-admin-awards-dropdown">
+          <summary{% if request.endpoint in ['admin_round1', 'admin_dca_nominations'] %} aria-current="page"{% endif %}>AWARDS <span aria-hidden="true">▾</span></summary>
+          <div class="lf-admin-awards-dropdown__menu">
+            <a href="{{ url_for('admin_dashboard') }}#awards">Awards overview</a>
+            <a href="{{ url_for('admin_round1') }}">DCA · Category moderation</a>
+            <a href="{{ url_for('admin_dca_nominations') }}">DCA · Nomination review</a>
+            <a href="{{ url_for('round2') }}" target="_blank" rel="noopener">Round 1 results</a>
+            <a href="{{ url_for('dca_nominations_closed') }}" target="_blank" rel="noopener">Public nominations</a>
+          </div>
+        </details>
 
         <a
             href="{{ url_for('admin_dashboard') }}#community"
@@ -78,3 +82,15 @@
     </div>
 
 </nav>
+
+<style id="lf-phase9d-admin-awards">
+/* Only the AWARDS item is extended; existing Ledger navigation remains intact. */
+.ledger-admin-nav__links .lf-admin-awards-dropdown{position:relative;display:inline-flex;align-items:center;font:inherit}
+.ledger-admin-nav__links .lf-admin-awards-dropdown>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:.45em;font:inherit;font-weight:inherit;letter-spacing:inherit;color:inherit;padding:inherit;white-space:nowrap}
+.ledger-admin-nav__links .lf-admin-awards-dropdown>summary::-webkit-details-marker{display:none}
+.ledger-admin-nav__links .lf-admin-awards-dropdown>summary span{font-size:.72em}
+.ledger-admin-nav__links .lf-admin-awards-dropdown__menu{position:absolute;z-index:2000;top:100%;left:0;min-width:245px;padding:8px;border:1px solid currentColor;background:var(--admin-nav-bg, var(--nav-background, Canvas));color:var(--admin-nav-color, CanvasText);box-shadow:0 12px 24px rgba(0,0,0,.18)}
+.ledger-admin-nav__links .lf-admin-awards-dropdown__menu a{display:block;padding:10px 12px!important;line-height:1.35!important;white-space:normal;text-decoration:none;color:inherit;font-size:.85rem}
+.ledger-admin-nav__links .lf-admin-awards-dropdown__menu a:hover,.ledger-admin-nav__links .lf-admin-awards-dropdown__menu a:focus{background:color-mix(in srgb,currentColor 9%,transparent)}
+@media(max-width:650px){.ledger-admin-nav__links .lf-admin-awards-dropdown__menu{left:auto;right:0;max-width:min(90vw,280px)}}
+</style>

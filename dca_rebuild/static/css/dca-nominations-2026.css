@@ -1,0 +1,26 @@
+/* Phase 9D: extends the existing DCA design system; no global overrides. */
+.lf-nom-2026{max-width:1000px;margin:0 auto;padding:3rem 1.25rem 5rem;color:inherit}
+.lf-nom-2026 .lf-nom-eyebrow{letter-spacing:.1em;font-weight:800;color:#caa326}
+.lf-nom-2026 h1{font-size:clamp(2.7rem,8vw,5rem);line-height:1;letter-spacing:-.05em;margin:.5em 0 .3em}
+.lf-nom-2026 .lf-nom-intro{max-width:65ch;font-size:1.05rem;line-height:1.6}
+.lf-nom-2026 .lf-nom-label{font-weight:800;font-size:.88rem;letter-spacing:.04em;margin:1.6rem 0 .7rem}
+.lf-nom-2026 .lf-nom-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:12px}
+.lf-nom-2026 .lf-nom-card{display:flex;flex-direction:column;gap:9px;min-width:0;padding:17px;border:1px solid currentColor;background:transparent;cursor:pointer;border-radius:3px;min-height:145px}
+.lf-nom-2026 .lf-nom-card:has(input:checked){outline:3px solid #caa326;outline-offset:-3px}
+.lf-nom-2026 .lf-nom-card:focus-within{outline:3px solid #caa326;outline-offset:2px}
+.lf-nom-2026 .lf-nom-card-head{display:flex;gap:10px;align-items:flex-start}
+.lf-nom-2026 .lf-nom-card-head strong{line-height:1.3}
+.lf-nom-2026 .lf-nom-desc{font-size:.88rem;line-height:1.45;opacity:.83;overflow-wrap:anywhere}
+.lf-nom-2026 .lf-nom-entry{display:grid;gap:14px;max-width:700px;margin-top:20px}
+.lf-nom-2026 .lf-nom-entry label{font-weight:700;display:grid;gap:7px}
+.lf-nom-2026 .lf-nom-entry input,.lf-nom-2026 .lf-nom-entry textarea{box-sizing:border-box;max-width:100%;width:100%;padding:13px;border:1px solid currentColor;background:transparent;color:inherit;font:inherit;border-radius:3px}
+.lf-nom-2026 .lf-nom-entry button{background:#caa326;color:#0a1d3d;border:0;padding:16px;font-weight:800;cursor:pointer}
+.lf-nom-2026 .lf-nom-entry button:hover{filter:brightness(1.08)}
+.lf-nom-2026 .lf-nom-note{font-size:.84rem;opacity:.8}
+.lf-9d-select-list{max-height:450px;overflow:auto;border-top:1px solid currentColor;border-bottom:1px solid currentColor}
+.lf-9d-select-row{display:grid;grid-template-columns:25px minmax(170px,1fr) minmax(220px,1.3fr);align-items:center;gap:12px;padding:12px;border-bottom:1px solid rgba(100,111,137,.3);cursor:pointer}
+.lf-9d-select-name{display:flex;flex-direction:column;gap:4px}
+.lf-9d-select-name small,.lf-9d-select-note{font-size:.85rem;opacity:.85}
+.lf-9d-confirm{display:grid;gap:7px;margin:20px 0;max-width:320px}
+.lf-9d-confirm input{font:inherit;padding:12px;border:1px solid currentColor;background:transparent;color:inherit}
+@media(max-width:700px){.lf-9d-select-row{grid-template-columns:25px 1fr}.lf-9d-select-note{grid-column:2}}
