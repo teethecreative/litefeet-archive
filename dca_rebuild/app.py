@@ -611,10 +611,11 @@ def round1():
 
 @app.route(
     "/awards/dancers-choice/category-voting",
-    methods=["GET", "POST"],
+    methods=["GET"],
 )
 def round2():
     db = SessionLocal()
+    round1_is_closed = dca_categories_closed()
 
     try:
         historical = (
@@ -638,6 +639,7 @@ def round2():
                 round1_submission_count=0,
                 round1_winner=None,
                 round1_method_tied=False,
+                round1_is_closed=round1_is_closed,
             )
 
         categories = (
@@ -729,13 +731,13 @@ def round2():
             # We deliberately do NOT assign an elimination
             # threshold here. That rule has not been finalized.
             if total == 0:
-                status = "Waiting for community votes"
+                status = "No recorded votes" if round1_is_closed else "Waiting for community votes"
             elif keep_count > remove_count:
-                status = "Currently favored to return"
+                status = "More KEEP votes" if round1_is_closed else "Currently favored to return"
             elif remove_count > keep_count:
-                status = "Currently trailing"
+                status = "More REMOVE votes" if round1_is_closed else "Currently trailing"
             else:
-                status = "Currently tied"
+                status = "Tied votes" if round1_is_closed else "Currently tied"
 
             category_items.append({
                 "category": category,
@@ -841,7 +843,7 @@ def round2():
             else:
                 round1_method_tied = True
                 round1_winner = (
-                    "Currently tied"
+                    ("Tied in Round 1" if round1_is_closed else "Currently tied")
                 )
 
         return render_template(
@@ -852,6 +854,7 @@ def round2():
             round1_submission_count=round1_submission_count,
             round1_winner=round1_winner,
             round1_method_tied=round1_method_tied,
+            round1_is_closed=round1_is_closed,
         )
 
     finally:
@@ -1518,6 +1521,13 @@ def admin_round1():
             "locked": True,
         }
 
+        current_ballot = db.query(DCACategoryBallot).filter_by(edition_id=edition.id).first()
+        ballot_prepared = current_ballot is not None
+        ballot_opened = bool(current_ballot and (current_ballot.is_open or current_ballot.opened_at))
+        ballot_category_count = db.query(DCACategory).filter_by(
+            edition_id=edition.id, status="round2_ballot"
+        ).count()
+
         return render_template(
             "admin_round1.html",
             submission_count=submission_count,
@@ -1529,6 +1539,9 @@ def admin_round1():
             shortlist=shortlist,
             final_review=final_review,
             finalization_readiness=finalization_readiness,
+            ballot_prepared=ballot_prepared,
+            ballot_opened=ballot_opened,
+            ballot_category_count=ballot_category_count,
             final_review_has_duplicates=final_review_has_duplicates,
             method_counts=method_counts,
             method_labels=method_labels,
@@ -1628,6 +1641,13 @@ def build_round2_ballot():
         names = [" ".join(item["name"].casefold().split()) for item in selected]
         if any(not name for name in names) or len(set(names)) != len(names):
             flash("Resolve duplicate or empty category names before building the ballot.")
+            return redirect(url_for("admin_round1"))
+        missing_descriptions = [
+            item["name"] for item in selected
+            if not (item.get("description") or "").strip()
+        ]
+        if missing_descriptions:
+            flash(f"Add descriptions to {len(missing_descriptions)} selected categories before building the ballot.")
             return redirect(url_for("admin_round1"))
 
         ballot = db.query(DCACategoryBallot).filter_by(edition_id=current.id).first()
@@ -4622,3 +4642,5 @@ def ledger_analytics_date_scope():
 def ledger_analytics_hour_label(hour):
     hour = int(hour) % 24
     return f"{hour % 12 or 12}:00 {'AM' if hour < 12 else 'PM'}"
+
+# LITEFEET_PHASE9B_RESULTS_AND_CLOSED_BALLOT_2026

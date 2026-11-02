@@ -477,14 +477,15 @@
     <h2>ROUND 2 PREVIEW</h2>
 
     <p class="description">
-        Review the Category Voting page before Round 2 opens.
+        View recorded Round 1 results and the Round 2 preview.
+        This page is read-only: it does not accept ballots.
     </p>
 
     <a
         class="submit admin-preview-link"
         href="{{ url_for('round2') }}"
     >
-        OPEN ROUND 2 PREVIEW →
+        VIEW RESULTS &amp; ROUND 2 PREVIEW →
     </a>
 
 </section>
@@ -607,6 +608,30 @@ document.addEventListener('DOMContentLoaded', function(){
   </details>
 </section>
 
+<section class="admin-closed-ballot dca-readiness-compact" id="dca-round2-builder">
+  <h2>PREPARE THE CLOSED ROUND 2 BALLOT</h2>
+  <p>This step assembles the selected categories for admin review only.
+     It does <strong>not</strong> open voting, finalize the official categories,
+     change Round 1 votes, or enable nominations.</p>
+  {% if ballot_opened %}
+    <p><strong>ROUND 2 HAS ALREADY OPENED.</strong> Rebuilding is locked to preserve ballot integrity.</p>
+  {% elif finalization_readiness.issues %}
+    <p><strong>BUILD BLOCKED:</strong> Resolve all {{ finalization_readiness.issues|length }}
+       readiness requirement(s) above, then save your draft.</p>
+  {% else %}
+    {% if ballot_prepared %}
+      <p><strong>PREPARED:</strong> {{ ballot_category_count }} category records are currently on the closed ballot.</p>
+      <p>Rebuilding replaces the closed candidate set with your current saved draft.</p>
+    {% endif %}
+    <form method="post" action="{{ url_for('build_round2_ballot') }}">
+      <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">
+      <button class="submit" type="submit">
+        {% if ballot_prepared %}REBUILD CLOSED ROUND 2 BALLOT{% else %}BUILD CLOSED ROUND 2 BALLOT{% endif %}
+      </button>
+    </form>
+  {% endif %}
+</section>
+
 </main>
 
 
@@ -661,3 +686,5 @@ document.addEventListener("DOMContentLoaded", function () {
 <script defer src="{{ url_for('static', filename='js/compact-collections.js') }}"></script>
 </body>
 </html>
+
+<!-- LITEFEET_PHASE9B_RESULTS_AND_CLOSED_BALLOT_2026 -->

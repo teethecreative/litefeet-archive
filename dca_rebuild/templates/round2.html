@@ -22,7 +22,7 @@
     >
 
     <title>
-        DCA 2026 — Round 2 Preview
+        DCA 2026 — Round 1 Results &amp; Round 2 Preview
     </title>
 
     <link
@@ -45,23 +45,27 @@
     </div>
 
     <div class="round">
-        ROUND 02
+        ROUND 01 RESULTS
     </div>
 
     <h1>
         CATEGORY<br>
-        VOTING
+        RESULTS
     </h1>
 
     <div class="round2-live-preview-label">
-        PREVIEW
+        {% if round1_is_closed %}ROUND 1 CLOSED{% else %}ROUND 1 IN PROGRESS{% endif %}
     </div>
 
     <p class="lead">
-        Round 1 is currently in progress. This preview
-        updates as the community votes and shows what the
-        Round 2 ballot could look like based on results
-        so far.
+        {% if round1_is_closed %}
+        Round 1 category suggestions closed October 31, 2026 at 11:59 PM New York time.
+        These are the recorded results, subject to any remaining moderation.
+        The selected categories have not yet been declared official.
+        {% else %}
+        Round 1 is in progress. These results can change before the
+        category-suggestion deadline.
+        {% endif %}
     </p>
 
     <p class="preview-warning">
@@ -74,20 +78,20 @@
     <div class="number">01</div>
 
     <h2>
-        ROUND 1 RIGHT NOW
+        ROUND 1 SUBMISSIONS
     </h2>
 
     <p class="description">
         {{ round1_submission_count }}
         completed Round 1
         submission{% if round1_submission_count != 1 %}s{% endif %}
-        are currently represented below.
+        are represented below.
     </p>
 
     {% if round1_winner %}
     <div class="community-choice">
         <span>
-            CURRENT CATEGORY-LIST PREFERENCE
+            {% if round1_is_closed %}ROUND 1 CATEGORY-LIST PREFERENCE{% else %}CURRENT CATEGORY-LIST PREFERENCE{% endif %}
         </span>
 
         <strong>
@@ -96,7 +100,7 @@
 
         {% if round1_method_tied %}
         <small>
-            The preliminary community vote is currently tied.
+            The community preference vote is tied; no winner has been assumed.
         </small>
         {% endif %}
     </div>
@@ -113,10 +117,10 @@
     </h2>
 
     <p class="description">
-        These are live Round 1 results for categories
-        previously considered in the Dancer's Choice
-        Awards process. Results can change while Round 1
-        remains open.
+        These are {% if round1_is_closed %}recorded{% else %}live{% endif %}
+        Keep / Remove votes for categories from the 2023 awards.
+        These totals describe community preferences, not final approval or elimination.
+        {% if not round1_is_closed %}Results may change while Round 1 is open.{% endif %}
     </p>
 
     <div class="round2-preview-grid" data-lf-compact=".round2-preview-card">
@@ -215,7 +219,8 @@
     </h2>
 
     <p class="description">
-        New community suggestions appear automatically. Rejected suggestions are hidden, and duplicate ideas are grouped together.
+        Moderated community suggestions are listed below. Rejected suggestions are hidden;
+        duplicate ideas are grouped together. Inclusion here is not final category approval.
     </p>
 
     {% if approved_suggestions %}
@@ -253,7 +258,7 @@
     {% else %}
 
     <div class="round2-empty-state">
-        No new category suggestions have been submitted yet.
+        No moderated new-category suggestions are available to display.
     </div>
 
     {% endif %}
@@ -269,9 +274,9 @@
     </h2>
 
     <p class="description">
-        This is the current Round 1 preference survey.
-        It is preliminary. The binding decision will
-        happen during Round 2.
+        These are {% if round1_is_closed %}the recorded{% else %}current{% endif %}
+        Round 1 preferences. This survey is not binding:
+        the final category-list method will be decided in Round 2.
     </p>
 
     <div class="round2-method-results">
@@ -318,17 +323,20 @@
     </h2>
 
     <p class="description">
-        Round 1 results are still developing. After
-        Round 1 closes, the category list will be
-        reviewed and the official Round 2 ballot will
-        be finalized.
+        {% if round1_is_closed %}
+        Administrators can now review category selections and prepare a
+        closed Round 2 ballot. Category voting has not opened.
+        {% else %}
+        After Round 1 closes, administrators will review category
+        selections and prepare the Round 2 ballot.
+        {% endif %}
     </p>
 
     <a
         class="submit"
         href="{{ url_for('round1') }}"
     >
-        PREVIEW ROUND 2 →
+        VIEW ROUND 1 PAGE →
     </a>
 
 </section>
@@ -340,3 +348,5 @@
 <script defer src="{{ url_for('static', filename='js/compact-collections.js') }}"></script>
 </body>
 </html>
+
+<!-- LITEFEET_PHASE9B_RESULTS_AND_CLOSED_BALLOT_2026 -->
