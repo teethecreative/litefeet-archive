@@ -37,6 +37,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}"> <!-- LFV_SITEWIDE_V1 -->
   <!-- LFV_EDITORIAL_V2_20261102 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
+  <!-- LFV_EDITORIAL_V3_20261102 -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v3.css') }}">
 </head>
 
 <body>
@@ -44,310 +46,30 @@
 {% include "_navigation.html" %}
 {% include "_beta_bar.html" %}
 
-<main>
-
-<header>
-    <div class="label">
-        DANCER'S CHOICE AWARDS · 2026
-    </div>
-
-    <div class="round">
-        ROUND 01 RESULTS
-    </div>
-
-    <h1>
-        CATEGORY<br>
-        RESULTS
-    </h1>
-
-    <div class="round2-live-preview-label">
-        {% if round1_is_closed %}ROUND 1 CLOSED{% else %}ROUND 1 IN PROGRESS{% endif %}
-    </div>
-
-    <p class="lead">
-        {% if round1_is_closed %}
-        Round 1 category suggestions closed October 31, 2026 at 11:59 PM New York time.
-        These are the recorded results, subject to any remaining moderation.
-        The selected categories have not yet been declared official.
-        {% else %}
-        Round 1 is in progress. These results can change before the
-        category-suggestion deadline.
-        {% endif %}
-    </p>
-
-    <p class="preview-warning">
-        ROUND 2 VOTING HAS NOT STARTED
-    </p>
-</header>
-
-<section class="round2-preview-summary">
-
-    <div class="number">01</div>
-
-    <h2>
-        ROUND 1 SUBMISSIONS
-    </h2>
-
-    <p class="description">
-        {{ round1_submission_count }}
-        completed Round 1
-        submission{% if round1_submission_count != 1 %}s{% endif %}
-        are represented below.
-    </p>
-
-    {% if round1_winner %}
-    <div class="community-choice">
-        <span>
-            {% if round1_is_closed %}ROUND 1 CATEGORY-LIST PREFERENCE{% else %}CURRENT CATEGORY-LIST PREFERENCE{% endif %}
-        </span>
-
-        <strong>
-            {{ round1_winner }}
-        </strong>
-
-        {% if round1_method_tied %}
-        <small>
-            The community preference vote is tied; no winner has been assumed.
-        </small>
-        {% endif %}
-    </div>
-    {% endif %}
-
-</section>
-
-<section>
-
-    <div class="number">02</div>
-
-    <h2>
-        RETURNING CATEGORY RESULTS
-    </h2>
-
-    <p class="description">
-        These are {% if round1_is_closed %}recorded{% else %}live{% endif %}
-        Keep / Remove votes for categories from the 2023 awards.
-        These totals describe community preferences, not final approval or elimination.
-        {% if not round1_is_closed %}Results may change while Round 1 is open.{% endif %}
-    </p>
-
-    <div class="round2-preview-grid" data-lf-compact=".round2-preview-card">
-
-        {% for item in category_items %}
-
-        {% set category = item.category %}
-        {% set meta = item.meta %}
-
-        <article class="round2-preview-card">
-
-            <div class="round2-preview-card-top">
-
-                <div>
-                    {% if meta.get('winners') %}
-                    <span class="round2-history-label">
-                        2023 AWARD CATEGORY
-                    </span>
-                    {% else %}
-
-                    {% endif %}
-
-                    <h3>
-                        {{ category.name }}
-                    </h3>
-                </div>
-
-                <span class="round2-status">
-                    {{ item.status }}
-                </span>
-
-            </div>
-
-            {% if meta.get('winners') %}
-
-            {% else %}
-
-            {% endif %}
-
-            <div class="round2-result-row">
-
-                <div class="round2-result keep">
-                    <span>KEEP</span>
-
-                    <strong>
-                        {{ item.keep_percent }}%
-                    </strong>
-
-                    <small>
-                        {{ item.keep_count }}
-                        vote{% if item.keep_count != 1 %}s{% endif %}
-                    </small>
-                </div>
-
-                <div class="round2-result remove">
-                    <span>REMOVE</span>
-
-                    <strong>
-                        {{ item.remove_percent }}%
-                    </strong>
-
-                    <small>
-                        {{ item.remove_count }}
-                        vote{% if item.remove_count != 1 %}s{% endif %}
-                    </small>
-                </div>
-
-            </div>
-
-            <div class="round2-result-bar">
-                <span
-                    class="round2-result-bar-keep"
-                    style="width: {{ item.keep_percent }}%"
-                ></span>
-            </div>
-
-            <div class="round2-response-count">
-                {{ item.total }}
-                total response{% if item.total != 1 %}s{% endif %}
-            </div>
-
-        </article>
-
-        {% endfor %}
-
-    </div>
-
-</section>
-
-<section>
-
-    <div class="number">03</div>
-
-    <h2>
-        NEW CATEGORY SUGGESTIONS
-    </h2>
-
-    <p class="description">
-        Moderated community suggestions are listed below. Rejected suggestions are hidden;
-        duplicate ideas are grouped together. Inclusion here is not final category approval.
-    </p>
-
-    {% if approved_suggestions %}
-
-    <div class="round2-suggestion-list" data-lf-compact=".round2-suggestion-item">
-
-        {% for suggestion in approved_suggestions %}
-
-        <div class="round2-suggestion-item">
-            <strong>{{ suggestion.name }}</strong>
-            {% if suggestion.description %}<p class="description">{{ suggestion.description }}</p>{% endif %}
-            <div class="round2-result-row">
-              <div class="round2-result keep"><span>YES</span><strong>{{ suggestion.yes_percent }}%</strong><small>{{ suggestion.yes }} votes</small></div>
-              <div class="round2-result remove"><span>NO</span><strong>{{ suggestion.no_percent }}%</strong><small>{{ suggestion.no }} votes</small></div>
-            </div>
-            <div class="round2-result-bar"><span class="round2-result-bar-keep" style="width: {{ suggestion.yes_percent }}%"></span></div>
-            <small>{{ suggestion.total }} community votes</small>
-
-            {% if suggestion.count > 1 %}
-            <span>
-                {{ suggestion.count }}
-                merged suggestions
-            </span>
-            {% else %}
-            <span>
-                Community suggestion
-            </span>
-            {% endif %}
-        </div>
-
-        {% endfor %}
-
-    </div>
-
-    {% else %}
-
-    <div class="round2-empty-state">
-        No moderated new-category suggestions are available to display.
-    </div>
-
-    {% endif %}
-
-</section>
-
-<section>
-
-    <div class="number">04</div>
-
-    <h2>
-        HOW SHOULD THE FINAL LIST BE DECIDED?
-    </h2>
-
-    <p class="description">
-        These are {% if round1_is_closed %}the recorded{% else %}current{% endif %}
-        Round 1 preferences. This survey is not binding:
-        the final category-list method will be decided in Round 2.
-    </p>
-
-    <div class="round2-method-results">
-
-        {% for method in method_results %}
-
-        <div class="round2-method-result">
-
-            <div class="round2-method-heading">
-                <strong>
-                    {{ method.label }}
-                </strong>
-
-                <span>
-                    {{ method.percent }}%
-                </span>
-            </div>
-
-            <div class="round2-method-bar">
-                <span
-                    style="width: {{ method.percent }}%"
-                ></span>
-            </div>
-
-            <small>
-                {{ method.count }}
-                vote{% if method.count != 1 %}s{% endif %}
-            </small>
-
-        </div>
-
-        {% endfor %}
-
-    </div>
-
-</section>
-
-<section class="round2-preview-footer">
-
-    <div class="number">05</div>
-
-    <h2>
-        WHAT HAPPENS NEXT?
-    </h2>
-
-    <p class="description">
-        {% if round1_is_closed %}
-        Administrators can now review category selections and prepare a
-        closed Round 2 ballot. Category voting has not opened.
-        {% else %}
-        After Round 1 closes, administrators will review category
-        selections and prepare the Round 2 ballot.
-        {% endif %}
-    </p>
-
-    <a
-        class="submit"
-        href="{{ url_for('round1') }}"
-    >
-        VIEW ROUND 1 PAGE →
-    </a>
-
-</section>
-
+<main class="lfv3-results lfv3-wrap" id="dca-results">
+  <header class="lfv3-results-hero"><p class="lfv3-eyebrow">DANCER'S CHOICE AWARDS / 2026</p><div class="lfv3-results-top"><div><h1>THE CATEGORY<br>RESULTS.</h1><p>Recorded Round 1 community preferences. The numbers below are not a final announcement of official categories.</p></div><aside><span>ROUND 1</span><strong>{% if round1_is_closed %}CLOSED{% else %}IN PROGRESS{% endif %}</strong><small>{{ round1_submission_count }} completed submissions</small><a href="{{ url_for('dca_nominations_closed') }}">2026 nominations <span aria-hidden="true">↗</span></a></aside></div></header>
+  <nav class="lfv3-section-jump" aria-label="On this page"><a href="#returning">Returning categories</a><a href="#new-categories">New suggestions</a><a href="#method">Selection method</a></nav>
+  <section class="lfv3-results-section" id="returning"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">01 / COMMUNITY RESULTS</p><h2>Returning categories</h2></div><p>These are Keep and Remove responses for categories from the previous awards edition.</p></div>
+    {% if category_items %}<div class="lfv3-results-list" data-lf-compact=".lfv3-result-line">
+       <div class="lfv3-result-header" aria-hidden="true"><span>CATEGORY</span><span>KEEP</span><span>REMOVE</span><span>RESPONSES</span></div>
+       {% for item in category_items %}
+       <article class="lfv3-result-line"><div><h3>{{ item.category.name }}</h3><small>{{ item.status }}</small></div><div class="lfv3-stat"><strong>{{ item.keep_percent }}%</strong><small>{{ item.keep_count }} keep</small></div><div class="lfv3-stat"><strong>{{ item.remove_percent }}%</strong><small>{{ item.remove_count }} remove</small></div><div class="lfv3-total"><strong>{{ item.total }}</strong><div class="lfv3-meter" role="img" aria-label="{{ item.keep_percent }} percent keep"><span style="width:{{ item.keep_percent }}%"></span></div></div></article>
+       {% endfor %}
+    </div>{% else %}<p>No recorded returning-category responses to display.</p>{% endif %}
+  </section>
+  <section class="lfv3-results-section" id="new-categories"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">02 / COMMUNITY SUGGESTIONS</p><h2>New category ideas</h2></div><p>Moderated suggestions, with duplicate ideas grouped together. Listing does not indicate final category approval.</p></div>
+    {% if approved_suggestions %}<div class="lfv3-results-list" data-lf-compact=".lfv3-result-line">
+       <div class="lfv3-result-header" aria-hidden="true"><span>CATEGORY / DESCRIPTION</span><span>YES</span><span>NO</span><span>VOTES</span></div>
+       {% for suggestion in approved_suggestions %}
+       <article class="lfv3-result-line"><div><h3>{{ suggestion.name }}</h3>{% if suggestion.description %}<p>{{ suggestion.description }}</p>{% endif %}{% if suggestion.count > 1 %}<small>{{ suggestion.count }} grouped suggestions</small>{% endif %}</div><div class="lfv3-stat"><strong>{{ suggestion.yes_percent }}%</strong><small>{{ suggestion.yes }} yes</small></div><div class="lfv3-stat"><strong>{{ suggestion.no_percent }}%</strong><small>{{ suggestion.no }} no</small></div><div class="lfv3-total"><strong>{{ suggestion.total }}</strong><div class="lfv3-meter" role="img" aria-label="{{ suggestion.yes_percent }} percent yes"><span style="width:{{ suggestion.yes_percent }}%"></span></div></div></article>
+       {% endfor %}
+    </div>{% else %}<p>No approved new-category suggestions to display.</p>{% endif %}
+  </section>
+  <section class="lfv3-results-section lfv3-method" id="method"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">03 / THE COMMUNITY'S PREFERENCE</p><h2>How should categories be selected?</h2></div><p>The Round 1 preference was preliminary. It was not the binding category-selection ballot.</p></div>
+    <div class="lfv3-method-grid">{% for method in method_results %}<div><span>{{ method.label }}</span><strong>{{ method.percent }}%</strong><div class="lfv3-meter"><span style="width:{{ method.percent }}%"></span></div><small>{{ method.count }} vote{% if method.count != 1 %}s{% endif %}</small></div>{% endfor %}</div>
+    {% if round1_winner %}<p class="lfv3-method-note">Recorded leading preference: <strong>{{ round1_winner }}</strong>{% if round1_method_tied %} (tie){% endif %}. Nominations and eligibility are managed separately.</p>{% endif %}
+  </section>
+  <footer class="lfv3-results-cta"><div><p class="lfv3-eyebrow">WHAT'S NEXT</p><h2>Know someone who deserves recognition?</h2><p>See the current nominations page for participation details and availability.</p></div><a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_nominations_closed') }}">Visit nominations <span aria-hidden="true">↗</span></a></footer>
 </main>
 
 {% include "_footer.html" %}

@@ -156,6 +156,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}"> <!-- LFV_SITEWIDE_V1 -->
   <!-- LFV_EDITORIAL_V2_20261102 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
+  <!-- LFV_EDITORIAL_V3_20261102 -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v3.css') }}">
 </head>
 
 <body>
@@ -163,28 +165,51 @@
 {% include "_navigation.html" %}
 {% include "_beta_bar.html" %}
 
-<main class="ledger-home lfv-ledger-home">
-  <section class="lfv-ledger-hero" aria-labelledby="lfv-ledger-title">
-    <p class="lfv-kicker">THE LITEFEET VAULT / THE LEDGER</p>
-    <h1 id="lfv-ledger-title">THE CULTURE.<br>ON RECORD.</h1>
-    <p class="lfv-ledger-deck">The LiteFeet Ledger documents awards, history and community contributions — preserving what happened while making space for what happens next.</p>
-    <nav class="lfv-ledger-section-links" aria-label="Explore award archives">
-      <a href="{{ url_for('round2') }}">DCA 2026 results <span aria-hidden="true">↗</span></a>
-      <a href="{{ url_for('lfa_home') }}">LiteFeet Awards archive <span aria-hidden="true">↗</span></a>
-      <a href="{{ url_for('hypeitup_awards') }}">HypeItUpTV Awards <span aria-hidden="true">↗</span></a>
-    </nav>
+<main class="lfv3-hub lfv3-wrap" id="vault-home">
+  <section class="lfv3-hero" aria-labelledby="vault-heading">
+    <div class="lfv3-hero-copy">
+      <p class="lfv3-eyebrow">THE LITEFEET VAULT / CULTURE · PEOPLE · HISTORY</p>
+      <h1 id="vault-heading">THE CULTURE<br>LIVES HERE.</h1>
+      <p class="lfv3-deck">A living home for LiteFeet—the dancers, crews, music, battles and memories that define the culture. Explore what happened and what is happening next.</p>
+      <div class="lfv3-actions">
+        <a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_nominations_closed') }}">DCA 2026 nominations <span aria-hidden="true">↗</span></a>
+        <a class="lfv3-button lfv3-button-outline" href="#explore">Explore the Vault <span aria-hidden="true">↓</span></a>
+      </div>
+    </div>
+    <aside class="lfv3-feature" aria-label="Current community program">
+      <p class="lfv3-eyebrow">IN THE CULTURE / 2026</p>
+      <span class="lfv3-feature-num">01</span>
+      <h2>Dancer's Choice Awards</h2>
+      <p>Community-selected categories, nominations and the road to the 2026 awards.</p>
+      <div class="lfv3-feature-actions">
+        <a href="{{ url_for('dca_nominations_closed') }}">Go to nominations <span aria-hidden="true">↗</span></a>
+        <a href="{{ url_for('round2') }}">See category results <span aria-hidden="true">↗</span></a>
+      </div>
+      <small>Nomination availability is shown on the nomination page.</small>
+    </aside>
   </section>
-  <section class="lfv-ledger-collection" aria-labelledby="lfv-ledger-collection-title">
-    <div class="lfv-section-topline"><p class="lfv-kicker">EXPLORE THE ARCHIVE</p><span>AWARDS / HISTORY</span></div>
-    <h2 id="lfv-ledger-collection-title">Awards &amp; recognition</h2>
-    <div class="lfv-ledger-rows">
-      <article><span class="lfv-ledger-index">01 / CURRENT EDITION</span><div><h3>Dancer's Choice Awards</h3><p>Follow the 2026 awards process, category results and nomination information.</p></div><div class="lfv-ledger-actions"><a class="ledger-button" href="{{ url_for('dca_nominations_closed') }}">2026 nominations</a><a href="{{ url_for('round2') }}">Category results</a></div></article>
-      <article><span class="lfv-ledger-index">02 / HISTORICAL RECORD</span><div><h3>LiteFeet Awards</h3><p>Explore existing records and contribute verified historical awards information.</p></div><div class="lfv-ledger-actions"><a class="ledger-button" href="{{ url_for('lfa_home') }}">Explore archive</a></div></article>
-      <article><span class="lfv-ledger-index">03 / ARCHIVE IN PROGRESS</span><div><h3>HypeItUpTV Awards</h3><p>Explore the program's developing archive and published information.</p></div><div class="lfv-ledger-actions"><a class="ledger-button ledger-button-secondary" href="{{ url_for('hypeitup_awards') }}">View program</a></div></article>
+
+  <section class="lfv3-section lfv3-directory" id="explore" aria-labelledby="explore-title">
+    <div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">EXPLORE / THE VAULT</p><h2 id="explore-title">Find your way into the culture.</h2></div><p>Different ways to explore one connected history.</p></div>
+    <div class="lfv3-tile-grid">
+      <div><span>01 / COMMUNITY</span><strong>People &amp; dancers</strong><em>Profiles and oral histories <span>Archive section in development</span></em></div>
+      <div><span>02 / COLLECTIVES</span><strong>Crews &amp; teams</strong><em>Group histories and affiliations <span>In development</span></em></div>
+      <div><span>03 / SOUND</span><strong>Music &amp; movement</strong><em>Tracks, battles and performance media <span>In development</span></em></div>
+      <a href="{{ url_for('dca_2026_home') }}"><span>04 / RIGHT NOW</span><strong>DCA 2026</strong><em>Current awards edition <span aria-hidden="true">↗</span></em></a>
+      <a href="{{ url_for('round2') }}"><span>05 / THE RECORD</span><strong>Category results</strong><em>Recorded community choices <span aria-hidden="true">↗</span></em></a>
+      <a href="{{ url_for('dca_2023_home') }}"><span>06 / HISTORY</span><strong>Past editions</strong><em>Dancer's Choice 2023 <span aria-hidden="true">↗</span></em></a>
     </div>
   </section>
-  <section class="lfv-ledger-archive-note"><p class="lfv-kicker">PRESERVATION / CONTEXT</p><h2>Building a living historical record.</h2>
-    <p>Historical records and community contributions are preserved as they are reviewed, organized and verified. The archive grows through documentation, context and community knowledge.</p></section>
+
+  <section class="lfv3-section lfv3-desk" aria-labelledby="desk-title">
+    <div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">THE CULTURE DESK / WHAT'S NEW</p><h2 id="desk-title">On the record.</h2></div><p>Current activity and ways to contribute—without losing the history.</p></div>
+    <div class="lfv3-desk-grid">
+      <article class="lfv3-desk-lead"><p class="lfv3-eyebrow">FEATURED / DCA 2026</p><h3>Who should be recognized?</h3><p>Dancer's Choice is community-driven. Follow the nominations and see the categories that emerged from the first round.</p><a class="lfv3-inline-link" href="{{ url_for('dca_nominations_closed') }}">Visit nominations <span aria-hidden="true">↗</span></a></article>
+      <div class="lfv3-desk-list"><a href="{{ url_for('round2') }}"><span>01 / RESULTS</span><strong>2026 category results</strong><span aria-hidden="true">↗</span></a><a href="{{ url_for('lfa_home') }}"><span>02 / ARCHIVE</span><strong>LiteFeet Awards records</strong><span aria-hidden="true">↗</span></a><a href="{{ url_for('hypeitup_awards') }}"><span>03 / ARCHIVE</span><strong>HypeItUpTV Awards</strong><span aria-hidden="true">↗</span></a></div>
+    </div>
+  </section>
+
+  <section class="lfv3-section lfv3-preserve" aria-labelledby="preserve-title"><div><p class="lfv3-eyebrow">THE ARCHIVE / COMMUNITY</p><h2 id="preserve-title">History doesn't collect itself.</h2><p>Help document the dancers, events, and stories that deserve a place in the record. Contributions are reviewed before publication.</p></div><a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_2026_home') }}">Explore the current archive <span aria-hidden="true">↗</span></a></section>
 </main>
 
 

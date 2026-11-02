@@ -20,6 +20,7 @@
     wrapper.innerHTML = '<div class="lfv-shell-bar">' +
       '<a class="lfv-shell-brand" href="/">THE LITEFEET <span>VAULT</span></a>' +
       '<div class="lfv-shell-actions">' +
+      '<a class="lfv-shell-nominations" href="/awards/dancers-choice/nominations">NOMINATE 2026 <span aria-hidden="true">↗</span></a>' +
       '<button type="button" class="lfv-nav-button lfv-theme-button" aria-label="Toggle color theme"><span class="lfv-theme-label">THEME</span><span aria-hidden="true">◐</span></button>' +
       '<button type="button" class="lfv-nav-button lfv-menu-open" aria-controls="lfv-menu-panel" aria-expanded="false" aria-label="Open site navigation"><span class="lfv-hamburger" aria-hidden="true"><i></i><i></i><i></i></span></button>' +
       '</div></div>';

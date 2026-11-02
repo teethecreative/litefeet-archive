@@ -2,15 +2,15 @@
 {% block title %}The LiteFeet Vault | LiteFeet Culture, History, Dancers & Community{% endblock %}
 {% block meta_description %}Explore the people, crews, battles, music, events, awards, and living history of LiteFeet culture through The LiteFeet Vault.{% endblock %}
 {% block content %}
-<div class="lfv-homepage">
-  <section class="lfv-home-lead" aria-labelledby="lfv-home-title">
+<div class="lfv-homepage lfv3-legacy-home">
+  <section class="lfv-home-lead lfv3-legacy-lead" aria-labelledby="lfv-home-title">
     <div class="lfv-home-intro">
       <p class="lfv-kicker">THE LITEFEET VAULT / CULTURE &amp; HISTORY</p>
       <h1 id="lfv-home-title">THE CULTURE<br>LIVES HERE.</h1>
       <p class="lfv-home-deck">The people, movements, music, stories, and moments that shape LiteFeet — documented by the community and preserved for what's next.</p>
       <div class="lfv-home-actions">
         <a class="button primary" href="{{ url_for('dancers') }}">Explore the culture</a>
-        <a class="button secondary" href="{{ url_for('awards') }}">Awards &amp; recognition</a>
+        <a class="button secondary" href="/awards/dancers-choice/nominations">DCA 2026 nominations</a>
       </div>
     </div>
     <aside class="lfv-home-index" aria-label="Explore the archive">
@@ -23,7 +23,7 @@
     </aside>
   </section>
 
-  <section class="lfv-home-latest" id="latest-media" aria-labelledby="lfv-latest-title">
+  <section class="lfv-home-latest lfv3-editorial-updates" id="latest-media" aria-labelledby="lfv-latest-title">
     <div class="lfv-section-topline"><p class="lfv-kicker">THE RECORD / WHAT'S NEW</p><span>UPDATES FROM THE ARCHIVE</span></div>
     <div class="lfv-section-header">
       <div><h2 id="lfv-latest-title">Latest in the Vault</h2><p>Recently added media and stories from the community record.</p></div>
@@ -44,7 +44,7 @@
     {% endif %}
   </section>
 
-  <section class="lfv-home-media" aria-labelledby="lfv-media-title">
+  <section class="lfv-home-media lfv3-editorial-feed" aria-labelledby="lfv-media-title">
     <div class="lfv-section-topline"><p class="lfv-kicker">WATCH / THE ARCHIVE</p><span>MUSIC · BATTLES · MOMENTS</span></div>
     <div class="lfv-section-header"><div><h2 id="lfv-media-title">On Record</h2>
       <p>Curated LiteFeet videos, performances, battles, recaps, and community footage.</p></div></div>

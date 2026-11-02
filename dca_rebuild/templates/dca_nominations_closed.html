@@ -9,11 +9,9 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}"> <!-- LFV_SITEWIDE_V1 -->
   <!-- LFV_EDITORIAL_V2_20261102 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
+  <!-- LFV_EDITORIAL_V3_20261102 -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v3.css') }}">
 </head>
 <body>{% include "_navigation.html" %}
-<main style="max-width:800px;margin:8vh auto;padding:24px;text-align:center">
-<p>DANCER'S CHOICE AWARDS · 2026</p><h1>NOMINATIONS</h1>
-<p>The first 25 categories are being prepared. Public nominations will open once the official list is approved.</p>
-<a href="{{ url_for('round2') }}">VIEW CATEGORY RESULTS</a>
-</main>{% include "_footer.html" %}  <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script> <!-- LFV_SITEWIDE_V1 -->
+<main class="lfv3-nominations-closed lfv3-wrap"><div class="lfv3-closed-hero"><p class="lfv3-eyebrow">DANCER'S CHOICE AWARDS / 2026</p><h1>THE NEXT NAMES<br>ARE UP TO YOU.</h1><p>The community-selected Top 25 is the starting point for nominations. Eligible write-in categories can also qualify through stronger support.</p><div class="lfv3-closed-status"><strong>NOMINATIONS ARE NOT OPEN YET</strong><span>The official categories are being prepared. Check back for the opening announcement.</span></div><a class="lfv3-button lfv3-button-outline" href="{{ url_for('round2') }}">Explore category results <span aria-hidden="true">↗</span></a></div><div class="lfv3-closed-info"><p class="lfv3-eyebrow">HOW IT WILL WORK</p><div><span>01</span><p>Explore the first 25 categories, one at a time.</p></div><div><span>02</span><p>One accepted nomination per participant per New York calendar day.</p></div><div><span>03</span><p>Return to support nominees and explore qualifying write-in categories.</p></div><div><span>04</span><p>The five highest-supported eligible nominees per category advance after the nomination window closes.</p></div></div></main>{% include "_footer.html" %}  <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script> <!-- LFV_SITEWIDE_V1 -->
 </body></html>
