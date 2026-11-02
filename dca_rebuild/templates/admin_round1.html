@@ -32,6 +32,8 @@
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico', v='20261102') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png', v='20261102') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}"> <!-- LFV_SITEWIDE_V1 -->
+  <!-- LFV_EDITORIAL_V2_20261102 -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
 </head>
 
 
@@ -69,65 +71,17 @@
   </div>
 
   <nav class="lf-ws-quicknav" aria-label="Workspace sections">
-    <a href="#lf-email-section">Email activity</a>
     <a href="#lf-categories-section">Categories</a>
     <a href="#lf-method-section">Selection method</a>
     <a href="#lf-advanced-section">Review tools</a>
+    <a href="#lf-email-section">Email activity</a>
     <a href="{{ url_for('round2') }}" target="_blank" rel="noopener">Public results ↗</a>
   </nav>
 
-  <section class="lf-ws-panel" id="lf-email-section" aria-labelledby="lf-email-title">
-    <div class="lf-ws-panel-heading">
-      <div><div class="lf-ws-number">01 / PARTICIPANTS</div><h2 id="lf-email-title">Email activity</h2>
-        <p>One row per email address; submissions from the same email are grouped together.</p></div>
-      <span class="lf-ws-count">{{ voter_activity|length }} EMAILS</span>
-    </div>
-    <div class="lf-ws-toolbar">
-      <label>SEARCH EMAIL
-        <input type="search" id="lf-email-search" placeholder="Search email address" autocomplete="off" aria-controls="lf-email-table">
-      </label>
-      <label>FILTER
-        <select id="lf-email-filter" aria-controls="lf-email-table">
-          <option value="all">All emails</option>
-          <option value="multiple">Multiple submissions</option>
-          <option value="single">One submission</option>
-        </select>
-      </label>
-    </div>
-    <div class="lf-ws-table-scroll">
-      <table class="lf-ws-table lf-ws-email-table" id="lf-email-table">
-        <thead><tr><th scope="col">#</th><th scope="col">EMAIL ADDRESS</th><th scope="col" class="lf-ws-right">SUBMISSIONS</th></tr></thead>
-        <tbody>
-          {% for voter in voter_activity %}
-          <tr class="lf-email-row" data-search="{{ voter.email|lower|e }}" data-count="{{ voter.count }}">
-            <td class="lf-ws-index">{{ loop.index }}</td>
-            <td class="lf-ws-email">{{ voter.email }}</td>
-            <td class="lf-ws-right"><strong>{{ voter.count }}</strong></td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div id="lf-email-empty" class="lf-ws-empty" hidden>No emails match your search or filter.</div>
-    <div class="lf-ws-pager" data-pager="email">
-      <span id="lf-email-range" aria-live="polite">Showing {{ [voter_activity|length, 5]|min }} of {{ voter_activity|length }}</span>
-      <div class="lf-ws-pager-buttons">
-        <button type="button" data-page-action="first" aria-label="First email page">«</button>
-        <button type="button" data-page-action="prev" aria-label="Previous email page">Previous</button>
-        <span id="lf-email-page" class="lf-ws-page-label">Page 1</span>
-        <button type="button" data-page-action="next" aria-label="Next email page">Next</button>
-        <button type="button" data-page-action="last" aria-label="Last email page">»</button>
-      </div>
-    </div>
-    {% if historical_unknown_count %}
-    <p class="lf-ws-footnote">{{ historical_unknown_count }} earlier submission{% if historical_unknown_count != 1 %}s{% endif %} have no stored email address and are excluded from the email table.</p>
-    {% endif %}
-  </section>
-
   <section class="lf-ws-panel" id="lf-categories-section" aria-labelledby="lf-categories-title">
     <div class="lf-ws-panel-heading">
-      <div><div class="lf-ws-number">02 / CATEGORY DECISIONS</div><h2 id="lf-categories-title">Category list</h2>
-        <p>Review votes, descriptions and approval status in one place. The draft checkbox selects candidates for Round 2; moderation actions change a new suggestion’s review status.</p></div>
+      <div><div class="lf-ws-number">02 / CATEGORY DECISIONS</div><h2 id="lf-categories-title">Master Category List</h2>
+        <p>Search, sort and edit categories directly in the table. Click Edit in any row to change its description or moderation decision.</p></div>
       <span class="lf-ws-count">{{ category_rows|length }} CATEGORIES</span>
     </div>
     <div class="lf-ws-toolbar lf-ws-category-toolbar">
@@ -157,23 +111,6 @@
         </select>
       </label>
     </div>
-    <div class="lf-ws-actions-head">
-      <button type="button" id="lf-edit-toggle" class="lf-ws-small-action" aria-pressed="false">EDIT / BULK ACTIONS</button>
-      <span class="lf-ws-footnote">Select new suggestions to approve, reject, or merge. Historical returning categories remain editable individually.</span>
-    </div>
-    <form id="lf-bulk-form" method="post" action="{{ url_for('bulk_moderate_round1_suggestions') }}">
-      <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">
-    </form>
-    <div id="lf-bulk-tools" class="lf-ws-bulk-toolbar" hidden>
-      <strong><span id="lf-bulk-count">0</span> selected for moderation</strong>
-      <button type="submit" form="lf-bulk-form" name="action" value="approved" class="lf-ws-small-action" data-confirm-action="approve">APPROVE</button>
-      <button type="submit" form="lf-bulk-form" name="action" value="rejected" class="lf-ws-small-action" data-confirm-action="reject">DON'T APPROVE / REMOVE</button>
-      <label class="lf-ws-merge-target">MERGE INTO
-        <select name="merge_target_id" id="lf-merge-target" form="lf-bulk-form"><option value="">Select primary category</option></select>
-      </label>
-      <button type="submit" form="lf-bulk-form" name="action" value="merged" id="lf-merge-selected" class="lf-ws-small-action" data-confirm-action="merge" disabled>MERGE SELECTED</button>
-      <span class="lf-ws-footnote">Remove means rejected, not erased. Merging preserves original submissions.</span>
-    </div>
     <form id="lf-draft-form" method="post" action="{{ url_for('save_dca_category_draft') }}">
       <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">
     </form>
@@ -182,7 +119,7 @@
         <thead><tr>
           <th scope="col">DRAFT</th><th scope="col" class="lf-ws-edit-only">BULK</th>
           <th scope="col">CATEGORY / ID</th><th scope="col" class="lf-ws-right">YES</th>
-          <th scope="col" class="lf-ws-right">NO</th><th scope="col">STATUS</th>
+          <th scope="col" class="lf-ws-right">NO</th><th scope="col" class="lf-ws-right">YES %</th><th scope="col">STATUS</th>
           <th scope="col">DESCRIPTION / ACTIONS</th>
         </tr></thead>
         <tbody>
@@ -207,10 +144,11 @@
             <td><strong class="lf-ws-category-name">{{ row.name }}</strong><small class="lf-ws-item-id">{{ row.key }}</small></td>
             <td class="lf-ws-right lf-ws-votes">{{ row.yes if row.yes is not none else '—' }}</td>
             <td class="lf-ws-right lf-ws-votes">{{ row.no if row.no is not none else '—' }}</td>
+            <td class="lf-ws-right lf-ws-votes">{% if (row.yes or 0) + (row.no or 0) > 0 %}{{ ((((row.yes or 0) * 100) / ((row.yes or 0) + (row.no or 0)))|round(1)) }}%{% else %}—{% endif %}</td>
             <td><span class="lf-ws-source">{{ row.status|upper }}</span></td>
             <td class="lf-ws-description">
               <div class="lf-ws-description-text">{{ row.description or 'Description needed' }}</div>
-              <div class="lf-ws-inline-editor lf-ws-edit-only"><button type="button" class="lf-ws-small-action lf-ws-open-editor">EDIT</button>
+              <div class="lf-ws-inline-editor"><button type="button" class="lf-ws-small-action lf-ws-open-editor">EDIT</button>
               <div class="lf-ws-inrow-editor" hidden>
                 <div class="lf-ws-edit-dialog-heading"><strong>Edit: {{ row.name }}</strong><button type="button" class="lf-ws-dialog-close" aria-label="Close editor">×</button></div>
                 {% if row.suggestion_id %}
@@ -287,6 +225,29 @@
         <p>Readiness checks and ballot preparation stay separate from everyday category moderation.</p></div>
     </div>
 
+    <details class="lf-ws-accordion" id="lf-optional-bulk-tools">
+      <summary><span><strong>Advanced category actions</strong><small>Optional bulk review tools for multiple suggestions</small></span></summary>
+      <div class="lf-ws-accordion-content">
+    <div class="lf-ws-actions-head">
+      <button type="button" id="lf-edit-toggle" class="lf-ws-small-action" aria-pressed="false">EDIT / BULK ACTIONS</button>
+      <span class="lf-ws-footnote">Select new suggestions to approve, reject, or merge. Historical returning categories remain editable individually.</span>
+    </div>
+    <form id="lf-bulk-form" method="post" action="{{ url_for('bulk_moderate_round1_suggestions') }}">
+      <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">
+    </form>
+    <div id="lf-bulk-tools" class="lf-ws-bulk-toolbar" hidden>
+      <strong><span id="lf-bulk-count">0</span> selected for moderation</strong>
+      <button type="submit" form="lf-bulk-form" name="action" value="approved" class="lf-ws-small-action" data-confirm-action="approve">APPROVE</button>
+      <button type="submit" form="lf-bulk-form" name="action" value="rejected" class="lf-ws-small-action" data-confirm-action="reject">DON'T APPROVE / REMOVE</button>
+      <label class="lf-ws-merge-target">MERGE INTO
+        <select name="merge_target_id" id="lf-merge-target" form="lf-bulk-form"><option value="">Select primary category</option></select>
+      </label>
+      <button type="submit" form="lf-bulk-form" name="action" value="merged" id="lf-merge-selected" class="lf-ws-small-action" data-confirm-action="merge" disabled>MERGE SELECTED</button>
+      <span class="lf-ws-footnote">Remove means rejected, not erased. Merging preserves original submissions.</span>
+    </div>
+      </div>
+    </details>
+
     <details class="lf-ws-accordion" id="lf-final-review">
       <summary><span><strong>Draft selection &amp; readiness</strong><small>Check selected categories and outstanding requirements</small></span><span>{{ finalization_readiness.issues|length }} ITEMS</span></summary>
       <div class="lf-ws-accordion-content">
@@ -321,6 +282,57 @@
     </details>
   </section>
 {% include "phase9e_admin_controls.html" %}
+
+  <!-- Email activity lives at the bottom of the workspace. -->
+  <section class="lf-ws-panel" id="lf-email-section" aria-labelledby="lf-email-title">
+    <div class="lf-ws-panel-heading">
+      <div><div class="lf-ws-number">01 / PARTICIPANTS</div><h2 id="lf-email-title">Email activity</h2>
+        <p>One row per email address; submissions from the same email are grouped together.</p></div>
+      <span class="lf-ws-count">{{ voter_activity|length }} EMAILS</span>
+    </div>
+    <div class="lf-ws-toolbar">
+      <label>SEARCH EMAIL
+        <input type="search" id="lf-email-search" placeholder="Search email address" autocomplete="off" aria-controls="lf-email-table">
+      </label>
+      <label>FILTER
+        <select id="lf-email-filter" aria-controls="lf-email-table">
+          <option value="all">All emails</option>
+          <option value="multiple">Multiple submissions</option>
+          <option value="single">One submission</option>
+        </select>
+      </label>
+    </div>
+    <div class="lf-ws-table-scroll">
+      <table class="lf-ws-table lf-ws-email-table" id="lf-email-table">
+        <thead><tr><th scope="col">#</th><th scope="col">EMAIL ADDRESS</th><th scope="col" class="lf-ws-right">SUBMISSIONS</th></tr></thead>
+        <tbody>
+          {% for voter in voter_activity %}
+          <tr class="lf-email-row" data-search="{{ voter.email|lower|e }}" data-count="{{ voter.count }}">
+            <td class="lf-ws-index">{{ loop.index }}</td>
+            <td class="lf-ws-email">{{ voter.email }}</td>
+            <td class="lf-ws-right"><strong>{{ voter.count }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div id="lf-email-empty" class="lf-ws-empty" hidden>No emails match your search or filter.</div>
+    <div class="lf-ws-pager" data-pager="email">
+      <span id="lf-email-range" aria-live="polite">Showing {{ [voter_activity|length, 5]|min }} of {{ voter_activity|length }}</span>
+      <div class="lf-ws-pager-buttons">
+        <button type="button" data-page-action="first" aria-label="First email page">«</button>
+        <button type="button" data-page-action="prev" aria-label="Previous email page">Previous</button>
+        <span id="lf-email-page" class="lf-ws-page-label">Page 1</span>
+        <button type="button" data-page-action="next" aria-label="Next email page">Next</button>
+        <button type="button" data-page-action="last" aria-label="Last email page">»</button>
+      </div>
+    </div>
+    {% if historical_unknown_count %}
+    <p class="lf-ws-footnote">{{ historical_unknown_count }} earlier submission{% if historical_unknown_count != 1 %}s{% endif %} have no stored email address and are excluded from the email table.</p>
+    {% endif %}
+  </section>
+
+
 
 </main>
 

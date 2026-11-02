@@ -1,0 +1,62 @@
+/* THE LITEFEET VAULT — approved shared editorial system (v1)
+   Presentation only: does not alter route names, forms, database, awards, or SEO. */
+:root{
+  --lfv-navy:#0a2c5f; --lfv-gold:#c9a127; --lfv-white:#fff;
+  --lfv-bg:#e9edf4; --lfv-surface:#fff; --lfv-surface-muted:#f5f7fb;
+  --lfv-ink:#07152b; --lfv-muted:#3d4b61; --lfv-line:#cbd3e0;
+  --lfv-gutter:clamp(18px,4.3vw,64px); --lfv-max:1440px;
+  --lfv-radius:8px; --lfv-font:Arial,"Helvetica Neue",Helvetica,sans-serif;
+}
+html[data-theme="dark"],html.dark,body.dark{
+  --lfv-bg:#0b1422; --lfv-surface:#15233a; --lfv-surface-muted:#1b2a43;
+  --lfv-ink:#f4f7fc; --lfv-muted:#c0cbdb; --lfv-line:#3a4b65;
+}
+html.lfv-sitewide{scroll-padding-top:90px;scroll-behavior:smooth}
+html.lfv-sitewide body{background:var(--lfv-bg);color:var(--lfv-ink);font-family:var(--lfv-font);min-width:320px}
+html.lfv-sitewide :is(h1,h2,h3,h4){font-family:var(--lfv-font);font-style:normal;font-weight:800;letter-spacing:-.025em;line-height:1.08;overflow-wrap:break-word}
+html.lfv-sitewide h1{font-size:clamp(2.35rem,5.4vw,5rem)}
+html.lfv-sitewide h2{font-size:clamp(1.55rem,2.7vw,2.65rem)}
+html.lfv-sitewide h3{font-size:clamp(1.16rem,1.65vw,1.6rem)}
+html.lfv-sitewide :is(p,li,dd){line-height:1.55}
+html.lfv-sitewide :is(button,input,select,textarea){font-family:var(--lfv-font)}
+html.lfv-sitewide :is(button,input:not([type="checkbox"]):not([type="radio"]),select,textarea,.button,.btn){border-radius:var(--lfv-radius)}
+html.lfv-sitewide :is(button,a,input,select,textarea,summary):focus-visible{outline:3px solid var(--lfv-gold);outline-offset:3px}
+html.lfv-sitewide :is(.card,.award-card,.admin-stat,.moderation-card,.round2-preview-card,.lf9e-leaderboard,.admin-result){border-radius:var(--lfv-radius);box-shadow:none}
+html.lfv-sitewide :is(.submit,.btn-primary,.button-primary,.lf9e-primary){background:var(--lfv-gold);color:var(--lfv-navy);font-weight:800;border-radius:var(--lfv-radius)}
+/* Wide but never edge-to-edge. Keep page-specific inner grids intact. */
+html.lfv-sitewide main:not(.lfv-drawer):not(.lfv-exempt-main){box-sizing:border-box;max-width:var(--lfv-max);width:calc(100% - 2 * var(--lfv-gutter));margin-inline:auto}
+html.lfv-sitewide main :is(img,video,iframe){max-width:100%}
+html.lfv-sitewide :is(.lfv-menu-list a,.lfv-shell-brand){text-decoration:none}
+html.lfv-sitewide :is(table,.admin-results){max-width:100%}
+/* One sticky navigation per rendered page. Existing route links are reused verbatim. */
+.lfv-shell{position:sticky;top:0;z-index:5000;background:var(--lfv-navy);color:var(--lfv-white);border-bottom:3px solid var(--lfv-gold);box-shadow:0 2px 9px rgba(0,0,0,.1)}
+.lfv-shell-bar{box-sizing:border-box;max-width:calc(var(--lfv-max) + 2 * var(--lfv-gutter));margin-inline:auto;padding:0 var(--lfv-gutter);height:66px;display:flex;gap:18px;align-items:center;justify-content:space-between}
+.lfv-shell-brand{color:var(--lfv-white);font-size:clamp(.95rem,1.8vw,1.3rem);font-weight:900;letter-spacing:.035em;white-space:nowrap}
+.lfv-shell-brand span{color:var(--lfv-gold)}
+.lfv-shell-actions{display:flex;align-items:center;gap:12px}
+.lfv-nav-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;min-width:42px;padding:8px 12px;border:1px solid var(--lfv-gold);background:transparent;color:var(--lfv-white);font:800 .77rem var(--lfv-font);letter-spacing:.045em;cursor:pointer;border-radius:var(--lfv-radius)}
+.lfv-nav-button:hover{background:rgba(255,255,255,.1)}
+.lfv-theme-label{white-space:nowrap;letter-spacing:.025em;font-size:.72rem}
+.lfv-hamburger{display:grid;gap:4px;width:19px}
+.lfv-hamburger i{display:block;width:19px;height:2px;background:var(--lfv-gold)}
+.lfv-menu-backdrop[hidden],.lfv-menu-panel[hidden]{display:none!important}
+.lfv-menu-backdrop{position:fixed;inset:0;z-index:5001;background:rgba(3,11,28,.65)}
+.lfv-menu-panel{box-sizing:border-box;position:fixed;right:0;top:0;bottom:0;z-index:5002;width:min(400px,calc(100vw - 24px));padding:24px 22px 32px;overflow-y:auto;overscroll-behavior:contain;background:var(--lfv-surface);color:var(--lfv-ink);box-shadow:-15px 0 45px rgba(0,0,0,.18);border-left:3px solid var(--lfv-gold)}
+.lfv-menu-top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--lfv-line)}
+.lfv-menu-title{font-weight:900;letter-spacing:.04em;font-size:.86rem}
+.lfv-menu-close{min-width:40px;min-height:40px;background:transparent;border:1px solid var(--lfv-line);color:var(--lfv-ink);font-weight:800;font-size:1.5rem;cursor:pointer}
+.lfv-menu-list{display:grid;gap:0;margin-top:16px}
+.lfv-menu-list a{display:block;padding:15px 3px;border-bottom:1px solid var(--lfv-line);font-weight:750;color:var(--lfv-ink);line-height:1.3;overflow-wrap:anywhere}
+.lfv-menu-list a:hover,.lfv-menu-list a[aria-current="page"]{color:var(--lfv-navy);border-bottom-color:var(--lfv-gold)}
+html[data-theme="dark"] .lfv-menu-list a:hover,html[data-theme="dark"] .lfv-menu-list a[aria-current="page"]{color:var(--lfv-gold)}
+/* Never replace content with decorative imagery. */
+@media(max-width:640px){
+ :root{--lfv-gutter:18px}
+ .lfv-shell-bar{height:59px}
+ .lfv-shell-brand{font-size:.92rem}
+ .lfv-theme-label{display:none}
+ .lfv-shell-actions{gap:8px}
+ .lfv-nav-button{min-width:40px;min-height:40px;padding:7px}
+ html.lfv-sitewide h1{font-size:clamp(2rem,9vw,3.2rem)}
+}
+@media(prefers-reduced-motion:reduce){html.lfv-sitewide{scroll-behavior:auto}.lfv-menu-panel{scroll-behavior:auto}}

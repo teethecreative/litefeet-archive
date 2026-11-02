@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="lfv-root">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,9 @@
     <link rel="canonical" href="{% block canonical_url %}https://thelitefeetvault.com{{ request.path }}{% endblock %}">
     <meta name="google-site-verification" content="8w8AbHhkZ2rx2Dqquv94WjpyqjJbWOI8jhT_khqv1jo" />
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/litefeet-sitewide.css">
+    <link rel="stylesheet" href="/static/css/lfv-editorial-v2.css">
+    <script>(function(){try{var v=localStorage.getItem('litefeet-ledger-theme');document.documentElement.dataset.theme=(v==='dark'?'dark':'light')}catch(e){document.documentElement.dataset.theme='light'}})();</script>
     <link rel="icon" type="image/png" href="/static/images/litefeet-ledger-logo.png">
 
 <style id="ledger-compact-desktop-css">
@@ -248,7 +251,7 @@
         <header class="site-header">
             <a href="/" class="logo brand-with-logo">
                 <img src="/static/images/litefeet-ledger-logo.png" alt="LiteFeet Ledger logo">
-                <span>LiteFeet Ledger</span>
+                <span>The LiteFeet Vault</span>
             </a>
 
             <nav class="nav-links">
@@ -277,7 +280,7 @@
         </main>
 
         <footer class="site-footer">
-            <p>The LiteFeet Ledger is being built with the community, for the community.</p>
+            <p>The LiteFeet Vault — documenting the culture, with the community and for the community.</p>
             <div class="footer-links">
                 
                 <a href="{{ url_for('account_login') }}">Account Login</a>
@@ -305,5 +308,6 @@
         window.LITEFEET_LEDGER_IS_ADMIN = {{ "true" if session.get("admin_logged_in") or nav_is_admin else "false" }};
     </script>
     <script src="/static/js/archive.js"></script>
+    <script defer src="/static/js/litefeet-sitewide.js"></script>
 </body>
 </html>

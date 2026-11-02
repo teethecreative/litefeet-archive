@@ -154,6 +154,8 @@
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico', v='20261102') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png', v='20261102') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}"> <!-- LFV_SITEWIDE_V1 -->
+  <!-- LFV_EDITORIAL_V2_20261102 -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
 </head>
 
 <body>
@@ -161,128 +163,28 @@
 {% include "_navigation.html" %}
 {% include "_beta_bar.html" %}
 
-<main class="ledger-home">
-
-    <section class="ledger-hero">
-
-        <div class="ledger-kicker">
-            THE LITEFEET ARCHIVE
-        </div>
-
-        <h1>
-            LITEFEET<br>LEDGER
-        </h1>
-
-        <p>
-            A living record of LiteFeet history, awards and community
-            contributions — preserving what happened while documenting
-            what happens next.
-        </p>
-
-    </section>
-
-
-    <section class="ledger-grid">
-
-        <article class="ledger-card">
-
-            <div class="ledger-card-label">
-                CURRENTLY ACTIVE
-            </div>
-
-            <h2>
-                Dancer's Choice Awards
-            </h2>
-
-            <p>
-                The 2026 Dancer's Choice Awards process is underway.
-                Help decide which categories should return and suggest
-                categories for this year's awards.
-            </p>
-
-            <div class="ledger-card-actions">
-                <a class="ledger-button"
-                   href="{{ url_for('round1') }}">
-                    Suggest 2026 Categories
-                </a>
-            </div>
-
-        </article>
-
-
-        <article class="ledger-card">
-
-            <div class="ledger-card-label">
-                BUILDING THE RECORD
-            </div>
-
-            <h2>
-                LiteFeet Awards
-            </h2>
-
-            <p>
-                Historical LiteFeet Awards results are being gathered
-                and verified. If you know a year, category or winner,
-                you can contribute information to the archive.
-            </p>
-
-            <div class="ledger-card-actions">
-                <a class="ledger-button"
-                   href="{{ url_for('lfa_home') }}">
-                    Explore & Contribute
-                </a>
-            </div>
-
-        </article>
-
-
-        <article class="ledger-card">
-
-            <div class="ledger-card-label">
-                COMING SOON
-            </div>
-
-            <h2>
-                HypeItUpTV Awards
-            </h2>
-
-            <p>
-                The HypeItUpTV Awards section of the Ledger is coming
-                soon. Follow Hype It Up TV on Instagram and subscribe
-                on YouTube for updates.
-            </p>
-
-            <div class="ledger-card-actions">
-                <a class="ledger-button ledger-button-secondary"
-                   href="{{ url_for('hypeitup_awards') }}">
-                    View Coming Soon
-                </a>
-            </div>
-
-        </article>
-
-    </section>
-
-
-    <section class="ledger-archive-note">
-
-        <div class="ledger-card-label">
-            THE ARCHIVE
-        </div>
-
-        <h2>
-            More LiteFeet history is coming back.
-        </h2>
-
-        <p>
-            LiteFeet Ledger is being rebuilt from the previous
-            LiteFeet Archive. Historical records and community
-            contributions are being preserved and will return as
-            they are reviewed, organized and verified.
-        </p>
-
-    </section>
-
+<main class="ledger-home lfv-ledger-home">
+  <section class="lfv-ledger-hero" aria-labelledby="lfv-ledger-title">
+    <p class="lfv-kicker">THE LITEFEET VAULT / THE LEDGER</p>
+    <h1 id="lfv-ledger-title">THE CULTURE.<br>ON RECORD.</h1>
+    <p class="lfv-ledger-deck">The LiteFeet Ledger documents awards, history and community contributions — preserving what happened while making space for what happens next.</p>
+    <nav class="lfv-ledger-section-links" aria-label="Explore award archives">
+      <a href="{{ url_for('round2') }}">DCA 2026 results <span aria-hidden="true">↗</span></a>
+      <a href="{{ url_for('lfa_home') }}">LiteFeet Awards archive <span aria-hidden="true">↗</span></a>
+      <a href="{{ url_for('hypeitup_awards') }}">HypeItUpTV Awards <span aria-hidden="true">↗</span></a>
+    </nav>
+  </section>
+  <section class="lfv-ledger-collection" aria-labelledby="lfv-ledger-collection-title">
+    <div class="lfv-section-topline"><p class="lfv-kicker">EXPLORE THE ARCHIVE</p><span>AWARDS / HISTORY</span></div>
+    <h2 id="lfv-ledger-collection-title">Awards &amp; recognition</h2>
+    <div class="lfv-ledger-rows">
+      <article><span class="lfv-ledger-index">01 / CURRENT EDITION</span><div><h3>Dancer's Choice Awards</h3><p>Follow the 2026 awards process, category results and nomination information.</p></div><div class="lfv-ledger-actions"><a class="ledger-button" href="{{ url_for('dca_nominations_closed') }}">2026 nominations</a><a href="{{ url_for('round2') }}">Category results</a></div></article>
+      <article><span class="lfv-ledger-index">02 / HISTORICAL RECORD</span><div><h3>LiteFeet Awards</h3><p>Explore existing records and contribute verified historical awards information.</p></div><div class="lfv-ledger-actions"><a class="ledger-button" href="{{ url_for('lfa_home') }}">Explore archive</a></div></article>
+      <article><span class="lfv-ledger-index">03 / ARCHIVE IN PROGRESS</span><div><h3>HypeItUpTV Awards</h3><p>Explore the program's developing archive and published information.</p></div><div class="lfv-ledger-actions"><a class="ledger-button ledger-button-secondary" href="{{ url_for('hypeitup_awards') }}">View program</a></div></article>
+    </div>
+  </section>
+  <section class="lfv-ledger-archive-note"><p class="lfv-kicker">PRESERVATION / CONTEXT</p><h2>Building a living historical record.</h2>
+    <p>Historical records and community contributions are preserved as they are reviewed, organized and verified. The archive grows through documentation, context and community knowledge.</p></section>
 </main>
 
 
