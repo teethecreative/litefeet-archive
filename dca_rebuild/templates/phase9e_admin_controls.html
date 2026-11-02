@@ -2,13 +2,14 @@
 <section class="lf-ws-panel" id="lf-9e-top25" aria-labelledby="lf-9e-top25-title">
   <div class="lf-ws-panel-heading"><div><div class="lf-ws-number">05 / NOMINATION LAUNCH</div>
     <h2 id="lf-9e-top25-title">Automatic Top 25</h2>
-    <p>Ranked from Round 1 YES votes, then net YES minus NO. Exact ties use category name for a stable display order. Confirm once to publish—no manual category selection.</p></div>
+    <p>Ranked by Round 1 YES percentage (YES ÷ YES+NO), then total responses for percentage ties. Categories need at least {{ phase9e.min_votes }} responses to qualify for the initial Top 25. Confirm once to publish—no manual category selection.</p></div>
     <span class="lf-ws-count">{{ phase9e.count_top }} / 25 PUBLISHED</span></div>
   <div class="lf-ws-table-scroll"><table class="lf-ws-table lf9e-admin-table">
-    <thead><tr><th>RANK</th><th>CATEGORY</th><th>YES / NO</th><th>DESCRIPTION — EDIT DIRECTLY</th></tr></thead>
-    <tbody>{% for row in phase9e.ranked[:25] %}
+    <thead><tr><th>RANK</th><th>CATEGORY</th><th>YES / NO</th><th>APPROVAL</th><th>DESCRIPTION — EDIT DIRECTLY</th></tr></thead>
+    <tbody>{% for row in phase9e.top_candidates %}
       <tr><td><strong>{{ row.rank }}</strong></td><td><strong>{{ row.name }}</strong><small class="lf-ws-item-id">{{ row.key }}</small></td>
       <td>{{ row.yes }} / {{ row.no }}</td>
+      <td><strong>{{ row.approval_percent }}%</strong><small class="lf-ws-item-id">{{ row.total_votes }} votes</small></td>
       <td><form method="post" action="{{ url_for('phase9e_save_description') }}" class="lf9e-edit-form">
         <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}"><input type="hidden" name="category_key" value="{{ row.key }}">
         <textarea name="description" rows="2" maxlength="500" required aria-label="Description for {{ row.name }}">{{ row.description }}</textarea>
@@ -25,8 +26,8 @@
       <label>TYPE ADOPT TOP 25<input name="confirmation" required pattern="ADOPT TOP 25" placeholder="ADOPT TOP 25"></label>
       <button type="submit" class="lf-ws-primary">ADOPT EXISTING TOP 25</button>
     </form>
-  {% elif phase9e.ranked|length < 25 %}
-    <p class="lf-ws-alert">Only {{ phase9e.ranked|length }} eligible categories. Approve enough categories before confirming 25.</p>
+  {% elif phase9e.eligible_count < 25 %}
+    <p class="lf-ws-alert">Only {{ phase9e.eligible_count }} categories have at least {{ phase9e.min_votes }} Round 1 responses. At least 25 are required before confirmation; lower-response categories remain available for optional write-ins.</p>
   {% else %}
     <form method="post" action="{{ url_for('phase9e_confirm_top25') }}" class="lf9e-confirm-form" onsubmit="return confirm('Confirm the automatic Top 25 and stage public nominations? This cannot overwrite existing categories.')">
       <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">

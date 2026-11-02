@@ -11,6 +11,7 @@ import os
 import re
 import secrets
 from collections import defaultdict
+from fractions import Fraction
 
 from flask import abort, flash, redirect, render_template, request, session, url_for
 from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
@@ -108,8 +109,28 @@ def normalized(value):
     return ' '.join(value.casefold().split())
 
 
+# LITEFEET_PHASE9E_PERCENTAGE_RANKING_HOTFIX
+# A category needs at least five Round 1 Yes/No responses before it is eligible
+# for the automatic Top 25. This does NOT remove it from write-in consideration.
+MIN_TOP25_CATEGORY_RESPONSES = 5
+
+
+def top25_rank_key(item):
+    """Approval ratio descending, then total votes descending, then stable name.
+
+    Fractions compare exactly; rounding is for display only. Low-response
+    categories sort below eligible ones and cannot be confirmed into the Top 25.
+    """
+    yes = int(item['yes'])
+    no = int(item['no'])
+    total = yes + no
+    ratio = Fraction(yes, total) if total else Fraction(0, 1)
+    return (total < MIN_TOP25_CATEGORY_RESPONSES,
+            -ratio, -total, item['name'].casefold(), item['key'])
+
+
 def ranked_candidates(db, ns, edition):
-    """Round-1 YES support first, net votes second; stable name only breaks exact ties.
+    """Rank Round 1 categories by YES percentage, with participation safeguard.
 
     Pending/rejected new suggestions are excluded. No saved-draft prerequisite.
     """
@@ -143,7 +164,12 @@ def ranked_candidates(db, ns, edition):
         item['description'] = overrides.get(item['key'], item['description'])
     # An approved new suggestion may duplicate an older category's display name:
     # do not silently overwrite or double-count it when publishing.
-    entries.sort(key=lambda x: (-x['yes'], -(x['yes'] - x['no']), x['name'].casefold(), x['key']))
+    for item in entries:
+        total = int(item['yes']) + int(item['no'])
+        item['total_votes'] = total
+        item['approval_percent'] = round(100 * item['yes'] / total, 1) if total else 0.0
+        item['eligible_for_top25'] = total >= MIN_TOP25_CATEGORY_RESPONSES
+    entries.sort(key=top25_rank_key)
     for index, item in enumerate(entries, 1):
         item['rank'] = index
     return entries
@@ -216,6 +242,8 @@ def install_phase9e(app, ns):
             if not edition:
                 return {'phase9e': None}
             ranked = ranked_candidates(db, ns, edition)
+            top_candidates = [r for r in ranked if r['eligible_for_top25']][:25]
+            eligible_count = sum(r['eligible_for_top25'] for r in ranked)
             stages = stages_for(db, edition)
             published = {cat.normalized_name: (stage.stage, stage.position) for stage, cat in stages}
             top = [dict(category=cat, position=stage.position) for stage, cat in stages if stage.stage == 'top25']
@@ -224,7 +252,9 @@ def install_phase9e(app, ns):
             writein_names = {cat['category'].normalized_name for cat in writeins}
             remaining = [entry for entry in ranked if normalized(entry['name']) not in published]
             qualified, floor, requirement = qualification(db, edition, stages)
-            return {'phase9e': dict(ranked=ranked, top=top, writeins=writeins, remaining=remaining,
+            return {'phase9e': dict(ranked=ranked, top_candidates=top_candidates,
+                                   eligible_count=eligible_count, min_votes=MIN_TOP25_CATEGORY_RESPONSES,
+                                   top=top, writeins=writeins, remaining=remaining,
                                    published=published, writein_names=writein_names,
                                    qualified=qualified, floor=floor, requirement=requirement,
                                    closed=is_closed(), count_top=len(top), legacy_official=legacy_official,
@@ -315,9 +345,10 @@ def install_phase9e(app, ns):
             if db.query(DCACategory).filter_by(edition_id=edition.id, status='official').count():
                 abort(409, 'Official categories already exist; review before republishing')
             ranked = ranked_candidates(db, ns, edition)
-            if len(ranked) < 25:
-                abort(409, 'At least 25 eligible categories required')
-            selected = ranked[:25]
+            eligible = [r for r in ranked if r['eligible_for_top25']]
+            if len(eligible) < 25:
+                abort(409, f'At least 25 categories with {MIN_TOP25_CATEGORY_RESPONSES} or more Round 1 votes required')
+            selected = eligible[:25]
             names = [normalized(item['name']) for item in selected]
             if len(set(names)) != 25:
                 abort(409, 'Duplicate category names in Top 25: merge before publishing')
