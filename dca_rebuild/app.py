@@ -1528,6 +1528,37 @@ def admin_round1():
             edition_id=edition.id, status="round2_ballot"
         ).count()
 
+        # Phase 9C: returning categories and ALL new moderation records in
+        # one searchable table; never fabricate vote totals for ungrouped rows.
+        current_shortlist = {item["key"]: item for item in shortlist}
+        category_rows = []
+        for item in shortlist:
+            if item["source"] != "RETURNING":
+                continue
+            category_rows.append({
+                "key": item["key"], "name": item["name"],
+                "source": "RETURNING", "yes": item["yes"], "no": item["no"],
+                "description": item["description"], "selected": item["selected"],
+                "can_include": True, "status": "returning",
+                "category_id": int(item["key"].split(":", 1)[1]),
+                "suggestion_id": None,
+            })
+        for suggestion in suggestions:
+            key = f"new:{suggestion.id}"
+            shortlisted = current_shortlist.get(key)
+            category_rows.append({
+                "key": key, "name": suggestion.category_name,
+                "source": "NEW",
+                "yes": shortlisted["yes"] if shortlisted else None,
+                "no": shortlisted["no"] if shortlisted else None,
+                "description": suggestion.description,
+                "selected": shortlisted["selected"] if shortlisted else False,
+                "can_include": bool(shortlisted),
+                "status": suggestion.moderation_status,
+                "category_id": None, "suggestion_id": suggestion.id,
+            })
+        category_rows.sort(key=lambda row: (row["name"].casefold(), row["key"]))
+
         return render_template(
             "admin_round1.html",
             submission_count=submission_count,
@@ -1537,6 +1568,7 @@ def admin_round1():
             suggestions=suggestions,
             suggestion_vote_groups=dca_new_category_groups(db, edition.id),
             shortlist=shortlist,
+            category_rows=category_rows,
             final_review=final_review,
             finalization_readiness=finalization_readiness,
             ballot_prepared=ballot_prepared,
@@ -1597,11 +1629,98 @@ def save_dca_category_draft():
         for row in existing:
             row.selected = row.category_key in selected and row.category_key in eligible
         existing_keys = {row.category_key for row in existing}
-        for key in selected - existing_keys:
-            db.add(DCACategoryDraftSelection(edition_id=current.id, category_key=key, selected=True))
+        # Save unchecked choices too, or defaults reappear on the next request.
+        for key in eligible.keys() - existing_keys:
+            db.add(DCACategoryDraftSelection(
+                edition_id=current.id, category_key=key,
+                selected=key in selected,
+            ))
         db.commit()
         flash("Category selection draft saved.")
         return redirect(url_for("admin_round1"))
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
+@app.route("/admin/dca/round1/bulk", methods=["POST"])
+@admin_login_required
+def bulk_moderate_round1_suggestions():
+    expected = session.get("dca_moderation_csrf", "")
+    provided = request.form.get("csrf_token", "")
+    if not expected or not secrets.compare_digest(expected, provided):
+        abort(400, description="Invalid moderation token")
+
+    action = request.form.get("action", "").strip()
+    if action not in {"approved", "rejected", "merged"}:
+        abort(400, description="Invalid moderation action")
+    raw = request.form.getlist("suggestion_id")
+    if not raw or len(raw) > 150:
+        abort(400, description="Choose 1 to 150 suggestions")
+    try:
+        ids = [int(value) for value in raw]
+    except (ValueError, TypeError):
+        abort(400, description="Invalid suggestion ID")
+    if len(set(ids)) != len(ids) or any(i <= 0 for i in ids):
+        abort(400, description="Duplicate or invalid suggestion ID")
+
+    db = SessionLocal()
+    try:
+        current = db.query(DCAEdition).filter_by(year=2026).first()
+        if current is None:
+            abort(404)
+        ballot = db.query(DCACategoryBallot).filter_by(edition_id=current.id).first()
+        if ballot and (ballot.is_open or ballot.opened_at):
+            abort(409, description="Cannot moderate an already-open Round 2 ballot")
+        chosen = (db.query(DCANewCategorySuggestion)
+                  .join(DCACategorySuggestionSubmission,
+                        DCANewCategorySuggestion.submission_id == DCACategorySuggestionSubmission.id)
+                  .filter(DCACategorySuggestionSubmission.edition_id == current.id,
+                          DCANewCategorySuggestion.id.in_(ids))
+                  .all())
+        if len(chosen) != len(ids):
+            abort(400, description="One or more suggestions are not eligible")
+        by_id = {item.id: item for item in chosen}
+        if any(item.moderation_status == "merged" for item in chosen):
+            abort(400, description="Already-merged suggestions cannot be bulk edited")
+
+        if action == "merged":
+            if len(chosen) < 2:
+                abort(400, description="Select at least two suggestions to merge")
+            try:
+                primary_id = int(request.form.get("merge_target_id", ""))
+            except (TypeError, ValueError):
+                abort(400, description="Choose a primary category among the selected")
+            if primary_id not in by_id:
+                abort(400, description="Primary category must be one of the selected suggestions")
+            primary = by_id[primary_id]
+            if primary.moderation_status == "rejected":
+                abort(400, description="Choose a non-rejected primary suggestion")
+            secondary_ids = [id_ for id_ in ids if id_ != primary_id]
+            # Existing merged children must follow their previous parent so
+            # that no vote support is stranded or counted as a new category.
+            descendants = (db.query(DCANewCategorySuggestion)
+                           .filter(DCANewCategorySuggestion.merged_into_id.in_(secondary_ids))
+                           .all())
+            primary.moderation_status = "approved"
+            primary.merged_into_id = None
+            for item in chosen:
+                if item.id != primary_id:
+                    item.moderation_status = "merged"
+                    item.merged_into_id = primary_id
+            for item in descendants:
+                item.merged_into_id = primary_id
+            note = f"Merged {len(chosen) - 1} suggestion(s) into '{primary.category_name}'."
+        else:
+            for item in chosen:
+                item.moderation_status = action
+                item.merged_into_id = None
+            note = f"{len(chosen)} suggestion(s) {'approved' if action == 'approved' else 'removed from consideration'}."
+        db.commit()
+        flash(note)
+        return redirect(url_for("admin_round1") + "#lf-categories-section")
     except Exception:
         db.rollback()
         raise
@@ -4644,3 +4763,5 @@ def ledger_analytics_hour_label(hour):
     return f"{hour % 12 or 12}:00 {'AM' if hour < 12 else 'PM'}"
 
 # LITEFEET_PHASE9B_RESULTS_AND_CLOSED_BALLOT_2026
+
+# LITEFEET_PHASE9C_ADMIN_WORKSPACE_2026
