@@ -6,10 +6,12 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png', v='20261102') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico', v='20261102') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png', v='20261102') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}"> <!-- LFV_SITEWIDE_V1 -->
 </head>
 <body>{% include "_navigation.html" %}
 <main style="max-width:800px;margin:8vh auto;padding:24px;text-align:center">
 <p>DANCER'S CHOICE AWARDS · 2026</p><h1>NOMINATIONS</h1>
 <p>The first 25 categories are being prepared. Public nominations will open once the official list is approved.</p>
 <a href="{{ url_for('round2') }}">VIEW CATEGORY RESULTS</a>
-</main>{% include "_footer.html" %}</body></html>
+</main>{% include "_footer.html" %}  <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script> <!-- LFV_SITEWIDE_V1 -->
+</body></html>

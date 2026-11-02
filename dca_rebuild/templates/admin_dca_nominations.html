@@ -20,6 +20,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png', v='20261102') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico', v='20261102') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png', v='20261102') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}"> <!-- LFV_SITEWIDE_V1 -->
 </head><body>{% include "_admin_navigation.html" %}
 <main class="dca-nominations-admin"><p>DCA 2026 · ADMIN</p><h1>NOMINATION REVIEW</h1>
 <p>Public nominations are closed. This page lets you review nominations once submissions are enabled in a later phase.</p>
@@ -54,4 +55,5 @@
 <span>PAGE {{ page }} OF {{ pages }}</span>
 {% if page < pages %}<a href="{{ url_for('admin_dca_nominations', page=page+1, q=search, status=status) }}">NEXT →</a>{% endif %}
 </nav>
-</main></body></html>
+</main>  <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script> <!-- LFV_SITEWIDE_V1 -->
+</body></html>

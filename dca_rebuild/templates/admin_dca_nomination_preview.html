@@ -14,6 +14,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png', v='20261102') }}">
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico', v='20261102') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png', v='20261102') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}"> <!-- LFV_SITEWIDE_V1 -->
 </head><body>{% include "_admin_navigation.html" %}
 <main class="dca-nom-preview">
 <p>DANCER'S CHOICE AWARDS · 2026 · ADMIN PREVIEW</p>
@@ -27,4 +28,5 @@
 <label>Your email<input type="email" placeholder="name@example.com" disabled></label>
 <p>When submissions open, nominee names will be normalized for duplicate detection within each category. Multiple people can support the same nominee without creating duplicate nominee records.</p>
 <button type="button" disabled>SUBMISSIONS NOT OPEN</button>
-</form></main></body></html>
+</form></main>  <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script> <!-- LFV_SITEWIDE_V1 -->
+</body></html>
