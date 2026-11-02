@@ -1,0 +1,68 @@
+{% if phase9e %}
+<section class="lf-ws-panel" id="lf-9e-top25" aria-labelledby="lf-9e-top25-title">
+  <div class="lf-ws-panel-heading"><div><div class="lf-ws-number">05 / NOMINATION LAUNCH</div>
+    <h2 id="lf-9e-top25-title">Automatic Top 25</h2>
+    <p>Ranked from Round 1 YES votes, then net YES minus NO. Exact ties use category name for a stable display order. Confirm once to publish—no manual category selection.</p></div>
+    <span class="lf-ws-count">{{ phase9e.count_top }} / 25 PUBLISHED</span></div>
+  <div class="lf-ws-table-scroll"><table class="lf-ws-table lf9e-admin-table">
+    <thead><tr><th>RANK</th><th>CATEGORY</th><th>YES / NO</th><th>DESCRIPTION — EDIT DIRECTLY</th></tr></thead>
+    <tbody>{% for row in phase9e.ranked[:25] %}
+      <tr><td><strong>{{ row.rank }}</strong></td><td><strong>{{ row.name }}</strong><small class="lf-ws-item-id">{{ row.key }}</small></td>
+      <td>{{ row.yes }} / {{ row.no }}</td>
+      <td><form method="post" action="{{ url_for('phase9e_save_description') }}" class="lf9e-edit-form">
+        <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}"><input type="hidden" name="category_key" value="{{ row.key }}">
+        <textarea name="description" rows="2" maxlength="500" required aria-label="Description for {{ row.name }}">{{ row.description }}</textarea>
+        <button type="submit" class="lf-ws-small-action">SAVE</button>
+      </form></td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% if phase9e.count_top == 25 %}
+    <p class="lf-ws-alert">Top 25 confirmed and staged. Nothing will be republished over existing nominations.</p>
+  {% elif phase9e.legacy_official == 25 %}
+    <p class="lf-ws-alert">25 categories were already published in Phase 9D. Preserve that list and adopt it into the new sequential nomination flow.</p>
+    <form method="post" action="{{ url_for('phase9e_adopt_existing_top25') }}" class="lf9e-confirm-form">
+      <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">
+      <label>TYPE ADOPT TOP 25<input name="confirmation" required pattern="ADOPT TOP 25" placeholder="ADOPT TOP 25"></label>
+      <button type="submit" class="lf-ws-primary">ADOPT EXISTING TOP 25</button>
+    </form>
+  {% elif phase9e.ranked|length < 25 %}
+    <p class="lf-ws-alert">Only {{ phase9e.ranked|length }} eligible categories. Approve enough categories before confirming 25.</p>
+  {% else %}
+    <form method="post" action="{{ url_for('phase9e_confirm_top25') }}" class="lf9e-confirm-form" onsubmit="return confirm('Confirm the automatic Top 25 and stage public nominations? This cannot overwrite existing categories.')">
+      <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">
+      <label>TYPE CONFIRM TOP 25 <input name="confirmation" required pattern="CONFIRM TOP 25" placeholder="CONFIRM TOP 25"></label>
+      <button class="lf-ws-primary" type="submit">CONFIRM TOP 25</button>
+    </form>
+  {% endif %}
+  <p class="lf-ws-footnote">Public nominations host switch: <strong>{{ 'ENABLED' if phase9e.host_enabled else 'DISABLED' }}</strong>. Confirmation alone does not bypass that setting.</p>
+
+  <details class="lf-ws-accordion" id="lf9e-writein-admin"><summary><span><strong>Additional categories / write-ins</strong><small>Approve categories in the table, then select which ones are visible for optional write-ins</small></span><span>{{ phase9e.writeins|length }} VISIBLE</span></summary>
+    <div class="lf-ws-accordion-content">
+    <form method="post" action="{{ url_for('phase9e_publish_writeins') }}">
+      <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">
+      <div class="lf9e-write-admin-list">
+      {% for row in phase9e.remaining %}
+        <label><input type="checkbox" name="category_key" value="{{ row.key }}"><strong>{{ row.name }}</strong><span>{{ row.yes }} YES / {{ row.no }} NO · {{ row.description or 'No description yet' }}</span></label>
+      {% else %}<p>No remaining approved suggestions. Approve more category suggestions above to make them eligible.</p>{% endfor %}
+      </div>
+      <button class="lf-ws-primary" type="submit" {% if phase9e.count_top != 25 %}disabled{% endif %}>PUBLISH SELECTED WRITE-INS</button>
+    </form>
+    <h3>Write-in qualification tracker</h3>
+    <p>Beat the lowest unique-supporter count among the initial Top 25 (currently {{ phase9e.floor }}), with at least 20 supporters and five approved nominees. Qualification is finalized after nominations close.</p>
+    <div class="lf-ws-table-scroll"><table class="lf-ws-table"><thead><tr><th>CATEGORY</th><th>SUPPORTERS</th><th>ELIGIBLE NOMINEES</th><th>STATUS</th></tr></thead><tbody>
+    {% for item in phase9e.writeins %}
+      {% set q = phase9e.qualified.get(item.category.id) %}
+      <tr><td>{{ item.category.name }}</td><td>{{ q.supporters if q else 0 }} / {{ phase9e.requirement }}</td><td>{{ q.eligible_nominees if q else 0 }} / 5</td><td>
+        {% if q and q.qualified %}OFFICIALLY QUALIFIED
+        {% elif q and q.met %}PROVISIONAL — CRITERIA MET
+        {% else %}BUILDING SUPPORT{% endif %}
+        {% if phase9e.closed and q and q.met and not q.qualified %}
+          <form method="post" action="{{ url_for('phase9e_confirm_qualified') }}"><input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}"><input type="hidden" name="category_id" value="{{ item.category.id }}"><button type="submit" class="lf-ws-small-action">CONFIRM QUALIFIED</button></form>
+        {% endif %}
+      </td></tr>
+    {% else %}<tr><td colspan="4">No write-ins published yet.</td></tr>{% endfor %}
+    </tbody></table></div>
+    </div>
+  </details>
+</section>
+{% endif %}

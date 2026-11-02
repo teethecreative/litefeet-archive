@@ -4867,3 +4867,7 @@ def ledger_analytics_hour_label(hour):
 # LITEFEET_SEO_PHASE_1
 from dca_rebuild.seo import register_seo
 register_seo(app)
+
+# LITEFEET_PHASE9E_DAILY_NOMINATIONS
+from dca_rebuild.phase9e import install_phase9e
+install_phase9e(app, globals())

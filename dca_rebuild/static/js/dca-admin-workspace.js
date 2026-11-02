@@ -100,16 +100,16 @@
         (filter === 'missing' && row.dataset.missing === 'true');
     });
 
-    // The category table has two independent selection types: Round 2 draft
-    // inclusion and bulk moderation of new-category suggestions only.
-    // Modal editors sit above the table rather than expanding individual
-    // card-like rows to different heights.
+    // Inline editors: no modal overlays or table reset.
     document.querySelectorAll('.lf-ws-open-editor').forEach(function (button) {
-      const dlg = button.parentElement.querySelector('dialog');
-      if (!dlg) return;
-      button.addEventListener('click', function () { dlg.showModal(); });
-      dlg.querySelector('.lf-ws-dialog-close')?.addEventListener('click', function () { dlg.close(); });
-      dlg.addEventListener('click', function (event) { if (event.target === dlg) dlg.close(); });
+      const panel = button.parentElement.querySelector('.lf-ws-inrow-editor');
+      if (!panel) return;
+      button.addEventListener('click', function () {
+        panel.hidden = !panel.hidden;
+        button.setAttribute('aria-expanded', String(!panel.hidden));
+        if (!panel.hidden) panel.querySelector('input,textarea,select')?.focus();
+      });
+      panel.querySelector('.lf-ws-dialog-close')?.addEventListener('click', function () { panel.hidden = true; });
     });
     const section = document.getElementById('lf-categories-section');
     const toggle = document.getElementById('lf-edit-toggle');
@@ -199,7 +199,7 @@
         window.requestAnimationFrame(function () { window.scrollTo(0, y); });
       }
     }
-    document.querySelectorAll('#lf-category-table form, #lf-draft-form, #lf-bulk-form').forEach(function (editForm) {
+    document.querySelectorAll('#lf-category-table form, #lf-draft-form, #lf-bulk-form, .lf9e-edit-form').forEach(function (editForm) {
       editForm.addEventListener('submit', function () {
         sessionStorage.setItem('lf-dca-9d-scroll', String(window.scrollY));
       });

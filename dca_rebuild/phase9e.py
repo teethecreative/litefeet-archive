@@ -1,0 +1,548 @@
+"""LiteFeet DCA 2026 Phase 9E — install Flask hooks onto the existing site.
+
+Existing public routes, historical votes, and visual system are preserved.
+New tables are additive and created on startup; this module never drops data.
+"""
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+import os
+import re
+import secrets
+from collections import defaultdict
+
+from flask import abort, flash, redirect, render_template, request, session, url_for
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy.exc import IntegrityError
+
+from dca_rebuild.models import (
+    Base, DCACategory, DCACategorySuggestionSubmission, DCAReturnCategoryVote,
+    DCAEdition, DCANominee, DCANominationSubmission,
+)
+from dca_rebuild.nomination_service import add_nomination
+
+NY = ZoneInfo('America/New_York')
+
+
+class DailyNominationClaim9E(Base):
+    __tablename__ = 'ledger_dca9e_daily_claims'
+    id = Column(Integer, primary_key=True)
+    edition_id = Column(Integer, nullable=False)
+    submitter_hash = Column(String(128), nullable=False)
+    local_day = Column(Date, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    __table_args__ = (UniqueConstraint('edition_id', 'submitter_hash', 'local_day', name='uq_dca9e_daily'),)
+
+
+class NominationDetail9E(Base):
+    __tablename__ = 'ledger_dca9e_nomination_details'
+    id = Column(Integer, primary_key=True)
+    submission_id = Column(Integer, ForeignKey('ledger_dca_nomination_submissions.id'), unique=True, nullable=False)
+    team = Column(String(250))
+    location = Column(String(250))
+    instagram = Column(String(100))
+    justification = Column(Text)
+
+
+class CategoryStage9E(Base):
+    __tablename__ = 'ledger_dca9e_category_stages'
+    id = Column(Integer, primary_key=True)
+    edition_id = Column(Integer, nullable=False)
+    category_id = Column(Integer, ForeignKey('ledger_dca_categories.id'), nullable=False)
+    stage = Column(String(24), nullable=False)  # top25, write_in, qualified
+    position = Column(Integer, nullable=False)
+    __table_args__ = (UniqueConstraint('edition_id', 'category_id', name='uq_dca9e_category_stage'),)
+
+
+class DraftCategoryDescription9E(Base):
+    __tablename__ = 'ledger_dca9e_draft_descriptions'
+    id = Column(Integer, primary_key=True)
+    edition_id = Column(Integer, nullable=False)
+    category_key = Column(String(100), nullable=False)
+    description = Column(String(500), nullable=False)
+    __table_args__ = (UniqueConstraint('edition_id', 'category_key', name='uq_dca9e_draft_desc'),)
+
+
+TABLES = [DailyNominationClaim9E.__table__, NominationDetail9E.__table__,
+          CategoryStage9E.__table__, DraftCategoryDescription9E.__table__]
+
+
+def today_ny():
+    return datetime.now(NY).date()
+
+
+def day_bounds_utc(day):
+    start = datetime.combine(day, datetime.min.time(), tzinfo=NY).astimezone(timezone.utc)
+    end = (datetime.combine(day + timedelta(days=1), datetime.min.time(), tzinfo=NY)
+           .astimezone(timezone.utc))
+    return start.replace(tzinfo=None), end.replace(tzinfo=None)
+
+
+def nomination_deadline():
+    """Optional explicit cutoff, e.g. 2026-12-31T23:59:00-05:00. No implicit closing date."""
+    value = os.getenv('DCA_2026_NOMINATIONS_CLOSE_AT', '').strip()
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+        if parsed.tzinfo is None:
+            return parsed.replace(tzinfo=NY)
+        return parsed
+    except ValueError:
+        raise RuntimeError('Invalid DCA_2026_NOMINATIONS_CLOSE_AT (must be ISO date/time)')
+
+
+def is_closed():
+    end = nomination_deadline()
+    return bool(end and datetime.now(NY) >= end)
+
+
+def csrf_ok():
+    token = request.form.get('csrf_token', '')
+    expected = session.get('dca_moderation_csrf', '')
+    return bool(token and expected and secrets.compare_digest(token, expected))
+
+
+def normalized(value):
+    return ' '.join(value.casefold().split())
+
+
+def ranked_candidates(db, ns, edition):
+    """Round-1 YES support first, net votes second; stable name only breaks exact ties.
+
+    Pending/rejected new suggestions are excluded. No saved-draft prerequisite.
+    """
+    historical = db.query(DCAEdition).filter_by(year=2023).first()
+    if not historical:
+        return []
+    votes = (db.query(DCAReturnCategoryVote.category_id, DCAReturnCategoryVote.bring_back,
+                      func.count(DCAReturnCategoryVote.id))
+             .join(DCACategorySuggestionSubmission,
+                   DCACategorySuggestionSubmission.id == DCAReturnCategoryVote.submission_id)
+             .filter(DCACategorySuggestionSubmission.edition_id == edition.id)
+             .group_by(DCAReturnCategoryVote.category_id, DCAReturnCategoryVote.bring_back).all())
+    by_id = defaultdict(lambda: {'yes': 0, 'no': 0})
+    for cid, yes, count in votes:
+        by_id[cid]['yes' if yes else 'no'] = int(count)
+    entries = []
+    for item in db.query(DCACategory).filter_by(edition_id=historical.id).all():
+        v = by_id[item.id]
+        entries.append(dict(key=f'returning:{item.id}', name=item.name, description=item.description or '',
+                            source_type='returning', source_category_id=item.id,
+                            yes=v['yes'], no=v['no']))
+    for group in ns['dca_new_category_groups'](db, edition.id):
+        if group['status'] != 'approved':
+            continue
+        entries.append(dict(key=f'new:{group["id"]}', name=group['name'],
+                            description=group.get('description') or '', source_type='new',
+                            source_category_id=None, yes=group['yes'], no=group['no']))
+    overrides = {r.category_key: r.description for r in
+                 db.query(DraftCategoryDescription9E).filter_by(edition_id=edition.id).all()}
+    for item in entries:
+        item['description'] = overrides.get(item['key'], item['description'])
+    # An approved new suggestion may duplicate an older category's display name:
+    # do not silently overwrite or double-count it when publishing.
+    entries.sort(key=lambda x: (-x['yes'], -(x['yes'] - x['no']), x['name'].casefold(), x['key']))
+    for index, item in enumerate(entries, 1):
+        item['rank'] = index
+    return entries
+
+
+def stages_for(db, edition):
+    return (db.query(CategoryStage9E, DCACategory)
+            .join(DCACategory, DCACategory.id == CategoryStage9E.category_id)
+            .filter(CategoryStage9E.edition_id == edition.id)
+            .order_by(CategoryStage9E.position, DCACategory.name).all())
+
+
+def get_counts(db, edition):
+    """Only approved nominees are publicly listed or used for qualifying support."""
+    approved = db.query(DCANominee).filter_by(edition_id=edition.id, moderation_status='approved').all()
+    approved_ids = [n.id for n in approved]
+    counts = defaultdict(int)
+    supporters = defaultdict(set)
+    if approved_ids:
+        rows = (db.query(DCANominationSubmission.nominee_id, DCANominationSubmission.submitter_hash)
+                .filter(DCANominationSubmission.edition_id == edition.id,
+                        DCANominationSubmission.nominee_id.in_(approved_ids)).all())
+        for nid, supporter in rows:
+            counts[nid] += 1
+            supporters[nid].add(supporter)
+    by_cat = defaultdict(list)
+    for n in approved:
+        by_cat[n.category_id].append(dict(id=n.id, name=n.name, count=counts[n.id]))
+    for vals in by_cat.values():
+        vals.sort(key=lambda x: (-x['count'], x['name'].casefold()))
+    category_support = {cid: len(set().union(*(supporters[x['id']] for x in vals)))
+                        for cid, vals in by_cat.items()}
+    return by_cat, category_support
+
+
+def qualification(db, edition, stages=None):
+    if stages is None:
+        stages = stages_for(db, edition)
+    nominees, support = get_counts(db, edition)
+    top = [cat.id for stage, cat in stages if stage.stage == 'top25']
+    floor = min((support.get(cid, 0) for cid in top), default=0)
+    required = max(20, floor + 1)
+    results = {}
+    for stage, cat in stages:
+        if stage.stage not in ('write_in', 'qualified'):
+            continue
+        supporters = support.get(cat.id, 0)
+        distinct_nominees = len(nominees.get(cat.id, []))
+        results[cat.id] = dict(supporters=supporters, eligible_nominees=distinct_nominees,
+                               required=required, met=supporters >= required and distinct_nominees >= 5,
+                               qualified=stage.stage == 'qualified')
+    return results, floor, required
+
+
+def install_phase9e(app, ns):
+    """Run after the original routes are registered; never changes existing route URL."""
+    engine = ns['engine']
+    Base.metadata.create_all(bind=engine, tables=TABLES, checkfirst=True)
+    SessionLocal = ns['SessionLocal']
+    admin_login_required = ns['admin_login_required']
+    private_hash = ns['private_hash']
+
+    @app.context_processor
+    def phase9e_admin_template_context():
+        if request.endpoint != 'admin_round1' or not session.get('ledger_admin_authenticated'):
+            return {'phase9e': None}
+        db = SessionLocal()
+        try:
+            edition = db.query(DCAEdition).filter_by(year=2026).first()
+            if not edition:
+                return {'phase9e': None}
+            ranked = ranked_candidates(db, ns, edition)
+            stages = stages_for(db, edition)
+            published = {cat.normalized_name: (stage.stage, stage.position) for stage, cat in stages}
+            top = [dict(category=cat, position=stage.position) for stage, cat in stages if stage.stage == 'top25']
+            legacy_official = db.query(DCACategory).filter_by(edition_id=edition.id, status='official').count()
+            writeins = [dict(category=cat, position=stage.position) for stage, cat in stages if stage.stage in ('write_in', 'qualified')]
+            writein_names = {cat['category'].normalized_name for cat in writeins}
+            remaining = [entry for entry in ranked if normalized(entry['name']) not in published]
+            qualified, floor, requirement = qualification(db, edition, stages)
+            return {'phase9e': dict(ranked=ranked, top=top, writeins=writeins, remaining=remaining,
+                                   published=published, writein_names=writein_names,
+                                   qualified=qualified, floor=floor, requirement=requirement,
+                                   closed=is_closed(), count_top=len(top), legacy_official=legacy_official,
+                                   host_enabled=os.getenv('DCA_2026_NOMINATIONS_ENABLED') == 'true')}
+        finally:
+            db.close()
+
+    @app.route('/admin/dca/phase9e/adopt-existing-top25', methods=['POST'])
+    @admin_login_required
+    def phase9e_adopt_existing_top25():
+        """Safely bridge previously published Phase 9D's 25 into the new wizard."""
+        if not csrf_ok() or request.form.get('confirmation') != 'ADOPT TOP 25':
+            abort(400, 'Invalid confirmation')
+        db = SessionLocal()
+        try:
+            edition = db.query(DCAEdition).filter_by(year=2026).first()
+            if not edition or edition.phase != 'nominations':
+                abort(409, 'No staged nomination edition')
+            if db.query(CategoryStage9E).filter_by(edition_id=edition.id).count():
+                abort(409, 'Category stages already exist')
+            categories = db.query(DCACategory).filter_by(edition_id=edition.id, status='official').all()
+            if len(categories) != 25:
+                abort(409, 'Expected exactly 25 existing official categories')
+            rank_map = {normalized(entry['name']): entry['rank']
+                        for entry in ranked_candidates(db, ns, edition)}
+            categories.sort(key=lambda c: (rank_map.get(c.normalized_name, 99999), c.name.casefold()))
+            for i, category in enumerate(categories, 1):
+                db.add(CategoryStage9E(edition_id=edition.id, category_id=category.id,
+                                      stage='top25', position=i))
+            db.commit()
+            flash('Existing Top 25 adopted without changing category membership or nominations.')
+            return redirect(url_for('admin_round1') + '#lf-9e-top25')
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    @app.route('/admin/dca/phase9e/description', methods=['POST'])
+    @admin_login_required
+    def phase9e_save_description():
+        if not csrf_ok():
+            abort(400, 'Invalid CSRF token')
+        key = request.form.get('category_key', '')
+        desc = ' '.join(request.form.get('description', '').split())
+        if not desc or len(desc) > 500:
+            abort(400, 'Description must be 1 to 500 characters')
+        db = SessionLocal()
+        try:
+            edition = db.query(DCAEdition).filter_by(year=2026).first()
+            if not edition:
+                abort(404)
+            eligible = {item['key']: item for item in ranked_candidates(db, ns, edition)}
+            if key not in eligible:
+                abort(400, 'Invalid category')
+            existing = db.query(DraftCategoryDescription9E).filter_by(edition_id=edition.id, category_key=key).first()
+            if existing:
+                existing.description = desc
+            else:
+                db.add(DraftCategoryDescription9E(edition_id=edition.id, category_key=key, description=desc))
+            # Keep an already-published 2026 category in sync without editing 2023 history.
+            row = db.query(DCACategory).filter_by(edition_id=edition.id, normalized_name=normalized(eligible[key]['name'])).first()
+            if row:
+                row.description = desc
+            db.commit()
+            flash('Category description saved.')
+            return redirect(url_for('admin_round1') + '#lf-9e-top25')
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    @app.route('/admin/dca/phase9e/confirm-top25', methods=['POST'])
+    @admin_login_required
+    def phase9e_confirm_top25():
+        if not csrf_ok() or request.form.get('confirmation') != 'CONFIRM TOP 25':
+            abort(400, 'Invalid confirmation')
+        if not ns['dca_categories_closed']():
+            abort(409, 'Round 1 is still open')
+        db = SessionLocal()
+        try:
+            edition = db.query(DCAEdition).filter_by(year=2026).first()
+            if not edition:
+                abort(404)
+            if edition.phase == 'nominations' or db.query(CategoryStage9E).filter_by(edition_id=edition.id).count():
+                abort(409, 'Top 25 already published; do not overwrite existing nominations')
+            if db.query(DCACategory).filter_by(edition_id=edition.id, status='official').count():
+                abort(409, 'Official categories already exist; review before republishing')
+            ranked = ranked_candidates(db, ns, edition)
+            if len(ranked) < 25:
+                abort(409, 'At least 25 eligible categories required')
+            selected = ranked[:25]
+            names = [normalized(item['name']) for item in selected]
+            if len(set(names)) != 25:
+                abort(409, 'Duplicate category names in Top 25: merge before publishing')
+            for position, item in enumerate(selected, 1):
+                row = db.query(DCACategory).filter_by(edition_id=edition.id, normalized_name=normalized(item['name'])).first()
+                if row is None:
+                    row = DCACategory(edition_id=edition.id, name=item['name'],
+                                      normalized_name=normalized(item['name']), description=item['description'],
+                                      source_type=item['source_type'], source_category_id=item['source_category_id'],
+                                      status='official')
+                    db.add(row)
+                    db.flush()
+                else:
+                    row.status = 'official'
+                    row.description = item['description']
+                db.add(CategoryStage9E(edition_id=edition.id, category_id=row.id, stage='top25', position=position))
+            edition.phase = 'nominations'
+            db.commit()
+            flash('Top 25 confirmed. Public nominations still require the host enable flag.')
+            return redirect(url_for('admin_round1') + '#lf-9e-top25')
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    @app.route('/admin/dca/phase9e/publish-writeins', methods=['POST'])
+    @admin_login_required
+    def phase9e_publish_writeins():
+        if not csrf_ok():
+            abort(400, 'Invalid CSRF token')
+        keys = list(dict.fromkeys(request.form.getlist('category_key')))
+        if not keys:
+            abort(400, 'Select approved categories')
+        db = SessionLocal()
+        try:
+            edition = db.query(DCAEdition).filter_by(year=2026).first()
+            if not edition or edition.phase != 'nominations':
+                abort(409, 'Confirm Top 25 first')
+            stages = stages_for(db, edition)
+            if len([s for s, _ in stages if s.stage == 'top25']) != 25:
+                abort(409, 'A confirmed Top 25 is required')
+            available = {r['key']: r for r in ranked_candidates(db, ns, edition)}
+            published_names = {cat.normalized_name for _, cat in stages}
+            selected = []
+            for key in keys:
+                if key not in available:
+                    abort(400, 'Invalid or unapproved category')
+                item = available[key]
+                if normalized(item['name']) in published_names:
+                    abort(409, 'Category already visible')
+                selected.append(item)
+            if len({normalized(x['name']) for x in selected}) != len(selected):
+                abort(409, 'Duplicate category names: merge before publishing')
+            next_pos = max((s.position for s, _ in stages), default=25)
+            for item in selected:
+                row = db.query(DCACategory).filter_by(edition_id=edition.id, normalized_name=normalized(item['name'])).first()
+                if not row:
+                    row = DCACategory(edition_id=edition.id, normalized_name=normalized(item['name']),
+                                      name=item['name'], description=item['description'],
+                                      source_type=item['source_type'], source_category_id=item['source_category_id'],
+                                      status='write_in_eligible')
+                    db.add(row)
+                    db.flush()
+                else:
+                    row.status = 'write_in_eligible'
+                    row.description = item['description']
+                next_pos += 1
+                db.add(CategoryStage9E(edition_id=edition.id, category_id=row.id,
+                                      stage='write_in', position=next_pos))
+            db.commit()
+            flash(f'{len(selected)} additional categories published for optional write-in nominations.')
+            return redirect(url_for('admin_round1') + '#lf-9e-top25')
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    @app.route('/admin/dca/phase9e/confirm-qualified', methods=['POST'])
+    @admin_login_required
+    def phase9e_confirm_qualified():
+        if not csrf_ok():
+            abort(400)
+        if nomination_deadline() is None or not is_closed():
+            abort(409, 'Set a nomination deadline and wait for nominations to close')
+        try:
+            category_id = int(request.form.get('category_id', ''))
+        except ValueError:
+            abort(400)
+        db = SessionLocal()
+        try:
+            edition = db.query(DCAEdition).filter_by(year=2026).first()
+            stages = stages_for(db, edition)
+            matching = [(s, c) for s, c in stages if c.id == category_id and s.stage == 'write_in']
+            if not matching:
+                abort(404)
+            result, _, _ = qualification(db, edition, stages)
+            if not result[category_id]['met']:
+                abort(409, 'Write-in has not met eligibility requirements')
+            stage, category = matching[0]
+            stage.stage = 'qualified'
+            category.status = 'official'
+            db.commit()
+            flash('Write-in category qualified and added to the official awards list.')
+            return redirect(url_for('admin_round1') + '#lf-9e-top25')
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    def nomination_view_9e():
+        db = SessionLocal()
+        try:
+            edition = db.query(DCAEdition).filter_by(year=2026).first()
+            if (not edition or edition.phase != 'nominations'
+                or os.getenv('DCA_2026_NOMINATIONS_ENABLED') != 'true'):
+                if request.method == 'POST':
+                    abort(403, 'Nominations not open')
+                return render_template('dca_nominations_closed.html')
+            stages = stages_for(db, edition)
+            top = [(s, c) for s, c in stages if s.stage == 'top25']
+            if len(top) != 25:
+                if request.method == 'POST':
+                    abort(403, 'Top 25 not confirmed')
+                return render_template('dca_nominations_closed.html')
+            other = [(s, c) for s, c in stages if s.stage in ('write_in', 'qualified')]
+            allowed = {c.id: c for _, c in top + other}
+            if 'lf9e_nomination_csrf' not in session:
+                session['lf9e_nomination_csrf'] = secrets.token_urlsafe(32)
+            if request.method == 'POST':
+                expected = session['lf9e_nomination_csrf']
+                token = request.form.get('csrf_token', '')
+                if not token or not secrets.compare_digest(token, expected):
+                    abort(400, 'Invalid submission token')
+                if is_closed():
+                    abort(403, 'Nominations are closed')
+                try:
+                    cid = int(request.form.get('category_id', ''))
+                except (ValueError, TypeError):
+                    abort(400, 'Select a valid category')
+                if cid not in allowed:
+                    abort(400, 'Category is not available')
+                email = request.form.get('email', '').strip().casefold()
+                name = request.form.get('name', '').strip()
+                team = request.form.get('team', '').strip()
+                location = request.form.get('location', '').strip()
+                instagram = request.form.get('instagram', '').strip().lstrip('@')
+                # Accept common profile links as well as @handles.
+                instagram = re.sub(r'^https?://(?:www\.)?instagram\.com/', '', instagram, flags=re.I).split('?')[0].strip('/')
+                reason = request.form.get('reason', '').strip()
+                if len(email) > 254 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
+                    abort(400, 'Enter a valid email')
+                if len(team) > 250 or len(location) > 250 or len(instagram) > 100 or len(reason) > 2000:
+                    abort(400, 'One or more fields are too long')
+                if instagram and not re.fullmatch(r'[A-Za-z0-9._]{1,30}', instagram):
+                    abort(400, 'Instagram must be a username, without a full URL')
+                from dca_rebuild.nomination_service import normalize_nominee_name
+                try:
+                    normalize_nominee_name(name)
+                except ValueError as exc:
+                    abort(400, str(exc))
+                who = private_hash('dca-nomination:' + email)
+                today = today_ny()
+                start, end = day_bounds_utc(today)
+                prior_claim = db.query(DailyNominationClaim9E).filter_by(
+                    edition_id=edition.id, submitter_hash=who, local_day=today).first()
+                legacy_today = (db.query(DCANominationSubmission).filter(
+                    DCANominationSubmission.edition_id == edition.id,
+                    DCANominationSubmission.submitter_hash == who,
+                    DCANominationSubmission.submitted_at >= start,
+                    DCANominationSubmission.submitted_at < end).first())
+                if prior_claim or legacy_today:
+                    flash('You already nominated someone today. Come back tomorrow after midnight New York time.')
+                    return redirect(url_for('dca_nominations_closed') + '?step=summary')
+                try:
+                    db.add(DailyNominationClaim9E(edition_id=edition.id, submitter_hash=who, local_day=today))
+                    db.flush()  # database unique constraint is authoritative across processes
+                    nominee, created = add_nomination(db, edition_id=edition.id, category_id=cid,
+                                                      name=name, submitter_hash=who, description=reason)
+                    if not created:
+                        db.rollback()  # failed repeat does not spend the daily allowance
+                        flash('You already nominated this person in this category. Choose another nominee.')
+                        return redirect(url_for('dca_nominations_closed') + '?step=summary')
+                    submission = db.query(DCANominationSubmission).filter_by(
+                        nominee_id=nominee.id, submitter_hash=who).first()
+                    if submission:
+                        db.add(NominationDetail9E(submission_id=submission.id, team=team or None,
+                                                  location=location or None, instagram=instagram or None,
+                                                  justification=reason or None))
+                    db.commit()
+                except IntegrityError:
+                    db.rollback()
+                    flash('A nomination has already been recorded for this day or nominee.')
+                    return redirect(url_for('dca_nominations_closed') + '?step=summary')
+                session['lf9e_recent_hash'] = who  # never store public email in the session
+                session['lf9e_recent_category'] = cid
+                flash('Nomination received for moderation. Return tomorrow to nominate again!')
+                return redirect(url_for('dca_nominations_closed') + '?step=summary')
+            nominees, support = get_counts(db, edition)
+            recent_hash = session.get('lf9e_recent_hash', '')
+            day_used = False
+            if recent_hash:
+                begin, finish = day_bounds_utc(today_ny())
+                day_used = bool(db.query(DailyNominationClaim9E).filter_by(
+                    edition_id=edition.id, submitter_hash=recent_hash, local_day=today_ny()).first() or
+                    db.query(DCANominationSubmission).filter(
+                        DCANominationSubmission.edition_id == edition.id,
+                        DCANominationSubmission.submitter_hash == recent_hash,
+                        DCANominationSubmission.submitted_at >= begin,
+                        DCANominationSubmission.submitted_at < finish).first())
+            rules, floor, requirement = qualification(db, edition, stages)
+            return render_template('dca_nominations_form.html',
+                                   categories=[dict(id=c.id, name=c.name, description=c.description or '',
+                                                    nominees=nominees.get(c.id, [])) for _, c in top],
+                                   writeins=[dict(id=c.id, name=c.name, description=c.description or '',
+                                                  nominees=nominees.get(c.id, []),
+                                                  support=support.get(c.id, 0), required=requirement)
+                                             for _, c in other],
+                                   csrf_token=session['lf9e_nomination_csrf'], day_used=day_used,
+                                   closed=is_closed(), step=request.args.get('step', 'welcome'),
+                                   minimum_support=requirement, floor=floor)
+        finally:
+            db.close()
+
+    app.view_functions['dca_nominations_closed'] = nomination_view_9e
+    app.logger.info('DCA Phase 9E initialized: staged categories, daily nominations and write-ins')
