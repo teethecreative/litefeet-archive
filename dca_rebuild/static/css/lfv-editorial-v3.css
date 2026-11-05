@@ -131,3 +131,7 @@ html.lfv-root .lfv3-legacy-home .lfv-section-header h2{font-size:clamp(2rem,3.5v
 @media(prefers-reduced-motion:reduce){html.lfv-sitewide .lfv3-wrap *{scroll-behavior:auto!important}}
 
 html.lfv-sitewide .lfv3-tile-grid>div{cursor:default}html.lfv-sitewide .lfv3-tile-grid>div em span{letter-spacing:0;font-size:.68rem}
+
+html.lfv-sitewide .lfv3-hub>.lfv3-hero-simple{grid-template-columns:1fr}
+
+html.lfv-root .lfv3-legacy-lead{grid-template-columns:1fr!important}

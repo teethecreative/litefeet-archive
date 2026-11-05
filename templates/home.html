@@ -9,21 +9,27 @@
       <h1 id="lfv-home-title">THE CULTURE<br>LIVES HERE.</h1>
       <p class="lfv-home-deck">The people, movements, music, stories, and moments that shape LiteFeet — documented by the community and preserved for what's next.</p>
       <div class="lfv-home-actions">
-        <a class="button primary" href="{{ url_for('dancers') }}">Explore the culture</a>
-        <a class="button secondary" href="/awards/dancers-choice/nominations">DCA 2026 nominations</a>
+        <a class="button primary" href="#explore">Explore the Vault</a>
       </div>
     </div>
-    <aside class="lfv-home-index" aria-label="Explore the archive">
-      <p class="lfv-index-label">DISCOVER THE VAULT</p>
-      <a href="{{ url_for('dancers') }}"><span>01</span><strong>People &amp; teams</strong><span aria-hidden="true">↗</span></a>
-      <a href="{{ url_for('battles') }}"><span>02</span><strong>Battles &amp; movement</strong><span aria-hidden="true">↗</span></a>
-      <a href="{{ url_for('litefeet_music') }}"><span>03</span><strong>Music &amp; sound</strong><span aria-hidden="true">↗</span></a>
-      <a href="{{ url_for('events') }}"><span>04</span><strong>Events &amp; moments</strong><span aria-hidden="true">↗</span></a>
-      <a href="{{ url_for('awards') }}"><span>05</span><strong>Awards &amp; history</strong><span aria-hidden="true">↗</span></a>
-    </aside>
+
   </section>
 
-  <section class="lfv-home-latest lfv3-editorial-updates" id="latest-media" aria-labelledby="lfv-latest-title">
+  <section class="lfv-home-latest" aria-labelledby="whats-new-title">
+    <p class="lfv-kicker">WHAT'S NEW</p><h2 id="whats-new-title">Dancer's Choice Awards 2026</h2>
+    <p>Help recognize the people who represent the culture.</p>
+    <div class="lfv-home-actions"><a class="button primary" href="/awards/dancers-choice/nominations">Nominations</a><a class="button secondary" href="/awards/dancers-choice/category-voting">Category results</a></div>
+  </section>
+  <section id="explore" aria-labelledby="explore-title"><h2 id="explore-title">Explore the Vault</h2>
+    <div class="lfv-home-index" aria-label="Explore the archive">
+      <p class="lfv-index-label">DISCOVER THE VAULT</p>
+      <a href="{{ url_for('dancers') }}"><span>01</span><strong>People &amp; dancers</strong><span aria-hidden="true"><svg class="lfv-link-icon" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><path d="M3 13 13 3M3 3h10v10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></a>
+      <a href="{{ url_for('teams') }}"><span>02</span><strong>Crews &amp; teams</strong><span aria-hidden="true">&gt;</span></a>
+      <a href="{{ url_for('battles') }}"><span>02</span><strong>Battles &amp; movement</strong><span aria-hidden="true"><svg class="lfv-link-icon" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><path d="M3 13 13 3M3 3h10v10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></a>
+      <a href="{{ url_for('litefeet_music') }}"><span>03</span><strong>Music &amp; sound</strong><span aria-hidden="true"><svg class="lfv-link-icon" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><path d="M3 13 13 3M3 3h10v10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></a>
+      <a href="{{ url_for('events') }}"><span>04</span><strong>Events &amp; moments</strong><span aria-hidden="true"><svg class="lfv-link-icon" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><path d="M3 13 13 3M3 3h10v10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></a>
+      <a href="{{ url_for('awards') }}"><span>05</span><strong>Awards &amp; history</strong><span aria-hidden="true"><svg class="lfv-link-icon" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><path d="M3 13 13 3M3 3h10v10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></a>
+    </div>  <section class="lfv-home-latest lfv3-editorial-updates" id="latest-media" aria-labelledby="lfv-latest-title">
     <div class="lfv-section-topline"><p class="lfv-kicker">THE RECORD / WHAT'S NEW</p><span>UPDATES FROM THE ARCHIVE</span></div>
     <div class="lfv-section-header">
       <div><h2 id="lfv-latest-title">Latest in the Vault</h2><p>Recently added media and stories from the community record.</p></div>
@@ -35,7 +41,7 @@
           <div class="lfv-current-item"><span class="lfv-current-num">0{{ loop.index }}</span>
             <div><span class="lfv-current-kind">VIDEO / {{ item["platform"] or item["url"]|media_platform }}</span><h3>{{ item["title"] }}</h3>
               {% if item["event_name"] %}<p>{{ item["event_name"] }}</p>{% endif %}</div>
-            <a href="#lfv-video-{{ loop.index }}" aria-label="View video: {{ item['title'] }}">View ↘</a>
+            <a href="#lfv-video-{{ loop.index }}" aria-label="View video: {{ item['title'] }}">View video</a>
           </div>
         {% endfor %}
       </div>
@@ -44,7 +50,7 @@
     {% endif %}
   </section>
 
-  <section class="lfv-home-media lfv3-editorial-feed" aria-labelledby="lfv-media-title">
+  <div class="lfv-home-media lfv3-editorial-feed" aria-labelledby="lfv-media-title">
     <div class="lfv-section-topline"><p class="lfv-kicker">WATCH / THE ARCHIVE</p><span>MUSIC · BATTLES · MOMENTS</span></div>
     <div class="lfv-section-header"><div><h2 id="lfv-media-title">On Record</h2>
       <p>Curated LiteFeet videos, performances, battles, recaps, and community footage.</p></div></div>
@@ -66,11 +72,12 @@
       {% endfor %}
       </div>
     {% else %}<div class="empty-state"><h3>No videos added yet.</h3><p>Newly curated Ledger videos will appear here once available.</p></div>{% endif %}
-  </section>
+  </div>
 
+  </section>
   <section class="lfv-home-contribute" aria-labelledby="lfv-contribute-title">
-    <div><p class="lfv-kicker">COMMUNITY / THE LIVING RECORD</p><h2 id="lfv-contribute-title">Help preserve what happened.</h2>
-      <p>LiteFeet history lives in the people who experienced it. Share what you know and help build an archive that connects the past to the present.</p></div>
+    <div><p class="lfv-kicker">COMMUNITY / THE LIVING RECORD</p><h2 id="lfv-contribute-title">Community Contributions</h2>
+      <p>LiteFeet history lives in the people who experienced it. Share historical information, corrections, photos, footage and sources. Include names, dates and credits when possible. Contributions are reviewed before publication.</p></div>
     <a class="button primary" href="/submit/start">Contribute to the Vault</a>
   </section>
 </div>

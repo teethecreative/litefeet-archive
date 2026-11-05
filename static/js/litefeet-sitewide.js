@@ -20,7 +20,6 @@
     wrapper.innerHTML = '<div class="lfv-shell-bar">' +
       '<a class="lfv-shell-brand" href="/">THE LITEFEET <span>VAULT</span></a>' +
       '<div class="lfv-shell-actions">' +
-      '<a class="lfv-shell-nominations" href="/awards/dancers-choice/nominations">NOMINATE 2026 <span aria-hidden="true">↗</span></a>' +
       '<button type="button" class="lfv-nav-button lfv-theme-button" aria-label="Toggle color theme"><span class="lfv-theme-label">THEME</span><span aria-hidden="true">◐</span></button>' +
       '<button type="button" class="lfv-nav-button lfv-menu-open" aria-controls="lfv-menu-panel" aria-expanded="false" aria-label="Open site navigation"><span class="lfv-hamburger" aria-hidden="true"><i></i><i></i><i></i></span></button>' +
       '</div></div>';
@@ -109,6 +108,10 @@
       try { localStorage.setItem('litefeet-ledger-theme', next); } catch (e) { /* storage can be disabled */ }
       themeLabel();
     });
+    try {
+      var savedTheme = localStorage.getItem('litefeet-ledger-theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') document.documentElement.dataset.theme = savedTheme;
+    } catch (_) { /* Theme remains usable without browser storage. */ }
     themeLabel();
   }
   function findOriginalNavigation() {
@@ -138,7 +141,7 @@
       try { parsed = new URL(href, location.href); } catch (e) { return; }
       if (parsed.origin !== location.origin || !/^https?:$/.test(parsed.protocol)) return;
       var key = parsed.pathname + parsed.search + parsed.hash;
-      if (seen[key]) return;
+      if (seen[key] || parsed.pathname === '/awards/dancers-choice/nominations') return;
       var label = (anchor.getAttribute('aria-label') || anchor.textContent || '').replace(/\s+/g, ' ').trim();
       if (!label || label.length > 85) return;
       seen[key] = true;

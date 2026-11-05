@@ -47,7 +47,7 @@
 {% include "_beta_bar.html" %}
 
 <main class="lfv3-results lfv3-wrap" id="dca-results">
-  <header class="lfv3-results-hero"><p class="lfv3-eyebrow">DANCER'S CHOICE AWARDS / 2026</p><div class="lfv3-results-top"><div><h1>THE CATEGORY<br>RESULTS.</h1><p>Recorded Round 1 community preferences. The numbers below are not a final announcement of official categories.</p></div><aside><span>ROUND 1</span><strong>{% if round1_is_closed %}CLOSED{% else %}IN PROGRESS{% endif %}</strong><small>{{ round1_submission_count }} completed submissions</small><a href="{{ url_for('dca_nominations_closed') }}">2026 nominations <span aria-hidden="true">↗</span></a></aside></div></header>
+  <header class="lfv3-results-hero"><p class="lfv3-eyebrow">DANCER'S CHOICE AWARDS / 2026</p><div class="lfv3-results-top"><div><h1>THE CATEGORY<br>RESULTS.</h1><p>Recorded Round 1 community preferences. The numbers below are not a final announcement of official categories.</p></div><aside><span>ROUND 1</span><strong>{% if round1_is_closed %}CLOSED{% else %}IN PROGRESS{% endif %}</strong><small>{{ round1_submission_count }} completed submissions</small><a href="{{ url_for('dca_nominations_closed') }}">2026 nominations <span aria-hidden="true"><svg class="lfv-link-icon" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><path d="M3 13 13 3M3 3h10v10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></a></aside></div></header>
   <nav class="lfv3-section-jump" aria-label="On this page"><a href="#returning">Returning categories</a><a href="#new-categories">New suggestions</a><a href="#method">Selection method</a></nav>
   <section class="lfv3-results-section" id="returning"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">01 / COMMUNITY RESULTS</p><h2>Returning categories</h2></div><p>These are Keep and Remove responses for categories from the previous awards edition.</p></div>
     {% if category_items %}<div class="lfv3-results-list" data-lf-compact=".lfv3-result-line">
@@ -69,7 +69,7 @@
     <div class="lfv3-method-grid">{% for method in method_results %}<div><span>{{ method.label }}</span><strong>{{ method.percent }}%</strong><div class="lfv3-meter"><span style="width:{{ method.percent }}%"></span></div><small>{{ method.count }} vote{% if method.count != 1 %}s{% endif %}</small></div>{% endfor %}</div>
     {% if round1_winner %}<p class="lfv3-method-note">Recorded leading preference: <strong>{{ round1_winner }}</strong>{% if round1_method_tied %} (tie){% endif %}. Nominations and eligibility are managed separately.</p>{% endif %}
   </section>
-  <footer class="lfv3-results-cta"><div><p class="lfv3-eyebrow">WHAT'S NEXT</p><h2>Know someone who deserves recognition?</h2><p>See the current nominations page for participation details and availability.</p></div><a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_nominations_closed') }}">Visit nominations <span aria-hidden="true">↗</span></a></footer>
+  <footer class="lfv3-results-cta"><div><p class="lfv3-eyebrow">WHAT'S NEXT</p><h2>Know someone who deserves recognition?</h2><p>See the current nominations page for participation details and availability.</p></div><a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_nominations_closed') }}">Visit nominations <span aria-hidden="true"><svg class="lfv-link-icon" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><path d="M3 13 13 3M3 3h10v10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></a></footer>
 </main>
 
 {% include "_footer.html" %}

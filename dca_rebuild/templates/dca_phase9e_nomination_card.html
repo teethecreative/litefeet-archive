@@ -1,3 +1,5 @@
+{% include "dca_nomination_status.html" %}
+{% include "dca_nomination_history.html" %}
 <div class="lf9e-entry-layout">
   <div>
     <h2>Nominate someone</h2>
@@ -9,17 +11,17 @@
       <label>Location <span class="lf9e-optional">(optional)</span><input name="location" maxlength="250" placeholder="City / state"></label>
       <label>Instagram <span class="lf9e-optional">(optional)</span><input name="instagram" maxlength="100" placeholder="@username"></label>
       <label>Why are you nominating them? <span class="lf9e-optional">(optional)</span><textarea name="reason" maxlength="2000" rows="3" placeholder="What makes them stand out?"></textarea></label>
-      <label>Your email <span aria-hidden="true">*</span><input name="email" type="email" maxlength="254" required autocomplete="email" placeholder="you@example.com"></label>
       <button type="button" class="lf9e-add" data-add-later>+ SAVE ANOTHER IDEA FOR LATER</button>
-      <p class="lf9e-note">The + saves a future nomination idea in this browser only. It is not submitted, and the daily limit still applies.</p>
-      <button type="submit" class="lf9e-primary" {% if day_used or closed %}disabled{% endif %}>{% if closed %}NOMINATIONS CLOSED{% elif day_used %}TODAY'S NOMINATION USED{% else %}SUBMIT TODAY'S NOMINATION{% endif %}</button>
+      <p class="lf9e-note">The + saves a future nomination idea in this browser only. It is not submitted, and the category cooldown still applies.</p>
+      <button type="submit" class="lf9e-primary" {% if not category.available %}disabled{% endif %}>{% if closed %}NOMINATIONS CLOSED{% elif category.remaining %}CATEGORY ON COOLDOWN{% else %}SUBMIT NOMINATION{% endif %}</button>
     </form>
+    <form method="post" class="lf9e-buttons"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="category_id" value="{{ category.id }}"><button name="action" value="skip" class="lf9e-secondary" {% if closed %}disabled{% endif %}>SKIP / RETURN TO CATEGORIES</button></form>
   </div>
   <aside class="lf9e-leaderboard">
     <h2>Already nominated</h2>
     {% if category.nominees %}
       <ol>{% for person in category.nominees %}
-        <li><span>{{ person.name }}{% set fifth_count = category.nominees[4].count if category.nominees|length >= 5 else 0 %}{% if loop.index <= 5 or (fifth_count and person.count == fifth_count) %}<small class="lf9e-topfive"> · PROVISIONAL TOP 5</small>{% endif %}</span><strong>{{ person.count }} nomination{% if person.count != 1 %}s{% endif %}</strong></li>
+        <li><span><button type="button" class="lf9e-pick" data-nominee="{{ person.name }}">{{ person.name }}</button>{% set fifth_count = category.nominees[4].count if category.nominees|length >= 5 else 0 %}{% if loop.index <= 5 or (fifth_count and person.count == fifth_count) %}<small class="lf9e-topfive"> · PROVISIONAL TOP 5</small>{% endif %}</span><strong>{{ person.count }} nomination{% if person.count != 1 %}s{% endif %}</strong></li>
       {% endfor %}</ol>
     {% else %}
       <p class="lf9e-note">No approved nominees yet. Be among the first to nominate someone!</p>

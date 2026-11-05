@@ -36,10 +36,20 @@ class DailyNominationClaim9E(Base):
     __table_args__ = (UniqueConstraint('edition_id', 'submitter_hash', 'local_day', name='uq_dca9e_daily'),)
 
 
-class NominationDetail9E(Base):
+class LegacyNominationDetail9E(Base):
     __tablename__ = 'ledger_dca9e_nomination_details'
     id = Column(Integer, primary_key=True)
     submission_id = Column(Integer, ForeignKey('ledger_dca_nomination_submissions.id'), unique=True, nullable=False)
+    team = Column(String(250))
+    location = Column(String(250))
+    instagram = Column(String(100))
+    justification = Column(Text)
+
+
+class NominationDetail9E(Base):
+    __tablename__ = 'ledger_dca_nomination_entry_details'
+    id = Column(Integer, primary_key=True)
+    submission_id = Column(Integer, ForeignKey('ledger_dca_nomination_entries.id'), unique=True, nullable=False)
     team = Column(String(250))
     location = Column(String(250))
     instagram = Column(String(100))
@@ -65,7 +75,7 @@ class DraftCategoryDescription9E(Base):
     __table_args__ = (UniqueConstraint('edition_id', 'category_key', name='uq_dca9e_draft_desc'),)
 
 
-TABLES = [DailyNominationClaim9E.__table__, NominationDetail9E.__table__,
+TABLES = [DailyNominationClaim9E.__table__, LegacyNominationDetail9E.__table__, NominationDetail9E.__table__,
           CategoryStage9E.__table__, DraftCategoryDescription9E.__table__]
 
 
@@ -228,6 +238,8 @@ def install_phase9e(app, ns):
     """Run after the original routes are registered; never changes existing route URL."""
     engine = ns['engine']
     Base.metadata.create_all(bind=engine, tables=TABLES, checkfirst=True)
+    from dca_rebuild.nomination_migration import migrate_nomination_history
+    migrate_nomination_history(engine)
     SessionLocal = ns['SessionLocal']
     admin_login_required = ns['admin_login_required']
     private_hash = ns['private_hash']
@@ -461,7 +473,15 @@ def install_phase9e(app, ns):
         finally:
             db.close()
 
+    @app.after_request
+    def private_nomination_response(response):
+        if request.endpoint == 'dca_nominations_closed':
+            response.headers['Cache-Control'] = 'private, no-store'
+            response.headers['Referrer-Policy'] = 'same-origin'
+        return response
+
     def nomination_view_9e():
+        from dca_rebuild.nomination_service import category_history, remaining_seconds, normalize_nominee_name
         db = SessionLocal()
         try:
             edition = db.query(DCAEdition).filter_by(year=2026).first()
@@ -478,13 +498,28 @@ def install_phase9e(app, ns):
                 return render_template('dca_nominations_closed.html')
             other = [(s, c) for s, c in stages if s.stage in ('write_in', 'qualified')]
             allowed = {c.id: c for _, c in top + other}
-            if 'lf9e_nomination_csrf' not in session:
-                session['lf9e_nomination_csrf'] = secrets.token_urlsafe(32)
+            session.setdefault('lf9e_nomination_csrf', secrets.token_urlsafe(32))
             if request.method == 'POST':
-                expected = session['lf9e_nomination_csrf']
                 token = request.form.get('csrf_token', '')
-                if not token or not secrets.compare_digest(token, expected):
+                if not token or not secrets.compare_digest(token, session['lf9e_nomination_csrf']):
                     abort(400, 'Invalid submission token')
+                action = request.form.get('action', 'nominate')
+                if action == 'change-email':
+                    session.pop('lf9e_recent_hash', None)
+                    session.pop('lf9e_skipped', None)
+                    return redirect(url_for('dca_nominations_closed'))
+                if action == 'identify':
+                    email = request.form.get('email', '').strip().casefold()
+                    if len(email) > 254 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
+                        abort(400, 'Enter a valid email')
+                    who = private_hash('dca-nomination:' + email)
+                    if who != session.get('lf9e_recent_hash'):
+                        session.pop('lf9e_skipped', None)
+                    session['lf9e_recent_hash'] = who
+                    return redirect(url_for('dca_nominations_closed'))
+                who = session.get('lf9e_recent_hash')
+                if not who:
+                    abort(400, 'Enter your email before selecting a category')
                 if is_closed():
                     abort(403, 'Nominations are closed')
                 try:
@@ -493,87 +528,81 @@ def install_phase9e(app, ns):
                     abort(400, 'Select a valid category')
                 if cid not in allowed:
                     abort(400, 'Category is not available')
-                email = request.form.get('email', '').strip().casefold()
+                if action == 'skip':
+                    skipped = set(session.get('lf9e_skipped', []))
+                    skipped.add(cid)
+                    session['lf9e_skipped'] = sorted(skipped)
+                    return redirect(url_for('dca_nominations_closed'))
+                if action != 'nominate':
+                    abort(400, 'Invalid action')
                 name = request.form.get('name', '').strip()
                 team = request.form.get('team', '').strip()
                 location = request.form.get('location', '').strip()
                 instagram = request.form.get('instagram', '').strip().lstrip('@')
-                # Accept common profile links as well as @handles.
                 instagram = re.sub(r'^https?://(?:www\.)?instagram\.com/', '', instagram, flags=re.I).split('?')[0].strip('/')
                 reason = request.form.get('reason', '').strip()
-                if len(email) > 254 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
-                    abort(400, 'Enter a valid email')
                 if len(team) > 250 or len(location) > 250 or len(instagram) > 100 or len(reason) > 2000:
                     abort(400, 'One or more fields are too long')
                 if instagram and not re.fullmatch(r'[A-Za-z0-9._]{1,30}', instagram):
-                    abort(400, 'Instagram must be a username, without a full URL')
-                from dca_rebuild.nomination_service import normalize_nominee_name
+                    abort(400, 'Instagram must be a username')
                 try:
                     normalize_nominee_name(name)
                 except ValueError as exc:
                     abort(400, str(exc))
-                who = private_hash('dca-nomination:' + email)
-                today = today_ny()
-                start, end = day_bounds_utc(today)
-                prior_claim = db.query(DailyNominationClaim9E).filter_by(
-                    edition_id=edition.id, submitter_hash=who, local_day=today).first()
-                legacy_today = (db.query(DCANominationSubmission).filter(
-                    DCANominationSubmission.edition_id == edition.id,
-                    DCANominationSubmission.submitter_hash == who,
-                    DCANominationSubmission.submitted_at >= start,
-                    DCANominationSubmission.submitted_at < end).first())
-                if prior_claim or legacy_today:
-                    flash('You already nominated someone today. Come back tomorrow after midnight New York time.')
-                    return redirect(url_for('dca_nominations_closed') + '?step=summary')
                 try:
-                    db.add(DailyNominationClaim9E(edition_id=edition.id, submitter_hash=who, local_day=today))
-                    db.flush()  # database unique constraint is authoritative across processes
                     nominee, created = add_nomination(db, edition_id=edition.id, category_id=cid,
                                                       name=name, submitter_hash=who, description=reason)
                     if not created:
-                        db.rollback()  # failed repeat does not spend the daily allowance
-                        flash('You already nominated this person in this category. Choose another nominee.')
-                        return redirect(url_for('dca_nominations_closed') + '?step=summary')
-                    submission = db.query(DCANominationSubmission).filter_by(
-                        nominee_id=nominee.id, submitter_hash=who).first()
-                    if submission:
-                        db.add(NominationDetail9E(submission_id=submission.id, team=team or None,
-                                                  location=location or None, instagram=instagram or None,
-                                                  justification=reason or None))
+                        db.rollback()
+                        flash('This category is on cooldown. Other available categories are ready to nominate.')
+                        return redirect(url_for('dca_nominations_closed'))
+                    submission = (db.query(DCANominationSubmission).filter_by(
+                        nominee_id=nominee.id, submitter_hash=who)
+                        .order_by(DCANominationSubmission.id.desc()).first())
+                    db.add(NominationDetail9E(submission_id=submission.id, team=team or None,
+                                              location=location or None, instagram=instagram or None,
+                                              justification=reason or None))
                     db.commit()
                 except IntegrityError:
                     db.rollback()
-                    flash('A nomination has already been recorded for this day or nominee.')
-                    return redirect(url_for('dca_nominations_closed') + '?step=summary')
-                session['lf9e_recent_hash'] = who  # never store public email in the session
-                session['lf9e_recent_category'] = cid
-                flash('Nomination received for moderation. Return tomorrow to nominate again!')
-                return redirect(url_for('dca_nominations_closed') + '?step=summary')
-            nominees, support = get_counts(db, edition)
-            recent_hash = session.get('lf9e_recent_hash', '')
-            day_used = False
-            if recent_hash:
-                begin, finish = day_bounds_utc(today_ny())
-                day_used = bool(db.query(DailyNominationClaim9E).filter_by(
-                    edition_id=edition.id, submitter_hash=recent_hash, local_day=today_ny()).first() or
-                    db.query(DCANominationSubmission).filter(
-                        DCANominationSubmission.edition_id == edition.id,
-                        DCANominationSubmission.submitter_hash == recent_hash,
-                        DCANominationSubmission.submitted_at >= begin,
-                        DCANominationSubmission.submitted_at < finish).first())
-            rules, floor, requirement = qualification(db, edition, stages)
-            return render_template('dca_nominations_form.html',
-                                   categories=[dict(id=c.id, name=c.name, description=c.description or '',
-                                                    nominees=nominees.get(c.id, [])) for _, c in top],
-                                   writeins=[dict(id=c.id, name=c.name, description=c.description or '',
-                                                  nominees=nominees.get(c.id, []),
-                                                  support=support.get(c.id, 0), required=requirement)
-                                             for _, c in other],
-                                   csrf_token=session['lf9e_nomination_csrf'], day_used=day_used,
-                                   closed=is_closed(), step=request.args.get('step', 'welcome'),
-                                   minimum_support=requirement, floor=floor)
+                    flash('Your nomination could not be recorded. Check your category status and try again.')
+                    return redirect(url_for('dca_nominations_closed'))
+                session['lf9e_skipped'] = [x for x in session.get('lf9e_skipped', []) if x != cid]
+                flash('Nomination received for moderation. You can nominate in any other available category.')
+                return redirect(url_for('dca_nominations_closed'))
+            who = session.get('lf9e_recent_hash')
+            categories, writeins = [], []
+            summary = dict(submitted=0, available=0, cooldown=0, skipped=0)
+            selected = None
+            if who:
+                nominees, support = get_counts(db, edition)
+                history = defaultdict(list)
+                for entry, nominee in category_history(db, edition.id, who):
+                    history[nominee.category_id].append(dict(name=nominee.name,
+                        status=nominee.moderation_status, at=entry.submitted_at.isoformat() + 'Z'))
+                rules, floor, requirement = qualification(db, edition, stages)
+                skipped = set(session.get('lf9e_skipped', []))
+                now = datetime.now(timezone.utc).replace(tzinfo=None)
+                for stage, cat in top + other:
+                    past = history[cat.id]
+                    remaining = remaining_seconds(datetime.fromisoformat(past[0]['at']), now) if past else 0
+                    row = dict(id=cat.id, name=cat.name, description=cat.description or '',
+                               nominees=nominees.get(cat.id, []), history=past,
+                               remaining=remaining, available=not remaining and not is_closed(),
+                               next_at=(datetime.fromisoformat(past[0]['at']) + timedelta(hours=24)).isoformat() if remaining else '',
+                               support=support.get(cat.id, 0), required=requirement,
+                               skipped=cat.id in skipped)
+                    (categories if stage.stage == 'top25' else writeins).append(row)
+                    summary['submitted'] += len(past)
+                    summary['cooldown'] += bool(remaining)
+                    summary['available'] += row['available']
+                    summary['skipped'] += row['skipped']
+                selected = next((c for c in categories + writeins if str(c['id']) == request.args.get('category')), None)
+            return render_template('dca_nominations_form.html', categories=categories, writeins=writeins,
+                                   selected=selected, identified=bool(who), summary=summary,
+                                   csrf_token=session['lf9e_nomination_csrf'], closed=is_closed())
         finally:
             db.close()
 
     app.view_functions['dca_nominations_closed'] = nomination_view_9e
-    app.logger.info('DCA Phase 9E initialized: staged categories, daily nominations and write-ins')
+    app.logger.info('DCA nominations: per-category rolling UTC cooldowns and email-first grid')
