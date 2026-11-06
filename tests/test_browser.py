@@ -58,10 +58,17 @@ def test_grid_navigation_theme_and_keyboard(website, width, height):
             page.get_by_role('button', name='SUBMIT NOMINATION', exact=True).click()
             assert page.get_by_role('heading', name='NOMINEE STANDINGS', exact=True).is_visible()
             assert page.locator('.lf9e-summary-stats').count() == 0
+            standings = page.locator('.lf9e-standings-category').first
+            assert standings.bounding_box()['height'] < 150
+            assert standings.evaluate('node => getComputedStyle(node).borderLeftWidth') == '0px'
+            nominee_link = standings.get_by_role('link', name='Browser Dancer')
+            assert nominee_link.evaluate('node => getComputedStyle(node).backgroundColor') == 'rgba(0, 0, 0, 0)'
+            assert nominee_link.bounding_box()['height'] >= 44
+            assert page.locator('.lf9e-standings-heading').bounding_box()['height'] < 100
             page.screenshot(path=f'/tmp/vault-nominee-standings-{width}.png', full_page=True)
             assert page.get_by_role('link', name='Browser Dancer', exact=True).is_visible()
             assert page.locator('[role="status"]').inner_text().find('Nomination received') >= 0
-            page.get_by_role('link', name='NOMINATE IN ANOTHER CATEGORY', exact=True).click()
+            page.get_by_role('link', name='Nominate', exact=True).click()
             page.locator('[data-category-id="1"] > a').click()
             assert 'cooldown active' in page.locator('.lf9e-status').inner_text()
             page.get_by_role('link', name='Browser Dancer').click()

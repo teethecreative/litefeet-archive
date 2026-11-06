@@ -18,8 +18,8 @@
 </head>
 <body>
 {% include "_navigation.html" %}
-<main class="lf-nom-2026 lf9e" id="nominations">
-  <p class="lf-nom-eyebrow">DANCER'S CHOICE AWARDS · 2026</p>
+<main class="lf-nom-2026 lf9e{% if results_view %} lf9e-standings-page{% endif %}" id="nominations">
+  <p class="lf-nom-eyebrow">{% if results_view %}DCA 2026{% else %}DANCER'S CHOICE AWARDS · 2026{% endif %}</p>
   {% with messages = get_flashed_messages() %}{% for message in messages %}
     <p class="lf9e-message" role="status">{{ message }}</p>
   {% endfor %}{% endwith %}
