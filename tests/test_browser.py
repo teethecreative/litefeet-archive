@@ -39,6 +39,8 @@ def test_grid_navigation_theme_and_keyboard(website, width, height):
             assert page.locator('main input[name="email"]').is_visible()
             assert page.locator('#lf9e-intro-categories li').count() == 25
             assert page.locator('.lf9e-intro-category-scroll').bounding_box()['height'] <= 202
+            assert page.locator('.lf9e-introduction').evaluate('node => getComputedStyle(node).paddingTop') == '0px'
+            assert page.locator('.lf9e-intro-results').evaluate('node => getComputedStyle(node).backgroundColor') == 'rgba(0, 0, 0, 0)'
             assert page.locator('#lf9e-email-start').bounding_box()['y'] < 850
             page.screenshot(path=f'/tmp/vault-introduction-compact-{width}.png', full_page=True)
             assert page.locator('#lf9e-intro-categories').bounding_box()['y'] < page.locator('#lf9e-email-start').bounding_box()['y']

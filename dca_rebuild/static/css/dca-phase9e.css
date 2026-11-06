@@ -97,10 +97,10 @@ html.lfv-sitewide .lf9e-introduction h2{font-size:1.05rem;margin:18px 0 8px}
 .lf9e-intro-categories{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));list-style-position:inside;margin:0;padding:0;gap:0}
 .lf9e-intro-categories li{padding:8px 10px;border-bottom:1px solid var(--lfv-line);font-size:.9rem;overflow-wrap:anywhere}
 .lf9e-intro-writeins>summary{cursor:pointer;font-weight:700;padding:10px 0}
-html.lfv-sitewide main .lf9e-intro-results{display:inline-block;background:transparent;border:0;padding:8px 0;margin-top:8px;color:var(--lfv-ink);font-size:.9rem;text-decoration:underline;text-underline-offset:3px}
+html.lfv-sitewide main#nominations .lf9e-intro-results{display:inline-block;background:transparent;border:0;padding:8px 0;margin-top:8px;color:var(--lfv-ink);font-size:.9rem;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:620px){.lf9e-intro-categories{grid-template-columns:1fr}}
 
 html.lfv-sitewide main.lf9e-intro-page{padding:20px 0 44px;max-width:960px!important}
-html.lfv-sitewide main.lf9e-intro-page>.lf9e-introduction{border:0;padding:0;background:transparent;margin:0}
+html.lfv-sitewide main#nominations.lf9e-intro-page>.lf9e-introduction{border:0;padding:0;background:transparent;margin:0}
 .lf9e-intro-page .lf-nom-eyebrow{font-size:.75rem;margin:0 0 10px}
 .lf9e-introduction .lf9e-email-form{margin-top:16px;gap:10px}
