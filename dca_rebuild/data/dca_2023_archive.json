@@ -1,0 +1,818 @@
+{
+  "edition": {
+    "name": "Dancer’s Choice Awards",
+    "month": "August",
+    "year": 2023
+  },
+  "source": {
+    "description": "Archived August 2023 awards spreadsheet; complete display labels and winner designations supplied by the archive owner.",
+    "repository_nominee_source": "data/imports/dancers_choice_august_2023_all_nominee_fixed_votes.csv",
+    "repository_winner_source": "data/imports/dancers_choice_august_2023_official_results.json",
+    "winner_designation_in_spreadsheet": "official PDF results",
+    "underlying_pdf_independently_rechecked": false,
+    "adjusted_count_categories": [
+      "Best Shoe Tricker",
+      "Most Fearless",
+      "Best Combo Dancer"
+    ],
+    "publication_policy": "Do not publish spreadsheet vote totals or describe adjusted figures as original public voting records.",
+    "nominee_order": "Preserved supplied order, not independently verified ranking.",
+    "display_name_policy": "Historical labels are preserved verbatim. Do not automatically merge similarly spelled names."
+  },
+  "categories": [
+    {
+      "id": "best-trickster",
+      "name": "Best Trickster",
+      "nominees": [
+        {
+          "name": "Kid Smoove",
+          "is_winner": true
+        },
+        {
+          "name": "Richie Rich",
+          "is_winner": false
+        },
+        {
+          "name": "Larry Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "FLii BOOGiiE",
+          "is_winner": false
+        },
+        {
+          "name": "D Astro",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-hat-tricker",
+      "name": "Best Hat Tricker",
+      "nominees": [
+        {
+          "name": "Kid Smoove",
+          "is_winner": true
+        },
+        {
+          "name": "40 Pounds",
+          "is_winner": false
+        },
+        {
+          "name": "Kid The Wiz",
+          "is_winner": false
+        },
+        {
+          "name": "Larry Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "Kid Star",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-shoe-tricker",
+      "name": "Best Shoe Tricker",
+      "nominees": [
+        {
+          "name": "D Astro",
+          "is_winner": true
+        },
+        {
+          "name": "E Solo",
+          "is_winner": false
+        },
+        {
+          "name": "Kid Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "Matt Live",
+          "is_winner": false
+        },
+        {
+          "name": "Richie Rich",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-footwork",
+      "name": "Best Footwork",
+      "nominees": [
+        {
+          "name": "Kid Smoove",
+          "is_winner": true
+        },
+        {
+          "name": "K Slic",
+          "is_winner": false
+        },
+        {
+          "name": "40 Pounds",
+          "is_winner": false
+        },
+        {
+          "name": "D Rillz",
+          "is_winner": false
+        },
+        {
+          "name": "Radar",
+          "is_winner": false
+        },
+        {
+          "name": "Mok Lite",
+          "is_winner": false
+        },
+        {
+          "name": "Noahlot",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-battle-moment",
+      "name": "Best Battle Moment",
+      "nominees": [
+        {
+          "name": "Noahlot - Red Bull",
+          "is_winner": true
+        },
+        {
+          "name": "Kid Smoove vs 40 Pounds",
+          "is_winner": false
+        },
+        {
+          "name": "Larry Smoove vs 40 Pounds",
+          "is_winner": false
+        },
+        {
+          "name": "SoundCloud vs Fire Flamez",
+          "is_winner": false
+        },
+        {
+          "name": "Crazy C Shoulder",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-tag-team",
+      "name": "Best Tag Team",
+      "nominees": [
+        {
+          "name": "Tati B & Tah Swag",
+          "is_winner": true
+        },
+        {
+          "name": "Noahlot & Kid Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "40 Pounds & K Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "2Crafty",
+          "is_winner": false
+        },
+        {
+          "name": "FLii Robot",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-collab",
+      "name": "Best Collab",
+      "nominees": [
+        {
+          "name": "Tati B & Tah Swag",
+          "is_winner": true
+        },
+        {
+          "name": "Noahlot & Kid Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "Artefakt 2023 Lf Cypher",
+          "is_winner": false
+        },
+        {
+          "name": "Jay Wavy & Red Ink",
+          "is_winner": false
+        },
+        {
+          "name": "Lucky Banks & K Shakes",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-entertainer",
+      "name": "Best Entertainer",
+      "nominees": [
+        {
+          "name": "Tah Swag",
+          "is_winner": true
+        },
+        {
+          "name": "K Shakes",
+          "is_winner": false
+        },
+        {
+          "name": "Crazy C",
+          "is_winner": false
+        },
+        {
+          "name": "E Solo",
+          "is_winner": false
+        },
+        {
+          "name": "Mr Jones",
+          "is_winner": false
+        },
+        {
+          "name": "Lucky luck",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-ankle-bender",
+      "name": "Best Ankle Bender",
+      "nominees": [
+        {
+          "name": "Iron Man",
+          "is_winner": true
+        },
+        {
+          "name": "E Solo",
+          "is_winner": false
+        },
+        {
+          "name": "Kid Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "K Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "D Rillz",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "life-of-the-party",
+      "name": "Life of the Party",
+      "nominees": [
+        {
+          "name": "K Shakes",
+          "is_winner": true
+        },
+        {
+          "name": "Noahlot",
+          "is_winner": false
+        },
+        {
+          "name": "Jay Wavy",
+          "is_winner": false
+        },
+        {
+          "name": "Bbq",
+          "is_winner": false
+        },
+        {
+          "name": "Mr Jones",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-lite-feet-energy",
+      "name": "Best “Lite” Feet Energy",
+      "nominees": [
+        {
+          "name": "Jada Chanel",
+          "is_winner": true
+        },
+        {
+          "name": "Noahlot",
+          "is_winner": false
+        },
+        {
+          "name": "Jay Wavy",
+          "is_winner": false
+        },
+        {
+          "name": "Moe Black",
+          "is_winner": false
+        },
+        {
+          "name": "Mr Jones",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-team-video",
+      "name": "Best Team Video",
+      "nominees": [
+        {
+          "name": "2Crafty",
+          "is_winner": true
+        },
+        {
+          "name": "Bombsquad",
+          "is_winner": true
+        },
+        {
+          "name": "God Of Shoe Tricks",
+          "is_winner": false
+        },
+        {
+          "name": "Lyve Rockets",
+          "is_winner": false
+        },
+        {
+          "name": "Lyvetyme",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "most-passionate",
+      "name": "Most Passionate",
+      "nominees": [
+        {
+          "name": "Jada Chanel",
+          "is_winner": true
+        },
+        {
+          "name": "Kid Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "E Solo",
+          "is_winner": false
+        },
+        {
+          "name": "Noahlot",
+          "is_winner": false
+        },
+        {
+          "name": "Mr Jones",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "most-versatile",
+      "name": "Most Versatile",
+      "nominees": [
+        {
+          "name": "Noahlot",
+          "is_winner": true
+        },
+        {
+          "name": "E Solo",
+          "is_winner": false
+        },
+        {
+          "name": "FLii BOOGiiE",
+          "is_winner": false
+        },
+        {
+          "name": "Kid Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "Jay Wavy",
+          "is_winner": false
+        },
+        {
+          "name": "SoundCloud",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "most-involved",
+      "name": "Most Involved",
+      "nominees": [
+        {
+          "name": "E Solo",
+          "is_winner": true
+        },
+        {
+          "name": "Bombsquad",
+          "is_winner": false
+        },
+        {
+          "name": "Chrybaby",
+          "is_winner": false
+        },
+        {
+          "name": "Tee / Litefeet ESPN",
+          "is_winner": false
+        },
+        {
+          "name": "Kid Smoove",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "most-fearless",
+      "name": "Most Fearless",
+      "nominees": [
+        {
+          "name": "Wild N Out",
+          "is_winner": true
+        },
+        {
+          "name": "Kid Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "Larry Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "Mok Lite",
+          "is_winner": false
+        },
+        {
+          "name": "Billie Bucks",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "most-improved",
+      "name": "Most Improved",
+      "nominees": [
+        {
+          "name": "Jizzi Jazz",
+          "is_winner": true
+        },
+        {
+          "name": "Unolot",
+          "is_winner": false
+        },
+        {
+          "name": "Tre Bucks",
+          "is_winner": false
+        },
+        {
+          "name": "Red Ink",
+          "is_winner": false
+        },
+        {
+          "name": "Baby Sparkz",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "most-improved-producer",
+      "name": "Most Improved Producer",
+      "nominees": [
+        {
+          "name": "LadyMoSoFou",
+          "is_winner": true
+        },
+        {
+          "name": "BigWav3",
+          "is_winner": false
+        },
+        {
+          "name": "AyeJaeBeats",
+          "is_winner": false
+        },
+        {
+          "name": "KennDot",
+          "is_winner": false
+        },
+        {
+          "name": "Phresh Tune",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "most-consistent-producer",
+      "name": "Most Consistent Producer",
+      "nominees": [
+        {
+          "name": "BsnYea",
+          "is_winner": true
+        },
+        {
+          "name": "LadyMoSoFou",
+          "is_winner": false
+        },
+        {
+          "name": "BigWav3",
+          "is_winner": false
+        },
+        {
+          "name": "Jay Black",
+          "is_winner": false
+        },
+        {
+          "name": "Speightsrawkid (Buckwheat)",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "most-consistent-dancer",
+      "name": "Most Consistent Dancer",
+      "nominees": [
+        {
+          "name": "Kid Smoove",
+          "is_winner": true
+        },
+        {
+          "name": "Jada Chanel",
+          "is_winner": false
+        },
+        {
+          "name": "E Solo",
+          "is_winner": false
+        },
+        {
+          "name": "Noahlot",
+          "is_winner": false
+        },
+        {
+          "name": "Jay Wavy",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "battle-song-of-the-year",
+      "name": "Battle Song of the Year",
+      "nominees": [
+        {
+          "name": "Tek 9 - LadyMoSoFou",
+          "is_winner": true
+        },
+        {
+          "name": "So Disrespectful - LadyMoSoFou",
+          "is_winner": false
+        },
+        {
+          "name": "Damson - PhreshTune",
+          "is_winner": false
+        },
+        {
+          "name": "Sheesh Bo - SpeightsRawKid",
+          "is_winner": false
+        },
+        {
+          "name": "GG - KennDot",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "content-song-of-the-year",
+      "name": "Content Song of the Year",
+      "nominees": [
+        {
+          "name": "Tek 9 - LadyMoSoFou",
+          "is_winner": true
+        },
+        {
+          "name": "So Disrespectful - LadyMoSoFou",
+          "is_winner": false
+        },
+        {
+          "name": "Powerstep - LadyMoSoFou",
+          "is_winner": false
+        },
+        {
+          "name": "Damson - PhreshTune",
+          "is_winner": false
+        },
+        {
+          "name": "Mafioso - BigWav3",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-content-creator",
+      "name": "Best Content Creator",
+      "nominees": [
+        {
+          "name": "Lucky Banks",
+          "is_winner": true
+        },
+        {
+          "name": "Kid The Wiz",
+          "is_winner": false
+        },
+        {
+          "name": "Mr. YouTube",
+          "is_winner": false
+        },
+        {
+          "name": "Aero Ace",
+          "is_winner": false
+        },
+        {
+          "name": "Boy Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "Esolo",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-combo-dancer",
+      "name": "Best Combo Dancer",
+      "nominees": [
+        {
+          "name": "Fox Lite",
+          "is_winner": true
+        },
+        {
+          "name": "Noahlot",
+          "is_winner": false
+        },
+        {
+          "name": "Kid Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "Moe Black",
+          "is_winner": false
+        },
+        {
+          "name": "Ty Blaze",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-balance",
+      "name": "Best Balance",
+      "nominees": [
+        {
+          "name": "D Astro",
+          "is_winner": true
+        },
+        {
+          "name": "Kid Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "K Shakes",
+          "is_winner": false
+        },
+        {
+          "name": "FLii BOOGiiE",
+          "is_winner": false
+        },
+        {
+          "name": "Mok Lite",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-musicality",
+      "name": "Best Musicality",
+      "nominees": [
+        {
+          "name": "K Shakes",
+          "is_winner": true
+        },
+        {
+          "name": "Kid Smoove",
+          "is_winner": false
+        },
+        {
+          "name": "Noahlot",
+          "is_winner": false
+        },
+        {
+          "name": "Sound Cloud",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-out-of-state-dancer",
+      "name": "Best Out of State Dancer",
+      "nominees": [
+        {
+          "name": "Jay Bull",
+          "is_winner": true
+        },
+        {
+          "name": "Red Ink",
+          "is_winner": false
+        },
+        {
+          "name": "8 Legx",
+          "is_winner": false
+        },
+        {
+          "name": "D Phantom",
+          "is_winner": false
+        },
+        {
+          "name": "Speedforce",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-event-2023",
+      "name": "Best Event 2023",
+      "nominees": [
+        {
+          "name": "Litefeet Awards Weekend",
+          "is_winner": true
+        },
+        {
+          "name": "Body Bag 2",
+          "is_winner": false
+        },
+        {
+          "name": "LiteFeet Day 3",
+          "is_winner": false
+        },
+        {
+          "name": "DEFCON",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-big-man",
+      "name": "Best Big Man",
+      "nominees": [
+        {
+          "name": "Sound Cloud",
+          "is_winner": true
+        },
+        {
+          "name": "Crazy C",
+          "is_winner": false
+        },
+        {
+          "name": "A Wright",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "best-junior-dancer",
+      "name": "Best Junior Dancer",
+      "nominees": [
+        {
+          "name": "Tah Swag",
+          "is_winner": true
+        },
+        {
+          "name": "Taylah Gang",
+          "is_winner": false
+        },
+        {
+          "name": "Oh Baby",
+          "is_winner": false
+        }
+      ]
+    },
+    {
+      "id": "youngest-in-charge",
+      "name": "Youngest in Charge",
+      "nominees": [
+        {
+          "name": "Tah Swag",
+          "is_winner": true
+        },
+        {
+          "name": "Taylah Gang",
+          "is_winner": false
+        },
+        {
+          "name": "XO Wavy",
+          "is_winner": false
+        }
+      ]
+    }
+  ]
+}
