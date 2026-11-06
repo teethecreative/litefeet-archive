@@ -1,2 +1,2 @@
 <details><summary>Your previous nominations ({{ category.history|length }})</summary>
-<ul class="lf9e-history">{% for entry in category.history %}<li>{{ entry.name }} — {{ entry.status }} <time datetime="{{ entry.at }}">{{ entry.at }} (UTC)</time></li>{% else %}<li>No previous nominations in this category.</li>{% endfor %}</ul></details>
+<ul class="lf9e-history">{% for entry in category.history %}<li>{{ entry.name }} <time datetime="{{ entry.at }}">{{ entry.at }} (UTC)</time></li>{% else %}<li>No previous nominations in this category.</li>{% endfor %}</ul></details>

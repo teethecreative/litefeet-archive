@@ -1,12 +1,12 @@
 {% include "dca_nomination_status.html" %}
 {% include "dca_nomination_history.html" %}
-<div class="lf9e-entry-layout">
+<div class="lf9e-nomination-form">
   <div>
     <h2>Nominate someone</h2>
     <form method="post" action="{{ url_for('dca_nominations_closed') }}" class="lf9e-entry-form" data-lf9e-entry>
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <input type="hidden" name="category_id" value="{{ category.id }}">
-      <label>Nominee name <span aria-hidden="true">*</span><input name="name" maxlength="250" minlength="2" required placeholder="Dancer, team, or nominee" autocomplete="off"></label>
+      <label>Nominee name <span aria-hidden="true">*</span><input name="name" maxlength="250" minlength="2" required placeholder="Dancer, team, or nominee" autocomplete="off" value="{{ suggestion.name if suggestion else '' }}"></label>
       <label>Team <span class="lf9e-optional">(optional)</span><input name="team" maxlength="250" placeholder="Team or crew"></label>
       <label>Location <span class="lf9e-optional">(optional)</span><input name="location" maxlength="250" placeholder="City / state"></label>
       <label>Instagram <span class="lf9e-optional">(optional)</span><input name="instagram" maxlength="100" placeholder="@username"></label>
@@ -17,15 +17,4 @@
     </form>
     <form method="post" class="lf9e-buttons"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="category_id" value="{{ category.id }}"><button name="action" value="skip" class="lf9e-secondary" {% if closed %}disabled{% endif %}>SKIP / RETURN TO CATEGORIES</button></form>
   </div>
-  <aside class="lf9e-leaderboard">
-    <h2>Already nominated</h2>
-    {% if category.nominees %}
-      <ol>{% for person in category.nominees %}
-        <li><span><button type="button" class="lf9e-pick" data-nominee="{{ person.name }}">{{ person.name }}</button>{% set fifth_count = category.nominees[4].count if category.nominees|length >= 5 else 0 %}{% if loop.index <= 5 or (fifth_count and person.count == fifth_count) %}<small class="lf9e-topfive"> · PROVISIONAL TOP 5</small>{% endif %}</span><strong>{{ person.count }} nomination{% if person.count != 1 %}s{% endif %}</strong></li>
-      {% endfor %}</ol>
-    {% else %}
-      <p class="lf9e-note">No approved nominees yet. Be among the first to nominate someone!</p>
-    {% endif %}
-    <p class="lf9e-note">Counts are provisional and include only approved nominee listings. The Top 5 advance after the nomination period closes, subject to verification and ties.</p>
-  </aside>
 </div>

@@ -192,21 +192,27 @@ def stages_for(db, edition):
             .order_by(CategoryStage9E.position, DCACategory.name).all())
 
 
-def get_counts(db, edition):
-    """Only approved nominees are publicly listed or used for qualifying support."""
-    approved = db.query(DCANominee).filter_by(edition_id=edition.id, moderation_status='approved').all()
-    approved_ids = [n.id for n in approved]
+def get_counts(db, edition, *, include_pending=False):
+    """Public suggestions include pending names; qualification stays moderated.
+
+    Rejected suggestions remain hidden without deleting any submissions.
+    """
+    statuses = ('pending', 'approved') if include_pending else ('approved',)
+    nominees = (db.query(DCANominee).filter(
+        DCANominee.edition_id == edition.id,
+        DCANominee.moderation_status.in_(statuses)).all())
+    nominee_ids = [n.id for n in nominees]
     counts = defaultdict(int)
     supporters = defaultdict(set)
-    if approved_ids:
+    if nominee_ids:
         rows = (db.query(DCANominationSubmission.nominee_id, DCANominationSubmission.submitter_hash)
                 .filter(DCANominationSubmission.edition_id == edition.id,
-                        DCANominationSubmission.nominee_id.in_(approved_ids)).all())
+                        DCANominationSubmission.nominee_id.in_(nominee_ids)).all())
         for nid, supporter in rows:
             counts[nid] += 1
             supporters[nid].add(supporter)
     by_cat = defaultdict(list)
-    for n in approved:
+    for n in nominees:
         by_cat[n.category_id].append(dict(id=n.id, name=n.name, count=counts[n.id]))
     for vals in by_cat.values():
         vals.sort(key=lambda x: (-x['count'], x['name'].casefold()))
@@ -568,14 +574,16 @@ def install_phase9e(app, ns):
                     flash('Your nomination could not be recorded. Check your category status and try again.')
                     return redirect(url_for('dca_nominations_closed'))
                 session['lf9e_skipped'] = [x for x in session.get('lf9e_skipped', []) if x != cid]
-                flash('Nomination received for moderation. You can nominate in any other available category.')
+                flash('Nomination received. You can nominate in any other available category.')
                 return redirect(url_for('dca_nominations_closed'))
             who = session.get('lf9e_recent_hash')
             categories, writeins = [], []
             summary = dict(submitted=0, available=0, cooldown=0, skipped=0)
             selected = None
+            suggestion = None
+            suggestion_details = []
             if who:
-                nominees, support = get_counts(db, edition)
+                nominees, support = get_counts(db, edition, include_pending=True)
                 history = defaultdict(list)
                 for entry, nominee in category_history(db, edition.id, who):
                     history[nominee.category_id].append(dict(name=nominee.name,
@@ -598,8 +606,31 @@ def install_phase9e(app, ns):
                     summary['available'] += row['available']
                     summary['skipped'] += row['skipped']
                 selected = next((c for c in categories + writeins if str(c['id']) == request.args.get('category')), None)
+                if request.args.get('category') and selected is None:
+                    abort(404)
+                if request.args.get('suggestion'):
+                    suggestion_id = request.args.get('suggestion', type=int)
+                    suggestion = next((n for n in selected['nominees'] if n['id'] == suggestion_id), None) if selected else None
+                    if suggestion is None:
+                        abort(404)
+                    rows = (db.query(NominationDetail9E)
+                            .join(DCANominationSubmission, DCANominationSubmission.id == NominationDetail9E.submission_id)
+                            .filter(DCANominationSubmission.nominee_id == suggestion_id,
+                                    DCANominationSubmission.edition_id == edition.id)
+                            .order_by(DCANominationSubmission.submitted_at, DCANominationSubmission.id).all())
+                    # Only submitted nominee details; never supporter identity.
+                    suggestion_details = [dict(team=r.team, location=r.location,
+                        instagram=r.instagram, reason=r.justification) for r in rows
+                        if any((r.team, r.location, r.instagram, r.justification))]
+                    if not suggestion_details:
+                        nominee = db.get(DCANominee, suggestion_id)
+                        if nominee.description:
+                            suggestion_details = [dict(reason=nominee.description)]
+
             return render_template('dca_nominations_form.html', categories=categories, writeins=writeins,
-                                   selected=selected, identified=bool(who), summary=summary,
+                                   selected=selected, suggestion=suggestion, suggestion_details=suggestion_details,
+                                   show_form=request.args.get('nominate') == '1' or 'draft' in request.args,
+                                   identified=bool(who), summary=summary,
                                    csrf_token=session['lf9e_nomination_csrf'], closed=is_closed())
         finally:
             db.close()

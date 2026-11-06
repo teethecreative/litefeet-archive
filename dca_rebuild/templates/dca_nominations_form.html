@@ -37,18 +37,24 @@
   </section>
   {% else %}
     <div class="lf9e-buttons">
-      <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button name="action" value="change-email" class="lf9e-secondary">USE A DIFFERENT EMAIL</button></form>
       {% if selected %}<a class="lf9e-secondary" href="{{ url_for('dca_nominations_closed') }}">ALL CATEGORIES</a>{% endif %}
     </div>
     {% if selected %}
       {% set category = selected %}
       <h1 class="lf9e-category-title">{{ category.name }}</h1>
       <p>{{ category.description }}</p>
-      {% include "dca_phase9e_nomination_card.html" %}
+      {% if show_form %}
+        <a class="lf9e-back-link" href="{{ url_for('dca_nominations_closed', category=category.id) }}">Back to suggestions</a>
+        {% include "dca_phase9e_nomination_card.html" %}
+      {% elif suggestion %}
+        {% include "dca_nomination_suggestion_details.html" %}
+      {% else %}
+        {% include "dca_nomination_suggestions.html" %}
+      {% endif %}
     {% else %}
       <h1>CHOOSE YOUR CATEGORY.</h1>
       <p>Nominate in any available category. Each category unlocks 24 hours after your last submission there.</p>
-      {% if closed %}<p class="lf9e-message">Nominations are closed. Your history and approved nominees remain available below.</p>{% endif %}
+      {% if closed %}<p class="lf9e-message">Nominations are closed. Your history and suggestions remain available inside each category.</p>{% endif %}
       <section aria-label="Your nomination summary" class="lf9e-summary-stats">
         <p><strong>{{ summary.submitted }}</strong><span>NOMINATIONS SUBMITTED</span></p>
         <p><strong>{{ summary.available }}</strong><span>CATEGORIES AVAILABLE</span></p>
@@ -59,8 +65,8 @@
         <div class="lf9e-category-grid">{% for category in categories %}{% include "dca_nomination_grid_card.html" %}{% endfor %}</div>
       </section>
       <details class="lf9e-writeins" id="writeins"><summary>Additional write-in categories ({{ writeins|length }})</summary>
-        <p class="lf9e-note">Write-ins need more unique supporters than the least-supported Top 25 category, at least 20 unique supporters, and five approved nominees. Qualification is reviewed after nominations close.</p>
-        <div class="lf9e-category-grid">{% for category in writeins %}{% include "dca_nomination_grid_card.html" %}{% else %}<p>Additional categories are under review.</p>{% endfor %}</div>
+        <p class="lf9e-note">Write-ins need more unique supporters than the least-supported Top 25 category, at least 20 unique supporters, and five eligible nominees. Qualification is reviewed after nominations close.</p>
+        <div class="lf9e-category-grid">{% for category in writeins %}{% include "dca_nomination_grid_card.html" %}{% else %}<p>No additional categories are available yet.</p>{% endfor %}</div>
       </details>
       <section class="lf9e-saved-ideas" aria-labelledby="lf9e-saved-title">
         <h2 id="lf9e-saved-title">Saved nomination ideas</h2>

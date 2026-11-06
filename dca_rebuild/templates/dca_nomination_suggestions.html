@@ -1,0 +1,13 @@
+<section class="lf9e-suggestions" aria-labelledby="suggestions-title">
+  <h2 id="suggestions-title">Suggestions</h2>
+  {% if category.nominees %}
+    <ul class="lf9e-suggestion-list">
+      {% for person in category.nominees %}
+        <li><a href="{{ url_for('dca_nominations_closed', category=category.id, suggestion=person.id) }}"><strong>{{ person.name }}</strong><span>{{ person.count }} nomination{{ 's' if person.count != 1 else '' }}</span></a></li>
+      {% endfor %}
+    </ul>
+  {% else %}<p>No suggestions yet. Put a name forward.</p>{% endif %}
+  <a class="lf9e-primary lf9e-nominate-link" href="{{ url_for('dca_nominations_closed', category=category.id, nominate=1) }}">NOMINATE</a>
+</section>
+{% include "dca_nomination_status.html" %}
+{% include "dca_nomination_history.html" %}

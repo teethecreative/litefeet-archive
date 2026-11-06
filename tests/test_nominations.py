@@ -123,9 +123,10 @@ def test_email_first_history_and_return_to_grid(website, database):
     assert b'person@example.com' not in grid.data
     assert 'no-store' in grid.headers['Cache-Control']
     result = client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One', team='Crew'), follow_redirects=True)
-    assert b'Nomination received for moderation' in result.data
-    assert b'Already nominated / cooldown active' in result.data
-    assert b'Dancer One' in result.data  # own pending history
+    assert b'Nomination received.' in result.data
+    category_page = client.get(PATH + '?category=1')
+    assert b'Already nominated / cooldown active' in category_page.data
+    assert b'Dancer One' in category_page.data  # pending suggestions appear immediately
     assert b'CATEGORIES AVAILABLE' in result.data
     assert b'Return tomorrow' not in result.data
     assert result.data.count(b'data-category-id=') == 27
@@ -135,7 +136,7 @@ def test_email_first_history_and_return_to_grid(website, database):
         assert db.query(DCANominationSubmission).count() == 2
     # Returning with the same normalized email retrieves history on a new browser.
     other = website.test_client(); identify(other)
-    assert b'Already nominated / cooldown active' in other.get(PATH).data
+    assert b'Already nominated / cooldown active' in other.get(PATH + '?category=1').data
     with client.session_transaction() as sess:
         assert 'person@example.com' not in repr(dict(sess))
 
@@ -145,7 +146,7 @@ def test_validation_gates_and_skips(website, monkeypatch):
     assert client.post(PATH, data=dict(csrf_token=token, category_id=999, name='Dancer')).status_code == 400
     assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='!')).status_code == 400
     response = client.post(PATH, data=dict(csrf_token=token, category_id=1, action='skip'), follow_redirects=True)
-    assert b'Skipped this visit' in response.data
+    assert b'<strong>1</strong><span>SKIPPED THIS VISIT' in response.data
     monkeypatch.setenv('DCA_2026_NOMINATIONS_CLOSE_AT', '2020-01-01T00:00:00Z')
     assert client.post(PATH, data=dict(csrf_token=token, category_id=2, name='Dancer')).status_code == 403
     monkeypatch.setenv('DCA_2026_NOMINATIONS_ENABLED', 'false')
@@ -229,3 +230,80 @@ def test_concurrent_historical_import(database):
     with factory() as db:
         assert db.query(DCANominationSubmission).count() == 1
         assert db.query(LegacyNominationSubmission).count() == 1
+
+
+def test_category_names_then_suggestions_and_private_details(website, database):
+    client = website.test_client(); token = identify(client)
+    grid = client.get(PATH).get_data(as_text=True)
+    assert 'USE A DIFFERENT EMAIL' not in grid
+    from html.parser import HTMLParser
+    class CategoryText(HTMLParser):
+        def __init__(self):
+            super().__init__(); self.active = False; self.text = []
+        def handle_starttag(self, tag, attrs):
+            if tag == 'article' and dict(attrs).get('data-category-id') == '1': self.active = True
+        def handle_endtag(self, tag):
+            if tag == 'article': self.active = False
+        def handle_data(self, data):
+            if self.active: self.text.append(data.strip())
+    parsed = CategoryText(); parsed.feed(grid)
+    assert ' '.join(filter(None, parsed.text)) == 'Category 1'
+    client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Suggested Dancer',
+                team='Original Crew', location='Harlem', instagram='dancer.one',
+                reason='A thoughtful nomination.'))
+    # Pending is immediately public; classification and qualification stay separate.
+    visitor = website.test_client(); identify(visitor, 'another@example.com')
+    category = visitor.get(PATH + '?category=1').get_data(as_text=True)
+    assert 'Suggested Dancer' in category
+    assert 'approved' not in category.lower()
+    assert 'name="name"' not in category  # form comes after the Nominate action
+    with database[1]() as db:
+        nominee = db.query(DCANominee).one()
+        nominee_id = nominee.id
+        assert nominee.moderation_status == 'pending'
+        private_hash = db.query(DCANominationSubmission).one().submitter_hash
+    details = visitor.get(PATH + f'?category=1&suggestion={nominee_id}').get_data(as_text=True)
+    for value in ['Original Crew', 'Harlem', '@dancer.one', 'A thoughtful nomination.']:
+        assert value in details
+    assert 'person@example.com' not in details and 'another@example.com' not in details
+    assert private_hash not in details
+    form = visitor.get(PATH + f'?category=1&suggestion={nominee_id}&nominate=1').get_data(as_text=True)
+    assert 'value="Suggested Dancer"' in form
+    assert visitor.get(PATH + f'?category=2&suggestion={nominee_id}').status_code == 404
+    assert visitor.get(PATH + '?category=1&suggestion=99999').status_code == 404
+    assert visitor.get(PATH + '?category=99999').status_code == 404
+    # A second visitor supports the existing suggestion without a duplicate nominee.
+    with visitor.session_transaction() as sess:
+        token = sess['lf9e_nomination_csrf']
+    visitor.post(PATH, data=dict(csrf_token=token, category_id=1, name='Suggested Dancer'))
+    with database[1]() as db:
+        assert db.query(DCANominee).count() == 1
+        assert db.query(DCANominationSubmission).count() == 2
+
+
+def test_public_suggestions_preserve_moderation_and_qualification(website, database):
+    from dca_rebuild.models import DCAEdition
+    _, factory, edition_id = database
+    with factory.begin() as db:
+        for index, status in enumerate(['pending', 'approved', 'rejected']):
+            nominee = DCANominee(edition_id=edition_id, category_id=26,
+                name=f'{status.title()} Dancer', normalized_name=f'{status} dancer', moderation_status=status)
+            db.add(nominee); db.flush()
+            db.add(DCANominationSubmission(edition_id=edition_id, nominee_id=nominee.id, submitter_hash=f'private-{index}', submitted_at=NOW))
+            if status == 'rejected': rejected_id = nominee.id
+        db.flush()
+    with factory() as db:
+        edition = db.get(DCAEdition, edition_id)
+        public, _ = get_counts(db, edition, include_pending=True)
+        assert {x['name'] for x in public[26]} == {'Pending Dancer', 'Approved Dancer'}
+        moderated, _ = get_counts(db, edition)
+        assert {x['name'] for x in moderated[26]} == {'Approved Dancer'}
+        rules, _, _ = qualification(db, edition)
+        assert rules[26]['eligible_nominees'] == 1
+    client = website.test_client(); identify(client)
+    response = client.get(PATH + '?category=26').get_data(as_text=True)
+    assert 'Pending Dancer' in response and 'Approved Dancer' in response
+    assert 'Rejected Dancer' not in response
+    assert client.get(PATH + f'?category=26&suggestion={rejected_id}').status_code == 404
+    with factory() as db:
+        assert db.query(DCANominationSubmission).count() == 3

@@ -1,0 +1,17 @@
+<section class="lf9e-suggestion-details" aria-labelledby="suggestion-title">
+  <a class="lf9e-back-link" href="{{ url_for('dca_nominations_closed', category=category.id) }}">Back to suggestions</a>
+  <h2 id="suggestion-title">{{ suggestion.name }}</h2>
+  <p>{{ suggestion.count }} nomination{{ 's' if suggestion.count != 1 else '' }}</p>
+  {% for detail in suggestion_details %}
+    <article class="lf9e-suggestion-detail">
+      {% if detail.team or detail.location or detail.instagram %}<dl>
+        {% if detail.team %}<dt>Team</dt><dd>{{ detail.team }}</dd>{% endif %}
+        {% if detail.location %}<dt>Location</dt><dd>{{ detail.location }}</dd>{% endif %}
+        {% if detail.instagram %}<dt>Instagram</dt><dd>@{{ detail.instagram }}</dd>{% endif %}
+      </dl>{% endif %}
+      {% if detail.reason %}<h3>Why they were suggested</h3><p class="lf9e-suggestion-reason">{{ detail.reason }}</p>{% endif %}
+    </article>
+  {% else %}<p>No additional details have been shared yet.</p>{% endfor %}
+  <a class="lf9e-primary lf9e-nominate-link" href="{{ url_for('dca_nominations_closed', category=category.id, suggestion=suggestion.id, nominate=1) }}">NOMINATE {{ suggestion.name }}</a>
+</section>
+{% include "dca_nomination_status.html" %}

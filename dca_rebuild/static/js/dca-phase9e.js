@@ -22,7 +22,7 @@
         const title = document.createElement('span'); title.textContent = idea.name || 'Untitled';
         const load = document.createElement('a'); load.className = 'lf9e-secondary'; load.textContent = 'LOAD';
         const destination = new URL(location.pathname, location.origin);
-        destination.searchParams.set('category', idea.category_id); destination.searchParams.set('draft', i);
+        destination.searchParams.set('category', idea.category_id); destination.searchParams.set('nominate', '1'); destination.searchParams.set('draft', i);
         load.href = destination.href;
         const remove = document.createElement('button'); remove.type = 'button';
         remove.textContent = 'REMOVE'; remove.className = 'lf9e-secondary';
@@ -41,12 +41,6 @@
       if (idea && String(idea.category_id) === form.elements.category_id.value) {
         fields.forEach(field => { form.elements.namedItem(field).value = idea[field] || ''; });
       }
-      root.querySelectorAll('[data-nominee]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          form.elements.name.value = button.dataset.nominee;
-          form.elements.name.focus();
-        });
-      });
       root.querySelectorAll('[data-add-later]').forEach(function (button) {
         button.addEventListener('click', function () {
           if (!form.elements.name.value.trim()) { form.elements.name.focus(); return; }
