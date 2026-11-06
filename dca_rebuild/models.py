@@ -764,7 +764,7 @@ class DCANominee(Base):
     )
 
 
-class DCANominationSubmission(Base):
+class LegacyNominationSubmission(Base):
     __tablename__ = "ledger_dca_nomination_submissions"
 
     id = Column(Integer, primary_key=True)
@@ -778,6 +778,30 @@ class DCANominationSubmission(Base):
     __table_args__ = (
         UniqueConstraint("nominee_id", "submitter_hash", name="ledger_uq_dca_nomination_submitter_nominee"),
     )
+
+
+class DCANominationSubmission(Base):
+    """Append-only ledger, including copies of all pre-cooldown submissions.
+
+    The legacy table and its lifetime uniqueness constraint remain untouched.
+    legacy_submission_id makes the additive historical import idempotent.
+    """
+    __tablename__ = "ledger_dca_nomination_entries"
+    id = Column(Integer, primary_key=True)
+    legacy_submission_id = Column(Integer, ForeignKey("ledger_dca_nomination_submissions.id"), unique=True)
+    edition_id = Column(Integer, ForeignKey("ledger_dca_editions.id"), nullable=False, index=True)
+    nominee_id = Column(Integer, ForeignKey("ledger_dca_nominees.id"), nullable=False, index=True)
+    submitter_hash = Column(String(128), nullable=False, index=True)
+    ip_hash = Column(String(128))
+    submitted_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
+
+
+class NominationCooldown(Base):
+    __tablename__ = "ledger_dca_nomination_cooldowns"
+    edition_id = Column(Integer, ForeignKey("ledger_dca_editions.id"), primary_key=True)
+    category_id = Column(Integer, ForeignKey("ledger_dca_categories.id"), primary_key=True)
+    submitter_hash = Column(String(128), primary_key=True)
+    next_eligible_at = Column(DateTime, nullable=False)
 
 
 class DCACategoryDraftSelection(Base):

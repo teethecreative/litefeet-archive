@@ -1,0 +1,4 @@
+{% if category.remaining %}
+  <p class="lf9e-status">Already nominated / cooldown active. Available in <span data-cooldown-until="{{ category.next_at }}">{{ (category.remaining // 3600) }}h {{ ((category.remaining % 3600) // 60) }}m {{ category.remaining % 60 }}s</span>.</p>
+{% elif closed %}<p class="lf9e-status">Nominations closed</p>
+{% else %}<p class="lf9e-status">Available to nominate</p>{% endif %}

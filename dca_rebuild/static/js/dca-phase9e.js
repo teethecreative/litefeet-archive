@@ -1,94 +1,74 @@
-/* One category per screen. Navigation is browser-side; daily claim is server-enforced. */
+/* Category selection uses real links/forms; no scripted heading focus. */
 (function () {
   'use strict';
   document.addEventListener('DOMContentLoaded', function () {
     const root = document.querySelector('.lf9e');
     if (!root) return;
-    const screens = Array.from(root.querySelectorAll('[data-screen]'));
-    const available = new Set(screens.map(s => s.dataset.screen));
-    const key = 'lf9e-skipped-v1';
-    let skipped = new Set();
-    try { skipped = new Set(JSON.parse(sessionStorage.getItem(key) || '[]')); } catch (_) {}
-    function go(dest) {
-      if (!available.has(dest)) dest = 'welcome';
-      screens.forEach(screen => { screen.hidden = screen.dataset.screen !== dest; });
-      const skippedLabel = document.getElementById('lf9e-skipped-count');
-      if (skippedLabel) skippedLabel.textContent = String(skipped.size);
-      if (history.replaceState) history.replaceState(null, '', location.pathname + '?step=' + encodeURIComponent(dest));
-      window.scrollTo(0, 0);
-      const target = screens.find(s => s.dataset.screen === dest);
-      const title = target && target.querySelector('h1');
-      if (title) { title.setAttribute('tabindex','-1'); title.focus({preventScroll:true}); }
-    }
-    root.addEventListener('click', function(event) {
-      const btn = event.target.closest('[data-go]');
-      if (!btn) return;
-      if (btn.dataset.skip) {
-        skipped.add(btn.dataset.skip);
-        try { sessionStorage.setItem(key, JSON.stringify(Array.from(skipped))); } catch (_) {}
-      }
-      go(btn.dataset.go);
-    });
-    go(root.dataset.initialStep || 'welcome');
     const draftKey = 'lf9e-future-nomination-ideas';
-    function loadDrafts() {
-      const list = document.getElementById('lf9e-saved-list');
+    function drafts() {
+      try { const rows = JSON.parse(localStorage.getItem(draftKey) || '[]'); return Array.isArray(rows) ? rows : []; }
+      catch (_) { return []; }
+    }
+    const fields = ['name', 'team', 'location', 'instagram', 'reason'];
+    const form = root.querySelector('form[data-lf9e-entry]');
+    const list = document.getElementById('lf9e-saved-list');
+    function renderDrafts() {
       if (!list) return;
       list.replaceChildren();
-      let drafts = [];
-      try { drafts = JSON.parse(localStorage.getItem(draftKey) || '[]'); } catch (_) {}
-      if (!Array.isArray(drafts) || !drafts.length) { list.textContent = 'No ideas saved in this browser.'; return; }
-      drafts.forEach(function (idea, i) {
-        const row = document.createElement('div');
-        row.className = 'lf9e-saved-row';
-        const text = document.createElement('span');
-        text.textContent = idea.name || 'Untitled';
-        const use = document.createElement('button');
-        use.type = 'button'; use.textContent = 'LOAD'; use.className = 'lf9e-secondary';
-        use.addEventListener('click', function () {
-          const form = Array.from(root.querySelectorAll('form[data-lf9e-entry]')).find(f =>
-            f.elements.namedItem('category_id').value === idea.category_id);
-          if (!form) { window.alert('That category is not currently available.'); return; }
-          ['name','team','location','instagram','reason'].forEach(field => {
-            form.elements.namedItem(field).value = idea[field] || '';
-          });
-          go(form.closest('[data-screen]').dataset.screen);
-          drafts.splice(i, 1);
-          try { localStorage.setItem(draftKey, JSON.stringify(drafts)); } catch (_) {}
-          loadDrafts();
-        });
-        const remove = document.createElement('button');
-        remove.type = 'button'; remove.textContent = 'REMOVE'; remove.className = 'lf9e-secondary';
+      const rows = drafts();
+      if (!rows.length) { list.textContent = 'No ideas saved in this browser.'; return; }
+      rows.forEach(function (idea, i) {
+        const row = document.createElement('div'); row.className = 'lf9e-saved-row';
+        const title = document.createElement('span'); title.textContent = idea.name || 'Untitled';
+        const load = document.createElement('a'); load.className = 'lf9e-secondary'; load.textContent = 'LOAD';
+        const destination = new URL(location.pathname, location.origin);
+        destination.searchParams.set('category', idea.category_id); destination.searchParams.set('draft', i);
+        load.href = destination.href;
+        const remove = document.createElement('button'); remove.type = 'button';
+        remove.textContent = 'REMOVE'; remove.className = 'lf9e-secondary';
         remove.addEventListener('click', function () {
-          drafts.splice(i, 1);
-          try { localStorage.setItem(draftKey, JSON.stringify(drafts)); } catch (_) {}
-          loadDrafts();
+          const saved = drafts(); saved.splice(i, 1);
+          try { localStorage.setItem(draftKey, JSON.stringify(saved)); renderDrafts(); }
+          catch (_) { window.alert('Browser storage is unavailable.'); }
         });
-        row.append(text, use, remove); list.append(row);
+        row.append(title, load, remove); list.append(row);
       });
     }
-    loadDrafts();
-    root.querySelectorAll('[data-add-later]').forEach(function(btn) {
-      btn.addEventListener('click', function () {
-        const form = btn.closest('form');
-        const name = form.elements.namedItem('name');
-        if (!name.value.trim()) { name.focus(); return; }
-        const category = form.elements.namedItem('category_id').value;
-        const idea = {category_id: category, name: name.value.trim(),
-                      team: form.elements.namedItem('team').value.trim(),
-                      location: form.elements.namedItem('location').value.trim(),
-                      instagram: form.elements.namedItem('instagram').value.trim(),
-                      reason: form.elements.namedItem('reason').value.trim()};
-        let previous = [];
-        try { previous = JSON.parse(localStorage.getItem(draftKey) || '[]'); } catch (_) {}
-        if (!Array.isArray(previous)) previous = [];
-        previous.push(idea);
-        try { localStorage.setItem(draftKey, JSON.stringify(previous.slice(-30))); }
-        catch (_) { window.alert('Browser storage unavailable; idea was not saved.'); return; }
-        loadDrafts();
-        window.alert('Saved locally for a future day. This did NOT submit a nomination.');
-        ['name','team','location','instagram','reason'].forEach(field => { form.elements.namedItem(field).value = ''; });
+    renderDrafts();
+    if (form) {
+      const index = new URLSearchParams(location.search).get('draft');
+      const idea = index !== null ? drafts()[Number(index)] : null;
+      if (idea && String(idea.category_id) === form.elements.category_id.value) {
+        fields.forEach(field => { form.elements.namedItem(field).value = idea[field] || ''; });
+      }
+      root.querySelectorAll('[data-nominee]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          form.elements.name.value = button.dataset.nominee;
+          form.elements.name.focus();
+        });
       });
-    });
+      root.querySelectorAll('[data-add-later]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          if (!form.elements.name.value.trim()) { form.elements.name.focus(); return; }
+          const idea = {category_id: form.elements.category_id.value};
+          fields.forEach(field => { idea[field] = form.elements.namedItem(field).value.trim(); });
+          const rows = drafts(); rows.push(idea);
+          try { localStorage.setItem(draftKey, JSON.stringify(rows.slice(-30))); }
+          catch (_) { window.alert('Browser storage unavailable; idea was not saved.'); return; }
+          window.alert('Saved in this browser. This has not been submitted.');
+        });
+      });
+    }
+    function updateCooldowns() {
+      root.querySelectorAll('[data-cooldown-until]').forEach(function (timer) {
+        const seconds = Math.max(0, Math.ceil((Date.parse(timer.dataset.cooldownUntil) - Date.now()) / 1000));
+        if (!seconds) {
+          timer.textContent = '0s — refresh this page to check eligibility';
+          return;
+        }
+        timer.textContent = Math.floor(seconds / 3600) + 'h ' + Math.floor(seconds % 3600 / 60) + 'm ' + seconds % 60 + 's';
+      });
+    }
+    updateCooldowns(); window.setInterval(updateCooldowns, 1000);
   });
 })();

@@ -18,86 +18,57 @@
 </head>
 <body>
 {% include "_navigation.html" %}
-<main class="lf-nom-2026 lf9e" data-initial-step="{{ step|e }}">
+<main class="lf-nom-2026 lf9e" id="nominations">
   <p class="lf-nom-eyebrow">DANCER'S CHOICE AWARDS · 2026</p>
   {% with messages = get_flashed_messages() %}{% for message in messages %}
     <p class="lf9e-message" role="status">{{ message }}</p>
   {% endfor %}{% endwith %}
-
-  <section class="lf9e-screen" data-screen="welcome">
-    <h1>YOUR VOICE.<br>YOUR CHOICE.</h1>
-    <p class="lf-nom-intro">The community chose the first 25 award categories. You can help nominate the people who represent LiteFeet—and help strong additional categories join the awards.</p>
-    <ol class="lf9e-rules">
-      <li>Explore the Top 25 categories one at a time. Skip any that don't apply to you.</li>
-      <li>You get <strong>one nomination per New York calendar day</strong>, across all categories. Return tomorrow to submit another.</li>
-      <li>Choose an already-nominated dancer or suggest a new one. Approved nominees and their support totals appear on each category.</li>
-      <li>The five most-nominated eligible people or teams per official category will advance to final voting. Rankings are provisional until nominations close.</li>
-      <li>After the Top 25, explore additional categories and support write-ins. Write-ins may qualify to expand the awards list.</li>
-    </ol>
-    <p class="lf9e-note">Your email is used for daily limits and duplicate prevention; it isn't displayed publicly. Submitted names are reviewed before appearing on public lists.</p>
-    {% if day_used %}<p class="lf9e-message">You've nominated someone today. You can still explore categories and come back tomorrow.</p>{% endif %}
-    <button class="lf9e-primary" type="button" data-go="top-0">START EXPLORING THE TOP 25 →</button>
+  {% if not identified %}
+  <section aria-labelledby="email-title">
+    <h1 id="email-title">YOUR VOICE.<br>YOUR CHOICE.</h1>
+    <p>Enter your email to check your nomination history and availability.</p>
+    <form method="post" class="lf9e-entry-form lf9e-email-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="action" value="identify">
+      <label>Your email<input name="email" type="email" maxlength="254" autocomplete="email" required></label>
+      <button type="submit" class="lf9e-primary">CHECK CATEGORY ELIGIBILITY</button>
+    </form>
+    <p class="lf9e-note">Your email is hashed for eligibility checks and is never displayed publicly. One nomination per category per rolling 24 hours. Each category has its own cooldown.</p>
   </section>
-
-  {% for category in categories %}
-  <section class="lf9e-screen" data-screen="top-{{ loop.index0 }}" hidden>
-    <div class="lf9e-progress-text">TOP 25 · {{ loop.index }} / {{ categories|length }}</div>
-    <div class="lf9e-progress"><span style="width:{{ loop.index * 100 / categories|length }}%"></span></div>
-    <h1 class="lf9e-category-title">{{ category.name }}</h1>
-    {% if category.description %}<p class="lf-nom-intro">{{ category.description }}</p>{% endif %}
-    {% set prev='welcome' if loop.first else 'top-' ~ (loop.index0-1) %}
-    {% set next='summary' if loop.last else 'top-' ~ loop.index %}
-    {% include "dca_phase9e_nomination_card.html" %}
-    <nav class="lf9e-buttons" aria-label="Category navigation">
-      <button type="button" data-go="{{ prev }}" class="lf9e-secondary">← BACK</button>
-      <button type="button" data-skip="{{ category.id }}" data-go="{{ next }}" class="lf9e-secondary">SKIP CATEGORY</button>
-      <button type="button" data-go="{{ next }}" class="lf9e-primary">NEXT →</button>
-    </nav>
-  </section>
-  {% endfor %}
-
-  <section class="lf9e-screen" data-screen="summary" hidden>
-    <p class="lf9e-progress-text">TOP 25 · COMPLETE</p>
-    <h1>YOUR NOMINATION<br>SUMMARY</h1>
-    <p class="lf-nom-intro">You've reached the end of the first 25 categories. Thanks for showing up for the community.</p>
-    <div class="lf9e-summary-stats"><p><strong>{{ categories|length }}</strong><span>TOP CATEGORIES EXPLORED</span></p><p><strong id="lf9e-skipped-count">0</strong><span>SKIPPED THIS VISIT</span></p></div>
-    {% if day_used %}<p class="lf9e-message">Your nomination for today has been received. Come back tomorrow to support another nominee.</p>{% else %}<p class="lf9e-note">If you haven't nominated someone yet, you can go back to any category or explore the write-ins below.</p>{% endif %}
-    <p class="lf9e-note">Additional categories can qualify by earning more unique supporters than the least-supported Top 25 category, with a minimum of 20 unique supporters and five approved nominees. Qualification is checked after nominations close.</p>
-    <section class="lf9e-saved-ideas" aria-labelledby="lf9e-saved-title">
-      <h2 id="lf9e-saved-title">Saved ideas for another day</h2>
-      <p class="lf9e-note">These are private drafts kept in this browser. They have not been submitted. You can load one on a future visit.</p>
-      <div id="lf9e-saved-list" aria-live="polite"></div>
-    </section>
+  {% else %}
     <div class="lf9e-buttons">
-      <button type="button" data-go="top-0" class="lf9e-secondary">REVISIT TOP 25</button>
-      <button type="button" data-go="write-list" class="lf9e-primary">EXPLORE WRITE-IN CATEGORIES →</button>
+      <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button name="action" value="change-email" class="lf9e-secondary">USE A DIFFERENT EMAIL</button></form>
+      {% if selected %}<a class="lf9e-secondary" href="{{ url_for('dca_nominations_closed') }}">ALL CATEGORIES</a>{% endif %}
     </div>
-  </section>
-
-  <section class="lf9e-screen" data-screen="write-list" hidden>
-    <p class="lf9e-progress-text">OPTIONAL · WRITE-IN CATEGORIES</p>
-    <h1>ADDITIONAL<br>CATEGORIES</h1>
-    <p class="lf-nom-intro">The Top 25 is where nominations start—not a permanent limit. Select a category to see its nominees and nominate someone. Qualifying write-ins can expand the award categories.</p>
-    {% if writeins %}
-    <div class="lf9e-write-list">
-      {% for category in writeins %}
-      <button type="button" data-go="write-{{ loop.index0 }}" class="lf9e-write-list-item"><strong>{{ category.name }}</strong><span>{{ category.support }} unique approved supporters · {{ category.required }} currently needed</span></button>
-      {% endfor %}
-    </div>
-    {% else %}<p class="lf9e-note">Additional categories are under review. Check back as more are approved.</p>{% endif %}
-    <button type="button" data-go="summary" class="lf9e-secondary">← BACK TO SUMMARY</button>
-  </section>
-
-  {% for category in writeins %}
-  <section class="lf9e-screen" data-screen="write-{{ loop.index0 }}" hidden>
-    <p class="lf9e-progress-text">WRITE-IN CATEGORY · {{ loop.index }} / {{ writeins|length }}</p>
-    <h1 class="lf9e-category-title">{{ category.name }}</h1>
-    {% if category.description %}<p class="lf-nom-intro">{{ category.description }}</p>{% endif %}
-    <p class="lf9e-note">{{ category.support }} unique approved supporters · current qualification benchmark: {{ category.required }} (plus five eligible nominees)</p>
-    {% include "dca_phase9e_nomination_card.html" %}
-    <div class="lf9e-buttons"><button type="button" data-go="write-list" class="lf9e-secondary">← ALL WRITE-INS</button><button type="button" data-go="summary" class="lf9e-primary">FINISH →</button></div>
-  </section>
-  {% endfor %}
+    {% if selected %}
+      {% set category = selected %}
+      <h1 class="lf9e-category-title">{{ category.name }}</h1>
+      <p>{{ category.description }}</p>
+      {% include "dca_phase9e_nomination_card.html" %}
+    {% else %}
+      <h1>CHOOSE YOUR CATEGORY.</h1>
+      <p>Nominate in any available category. Each category unlocks 24 hours after your last submission there.</p>
+      {% if closed %}<p class="lf9e-message">Nominations are closed. Your history and approved nominees remain available below.</p>{% endif %}
+      <section aria-label="Your nomination summary" class="lf9e-summary-stats">
+        <p><strong>{{ summary.submitted }}</strong><span>NOMINATIONS SUBMITTED</span></p>
+        <p><strong>{{ summary.available }}</strong><span>CATEGORIES AVAILABLE</span></p>
+        <p><strong>{{ summary.cooldown }}</strong><span>ON COOLDOWN</span></p>
+        <p><strong>{{ summary.skipped }}</strong><span>SKIPPED THIS VISIT</span></p>
+      </section>
+      <section aria-labelledby="official-title"><h2 id="official-title">Official Top 25</h2>
+        <div class="lf9e-category-grid">{% for category in categories %}{% include "dca_nomination_grid_card.html" %}{% endfor %}</div>
+      </section>
+      <details class="lf9e-writeins" id="writeins"><summary>Additional write-in categories ({{ writeins|length }})</summary>
+        <p class="lf9e-note">Write-ins need more unique supporters than the least-supported Top 25 category, at least 20 unique supporters, and five approved nominees. Qualification is reviewed after nominations close.</p>
+        <div class="lf9e-category-grid">{% for category in writeins %}{% include "dca_nomination_grid_card.html" %}{% else %}<p>Additional categories are under review.</p>{% endfor %}</div>
+      </details>
+      <section class="lf9e-saved-ideas" aria-labelledby="lf9e-saved-title">
+        <h2 id="lf9e-saved-title">Saved nomination ideas</h2>
+        <p class="lf9e-note">Private drafts stored in this browser. These have not been submitted.</p>
+        <div id="lf9e-saved-list"></div>
+      </section>
+    {% endif %}
+  {% endif %}
 </main>
 {% include "_footer.html" %}
   <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script> <!-- LFV_SITEWIDE_V1 -->

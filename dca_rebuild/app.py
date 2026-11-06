@@ -1981,14 +1981,17 @@ def dca_nominations_closed():
                     name=name, submitter_hash=private_hash("dca-nomination:" + email),
                     description=reason or None,
                 )
-                db.commit()
+                if created:
+                    db.commit()
+                else:
+                    db.rollback()
             except ValueError as exc:
                 db.rollback()
                 abort(400, description=str(exc))
             except Exception:
                 db.rollback()
                 raise
-            flash("Nomination received." if created else "You've already nominated this nominee in this category.")
+            flash("Nomination received." if created else "This category is on cooldown. Other categories remain available.")
             return redirect(url_for("dca_nominations_closed"))
         return render_template("dca_nominations_form.html", categories=categories,
                                csrf_token=session["dca_nomination_csrf"])
@@ -2050,7 +2053,7 @@ def admin_dca_nominations():
                 nominee.moderation_status = decision
                 nominee.reviewed_at = datetime.utcnow() if decision != "pending" else None
                 db.commit()
-                flash("Nominee review updated. Public nominations remain closed.")
+                flash("Nominee review updated.")
             else:
                 abort(400, description="Unsupported action")
             return redirect(url_for("admin_dca_nominations"))
