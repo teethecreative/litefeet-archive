@@ -25,9 +25,11 @@ Do **not** directly join these two applications' tables, expose raw seed notes o
 Example: a proposed date, event outcome, dancer attribution or move origin.
 
 Labels:
-- **Accurate / True**
-- **Inaccurate / False**
-- **Needs context / Debatable**
+- **True**
+- **False**
+- **Debatable**
+
+**Required interaction detail (Nov 6):** Selecting **Debatable** expands a clearly labelled field, `Why is this debatable? (Optional)`. The field is hidden when True or False is selected. A contributor can submit Debatable without a comment; the selection alone is valid. When changing the selection away from Debatable, clear the unused comment rather than silently submitting it with the new response. The input should accommodate personal recollection, different names/years, disputed attribution and corrections. Display public explanations only after moderation; do not show private contributor contact details. Include accessible announcements and preserve keyboard usability.
 
 Every response optionally includes a reason, firsthand account, credited source, and correction. The page shows the **record's editorial verification status** separately from the community response distribution. Example: *Under review* is not the same as *community majority agrees*.
 
