@@ -574,18 +574,19 @@ def install_phase9e(app, ns):
                     flash('Your nomination could not be recorded. Check your category status and try again.')
                     return redirect(url_for('dca_nominations_closed'))
                 session['lf9e_skipped'] = [x for x in session.get('lf9e_skipped', []) if x != cid]
-                flash('Nomination received. You can nominate in any other available category.')
-                return redirect(url_for('dca_nominations_closed'))
+                flash('Nomination received.')
+                return redirect(url_for('dca_nominations_closed', view='results'))
+            results_view = request.args.get('view') == 'results'
             who = session.get('lf9e_recent_hash')
             categories, writeins = [], []
             summary = dict(submitted=0, available=0, cooldown=0, skipped=0)
             selected = None
             suggestion = None
             suggestion_details = []
-            if who:
+            if who or results_view:
                 nominees, support = get_counts(db, edition, include_pending=True)
                 history = defaultdict(list)
-                for entry, nominee in category_history(db, edition.id, who):
+                for entry, nominee in (category_history(db, edition.id, who) if who and not results_view else []):
                     history[nominee.category_id].append(dict(name=nominee.name,
                         status=nominee.moderation_status, at=entry.submitted_at.isoformat() + 'Z'))
                 rules, floor, requirement = qualification(db, edition, stages)
@@ -630,7 +631,7 @@ def install_phase9e(app, ns):
             return render_template('dca_nominations_form.html', categories=categories, writeins=writeins,
                                    selected=selected, suggestion=suggestion, suggestion_details=suggestion_details,
                                    show_form=request.args.get('nominate') == '1' or 'draft' in request.args,
-                                   identified=bool(who), summary=summary,
+                                   identified=bool(who), results_view=results_view, summary=summary,
                                    csrf_token=session['lf9e_nomination_csrf'], closed=is_closed())
         finally:
             db.close()

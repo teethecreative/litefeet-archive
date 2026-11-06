@@ -39,6 +39,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
   <!-- LFV_EDITORIAL_V3_20261102 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v3.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/category-results.css') }}">
 </head>
 
 <body>
@@ -50,19 +51,43 @@
   <header class="lfv3-results-hero"><p class="lfv3-eyebrow">DANCER'S CHOICE AWARDS / 2026</p><div class="lfv3-results-top"><div><h1>THE CATEGORY<br>RESULTS.</h1><p>Recorded Round 1 community preferences. The numbers below are not a final announcement of official categories.</p></div><aside><span>ROUND 1</span><strong>{% if round1_is_closed %}CLOSED{% else %}IN PROGRESS{% endif %}</strong><small>{{ round1_submission_count }} completed submissions</small><a href="{{ url_for('dca_nominations_closed') }}">2026 nominations <span aria-hidden="true"><svg class="lfv-link-icon" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><path d="M3 13 13 3M3 3h10v10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></a></aside></div></header>
   <nav class="lfv3-section-jump" aria-label="On this page"><a href="#returning">Returning categories</a><a href="#new-categories">New suggestions</a><a href="#method">Selection method</a></nav>
   <section class="lfv3-results-section" id="returning"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">01 / COMMUNITY RESULTS</p><h2>Returning categories</h2></div><p>These are Keep and Remove responses for categories from the previous awards edition.</p></div>
-    {% if category_items %}<div class="lfv3-results-list" data-lf-compact=".lfv3-result-line">
-       <div class="lfv3-result-header" aria-hidden="true"><span>CATEGORY</span><span>KEEP</span><span>REMOVE</span><span>RESPONSES</span></div>
-       {% for item in category_items %}
-       <article class="lfv3-result-line"><div><h3>{{ item.category.name }}</h3><small>{{ item.status }}</small></div><div class="lfv3-stat"><strong>{{ item.keep_percent }}%</strong><small>{{ item.keep_count }} keep</small></div><div class="lfv3-stat"><strong>{{ item.remove_percent }}%</strong><small>{{ item.remove_count }} remove</small></div><div class="lfv3-total"><strong>{{ item.total }}</strong><div class="lfv3-meter" role="img" aria-label="{{ item.keep_percent }} percent keep"><span style="width:{{ item.keep_percent }}%"></span></div></div></article>
-       {% endfor %}
+    {% if category_items %}
+    <div class="lfv-category-results" data-category-results>
+      <div class="lfv-results-tools"><label>Search returning categories<input type="search" data-category-search placeholder="Search categories" aria-controls="returning-results-table"></label><span data-results-count role="status">{{ category_items|length }} categories</span></div>
+      <p class="lf9e-note" id="returning-scroll-hint">Scroll for more categories and columns.</p>
+      <div class="lfv-results-scroll" tabindex="0" role="region" aria-label="Returning category results" aria-describedby="returning-scroll-hint">
+        <table class="lfv-category-table" id="returning-results-table">
+          <caption class="lfv-visually-hidden">Returning category Keep and Remove results</caption>
+          <thead><tr><th scope="col">Category</th><th scope="col">Keep</th><th scope="col">Remove</th><th scope="col">Responses</th></tr></thead>
+          <tbody>{% for item in category_items %}<tr data-result-row>
+            <th scope="row"><strong>{{ item.category.name }}</strong><small>{{ item.status }}</small></th>
+            <td><strong>{{ item.keep_percent }}%</strong><small>{{ item.keep_count }} keep</small></td>
+            <td><strong>{{ item.remove_percent }}%</strong><small>{{ item.remove_count }} remove</small></td>
+            <td><strong>{{ item.total }}</strong><div class="lfv3-meter" role="img" aria-label="{{ item.keep_percent }} percent keep"><span style="width:{{ item.keep_percent }}%"></span></div></td>
+          </tr>{% endfor %}</tbody>
+        </table>
+      </div>
+      <p data-no-results hidden>No matching categories.</p>
     </div>{% else %}<p>No recorded returning-category responses to display.</p>{% endif %}
   </section>
   <section class="lfv3-results-section" id="new-categories"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">02 / COMMUNITY SUGGESTIONS</p><h2>New category ideas</h2></div><p>Moderated suggestions, with duplicate ideas grouped together. Listing does not indicate final category approval.</p></div>
-    {% if approved_suggestions %}<div class="lfv3-results-list" data-lf-compact=".lfv3-result-line">
-       <div class="lfv3-result-header" aria-hidden="true"><span>CATEGORY / DESCRIPTION</span><span>YES</span><span>NO</span><span>VOTES</span></div>
-       {% for suggestion in approved_suggestions %}
-       <article class="lfv3-result-line"><div><h3>{{ suggestion.name }}</h3>{% if suggestion.description %}<p>{{ suggestion.description }}</p>{% endif %}{% if suggestion.count > 1 %}<small>{{ suggestion.count }} grouped suggestions</small>{% endif %}</div><div class="lfv3-stat"><strong>{{ suggestion.yes_percent }}%</strong><small>{{ suggestion.yes }} yes</small></div><div class="lfv3-stat"><strong>{{ suggestion.no_percent }}%</strong><small>{{ suggestion.no }} no</small></div><div class="lfv3-total"><strong>{{ suggestion.total }}</strong><div class="lfv3-meter" role="img" aria-label="{{ suggestion.yes_percent }} percent yes"><span style="width:{{ suggestion.yes_percent }}%"></span></div></div></article>
-       {% endfor %}
+    {% if approved_suggestions %}
+    <div class="lfv-category-results" data-category-results>
+      <div class="lfv-results-tools"><label>Search new category ideas<input type="search" data-category-search placeholder="Search categories" aria-controls="new-results-table"></label><span data-results-count role="status">{{ approved_suggestions|length }} categories</span></div>
+      <p class="lf9e-note" id="new-scroll-hint">Scroll for more category ideas and columns.</p>
+      <div class="lfv-results-scroll" tabindex="0" role="region" aria-label="New category idea results" aria-describedby="new-scroll-hint">
+        <table class="lfv-category-table" id="new-results-table">
+          <caption class="lfv-visually-hidden">New category Yes and No results</caption>
+          <thead><tr><th scope="col">Category</th><th scope="col">Yes</th><th scope="col">No</th><th scope="col">Votes</th></tr></thead>
+          <tbody>{% for suggestion in approved_suggestions %}<tr data-result-row>
+            <th scope="row"><strong>{{ suggestion.name }}</strong>{% if suggestion.description %}<details><summary>Description</summary><p>{{ suggestion.description }}</p></details>{% endif %}{% if suggestion.count > 1 %}<small>{{ suggestion.count }} grouped suggestions</small>{% endif %}</th>
+            <td><strong>{{ suggestion.yes_percent }}%</strong><small>{{ suggestion.yes }} yes</small></td>
+            <td><strong>{{ suggestion.no_percent }}%</strong><small>{{ suggestion.no }} no</small></td>
+            <td><strong>{{ suggestion.total }}</strong><div class="lfv3-meter" role="img" aria-label="{{ suggestion.yes_percent }} percent yes"><span style="width:{{ suggestion.yes_percent }}%"></span></div></td>
+          </tr>{% endfor %}</tbody>
+        </table>
+      </div>
+      <p data-no-results hidden>No matching categories.</p>
     </div>{% else %}<p>No approved new-category suggestions to display.</p>{% endif %}
   </section>
   <section class="lfv3-results-section lfv3-method" id="method"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">03 / THE COMMUNITY'S PREFERENCE</p><h2>How should categories be selected?</h2></div><p>The Round 1 preference was preliminary. It was not the binding category-selection ballot.</p></div>
@@ -74,7 +99,7 @@
 
 {% include "_footer.html" %}
 
-<script defer src="{{ url_for('static', filename='js/compact-collections.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/category-results.js') }}"></script>
   <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script> <!-- LFV_SITEWIDE_V1 -->
 </body>
 </html>

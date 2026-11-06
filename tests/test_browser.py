@@ -42,7 +42,7 @@ def test_grid_navigation_theme_and_keyboard(website, width, height):
             page.get_by_role('button', name='CHECK CATEGORY ELIGIBILITY').click()
             assert page.locator('section[aria-labelledby="official-title"] [data-category-id]').count() == 25
             assert page.locator('#writeins').is_visible()
-            assert page.locator('.lf9e-summary-stats').bounding_box()['height'] < 300
+            assert not page.locator('.lf9e-summary-stats').is_visible()
             assert 'browser@example.com' not in page.content()
             assert page.locator('h1[tabindex]').count() == 0
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
@@ -56,8 +56,12 @@ def test_grid_navigation_theme_and_keyboard(website, width, height):
             page.locator('input[name="team"]').fill('Browser Crew')
             page.locator('textarea[name="reason"]').fill('They bring the community together.')
             page.get_by_role('button', name='SUBMIT NOMINATION', exact=True).click()
-            assert page.locator('[data-category-id="1"]').inner_text().strip() == 'Category 1'
+            assert page.get_by_role('heading', name='NOMINEE STANDINGS', exact=True).is_visible()
+            assert page.locator('.lf9e-summary-stats').count() == 0
+            page.screenshot(path=f'/tmp/vault-nominee-standings-{width}.png', full_page=True)
+            assert page.get_by_role('link', name='Browser Dancer', exact=True).is_visible()
             assert page.locator('[role="status"]').inner_text().find('Nomination received') >= 0
+            page.get_by_role('link', name='NOMINATE IN ANOTHER CATEGORY', exact=True).click()
             page.locator('[data-category-id="1"] > a').click()
             assert 'cooldown active' in page.locator('.lf9e-status').inner_text()
             page.get_by_role('link', name='Browser Dancer').click()

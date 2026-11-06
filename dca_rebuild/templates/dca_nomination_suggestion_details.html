@@ -1,5 +1,5 @@
 <section class="lf9e-suggestion-details" aria-labelledby="suggestion-title">
-  <a class="lf9e-back-link" href="{{ url_for('dca_nominations_closed', category=category.id) }}">Back to suggestions</a>
+  <a class="lf9e-back-link" href="{{ url_for('dca_nominations_closed', view='results') ~ '#standings-' ~ category.id if results_view else url_for('dca_nominations_closed', category=category.id) }}">{{ 'Back to standings' if results_view else 'Back to suggestions' }}</a>
   <h2 id="suggestion-title">{{ suggestion.name }}</h2>
   <p>{{ suggestion.count }} nomination{{ 's' if suggestion.count != 1 else '' }}</p>
   {% for detail in suggestion_details %}
@@ -12,6 +12,6 @@
       {% if detail.reason %}<h3>Why they were suggested</h3><p class="lf9e-suggestion-reason">{{ detail.reason }}</p>{% endif %}
     </article>
   {% else %}<p>No additional details have been shared yet.</p>{% endfor %}
-  <a class="lf9e-primary lf9e-nominate-link" href="{{ url_for('dca_nominations_closed', category=category.id, suggestion=suggestion.id, nominate=1) }}">NOMINATE {{ suggestion.name }}</a>
+  {% if not results_view %}<a class="lf9e-primary lf9e-nominate-link" href="{{ url_for('dca_nominations_closed', category=category.id, suggestion=suggestion.id, nominate=1) }}">NOMINATE {{ suggestion.name }}</a>{% endif %}
 </section>
-{% include "dca_nomination_status.html" %}
+{% if not results_view %}{% include "dca_nomination_status.html" %}{% endif %}

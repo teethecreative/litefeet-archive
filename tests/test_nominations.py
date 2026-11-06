@@ -127,9 +127,11 @@ def test_email_first_history_and_return_to_grid(website, database):
     category_page = client.get(PATH + '?category=1')
     assert b'Already nominated / cooldown active' in category_page.data
     assert b'Dancer One' in category_page.data  # pending suggestions appear immediately
-    assert b'CATEGORIES AVAILABLE' in result.data
+    assert b'NOMINEE STANDINGS' in result.data
+    assert b'Your nomination summary' not in result.data
     assert b'Return tomorrow' not in result.data
-    assert result.data.count(b'data-category-id=') == 27
+    assert b'Dancer One' in result.data
+    assert client.get(PATH).data.count(b'data-category-id=') == 27
     assert client.post(PATH, data=dict(csrf_token=token, category_id=2, name='Dancer Two')).status_code == 302
     assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Other')).status_code == 302
     with database[1]() as db:
@@ -307,3 +309,31 @@ def test_public_suggestions_preserve_moderation_and_qualification(website, datab
     assert client.get(PATH + f'?category=26&suggestion={rejected_id}').status_code == 404
     with factory() as db:
         assert db.query(DCANominationSubmission).count() == 3
+
+
+def test_submission_opens_community_standings_not_personal_summary(website, database):
+    first = website.test_client(); token = identify(first, 'first@example.com')
+    response = first.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer Alpha', reason='Great community work.'))
+    assert response.status_code == 302 and 'view=results' in response.headers['Location']
+    second = website.test_client(); token = identify(second, 'second@example.com')
+    second.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer Beta'))
+    third = website.test_client(); token = identify(third, 'third@example.com')
+    third.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer Alpha'))
+    # A visitor without an email sees the same combined totals.
+    visitor = website.test_client()
+    page = visitor.get(PATH + '?view=results')
+    assert page.status_code == 200
+    main = page.get_data(as_text=True).split('<main', 1)[1].split('</main>', 1)[0]
+    assert 'NOMINEE STANDINGS' in main
+    assert main.index('Dancer Alpha') < main.index('Dancer Beta')
+    assert '</a></th><td>2</td>' in main and '</a></th><td>1</td>' in main
+    for private_label in ['Your nomination summary', 'Your previous nominations', 'ON COOLDOWN', 'first@example.com', 'second@example.com', 'third@example.com']:
+        assert private_label not in main
+    assert 'name="email"' not in main
+    with database[1]() as db:
+        nominee_id = db.query(DCANominee).filter_by(name='Dancer Alpha').one().id
+        assert db.query(DCANominationSubmission).count() == 3
+    detail = visitor.get(PATH + f'?view=results&category=1&suggestion={nominee_id}').get_data(as_text=True)
+    assert 'Great community work.' in detail
+    assert 'Back to standings' in detail
+    assert 'cooldown active' not in detail

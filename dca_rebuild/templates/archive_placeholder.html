@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ definition.title }} | The LiteFeet Vault</title>
+  <meta name="description" content="{{ definition.description }} This section of The LiteFeet Vault is in development.">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v3.css') }}">
+</head>
+<body>
+  {% include "_navigation.html" %}
+  <main class="lfv3-wrap">
+    <section aria-labelledby="archive-section-title">
+      <p class="lfv3-eyebrow">EXPLORE THE VAULT / IN DEVELOPMENT</p>
+      <h1 id="archive-section-title">{{ definition.title }}</h1>
+      <p class="lfv3-deck">{{ definition.description }}</p>
+      <p>This section is being prepared. Check back as the archive grows.</p>
+      <a class="lfv3-button lfv3-button-gold" href="{{ url_for('index') }}#explore">Back to Explore the Vault</a>
+    </section>
+  </main>
+  {% include "_footer.html" %}
+  <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>
+</body>
+</html>

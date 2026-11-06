@@ -135,3 +135,7 @@ html.lfv-sitewide .lfv3-tile-grid>div{cursor:default}html.lfv-sitewide .lfv3-til
 html.lfv-sitewide .lfv3-hub>.lfv3-hero-simple{grid-template-columns:1fr}
 
 html.lfv-root .lfv3-legacy-lead{grid-template-columns:1fr!important}
+
+/* Awards landing: one introduction, two actions and the historical edition. */
+html.lfv-sitewide .lfv3-awards>.lfv3-awards-compact{grid-template-columns:1fr}
+html.lfv-sitewide .lfv3-awards-history>.lfv3-inline-link{display:inline-block;margin-top:18px}

@@ -1,0 +1,22 @@
+<h1>NOMINEE STANDINGS</h1>
+<p>Nominations so far.</p>
+<a class="lf9e-primary lf9e-nominate-link" href="{{ url_for('dca_nominations_closed') }}">NOMINATE IN ANOTHER CATEGORY</a>
+{% if selected and suggestion %}
+  <h2>{{ selected.name }}</h2>
+  {% set category = selected %}
+  {% include "dca_nomination_suggestion_details.html" %}
+{% else %}
+  <div class="lf9e-standings">
+    {% for category in categories if category.nominees %}
+      {% include "dca_nominee_standings_category.html" %}
+    {% endfor %}
+  </div>
+  {% set nominated_writeins = writeins|selectattr('nominees')|list %}
+  {% if nominated_writeins %}
+    <h2>Write-in categories</h2>
+    <div class="lf9e-standings">{% for category in nominated_writeins %}{% include "dca_nominee_standings_category.html" %}{% endfor %}</div>
+  {% endif %}
+  {% if not categories|selectattr('nominees')|list and not nominated_writeins %}
+    <p>No nominations yet.</p>
+  {% endif %}
+{% endif %}
