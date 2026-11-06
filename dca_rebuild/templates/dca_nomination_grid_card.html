@@ -1,11 +1,3 @@
-<article class="lf9e-grid-card" data-category-id="{{ category.id }}">
-  <h3>{{ category.name }}</h3>
-  {% include "dca_nomination_status.html" %}
-  {% if category.required is defined and category in writeins %}<p class="lf9e-note">{{ category.support }} unique approved supporters · {{ category.required }} currently needed</p>{% endif %}
-  <details><summary>Approved nominees and support ({{ category.nominees|length }})</summary>
-    <ul>{% for nominee in category.nominees %}<li>{{ nominee.name }} — {{ nominee.count }} nomination{{ 's' if nominee.count != 1 else '' }}</li>{% else %}<li>No approved nominees yet.</li>{% endfor %}</ul>
-  </details>
-  {% include "dca_nomination_history.html" %}
-  {% if category.skipped %}<p class="lf9e-note">Skipped this visit</p>{% endif %}
-  <a class="lf9e-secondary" href="{{ url_for('dca_nominations_closed', category=category.id) }}">{{ 'NOMINATE' if category.available else 'VIEW CATEGORY' }}</a>
+<article class="lf9e-grid-card lf9e-category-name" data-category-id="{{ category.id }}">
+  <a href="{{ url_for('dca_nominations_closed', category=category.id) }}">{{ category.name }}</a>
 </article>

@@ -62,3 +62,11 @@ Install `pip install -r requirements-dev.txt`, then `playwright install chromium
 Backend coverage includes exact 24-hour boundaries, different categories on the same day, repeat nominations, same-category concurrency, concurrent supporters for one nominee, rollback, historical import/details/count preservation, concurrent imports, UTC, email privacy/validation, CSRF, moderation approvals/rejections, write-in qualification and preservation of the Top 25.
 
 Existing `datetime.utcnow()` defaults elsewhere emit Python deprecation warnings. New cooldown calculations use explicit UTC.
+
+## Follow-up: category and suggestion browser
+
+The category grid now shows linked category names only. Category pages list all pending and approved suggestions, with a separate Nominate action; selecting a suggestion opens its team, location, Instagram and nomination reasons. A suggestion can be nominated again through a prefilled form, subject to the same category cooldown. No email-switch promotion or public approval classification appears. The existing change-identity endpoint remains available for compatibility, without a navigation button.
+
+Rejected entries remain stored and hidden from other visitors. Qualification and administrative counts continue using the existing moderation rules; public suggestion totals now include pending submissions. Only public nominee fields are rendered in details, with no supporter email, hash or IP. Existing nomination histories, browser drafts and summary counts are preserved. This follow-up changes no database schema and requires no additional migration.
+
+Validation: 17 checks with SQLite and mobile/desktop Chromium, plus the 15-test backend suite against PostgreSQL 16. New checks cover category-name-only tiles, immediate pending visibility, suggestion details and prefilled nomination, category isolation, hidden rejected entries, private identities, and unchanged write-in qualification.

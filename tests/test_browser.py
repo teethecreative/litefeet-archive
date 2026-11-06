@@ -46,12 +46,29 @@ def test_grid_navigation_theme_and_keyboard(website, width, height):
             assert 'browser@example.com' not in page.content()
             assert page.locator('h1[tabindex]').count() == 0
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            assert page.get_by_role('button', name='USE A DIFFERENT EMAIL').count() == 0
+            assert page.locator('[data-category-id="1"]').inner_text().strip() == 'Category 1'
             page.locator('[data-category-id="1"] > a').click()
+            assert page.get_by_role('heading', name='Suggestions', exact=True).is_visible()
+            assert page.locator('input[name="name"]').count() == 0
+            page.get_by_role('link', name='NOMINATE', exact=True).click()
             page.locator('input[name="name"]').fill('Browser Dancer')
+            page.locator('input[name="team"]').fill('Browser Crew')
+            page.locator('textarea[name="reason"]').fill('They bring the community together.')
             page.get_by_role('button', name='SUBMIT NOMINATION', exact=True).click()
-            assert page.locator('[data-category-id="1"]').inner_text().find('cooldown active') >= 0
-            assert page.locator('[data-category-id="2"]').inner_text().find('Available to nominate') >= 0
+            assert page.locator('[data-category-id="1"]').inner_text().strip() == 'Category 1'
             assert page.locator('[role="status"]').inner_text().find('Nomination received') >= 0
+            page.locator('[data-category-id="1"] > a').click()
+            assert 'cooldown active' in page.locator('.lf9e-status').inner_text()
+            page.get_by_role('link', name='Browser Dancer').click()
+            assert page.get_by_role('heading', name='Browser Dancer', exact=True).is_visible()
+            assert 'Browser Crew' in page.locator('.lf9e-suggestion-details').inner_text()
+            assert 'They bring the community together.' in page.locator('.lf9e-suggestion-details').inner_text()
+            assert 'approved' not in page.locator('main').inner_text().lower()
+            page.get_by_role('link', name='ALL CATEGORIES').click()
+            page.locator('[data-category-id="2"] > a').click()
+            assert 'Available to nominate' in page.locator('.lf9e-status').inner_text()
+            page.get_by_role('link', name='ALL CATEGORIES').click()
             page.locator('.lfv-theme-button').click()
             assert page.locator('html').get_attribute('data-theme') == 'light'
             page.mouse.move(0, 0)
