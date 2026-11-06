@@ -96,3 +96,5 @@ Standings now include all 25 official categories and all eligible write-in categ
 ## Follow-up: process, categories, then email
 
 The nomination entry page now explains the process, lists all 25 configured official categories (with available write-ins separately expandable), and then asks for email. The category preview scrolls locally to keep the form reachable on mobile. Continue still validates email and checks eligibility before any submission; historical identity hashes, independent cooldowns, category configuration, standings and moderation remain unchanged. This updates the earlier email-first presentation to the owner's requested introduction order. No schema or database migration is required.
+
+The introduction is additionally condensed to a small title, three short process steps, a 200px scrollable category preview (all categories retained), and the email field/Continue action with one short privacy line. Remove the enclosing card and excess top padding. Targeted route and mobile/desktop checks passed; the email form begins within 850px at both tested widths.

@@ -360,7 +360,7 @@ def test_introduction_lists_process_and_categories_before_email(website):
     html = response.get_data(as_text=True)
     assert html.index('id="intro-title"') < html.index('id="lf9e-intro-categories"') < html.index('id="lf9e-email-start"')
     assert 'Category 25' in html and 'Category 26' in html and 'Category 27' in html
-    assert 'once per category every 24 hours' in html
+    assert 'One nomination per category every 24 hours.' in html
     assert 'advance to final voting' in html
     assert 'Your previous nominations' not in html
     with client.session_transaction() as sess:

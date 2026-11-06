@@ -18,8 +18,8 @@
 </head>
 <body>
 {% include "_navigation.html" %}
-<main class="lf-nom-2026 lf9e{% if results_view %} lf9e-standings-page{% endif %}" id="nominations">
-  <p class="lf-nom-eyebrow">{% if results_view %}DCA 2026{% else %}DANCER'S CHOICE AWARDS · 2026{% endif %}</p>
+<main class="lf-nom-2026 lf9e{% if results_view %} lf9e-standings-page{% elif not identified %} lf9e-intro-page{% endif %}" id="nominations">
+  <p class="lf-nom-eyebrow">{% if results_view or not identified %}DCA 2026{% else %}DANCER'S CHOICE AWARDS · 2026{% endif %}</p>
   {% with messages = get_flashed_messages() %}{% for message in messages %}
     <p class="lf9e-message" role="status">{{ message }}</p>
   {% endfor %}{% endwith %}
@@ -27,11 +27,11 @@
     {% include "dca_nominee_standings.html" %}
   {% elif not identified %}
   <section class="lf9e-introduction" aria-labelledby="intro-title">
-    <h1 id="intro-title">HOW NOMINATIONS WORK</h1>
+    <h1 id="intro-title">NOMINATIONS</h1>
     <ol class="lf9e-intro-steps">
-      <li>Choose an official category or an eligible write-in category.</li>
-      <li>Suggest a nominee or support an existing suggestion. You can nominate once per category every 24 hours.</li>
-      <li>The five most-supported eligible nominees in each category advance to final voting.</li>
+      <li>Choose a category. Suggest a name or support one listed.</li>
+      <li>One nomination per category every 24 hours.</li>
+      <li>The top five eligible nominees advance to final voting.</li>
     </ol>
     <h2 id="intro-categories-title">Official Top 25</h2>
     <div class="lf9e-intro-category-scroll" role="region" aria-labelledby="intro-categories-title" tabindex="0">
@@ -40,15 +40,13 @@
       </ol>
     </div>
     {% if intro_writeins %}<details class="lf9e-intro-writeins"><summary>Additional write-in categories ({{ intro_writeins|length }})</summary><ul class="lf9e-intro-categories">{% for category in intro_writeins %}<li>{{ category.name }}</li>{% endfor %}</ul></details>{% endif %}
-    <h2 id="email-title">Start nominating</h2>
-    <p>Enter your email to check your category availability.</p>
     <form method="post" class="lf9e-entry-form lf9e-email-form" id="lf9e-email-start" aria-labelledby="email-title">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <input type="hidden" name="action" value="identify">
-      <label>Your email<input name="email" type="email" maxlength="254" autocomplete="email" required></label>
+      <label id="email-title">Your email<input name="email" type="email" maxlength="254" autocomplete="email" required></label>
       <button type="submit" class="lf9e-primary">CONTINUE</button>
     </form>
-    <p class="lf9e-note">Your email is used for eligibility and is never displayed publicly.</p>
+    <p class="lf9e-note">Your email stays private.</p>
     <a class="lf9e-intro-results" href="{{ url_for('dca_nominations_closed', view='results') }}">View nominee standings</a>
   </section>
   {% else %}
