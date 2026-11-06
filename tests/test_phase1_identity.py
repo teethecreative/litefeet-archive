@@ -16,7 +16,11 @@ def test_homepage_has_distinct_public_sections_and_real_destinations(website):
         html.index('id="contribute"'),
     ]
     assert positions == sorted(positions)
-    assert 'THE CULTURE DESERVES TO BE REMEMBERED.' in html
+    assert 'THE CULTURE DESERVES TO <span class="lfv1-headline-pair">BE REMEMBERED.</span>' in html
+    assert 'class="lfv1-founder-greeting">Dear LiteFeet,</p>' in html
+    assert 'class="lfv1-founder-excerpt"' in html
+    assert 'Read more' in html
+    assert 'Read Dear LiteFeet' not in html
     assert 'href="/about#letter"' in html
     assert 'August 2023: on the record.' in html
     assert 'href="/awards/dancers-choice/2026"' in html
