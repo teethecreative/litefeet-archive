@@ -1,0 +1,197 @@
+/* Phase 1 public identity: approved homepage, live updates and founder's letter.
+   Scoped to new public content only; preserves site palette, dark mode and admin UI. */
+
+html.lfv-sitewide .lfv1-home .lfv1-hero {
+  background: var(--lfv-surface);
+  border-top-color: var(--lfv-gold);
+}
+html.lfv-sitewide .lfv1-home .lfv1-hero .lfv3-hero-copy {
+  max-width: 1010px;
+}
+html.lfv-sitewide .lfv1-home .lfv1-hero h1 {
+  max-width: 940px;
+  font-size: clamp(2.6rem, 6.2vw, 6.8rem) !important;
+  line-height: .98 !important;
+  letter-spacing: -.055em !important;
+}
+html.lfv-sitewide .lfv1-home .lfv1-hero-letter {
+  background: transparent;
+  border: 1px solid var(--lfv-line);
+  color: var(--lfv-ink);
+}
+html.lfv-sitewide .lfv1-home .lfv3-section-heading > p {
+  line-height: 1.6;
+}
+html.lfv-sitewide .lfv1-home .lfv1-updates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 18px;
+}
+html.lfv-sitewide .lfv1-home .lfv1-update {
+  background: var(--lfv-surface);
+  border: 1px solid var(--lfv-line);
+  border-top: 3px solid var(--lfv-gold);
+  padding: clamp(22px,3vw,36px);
+  min-width: 0;
+}
+html.lfv-sitewide .lfv1-home .lfv1-update h3 {
+  overflow-wrap: anywhere;
+}
+html.lfv-sitewide .lfv1-home .lfv1-update p {
+  color: var(--lfv-muted);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+html.lfv-sitewide .lfv1-home .lfv1-update-date {
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+}
+html.lfv-sitewide .lfv1-home .lfv1-feed-empty {
+  padding: clamp(24px,3.5vw,44px);
+  background: var(--lfv-surface);
+  border: 1px solid var(--lfv-line);
+  border-left: 4px solid var(--lfv-gold);
+}
+html.lfv-sitewide .lfv1-home .lfv1-feed-empty p {
+  color: var(--lfv-muted);
+  line-height: 1.65;
+  max-width: 650px;
+}
+html.lfv-sitewide .lfv1-home .lfv1-featured {
+  display: flex;
+  gap: 30px;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--lfv-surface);
+  border: 1px solid var(--lfv-line);
+  padding: clamp(25px,4vw,52px);
+}
+html.lfv-sitewide .lfv1-home .lfv1-featured p {
+  max-width: 760px;
+  color: var(--lfv-muted);
+  line-height: 1.7;
+  font-size: clamp(1rem,1.4vw,1.18rem);
+}
+html.lfv-sitewide .lfv1-home .lfv1-explore-grid {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  border-left: 1px solid var(--lfv-line);
+  border-top: 1px solid var(--lfv-line);
+}
+html.lfv-sitewide .lfv1-home .lfv1-explore-grid a {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  min-width: 0;
+  padding: clamp(22px,3vw,38px);
+  min-height: 210px;
+  border-right: 1px solid var(--lfv-line);
+  border-bottom: 1px solid var(--lfv-line);
+  background: var(--lfv-surface);
+  color: var(--lfv-ink);
+  text-decoration: none;
+}
+html.lfv-sitewide .lfv1-home .lfv1-explore-grid a:hover,
+html.lfv-sitewide .lfv1-home .lfv1-explore-grid a:focus-visible {
+  background: var(--lfv-surface-muted);
+}
+html.lfv-sitewide .lfv1-home .lfv1-explore-grid span {
+  font-weight: 800;
+  font-size: .71rem;
+  color: var(--lfv-muted);
+  letter-spacing: .08em;
+}
+html.lfv-sitewide .lfv1-home .lfv1-explore-grid strong {
+  font-size: clamp(1.45rem,2.2vw,2.3rem);
+  letter-spacing: -.04em;
+}
+html.lfv-sitewide .lfv1-home .lfv1-explore-grid em {
+  font-style: normal;
+  font-size: .9rem;
+  line-height: 1.5;
+  margin-top: auto;
+  color: var(--lfv-muted);
+}
+html.lfv-sitewide .lfv1-home .lfv1-awards > p {
+  max-width: 760px;
+  line-height: 1.65;
+  color: var(--lfv-muted);
+  margin-bottom: 24px;
+}
+html.lfv-sitewide .lfv1-home .lfv1-contribute {
+  margin-top: 40px !important;
+}
+html.lfv-sitewide body main.vault-section-page > section.lfv1-founder-letter {
+  background: var(--lfv-surface) !important;
+  border: 1px solid var(--lfv-line) !important;
+  border-top: 4px solid var(--lfv-gold) !important;
+  padding: clamp(27px,5vw,65px) !important;
+  margin: 26px 0 45px !important;
+  border-radius: 6px !important;
+}
+html.lfv-sitewide .lfv1-founder-letter > h2 {
+  font-size: clamp(2.4rem,5.2vw,5rem);
+  line-height: 1.03;
+  letter-spacing: -.055em;
+  margin: 14px 0 30px;
+}
+html.lfv-sitewide .lfv1-founder-letter .lfv1-letter-body {
+  max-width: 760px;
+}
+html.lfv-sitewide .lfv1-founder-letter .lfv1-letter-body p {
+  font-size: clamp(1rem,1.45vw,1.19rem);
+  line-height: 1.78;
+  margin: 0 0 23px;
+  color: var(--lfv-ink);
+}
+html.lfv-sitewide .lfv1-founder-letter .lfv1-letter-signoff {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 35px 0 0;
+  color: var(--lfv-ink);
+}
+html.lfv-sitewide .lfv1-founder-letter .lfv1-letter-signoff strong {
+  margin-bottom: 10px;
+  font-weight: 650;
+}
+html.lfv-sitewide .lfv1-founder-letter .lfv1-letter-signoff span {
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+html.lfv-sitewide .lfv1-founder-letter .lfv1-letter-signoff small {
+  color: var(--lfv-muted);
+  font-size: .88rem;
+}
+@media (max-width: 850px) {
+  html.lfv-sitewide .lfv1-home .lfv1-featured {
+    display: block;
+  }
+  html.lfv-sitewide .lfv1-home .lfv1-featured > .lfv3-inline-link {
+    display: inline-block;
+    margin-top: 24px;
+  }
+  html.lfv-sitewide .lfv1-home .lfv1-explore-grid {
+    grid-template-columns: 1fr;
+  }
+  html.lfv-sitewide .lfv1-home .lfv1-explore-grid a {
+    min-height: 125px;
+  }
+}
+@media (max-width: 600px) {
+  html.lfv-sitewide .lfv1-home .lfv1-updates {
+    grid-template-columns: 1fr;
+  }
+  html.lfv-sitewide .lfv1-home .lfv1-hero h1 {
+    font-size: clamp(2.3rem,11vw,4rem) !important;
+  }
+  html.lfv-sitewide .lfv1-home .lfv1-hero .lfv3-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  html.lfv-sitewide .lfv1-home .lfv1-hero .lfv3-actions a {
+    width: 100%;
+  }
+}
