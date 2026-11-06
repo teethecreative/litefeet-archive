@@ -10,7 +10,7 @@ import json
 import re
 
 from litefeet_seed_data import LITEFEET_RESEARCH_RECORDS
-from dca_rebuild.models import Base, VaultArchiveRecord, VaultArchiveAssertion
+from dca_rebuild.models import Base, VaultArchiveRecord, VaultArchiveAssertion, VaultArchiveResponse
 
 PUBLICATION_STATUS = "private"
 COLLECTIONS = {
@@ -73,7 +73,7 @@ def staged_rows():
 def apply_private_import(session_factory, engine):
     # Creation is limited to additive Vault tables. Never mutate DCA tables.
     Base.metadata.create_all(engine, tables=[
-        VaultArchiveRecord.__table__, VaultArchiveAssertion.__table__,
+        VaultArchiveRecord.__table__, VaultArchiveAssertion.__table__, VaultArchiveResponse.__table__,
     ])
     created = existing = assertions = 0
     with session_factory.begin() as db:
