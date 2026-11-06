@@ -68,3 +68,29 @@ html.lfv-sitewide a:where(:hover,:focus-visible){text-decoration:underline;text-
 html.lfv-sitewide a.lfv-shell-brand:where(:link,:visited){color:var(--lfv-white)}
 
 .lfv-link-icon{width:1em;height:1em;display:inline-block;vertical-align:middle;flex-shrink:0}
+
+/* Phase 1 section hierarchy, fallback navigation and page context. */
+.lfv-menu-list .lfv-menu-section,.lfv-menu-list .lfv-menu-back{display:flex;align-items:center;justify-content:space-between;min-height:50px;padding:15px 3px;border:0;border-bottom:1px solid var(--lfv-line);border-radius:0;background:transparent;color:var(--lfv-ink);font:750 1rem var(--lfv-font);text-align:left;cursor:pointer}
+.lfv-menu-section::after{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-top:2px solid currentColor;transform:rotate(45deg);margin-right:5px}
+.lfv-menu-list [data-active="true"]{border-left:3px solid var(--lfv-gold);padding-left:12px}
+.lfv-menu-back{font-size:.85rem!important;color:var(--lfv-muted)!important}
+.lfv-menu-section:hover,.lfv-menu-back:hover{background:var(--lfv-surface-muted)}
+.ledger-admin-nav[data-lfv-admin-toolbar]{position:static!important;top:auto!important}
+.lfv-breadcrumbs,.lfv-program-nav{box-sizing:border-box;max-width:1440px;width:calc(100% - 2 * var(--lfv-gutter));margin:12px auto;display:flex;gap:8px;align-items:center;font:500 .8rem var(--lfv-font);color:var(--lfv-muted)}
+.lfv-breadcrumbs{flex-wrap:wrap}.lfv-breadcrumbs a,.lfv-program-nav a{color:inherit;text-decoration:none}
+.lfv-breadcrumbs a:hover,.lfv-program-nav a:hover{text-decoration:underline}
+.lfv-program-nav{overflow-x:auto;white-space:nowrap;gap:20px;border-bottom:1px solid var(--lfv-line)}
+.lfv-program-nav a{padding:12px 0}.lfv-program-nav a[aria-current="page"]{border-bottom:3px solid var(--lfv-gold);font-weight:800;color:var(--lfv-ink)}
+.lfv-fallback-navigation{display:flex;flex-wrap:wrap;gap:16px;align-items:start}
+.lfv-fallback-navigation details>a{display:block;padding:8px}.lfv-fallback-navigation summary{cursor:pointer;font-weight:700}
+html.lfv-sitewide main.vault-section-page{padding:26px 0 60px;max-width:1120px!important}
+html.lfv-sitewide body main.vault-section-page>header{background:transparent!important;color:var(--lfv-ink);border:0!important;border-top:3px solid var(--lfv-gold)!important;border-radius:0;padding:18px 0!important;margin:0 0 24px!important}
+html.lfv-sitewide main.vault-section-page>header h1{font-size:clamp(2rem,5vw,3.5rem)!important;color:var(--lfv-ink)!important;margin:10px 0 18px!important}
+html.lfv-sitewide main.vault-section-page>section{padding:22px 0!important;background:transparent!important;border:0!important;border-top:1px solid var(--lfv-line)!important;border-radius:0;margin:18px 0}
+.vault-section-page p{max-width:760px}.vault-kicker{font-size:.75rem;font-weight:800;letter-spacing:.1em;color:var(--lfv-muted)}
+.vault-section-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+html.lfv-sitewide main.vault-section-page .vault-collection{display:flex;flex-direction:column;align-items:start;gap:10px;background:var(--lfv-surface);border:1px solid var(--lfv-line);border-top:3px solid var(--lfv-gold);padding:22px;color:var(--lfv-ink);font-weight:400;min-height:110px;text-decoration:none}
+.vault-collection strong{font-size:1.25rem}.vault-collection span{color:var(--lfv-muted);font-size:.9rem;line-height:1.5}
+.vault-update{border-top:1px solid var(--lfv-line);padding:16px 0}.vault-update time{font-size:.8rem;color:var(--lfv-muted)}
+.vault-timeline{padding-left:22px}.vault-timeline li{padding:16px 0}
+@media(max-width:620px){.vault-section-grid{grid-template-columns:1fr}.lfv-breadcrumbs{font-size:.75rem}}

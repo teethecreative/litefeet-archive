@@ -166,33 +166,22 @@
 {% include "_beta_bar.html" %}
 
 <main class="lfv3-hub lfv3-wrap" id="vault-home">
-  <section class="lfv3-hero lfv3-hero-simple" aria-labelledby="vault-heading">
-    <div class="lfv3-hero-copy">
-      <p class="lfv3-eyebrow">THE LITEFEET VAULT / CULTURE · PEOPLE · HISTORY</p>
-      <h1 id="vault-heading">THE CULTURE<br>LIVES HERE.</h1>
-      <p class="lfv3-deck">A living archive of the people, teams, music, battles and moments that shape LiteFeet.</p>
-      <a class="lfv3-button lfv3-button-gold" href="#explore">Explore the Vault</a>
-    </div>
+  <section class="lfv3-hero lfv3-hero-simple" aria-labelledby="vault-heading"><div class="lfv3-hero-copy">
+    <p class="lfv3-eyebrow">THE LITEFEET VAULT / CULTURE · PEOPLE · HISTORY</p>
+    <h1 id="vault-heading">THE CULTURE<br>LIVES HERE.</h1>
+    <p class="lfv3-deck">A community record of LiteFeet history, creativity and the people who shape it.</p>
+    <a class="lfv3-button lfv3-button-gold" href="{{ url_for('vault_archive') }}">Explore the Archive</a>
+  </div></section>
+  <section class="lfv3-section" aria-labelledby="new-title"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">WHAT’S NEW</p><h2 id="new-title">Dancer’s Choice Awards 2026</h2></div></div>
+    <p>Explore the current award categories, nomination participation and community results.</p><a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_2026_home') }}">Visit the 2026 edition</a>
   </section>
-  <section class="lfv3-section" aria-labelledby="new-title">
-    <div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">WHAT'S NEW</p><h2 id="new-title">Dancer's Choice Awards 2026</h2></div></div>
-    <p>The community chose the categories. Help recognize the people who represent the culture.</p>
-    <div class="lfv3-actions"><a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_nominations_closed') }}">Nominations</a><a class="lfv3-button lfv3-button-outline" href="{{ url_for('round2') }}">Category results</a><a href="{{ url_for('dca_2026_home') }}">Awards overview</a></div>
+  <section class="lfv3-section" id="explore" aria-labelledby="explore-title"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">FEATURED ARCHIVE</p><h2 id="explore-title">August 2023: on the record.</h2></div></div>
+    <p>31 award categories, 152 nominee entries and the recorded winners from the 2023 Dancer’s Choice Awards.</p><a class="lfv3-button lfv3-button-outline" href="{{ url_for('dca_2023_home') }}">Browse the historical archive</a>
+    {% if vault_eras %}<p><a href="{{ url_for('vault_timeline') }}">Explore the historical timeline</a></p>{% endif %}
   </section>
-  <section class="lfv3-section lfv3-directory" id="explore" aria-labelledby="explore-title">
-    <div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">EXPLORE THE VAULT</p><h2 id="explore-title">Find your way into the culture.</h2></div></div>
-    <div class="lfv3-tile-grid">
-      <a href="/people/dancers"><span>01 / PEOPLE</span><strong>People &amp; dancers</strong><em>Profiles and oral histories</em></a>
-      <a href="/people/teams"><span>02 / COLLECTIVES</span><strong>Crews &amp; teams</strong><em>Group histories and affiliations</em></a>
-      <a href="/litefeet-music"><span>03 / SOUND</span><strong>Music</strong><em>Tracks and producers</em></a>
-      <a href="/battles"><span>04 / MOVEMENT</span><strong>Battles</strong><em>Performances and documented moments</em></a>
-      <a href="/events"><span>05 / GATHERINGS</span><strong>Events</strong><em>Community events and memories</em></a>
-      <div><span>06 / HISTORY</span><strong>Historical archives</strong><a href="{{ url_for('dca_2023_home') }}">Dancer's Choice 2023</a><a href="{{ url_for('lfa_home') }}">LiteFeet Awards</a><a href="{{ url_for('hypeitup_awards') }}">HypeItUpTV Awards</a></div>
-    </div>
-  </section>
-  <section class="lfv3-section lfv3-preserve" aria-labelledby="preserve-title">
-    <div><p class="lfv3-eyebrow">COMMUNITY CONTRIBUTIONS</p><h2 id="preserve-title">History doesn't collect itself.</h2><p>Share historical information, corrections, photos, footage and sources. Include names, dates and credits where you can. Contributions are reviewed before publication.</p></div>
-    <a class="lfv3-button lfv3-button-gold" href="/submit/start">Contribute to the Vault</a>
+  <section class="lfv3-section" aria-labelledby="community-title"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">COMMUNITY</p><h2 id="community-title">Keep the record growing.</h2></div></div>
+    {% for update in vault_updates[:3] %}<article class="vault-update"><h3>{{ update.title }}</h3><p>{{ update.details }}</p></article>{% endfor %}
+    <p>Share historical sources and corrections, or get in touch about photographs and footage.</p><a class="lfv3-button lfv3-button-gold" href="{{ url_for('vault_community') }}">Contribute to the Vault</a>
   </section>
 </main>
 

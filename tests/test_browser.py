@@ -22,7 +22,7 @@ def test_grid_navigation_theme_and_keyboard(website, width, height):
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.goto(base + '/')
             assert page.locator('#vault-home > section').count() == 4
-            assert page.locator('#vault-home a[href="/awards/dancers-choice/nominations"]').count() == 1
+            assert page.locator('#vault-home a[href="/awards/dancers-choice/2026"]').count() == 1
             assert page.locator('.lfv-shell-nominations').count() == 0
             menu = page.get_by_role('button', name='Open site navigation')
             menu.click()

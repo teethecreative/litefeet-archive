@@ -1,154 +1,109 @@
-/* The LiteFeet Vault — shared, accessible navigation layer.
-   Discovers existing route links from legacy navigation; does not invent routes. */
+/* The LiteFeet Vault: progressive navigation; no page or business-rule rewrites. */
 (function () {
   'use strict';
-  var BOOT = 'lfv-sitewide-v1';
   function boot() {
-    if (document.getElementById(BOOT) || !document.body) return;
-    document.documentElement.classList.add('lfv-sitewide');
-    var original = findOriginalNavigation();
-    if (!original) {
-      /* Fail open: never replace existing navigation when its structure is unknown. */
+    if (document.getElementById('lfv-sitewide-v1')) return;
+    const original = document.querySelector('.awards-global-nav, .ledger-admin-nav');
+    if (!original) return;
+    let items;
+    try { items = JSON.parse(document.getElementById('lfv-navigation-data').textContent); }
+    catch (_) {
+      // Older standalone templates retain their original navigation.
       return;
     }
-    var links = collectLinks(original);
-    if (!links.length) return;
-    var first = document.body.firstChild;
-    var wrapper = document.createElement('div');
-    wrapper.id = BOOT;
-    wrapper.className = 'lfv-shell';
-    wrapper.innerHTML = '<div class="lfv-shell-bar">' +
-      '<a class="lfv-shell-brand" href="/">THE LITEFEET <span>VAULT</span></a>' +
-      '<div class="lfv-shell-actions">' +
-      '<button type="button" class="lfv-nav-button lfv-theme-button" aria-label="Toggle color theme"><span class="lfv-theme-label">THEME</span><span aria-hidden="true">◐</span></button>' +
-      '<button type="button" class="lfv-nav-button lfv-menu-open" aria-controls="lfv-menu-panel" aria-expanded="false" aria-label="Open site navigation"><span class="lfv-hamburger" aria-hidden="true"><i></i><i></i><i></i></span></button>' +
-      '</div></div>';
-    var backdrop = document.createElement('div');
-    backdrop.className = 'lfv-menu-backdrop';
-    backdrop.hidden = true;
-    var panel = document.createElement('aside');
-    panel.id = 'lfv-menu-panel';
-    panel.className = 'lfv-menu-panel';
-    panel.setAttribute('role', 'dialog');
-    panel.setAttribute('aria-modal', 'true');
-    panel.setAttribute('aria-label', 'Site navigation');
-    panel.hidden = true;
-    panel.innerHTML = '<div class="lfv-menu-top"><span class="lfv-menu-title">' +
-      (location.pathname.indexOf('/admin') === 0 ? 'ADMIN CONTROL ROOM' : 'EXPLORE THE VAULT') +
-      '</span><button type="button" class="lfv-menu-close" aria-label="Close navigation">×</button></div>' +
-      '<nav class="lfv-menu-list" aria-label="Site navigation links"></nav>';
-    var list = panel.querySelector('.lfv-menu-list');
-    links.forEach(function (link) {
-      var a = document.createElement('a');
-      a.href = link.href;
-      a.textContent = link.label;
-      if (new URL(a.href, location.href).pathname === location.pathname) a.setAttribute('aria-current', 'page');
-      list.appendChild(a);
-    });
-    document.body.insertBefore(wrapper, first);
-    document.body.appendChild(backdrop);
-    document.body.appendChild(panel);
+    if (!Array.isArray(items) || !items.length) return;
     document.documentElement.classList.add('lfv-sitewide');
-    // Only after successful construction, hide the legacy navigation container.
-    original.setAttribute('data-lfv-original-navigation', '');
-    original.hidden = true;
-    original.style.setProperty('display', 'none', 'important');
-    // Existing theme toggle can still run globally; avoid a second floating control.
-    document.querySelectorAll('.theme-toggle').forEach(function (node) {
-      if (!wrapper.contains(node)) node.setAttribute('data-lfv-legacy-toggle', '');
-    });
-    var openButton = wrapper.querySelector('.lfv-menu-open');
-    var closeButton = panel.querySelector('.lfv-menu-close');
-    var themeButton = wrapper.querySelector('.lfv-theme-button');
-    var previousFocus = null;
-    var savedOverflow = '';
-    function setOpen(isOpen) {
-      if (isOpen) {
-        previousFocus = document.activeElement;
-        savedOverflow = document.body.style.overflow;
-        panel.hidden = false;
-        backdrop.hidden = false;
-        document.body.style.overflow = 'hidden';
-        openButton.setAttribute('aria-expanded', 'true');
-        closeButton.focus();
+    const shell = document.createElement('div');
+    shell.id = 'lfv-sitewide-v1'; shell.className = 'lfv-shell';
+    shell.innerHTML = '<div class="lfv-shell-bar"><a class="lfv-shell-brand" href="/">THE LITEFEET <span>VAULT</span></a><div class="lfv-shell-actions"><button type="button" class="lfv-nav-button lfv-theme-button" aria-label="Toggle color theme"><span class="lfv-theme-label">THEME</span><span aria-hidden="true">◐</span></button><button type="button" class="lfv-nav-button lfv-menu-open" aria-label="Open site navigation" aria-controls="lfv-menu-panel" aria-expanded="false"><span class="lfv-hamburger" aria-hidden="true"><i></i><i></i><i></i></span></button></div></div>';
+    const backdrop = document.createElement('div'); backdrop.className = 'lfv-menu-backdrop'; backdrop.hidden = true;
+    const panel = document.createElement('aside');
+    panel.id = 'lfv-menu-panel'; panel.className = 'lfv-menu-panel'; panel.hidden = true;
+    panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true'); panel.setAttribute('aria-label', 'Site navigation');
+    panel.innerHTML = '<div class="lfv-menu-top"><span class="lfv-menu-title">EXPLORE THE VAULT</span><button type="button" class="lfv-menu-close" aria-label="Close navigation">×</button></div><nav class="lfv-menu-list" aria-label="Site navigation links"></nav>';
+    document.body.prepend(shell); document.body.append(backdrop, panel);
+    if (original.classList.contains('ledger-admin-nav')) original.setAttribute('data-lfv-admin-toolbar', '');
+    else { original.hidden = true; original.style.setProperty('display', 'none', 'important'); }
+    const openButton = shell.querySelector('.lfv-menu-open');
+    const closeButton = panel.querySelector('.lfv-menu-close');
+    const themeButton = shell.querySelector('.lfv-theme-button');
+    const list = panel.querySelector('.lfv-menu-list');
+    const title = panel.querySelector('.lfv-menu-title');
+    let previousFocus, savedOverflow, opened = false;
+    const inertBefore = new Map();
+    function current(href) {
+      const url = new URL(href, location.href);
+      return url.pathname === location.pathname && url.search === location.search && (!url.hash || url.hash === location.hash);
+    }
+    function addLink(label, href) {
+      const link = document.createElement('a'); link.textContent = label; link.href = href;
+      if (current(href)) link.setAttribute('aria-current', 'page');
+      list.append(link); return link;
+    }
+    function renderRoot(focusKey) {
+      list.replaceChildren(); title.textContent = 'EXPLORE THE VAULT';
+      items.forEach(function (item) {
+        let control;
+        if (item.children && item.children.length) {
+          control = document.createElement('button'); control.type = 'button'; control.textContent = item.label;
+          control.className = 'lfv-menu-section'; control.setAttribute('aria-haspopup', 'true');
+          control.addEventListener('click', function () { renderSection(item); }); list.append(control);
+        } else control = addLink(item.label, item.href);
+        control.dataset.section = item.key;
+        if (item.active) { control.dataset.active = 'true'; control.setAttribute('aria-label', item.label + ', current section'); }
+        if (focusKey === item.key) control.focus();
+      });
+    }
+    function renderSection(item) {
+      list.replaceChildren(); title.textContent = item.label;
+      const back = document.createElement('button'); back.type = 'button'; back.className = 'lfv-menu-back';
+      back.textContent = 'Back'; back.setAttribute('aria-label', 'Back to main menu');
+      back.addEventListener('click', function () { renderRoot(item.key); }); list.append(back);
+      addLink(item.label + ' overview', item.href);
+      item.children.forEach(child => addLink(child.label, child.href));
+      back.focus();
+    }
+    function setOpen(next) {
+      if (opened === next) return;
+      opened = next;
+      if (next) {
+        previousFocus = document.activeElement; savedOverflow = document.body.style.overflow;
+        renderRoot(); panel.hidden = backdrop.hidden = false;
+        Array.from(document.body.children).forEach(function (node) {
+          if (node !== panel && node !== backdrop) { inertBefore.set(node, node.inert); node.inert = true; }
+        });
+        document.body.style.overflow = 'hidden'; openButton.setAttribute('aria-expanded', 'true'); closeButton.focus();
       } else {
-        panel.hidden = true;
-        backdrop.hidden = true;
-        document.body.style.overflow = savedOverflow;
-        openButton.setAttribute('aria-expanded', 'false');
-        if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+        panel.hidden = backdrop.hidden = true;
+        inertBefore.forEach((value, node) => { node.inert = value; }); inertBefore.clear();
+        document.body.style.overflow = savedOverflow; openButton.setAttribute('aria-expanded', 'false');
+        if (previousFocus && previousFocus.isConnected) previousFocus.focus();
       }
     }
-    openButton.addEventListener('click', function () { setOpen(true); });
-    closeButton.addEventListener('click', function () { setOpen(false); });
-    backdrop.addEventListener('click', function () { setOpen(false); });
-    panel.addEventListener('click', function (event) {
-      if (event.target.closest('a')) setOpen(false);
-    });
+    openButton.addEventListener('click', () => setOpen(true)); closeButton.addEventListener('click', () => setOpen(false));
+    backdrop.addEventListener('click', () => setOpen(false));
+    panel.addEventListener('click', event => { if (event.target.closest('a')) setOpen(false); });
     document.addEventListener('keydown', function (event) {
-      if (panel.hidden) return;
-      if (event.key === 'Escape') { event.preventDefault(); setOpen(false); return; }
+      if (!opened) return;
+      if (event.key === 'Escape') { event.preventDefault(); setOpen(false); }
       if (event.key === 'Tab') {
-        var tabbable = Array.from(panel.querySelectorAll('a[href],button:not([disabled])'));
-        if (!tabbable.length) return;
-        var firstEl = tabbable[0], lastEl = tabbable[tabbable.length - 1];
-        if (event.shiftKey && document.activeElement === firstEl) { event.preventDefault(); lastEl.focus(); }
-        else if (!event.shiftKey && document.activeElement === lastEl) { event.preventDefault(); firstEl.focus(); }
+        const controls = Array.from(panel.querySelectorAll('a[href],button')).filter(node => node.getClientRects().length);
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
       }
     });
-    function dark() {
-      return document.documentElement.dataset.theme === 'dark' || document.documentElement.classList.contains('dark');
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+      themeButton.setAttribute('aria-label', 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' mode');
     }
-    function themeLabel() { themeButton.setAttribute('aria-label', 'Switch to ' + (dark() ? 'light' : 'dark') + ' mode'); }
+    let saved = 'light'; try { saved = localStorage.getItem('litefeet-ledger-theme') || 'light'; } catch (_) {}
+    applyTheme(saved === 'dark' ? 'dark' : 'light');
     themeButton.addEventListener('click', function () {
-      var next = dark() ? 'light' : 'dark';
-      try { if (typeof window.setTheme === 'function') window.setTheme(next); } catch (e) { /* use fallback */ }
-      document.documentElement.dataset.theme = next;
-      document.documentElement.classList.toggle('dark', next === 'dark');
-      try { localStorage.setItem('litefeet-ledger-theme', next); } catch (e) { /* storage can be disabled */ }
-      themeLabel();
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; applyTheme(next);
+      try { localStorage.setItem('litefeet-ledger-theme', next); } catch (_) {}
     });
-    try {
-      var savedTheme = localStorage.getItem('litefeet-ledger-theme');
-      if (savedTheme === 'light' || savedTheme === 'dark') document.documentElement.dataset.theme = savedTheme;
-    } catch (_) { /* Theme remains usable without browser storage. */ }
-    themeLabel();
   }
-  function findOriginalNavigation() {
-    var priority = [
-      '.ledger-admin-nav', 'header.site-header', '.site-header',
-      '#site-header', '.main-nav', '.site-nav', '#site-nav',
-      'nav[aria-label="Main navigation"]', 'nav[aria-label="Primary navigation"]',
-      'header nav', 'body > nav'
-    ];
-    for (var i = 0; i < priority.length; i++) {
-      var node = document.querySelector(priority[i]);
-      if (node && node.querySelector('a[href]') && !node.closest('.lfv-shell')) return node;
-    }
-    // A single nav outside the main content is a safe last resort.
-    var candidates = Array.from(document.querySelectorAll('nav')).filter(function (node) {
-      return !node.closest('main,footer,aside') && node.querySelectorAll('a[href]').length >= 2;
-    });
-    return candidates.length === 1 ? candidates[0] : null;
-  }
-  function collectLinks(node) {
-    var result = [{href: location.origin + '/', label: 'Home'}];
-    var seen = {'/': true};
-    node.querySelectorAll('a[href]').forEach(function (anchor) {
-      var href = anchor.getAttribute('href');
-      if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0) return;
-      var parsed;
-      try { parsed = new URL(href, location.href); } catch (e) { return; }
-      if (parsed.origin !== location.origin || !/^https?:$/.test(parsed.protocol)) return;
-      var key = parsed.pathname + parsed.search + parsed.hash;
-      if (seen[key] || parsed.pathname === '/awards/dancers-choice/nominations') return;
-      var label = (anchor.getAttribute('aria-label') || anchor.textContent || '').replace(/\s+/g, ' ').trim();
-      if (!label || label.length > 85) return;
-      seen[key] = true;
-      result.push({href: parsed.href, label: label});
-    });
-    return result;
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

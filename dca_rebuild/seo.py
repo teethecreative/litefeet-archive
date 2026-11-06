@@ -1,4 +1,4 @@
-"""LiteFeet Ledger public search metadata, crawl directives and XML sitemap."""
+"""The LiteFeet Vault public search metadata, crawl directives and XML sitemap."""
 import re
 from xml.sax.saxutils import escape
 from flask import Response, request
@@ -6,37 +6,52 @@ from flask import Response, request
 SITE_URL = "https://thelitefeetvault.com"
 PAGES = {
     "/": (
-        "LiteFeet Ledger | LiteFeet Dance History & Awards",
-        "Explore LiteFeet dance culture, history, and community awards. Follow the Dancer's Choice Awards and help preserve the legacy of Harlem's LiteFeet movement.",
+        "The LiteFeet Vault | LiteFeet Culture & History",
+        "Explore LiteFeet culture, historical records and community contributions in The LiteFeet Vault.",
     ),
     "/awards/dancers-choice/2026": (
-        "Dancer's Choice Awards 2026 | LiteFeet Ledger",
-        "Follow the 2026 Dancer's Choice Awards, from community category selection to nominations, voting and official results on LiteFeet Ledger.",
+        "Dancer's Choice Awards 2026 | The LiteFeet Vault",
+        "Follow the 2026 Dancer's Choice Awards, from community category selection to nominations, voting and official results on The LiteFeet Vault.",
     ),
     "/awards/dancers-choice/2023": (
         "Dancer's Choice Awards 2023 Archive | The LiteFeet Vault",
         "Explore the August 2023 Dancer's Choice Awards archive: 31 award categories, 152 nominee entries and 32 recorded winning entries.",
     ),
     "/awards/litefeet-awards": (
-        "LiteFeet Awards History & Results | LiteFeet Ledger",
+        "LiteFeet Awards History & Results | The LiteFeet Vault",
         "Explore the LiteFeet Awards historical archive and contribute information about past categories, winners and honorees for verification.",
     ),
     "/awards/hypeitup": (
-        "HypeItUpTV Awards | LiteFeet Ledger",
-        "Find updates about the HypeItUpTV Awards, a developing section of the LiteFeet Ledger awards archive.",
+        "HypeItUpTV Awards | The LiteFeet Vault",
+        "Find updates about the HypeItUpTV Awards, a developing section of the The LiteFeet Vault awards archive.",
     ),
     "/awards/dancers-choice/category-suggestions": (
-        "Dancer's Choice 2026 Category Suggestions | LiteFeet Ledger",
+        "Dancer's Choice 2026 Category Suggestions | The LiteFeet Vault",
         "Review the Dancer's Choice Awards 2026 category-suggestion stage and learn how the community helps shape the award categories.",
     ),
     "/awards/dancers-choice/category-voting": (
-        "Dancer's Choice 2026 Category Results | LiteFeet Ledger",
+        "Dancer's Choice 2026 Category Results | The LiteFeet Vault",
         "Explore recorded category-selection results and updates for the 2026 Dancer's Choice Awards. Results remain subject to final review.",
     ),
 }
+PAGES.update({
+    "/archive": ("The Archive | The LiteFeet Vault", "Explore preserved LiteFeet historical collections and published records."),
+    "/archive/timeline": ("Historical Timeline | The LiteFeet Vault", "Browse published historical eras in the LiteFeet archive."),
+    "/awards": ("Awards | The LiteFeet Vault", "Explore LiteFeet award programs, current participation and historical results."),
+    "/awards/dancers-choice": ("Dancer’s Choice Awards | The LiteFeet Vault", "Explore Dancer’s Choice award editions, current participation and historical archives."),
+    "/community": ("Community | The LiteFeet Vault", "Contribute historical sources, suggest corrections and follow public community updates."),
+    "/about": ("About | The LiteFeet Vault", "Our mission, how the archive works and how to contact The LiteFeet Vault."),
+    "/awards/dancers-choice/nominations": ("DCA 2026 Nominations | The LiteFeet Vault", "Explore the categories and nominate the people who represent LiteFeet culture."),
+})
+
 # Only advertise curated public entry points. Some linked pages are unfinished.
 SITEMAP_PATHS = (
     "/",
+    "/archive",
+    "/awards",
+    "/awards/dancers-choice",
+    "/community",
+    "/about",
     "/awards/dancers-choice/2026",
     "/awards/dancers-choice/2023",
     "/awards/litefeet-awards",
@@ -45,21 +60,26 @@ SITEMAP_PATHS = (
 )
 
 
-def metadata_for_path(path):
+def metadata_for_path(path, view=None):
     record = PAGES.get(path)
     if record is None:
         match = re.fullmatch(r"/awards/litefeet-awards/(2023|2024|2025|2026)", path)
         if match:
             year = match.group(1)
             record = (
-                f"LiteFeet Awards {year} Archive | LiteFeet Ledger",
-                f"Explore the LiteFeet Awards {year} archive and its preserved awards history on LiteFeet Ledger.",
+                f"LiteFeet Awards {year} Archive | The LiteFeet Vault",
+                f"Explore the LiteFeet Awards {year} archive and its preserved awards history on The LiteFeet Vault.",
             )
     if record is None:
         return None
+    results = path == '/awards/dancers-choice/nominations' and view == 'results'
+    if results:
+        record = ("DCA 2026 Nominee Standings | The LiteFeet Vault",
+                  "See current Dancer’s Choice Awards 2026 nominees and nomination totals across every category on The LiteFeet Vault.")
     title, description = record
-    canonical = SITE_URL + path
-    website = {"@type": "WebSite", "name": "LiteFeet Ledger", "url": SITE_URL + "/"}
+    canonical = SITE_URL + path + ('?view=results' if results else '')
+    image_url = SITE_URL + '/static/social/dca-2026-standings-v1.png' if results else None
+    website = {"@type": "WebSite", "name": "The LiteFeet Vault", "url": SITE_URL + "/"}
     page = {
         "@type": "WebPage",
         "name": title,
@@ -70,13 +90,14 @@ def metadata_for_path(path):
     schema = {"@context": "https://schema.org", "@graph": [
         {**website, "@id": SITE_URL + "/#website"}, page,
     ]}
-    return {"title": title, "description": description, "canonical": canonical, "schema": schema}
+    return {"title": title, "description": description, "canonical": canonical, "schema": schema,
+            "image": image_url, "image_alt": "The LiteFeet Vault — Dancer’s Choice Awards 2026 nominee standings" if results else None}
 
 
 def register_seo(app):
     @app.context_processor
     def litefeet_seo_context():
-        return {"seo": metadata_for_path(request.path)}
+        return {"seo": metadata_for_path(request.path, request.args.get("view"))}
 
     @app.get("/robots.txt")
     def litefeet_robots():

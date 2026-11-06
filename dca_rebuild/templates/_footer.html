@@ -3,11 +3,11 @@
 
         <div class="ledger-footer-brand">
             <a href="{{ url_for('index') }}">
-                LITEFEET LEDGER
+                THE LITEFEET VAULT
             </a>
 
             <p>
-                Preserving LiteFeet history, awards and community contributions.
+                Preserving LiteFeet culture, history and community knowledge.
             </p>
         </div>
 
@@ -17,7 +17,7 @@
             </div>
 
             <p>
-                Get updates from LiteFeet Ledger.
+                Get updates from The LiteFeet Vault.
             </p>
 
             <form
@@ -54,24 +54,12 @@
             ></p>
         </div>
 
-        <div class="ledger-footer-links">
-            <a href="{{ url_for('dca_2026_home') }}">
-                Dancer's Choice Awards
-            </a>
-
-            <a href="{{ url_for('lfa_home') }}">
-                LiteFeet Awards
-            </a>
-
-            <a href="{{ url_for('hypeitup_awards') }}">
-                HypeItUpTV Awards
-            </a>
-        </div>
+        <div class="ledger-footer-links">{% for item in vault_navigation %}<a href="{{ item.href }}">{{ item.label }}</a>{% endfor %}</div>
 
     </div>
 
     <div class="ledger-footer-bottom">
-        <span>© {{ current_year }} LiteFeet Ledger</span>
+        <span>© {{ current_year }} The LiteFeet Vault</span>
 
         <span>
             Built to document the culture.
