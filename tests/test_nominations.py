@@ -337,3 +337,17 @@ def test_submission_opens_community_standings_not_personal_summary(website, data
     assert 'Great community work.' in detail
     assert 'Back to standings' in detail
     assert 'cooldown active' not in detail
+
+
+def test_standings_show_all_categories_even_without_nominations(website):
+    client = website.test_client()
+    before = client.get(PATH + '?view=results').get_data(as_text=True)
+    assert before.count('class="lf9e-standings-category"') == 27
+    assert before.count('No nominations yet.') == 27
+    assert 'id="standings-25"' in before and 'id="standings-27"' in before
+    token = identify(client)
+    client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One'))
+    after = client.get(PATH + '?view=results').get_data(as_text=True)
+    assert after.count('class="lf9e-standings-category"') == 27
+    assert after.count('No nominations yet.') == 26
+    assert 'Dancer One' in after and '</a></th><td>1</td>' in after

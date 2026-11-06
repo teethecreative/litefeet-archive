@@ -58,6 +58,8 @@ def test_grid_navigation_theme_and_keyboard(website, width, height):
             page.get_by_role('button', name='SUBMIT NOMINATION', exact=True).click()
             assert page.get_by_role('heading', name='NOMINEE STANDINGS', exact=True).is_visible()
             assert page.locator('.lf9e-summary-stats').count() == 0
+            assert page.locator('.lf9e-standings-category').count() == 27
+            assert page.locator('#standings-25 .lf9e-standings-empty').inner_text() == 'No nominations yet.'
             standings = page.locator('.lf9e-standings-category').first
             assert standings.bounding_box()['height'] < 150
             assert standings.evaluate('node => getComputedStyle(node).borderLeftWidth') == '0px'

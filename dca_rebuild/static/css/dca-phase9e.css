@@ -85,3 +85,5 @@ html.lfv-sitewide main.lf9e-standings-page .lf9e-standings-category a:hover{text
 .lf9e-activity{margin-block:20px}.lf9e-activity>summary{cursor:pointer;padding:12px 0;font-weight:700}
 .lf9e-visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 @media(max-width:720px){.lf9e-standings{grid-template-columns:1fr}}
+
+.lf9e-standings-empty{margin:6px 0 10px;font-size:.85rem;color:var(--lfv-muted)}
