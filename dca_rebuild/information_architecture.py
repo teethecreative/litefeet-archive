@@ -47,7 +47,8 @@ def install_information_architecture(app, ns):
             'community': [dict(label='Contribute to the Archive', href='/community#contribute'),
                           dict(label='Suggest Corrections', href='/awards/litefeet-awards#contribute')] +
                          ([dict(label='Community Updates', href='/community#updates')] if content['updates'] else []),
-            'about': [dict(label='Our Mission', href='/about#mission'),
+            'about': [dict(label="Founder's Letter", href='/about#letter'),
+                      dict(label='Our Mission', href='/about#mission'),
                       dict(label='About the Archive', href='/about#archive'),
                       dict(label='How It Works', href='/about#how-it-works'),
                       dict(label='Contact', href='/about#contact')],
