@@ -14,8 +14,8 @@ PAGES = {
         "Follow the 2026 Dancer's Choice Awards, from community category selection to nominations, voting and official results on LiteFeet Ledger.",
     ),
     "/awards/dancers-choice/2023": (
-        "Dancer's Choice Awards 2023 Archive | LiteFeet Ledger",
-        "Explore the Dancer's Choice Awards 2023 historical archive and the award categories preserved by LiteFeet Ledger.",
+        "Dancer's Choice Awards 2023 Archive | The LiteFeet Vault",
+        "Explore the August 2023 Dancer's Choice Awards archive: 31 award categories, 152 nominee entries and 32 recorded winning entries.",
     ),
     "/awards/litefeet-awards": (
         "LiteFeet Awards History & Results | LiteFeet Ledger",

@@ -1,0 +1,44 @@
+/* Historical archive only. Reuse Vault colors and navigation without retheming. */
+html.lfv-sitewide main#dca-2023-archive{padding:24px 0 52px;max-width:1120px!important}
+html.lfv-sitewide #dca-2023-archive>.dca23-header{background:transparent!important;color:var(--lfv-ink);border:0!important;border-top:3px solid var(--lfv-gold)!important;border-radius:0;padding:18px 0 0!important;margin:0 0 24px!important}
+html.lfv-sitewide #dca-2023-archive .dca23-header h1{color:var(--lfv-ink)!important;font-size:clamp(1.8rem,4.5vw,3.2rem)!important;line-height:1.05!important;letter-spacing:-.035em!important;margin:10px 0 18px!important}
+#dca-2023-archive .dca23-header p:not(.dca23-eyebrow){max-width:780px;font-size:1rem;line-height:1.55;color:var(--lfv-muted);margin:10px 0}
+#dca-2023-archive .dca23-eyebrow{font-size:.72rem;line-height:1.5;font-weight:800;letter-spacing:.09em;color:var(--lfv-ink);margin:0}
+html.lfv-sitewide #dca-2023-archive>section{padding:0;margin:28px 0;border:0;background:transparent;border-radius:0}
+html.lfv-sitewide #dca-2023-archive h2{font-size:1.3rem;line-height:1.2;margin:0 0 16px}
+#dca-2023-archive .dca23-overview dl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0}
+#dca-2023-archive .dca23-overview dl>div{display:flex;flex-direction:column;padding:10px 14px;border-left:3px solid var(--lfv-gold);min-width:0}
+#dca-2023-archive .dca23-overview dt{font-size:.78rem;color:var(--lfv-muted);line-height:1.4}
+#dca-2023-archive .dca23-overview dd{order:-1;margin:0 0 5px;font-size:1.6rem;font-weight:800;line-height:1.1}
+#dca-2023-archive .dca23-tools{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin-bottom:14px}
+#dca-2023-archive .dca23-tools label{display:grid;gap:6px;flex:1;min-width:180px;font-size:.85rem;font-weight:700}
+#dca-2023-archive input{width:100%;box-sizing:border-box;font:inherit;padding:11px 12px;background:var(--lfv-surface);color:var(--lfv-ink);border:1px solid var(--lfv-line);min-height:44px}
+#dca-2023-archive .dca23-tools button{font:inherit;font-weight:700;min-height:44px;padding:10px 14px;border:1px solid var(--lfv-line);color:var(--lfv-ink);background:var(--lfv-surface);cursor:pointer}
+#dca-2023-archive #dca23-count{font-size:.8rem;align-self:center;color:var(--lfv-muted)}
+#dca-2023-archive .dca23-categories{max-height:min(65vh,640px);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;border-block:1px solid var(--lfv-line)}
+#dca-2023-archive .dca23-category{border:1px solid var(--lfv-line);border-left:3px solid var(--lfv-gold);border-top:0;background:var(--lfv-surface)}
+#dca-2023-archive summary{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,.8fr) 12px;align-items:center;gap:14px;position:relative;padding:15px;min-height:64px;box-sizing:border-box;list-style:none;cursor:pointer;overflow-wrap:anywhere}
+#dca-2023-archive summary::-webkit-details-marker{display:none}
+#dca-2023-archive summary::after{content:"";display:block;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);justify-self:center}
+#dca-2023-archive details[open]>summary::after{transform:rotate(225deg)}
+#dca-2023-archive .dca23-category-name{font-size:1rem;font-weight:800;line-height:1.35}
+#dca-2023-archive .dca23-winners{display:flex;flex-wrap:wrap;gap:5px 12px;align-items:center;font-size:.9rem;line-height:1.4}
+#dca-2023-archive .dca23-winner-label{font-size:.68rem;background:var(--lfv-gold);color:var(--lfv-navy);padding:3px 6px;font-weight:800}
+#dca-2023-archive .dca23-nominees{padding:0 15px 15px;border-top:1px solid var(--lfv-line)}
+html.lfv-sitewide #dca-2023-archive .dca23-nominees h3{font-size:.85rem;margin:14px 0 10px}
+#dca-2023-archive .dca23-nominees ul{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 24px;margin:0;padding-left:20px;font-size:.9rem}
+#dca-2023-archive .dca23-nominees li{overflow-wrap:anywhere}
+#dca-2023-archive .dca23-contribute{border-top:2px solid var(--lfv-gold);padding-top:22px}
+#dca-2023-archive .dca23-contribute p{max-width:780px;line-height:1.55;color:var(--lfv-muted)}
+html.lfv-sitewide main#dca-2023-archive .dca23-contribution-link{display:inline-flex;background:var(--lfv-gold);color:var(--lfv-navy);border:0;font-size:.9rem;font-weight:800;min-height:44px;padding:11px 16px;text-decoration:none}
+#dca-2023-archive :is(input,button,summary,.dca23-categories,a):focus-visible{outline:3px solid var(--lfv-gold);outline-offset:3px}
+#dca-2023-archive [hidden]{display:none!important}
+@media(max-width:620px){
+ #dca-2023-archive .dca23-overview dl{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #dca-2023-archive .dca23-tools label{flex-basis:100%}
+ #dca-2023-archive summary{grid-template-columns:minmax(0,1fr) 12px;gap:8px;padding:13px}
+ #dca-2023-archive .dca23-category-name{grid-column:1}
+ #dca-2023-archive .dca23-winners{grid-column:1;font-size:.85rem}
+ #dca-2023-archive summary::after{grid-column:2;grid-row:1/3}
+ #dca-2023-archive .dca23-nominees ul{grid-template-columns:1fr}
+}

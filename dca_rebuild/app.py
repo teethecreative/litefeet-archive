@@ -2120,13 +2120,14 @@ def dca_2026_home():
 
 @app.route("/awards/dancers-choice/2023")
 def dca_2023_home():
+    from dca_rebuild.archive_2023 import load_archive_2023
+    categories = load_archive_2023()
     return render_template(
-        "award_landing.html",
-        page_title="Dancer's Choice Awards 2023",
-        eyebrow="DANCER'S CHOICE AWARDS",
-        title="2023",
-        subtitle="Historical awards archive.",
-        page_type="dca-2023",
+        "dca_2023_archive.html", categories=categories,
+        category_count=len(categories),
+        nominee_count=sum(len(c.nominees) for c in categories),
+        winner_count=sum(len(c.winners) for c in categories),
+        co_winner_categories=sum(len(c.winners) > 1 for c in categories),
     )
 
 
