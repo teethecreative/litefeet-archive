@@ -824,3 +824,65 @@ class LedgerPageView(Base):
         DateTime, nullable=False, default=datetime.utcnow, index=True
     )
     is_new_visit = Column(Boolean, nullable=False, default=False)
+
+
+# ============================================================
+# THE LITEFEET VAULT — ARCHIVAL RESEARCH FOUNDATION
+# These tables are additive to the existing Awards/Timeline models.
+# No imported research is made public automatically.
+# ============================================================
+
+class VaultArchiveRecord(Base):
+    __tablename__ = "vault_archive_records"
+
+    id = Column(Integer, primary_key=True)
+    source_key = Column(String(255), nullable=False, unique=True, index=True)
+    slug = Column(String(255), nullable=False, unique=True, index=True)
+    title = Column(String(255), nullable=False)
+    record_type = Column(String(40), nullable=False, index=True)
+    collection = Column(String(40), nullable=False, index=True)
+    summary = Column(Text, nullable=False)
+    historical_context = Column(Text, nullable=True)
+    source_url = Column(String(1500), nullable=True)
+    # Original research/verification notes are internal and never rendered publicly.
+    raw_details_json = Column(Text, nullable=False, default="{}")
+    # research / under_review / verified / disputed
+    editorial_status = Column(String(40), nullable=False, default="research", index=True)
+    # private / public_review / published. Defaults deliberately prevent unreviewed data exposure.
+    visibility = Column(String(40), nullable=False, default="private", index=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class VaultArchiveAssertion(Base):
+    __tablename__ = "vault_archive_assertions"
+
+    id = Column(Integer, primary_key=True)
+    record_id = Column(Integer, ForeignKey("vault_archive_records.id"), nullable=False, index=True)
+    source_key = Column(String(300), nullable=False, unique=True)
+    statement = Column(Text, nullable=False)
+    # factual assertions only; never ask visitors to vote on a person's identity.
+    assertion_type = Column(String(30), nullable=False, default="factual")
+    # private / public_review / published
+    visibility = Column(String(40), nullable=False, default="private")
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class VaultArchiveResponse(Base):
+    __tablename__ = "vault_archive_responses"
+    __table_args__ = (
+        UniqueConstraint("assertion_id", "respondent_key_hash", name="uq_vault_archive_assertion_respondent"),
+    )
+
+    id = Column(Integer, primary_key=True)
+    assertion_id = Column(Integer, ForeignKey("vault_archive_assertions.id"), nullable=False, index=True)
+    # Hashed pseudonymous identifier, never a public name or raw email/IP.
+    respondent_key_hash = Column(String(128), nullable=False)
+    # true / false / debatable
+    choice = Column(String(20), nullable=False)
+    # Only relevant when choice == debatable; optional and always moderated.
+    explanation = Column(Text, nullable=True)
+    evidence_url = Column(String(1500), nullable=True)
+    moderation_status = Column(String(20), nullable=False, default="pending", index=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
