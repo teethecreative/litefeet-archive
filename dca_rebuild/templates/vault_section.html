@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-identity-phase1.css') }}">
 </head><body>{% include "_navigation.html" %}
 <main class="vault-section-page" id="vault-section-{{ section }}">
 {% if section == 'archive' %}
@@ -27,8 +28,23 @@
 <section><h2>Media & general enquiries</h2><p>For photographs, footage or other archive enquiries, contact the Vault team.</p><a href="{{ vault_contact }}">Contact the Vault</a></section>
 {% if updates %}<section id="updates"><h2>Community updates</h2>{% for update in updates %}<article class="vault-update"><h3>{{ update.title }}</h3><time datetime="{{ update.created_at.isoformat() }}">{{ update.created_at.strftime('%B %d, %Y') }}</time><p>{{ update.details }}</p></article>{% endfor %}</section>{% endif %}
 {% elif section == 'about' %}
-<header><p class="vault-kicker">ABOUT</p><h1>The LiteFeet Vault</h1></header>
-<section id="mission"><h2>Our Mission</h2><p>Preserve LiteFeet culture through historical records, community knowledge and sourced storytelling.</p></section>
+<header><p class="vault-kicker">ABOUT THE VAULT</p><h1>Our history. Our stories. Our culture.</h1><p>A living record of LiteFeet, shaped by the people who made it.</p></header>
+<section id="letter" class="lfv1-founder-letter" aria-labelledby="founder-letter-title">
+  <p class="vault-kicker">FROM THE FOUNDER</p>
+  <h2 id="founder-letter-title">Dear LiteFeet,</h2>
+  <div class="lfv1-letter-body">
+    <p>LiteFeet is more than dance. It's a culture built through creativity, individuality, competition, community, and the people who have continued to push it forward.</p>
+    <p>Over the years, the culture has created countless moments, memories, movements, and contributions that deserve to be remembered.</p>
+    <p>But not everything has been documented. Not every name has been recognized. Not every story has been told.</p>
+    <p>That's part of why I created <strong>The LiteFeet Vault</strong>.</p>
+    <p>I wanted to build a space where our history could be preserved, where our contributions could be acknowledged, and where the community could have a role in telling its own story.</p>
+    <p>This isn't just about looking back. It's about documenting what's happening now, connecting the past to the present, and creating something future generations can learn from.</p>
+    <p>The Vault is meant to continue growing alongside the culture. It won't be complete overnight, and it shouldn't depend on any one person's perspective.</p>
+    <p>Because LiteFeet's history belongs to the people who made it.</p>
+  </div>
+  <p class="lfv1-letter-signoff"><strong>With love for the culture,</strong><span>Tee</span><small>Founder, The LiteFeet Vault</small></p>
+</section>
+<section id="mission"><h2>Our Mission</h2><p>Document, preserve and celebrate LiteFeet culture through historical records, community knowledge, recognition and sourced storytelling—connecting the past, present and future.</p></section>
 <section id="archive"><h2>About the Archive</h2><p>The Vault brings together LiteFeet history, people, teams, battles, events, music and awards. We are building toward a connected cultural archive and editorial platform.</p></section>
 <section id="how-it-works"><h2>How It Works</h2><p>Historical sources and community contributions help build the record. Contributions are reviewed before publication; corrections keep the archive accountable to the culture.</p><a href="{{ url_for('vault_community') }}#contribute">Contribute to the Archive</a></section>
 <section id="contact"><h2>Contact</h2><a href="{{ vault_contact }}">Contact the Vault team</a></section>
