@@ -158,6 +158,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
   <!-- LFV_EDITORIAL_V3_20261102 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v3.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-identity-phase1.css') }}">
 </head>
 
 <body>
@@ -165,23 +166,77 @@
 {% include "_navigation.html" %}
 {% include "_beta_bar.html" %}
 
-<main class="lfv3-hub lfv3-wrap" id="vault-home">
-  <section class="lfv3-hero lfv3-hero-simple" aria-labelledby="vault-heading"><div class="lfv3-hero-copy">
-    <p class="lfv3-eyebrow">THE LITEFEET VAULT / CULTURE · PEOPLE · HISTORY</p>
-    <h1 id="vault-heading">THE CULTURE<br>LIVES HERE.</h1>
-    <p class="lfv3-deck">A community record of LiteFeet history, creativity and the people who shape it.</p>
-    <a class="lfv3-button lfv3-button-gold" href="{{ url_for('vault_archive') }}">Explore the Archive</a>
-  </div></section>
-  <section class="lfv3-section" aria-labelledby="new-title"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">WHAT’S NEW</p><h2 id="new-title">Dancer’s Choice Awards 2026</h2></div></div>
-    <p>Explore the current award categories, nomination participation and community results.</p><a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_2026_home') }}">Visit the 2026 edition</a>
+<main class="lfv3-hub lfv3-wrap lfv1-home" id="vault-home">
+  <section class="lfv3-hero lfv3-hero-simple lfv1-hero" aria-labelledby="vault-heading">
+    <div class="lfv3-hero-copy">
+      <p class="lfv3-eyebrow">THE LITEFEET VAULT / CULTURE · PEOPLE · HISTORY</p>
+      <h1 id="vault-heading">THE CULTURE DESERVES TO BE REMEMBERED.</h1>
+      <p class="lfv3-deck">A living archive dedicated to documenting, preserving and celebrating LiteFeet and the community that built it.</p>
+      <div class="lfv3-actions">
+        <a class="lfv3-button lfv3-button-gold" href="{{ url_for('vault_archive') }}">Explore the Vault</a>
+        <a class="lfv3-button lfv1-hero-letter" href="{{ url_for('legacy_about') }}#letter">Read Dear LiteFeet</a>
+      </div>
+    </div>
   </section>
-  <section class="lfv3-section" id="explore" aria-labelledby="explore-title"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">FEATURED ARCHIVE</p><h2 id="explore-title">August 2023: on the record.</h2></div></div>
-    <p>31 award categories, 152 nominee entries and the recorded winners from the 2023 Dancer’s Choice Awards.</p><a class="lfv3-button lfv3-button-outline" href="{{ url_for('dca_2023_home') }}">Browse the historical archive</a>
-    {% if vault_eras %}<p><a href="{{ url_for('vault_timeline') }}">Explore the historical timeline</a></p>{% endif %}
+
+  <section class="lfv3-section" id="whats-new" aria-labelledby="new-title">
+    <div class="lfv3-section-heading">
+      <div><p class="lfv3-eyebrow">THE LATEST</p><h2 id="new-title">What’s New</h2></div>
+      <p>Public updates from the Vault. Community news, music and stories will join this space as they are reviewed and published.</p>
+    </div>
+    {% if vault_updates %}
+    <div class="lfv1-updates">
+      {% for update in vault_updates[:4] %}
+      <article class="lfv1-update">
+        <p class="lfv1-update-date"><time datetime="{{ update.created_at.isoformat() }}">{{ update.created_at.strftime('%B %d, %Y') }}</time></p>
+        <h3>{{ update.title }}</h3>
+        <p>{{ update.details }}</p>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="lfv1-feed-empty">
+      <p>New stories and community updates are on the way. In the meantime, explore the history already preserved in the Vault.</p>
+      <a class="lfv3-inline-link" href="{{ url_for('vault_archive') }}">Browse the Archive</a>
+    </div>
+    {% endif %}
   </section>
-  <section class="lfv3-section" aria-labelledby="community-title"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">COMMUNITY</p><h2 id="community-title">Keep the record growing.</h2></div></div>
-    {% for update in vault_updates[:3] %}<article class="vault-update"><h3>{{ update.title }}</h3><p>{{ update.details }}</p></article>{% endfor %}
-    <p>Share historical sources and corrections, or get in touch about photographs and footage.</p><a class="lfv3-button lfv3-button-gold" href="{{ url_for('vault_community') }}">Contribute to the Vault</a>
+
+  <section class="lfv3-section" id="featured" aria-labelledby="featured-title">
+    <div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">FEATURED FROM THE ARCHIVE</p><h2 id="featured-title">August 2023: on the record.</h2></div></div>
+    <div class="lfv1-featured">
+      <div>
+        <p>Explore the recorded Dancer’s Choice Awards from August 2023: 31 categories, 152 nominee entries and 32 winning entries.</p>
+        <a class="lfv3-button lfv3-button-outline" href="{{ url_for('dca_2023_home') }}">Explore the 2023 archive</a>
+      </div>
+      {% if vault_eras %}
+      <a class="lfv3-inline-link" href="{{ url_for('vault_timeline') }}">Browse the historical timeline</a>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="lfv3-section" id="explore" aria-labelledby="explore-title">
+    <div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">EXPLORE THE VAULT</p><h2 id="explore-title">Find your way into the culture.</h2></div></div>
+    <div class="lfv1-explore-grid">
+      <a href="{{ url_for('vault_archive') }}"><span>01 / HISTORY</span><strong>The Archive</strong><em>Historical collections and preserved records</em></a>
+      <a href="{{ url_for('awards_home') }}"><span>02 / RECOGNITION</span><strong>Awards</strong><em>Programs and documented results</em></a>
+      <a href="{{ url_for('vault_community') }}"><span>03 / COMMUNITY</span><strong>Community</strong><em>Contributions, corrections and updates</em></a>
+    </div>
+  </section>
+
+  <section class="lfv3-section lfv1-awards" id="recognition" aria-labelledby="awards-title">
+    <div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">AWARDS &amp; RECOGNITION</p><h2 id="awards-title">Dancer’s Choice Awards 2026</h2></div></div>
+    <p>Follow the current award categories, community participation and nomination information through the official awards section.</p>
+    <a class="lfv3-button lfv3-button-outline" href="{{ url_for('dca_2026_home') }}">View the 2026 awards</a>
+  </section>
+
+  <section class="lfv3-section lfv3-preserve lfv1-contribute" id="contribute" aria-labelledby="community-title">
+    <div>
+      <p class="lfv3-eyebrow">COMMUNITY CONTRIBUTIONS</p>
+      <h2 id="community-title">Keep the record growing.</h2>
+      <p>Have a historical source, a correction or a piece of LiteFeet history to share? Help us document it with care.</p>
+    </div>
+    <a class="lfv3-button lfv3-button-gold" href="{{ url_for('vault_community') }}#contribute">Contribute to the Vault</a>
   </section>
 </main>
 
