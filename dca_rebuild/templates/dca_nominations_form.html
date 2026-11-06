@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Dancer's Choice Awards 2026 — {{ 'Nominee standings' if results_view else 'Nominate' }}</title>
+{% include "_seo_head.html" %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dca-nominations-2026.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dca-phase9e.css') }}">

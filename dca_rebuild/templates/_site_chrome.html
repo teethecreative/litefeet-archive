@@ -1,0 +1,11 @@
+{% if vault_emit_chrome is defined and vault_emit_chrome() %}
+<script id="lfv-navigation-data" type="application/json">{{ vault_navigation|tojson }}</script>
+{% if vault_breadcrumbs %}
+<nav class="lfv-breadcrumbs" aria-label="Breadcrumb">
+{% for crumb in vault_breadcrumbs %}{% if not loop.first %}<span aria-hidden="true">/</span>{% endif %}{% if crumb.href %}<a href="{{ crumb.href }}">{{ crumb.label }}</a>{% else %}<span aria-current="page">{{ crumb.label }}</span>{% endif %}{% endfor %}
+</nav>
+{% endif %}
+{% if vault_program_navigation %}
+<nav class="lfv-program-nav" aria-label="Award program navigation">{% for item in vault_program_navigation %}<a href="{{ item.href }}" {% if request.path == item.href %}aria-current="page"{% endif %}>{{ item.label }}</a>{% endfor %}</nav>
+{% endif %}
+{% endif %}
