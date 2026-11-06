@@ -351,3 +351,20 @@ def test_standings_show_all_categories_even_without_nominations(website):
     assert after.count('class="lf9e-standings-category"') == 27
     assert after.count('No nominations yet.') == 26
     assert 'Dancer One' in after and '</a></th><td>1</td>' in after
+
+
+def test_introduction_lists_process_and_categories_before_email(website):
+    client = website.test_client()
+    response = client.get(PATH)
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert html.index('id="intro-title"') < html.index('id="lf9e-intro-categories"') < html.index('id="lf9e-email-start"')
+    assert 'Category 25' in html and 'Category 26' in html and 'Category 27' in html
+    assert 'One nomination per category every 24 hours.' in html
+    assert 'advance to final voting' in html
+    assert 'Your previous nominations' not in html
+    with client.session_transaction() as sess:
+        token = sess['lf9e_nomination_csrf']
+    assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One')).status_code == 400
+    identify(client)
+    assert b'CHOOSE YOUR CATEGORY' in client.get(PATH).data
