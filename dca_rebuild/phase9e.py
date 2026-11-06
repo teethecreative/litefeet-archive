@@ -510,6 +510,13 @@ def install_phase9e(app, ns):
                 if not token or not secrets.compare_digest(token, session['lf9e_nomination_csrf']):
                     abort(400, 'Invalid submission token')
                 action = request.form.get('action', 'nominate')
+                if action == 'done':
+                    # End this nomination visit without logging out administrators
+                    # or altering persistent nomination/cooldown records.
+                    for key in ('lf9e_recent_hash', 'lf9e_recent_category',
+                                'lf9e_skipped', 'lf9e_nomination_csrf'):
+                        session.pop(key, None)
+                    return redirect(url_for('dca_nominations_closed', view='results'))
                 if action == 'change-email':
                     session.pop('lf9e_recent_hash', None)
                     session.pop('lf9e_skipped', None)

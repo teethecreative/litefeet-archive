@@ -51,7 +51,10 @@
   </section>
   {% else %}
     <div class="lf9e-buttons">
-      <a class="lf9e-secondary" href="{{ url_for('dca_nominations_closed', view='results') }}">DONE / VIEW NOMINEE STANDINGS</a>
+      <form method="post" action="{{ url_for('dca_nominations_closed') }}" class="lf9e-done-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" name="action" value="done" class="lf9e-secondary">DONE / VIEW NOMINEE STANDINGS</button>
+      </form>
       {% if selected %}<a class="lf9e-secondary" href="{{ url_for('dca_nominations_closed') }}">ALL CATEGORIES</a>{% endif %}
     </div>
     {% if selected %}

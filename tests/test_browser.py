@@ -57,18 +57,29 @@ def test_grid_navigation_theme_and_keyboard(website, width, height):
             assert page.get_by_role('button', name='USE A DIFFERENT EMAIL').count() == 0
             assert page.locator('[data-category-id="1"]').inner_text().strip() == 'Category 1'
             page.locator('[data-category-id="1"] > a').click()
-            assert page.get_by_role('heading', name='Suggestions', exact=True).is_visible()
+            page.get_by_role('heading', name='Suggestions', exact=True).wait_for(state='visible')
             assert page.locator('input[name="name"]').count() == 0
             page.get_by_role('link', name='NOMINATE', exact=True).click()
             page.locator('input[name="name"]').fill('Browser Dancer')
             page.locator('input[name="team"]').fill('Browser Crew')
             page.locator('textarea[name="reason"]').fill('They bring the community together.')
             page.get_by_role('button', name='SUBMIT NOMINATION', exact=True).click()
-            assert page.get_by_role('heading', name='NOMINEE STANDINGS', exact=True).is_visible()
+            page.get_by_role('heading', name='NOMINEE STANDINGS', exact=True).wait_for(state='visible')
             assert page.locator('.lf9e-summary-stats').count() == 0
             assert page.locator('.lf9e-standings-category').count() == 27
-            assert page.locator('#standings-25 .lf9e-standings-empty').inner_text() == 'No nominations yet.'
+            assert page.locator('details.lf9e-standings-category').count() == 27
+            assert page.locator('.lf9e-standings-category[open]').count() == 0
+            empty_category = page.locator('#standings-25')
+            assert not empty_category.locator('.lf9e-standings-empty').is_visible()
+            empty_category.locator('summary').click()
+            assert empty_category.locator('.lf9e-standings-empty').is_visible()
+            assert empty_category.locator('.lf9e-standings-empty').inner_text() == 'No nominations yet.'
+            empty_category.locator('summary').focus()
+            page.keyboard.press('Enter')
+            assert empty_category.get_attribute('open') is None
             standings = page.locator('.lf9e-standings-category').first
+            standings.locator('summary').click()
+            assert standings.get_attribute('open') is not None
             assert standings.bounding_box()['height'] < 150
             assert standings.evaluate('node => getComputedStyle(node).borderLeftWidth') == '0px'
             nominee_link = standings.get_by_role('link', name='Browser Dancer')
@@ -101,6 +112,15 @@ def test_grid_navigation_theme_and_keyboard(website, width, height):
             assert link.evaluate('node => getComputedStyle(node).outlineStyle') != 'none'
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             page.screenshot(path=f'/tmp/vault-grid-{width}.png', full_page=True)
+            page.get_by_role('button', name='DONE / VIEW NOMINEE STANDINGS', exact=True).click()
+            page.get_by_role('heading', name='NOMINEE STANDINGS', exact=True).wait_for(state='visible')
+            page.get_by_role('link', name='Nominate', exact=True).click()
+            assert page.locator('main input[name="email"]').is_visible()
+            assert page.locator('main input[name="email"]').input_value() == ''
+            page.locator('main input[name="email"]').fill('browser@example.com')
+            page.get_by_role('button', name='CONTINUE', exact=True).click()
+            page.locator('[data-category-id="1"] > a').click()
+            assert 'cooldown active' in page.locator('.lf9e-status').inner_text()
             assert errors == []
             browser.close()
     finally:

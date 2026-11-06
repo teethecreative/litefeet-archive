@@ -368,3 +368,44 @@ def test_introduction_lists_process_and_categories_before_email(website):
     assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One')).status_code == 400
     identify(client)
     assert b'CHOOSE YOUR CATEGORY' in client.get(PATH).data
+
+
+def test_done_resets_email_session_without_resetting_cooldowns_or_admin(website, database):
+    client = website.test_client(); token = identify(client)
+    client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One'))
+    with client.session_transaction() as sess:
+        who = sess['lf9e_recent_hash']
+        sess['lf9e_skipped'] = [2]
+        sess['lf9e_recent_category'] = 1
+        sess['ledger_admin_authenticated'] = True
+        sess['dca_moderation_csrf'] = 'preserve-admin-token'
+    assert client.post(PATH, data=dict(action='done', csrf_token='invalid')).status_code == 400
+    with client.session_transaction() as sess:
+        assert sess['lf9e_recent_hash'] == who
+    # Merely viewing public results does not end an active nomination visit.
+    client.get(PATH + '?view=results')
+    with client.session_transaction() as sess:
+        assert sess['lf9e_recent_hash'] == who
+    response = client.post(PATH, data=dict(action='done', csrf_token=token), follow_redirects=True)
+    assert response.status_code == 200 and b'NOMINEE STANDINGS' in response.data
+    with client.session_transaction() as sess:
+        assert 'lf9e_recent_hash' not in sess
+        assert 'lf9e_recent_category' not in sess
+        assert 'lf9e_skipped' not in sess
+        assert sess['lf9e_nomination_csrf'] != token
+        assert sess['ledger_admin_authenticated'] is True
+        assert sess['dca_moderation_csrf'] == 'preserve-admin-token'
+        fresh_token = sess['lf9e_nomination_csrf']
+    page = client.get(PATH).get_data(as_text=True)
+    assert 'id="lf9e-email-start"' in page and 'data-category-id=' not in page
+    assert client.post(PATH, data=dict(csrf_token=fresh_token, category_id=2, name='Dancer Two')).status_code == 400
+    with database[1]() as db:
+        assert db.query(DCANominationSubmission).count() == 1
+    token = identify(client)  # Re-entering the same email restores its real history.
+    assert b'cooldown active' in client.get(PATH + '?category=1').data
+    client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One'))
+    with database[1]() as db:
+        assert db.query(DCANominationSubmission).count() == 1
+    client.post(PATH, data=dict(csrf_token=token, category_id=2, name='Dancer Two'))
+    with database[1]() as db:
+        assert db.query(DCANominationSubmission).count() == 2
