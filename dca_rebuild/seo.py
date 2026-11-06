@@ -7,7 +7,7 @@ SITE_URL = "https://thelitefeetvault.com"
 PAGES = {
     "/": (
         "The LiteFeet Vault | LiteFeet Culture & History",
-        "Explore LiteFeet culture, historical records and community contributions in The LiteFeet Vault.",
+        "Discover the people, history and creativity of LiteFeet in a living cultural archive built to preserve the culture.",
     ),
     "/awards/dancers-choice/2026": (
         "Dancer's Choice Awards 2026 | The LiteFeet Vault",
@@ -23,7 +23,7 @@ PAGES = {
     ),
     "/awards/hypeitup": (
         "HypeItUpTV Awards | The LiteFeet Vault",
-        "Find updates about the HypeItUpTV Awards, a developing section of the The LiteFeet Vault awards archive.",
+        "Find updates about the HypeItUpTV Awards, a developing section of The LiteFeet Vault awards archive.",
     ),
     "/awards/dancers-choice/category-suggestions": (
         "Dancer's Choice 2026 Category Suggestions | The LiteFeet Vault",
@@ -40,7 +40,7 @@ PAGES.update({
     "/awards": ("Awards | The LiteFeet Vault", "Explore LiteFeet award programs, current participation and historical results."),
     "/awards/dancers-choice": ("Dancer’s Choice Awards | The LiteFeet Vault", "Explore Dancer’s Choice award editions, current participation and historical archives."),
     "/community": ("Community | The LiteFeet Vault", "Contribute historical sources, suggest corrections and follow public community updates."),
-    "/about": ("About | The LiteFeet Vault", "Our mission, how the archive works and how to contact The LiteFeet Vault."),
+    "/about": ("About The LiteFeet Vault | Dear LiteFeet", "Read the founder’s letter, discover the Vault’s mission and learn how community contributions help preserve LiteFeet history."),
     "/awards/dancers-choice/nominations": ("DCA 2026 Nominations | The LiteFeet Vault", "Explore the categories and nominate the people who represent LiteFeet culture."),
 })
 
