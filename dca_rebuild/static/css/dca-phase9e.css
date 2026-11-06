@@ -70,7 +70,7 @@
 
 /* Finished nominations lead to community totals, independent of voter history. */
 .lf9e-standings{display:block;margin-top:12px}
-html.lfv-sitewide .lf9e-standings-category{min-width:0;margin:0;padding:14px 0 8px;border:0;border-bottom:1px solid var(--lfv-line);border-radius:0;background:transparent}
+html.lfv-sitewide .lf9e-standings-category{min-width:0;margin:0;padding:0;border:0;border-bottom:1px solid var(--lfv-line);border-radius:0;background:transparent}
 .lf9e-standings-category h2{font-size:1rem!important;margin:0 0 4px;line-height:1.3}
 .lf9e-standings-category table{width:100%;table-layout:fixed;border-collapse:collapse;color:var(--lfv-ink);background:transparent}
 .lf9e-standings-category th,.lf9e-standings-category td{text-align:left;padding:0;border:0;overflow-wrap:anywhere;background:transparent;color:inherit;font-size:.95rem}
@@ -104,3 +104,13 @@ html.lfv-sitewide main.lf9e-intro-page{padding:20px 0 44px;max-width:960px!impor
 html.lfv-sitewide main#nominations.lf9e-intro-page>.lf9e-introduction{border:0;padding:0;background:transparent;margin:0}
 .lf9e-intro-page .lf-nom-eyebrow{font-size:.75rem;margin:0 0 10px}
 .lf9e-introduction .lf9e-email-form{margin-top:16px;gap:10px}
+
+/* Standings category dropdowns use native, keyboard-accessible disclosure. */
+html.lfv-sitewide #nominations .lf9e-standings-category>summary{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:48px;padding:13px 0;box-sizing:border-box;list-style:none;cursor:pointer}
+#nominations .lf9e-standings-category>summary::-webkit-details-marker{display:none}
+#nominations .lf9e-standings-category>summary::after{content:"";width:7px;height:7px;flex-shrink:0;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-right:4px}
+#nominations .lf9e-standings-category[open]>summary::after{transform:rotate(225deg)}
+#nominations .lf9e-standings-category>summary h2{margin:0}
+#nominations .lf9e-standings-body{padding-bottom:12px}
+
+.lf9e-done-form{margin:0}

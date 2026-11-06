@@ -1,5 +1,6 @@
-<section class="lf9e-standings-category" id="standings-{{ category.id }}">
-  <h2>{{ category.name }}</h2>
+<details class="lf9e-standings-category" id="standings-{{ category.id }}">
+  <summary><h2>{{ category.name }}</h2></summary>
+  <div class="lf9e-standings-body">
   {% if category.nominees %}
   <table>
     <caption class="lf9e-visually-hidden">{{ category.name }} nomination totals</caption>
@@ -9,4 +10,5 @@
     {% endfor %}</tbody>
   </table>
   {% else %}<p class="lf9e-standings-empty">No nominations yet.</p>{% endif %}
-</section>
+  </div>
+</details>

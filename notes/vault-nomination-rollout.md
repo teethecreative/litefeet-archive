@@ -98,3 +98,11 @@ Standings now include all 25 official categories and all eligible write-in categ
 The nomination entry page now explains the process, lists all 25 configured official categories (with available write-ins separately expandable), and then asks for email. The category preview scrolls locally to keep the form reachable on mobile. Continue still validates email and checks eligibility before any submission; historical identity hashes, independent cooldowns, category configuration, standings and moderation remain unchanged. This updates the earlier email-first presentation to the owner's requested introduction order. No schema or database migration is required.
 
 The introduction is additionally condensed to a small title, three short process steps, a 200px scrollable category preview (all categories retained), and the email field/Continue action with one short privacy line. Remove the enclosing card and excess top padding. Targeted route and mobile/desktop checks passed; the email form begins within 850px at both tested widths.
+
+## Follow-up: category arrows and Done session reset
+
+Standings now use a small arrow beside every category name. Native details/summary disclosures start closed and expand nominees/totals below the selected category; empty categories remain listed and display their empty state when opened. Both touch and keyboard interaction are supported without new JavaScript.
+
+Done / View nominee standings now submits a CSRF-protected POST that clears only the nomination identity, skipped-category state, legacy recent-category key and nomination CSRF token, then redirects to public standings. Clicking Nominate afterward starts at the introduction/email form. Viewing results or submitting a single nomination does not implicitly end an active visit. Persistent submissions, category cooldowns, browser drafts and administrator authentication remain intact. Re-entering the same email restores its history and active cooldowns; Done cannot bypass limits.
+
+Validation: 19 nomination/backend tests and both mobile/desktop Chromium tests passed. Includes default-closed arrows, populated and empty category expansion, keyboard collapse, preserved nominee details/totals, invalid-CSRF protection, email reset, administrator session preservation and continued cooldown enforcement. `git diff --check` passed. No schema migration is needed.
