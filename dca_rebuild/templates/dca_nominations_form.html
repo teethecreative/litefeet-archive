@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Dancer's Choice Awards 2026 — Nominate</title>
+  <title>Dancer's Choice Awards 2026 — {{ 'Nominee standings' if results_view else 'Nominate' }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dca-nominations-2026.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dca-phase9e.css') }}">
@@ -23,7 +23,9 @@
   {% with messages = get_flashed_messages() %}{% for message in messages %}
     <p class="lf9e-message" role="status">{{ message }}</p>
   {% endfor %}{% endwith %}
-  {% if not identified %}
+  {% if results_view %}
+    {% include "dca_nominee_standings.html" %}
+  {% elif not identified %}
   <section aria-labelledby="email-title">
     <h1 id="email-title">YOUR VOICE.<br>YOUR CHOICE.</h1>
     <p>Enter your email to check your nomination history and availability.</p>
@@ -33,10 +35,12 @@
       <label>Your email<input name="email" type="email" maxlength="254" autocomplete="email" required></label>
       <button type="submit" class="lf9e-primary">CHECK CATEGORY ELIGIBILITY</button>
     </form>
+    <a class="lf9e-back-link" href="{{ url_for('dca_nominations_closed', view='results') }}">View nominee standings</a>
     <p class="lf9e-note">Your email is hashed for eligibility checks and is never displayed publicly. One nomination per category per rolling 24 hours. Each category has its own cooldown.</p>
   </section>
   {% else %}
     <div class="lf9e-buttons">
+      <a class="lf9e-secondary" href="{{ url_for('dca_nominations_closed', view='results') }}">DONE / VIEW NOMINEE STANDINGS</a>
       {% if selected %}<a class="lf9e-secondary" href="{{ url_for('dca_nominations_closed') }}">ALL CATEGORIES</a>{% endif %}
     </div>
     {% if selected %}
@@ -55,12 +59,14 @@
       <h1>CHOOSE YOUR CATEGORY.</h1>
       <p>Nominate in any available category. Each category unlocks 24 hours after your last submission there.</p>
       {% if closed %}<p class="lf9e-message">Nominations are closed. Your history and suggestions remain available inside each category.</p>{% endif %}
+      <details class="lf9e-activity"><summary>Your nomination activity</summary>
       <section aria-label="Your nomination summary" class="lf9e-summary-stats">
         <p><strong>{{ summary.submitted }}</strong><span>NOMINATIONS SUBMITTED</span></p>
         <p><strong>{{ summary.available }}</strong><span>CATEGORIES AVAILABLE</span></p>
         <p><strong>{{ summary.cooldown }}</strong><span>ON COOLDOWN</span></p>
         <p><strong>{{ summary.skipped }}</strong><span>SKIPPED THIS VISIT</span></p>
       </section>
+      </details>
       <section aria-labelledby="official-title"><h2 id="official-title">Official Top 25</h2>
         <div class="lf9e-category-grid">{% for category in categories %}{% include "dca_nomination_grid_card.html" %}{% endfor %}</div>
       </section>
