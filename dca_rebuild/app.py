@@ -3726,7 +3726,26 @@ LEGACY_HOME_ROUTES = [
 ]
 
 
+ARCHIVE_PLACEHOLDERS = {
+    "people": dict(title="People & dancers", description="Profiles, oral histories and the people who shape LiteFeet."),
+    "teams": dict(title="Crews & teams", description="Group histories, affiliations and the collectives behind the culture."),
+    "music": dict(title="Music", description="Tracks, producers and the sound of LiteFeet."),
+    "battles": dict(title="Battles", description="Performances, footage and documented battle moments."),
+    "events": dict(title="Events", description="Community gatherings, event history and shared memories."),
+}
+ARCHIVE_PLACEHOLDER_ROUTES = {
+    "/people": "people", "/dancers": "people", "/people/dancers": "people",
+    "/teams": "teams", "/people/teams": "teams",
+    "/people-teams": "teams", "/people-and-teams": "teams",
+    "/litefeet-music": "music", "/battles": "battles",
+    "/events": "events", "/calendar": "events",
+}
+
+
 def legacy_archive_redirect():
+    feature = ARCHIVE_PLACEHOLDER_ROUTES.get(request.path)
+    if feature:
+        return render_template("archive_placeholder.html", definition=ARCHIVE_PLACEHOLDERS[feature])
     return redirect(url_for("index"), code=302)
 
 

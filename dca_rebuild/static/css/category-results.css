@@ -1,0 +1,23 @@
+/* Category results use one native scroll region, with all records retained. */
+.lfv-results-tools{display:flex;align-items:end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-block:20px 8px}
+.lfv-results-tools label{display:grid;gap:7px;max-width:480px;flex:1;font-size:.85rem;font-weight:700}
+.lfv-results-tools input{box-sizing:border-box;width:100%;min-width:180px;padding:12px;font:inherit;color:var(--lfv-ink);background:var(--lfv-surface);border:1px solid var(--lfv-line)}
+.lfv-results-tools [role="status"]{font-size:.85rem;white-space:nowrap;padding-bottom:12px}
+.lfv-results-scroll{max-height:482px;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;border:1px solid var(--lfv-line);margin-block:12px 24px}
+.lfv-results-scroll:focus-visible{outline:3px solid var(--lfv-gold);outline-offset:3px}
+html.lfv-sitewide .lfv-category-table{width:100%;min-width:560px;max-width:none;border-collapse:separate;border-spacing:0;table-layout:fixed;margin:0;color:var(--lfv-ink);background:var(--lfv-surface)}
+.lfv-category-table thead th{position:sticky;top:0;z-index:2;background:var(--lfv-navy);color:var(--lfv-white);font-size:.76rem;letter-spacing:.04em;text-transform:uppercase;height:42px;box-sizing:border-box}
+.lfv-category-table th,.lfv-category-table td{text-align:left;padding:12px;border:0;border-bottom:1px solid var(--lfv-line);vertical-align:middle;overflow-wrap:anywhere}
+.lfv-category-table th:first-child{width:43%;position:sticky;left:0;z-index:1}
+.lfv-category-table thead th:first-child{z-index:3}
+.lfv-category-table tbody tr{height:88px;--results-row-bg:var(--lfv-surface)}
+.lfv-category-table tbody tr:nth-child(even){--results-row-bg:var(--lfv-surface-muted)}
+.lfv-category-table tbody th,.lfv-category-table tbody td{background:var(--results-row-bg)}
+.lfv-category-table strong{display:block;font-size:1.1rem;line-height:1.3}
+.lfv-category-table small{display:block;font-weight:400;font-size:.78rem;line-height:1.4;margin-top:5px;color:var(--lfv-muted)}
+.lfv-category-table details{font-size:.8rem;font-weight:400;margin-top:6px}
+.lfv-category-table summary{cursor:pointer}.lfv-category-table details p{margin-block:8px;font-weight:400}
+.lfv-category-table .lfv3-meter{margin-top:7px}
+.lfv-category-results [hidden]{display:none!important}
+.lfv-visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media(max-width:620px){.lfv-category-table th,.lfv-category-table td{padding:10px}.lfv-results-tools{align-items:start}.lfv-results-tools label{flex-basis:100%}.lfv-results-tools [role="status"]{padding-bottom:0}}
