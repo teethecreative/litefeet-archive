@@ -1,6 +1,7 @@
-<h1>NOMINEE STANDINGS</h1>
-<p>Nominations so far.</p>
-<a class="lf9e-primary lf9e-nominate-link" href="{{ url_for('dca_nominations_closed') }}">NOMINATE IN ANOTHER CATEGORY</a>
+<div class="lf9e-standings-heading">
+  <h1>NOMINEE STANDINGS</h1>
+  <a class="lf9e-secondary lf9e-standings-action" href="{{ url_for('dca_nominations_closed') }}">Nominate</a>
+</div>
 {% if selected and suggestion %}
   <h2>{{ selected.name }}</h2>
   {% set category = selected %}
