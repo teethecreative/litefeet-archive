@@ -8,16 +8,12 @@
   {% include "dca_nomination_suggestion_details.html" %}
 {% else %}
   <div class="lf9e-standings">
-    {% for category in categories if category.nominees %}
+    {% for category in categories %}
       {% include "dca_nominee_standings_category.html" %}
     {% endfor %}
   </div>
-  {% set nominated_writeins = writeins|selectattr('nominees')|list %}
-  {% if nominated_writeins %}
+  {% if writeins %}
     <h2>Write-in categories</h2>
-    <div class="lf9e-standings">{% for category in nominated_writeins %}{% include "dca_nominee_standings_category.html" %}{% endfor %}</div>
-  {% endif %}
-  {% if not categories|selectattr('nominees')|list and not nominated_writeins %}
-    <p>No nominations yet.</p>
+    <div class="lf9e-standings">{% for category in writeins %}{% include "dca_nominee_standings_category.html" %}{% endfor %}</div>
   {% endif %}
 {% endif %}

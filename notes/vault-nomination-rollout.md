@@ -88,3 +88,7 @@ Successful nomination now redirects to `?view=results`, displaying community-wid
 ## Follow-up: compact nominee standings
 
 The standings page now uses a small DCA 2026 label, compact title and short Nominate action. Category results form one column of closely spaced groups, with plain nominee links and right-aligned counts instead of large cards, gold nominee buttons and repeated visible table headers. Table captions/column headings remain available to screen readers, links retain 44px touch targets and keyboard focus, and nominee details/totals remain unchanged. No backend or database change. The 18 nomination/backend/mobile/desktop checks passed; mobile screenshots were inspected and the inherited dark-mode card borders were removed with a scoped style.
+
+## Follow-up: show every category in standings
+
+Standings now include all 25 official categories and all eligible write-in categories, including those without nominees. Empty categories show “No nominations yet.” Existing nominee names, support totals and compact styling remain unchanged. No backend/database changes. Tests cover all categories before and after a nomination, plus mobile/desktop visibility of empty categories.
