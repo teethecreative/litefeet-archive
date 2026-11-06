@@ -52,6 +52,10 @@ def test_scrollable_results_search_keyboard_and_themes(website, database, width)
             assert page.get_by_role('heading',name='People & dancers').is_visible()
             page.locator('.lfv-theme-button').click()
             assert page.locator('html').get_attribute('data-theme') == 'dark'
+            page.goto(base + '/awards/dancers-choice/2026')
+            assert page.locator('.lfv3-awards-side').count() == 0
+            assert page.locator('.lfv3-awards-intro').evaluate('node => node.clientWidth') > page.locator('.lfv3-awards-hero').evaluate('node => node.clientWidth') * .95
+            page.screenshot(path=f'/tmp/vault-awards-compact-{width}.png', full_page=True)
             page.goto(base + '/awards/dancers-choice/category-voting')
             region = page.get_by_role('region',name='Returning category results',exact=True)
             page.wait_for_function("document.querySelector('.lfv-results-scroll').style.maxHeight !== ''")
@@ -77,3 +81,16 @@ def test_scrollable_results_search_keyboard_and_themes(website, database, width)
             browser.close()
     finally:
         server.shutdown(); thread.join(timeout=5)
+
+
+def test_awards_landing_has_short_intro_and_single_actions(website):
+    response = website.test_client().get('/awards/dancers-choice/2026')
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    main = html.split('<main', 1)[1].split('</main>', 1)[0]
+    assert 'Nominate the people who move LiteFeet forward.' in main
+    assert main.count('href="/awards/dancers-choice/nominations"') == 1
+    assert main.count('href="/awards/dancers-choice/category-voting"') == 1
+    assert 'href="/awards/dancers-choice/2023"' in main
+    assert 'lfv3-awards-side' not in main
+    assert 'One awards program. Two ways in.' not in main
