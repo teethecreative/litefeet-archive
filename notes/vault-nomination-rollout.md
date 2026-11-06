@@ -92,3 +92,7 @@ The standings page now uses a small DCA 2026 label, compact title and short Nomi
 ## Follow-up: show every category in standings
 
 Standings now include all 25 official categories and all eligible write-in categories, including those without nominees. Empty categories show “No nominations yet.” Existing nominee names, support totals and compact styling remain unchanged. No backend/database changes. Tests cover all categories before and after a nomination, plus mobile/desktop visibility of empty categories.
+
+## Follow-up: process, categories, then email
+
+The nomination entry page now explains the process, lists all 25 configured official categories (with available write-ins separately expandable), and then asks for email. The category preview scrolls locally to keep the form reachable on mobile. Continue still validates email and checks eligibility before any submission; historical identity hashes, independent cooldowns, category configuration, standings and moderation remain unchanged. This updates the earlier email-first presentation to the owner's requested introduction order. No schema or database migration is required.

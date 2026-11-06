@@ -37,9 +37,12 @@ def test_grid_navigation_theme_and_keyboard(website, width, height):
             assert page.locator('html').get_attribute('data-theme') == 'dark'
             page.goto(base + '/awards/dancers-choice/nominations')
             assert page.locator('main input[name="email"]').is_visible()
+            assert page.locator('#lf9e-intro-categories li').count() == 25
+            assert page.locator('#lf9e-intro-categories').bounding_box()['y'] < page.locator('#lf9e-email-start').bounding_box()['y']
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             assert page.locator('[data-category-id]').count() == 0
             page.locator('main input[name="email"]').fill('browser@example.com')
-            page.get_by_role('button', name='CHECK CATEGORY ELIGIBILITY').click()
+            page.get_by_role('button', name='CONTINUE').click()
             assert page.locator('section[aria-labelledby="official-title"] [data-category-id]').count() == 25
             assert page.locator('#writeins').is_visible()
             assert not page.locator('.lf9e-summary-stats').is_visible()

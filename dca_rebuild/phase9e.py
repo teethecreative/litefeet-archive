@@ -629,6 +629,8 @@ def install_phase9e(app, ns):
                             suggestion_details = [dict(reason=nominee.description)]
 
             return render_template('dca_nominations_form.html', categories=categories, writeins=writeins,
+                                   intro_categories=[dict(id=c.id, name=c.name) for _, c in top],
+                                   intro_writeins=[dict(id=c.id, name=c.name) for _, c in other],
                                    selected=selected, suggestion=suggestion, suggestion_details=suggestion_details,
                                    show_form=request.args.get('nominate') == '1' or 'draft' in request.args,
                                    identified=bool(who), results_view=results_view, summary=summary,
