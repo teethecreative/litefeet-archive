@@ -1,7 +1,7 @@
-"""Branded, text-only PNG previews for social crawlers (no fabricated portraits)."""
+"""Branded, page-specific 1200x630 social preview PNGs; no synthetic portraits."""
 from functools import lru_cache
 from io import BytesIO
-
+import re
 from PIL import Image, ImageDraw, ImageFont
 
 NAVY = "#071d3b"
@@ -10,30 +10,40 @@ GOLD = "#d9ac47"
 PAPER = "#f6f5f1"
 WHITE = "#ffffff"
 
-
 def _font(size, bold=False):
     family = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
     try:
         return ImageFont.truetype(family, size)
     except OSError:
-        # PIL's bundled font is a deployment-safe fallback.
         return ImageFont.load_default(size=size)
 
+def _wrap(draw, text, font, max_width, max_lines):
+    """Bound text to the card; never let archive titles spill off the image."""
+    words = re.sub(r"\s+", " ", text or "").strip().split()
+    lines, current = [], ""
+    for word in words:
+        candidate = (current + " " + word).strip()
+        if draw.textbbox((0, 0), candidate, font=font)[2] <= max_width:
+            current = candidate
+        else:
+            if current:
+                lines.append(current)
+            current = word
+            if len(lines) >= max_lines:
+                break
+    if current and len(lines) < max_lines:
+        lines.append(current)
+    if len(lines) == max_lines and " ".join(lines) != " ".join(words):
+        last = lines[-1]
+        while last and draw.textbbox((0, 0), last + "…", font=font)[2] > max_width:
+            last = last[:-1]
+        lines[-1] = last.rstrip() + "…"
+    return lines
 
-@lru_cache(maxsize=2)
-def render_social_card(kind):
-    """Return a 1200 x 630 Open Graph PNG with consistent Vault branding."""
-    if kind == "write-ins":
-        lines = ("DANCER'S CHOICE", "WRITE-IN CATEGORIES")
-        kicker = "2026 AWARDS"
-        subtitle = "Help shape the 2026 award categories."
-    elif kind == "vault":
-        lines = ("PRESERVING", "LITEFEET CULTURE")
-        kicker = "THE LITEFEET VAULT"
-        subtitle = "Explore the people, stories and history of LiteFeet."
-    else:
-        raise ValueError("Unknown public social card")
-
+@lru_cache(maxsize=128)
+def render_social_card(kind, title, description):
+    if kind not in ("vault", "write-ins", "page"):
+        raise ValueError("Unknown preview category")
     im = Image.new("RGB", (1200, 630), PAPER)
     draw = ImageDraw.Draw(im)
     draw.rectangle((0, 0, 386, 630), fill=NAVY)
@@ -47,15 +57,26 @@ def render_social_card(kind):
     draw.text((52, 502), "COMMUNITY.", font=_font(20, True), fill=WHITE)
     draw.text((52, 575), "THELITEFEETVAULT.COM", font=_font(14), fill="#c9d4e2")
 
-    draw.text((446, 100), kicker, font=_font(20, True), fill=BLUE)
-    y = 172
-    for line in lines:
-        size = 57 if len(line) < 17 else 45
-        draw.text((442, y), line, font=_font(size, True), fill=NAVY)
-        y += 76
-    draw.rectangle((445, y + 22, 1080, y + 27), fill=GOLD)
-    draw.text((446, y + 66), subtitle, font=_font(23), fill="#263c57")
-
+    title = (title or "The LiteFeet Vault").replace(" | The LiteFeet Vault Archive", "")
+    title = title.replace(" | The LiteFeet Vault", "").strip()
+    heading = ("WRITE-IN CATEGORIES" if kind == "write-ins" else
+               "PRESERVING LITEFEET CULTURE" if kind == "vault" else title)
+    kicker = ("DANCER'S CHOICE / 2026" if kind == "write-ins" else
+              "THE LITEFEET VAULT" if kind == "vault" else
+              "EXPLORE THE LITEFEET VAULT")
+    draw.text((446, 98), kicker, font=_font(20, True), fill=BLUE)
+    size = 56 if len(heading) < 30 else 46 if len(heading) < 55 else 38
+    heading_font = _font(size, True)
+    heading_lines = _wrap(draw, heading, heading_font, 689, 4)
+    y = 167
+    for line in heading_lines:
+        draw.text((442, y), line, font=heading_font, fill=NAVY)
+        y += size + 16
+    rule_y = max(390, min(y + 12, 440))
+    draw.rectangle((445, rule_y, 1080, rule_y + 5), fill=GOLD)
+    subtitle_font = _font(22)
+    for index, line in enumerate(_wrap(draw, description, subtitle_font, 680, 3)):
+        draw.text((446, rule_y + 35 + index * 32), line, font=subtitle_font, fill="#263c57")
     buffer = BytesIO()
     im.save(buffer, format="PNG", optimize=True)
     return buffer.getvalue()
