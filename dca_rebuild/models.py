@@ -846,3 +846,31 @@ class VaultArchiveVerification(Base):
     moderation_status = Column(String(20), nullable=False, default="pending", index=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# Community-submitted gatherings, sessions and programs. Publication is separate
+# from the submission event so nothing appears publicly without admin approval.
+class VaultGatheringSubmission(Base):
+    __tablename__ = "vault_gathering_submissions"
+    id = Column(Integer, primary_key=True)
+    title = Column(String(240), nullable=False)
+    gathering_type = Column(String(40), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    start_date = Column(String(10), nullable=False, index=True)
+    end_date = Column(String(10), nullable=True)
+    start_time = Column(String(5), nullable=True)
+    end_time = Column(String(5), nullable=True)
+    timezone = Column(String(64), nullable=False, default="America/New_York")
+    venue = Column(String(240), nullable=True)
+    address = Column(String(350), nullable=True)
+    city = Column(String(120), nullable=True)
+    virtual = Column(Boolean, nullable=False, default=False)
+    link = Column(String(1200), nullable=True)
+    hosts = Column(String(400), nullable=True)
+    admission = Column(String(160), nullable=True)
+    contact_name = Column(String(160), nullable=True)
+    contact_email = Column(String(255), nullable=True)
+    additional_notes = Column(Text, nullable=True)
+    status = Column(String(20), nullable=False, default="pending", index=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    reviewed_at = Column(DateTime, nullable=True)
