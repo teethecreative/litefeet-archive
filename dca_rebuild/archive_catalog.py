@@ -267,7 +267,7 @@ def people_crew_cloud():
     for profile in profiles:
         aliases = [v.strip() for v in profile['title'].split('/') if v.strip()]
         # Short aliases risk matching unrelated words; require at least 4 letters.
-        patterns = [re.compile(r'(?<!\\w)' + re.escape(alias) + r'(?!\\w)', re.I)
+        patterns = [re.compile(r'(?<!\w)' + re.escape(alias) + r'(?!\w)', re.I)
                     for alias in aliases if len(alias) >= 4]
         mentions = 0
         for doc in documents:
