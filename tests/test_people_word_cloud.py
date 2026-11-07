@@ -45,3 +45,37 @@ def test_people_cloud_is_just_clickable_words_not_gold_buttons():
     assert 'font-size:var(--word-size,1.25rem)!important;' in cloud_css
     assert 'text-decoration:underline!important;' in cloud_css
     assert 'background:#c9a52b' not in cloud_css
+
+
+def test_historical_candidate_review_preserves_source_id_without_publishing():
+    from dca_rebuild.archive_catalog import reconcile_historical_profile_rows
+    source = [
+        {"id": "29", "dance_name": "Venom", "profile_slug": "venom-older",
+         "bio": "This is a ghost profile", "team_affiliation": "Team Demon",
+         "role_tags": "Dancer", "status": "Active"},
+        {"id": "112", "dance_name": "Venom", "profile_slug": "venom-other",
+         "bio": "unverified", "status": "Active"},
+        {"id": "12", "dance_name": "PRockz", "profile_slug": "prockz",
+         "status": "Active"},
+        {"id": "135", "dance_name": "P Rockz", "profile_slug": "p-rockz",
+         "status": "Active"},
+    ]
+    candidates = reconcile_historical_profile_rows(source)
+    assert len(candidates) == 4
+    assert {c["source_id"] for c in candidates} == {"29", "112", "12", "135"}
+    assert all(c["publishable"] is False for c in candidates)
+    assert all(c["review_status"] == "possible_duplicate_review_required" for c in candidates)
+    assert candidates[0]["duplicate_source_ids"] == ["112"]
+    assert candidates[2]["duplicate_source_ids"] == ["135"]
+    assert candidates[0]["original_affiliation"] == "Team Demon"
+    assert all("bio" not in c for c in candidates)
+    assert all("email" not in c for c in candidates)
+
+
+def test_historical_review_does_not_change_public_cloud():
+    from dca_rebuild.archive_catalog import reconcile_historical_profile_rows, people_crew_cloud
+    before = people_crew_cloud()
+    reconcile_historical_profile_rows([
+        {"id": "999", "dance_name": "Review Only", "status": "Active"}
+    ])
+    assert people_crew_cloud() == before
