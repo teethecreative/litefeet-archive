@@ -45,3 +45,19 @@ def test_people_cloud_is_just_clickable_words_not_gold_buttons():
     assert 'font-size:var(--word-size,1.25rem)!important;' in cloud_css
     assert 'text-decoration:underline!important;' in cloud_css
     assert 'background:#c9a52b' not in cloud_css
+
+
+def test_archive_mention_weights_match_whole_names_not_substrings(monkeypatch):
+    from dca_rebuild import archive_catalog
+    documents = [
+        {"collection": "people", "slug": "venom", "title": "Venom"},
+        {"collection": "events", "slug": "unrelated", "title": "Venomous dancers",
+         "description": "", "related_to": "", "battles": [], "lineup_participants": []},
+        {"collection": "events", "slug": "actual", "title": "Venom battle",
+         "description": "", "related_to": "", "battles": [], "lineup_participants": []},
+    ]
+    monkeypatch.setattr(archive_catalog, "all_records", lambda: documents)
+    cloud = archive_catalog.people_crew_cloud()
+    assert cloud[0]["title"] == "Venom"
+    assert cloud[0]["mentions"] == 1
+    assert cloud[0]["weight"] == 2
