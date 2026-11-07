@@ -11,7 +11,7 @@
 <main class="lfv-submit" id="vault-submit">
 <nav class="lfv-submit-breadcrumb"><a href="{{ url_for('vault_archive') }}">THE ARCHIVE</a> / SUBMIT</nav>
 <header><p class="lfv-submit-kicker">ADD TO THE CULTURE</p><h1>SUBMIT</h1>
-<p>HELP KEEP THE CULTURE CONNECTED. SHARE A BATTLE, LAB SESSION, LINK-UP, WORKSHOP, CLASS OR OTHER GATHERING.</p>
+<p>Help keep the culture connected. Share a battle, lab session, link-up, workshop, class or other gathering.</p>
 </header>
 {% with messages=get_flashed_messages() %}{% for message in messages %}<p class="lfv-submit-warning" role="alert">{{ message }}</p>{% endfor %}{% endwith %}
 <form method="post" action="{{ url_for('vault_submit') }}" class="lfv-submit-form">
@@ -50,8 +50,8 @@
 </div>
 <label>ADDITIONAL NOTES <textarea name="additional_notes" maxlength="2000" rows="3" placeholder="ANYTHING THE VAULT SHOULD REVIEW?"></textarea></label>
 </details>
-<p class="lfv-submit-privacy">SUBMISSIONS ARE REVIEWED BEFORE BEING ADDED TO THE PUBLIC CALENDAR. CONTACT INFORMATION AND PRIVATE NOTES ARE NEVER DISPLAYED PUBLICLY. NO FLYER OR ACCOUNT REQUIRED.</p>
-<button class="lfv-primary-cta" type="submit">SUBMIT <span aria-hidden="true">→</span></button>
+<p class="lfv-submit-privacy">Submissions are reviewed before being added to the public calendar. Contact information and private notes are never displayed publicly. No flyer or account required.</p>
+<button class="lfv-primary-cta" type="submit">Submit <span aria-hidden="true">→</span></button>
 </form>
 </main>{% include "_footer.html" %}
 <script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
