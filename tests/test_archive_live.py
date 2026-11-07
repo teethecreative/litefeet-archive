@@ -57,8 +57,11 @@ def test_search_filters_all_records_not_just_first_page(website):
     assert timeline.status_code == 200
     timeline_json = client.get('/archive/api/records?timeline=1').get_json()
     assert timeline_json['total'] >= 20
-    assert all(r['collection'] == 'events' and r['date'] for r in timeline_json['records'])
-    assert timeline_json['records'][0]['date'] >= timeline_json['records'][-1]['date']
+    assert timeline_json['total'] > endpoint['total']
+    assert all(r['kind'] in ('record', 'chapter', 'milestone', 'era') for r in timeline_json['records'])
+    researched = client.get('/archive/api/records?timeline=1&collection=history&q=harlem').get_json()
+    assert researched['total'] >= 2
+    assert all(r['collection'] == 'history' for r in researched['records'])
 
 
 def test_source_specific_event_and_research_pages(website):
