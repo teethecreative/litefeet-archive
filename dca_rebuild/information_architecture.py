@@ -1,6 +1,12 @@
 """Read-only public section organization. Nomination/admin handlers stay intact."""
-from flask import g, request, render_template, redirect
-from dca_rebuild.models import LedgerEra, BetaChangelog
+from datetime import datetime, timedelta
+import hashlib
+import secrets
+from flask import g, request, render_template, redirect, abort, jsonify, session, url_for, flash, current_app
+from dca_rebuild.models import LedgerEra, BetaChangelog, VaultArchiveVerification
+from dca_rebuild.archive_catalog import (
+    COLLECTIONS, PAGE_SIZE, all_records, browse, find_record, listing_payload,
+)
 
 # Stable future catalog; readiness is separate from the intended ordering.
 SECTION_CATALOG = (
@@ -39,8 +45,8 @@ def install_information_architecture(app, ns):
     def vault_site_context():
         content = public_content()
         children = {
-            'archive': [dict(label='Historical collections', href='/archive#collections')] +
-                       ([dict(label='Historical Timeline', href='/archive/timeline')] if content['eras'] else []),
+            'archive': [dict(label='Browse collections', href='/archive#collections'),
+                        dict(label='History & Timeline', href='/archive/timeline')],
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
                        dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
                        dict(label='Historical Results', href='/awards/dancers-choice/2023')],
@@ -77,6 +83,9 @@ def install_information_architecture(app, ns):
                 breadcrumbs.append(dict(label=section['label'], href=section['href']))
             if path.startswith('/awards/dancers-choice') and path != '/awards/dancers-choice':
                 breadcrumbs.append(dict(label='Dancer’s Choice Awards', href='/awards/dancers-choice'))
+            if request.endpoint == 'vault_archive_record':
+                archived = find_record((request.view_args or {}).get('slug', ''))
+                labels['vault_archive_record'] = archived['title'] if archived else 'Archive entry'
             current = labels.get(request.endpoint)
             if current:
                 breadcrumbs.append(dict(label=current, href=None))
@@ -95,19 +104,102 @@ def install_information_architecture(app, ns):
                     vault_program_navigation=program, vault_emit_chrome=emit_chrome,
                     vault_updates=content['updates'], vault_eras=content['eras'], vault_contact=CONTACT)
 
-    def section_page(page):
-        return render_template('vault_section.html', section=page, **public_content())
+    def section_page(page, **extra):
+        return render_template('vault_section.html', section=page,
+                               **public_content(), **extra)
+
+    def archive_page(section):
+        timeline = section == 'timeline'
+        current_page = max(1, request.args.get('page', 1, type=int) or 1)
+        filtered = browse(query=request.args.get('q', ''),
+                          collection=request.args.get('collection', 'all'),
+                          page=current_page, timeline=timeline)
+        return section_page(section, archive_items=filtered['items'],
+                            archive_pagination=filtered, archive_collections=COLLECTIONS,
+                            archive_timeline=timeline,
+                            archive_start_page=current_page)
 
     @app.get('/archive', endpoint='vault_archive')
     def archive():
-        return section_page('archive')
+        return archive_page('archive')
 
     @app.get('/archive/timeline', endpoint='vault_timeline')
     def timeline():
-        if not public_content()['eras']:
-            from flask import abort
+        return archive_page('timeline')
+
+    @app.get('/archive/api/records', endpoint='vault_archive_api')
+    def archive_api():
+        page = max(1, request.args.get('page', 1, type=int) or 1)
+        timeline_only = request.args.get('timeline') == '1'
+        result = browse(query=request.args.get('q', ''),
+                        collection=request.args.get('collection', 'all'),
+                        page=page, timeline=timeline_only)
+        response = jsonify({
+            'records': [listing_payload(x) for x in result['items']],
+            'page': result['page'], 'next_page': result['next_page'],
+            'has_more': result['has_more'], 'total': result['count'],
+        })
+        response.headers['Cache-Control'] = 'public, max-age=120'
+        return response
+
+    @app.get('/archive/records/<slug>', endpoint='vault_archive_record')
+    def archive_record(slug):
+        record = find_record(slug)
+        if record is None:
             abort(404)
-        return section_page('timeline')
+        if 'vault_archive_csrf' not in session:
+            session['vault_archive_csrf'] = secrets.token_urlsafe(32)
+        related_records = [
+            item for item in all_records()
+            if item['slug'] != slug and record.get('series')
+            and item.get('series') == record['series']
+        ][:8]
+        return render_template('archive_record.html', record=record,
+                               related_records=related_records,
+                               archive_csrf=session['vault_archive_csrf'],
+                               **public_content())
+
+    @app.post('/archive/records/<slug>/verify', endpoint='vault_archive_verify')
+    def archive_verify(slug):
+        record = find_record(slug)
+        if not record or not record['can_verify']:
+            abort(404)
+        token = request.form.get('csrf_token') or ''
+        expected = session.get('vault_archive_csrf') or ''
+        if not expected or not secrets.compare_digest(token, expected):
+            abort(400)
+        choice = (request.form.get('choice') or '').strip().lower()
+        if choice not in ('true', 'false', 'debatable'):
+            abort(400)
+        explanation = (request.form.get('explanation') or '').strip()
+        if len(explanation) > 1000:
+            abort(400)
+        if choice != 'debatable':
+            explanation = ''
+        # Opaque signed-cookie pseudonym; no raw IP, email or profile name stored.
+        if 'vault_archive_voter' not in session:
+            session['vault_archive_voter'] = secrets.token_hex(24)
+        seed = str(current_app.secret_key) + ':' + session['vault_archive_voter']
+        visitor_hash = hashlib.sha256(seed.encode('utf-8')).hexdigest()
+        now = datetime.utcnow()
+        with ns['SessionLocal'].begin() as db:
+            existing = db.query(VaultArchiveVerification).filter_by(
+                record_slug=slug, visitor_hash=visitor_hash).first()
+            if existing:
+                # Prevent rapid repeat submissions and vote flooding.
+                if existing.updated_at and now - existing.updated_at < timedelta(seconds=30):
+                    abort(429)
+                existing.vote = choice
+                existing.explanation = explanation or None
+                existing.moderation_status = 'pending'
+                existing.updated_at = now
+            else:
+                db.add(VaultArchiveVerification(
+                    record_slug=slug, visitor_hash=visitor_hash, vote=choice,
+                    explanation=explanation or None, moderation_status='pending',
+                    created_at=now, updated_at=now))
+        flash('Response received for editorial review.', 'archive')
+        return redirect(url_for('vault_archive_record', slug=slug) + '#verification', code=303)
 
     @app.get('/community', endpoint='vault_community')
     def community():

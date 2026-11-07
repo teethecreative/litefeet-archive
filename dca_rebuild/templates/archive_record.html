@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ seo.title if seo else record.title ~ ' | The LiteFeet Vault' }}</title>
+{% include "_seo_head.html" %}
+<link rel="icon" href="{{ url_for('static',filename='favicon.ico') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-editorial-v2.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-identity-phase1.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/archive-v1.css') }}">
+</head>
+<body>
+{% include "_navigation.html" %}
+<main class="vault-section-page lfv-archive-detail" id="archive-record">
+  <div class="lfv-archive-back"><a href="{{ url_for('vault_archive') }}">The Archive</a> <span aria-hidden="true">/</span> {{ record.collection | capitalize }}</div>
+  <header class="lfv-archive-record-hero">
+    <p class="vault-kicker">{{ 'Battles & Events' if record.collection == 'events' else record.collection | capitalize }}</p>
+    <h1>{{ record.title }}</h1>
+    <div class="lfv-archive-tags">
+      <span>{{ record.date_label }}</span>
+      <span>Research under review</span>
+      {% if record.series %}<span>{{ record.series }}</span>{% endif %}
+    </div>
+    {% if record.date_certainty == 'unconfirmed_year' %}
+    <p class="lfv-archive-caution">The year is inferred from promotional context and still needs confirmation from an original dated source.</p>
+    {% endif %}
+  </header>
+  <div class="lfv-archive-detail-layout">
+    <div class="lfv-archive-detail-body">
+      {% if record.record_type == 'event' %}
+        <section>
+          <h2>Event information</h2>
+          <p>{{ record.description }}</p>
+          <dl class="lfv-archive-facts">
+          {% for label, detail in record.information %}
+            <div><dt>{{ label }}</dt><dd>{{ detail }}</dd></div>
+          {% endfor %}
+          </dl>
+        </section>
+        {% if record.battles %}
+          <section>
+            <h2>Announced lineup</h2>
+            <p>These are advertised matchups and participants. The flyer does not establish which battles were completed or who won.</p>
+            {% for group in record.battles %}
+            <h3>{{ group.section }}</h3>
+            <ol class="lfv-archive-battles">
+              {% for battle in group['items'] %}
+              <li>{{ battle }}</li>
+              {% endfor %}
+            </ol>
+            {% endfor %}
+            {% if record.source_kind == 'legacy' and record.source_details.get('battles') %}
+              {% for battle in record.source_details['battles'] %}
+                {% if battle.get('featuring') %}
+                <p class="lfv-archive-participants"><strong>{{ battle.name }} participants:</strong> {{ battle.featuring | join(', ') }}</p>
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+          </section>
+        {% endif %}
+        {% if record.notes %}
+        <section>
+          <h2>Announcements &amp; research notes</h2>
+          <ul class="lfv-archive-notes">{% for note in record.notes %}<li>{{ note }}</li>{% endfor %}</ul>
+        </section>
+        {% endif %}
+      {% elif record.record_type == 'award_archive' %}
+        <section>
+          <h2>Historical award records</h2>
+          <p>{{ record.description }}</p>
+          <dl class="lfv-archive-facts">
+            {% for label, detail in record.information %}
+              <div><dt>{{ label }}</dt><dd>{{ detail }}</dd></div>
+            {% endfor %}
+          </dl>
+          <p><a href="{{ url_for('dca_2023_home') }}">Browse the complete August 2023 nominees and winning entries <span aria-hidden="true">→</span></a></p>
+        </section>
+      {% else %}
+        <section>
+          <h2>{% if record.collection == 'people' %}Documented research{% elif record.collection == 'moves' %}Movement research{% else %}Historical context{% endif %}</h2>
+          <p>{{ record.description }}</p>
+          {% if record.related_to %}<p><strong>Related subjects:</strong> {{ record.related_to }}</p>{% endif %}
+          {% for note in record.research_details %}
+            {% if note.label not in ['Claim Text','Move Origin / Context','Known For','Dancer Name / Alias','Move / Style Name','Archive Note'] %}
+            <div class="lfv-archive-research-detail">
+              <strong>{{ note.label }}</strong><p>{{ note.value }}</p>
+            </div>
+            {% endif %}
+          {% endfor %}
+        </section>
+      {% endif %}
+      {% if record.can_verify %}
+      <section class="lfv-archive-verify" id="verification">
+        <h2>Community verification</h2>
+        {% if record.claim %}
+          <p class="lfv-archive-claim">{{ record.claim }}</p>
+        {% endif %}
+        {% for message in get_flashed_messages(category_filter=['archive']) %}
+          <p class="lfv-archive-success" role="status">{{ message }}</p>
+        {% endfor %}
+        <form action="{{ url_for('vault_archive_verify',slug=record.slug) }}" method="post" data-archive-verify>
+          <input type="hidden" name="csrf_token" value="{{ archive_csrf }}">
+          <fieldset>
+            <legend>Is this information accurate?</legend>
+            <div class="lfv-archive-choice-row">
+              <label><input type="radio" name="choice" value="true" required> True</label>
+              <label><input type="radio" name="choice" value="false" required> False</label>
+              <label><input type="radio" name="choice" value="debatable" required> Debatable</label>
+            </div>
+            <div class="lfv-archive-explain" data-archive-explain hidden>
+              <label for="archive-reason">Why is this debatable? (Optional)</label>
+              <textarea name="explanation" id="archive-reason" maxlength="1000" rows="2" placeholder="Add context, a correction or a different account…"></textarea>
+            </div>
+          </fieldset>
+          <button type="submit" class="lfv-archive-submit">Submit response</button>
+        </form>
+        <p class="lfv-archive-fineprint">Guest responses are permitted. Explanations remain private pending editorial moderation. Community votes do not establish historical truth.</p>
+      </section>
+      {% endif %}
+    </div>
+    <aside class="lfv-archive-source-panel" aria-label="Sources and record status">
+      <h2>Source &amp; provenance</h2>
+      <p><strong>Current status:</strong> Research under review</p>
+      <p><strong>Record source:</strong> {{ record.source_label }}</p>
+      {% if record.source_url %}
+        <p><a href="{{ record.source_url }}" target="_blank" rel="noopener noreferrer">View the original linked source <span aria-hidden="true">↗</span></a></p>
+      {% else %}
+        <p>Source material is held in the archive research files. Original flyer images are not published here yet.</p>
+      {% endif %}
+      <p>Names, dates and planned battle lineups can be corrected as additional reliable evidence becomes available.</p>
+      <div class="lfv-archive-redirect">
+        <a href="{{ url_for('vault_community') }}#contribute">Submit a source or correction <span aria-hidden="true">→</span></a>
+        <a href="{{ url_for('vault_timeline') }}">Browse the timeline <span aria-hidden="true">→</span></a>
+      </div>
+    </aside>
+  </div>
+  {% if related_records %}
+  <section class="lfv-archive-related" aria-labelledby="archive-related-heading">
+    <h2 id="archive-related-heading">Related records</h2>
+    <div class="lfv-archive-related-links">{% for related in related_records %}
+      <a href="{{ url_for('vault_archive_record',slug=related.slug) }}">{{ related.title }} <span aria-hidden="true">→</span></a>
+    {% endfor %}</div>
+  </section>
+  {% endif %}
+</main>
+{% include "_footer.html" %}
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+<script defer src="{{ url_for('static',filename='js/archive-v1.js') }}"></script>
+</body></html>

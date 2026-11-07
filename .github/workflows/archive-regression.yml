@@ -1,0 +1,33 @@
+name: Vault archive regression
+
+on:
+  pull_request:
+    paths:
+      - 'dca_rebuild/**'
+      - 'tests/**'
+      - '.github/workflows/archive-regression.yml'
+  workflow_dispatch:
+
+jobs:
+  archive-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pytest
+      - name: Check source syntax
+        run: python -m compileall -q dca_rebuild
+      - name: Run archive and public regression tests
+        env:
+          TEST_BROWSER: '0'
+          DCA_SECRET_KEY: github-actions-archive-testing-secret
+          DATABASE_URL: sqlite:///vault-archive-checks.db
+        run: |
+          python -m pytest -q tests/test_archive_live.py tests/test_information_architecture.py tests/test_phase1_identity.py

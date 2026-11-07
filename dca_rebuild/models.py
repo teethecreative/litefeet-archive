@@ -824,3 +824,25 @@ class LedgerPageView(Base):
         DateTime, nullable=False, default=datetime.utcnow, index=True
     )
     is_new_visit = Column(Boolean, nullable=False, default=False)
+
+
+# ============================================================
+# LITEFEET VAULT — MODERATED ARCHIVE VERIFICATION
+# Responses are private until editorial review. No identity, email, or raw IP.
+# Separate from all DCA and historical awards tables.
+# ============================================================
+
+class VaultArchiveVerification(Base):
+    __tablename__ = "vault_archive_verifications"
+    __table_args__ = (
+        UniqueConstraint("record_slug", "visitor_hash",
+                         name="uq_vault_archive_record_visitor"),
+    )
+    id = Column(Integer, primary_key=True)
+    record_slug = Column(String(255), nullable=False, index=True)
+    visitor_hash = Column(String(64), nullable=False)
+    vote = Column(String(16), nullable=False)
+    explanation = Column(Text, nullable=True)
+    moderation_status = Column(String(20), nullable=False, default="pending", index=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
