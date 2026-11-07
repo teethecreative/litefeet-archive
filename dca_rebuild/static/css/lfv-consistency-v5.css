@@ -270,3 +270,50 @@ html.lfv-sitewide .lfv-unified-row-links>details>summary{
   padding:14px 21px!important;gap:13px!important;min-height:46px!important;
  }
 }
+
+
+/* Primary CTA contract: the founder's READ MORE and the featured awards action
+   must have exactly the same padding, rounding, weight and text/arrow spacing.
+   Explicitly scoped to .lfv-primary-cta to override older letter-link rules. */
+html.lfv-sitewide #vault-home a.lfv-primary-cta,
+html.lfv-sitewide #vault-home a.lfv-primary-cta:link,
+html.lfv-sitewide #vault-home a.lfv-primary-cta:visited {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 20px !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  min-height: 48px !important;
+  padding: 15px 26px !important;
+  margin-top: 0;
+  background: #c9a52b !important;
+  color: #091b36 !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  box-shadow: none !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  font-weight: 850 !important;
+  font-size: clamp(.83rem, 1.16vw, 1rem) !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0 !important;
+  text-transform: uppercase !important;
+  white-space: normal !important;
+}
+html.lfv-sitewide #vault-home a.lfv-primary-cta:hover {
+  background: #d6b445 !important;
+  color: #091b36 !important;
+}
+html.lfv-sitewide #vault-home a.lfv-primary-cta:focus-visible {
+  outline: 3px solid var(--lfv-ink) !important;
+  outline-offset: 3px !important;
+}
+@media (max-width: 600px) {
+  html.lfv-sitewide #vault-home a.lfv-primary-cta {
+    min-height: 46px !important;
+    padding: 14px 21px !important;
+    gap: 13px !important;
+  }
+}
