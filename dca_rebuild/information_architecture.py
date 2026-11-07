@@ -104,7 +104,7 @@ def install_information_architecture(app, ns):
                        dict(label='Contribute historical records', href='/awards/litefeet-awards#contribute')]
         return dict(vault_navigation=navigation, vault_breadcrumbs=breadcrumbs,
                     vault_program_navigation=program, vault_emit_chrome=emit_chrome,
-                    vault_upcoming_calendar=upcoming_calendar(),
+                    vault_upcoming_calendar=upcoming_calendar(session_factory=ns['SessionLocal']),
                     vault_site_updates=PUBLIC_SITE_UPDATES,
                     vault_updates=content['updates'], vault_eras=content['eras'], vault_contact=CONTACT)
 
