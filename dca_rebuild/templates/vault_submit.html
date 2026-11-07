@@ -18,37 +18,37 @@
 <input type="hidden" name="csrf_token" value="{{ submit_csrf }}">
 <div class="lfv-submit-trap" aria-hidden="true"><label>WEBSITE <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
 <div class="lfv-submit-two">
-<label>WHAT ARE YOU SHARING? <select name="gathering_type" required><option value="">CHOOSE ONE</option>
+<label>What are you sharing? <select name="gathering_type" required><option value="">Choose one</option>
 {% for value,label in submission_types %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
 </select></label>
-<label>NAME / TITLE <input name="title" maxlength="240" placeholder="WHAT IS IT CALLED?" required></label>
+<label>Name / title <input name="title" maxlength="240" placeholder="What is it called?" required></label>
 </div>
 <div class="lfv-submit-two">
-<label>START DATE <input type="date" name="start_date" required></label>
-<label>END DATE <span class="lfv-submit-optional">OPTIONAL</span><input type="date" name="end_date"></label>
+<label>Start date <input type="date" name="start_date" required></label>
+<label>End date <span class="lfv-submit-optional">Optional</span><input type="date" name="end_date"></label>
 </div>
 <div class="lfv-submit-two">
-<label>START TIME <span class="lfv-submit-optional">OPTIONAL</span><input type="time" name="start_time"></label>
-<label>END TIME <span class="lfv-submit-optional">OPTIONAL</span><input type="time" name="end_time"></label>
+<label>Start time <span class="lfv-submit-optional">Optional</span><input type="time" name="start_time"></label>
+<label>End time <span class="lfv-submit-optional">Optional</span><input type="time" name="end_time"></label>
 </div>
 <div class="lfv-submit-two">
-<label>LOCATION / VENUE <span class="lfv-submit-optional">OPTIONAL</span><input name="venue" maxlength="240" placeholder="VENUE OR MEETING PLACE"></label>
-<label>CITY / BOROUGH <span class="lfv-submit-optional">OPTIONAL</span><input name="city" maxlength="120" placeholder="HARLEM, BRONX, BROOKLYN…"></label>
+<label>Location / venue <span class="lfv-submit-optional">Optional</span><input name="venue" maxlength="240" placeholder="Venue or meeting place"></label>
+<label>City / borough <span class="lfv-submit-optional">Optional</span><input name="city" maxlength="120" placeholder="HARLEM, BRONX, BROOKLYN…"></label>
 </div>
-<label>STREET ADDRESS <span class="lfv-submit-optional">OPTIONAL</span><input name="address" maxlength="350" placeholder="IF APPLICABLE"></label>
-<label class="lfv-submit-check"><input type="checkbox" name="virtual" value="1"> THIS IS ONLINE / VIRTUAL</label>
+<label>Street address <span class="lfv-submit-optional">Optional</span><input name="address" maxlength="350" placeholder="If applicable"></label>
+<label class="lfv-submit-check"><input type="checkbox" name="virtual" value="1"> This is online / virtual</label>
 <div class="lfv-submit-two">
-<label>HOST / ORGANIZER <span class="lfv-submit-optional">OPTIONAL</span><input name="hosts" maxlength="400" placeholder="WHO'S PUTTING IT TOGETHER?"></label>
-<label>ADMISSION <span class="lfv-submit-optional">OPTIONAL</span><input name="admission" maxlength="160" placeholder="FREE, $10, DONATION…"></label>
+<label>Host / organizer <span class="lfv-submit-optional">Optional</span><input name="hosts" maxlength="400" placeholder="Who's putting it together?"></label>
+<label>Admission <span class="lfv-submit-optional">Optional</span><input name="admission" maxlength="160" placeholder="Free, $10, donation…"></label>
 </div>
-<label>DETAILS <span class="lfv-submit-optional">OPTIONAL</span><textarea name="description" maxlength="3000" rows="3" placeholder="WHAT SHOULD PEOPLE KNOW?"></textarea></label>
-<label>EVENT / REGISTRATION / SOURCE LINK <span class="lfv-submit-optional">OPTIONAL</span><input type="url" name="link" maxlength="1200" placeholder="HTTPS://…"></label>
-<details class="lfv-submit-more"><summary>CONTACT & ADDITIONAL NOTES (OPTIONAL)</summary>
+<label>Details <span class="lfv-submit-optional">Optional</span><textarea name="description" maxlength="3000" rows="3" placeholder="What should people know?"></textarea></label>
+<label>Event / registration / source link <span class="lfv-submit-optional">Optional</span><input type="url" name="link" maxlength="1200" placeholder="HTTPS://…"></label>
+<details class="lfv-submit-more"><summary>Contact & additional notes (optional)</summary>
 <div class="lfv-submit-two">
-<label>CONTACT NAME <input name="contact_name" maxlength="160"></label>
-<label>EMAIL <input type="email" name="contact_email" maxlength="255" placeholder="FOR FOLLOW-UP ONLY"></label>
+<label>Contact name <input name="contact_name" maxlength="160"></label>
+<label>Email <input type="email" name="contact_email" maxlength="255" placeholder="For follow-up only"></label>
 </div>
-<label>ADDITIONAL NOTES <textarea name="additional_notes" maxlength="2000" rows="3" placeholder="ANYTHING THE VAULT SHOULD REVIEW?"></textarea></label>
+<label>Additional notes <textarea name="additional_notes" maxlength="2000" rows="3" placeholder="Anything the Vault should review?"></textarea></label>
 </details>
 <p class="lfv-submit-privacy">Submissions are reviewed before being added to the public calendar. Contact information and private notes are never displayed publicly. No flyer or account required.</p>
 <button class="lfv-primary-cta" type="submit">Submit <span aria-hidden="true">→</span></button>
