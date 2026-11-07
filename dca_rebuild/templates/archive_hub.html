@@ -56,12 +56,12 @@
 <section class="lfv-people-cloud-section" aria-labelledby="people-cloud-title">
   <div class="lfv-people-cloud-heading">
     <h2 id="people-cloud-title">FEATURED PEOPLE &amp; CREWS</h2>
-    <p>UP TO 20 PROFILES FROM THE ARCHIVE. THE MORE OFTEN A NAME APPEARS IN DOCUMENTED RECORDS, THE LARGER IT SHOWS. SELECT A NAME TO VIEW THE PROFILE.</p>
+    <p>Explore up to 20 featured profiles. Names that appear more often in documented records are larger. Select a name to view its profile.</p>
   </div>
   <nav class="lfv-people-wordcloud" aria-label="People and crew profiles">
     {% for person in people_cloud %}
     <a class="lfv-people-word" href="{{ url_for('vault_archive_record',slug=person.slug) }}"
-       style="--word-weight:{{ (person.weight if person.weight < 7 else 7) }}"
+       style="--word-size:{{ (1.0 + ((person.weight if person.weight < 8 else 8) * 0.22)) | round(2) }}rem"
        title="{{ person.full_name }} · {{ person.mentions }} related archive mentions">
        {{ person.title }}
     </a>
