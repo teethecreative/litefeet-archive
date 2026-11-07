@@ -188,3 +188,85 @@ html.lfv-sitewide #vault-section-timeline .lfv-archive-pagination>p{font-size:.7
  html.lfv-sitewide #vault-section-timeline .lfv-unified-search input{flex-basis:100%}
  html.lfv-sitewide #vault-section-timeline .lfv-unified-search select{flex:1 1 auto}
 }
+
+
+/* V5.1 / user-approved CTA reference — same gold, rounded shape and comfortable inset.
+   This applies to public CONTENT actions only. Drawer navigation, tabs, filters,
+   category disclosures, footer links and utility icon toggles retain their roles. */
+html.lfv-sitewide :is(main, .lfv-about-page, .vault-section-page) :is(
+ a.lfv3-button,
+ a.lfv3-button-gold,
+ a.lfv1-button,
+ a.lf9e-primary,
+ a.lf9e-standings-action,
+ a.lf9e-secondary,
+ a.lfv5-minimal-action,
+ a.lfv4-update-arrow,
+ a[class~="button"],
+ a[class~="btn"],
+ button.lf9e-primary,
+ button.lf9e-secondary,
+ button.lf9e-add,
+ button[type="submit"],
+ input[type="submit"],
+ .lfv-archive-pagination > button
+):not(.lfv-menu-section):not(.lfv-menu-back):not([role="tab"]){
+ box-sizing:border-box!important;
+ display:inline-flex!important;
+ align-items:center!important;
+ justify-content:center!important;
+ gap:20px!important;
+ width:fit-content!important;
+ max-width:100%!important;
+ min-height:48px!important;
+ padding:15px 26px!important;
+ border:0!important;
+ border-radius:11px!important;
+ background:#c9a52b!important;
+ color:#091b36!important;
+ box-shadow:none!important;
+ text-decoration:none!important;
+ text-align:center!important;
+ font-weight:850!important;
+ font-size:clamp(.83rem,1.16vw,1rem)!important;
+ line-height:1.35!important;
+ letter-spacing:0!important;
+ text-transform:uppercase!important;
+ white-space:normal!important;
+ cursor:pointer;
+}
+html.lfv-sitewide :is(main, .lfv-about-page, .vault-section-page) :is(
+ a.lfv3-button,a.lfv3-button-gold,a.lfv1-button,a.lf9e-primary,
+ a.lf9e-standings-action,a.lf9e-secondary,a.lfv5-minimal-action,
+ a.lfv4-update-arrow,a[class~="button"],a[class~="btn"],
+ button.lf9e-primary,button.lf9e-secondary,button.lf9e-add,
+ button[type="submit"],input[type="submit"]
+):hover:not(:disabled){
+ background:#d6b445!important;color:#091b36!important;
+}
+html.lfv-sitewide :is(main, .lfv-about-page, .vault-section-page) :is(
+ a.lfv3-button,a.lfv3-button-gold,a.lfv1-button,a.lf9e-primary,
+ a.lf9e-standings-action,a.lf9e-secondary,a.lfv5-minimal-action,
+ a.lfv4-update-arrow,a[class~="button"],a[class~="btn"],
+ button.lf9e-primary,button.lf9e-secondary,button.lf9e-add,
+ button[type="submit"],input[type="submit"]
+):is(:focus-visible){
+ outline:3px solid var(--lfv-ink)!important;
+ outline-offset:3px!important;
+}
+/* Intentional compact categories and navigation remain rows, not oversized CTAs. */
+html.lfv-sitewide .lf9e .lfv5-category-disclosure>summary,
+html.lfv-sitewide .lfv-unified-expand>summary,
+html.lfv-sitewide .lfv-unified-row-links>details>summary{
+ background:transparent!important;border-radius:0!important;
+}
+/* Do not force decorative in-content labels or regular links into buttons. */
+@media(max-width:600px){
+ html.lfv-sitewide :is(main,.lfv-about-page,.vault-section-page) :is(
+ a.lfv3-button,a.lfv3-button-gold,a.lfv1-button,a.lf9e-primary,
+ a.lf9e-secondary,a.lf9e-standings-action,a.lfv5-minimal-action,
+ button.lf9e-primary,button.lf9e-secondary,button[type="submit"]
+ ){
+  padding:14px 21px!important;gap:13px!important;min-height:46px!important;
+ }
+}
