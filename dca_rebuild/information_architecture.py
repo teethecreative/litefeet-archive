@@ -98,8 +98,7 @@ def install_information_architecture(app, ns):
                 breadcrumbs = []
         if path.startswith('/awards/dancers-choice'):
             program = [dict(label='2026', href='/awards/dancers-choice/2026'),
-                       dict(label='2023 archive', href='/awards/dancers-choice/2023'),
-                       dict(label='Category results', href='/awards/dancers-choice/category-voting')]
+                       dict(label='2023', href='/awards/dancers-choice/2023')]
         elif path.startswith('/awards/litefeet-awards'):
             program = [dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
                        dict(label='Contribute historical records', href='/awards/litefeet-awards#contribute')]
