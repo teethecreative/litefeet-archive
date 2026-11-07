@@ -104,3 +104,101 @@ html.lfv-sitewide main.lf9e-intro-page{padding:20px 0 44px;max-width:960px!impor
 html.lfv-sitewide main#nominations.lf9e-intro-page>.lf9e-introduction{border:0;padding:0;background:transparent;margin:0}
 .lf9e-intro-page .lf-nom-eyebrow{font-size:.75rem;margin:0 0 10px}
 .lf9e-introduction .lf9e-email-form{margin-top:16px;gap:10px}
+
+/* Nomination-first category presentation: no oversized gold suggestion cards. */
+html.lfv-sitewide main.lf9e .lf9e-category-title{
+  text-transform:uppercase;font-size:clamp(1.8rem,5vw,3.1rem)!important;
+  line-height:1.14!important;letter-spacing:-.035em!important;
+}
+html.lfv-sitewide main.lf9e .lf9e-nominate-first{
+  padding:18px 0 22px!important;margin:0!important;
+  border:0!important;background:transparent!important;
+}
+html.lfv-sitewide main.lf9e .lf9e-nominate-eyebrow{
+  margin:0 0 6px!important;font-size:.73rem!important;
+  font-weight:850;letter-spacing:.09em;color:var(--lfv-gold)!important;
+}
+html.lfv-sitewide main.lf9e .lf9e-nominate-first h2{
+  margin:0 0 10px!important;font-size:clamp(1.35rem,2.5vw,1.9rem)!important;
+  letter-spacing:-.028em!important;line-height:1.15!important;
+}
+html.lfv-sitewide main.lf9e .lf9e-nominate-first>p:not(.lf9e-nominate-eyebrow){
+  font-size:.9rem!important;line-height:1.52!important;
+  max-width:650px;margin:0 0 15px!important;color:var(--lfv-muted)!important;
+}
+html.lfv-sitewide main.lf9e .lf9e-nominate-first .lf9e-nominate-link,
+html.lfv-sitewide main.lf9e .lf9e-nominate-first .lf9e-nominate-link:link{
+  display:inline-flex!important;align-items:center;gap:14px;
+  background:var(--lfv-gold)!important;color:var(--lfv-navy)!important;
+  border:0!important;box-shadow:none!important;
+  padding:12px 18px!important;margin:0!important;
+  min-height:44px!important;border-radius:4px!important;
+  font-size:.9rem!important;font-weight:850!important;text-decoration:none!important;
+}
+html.lfv-sitewide main.lf9e .lf9e-suggestions-compact{
+  border-top:1px solid var(--lfv-line)!important;
+  border-bottom:1px solid var(--lfv-line)!important;
+  margin:14px 0 22px!important;padding:0!important;
+  background:transparent!important;
+}
+html.lfv-sitewide main.lf9e .lf9e-suggestions-compact>summary{
+  cursor:pointer;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:11px 0!important;font-size:.85rem!important;
+  color:var(--lfv-ink)!important;font-weight:850;list-style:none;
+}
+html.lfv-sitewide main.lf9e .lf9e-suggestions-compact>summary::-webkit-details-marker{display:none}
+html.lfv-sitewide main.lf9e .lf9e-suggestions-compact>summary::before{
+  content:'+';color:var(--lfv-gold);font-size:1.1rem;line-height:1;
+}
+html.lfv-sitewide main.lf9e .lf9e-suggestions-compact[open]>summary::before{content:'−'}
+html.lfv-sitewide main.lf9e .lf9e-suggestions-compact>summary span{
+  margin-left:auto;color:var(--lfv-muted)!important;
+  font-weight:600!important;font-size:.72rem!important;
+}
+html.lfv-sitewide main.lf9e .lf9e-suggestions-compact .lf9e-suggestion-list{
+  padding:0!important;margin:0 0 10px!important;list-style:none;
+}
+html.lfv-sitewide main.lf9e .lf9e-suggestions-compact .lf9e-suggestion-list li{
+  padding:0!important;margin:0!important;
+  border-top:1px solid var(--lfv-line)!important;
+  border-bottom:0!important;
+}
+html.lfv-sitewide main.lf9e .lf9e-suggestions-compact .lf9e-suggestion-list a,
+html.lfv-sitewide main.lf9e .lf9e-suggestions-compact .lf9e-suggestion-list a:link{
+  display:flex!important;align-items:center!important;justify-content:space-between;
+  flex-direction:row!important;gap:8px;
+  background:transparent!important;color:var(--lfv-ink)!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  padding:10px 0!important;min-height:0!important;
+  text-decoration:none!important;font-size:.8rem!important;
+}
+html.lfv-sitewide main.lf9e .lf9e-suggestions-compact .lf9e-suggestion-list a strong{
+  font-size:.84rem!important;line-height:1.35!important;font-weight:750!important;
+  text-transform:uppercase!important;
+}
+html.lfv-sitewide main.lf9e .lf9e-suggestions-compact .lf9e-suggestion-list a span{
+  color:var(--lfv-muted)!important;font-size:.69rem!important;white-space:nowrap;
+}
+html.lfv-sitewide main.lf9e .lf9e-name-check{
+  border-left:3px solid var(--lfv-gold);
+  padding:10px!important;margin:0!important;
+  font-size:.8rem!important;line-height:1.45!important;
+  color:var(--lfv-ink)!important;background:var(--lfv-surface-muted);
+}
+html.lfv-sitewide main.lf9e .lf9e-distinct-confirm{
+  display:flex!important;align-items:start;gap:10px!important;
+  font-size:.76rem!important;font-weight:700!important;
+  padding:8px 0!important;
+}
+html.lfv-sitewide main.lf9e .lf9e-distinct-confirm input{
+  width:auto!important;margin:2px 0!important;min-width:17px!important;
+}
+html.lfv-sitewide main.lf9e :is(.lf9e-name-check,.lf9e-distinct-confirm)[hidden]{
+  display:none!important;
+}
+@media(max-width:620px){
+  html.lfv-sitewide main.lf9e .lf9e-nominate-first{padding:12px 0 16px!important;}
+  html.lfv-sitewide main.lf9e .lf9e-suggestions-compact .lf9e-suggestion-list a{
+    flex-direction:row!important;align-items:center!important;
+  }
+}
