@@ -13,7 +13,7 @@ html.lfv-sitewide .lfv4-letter-lead>.lfv3-hero-copy{
 html.lfv-sitewide .lfv4-letter-lead .lfv3-eyebrow{
   font-size:.72rem!important;letter-spacing:.12em!important;
 }
-html.lfv-sitewide .lfv4-letter-lead h1{
+html.lfv-sitewide .lfv1-home .lfv1-hero.lfv4-letter-lead h1{
   font-size:clamp(2.2rem,5.2vw,4.65rem)!important;
   line-height:1.06!important;letter-spacing:-.055em!important;
   margin:12px 0 25px!important;max-width:850px!important;
@@ -151,7 +151,7 @@ html.lfv-sitewide .lfv4-contribution-line a{
   html.lfv-sitewide .lfv4-letter-lead .lfv3-hero-copy{
     padding:clamp(23px,6vw,35px)!important;
   }
-  html.lfv-sitewide .lfv4-letter-lead h1{
+  html.lfv-sitewide .lfv1-home .lfv1-hero.lfv4-letter-lead h1{
     font-size:clamp(2.15rem,9vw,3rem)!important;
     margin:10px 0 19px!important;
   }
