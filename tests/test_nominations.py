@@ -238,18 +238,13 @@ def test_category_names_then_suggestions_and_private_details(website, database):
     client = website.test_client(); token = identify(client)
     grid = client.get(PATH).get_data(as_text=True)
     assert 'USE A DIFFERENT EMAIL' not in grid
-    from html.parser import HTMLParser
-    class CategoryText(HTMLParser):
-        def __init__(self):
-            super().__init__(); self.active = False; self.text = []
-        def handle_starttag(self, tag, attrs):
-            if tag == 'article' and dict(attrs).get('data-category-id') == '1': self.active = True
-        def handle_endtag(self, tag):
-            if tag == 'article': self.active = False
-        def handle_data(self, data):
-            if self.active: self.text.append(data.strip())
-    parsed = CategoryText(); parsed.feed(grid)
-    assert ' '.join(filter(None, parsed.text)) == 'Category 1'
+    # Categories are compact disclosures: the name and eligibility are visible
+    # before opening, with nominees nested inside the expandable panel.
+    assert 'data-category-id="1"' in grid
+    assert '<summary>' in grid
+    assert 'Category 1' in grid
+    assert 'AVAILABLE NOW' in grid
+    assert 'lfv5-category-panel' in grid
     client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Suggested Dancer',
                 team='Original Crew', location='Harlem', instagram='dancer.one',
                 reason='A thoughtful nomination.'))
@@ -342,14 +337,14 @@ def test_submission_opens_community_standings_not_personal_summary(website, data
 def test_standings_show_all_categories_even_without_nominations(website):
     client = website.test_client()
     before = client.get(PATH + '?view=results').get_data(as_text=True)
-    assert before.count('class="lf9e-standings-category"') == 27
-    assert before.count('No nominations yet.') == 27
+    assert before.count('class="lf9e-standings-category lfv5-category-disclosure"') == 27
+    assert before.count('NO NOMINATIONS YET.') == 27
     assert 'id="standings-25"' in before and 'id="standings-27"' in before
     token = identify(client)
     client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One'))
     after = client.get(PATH + '?view=results').get_data(as_text=True)
-    assert after.count('class="lf9e-standings-category"') == 27
-    assert after.count('No nominations yet.') == 26
+    assert after.count('class="lf9e-standings-category lfv5-category-disclosure"') == 27
+    assert after.count('NO NOMINATIONS YET.') == 26
     assert 'Dancer One' in after and '</a></th><td>1</td>' in after
 
 
