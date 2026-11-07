@@ -6,6 +6,7 @@ from flask import g, request, render_template, redirect, abort, jsonify, session
 from dca_rebuild.models import LedgerEra, BetaChangelog, VaultArchiveVerification
 from dca_rebuild.public_site_updates import PUBLIC_SITE_UPDATES
 from dca_rebuild.archive_history_guide import load_history_guide
+from dca_rebuild.timeline_catalog import timeline_browse, timeline_payload
 from dca_rebuild.archive_catalog import (
     COLLECTIONS, PAGE_SIZE, all_records, browse, find_record,
     listing_payload, public_record,
@@ -116,9 +117,10 @@ def install_information_architecture(app, ns):
     def archive_page(section):
         timeline = section == 'timeline'
         current_page = max(1, request.args.get('page', 1, type=int) or 1)
-        filtered = browse(query=request.args.get('q', ''),
-                          collection=request.args.get('collection', 'all'),
-                          page=current_page, timeline=timeline)
+        search = dict(query=request.args.get('q', ''),
+                      collection=request.args.get('collection', 'all'),
+                      page=current_page)
+        filtered = timeline_browse(**search) if timeline else browse(**search)
         return section_page(section, archive_items=filtered['items'],
                             archive_pagination=filtered, archive_collections=COLLECTIONS,
                             archive_timeline=timeline,
@@ -141,11 +143,12 @@ def install_information_architecture(app, ns):
     def archive_api():
         page = max(1, request.args.get('page', 1, type=int) or 1)
         timeline_only = request.args.get('timeline') == '1'
-        result = browse(query=request.args.get('q', ''),
-                        collection=request.args.get('collection', 'all'),
-                        page=page, timeline=timeline_only)
+        search = dict(query=request.args.get('q', ''),
+                      collection=request.args.get('collection', 'all'), page=page)
+        result = timeline_browse(**search) if timeline_only else browse(**search)
         response = jsonify({
-            'records': [listing_payload(x) for x in result['items']],
+            'records': [(timeline_payload(x) if timeline_only else listing_payload(x))
+                        for x in result['items']],
             'page': result['page'], 'next_page': result['next_page'],
             'has_more': result['has_more'], 'total': result['count'],
         })
