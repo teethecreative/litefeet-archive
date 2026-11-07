@@ -218,7 +218,7 @@
         <span>{{ event.status }}</span>
       </article>
     {% else %}
-      <p class="lfv5-calendar-empty">NO UPCOMING EVENTS HAVE BEEN CONFIRMED FOR THE NEXT 30 DAYS. HAVE A FLYER OR AN EVENT TO SHARE? <a href="{{ url_for('vault_community') }}#contribute">SUBMIT AN EVENT →</a></p>
+      <p class="lfv5-calendar-empty">NO UPCOMING GATHERINGS HAVE BEEN LISTED FOR THE NEXT 30 DAYS. KNOW ABOUT A BATTLE, LAB, CLASS OR LINK-UP? <a href="{{ url_for('vault_submit') }}">SUBMIT →</a></p>
     {% endfor %}
     </div>
     <a class="lfv5-minimal-action" href="{{ url_for('vault_timeline') }}">EXPLORE THE FULL TIMELINE <span aria-hidden="true">→</span></a>
