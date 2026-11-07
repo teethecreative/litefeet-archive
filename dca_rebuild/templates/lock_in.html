@@ -1,0 +1,52 @@
+<header class="lock-hero">
+  <p class="vault-kicker">The LiteFeet Card Battle Game</p>
+  <h1>Lock In</h1>
+  <p>Build a round the way you’d build one on the floor. Pick your dancer, find the right track, and put your moves together before you call “locked in.” Tee’s card game brings LiteFeet dancers, producers, teams, and battle spaces to the table.</p>
+  <nav aria-label="Game guide"><a href="#rules">How to play</a> · <a href="#decks">Sample decks</a> · <a href="#practice">Play a round</a> · <a href="#join">Get involved</a></nav>
+</header>
+<section id="rules">
+  <h2>How to play</h2>
+  <ol>
+    <li><strong>Set the battle.</strong> The draft supports 1v1, 2v2 tag teams, and 3v3 teams. Shuffle and cut your 25–50 card decks. Spin the adidas counter. The winner picks the arena and decides who goes first.</li>
+    <li><strong>Build your round.</strong> Start with a dancer and song. For a 1v1, the draft gives each player a seven-card hand. Play a setup like Rev Up or Tone Whop, then lay up to three move cards face down. Arena, producer, song, and trick cards can change how your round scores.</li>
+    <li><strong>Lock in.</strong> Say “locked in” before your opponent begins. In the draft, they can call out a missed lock-in for a 10 Battle Point penalty. Compare points to decide the round. Some cards introduce special outcomes, including TKOs.</li>
+  </ol>
+  <p>The full battle rules are in development. The practice round below teaches the move-set phase with its own scoring.</p>
+</section>
+<section id="decks">
+  <h2>Sample decks</h2>
+  <p>Each example contains 25 cards. Tee’s planning document supplies the card types and moves. The pairings and copy counts are practice builds. Both tracks come from Reel Hectic’s Common song submissions.</p>
+  <div class="lock-decks">
+  {% for key, sample in decks.items() %}
+    <article><p class="vault-kicker">{{ sample.dancer }}</p><h3>{{ sample.name }} deck</h3><p>{{ sample.note }}</p>
+      <details><summary>View all 25 cards</summary><ul>
+        <li>Dancer · {{ sample.dancer }} × 1</li><li>Arena · {{ sample.arena }} × 1</li>
+        <li>Producer · Reel Hectic × 1</li><li>Song · {{ sample.song }} × 1</li>
+        <li>Setup · {{ sample.setup }} × 3</li>
+        {% for move in sample.moves %}<li>Move · {{ move }} × 3</li>{% endfor %}
+        <li>Trick · {{ sample.trick }} × 3</li><li>Upgrade · Fake out × 3</li>
+      </ul></details>
+      <a href="{{ url_for('vault_lock_in', deck=key) }}#practice">Play the {{ sample.name }} deck</a>
+    </article>
+  {% endfor %}</div>
+</section>
+<section id="practice">
+  <h2>Play a practice round</h2>
+  <p><strong>{{ deck.name }} deck</strong> · {{ deck.dancer }} at {{ deck.arena }} with Reel Hectic’s <i>{{ deck.song }}</i>.</p>
+  <p>You’ve played {{ deck.setup }}. Your opponent locked in three moves for 6 BP. Pick up to three moves from your practice hand. Each earns 2 BP, and {{ deck.favored }} adds a 2 BP deck bonus.</p>
+  <form action="{{ url_for('vault_lock_in') }}#practice" method="get">
+    <input type="hidden" name="deck" value="{{ deck_key }}"><input type="hidden" name="play" value="1">
+    <fieldset><legend>Your move set</legend>
+    {% for move in deck.moves %}<label><input type="checkbox" name="move" value="{{ move }}" {% if move in selected %}checked{% endif %}> {{ move }}</label>{% endfor %}
+    </fieldset><button type="submit">Lock in my moves</button>
+  </form>
+  {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+  {% if result %}<div class="lock-result"><h3>{{ result.outcome }} · {{ result.score }} to 6 BP</h3>
+  <p>{{ selected|join(' + ') }} earned {{ result.base }} BP, plus {{ result.bonus }} BP in deck bonuses.</p>
+  <a href="{{ url_for('vault_lock_in', deck=deck_key) }}#practice">Reset this round</a></div>{% endif %}
+</section>
+<section id="join"><h2>Be part of Lock In</h2>
+  <p>Dancers can pitch five stats, their strongest stat, a signature move, and what it should do in a battle. Producers can send tracks grouped as Common, Rare, and Legendary. You can also suggest an arena, explain a team or song connection, or volunteer to playtest.</p>
+  <p>Email Tee with your LiteFeet name and what you’d like to contribute. Mention if you want to review your card before it’s finalized.</p>
+  <a href="{{ vault_contact.split('?')[0] }}?subject=Lock%20In%20card%20game%20submission">Email Tee about Lock In</a>
+</section>
