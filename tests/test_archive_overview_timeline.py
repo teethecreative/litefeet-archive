@@ -42,7 +42,7 @@ def test_timeline_metadata_and_original_event_reclassification():
     twos = next(group for group in event['battles'] if group['section'] == 'Advertised 2-on-2 battles')
     assert 'Tok City vs Gotham City' in twos['items']
     assert 'Groove Fam vs Lyve Fam' in twos['items']
-    assert record_metadata(event)['meta_parts'] == ('2026', '10', '24', 'EVENTS', 'HypeItUpTV')
+    assert record_metadata(event)['meta_parts'] == ('2026', 'October', '24', 'EVENTS', 'HypeItUpTV')
     unknown = next(row for row in all_timeline_entries()
                    if row['kind'] == 'record' and row['collection'] == 'people')
     assert unknown['meta_parts'][0] == 'YEAR UNKNOWN'
