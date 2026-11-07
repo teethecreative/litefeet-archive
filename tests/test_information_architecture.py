@@ -62,11 +62,13 @@ def test_publication_filters_and_no_data_mutation(website, database):
         assert (db.query(DCACategory).count(),db.query(DCANominationSubmission).count()) == before
 
 
-def test_unpublished_timeline_is_not_promoted(website):
+def test_unpublished_eras_are_not_leaked_into_public_timeline(website):
     client = website.test_client()
-    assert client.get('/archive/timeline').status_code == 404
+    page = client.get('/archive/timeline')
+    assert page.status_code == 200
+    assert 'Chronological timeline' in page.get_data(as_text=True)
     items = navigation(client.get('/').get_data(as_text=True))
-    assert not any(c['href'] == '/archive/timeline' for n in items for c in n['children'])
+    assert any(c['href'] == '/archive/timeline' for n in items for c in n['children'])
     assert 'id="updates"' not in client.get('/community').get_data(as_text=True)
 
 
