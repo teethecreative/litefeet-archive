@@ -35,6 +35,7 @@ PAGES = {
     ),
 }
 PAGES.update({
+    "/archive/lock-in": ("Lock In | The LiteFeet Card Battle Game", "Learn the rules, browse sample decks, play a practice round and contribute to the LiteFeet card game."),
     "/submit": ("Submit a Battle, Lab, Link-Up or Class | The LiteFeet Vault",
                 "Submit an upcoming battle, lab session, link-up, workshop, class or community gathering for review on The LiteFeet Vault."),
     "/submit/thank-you": ("Submission Received | The LiteFeet Vault", "Your community gathering has been submitted for review."),
@@ -57,6 +58,7 @@ PAGES.update({
 # Only advertise curated public entry points. Some linked pages are unfinished.
 SITEMAP_PATHS = (
     "/",
+    "/archive/lock-in",
     "/archive",
     "/archive/timeline",
     "/awards",
