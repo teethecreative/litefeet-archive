@@ -35,16 +35,17 @@
       "source_file": "seed_bodybag_events.py",
       "research_status": "Needs Verification",
       "additional_details": {
+        "event_date": "",
+        "date": "Needs confirmation",
+        "time": "Needs confirmation",
+        "location": "Needs confirmation",
         "battles": [],
-        "event_notes": [
+        "notes": [
           "Missing flyer/info",
           "Battles need confirmation"
         ],
-        "main_event": null,
-        "hosted_by": [],
-        "special_guest_judges": [],
-        "elimination_chamber_match": [],
-        "rules": [],
+        "sequence_order": 1,
+        "series": "Body Bag",
         "confirmation_needed": [
           "Body Bag Vol. 1 details",
           "Date",
@@ -97,6 +98,23 @@
       "source_file": "seed_bodybag_events.py",
       "research_status": "Community Supported",
       "additional_details": {
+        "event_date": "2023-05-27",
+        "date": "May 27, 2023",
+        "time": "6 PM – 10 PM",
+        "entry": "Free admission",
+        "hosted_by": [
+          "Chris Gzz",
+          "Bito",
+          "P.Cole",
+          "Jayway"
+        ],
+        "location": "New Cali",
+        "address": "2026 Third Ave, New York, NY 10029",
+        "food_drinks": "Food & drinks will be sold",
+        "merch": "Body Bag merch will be sold",
+        "producer_note": "Tee will be playing producer challenge beats",
+        "sequence_order": 2,
+        "series": "Body Bag",
         "battles": [
           {
             "name": "Flii Boogie vs Kid Smoove",
@@ -128,19 +146,7 @@
             "name": "Body Bag Cypher Vol. 2",
             "note": "Producer Battle"
           }
-        ],
-        "event_notes": [],
-        "main_event": null,
-        "hosted_by": [
-          "Chris Gzz",
-          "Bito",
-          "P.Cole",
-          "Jayway"
-        ],
-        "special_guest_judges": [],
-        "elimination_chamber_match": [],
-        "rules": [],
-        "confirmation_needed": []
+        ]
       }
     },
     {
@@ -179,6 +185,18 @@
       "source_file": "seed_bodybag_events.py",
       "research_status": "Community Supported",
       "additional_details": {
+        "event_date": "2023-08-18",
+        "date": "August 18, 2023",
+        "time": "6 PM – 10 PM",
+        "entry": "Free admission",
+        "location": "611 East 13th St",
+        "merch": "Merch will be available",
+        "rules": [
+          "No food or drinks allowed in the gym",
+          "Only sneakers allowed"
+        ],
+        "sequence_order": 3,
+        "series": "Body Bag",
         "battles": [
           {
             "name": "E-Solo vs D Rillz",
@@ -199,17 +217,7 @@
           {
             "name": "Body Bag Cypher Vol. 3"
           }
-        ],
-        "event_notes": [],
-        "main_event": null,
-        "hosted_by": [],
-        "special_guest_judges": [],
-        "elimination_chamber_match": [],
-        "rules": [
-          "No food or drinks allowed in the gym",
-          "Only sneakers allowed"
-        ],
-        "confirmation_needed": []
+        ]
       }
     },
     {
@@ -246,6 +254,17 @@
       "source_file": "seed_bodybag_events.py",
       "research_status": "Community Supported",
       "additional_details": {
+        "event_date": "2024-02-23",
+        "date": "February 23, 2024",
+        "time": "6 PM – 10 PM",
+        "entry": "Free admission",
+        "venue": "Studio 259",
+        "location": "Studio 259",
+        "address": "259 East 134th St, Bronx, NY 10470",
+        "message": "Please come drama free",
+        "ig_note": "Follow @litefeetawards for all details",
+        "sequence_order": 4,
+        "series": "Body Bag",
         "battles": [
           {
             "name": "Bomb Squad vs 2 Crafty"
@@ -262,14 +281,7 @@
           {
             "name": "Tre Buckz vs Reem Lite"
           }
-        ],
-        "event_notes": [],
-        "main_event": null,
-        "hosted_by": [],
-        "special_guest_judges": [],
-        "elimination_chamber_match": [],
-        "rules": [],
-        "confirmation_needed": []
+        ]
       }
     },
     {
@@ -315,6 +327,28 @@
       "source_file": "seed_bodybag_events.py",
       "research_status": "Community Supported",
       "additional_details": {
+        "event_date": "",
+        "date": "Needs confirmation",
+        "time": "4 PM – 9 PM sharp",
+        "battles_start": "4:30 PM sharp",
+        "host": "Jada Chanell",
+        "location": "Sakura Park, Harlem, NY",
+        "address": "500 Riverside Dr, New York, NY",
+        "message": "We Outsideeeeeee",
+        "sequence_order": 5,
+        "series": "Body Bag",
+        "confirmation_needed": [
+          "Bodybag 5 date/year"
+        ],
+        "rules": [
+          "Each round is 1 min 30 secs",
+          "It is a 3 twerk rule",
+          "Give the dancer space on the dance floor",
+          "Everybody come and have fun",
+          "Leave all the drama home",
+          "Body Bag Cypher will happen",
+          "All of these battles will be on YouTube"
+        ],
         "battles": [
           {
             "name": "M Nauti vs Trey Buckz"
@@ -334,23 +368,6 @@
           {
             "name": "Bodybag Cypher"
           }
-        ],
-        "event_notes": [],
-        "main_event": null,
-        "hosted_by": [],
-        "special_guest_judges": [],
-        "elimination_chamber_match": [],
-        "rules": [
-          "Each round is 1 min 30 secs",
-          "It is a 3 twerk rule",
-          "Give the dancer space on the dance floor",
-          "Everybody come and have fun",
-          "Leave all the drama home",
-          "Body Bag Cypher will happen",
-          "All of these battles will be on YouTube"
-        ],
-        "confirmation_needed": [
-          "Bodybag 5 date/year"
         ]
       }
     },
@@ -392,6 +409,16 @@
       "source_file": "seed_bodybag_events.py",
       "research_status": "Community Supported",
       "additional_details": {
+        "event_date": "2024-08-23",
+        "date": "Friday, August 23, 2024",
+        "time": "6 PM – Till",
+        "host": "Jada Chanell",
+        "location": "Sakura Park, Harlem, NY",
+        "address": "500 Riverside Dr, New York, NY 10027",
+        "note": "Venue can possibly change due to weather",
+        "message": "Come through drama free",
+        "sequence_order": 6,
+        "series": "Body Bag",
         "battles": [
           {
             "name": "E Chakra vs Lexii",
@@ -422,14 +449,7 @@
             "name": "BSN vs Reel Hectic",
             "note": "Producer Battle"
           }
-        ],
-        "event_notes": [],
-        "main_event": null,
-        "hosted_by": [],
-        "special_guest_judges": [],
-        "elimination_chamber_match": [],
-        "rules": [],
-        "confirmation_needed": []
+        ]
       }
     },
     {
@@ -463,6 +483,17 @@
       "source_file": "seed_bodybag_events.py",
       "research_status": "Community Supported",
       "additional_details": {
+        "event_date": "2025-02-22",
+        "date": "February 22, 2025",
+        "time": "6 PM – 10 PM",
+        "venue": "Ripley Grier Studios",
+        "location": "Ripley Grier Studios",
+        "address": "520 8th Avenue, New York, NY 10018",
+        "entry": "$10 till 8 PM, $25 after",
+        "requirement": "Must have ID to enter",
+        "host": "Jada Chanell",
+        "sequence_order": 7,
+        "series": "Body Bag",
         "battles": [
           {
             "name": "E Solo vs Noah Lot"
@@ -486,14 +517,7 @@
               "Playdoh"
             ]
           }
-        ],
-        "event_notes": [],
-        "main_event": null,
-        "hosted_by": [],
-        "special_guest_judges": [],
-        "elimination_chamber_match": [],
-        "rules": [],
-        "confirmation_needed": []
+        ]
       }
     },
     {
@@ -529,6 +553,17 @@
       "source_file": "seed_bodybag_events.py",
       "research_status": "Community Supported",
       "additional_details": {
+        "event_date": "2025-07-26",
+        "date": "July 26, 2025",
+        "time": "Needs confirmation",
+        "entry": "Needs confirmation",
+        "location": "Sakura Park",
+        "address": "500 Riverside Dr, New York, NY",
+        "sequence_order": 8,
+        "series": "Body Bag",
+        "confirmation_needed": [
+          "Body Bag 8 time and entry"
+        ],
         "battles": [
           {
             "name": "Moon Lite vs Radar"
@@ -543,15 +578,6 @@
             "name": "Money Mase vs Ash Rocket",
             "note": "Krucible Finals"
           }
-        ],
-        "event_notes": [],
-        "main_event": null,
-        "hosted_by": [],
-        "special_guest_judges": [],
-        "elimination_chamber_match": [],
-        "rules": [],
-        "confirmation_needed": [
-          "Body Bag 8 time and entry"
         ]
       }
     },
@@ -590,6 +616,20 @@
       "source_file": "seed_bodybag_events.py",
       "research_status": "Community Supported",
       "additional_details": {
+        "official_title_note": "Flyer/title needs confirmation as Bodybag / Body Bag 9",
+        "event_date": "2025-08-29",
+        "date": "August 29, 2025",
+        "time": "6 PM – 10 PM",
+        "entry": "Free before 8:30 PM, $10 after",
+        "venue": "Pearl Studios",
+        "location": "Pearl Studios",
+        "room": "Room 414",
+        "address": "500 8th Ave, New York, NY",
+        "sequence_order": 9,
+        "series": "Body Bag",
+        "confirmation_needed": [
+          "Whether the August 29, 2025 Pearl Studios event should officially be listed as Body Bag 9"
+        ],
         "battles": [
           {
             "name": "40 Pounds vs Moe Black"
@@ -609,15 +649,6 @@
           {
             "name": "Yaffi vs Redy Rell"
           }
-        ],
-        "event_notes": [],
-        "main_event": null,
-        "hosted_by": [],
-        "special_guest_judges": [],
-        "elimination_chamber_match": [],
-        "rules": [],
-        "confirmation_needed": [
-          "Whether the August 29, 2025 Pearl Studios event should officially be listed as Body Bag 9"
         ]
       }
     },
@@ -665,6 +696,45 @@
       "source_file": "seed_bodybag_events.py",
       "research_status": "Community Supported",
       "additional_details": {
+        "event_date": "2026-04-25",
+        "date": "April 25, 2026",
+        "time": "6 PM – 10 PM",
+        "entry": "$10 before 7:30 PM, $20 after",
+        "venue": "Pearl Studios",
+        "location": "Pearl Studios",
+        "room": "3rd Floor, Room 301",
+        "address": "500 8th Ave, New York, NY 10018",
+        "hosted_by": [
+          "40 Pounds"
+        ],
+        "music_by": [
+          "Juanye"
+        ],
+        "sequence_order": 10,
+        "series": "Body Bag",
+        "main_event": "Jay Wavvy vs Crazy C",
+        "elimination_chamber_match": [
+          "Kid Smoove",
+          "Noah Lot",
+          "Soundcloud",
+          "Sparkz Ra",
+          "Jay Bull",
+          "Cashew",
+          "Moon Lite",
+          "Diggy"
+        ],
+        "bonus_battle": {
+          "name": "Lady Live vs Nae Berry",
+          "note": "One Round of Fire"
+        },
+        "special_guest_judges": [
+          "Spaceman",
+          "Larry Smoove",
+          "Mr Jones",
+          "Kid The Wiz",
+          "P Rockz",
+          "Kid Robot"
+        ],
         "battles": [
           {
             "name": "Jay Wavvy vs Crazy C",
@@ -687,32 +757,7 @@
             "name": "Lady Live vs Nae Berry",
             "note": "One Round of Fire"
           }
-        ],
-        "event_notes": [],
-        "main_event": "Jay Wavvy vs Crazy C",
-        "hosted_by": [
-          "40 Pounds"
-        ],
-        "special_guest_judges": [
-          "Spaceman",
-          "Larry Smoove",
-          "Mr Jones",
-          "Kid The Wiz",
-          "P Rockz",
-          "Kid Robot"
-        ],
-        "elimination_chamber_match": [
-          "Kid Smoove",
-          "Noah Lot",
-          "Soundcloud",
-          "Sparkz Ra",
-          "Jay Bull",
-          "Cashew",
-          "Moon Lite",
-          "Diggy"
-        ],
-        "rules": [],
-        "confirmation_needed": []
+        ]
       }
     },
     {
@@ -747,6 +792,17 @@
       "source_file": "seed_bodybag_events.py",
       "research_status": "Community Supported",
       "additional_details": {
+        "event_date": "2026-04-19",
+        "date": "April 19, 2026",
+        "time": "4 PM – 7 PM",
+        "location": "Bronx, NY",
+        "address": "Purchased entry for location",
+        "entry": "Purchased entry required",
+        "sequence_order": 10.5,
+        "series": "Related / Special Events",
+        "confirmation_needed": [
+          "Whether Smallroom Sundays should be listed as part of the Body Bag-related sequence or kept as a separate related event"
+        ],
         "battles": [
           {
             "name": "Trey Otto vs Tre Buckz"
@@ -759,15 +815,6 @@
             "name": "Nem Lite vs Ty",
             "note": "Ty listed as UK"
           }
-        ],
-        "event_notes": [],
-        "main_event": null,
-        "hosted_by": [],
-        "special_guest_judges": [],
-        "elimination_chamber_match": [],
-        "rules": [],
-        "confirmation_needed": [
-          "Whether Smallroom Sundays should be listed as part of the Body Bag-related sequence or kept as a separate related event"
         ]
       }
     },
@@ -803,6 +850,16 @@
       "source_file": "seed_bodybag_events.py",
       "research_status": "Community Supported",
       "additional_details": {
+        "presented_by": "Body Bag",
+        "event_date": "2026-06-06",
+        "date": "June 6, 2026",
+        "time": "6 PM – 10 PM",
+        "entry": "$10 before 7:30 PM, $20 after",
+        "venue": "New Heat Studios",
+        "location": "New Heat Studios",
+        "address": "2 Prince St, Brooklyn, NY",
+        "sequence_order": 11,
+        "series": "Related / Special Events",
         "battles": [
           {
             "name": "Jada Chanell vs Ty Shotz",
@@ -822,14 +879,7 @@
             "name": "Noah Lot vs D Rillz",
             "note": "Main Event"
           }
-        ],
-        "event_notes": [],
-        "main_event": null,
-        "hosted_by": [],
-        "special_guest_judges": [],
-        "elimination_chamber_match": [],
-        "rules": [],
-        "confirmation_needed": []
+        ]
       }
     }
   ]
