@@ -359,7 +359,7 @@ def test_introduction_lists_process_and_categories_before_email(website):
     assert 'WRITE-IN CATEGORIES' in html
     # Community write-ins have their own searchable page rather than appearing in the Top 25 preview.
     assert 'Category 26' not in html and 'Category 27' not in html
-    assert 'One nomination per category every 24 hours.' in html
+    assert 'Submit one nomination per category every rolling 24 hours.' in html
     assert 'advance to final voting' in html
     assert 'Your previous nominations' not in html
     with client.session_transaction() as sess:
