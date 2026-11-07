@@ -13,7 +13,7 @@ import secrets
 from collections import defaultdict
 from fractions import Fraction
 
-from flask import abort, flash, redirect, render_template, request, session, url_for
+from flask import abort, flash, jsonify, redirect, render_template, request, session, url_for
 from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.exc import IntegrityError
 
@@ -21,7 +21,9 @@ from dca_rebuild.models import (
     Base, DCACategory, DCACategorySuggestionSubmission, DCAReturnCategoryVote,
     DCAEdition, DCANominee, DCANominationSubmission,
 )
-from dca_rebuild.nomination_service import add_nomination
+from dca_rebuild.nomination_service import (
+    add_nomination, canonical_nominee_name, canonical_nominee_key, candidate_matches,
+)
 
 NY = ZoneInfo('America/New_York')
 
@@ -193,9 +195,10 @@ def stages_for(db, edition):
 
 
 def get_counts(db, edition, *, include_pending=False):
-    """Public suggestions include pending names; qualification stays moderated.
+    """Count existing aliases together without deleting or rewriting votes.
 
-    Rejected suggestions remain hidden without deleting any submissions.
+    Only explicitly confirmed aliases are grouped. Other near-matches remain
+    separate pending a human identity check.
     """
     statuses = ('pending', 'approved') if include_pending else ('approved',)
     nominees = (db.query(DCANominee).filter(
@@ -205,21 +208,35 @@ def get_counts(db, edition, *, include_pending=False):
     counts = defaultdict(int)
     supporters = defaultdict(set)
     if nominee_ids:
-        rows = (db.query(DCANominationSubmission.nominee_id, DCANominationSubmission.submitter_hash)
+        rows = (db.query(DCANominationSubmission.nominee_id,
+                         DCANominationSubmission.submitter_hash)
                 .filter(DCANominationSubmission.edition_id == edition.id,
                         DCANominationSubmission.nominee_id.in_(nominee_ids)).all())
         for nid, supporter in rows:
             counts[nid] += 1
             supporters[nid].add(supporter)
-    by_cat = defaultdict(list)
+    grouped = defaultdict(list)
     for n in nominees:
-        by_cat[n.category_id].append(dict(id=n.id, name=n.name, count=counts[n.id]))
+        grouped[(n.category_id, canonical_nominee_key(n.name))].append(n)
+    by_cat = defaultdict(list)
+    category_supporters = defaultdict(set)
+    for (cid, _), matching in grouped.items():
+        # Prefer the canonical ID for new submissions; previous alias IDs
+        # remain linked via the ids list for existing justification records.
+        display, canonical_key = canonical_nominee_name(matching[0].name)
+        matching.sort(key=lambda n: (n.normalized_name != canonical_key, n.id))
+        primary = matching[0]
+        members = [n.id for n in matching]
+        total = sum(counts[nid] for nid in members)
+        by_cat[cid].append(dict(
+            id=primary.id, ids=members, name=display, count=total,
+        ))
+        for nid in members:
+            category_supporters[cid].update(supporters[nid])
     for vals in by_cat.values():
         vals.sort(key=lambda x: (-x['count'], x['name'].casefold()))
-    category_support = {cid: len(set().union(*(supporters[x['id']] for x in vals)))
-                        for cid, vals in by_cat.items()}
+    category_support = {cid: len(people) for cid, people in category_supporters.items()}
     return by_cat, category_support
-
 
 def qualification(db, edition, stages=None):
     if stages is None:
@@ -486,6 +503,36 @@ def install_phase9e(app, ns):
             response.headers['Referrer-Policy'] = 'same-origin'
         return response
 
+    @app.get('/awards/dancers-choice/nominee-name-check')
+    def phase9e_nominee_name_check():
+        """Fast pre-submit duplicate hint, scoped to the verified-email session."""
+        if not session.get('lf9e_recent_hash'):
+            abort(401)
+        name = (request.args.get('name') or '').strip()[:250]
+        cid = request.args.get('category_id', type=int)
+        if not cid or len(name) < 2:
+            return jsonify(matches=[], canonical_name=name, requires_confirmation=False)
+        db = SessionLocal()
+        try:
+            edition = db.query(DCAEdition).filter_by(year=2026).first()
+            if not edition or cid not in {
+                category.id for _, category in stages_for(db, edition)
+            }:
+                abort(404)
+            display, key = canonical_nominee_name(name)
+            matches = candidate_matches(db, category_id=cid, name=name)
+            exact = any(match['type'] == 'existing' for match in matches)
+            return jsonify(
+                matches=matches,
+                canonical_name=display,
+                already_listed=exact,
+                requires_confirmation=not exact and any(
+                    match['type'] == 'similar' for match in matches
+                ),
+            )
+        finally:
+            db.close()
+
     def nomination_view_9e():
         from dca_rebuild.nomination_service import category_history, remaining_seconds, normalize_nominee_name
         db = SessionLocal()
@@ -555,6 +602,12 @@ def install_phase9e(app, ns):
                     normalize_nominee_name(name)
                 except ValueError as exc:
                     abort(400, str(exc))
+                matches = candidate_matches(db, category_id=cid, name=name)
+                if (not any(match['type'] == 'existing' for match in matches)
+                    and any(match['type'] == 'similar' for match in matches)
+                    and request.form.get('confirm_distinct') != '1'):
+                    flash('A similar name already exists. Check the spelling or confirm a different person before submitting.')
+                    return redirect(url_for('dca_nominations_closed', category=cid, nominate=1), code=303)
                 try:
                     nominee, created = add_nomination(db, edition_id=edition.id, category_id=cid,
                                                       name=name, submitter_hash=who, description=reason)
@@ -616,7 +669,7 @@ def install_phase9e(app, ns):
                         abort(404)
                     rows = (db.query(NominationDetail9E)
                             .join(DCANominationSubmission, DCANominationSubmission.id == NominationDetail9E.submission_id)
-                            .filter(DCANominationSubmission.nominee_id == suggestion_id,
+                            .filter(DCANominationSubmission.nominee_id.in_(suggestion.get('ids', [suggestion_id])),
                                     DCANominationSubmission.edition_id == edition.id)
                             .order_by(DCANominationSubmission.submitted_at, DCANominationSubmission.id).all())
                     # Only submitted nominee details; never supporter identity.

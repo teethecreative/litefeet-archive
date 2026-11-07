@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ARCHIVE RESEARCH REVIEW — THE LITEFEET VAULT</title>
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-editorial-v2.css') }}">
+  <style>
+    .lfv-admin-review{width:min(100% - 30px,1120px);margin:35px auto 75px;padding:0;color:var(--lfv-ink)}
+    .lfv-admin-review h1{font-size:clamp(1.7rem,3vw,2.8rem);margin:14px 0 10px}
+    .lfv-admin-review>p{max-width:760px;line-height:1.55;color:var(--lfv-muted)}
+    .lfv-admin-review details{border-top:1px solid var(--lfv-line);padding:0}
+    .lfv-admin-review details:last-child{border-bottom:1px solid var(--lfv-line)}
+    .lfv-admin-review summary{cursor:pointer;display:flex;gap:14px;justify-content:space-between;align-items:start;padding:15px 0}
+    .lfv-admin-review summary strong{font-size:1rem;overflow-wrap:anywhere}
+    .lfv-admin-review summary small{color:var(--lfv-muted);font-size:.72rem}
+    .lfv-admin-review .lfv-admin-review-inner{padding:0 14px 17px;background:var(--lfv-surface);border:1px solid var(--lfv-line)}
+    .lfv-admin-review .lfv-admin-review-inner h2{font-size:.9rem;margin:17px 0 8px}
+    .lfv-admin-review .lfv-admin-review-inner li,.lfv-admin-review .lfv-admin-review-inner p{font-size:.83rem;line-height:1.48}
+    .lfv-admin-review .lfv-admin-review-inner a{color:var(--lfv-ink);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+    .lfv-admin-review .lfv-admin-review-inner ul{margin:0;padding-left:20px}
+    @media(max-width:600px){.lfv-admin-review summary{flex-direction:column;gap:4px}}
+  </style>
+</head>
+<body class="ledger-admin">
+{% include "_admin_navigation.html" %}
+<main class="lfv-admin-review">
+  <p class="label">ARCHIVE / ADMINISTRATION</p>
+  <h1>RESEARCH &amp; SOURCE REVIEW</h1>
+  <p>Private editorial workspace. Source discrepancies, tentative dates, research questions and import notes belong here—not in the visitor-facing archive. Public records are unchanged by opening these notes.</p>
+  {% include "_admin_archive_nav.html" %}
+  <p>{{ review_records | length }} RECORDS · EXPAND A RECORD TO REVIEW ITS ORIGINAL RESEARCH</p>
+  {% for entry in review_records %}
+  <details id="review-{{ entry.slug }}">
+    <summary>
+      <strong>{{ entry.title }}</strong>
+      <small>{{ entry.source_kind }} · {{ entry.editorial_status }}</small>
+    </summary>
+    <div class="lfv-admin-review-inner">
+      <p><a href="{{ url_for('vault_archive_record', slug=entry.slug) }}" target="_blank" rel="noopener noreferrer">VIEW PUBLIC RECORD ↗</a></p>
+      {% if entry.editorial_notes %}
+      <h2>EDITORIAL / VERIFICATION NOTES</h2>
+      <ul>{% for note in entry.editorial_notes %}<li>{{ note }}</li>{% endfor %}</ul>
+      {% endif %}
+      {% if entry.original_research %}
+      <h2>ORIGINAL RESEARCH FIELDS</h2>
+      <ul>{% for note in entry.original_research %}<li><strong>{{ note.label }}</strong> — {{ note.value }}</li>{% endfor %}</ul>
+      {% endif %}
+      {% if entry.source_links %}
+      <h2>PUBLIC RESEARCH SOURCES</h2>
+      <ul>{% for source in entry.source_links %}<li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }}</a></li>{% endfor %}</ul>
+      {% endif %}
+      {% if entry.source_details %}
+      <h2>ORIGINAL IMPORT FIELDS</h2>
+      <ul>
+      {% for key, value in entry.source_details.items() %}
+        {% if key not in ['battles'] %}
+        <li><strong>{{ key | replace('_',' ') }}</strong> — {{ value }}</li>
+        {% endif %}
+      {% endfor %}
+      </ul>
+      {% endif %}
+      {% if not entry.editorial_notes and not entry.original_research and not entry.source_details %}
+      <p>NO ADDITIONAL INTERNAL NOTES FOR THIS RECORD.</p>
+      {% endif %}
+    </div>
+  </details>
+  {% endfor %}
+</main>
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+</body></html>

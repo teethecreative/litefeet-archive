@@ -61,18 +61,18 @@
   <div class="lfv-archive-entry-list" data-archive-list role="list">
     {% for entry in archive_items %}
       <article class="lfv-archive-entry" role="listitem">
+        <time class="lfv-archive-entry-date" {% if entry.date %}datetime="{{ entry.date }}"{% endif %}>{{ entry.date[:4] if entry.date else 'RESEARCH' }}</time>
         <div class="lfv-archive-entry-main">
-          <p class="lfv-archive-entry-meta">{{ entry.date_label }} <span aria-hidden="true">·</span> {{ entry.collection | capitalize }} <span aria-hidden="true">·</span> Under review</p>
           <h3><a href="{{ url_for('vault_archive_record', slug=entry.slug) }}">{{ entry.title }}</a></h3>
           <p>{{ entry.summary }}</p>
         </div>
-        <a class="lfv-archive-open" href="{{ url_for('vault_archive_record', slug=entry.slug) }}" aria-label="View {{ entry.title }}">View record <span aria-hidden="true">→</span></a>
+        <a class="lfv-archive-open" href="{{ url_for('vault_archive_record', slug=entry.slug) }}" aria-label="View {{ entry.title }}"><span aria-hidden="true">→</span><span class="lfv-visually-hidden"> VIEW RECORD</span></a>
       </article>
     {% endfor %}
   </div>
   <p class="lfv-archive-empty" data-archive-empty {% if archive_items %}hidden{% endif %}>No matching records. Try another search or collection.</p>
   <div class="lfv-archive-pagination">
-    <p class="lfv-archive-load-state" aria-live="polite" data-archive-state>{% if archive_pagination.has_more %}Scroll for more records{% else %}All matching records loaded{% endif %}</p>
+    <p class="lfv-archive-load-state" aria-live="polite" data-archive-state>{% if archive_pagination.has_more %}SCROLL FOR MORE{% else %}ALL RECORDS LOADED{% endif %}</p>
     <button type="button" data-archive-load {% if not archive_pagination.has_more %}hidden{% endif %}>Load more records</button>
     <noscript>
       {% if archive_pagination.has_more %}

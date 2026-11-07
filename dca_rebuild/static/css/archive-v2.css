@@ -1,0 +1,180 @@
+/* ARCHIVE V2 — COMPACT UPPERCASE EDITORIAL INDEX.
+   This overrides legacy all-purpose link/button styling on Archive pages only.
+   Text-transform is visual: names, punctuation and source casing stay intact
+   in storage, browser search, accessibility labels and citations. */
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline,#archive-record){
+  text-transform:uppercase;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) :is(
+  .lfv-archive-intro h1,.lfv-archive-collections h2,.lfv-archive-list-head h2
+){letter-spacing:-.025em!important;}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-entry-list{border-top:1px solid var(--lfv-line);}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-entry{
+  display:grid!important;
+  grid-template-columns:58px minmax(0,1fr) 30px!important;
+  align-items:center!important;
+  column-gap:14px!important;
+  padding:12px 0!important;
+  margin:0!important;
+  min-height:68px!important;
+  background:transparent!important;
+  border:0!important;
+  border-bottom:1px solid var(--lfv-line)!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-entry-date{
+  font-size:.74rem!important;line-height:1.2!important;
+  font-weight:800!important;color:var(--lfv-gold)!important;
+  letter-spacing:.03em!important;
+  background:transparent!important;padding:0!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-entry .lfv-archive-entry-main{
+  min-width:0!important;
+  display:block!important;
+  padding:0!important;margin:0!important;
+  flex:none!important;background:transparent!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-entry h3{
+  font-size:clamp(.95rem,1.25vw,1.15rem)!important;
+  line-height:1.22!important;
+  letter-spacing:-.018em!important;
+  font-weight:850!important;
+  margin:0 0 4px!important;
+  padding:0!important;
+  background:transparent!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-entry h3 a,
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-entry h3 a:is(:link,:visited){
+  display:inline!important;
+  background:transparent!important;
+  color:var(--lfv-ink)!important;
+  border:0!important;
+  box-shadow:none!important;
+  text-decoration:none!important;
+  padding:0!important;margin:0!important;
+  min-height:0!important;
+  max-height:none!important;
+  font-size:inherit!important;line-height:inherit!important;
+  font-weight:inherit!important;
+  text-transform:uppercase!important;
+  border-radius:0!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-entry h3 a:hover{
+  text-decoration:underline!important;
+  text-underline-offset:4px!important;
+  text-decoration-color:var(--lfv-gold)!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-entry .lfv-archive-entry-main>p:last-child{
+  display:-webkit-box!important;-webkit-box-orient:vertical;
+  -webkit-line-clamp:1;overflow:hidden!important;
+  margin:0!important;max-width:100%;
+  color:var(--lfv-muted)!important;
+  font-size:.69rem!important;line-height:1.38!important;
+  letter-spacing:.008em!important;text-overflow:ellipsis;
+  background:transparent!important;
+  text-transform:uppercase!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-entry .lfv-archive-open,
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-entry .lfv-archive-open:is(:link,:visited){
+  display:flex!important;align-items:center;justify-content:flex-end;
+  min-width:30px!important;min-height:44px!important;
+  color:var(--lfv-gold)!important;background:transparent!important;
+  padding:0!important;margin:0!important;border:0!important;
+  box-shadow:none!important;border-radius:0!important;
+  font-size:1.45rem!important;line-height:1!important;
+  font-weight:600!important;text-decoration:none!important;
+  white-space:nowrap;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-list-head{padding-top:15px!important;}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-list-head h2{margin-bottom:11px!important;font-size:1.45rem!important;}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-filter{margin:7px 0 14px!important;}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-searchline :is(input,select,button){font-size:.75rem!important;min-height:42px!important;}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-pagination{padding:16px 0!important;gap:4px!important;}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+.lfv-archive-pagination button{
+  padding:9px 14px!important;font-size:.75rem!important;
+  background:transparent!important;color:var(--lfv-ink)!important;
+  border:1px solid var(--lfv-line)!important;box-shadow:none!important;
+}
+html.lfv-sitewide .lfv-visually-hidden{
+  position:absolute!important;width:1px!important;height:1px!important;
+  padding:0!important;margin:-1px!important;overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;
+}
+html.lfv-sitewide #archive-record .lfv-archive-record-hero{padding:22px 0!important;}
+html.lfv-sitewide #archive-record .lfv-archive-record-hero h1{
+  font-size:clamp(1.95rem,3.9vw,3.4rem)!important;line-height:1.11!important;
+}
+html.lfv-sitewide #archive-record .lfv-archive-tags span{
+  background:transparent!important;padding:4px 0!important;
+  border:0!important;border-radius:0!important;
+}
+html.lfv-sitewide #archive-record .lfv-archive-detail-body>section{
+  margin-bottom:24px!important;
+}
+html.lfv-sitewide #archive-record .lfv-archive-detail-body h2{
+  font-size:clamp(1.1rem,2vw,1.45rem)!important;
+}
+html.lfv-sitewide #archive-record .lfv-archive-source-panel{
+  background:transparent!important;border:1px solid var(--lfv-line)!important;
+  border-top:2px solid var(--lfv-gold)!important;
+}
+html.lfv-sitewide #archive-record .lfv-archive-detail-body .lfv-archive-facts>div{padding:7px 0!important;}
+html.lfv-sitewide #archive-record .lfv-archive-source-links{
+  list-style:none;padding:0;margin:10px 0;display:grid;gap:9px;
+}
+html.lfv-sitewide #archive-record .lfv-archive-source-links a{
+  font-size:.77rem!important;text-decoration:underline!important;
+  text-underline-offset:4px!important;text-decoration-color:var(--lfv-gold)!important;
+  overflow-wrap:anywhere;
+}
+html.lfv-sitewide #archive-record .lfv-archive-source-links time{
+  color:var(--lfv-muted)!important;font-size:.69rem!important;display:block;
+  margin-top:3px;
+}
+html.lfv-sitewide #archive-record .lfv-archive-findings{
+  padding-left:19px!important;display:grid;gap:12px;margin:15px 0!important;
+}
+html.lfv-sitewide #archive-record .lfv-archive-findings li{
+  font-size:.88rem!important;line-height:1.55!important;
+  color:var(--lfv-ink)!important;
+}
+html.lfv-sitewide #archive-record :is(.lfv-archive-redirect a,.lfv-archive-related-links a){
+  background:transparent!important;color:var(--lfv-ink)!important;
+  border:0!important;box-shadow:none!important;padding:7px 0!important;
+}
+@media(max-width:620px){
+  html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+  .lfv-archive-entry{
+    grid-template-columns:40px minmax(0,1fr) 20px!important;
+    gap:9px!important;padding:9px 0!important;min-height:57px!important;
+  }
+  html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+  .lfv-archive-entry h3{font-size:.91rem!important;margin:0 0 4px!important;}
+  html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+  .lfv-archive-entry .lfv-archive-entry-main>p:last-child{font-size:.65rem!important;}
+  html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+  .lfv-archive-entry-date{font-size:.68rem!important;}
+  html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+  .lfv-archive-entry .lfv-archive-open{min-width:20px!important;}
+  html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+  .lfv-archive-searchline{gap:6px!important;}
+  html.lfv-sitewide #archive-record .lfv-archive-record-hero h1{font-size:clamp(1.85rem,7vw,2.65rem)!important;}
+}

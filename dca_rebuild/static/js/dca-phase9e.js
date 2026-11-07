@@ -36,6 +36,90 @@
     }
     renderDrafts();
     if (form) {
+      const nomineeInput = form.elements.namedItem('name');
+      const checkStatus = form.querySelector('[data-name-check]');
+      const distinctRow = form.querySelector('[data-name-distinct]');
+      const distinctCheckbox = form.elements.namedItem('confirm_distinct');
+      let checkTimer = null;
+      let checkNonce = 0;
+      let approvedSubmit = false;
+
+      async function checkNominee() {
+        if (!nomineeInput || nomineeInput.value.trim().length < 2) {
+          checkStatus.hidden = true;
+          distinctRow.hidden = true;
+          distinctCheckbox.checked = false;
+          return null;
+        }
+        const targetName = nomineeInput.value.trim();
+        const nonce = ++checkNonce;
+        const url = new URL('/awards/dancers-choice/nominee-name-check', location.origin);
+        url.searchParams.set('category_id', String(form.elements.category_id.value));
+        url.searchParams.set('name', targetName);
+        try {
+          const response = await fetch(url.toString(), {
+            credentials: 'same-origin', headers: {'Accept': 'application/json'}
+          });
+          if (!response.ok) throw new Error('NAME CHECK FAILED');
+          const data = await response.json();
+          if (nonce !== checkNonce || nomineeInput.value.trim() !== targetName) return null;
+          if (data.already_listed) {
+            checkStatus.textContent = 'ALREADY LISTED AS ' + data.canonical_name.toUpperCase() +
+              '. YOUR NOMINATION WILL SUPPORT THE EXISTING PERSON.';
+            checkStatus.hidden = false;
+            distinctRow.hidden = true;
+            distinctCheckbox.checked = false;
+          } else if (data.requires_confirmation) {
+            const names = data.matches.filter(item => item.type === 'similar')
+              .map(item => item.name.toUpperCase());
+            checkStatus.textContent = 'SIMILAR NAME ALREADY LISTED: ' + names.join(' / ') +
+              '. CHECK WHETHER THIS IS THE SAME PERSON BEFORE SUBMITTING.';
+            checkStatus.hidden = false;
+            distinctRow.hidden = false;
+          } else {
+            checkStatus.textContent = '';
+            checkStatus.hidden = true;
+            distinctRow.hidden = true;
+            distinctCheckbox.checked = false;
+          }
+          return data;
+        } catch (_) {
+          if (nonce === checkNonce) {
+            checkStatus.textContent = 'NAME CHECK UNAVAILABLE. PLEASE TRY AGAIN.';
+            checkStatus.hidden = false;
+            distinctRow.hidden = true;
+          }
+          return null;
+        }
+      }
+      nomineeInput.addEventListener('input', function () {
+        ++checkNonce;
+        checkStatus.hidden = true;
+        distinctRow.hidden = true;
+        distinctCheckbox.checked = false;
+        clearTimeout(checkTimer);
+        checkTimer = setTimeout(checkNominee, 330);
+      });
+      nomineeInput.addEventListener('blur', function () {
+        clearTimeout(checkTimer);
+        checkNominee();
+      });
+      form.addEventListener('submit', async function (event) {
+        if (approvedSubmit) return;
+        event.preventDefault();
+        clearTimeout(checkTimer);
+        const data = await checkNominee();
+        if (!data) return;
+        if (data.requires_confirmation && !distinctCheckbox.checked) {
+          distinctRow.hidden = false;
+          distinctCheckbox.focus();
+          return;
+        }
+        approvedSubmit = true;
+        if (typeof form.requestSubmit === 'function') form.requestSubmit(event.submitter || undefined);
+        else form.submit();
+      });
+
       const index = new URLSearchParams(location.search).get('draft');
       const idea = index !== null ? drafts()[Number(index)] : null;
       if (idea && String(idea.category_id) === form.elements.category_id.value) {

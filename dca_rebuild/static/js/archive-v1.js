@@ -22,11 +22,12 @@
       const row = document.createElement("article");
       row.className = "lfv-archive-entry";
       row.setAttribute("role", "listitem");
+      const date = document.createElement("time");
+      date.className = "lfv-archive-entry-date";
+      date.textContent = item.date ? item.date.slice(0, 4) : "RESEARCH";
+      if (item.date) date.dateTime = item.date;
       const body = document.createElement("div");
       body.className = "lfv-archive-entry-main";
-      const meta = document.createElement("p");
-      meta.className = "lfv-archive-entry-meta";
-      meta.textContent = [item.date_label, item.collection, "Under review"].filter(Boolean).join(" · ");
       const h = document.createElement("h3");
       const name = document.createElement("a");
       const dest = "/archive/records/" + encodeURIComponent(item.slug);
@@ -35,13 +36,13 @@
       h.appendChild(name);
       const description = document.createElement("p");
       description.textContent = item.summary;
-      body.append(meta, h, description);
+      body.append(h, description);
       const link = document.createElement("a");
       link.className = "lfv-archive-open";
       link.href = dest;
-      link.textContent = "View record →";
+      link.textContent = "→";
       link.setAttribute("aria-label", "View " + item.title);
-      row.append(body, link);
+      row.append(date, body, link);
       return row;
     }
 
@@ -80,7 +81,7 @@
         button.hidden = !hasMore;
         empty.hidden = payload.total !== 0;
         count.textContent = String(payload.total) + (payload.total === 1 ? " entry" : " entries");
-        state.textContent = hasMore ? "Scroll for more records" : "All matching records loaded";
+        state.textContent = hasMore ? "SCROLL FOR MORE" : "ALL RECORDS LOADED";
         if (replace) {
           const dest = new URL(window.location.href);
           dest.searchParams.delete("page");
