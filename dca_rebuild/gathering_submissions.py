@@ -44,7 +44,7 @@ def csrf_token():
 
 
 def install_gathering_submissions(app, ns):
-    factory = ns["SessionLocal"]
+    # Resolve the active session factory per request for isolated test databases.
 
     @app.route("/submit", methods=["GET", "POST"], endpoint="vault_submit")
     def submit():
@@ -83,7 +83,7 @@ def install_gathering_submissions(app, ns):
             flash(str(exc) if str(exc) else "CHECK YOUR SUBMISSION DETAILS.")
             return redirect(url_for("vault_submit"))
 
-        with factory.begin() as db:
+        with ns["SessionLocal"].begin() as db:
             db.add(VaultGatheringSubmission(
                 title=title,
                 gathering_type=kind,
@@ -114,7 +114,7 @@ def install_gathering_submissions(app, ns):
     @app.get("/admin/gatherings", endpoint="admin_vault_gatherings")
     @ns["admin_login_required"]
     def admin_gatherings():
-        with factory() as db:
+        with ns["SessionLocal"]() as db:
             submissions = db.query(VaultGatheringSubmission).order_by(
                 VaultGatheringSubmission.created_at.desc(),
                 VaultGatheringSubmission.id.desc()).limit(200).all()
@@ -142,7 +142,7 @@ def install_gathering_submissions(app, ns):
             abort(400)
         if decision not in {"approve", "reject"}:
             abort(400)
-        with factory.begin() as db:
+        with ns["SessionLocal"].begin() as db:
             item = db.get(VaultGatheringSubmission, submission_id)
             if item is None:
                 abort(404)
