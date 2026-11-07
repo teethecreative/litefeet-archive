@@ -4898,3 +4898,7 @@ install_phase9e(app, globals())
 # Read-only public section navigation; existing business handlers are unchanged.
 from dca_rebuild.information_architecture import install_information_architecture
 install_information_architecture(app, globals())
+
+# Moderated public submissions for battles, labs, link-ups, classes and workshops.
+from dca_rebuild.gathering_submissions import install_gathering_submissions
+install_gathering_submissions(app, globals())
