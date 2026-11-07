@@ -15,18 +15,18 @@
 </section>
 <section id="decks">
   <h2>Sample decks</h2>
-  <p>Each example contains 25 cards. Tee’s planning document supplies the card types and moves. The pairings and copy counts are practice builds. Both tracks come from Reel Hectic’s Common song submissions.</p>
+  <p>Each example contains 25 cards. DC and K Cosmic supplied their dancer profiles, signature moves, and arena picks. The pairings and copy counts are practice builds. Both tracks come from Reel Hectic’s Common song submissions.</p>
   <div class="lock-decks">
   {% for key, sample in decks.items() %}
-    <article><p class="vault-kicker">{{ sample.dancer }}</p><h3>{{ sample.name }} deck</h3><p>{{ sample.note }}</p>
+    <article><p class="vault-kicker">{{ sample.name }}</p><h3>{{ sample.dancer }}’s deck</h3><p>{{ sample.note }}</p>
       <details><summary>View all 25 cards</summary><ul>
         <li>Dancer · {{ sample.dancer }} × 1</li><li>Arena · {{ sample.arena }} × 1</li>
         <li>Producer · Reel Hectic × 1</li><li>Song · {{ sample.song }} × 1</li>
         <li>Setup · {{ sample.setup }} × 3</li>
         {% for move in sample.moves %}<li>Move · {{ move }} × 3</li>{% endfor %}
-        <li>Trick · {{ sample.trick }} × 3</li><li>Upgrade · Fake out × 3</li>
+        <li>{{ sample.extra_type }} · {{ sample.extra }} × 3</li><li>Upgrade · Fake out × 3</li>
       </ul></details>
-      <a href="{{ url_for('vault_lock_in', deck=key) }}#practice">Play the {{ sample.name }} deck</a>
+      <a href="{{ url_for('vault_lock_in', deck=key) }}#practice">Play {{ sample.dancer }}’s deck</a>
     </article>
   {% endfor %}</div>
 </section>

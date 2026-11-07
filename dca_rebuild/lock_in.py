@@ -1,16 +1,16 @@
 """Illustrative practice decks and scoring for the Lock In public guide."""
 
 DECKS = {
-    "performance": dict(name="Performance", dancer="DC", arena="BC Circle",
+    "performance": dict(name="Performance", dancer="DC", arena="The Lite House",
                         song="Pure Imagination", setup="Tone Whop",
-                        moves=("Knee Drop", "Butterfly", "Swiss Drop", "Coin Drop"),
-                        trick="Shoe Clap", favored="Knee Drop",
+                        moves=("Knee Drop", "Needle & Thread", "Hoodie of Death", "Coin Drop"),
+                        extra_type="Setup", extra="Rev Up", favored="Hoodie of Death",
                         note="DC submitted Performance as the highest stat, Hoodie of Death as a signature move, and a TKO counter as a possible ability."),
-    "footwork": dict(name="Footwork", dancer="Practice dancer", arena="NYC Subway",
+    "spank": dict(name="Spank", dancer="K Cosmic", arena="Slattery Park",
                      song="Lonely Nights", setup="Rev Up",
-                     moves=("Stutter Step", "Around The World", "Butterfly", "Gangsta Lean"),
-                     trick="Shoe Foot Clap", favored="Stutter Step",
-                     note="An unnamed practice dancer built around the ankles and footwork moves in Tee’s rulebook."),
+                     moves=("Baggage Claim", "False Alarm", "Stutter Step", "Swiss Drop"),
+                     extra_type="Trick", extra="Shoe Trick", favored="False Alarm",
+                     note="K Cosmic chose Spank as the highest stat, named Baggage Claim and False Alarm as signatures, and picked Slattery Park for an arena advantage. False Alarm resets a fake-out and flows back into freestyle."),
 }
 
 
