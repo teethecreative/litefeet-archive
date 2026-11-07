@@ -1,3 +1,23 @@
-<article class="lf9e-grid-card lf9e-category-name" data-category-id="{{ category.id }}">
-  <a href="{{ url_for('dca_nominations_closed', category=category.id) }}">{{ category.name }}</a>
-</article>
+<details class="lf9e-grid-card lfv5-category-disclosure" data-category-id="{{ category.id }}">
+  <summary>
+    <span class="lfv5-category-name">{{ category.name }}</span>
+    <span class="lfv5-category-status">
+      {% if closed %}CLOSED
+      {% elif category.remaining %}COOLDOWN <span data-cooldown-until="{{ category.next_at }}">{{ (category.remaining // 3600) }}H {{ ((category.remaining % 3600) // 60) }}M</span>
+      {% else %}AVAILABLE NOW{% endif %}
+    </span>
+    <span class="lfv5-category-chevron" aria-hidden="true">+</span>
+  </summary>
+  <div class="lfv5-category-panel">
+    {% if category.nominees %}
+      <ol class="lfv5-nominee-minilist">
+      {% for nominee in category.nominees %}
+        <li><span>{{ nominee.name }}</span><span>{{ nominee.count }} NOMINATION{{ 'S' if nominee.count != 1 else '' }}</span></li>
+      {% endfor %}
+      </ol>
+    {% else %}
+      <p>NO NOMINATIONS YET. YOU CAN BE THE FIRST.</p>
+    {% endif %}
+    <a class="lfv5-minimal-action" href="{{ url_for('dca_nominations_closed', category=category.id) }}">VIEW CATEGORY / NOMINATE <span aria-hidden="true">→</span></a>
+  </div>
+</details>
