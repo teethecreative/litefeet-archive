@@ -30,11 +30,14 @@
   {% elif not identified %}
   <section class="lf9e-introduction" aria-labelledby="intro-title">
     <h1 id="intro-title">NOMINATIONS</h1>
+    <p class="lf9e-round-notice"><strong>THIS IS THE NOMINATION ROUND, NOT THE FINAL VOTE.</strong> You're suggesting who deserves to be a finalist. Nothing you submit here counts as a vote for the award winner.</p>
     <ol class="lf9e-intro-steps">
-      <li>Choose a category. Suggest a name or support one listed.</li>
-      <li>One nomination per category every 24 hours.</li>
-      <li>The top five eligible nominees advance to final voting.</li>
+      <li>Pick a category and nominate a dancer, producer, crew, creator or other eligible candidate.</li>
+      <li>You can nominate someone who is already listed. Each valid nomination adds one to that candidate's nomination total. For example, 8 nominations means 8 nominations of support, not 8 winning votes.</li>
+      <li>Submit one nomination per category every rolling 24 hours. You can nominate in other available categories while waiting.</li>
+      <li>The top five eligible nominees in each category become the finalists. Only then does the community vote for the winner.</li>
     </ol>
+    <p class="lf9e-note">This process gives the community a chance to recognize people who may have been overlooked. The nomination period is intended to continue beyond LiteFeet Awards weekend; the final closing date will be announced separately.</p>
     <h2 id="intro-categories-title">Official Top 25</h2>
     <div class="lf9e-intro-category-scroll" role="region" aria-labelledby="intro-categories-title" tabindex="0">
       <ol class="lf9e-intro-categories" id="lf9e-intro-categories">
@@ -60,6 +63,7 @@
       {% set category = selected %}
       <h1 class="lf9e-category-title">{{ category.name }}</h1>
       <p>{{ category.description }}</p>
+      <p class="lf9e-round-notice">Suggest a new name or add a nomination to someone already listed. Each nomination increases the candidate's total; this is not a vote for the winner.</p>
       {% if show_form %}
         <a class="lf9e-back-link" href="{{ url_for('dca_nominations_closed', category=category.id) }}">Back to suggestions</a>
         {% include "dca_phase9e_nomination_card.html" %}
@@ -70,7 +74,8 @@
       {% endif %}
     {% else %}
       <h1>CHOOSE YOUR CATEGORY.</h1>
-      <p>Nominate in any available category. Each category unlocks 24 hours after your last submission there.</p>
+      <p class="lf9e-round-notice"><strong>Nominations are open for suggestions, not votes for winners.</strong> Nominate a new name or support an existing nominee. Each nomination adds one to that person's total; the top five eligible nominees advance to the final vote.</p>
+      <p>One nomination per category every rolling 24 hours. Your cooldown is shown on each category before you open it.</p>
       {% if closed %}<p class="lf9e-message">Nominations are closed. Your history and suggestions remain available inside each category.</p>{% endif %}
       <details class="lf9e-activity"><summary>Your nomination activity</summary>
       <section aria-label="Your nomination summary" class="lf9e-summary-stats">
