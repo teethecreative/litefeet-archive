@@ -7,6 +7,7 @@ from dca_rebuild.models import LedgerEra, BetaChangelog, VaultArchiveVerificatio
 from dca_rebuild.public_site_updates import PUBLIC_SITE_UPDATES
 from dca_rebuild.archive_history_guide import load_history_guide
 from dca_rebuild.timeline_catalog import timeline_browse, timeline_payload
+from dca_rebuild.upcoming_calendar import upcoming_calendar
 from dca_rebuild.archive_catalog import (
     COLLECTIONS, PAGE_SIZE, all_records, browse, find_record,
     listing_payload, public_record,
@@ -104,6 +105,7 @@ def install_information_architecture(app, ns):
                        dict(label='Contribute historical records', href='/awards/litefeet-awards#contribute')]
         return dict(vault_navigation=navigation, vault_breadcrumbs=breadcrumbs,
                     vault_program_navigation=program, vault_emit_chrome=emit_chrome,
+                    vault_upcoming_calendar=upcoming_calendar(),
                     vault_site_updates=PUBLIC_SITE_UPDATES,
                     vault_updates=content['updates'], vault_eras=content['eras'], vault_contact=CONTACT)
 
