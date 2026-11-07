@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The History of LiteFeet, Get Lite &amp; the Harlem Shake | The LiteFeet Vault</title>
+{% include "_seo_head.html" %}
+<link rel="icon" href="{{ url_for('static',filename='favicon.ico') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-editorial-v2.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-identity-phase1.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/archive-v1.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/archive-v2.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/archive-v3.css') }}">
+</head>
+<body>
+{% include "_navigation.html" %}
+<main id="archive-history-guide" class="vault-section-page lfv-history-guide">
+  <div class="lfv-history-breadcrumb"><a href="{{ url_for('vault_archive') }}">THE ARCHIVE</a> <span aria-hidden="true">/</span> CULTURAL HISTORY</div>
+  <header class="lfv-history-header">
+    <p class="vault-kicker">CULTURE / PEOPLE / HISTORY</p>
+    <h1>THE HISTORY OF LITEFEET</h1>
+    <p class="lfv-history-deck">THE HARLEM SHAKE · GET LITE · LITEFEET</p>
+    <p>{{ history.introduction }}</p>
+    <p class="lfv-history-disclaimer">RESEARCH EDITION · {{ history.published_context }}. REPORTED ORAL HISTORIES AND DISPUTED ORIGIN CLAIMS ARE ATTRIBUTED, NOT PRESENTED AS SETTLED FACT.</p>
+  </header>
+  <nav class="lfv-history-chapter-nav" aria-label="HISTORY CHAPTERS">
+    <h2>EXPLORE THIS HISTORY</h2>
+    <ol>
+    {% for chapter in history.chapters %}
+      <li><a href="#{{ chapter.id }}"><span>{{ "%02d" | format(loop.index) }}</span> {{ chapter.title }} <span aria-hidden="true">↗</span></a></li>
+    {% endfor %}
+    </ol>
+  </nav>
+  <section class="lfv-history-timeline" id="history-overview" aria-labelledby="history-overview-heading">
+    <div class="lfv-history-section-number">TIMELINE / KEY MILESTONES</div>
+    <h2 id="history-overview-heading">A HISTORY IN CONTEXT</h2>
+    <ol>
+      {% for milestone in history.timeline %}
+      <li>
+        <strong>{{ milestone.year }}</strong>
+        <div><p>{{ milestone.detail }}</p>
+          <p class="lfv-history-refs">SOURCE: {% for key in milestone.sources %}<a href="{{ history.sources[key].url }}" target="_blank" rel="noopener noreferrer">{{ history.sources[key].title }}</a>{% if not loop.last %}<span aria-hidden="true"> · </span>{% endif %}{% endfor %}</p>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+  {% for chapter in history.chapters %}
+  <section class="lfv-history-chapter" id="{{ chapter.id }}" aria-labelledby="history-chapter-{{ chapter.id }}">
+    <div class="lfv-history-section-number">CHAPTER {{ "%02d" | format(loop.index) }} / 11</div>
+    <h2 id="history-chapter-{{ chapter.id }}">{{ chapter.title }}</h2>
+    <p class="lfv-history-subtitle">{{ chapter.subtitle }}</p>
+    <div class="lfv-history-prose">
+      {% for paragraph in chapter.paragraphs %}
+      <div class="lfv-history-paragraph">
+        <p>{{ paragraph.text }}</p>
+        <p class="lfv-history-refs">{% for key in paragraph.sources %}<a href="{{ history.sources[key].url }}" target="_blank" rel="noopener noreferrer" aria-label="Original source: {{ history.sources[key].title }}">SOURCE {{ loop.index }}: {{ history.sources[key].title }}</a>{% if not loop.last %}<span aria-hidden="true"> · </span>{% endif %}{% endfor %}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% if chapter.items %}
+    <div class="lfv-history-ledger">
+      <h3>PEOPLE / RECORDS / REFERENCES</h3>
+      {% for name, detail, source_ids in chapter.items %}
+      <article>
+        <h4>{{ name }}</h4>
+        <p>{{ detail }}</p>
+        <p class="lfv-history-refs">{% for key in source_ids %}<a href="{{ history.sources[key].url }}" target="_blank" rel="noopener noreferrer">{{ history.sources[key].title }}</a>{% if not loop.last %}<span aria-hidden="true"> · </span>{% endif %}{% endfor %}</p>
+      </article>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <a href="#archive-history-guide" class="lfv-history-back">BACK TO TOP <span aria-hidden="true">↑</span></a>
+  </section>
+  {% endfor %}
+  <section class="lfv-history-bibliography" id="history-sources">
+    <div class="lfv-history-section-number">REFERENCES / SOURCE LIBRARY</div>
+    <h2>ORIGINAL SOURCES</h2>
+    <p>THE LINKS BELOW OPEN THE ORIGINAL ARTICLES, INTERVIEWS, DOCUMENTARY RELEASES AND EDUCATIONAL ARCHIVES. THEIR ACCOUNTS ARE ATTRIBUTED TO THEIR AUTHORS OR PARTICIPANTS. PUBLIC ACCESS AND RIGHTS TO REPUBLISH ORIGINAL CONTENT ARE SEPARATE QUESTIONS.</p>
+    <ol>
+    {% for key, source in history.sources.items() %}
+      <li>
+        <a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }} <span aria-hidden="true">↗</span></a>
+        <span>{{ source.type }}{% if source.published %} · {{ source.published }}{% endif %}</span>
+      </li>
+    {% endfor %}
+    </ol>
+    <p class="lfv-history-contribute">HAVE A FIRSTHAND ACCOUNT, ORIGINAL FLYER, FOOTAGE OR A CORRECTION? <a href="{{ url_for('vault_community') }}#contribute">CONTRIBUTE TO THE VAULT <span aria-hidden="true">→</span></a></p>
+  </section>
+</main>
+{% include "_footer.html" %}
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+</body>
+</html>
