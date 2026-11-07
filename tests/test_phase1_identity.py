@@ -17,13 +17,13 @@ def test_homepage_is_letter_then_current_awards_then_real_site_updates(website):
     assert "But not everything has been documented." in html
     assert "That's part of why I created The LiteFeet Vault." in html
     assert 'Read more' in html
-    assert 'href="/about#letter"' in html
+    assert 'href="/about/letter"' in html
     assert 'Dancer’s Choice Awards 2026' in html
     assert 'href="/awards/dancers-choice/2026"' in html
-    assert 'Latest Updates' in html
-    assert 'Explore the expanded LiteFeet Archive' in html
-    assert 'href="/archive"' in html
-    assert 'href="/community#contribute"' in html
+    assert 'THIS MONTH IN LITEFEET' in html
+    assert 'lfv5-calendar-strip' in html
+    assert 'LATEST UPDATES' not in html.upper()
+    assert 'href="/archive/timeline"' in html
     assert 'lfv-home-v4.css' in html
     # No repeated large menu tiles, placeholder stories, backend changelog, or 2023 feature block.
     assert 'Find your way into the culture.' not in html
@@ -40,10 +40,13 @@ def test_founders_letter_is_public_and_preserves_mission(website):
     assert response.status_code == 200
     html = response.get_data(as_text=True)
     assert 'id="letter"' in html
-    assert 'Dear LiteFeet,' in html
-    assert 'LiteFeet is more than dance.' in html
-    assert "Because LiteFeet's history belongs to the people who made it." in html
-    assert 'Founder, The LiteFeet Vault' in html
+    assert 'id="letter"' in html
+    assert 'href="/about/letter"' in html
+    letter = client.get('/about/letter').get_data(as_text=True)
+    assert 'DEAR LITEFEET,' in letter
+    assert 'LiteFeet is more than dance.' in letter
+    assert "Because LiteFeet's history belongs to the people who made it." in letter
+    assert 'Founder, The LiteFeet Vault' in letter
     assert 'id="mission"' in html
     assert 'id="how-it-works"' in html
     assert 'lfv-identity-phase1.css' in html
@@ -59,7 +62,7 @@ def test_homepage_news_is_real_public_site_releases_not_changelog(website, datab
     client = website.test_client()
     home = client.get('/').get_data(as_text=True)
     community = client.get('/community').get_data(as_text=True)
-    assert 'Explore the expanded LiteFeet Archive' in home
+    assert 'THIS MONTH IN LITEFEET' in home
     assert 'Internal changelog entry' not in home
     assert 'Public archive update' not in home
     assert 'Private preview' not in home
