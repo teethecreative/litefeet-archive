@@ -22,12 +22,21 @@
       const row = document.createElement("article");
       row.className = "lfv-archive-entry";
       row.setAttribute("role", "listitem");
+      const body = document.createElement("div");
+      body.className = "lfv-archive-entry-main";
+      const meta = document.createElement("p");
+      meta.className = "lfv-archive-row-meta";
       const date = document.createElement("time");
       date.className = "lfv-archive-entry-date";
       date.textContent = item.date ? item.date.slice(0, 4) : "RESEARCH";
       if (item.date) date.dateTime = item.date;
-      const body = document.createElement("div");
-      body.className = "lfv-archive-entry-main";
+      const divider = document.createElement("span");
+      divider.textContent = "/";
+      divider.setAttribute("aria-hidden", "true");
+      const category = document.createElement("span");
+      category.className = "lfv-archive-entry-type";
+      category.textContent = item.collection.toUpperCase();
+      meta.append(date, divider, category);
       const h = document.createElement("h3");
       const name = document.createElement("a");
       const dest = "/archive/records/" + encodeURIComponent(item.slug);
@@ -36,13 +45,13 @@
       h.appendChild(name);
       const description = document.createElement("p");
       description.textContent = item.summary;
-      body.append(h, description);
+      body.append(meta, h, description);
       const link = document.createElement("a");
       link.className = "lfv-archive-open";
       link.href = dest;
       link.textContent = "→";
       link.setAttribute("aria-label", "View " + item.title);
-      row.append(date, body, link);
+      row.append(body, link);
       return row;
     }
 
