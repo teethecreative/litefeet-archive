@@ -149,7 +149,13 @@ def install_information_architecture(app, ns):
             abort(404)
         if 'vault_archive_csrf' not in session:
             session['vault_archive_csrf'] = secrets.token_urlsafe(32)
+        related_records = [
+            item for item in all_records()
+            if item['slug'] != slug and record.get('series')
+            and item.get('series') == record['series']
+        ][:8]
         return render_template('archive_record.html', record=record,
+                               related_records=related_records,
                                archive_csrf=session['vault_archive_csrf'],
                                **public_content())
 
