@@ -42,6 +42,12 @@ PAGES.update({
     "/awards/dancers-choice": ("Dancer’s Choice Awards | The LiteFeet Vault", "Explore Dancer’s Choice award editions, current participation and historical archives."),
     "/community": ("Community | The LiteFeet Vault", "Contribute historical sources, suggest corrections and follow public community updates."),
     "/about": ("About The LiteFeet Vault | Dear LiteFeet", "Read the founder’s letter, discover the Vault’s mission and learn how community contributions help preserve LiteFeet history."),
+    "/about/letter": ("Dear LiteFeet | Founder's Letter | The LiteFeet Vault", "Read the founder's letter about preserving LiteFeet culture for future generations."),
+    "/about/mission": ("Our Mission | The LiteFeet Vault", "Learn the mission behind The LiteFeet Vault and its community archive."),
+    "/about/archive": ("About the Archive | The LiteFeet Vault", "Learn how the Vault preserves documented dancers, crews, music, battles and original sources."),
+    "/about/how-it-works": ("How It Works | The LiteFeet Vault", "Learn how to explore LiteFeet records, share evidence and suggest corrections."),
+    "/about/contact": ("Contact | The LiteFeet Vault", "Reach the Vault team about preserving the history of LiteFeet."),
+
     "/awards/dancers-choice/nominations": ("DCA 2026 Nominations | The LiteFeet Vault", "Explore the categories and nominate the people who represent LiteFeet culture."),
 })
 
@@ -49,12 +55,16 @@ PAGES.update({
 SITEMAP_PATHS = (
     "/",
     "/archive",
-    "/archive/history",
     "/archive/timeline",
     "/awards",
     "/awards/dancers-choice",
     "/community",
     "/about",
+    "/about/letter",
+    "/about/mission",
+    "/about/archive",
+    "/about/how-it-works",
+    "/about/contact",
     "/awards/dancers-choice/2026",
     "/awards/dancers-choice/2023",
     "/awards/litefeet-awards",
