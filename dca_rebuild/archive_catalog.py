@@ -92,7 +92,8 @@ def _event(raw, source_kind):
 
 def _research(raw):
     typ = raw["record_type"]
-    collection = raw["collection"]
+    collection = ("music" if raw["title"] == "Get Lite to LiteFeet Music Evolution"
+                  else raw["collection"])
     description = raw["summary"]
     original_label = raw.get("research_status") or "Pending Review"
     record = {
@@ -130,9 +131,31 @@ def all_records():
     flyers = _read("archive_editor_flyers.json").get("events") or []
     legacy = _read("archive_legacy_events.json").get("events") or []
     research = _read("archive_core_research.json").get("records") or []
+    awards_archive = {
+        "slug": "dancers-choice-awards-august-2023",
+        "title": "Dancer’s Choice Awards — August 2023",
+        "collection": "awards", "record_type": "award_archive",
+        "date": "", "date_label": "August 2023",
+        "date_certainty": "month",
+        "source_kind": "awards", "editorial_status": "Archived results",
+        "source_url": "/awards/dancers-choice/2023",
+        "source_label": "Original Dancer’s Choice Awards historical import",
+        "summary": "31 historical categories, 152 nominee entries and 32 recorded winning entries.",
+        "description": "The original August 2023 Dancer’s Choice Awards archive "
+                       "preserves nominee entries and recorded winning entries. "
+                       "It is independent of current award nominations.",
+        "related_to": "", "research_details": [], "series": "Dancer’s Choice Awards",
+        "information": [
+            ("Edition", "August 2023"), ("Categories", "31"),
+            ("Nominee entries", "152"), ("Winning entries", "32")],
+        "battles": [], "notes": [], "presenter": "",
+        "search": "dancers choice awards august 2023 historic winners nominees results",
+        "can_verify": False, "claim": "",
+    }
     entries = ([_event(x, "flyers") for x in flyers]
                + [_event(x, "legacy") for x in legacy]
-               + [_research(x) for x in research])
+               + [_research(x) for x in research]
+               + [awards_archive])
     slugs = [e["slug"] for e in entries]
     if len(slugs) != len(set(slugs)):
         raise ValueError("Duplicate LiteFeet archive slug")
