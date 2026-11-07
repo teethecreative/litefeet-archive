@@ -252,7 +252,7 @@ def install_information_architecture(app, ns):
         ('contact', 'contact', 'CONTACT'),
     ):
         def about_view(page=page, label=label):
-            return render_template('about_' + page + '.html',
+            return render_template('about_' + page.replace('_', '-') + '.html',
                                    page_title=label, **public_content())
         app.add_url_rule('/about/' + about_path, endpoint='vault_about_' + page,
                          view_func=about_view, methods=['GET'])
