@@ -1,6 +1,7 @@
 """Privacy-preserving nominations with atomic, per-category rolling cooldowns."""
 from datetime import datetime, timedelta, timezone
 from math import ceil
+from difflib import SequenceMatcher
 import re
 import unicodedata
 from sqlalchemy import select, update
@@ -28,6 +29,54 @@ def normalize_nominee_name(value):
     if len(normalized) < 2:
         raise ValueError("Nominee name is invalid")
     return display, normalized
+
+
+# Confirmed owner-supplied identity mappings. Never infer an alias from
+# similar spelling alone. Keys/values use normalized_nominee_name syntax.
+CONFIRMED_NOMINEE_ALIASES = {
+    "a astro": ("D Astro", "d astro"),
+}
+
+
+def canonical_nominee_name(value):
+    display, normalized = normalize_nominee_name(value)
+    return CONFIRMED_NOMINEE_ALIASES.get(normalized, (display, normalized))
+
+
+def canonical_nominee_key(value):
+    return canonical_nominee_name(value)[1]
+
+
+def candidate_matches(db, *, category_id, name):
+    """Check existing nominees before submit; confirmed aliases aren't guesses."""
+    display, name_key = canonical_nominee_name(name)
+    choices = db.query(DCANominee).filter(
+        DCANominee.category_id == category_id,
+        DCANominee.moderation_status.in_(('pending', 'approved')),
+    ).all()
+    found = []
+    for nominee in choices:
+        existing_key = canonical_nominee_key(nominee.name)
+        exact = existing_key == name_key
+        score = SequenceMatcher(None, name_key, existing_key).ratio()
+        if exact or (len(name_key) >= 4 and len(existing_key) >= 4 and score >= 0.84):
+            found.append({
+                "id": nominee.id,
+                "name": (display if exact and name_key == "d astro" else nominee.name),
+                "type": "existing" if exact else "similar",
+                "score": score,
+            })
+    found.sort(key=lambda row: (row["type"] != "existing", -row["score"], row["name"].casefold()))
+    # One canonical existing name is enough; distinct close-name candidates
+    # are offered for human confirmation rather than automatic merging.
+    unique = []
+    seen = set()
+    for row in found:
+        key = row["name"].casefold()
+        if key not in seen:
+            seen.add(key)
+            unique.append(row)
+    return unique[:5]
 
 
 def category_history(db, edition_id, submitter_hash):
@@ -58,7 +107,7 @@ def add_nomination(db, *, edition_id, category_id, name, submitter_hash, ip_hash
     workers. The claim, nominee and submission commit or roll back together.
     Historical entries are checked while holding this category/identity lock.
     """
-    display, normalized = normalize_nominee_name(name)
+    display, normalized = canonical_nominee_name(name)
     if not isinstance(submitter_hash, str) or not submitter_hash.strip():
         raise ValueError("Submitter identity is required")
     category = db.get(DCACategory, category_id)
@@ -81,12 +130,22 @@ def add_nomination(db, *, edition_id, category_id, name, submitter_hash, ip_hash
               .order_by(DCANominationSubmission.submitted_at.desc()).first())
     if latest and remaining_seconds(latest[0], now):
         return None, False
-    db.execute(insert_for(db, DCANominee).values(
-        edition_id=edition_id, category_id=category_id, name=display,
-        normalized_name=normalized, description=(description or '')[:2000],
-        moderation_status='pending', created_at=now)
-        .on_conflict_do_nothing(index_elements=['category_id', 'normalized_name']))
-    nominee = db.scalars(select(DCANominee).filter_by(category_id=category_id, normalized_name=normalized)).one()
+    # Known aliases (e.g. A Astro / D Astro) count for the established
+    # person. All older submissions remain attached to their original IDs.
+    matching = [
+        nominee for nominee in db.query(DCANominee).filter_by(category_id=category_id).all()
+        if canonical_nominee_key(nominee.name) == normalized
+    ]
+    matching.sort(key=lambda n: (n.normalized_name != normalized, n.id))
+    nominee = matching[0] if matching else None
+    if nominee is None:
+        db.execute(insert_for(db, DCANominee).values(
+            edition_id=edition_id, category_id=category_id, name=display,
+            normalized_name=normalized, description=(description or '')[:2000],
+            moderation_status='pending', created_at=now)
+            .on_conflict_do_nothing(index_elements=['category_id', 'normalized_name']))
+        nominee = db.scalars(select(DCANominee).filter_by(
+            category_id=category_id, normalized_name=normalized)).one()
     db.add(DCANominationSubmission(edition_id=edition_id, nominee_id=nominee.id,
                                  submitter_hash=submitter_hash, ip_hash=ip_hash, submitted_at=now))
     db.flush()
