@@ -20,6 +20,8 @@ def test_people_collection_has_profile_links_and_word_cloud(website):
     assert response.status_code == 200
     page = response.get_data(as_text=True)
     assert 'lfv-people-wordcloud' in page
+    assert '--word-size:' in page
+    assert 'Names that appear more often in documented records are larger.' in page
     assert 'FEATURED PEOPLE' in page
     assert page.index('lfv-people-wordcloud') < page.index('SEARCH PEOPLE')
     assert 'SEARCH ARCHIVE RECORDS' in page
@@ -30,3 +32,16 @@ def test_people_collection_has_profile_links_and_word_cloud(website):
 def test_other_collections_do_not_include_people_cloud(website):
     client = website.test_client()
     assert 'lfv-people-wordcloud' not in client.get('/archive?collection=events').get_data(as_text=True)
+
+
+def test_people_cloud_is_just_clickable_words_not_gold_buttons():
+    """Protect the typographic cloud from sitewide CTA styles."""
+    from pathlib import Path
+    style = (Path(__file__).resolve().parents[1] /
+             'dca_rebuild/static/css/lfv-consistency-v5.css').read_text()
+    cloud_css = style.split('/* People & Crews: typography-only word cloud', 1)[1]
+    assert 'background:transparent!important;' in cloud_css
+    assert 'border:0!important;' in cloud_css
+    assert 'font-size:var(--word-size,1.25rem)!important;' in cloud_css
+    assert 'text-decoration:underline!important;' in cloud_css
+    assert 'background:#c9a52b' not in cloud_css
