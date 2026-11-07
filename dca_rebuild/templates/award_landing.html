@@ -39,6 +39,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
   <!-- LFV_EDITORIAL_V3_20261102 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v3.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
 </head>
 
 <body>
@@ -46,21 +47,30 @@
 {% include "_navigation.html" %}
 
 {% if page_type == "dca-2026" %}
-<main class="lfv3-awards lfv3-wrap" id="dca-2026">
+<main class="lfv3-awards lfv3-wrap lfv-dca-overview" id="dca-2026">
   <section class="lfv3-awards-hero lfv3-awards-compact" aria-labelledby="dca-title">
     <div class="lfv3-awards-intro">
       <p class="lfv3-eyebrow">DANCER'S CHOICE AWARDS / 2026</p>
       <h1 id="dca-title">THE CULTURE<br>DECIDES.</h1>
-      <p>Nominate the people who move LiteFeet forward.</p>
-      <div class="lfv3-actions">
-        <a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_nominations_closed') }}">Nominate</a>
-        <a class="lfv3-button lfv3-button-outline" href="{{ url_for('round2') }}">Category results</a>
-      </div>
+      <p>Created because members of the LiteFeet community wanted a say in the recognition of their culture, the Dancer’s Choice Awards put the process in the community's hands—from deciding the categories to nominating candidates and voting for the winners.</p>
+      <p>The LiteFeet Awards are an established awards program with their own selection process. DCA is a separate, community-driven way to recognize dancers, producers, crews, creators, and contributors, including people who may have been overlooked.</p>
     </div>
   </section>
-  <section class="lfv3-section lfv3-awards-history" aria-labelledby="history-title">
-    <h2 id="history-title">Past editions</h2>
-    <a class="lfv3-inline-link" href="{{ url_for('dca_2023_home') }}">Dancer's Choice 2023</a>
+  <section class="lfv3-section lfv-dca-current" aria-labelledby="dca-current-title">
+    <p class="lfv3-eyebrow">2026 / CURRENT ROUND</p>
+    <h2 id="dca-current-title">NOMINATIONS ARE NOT VOTING</h2>
+    <p>Community category suggestions came first. Now, people can nominate someone new or nominate an existing candidate again to increase that person's nomination total. This is how the shortlist is made; it does not decide the award winner.</p>
+    <ol class="lfv-dca-stages">
+      <li><strong>01 / CATEGORIES</strong><span>The community suggests and helps select categories.</span></li>
+      <li><strong>02 / NOMINATIONS</strong><span>Each nomination adds one to a candidate's total in that category, including names already on the list. You can nominate once per category every rolling 24 hours.</span></li>
+      <li><strong>03 / TOP FIVE</strong><span>The five eligible candidates with the most nominations in each category advance to voting.</span></li>
+      <li><strong>04 / FINAL VOTE</strong><span>Only in the voting round does the community choose the winner from those finalists.</span></li>
+    </ol>
+    <p>The nomination period is intended to continue approximately one to two weeks beyond LiteFeet Awards weekend, so conversations about who deserved recognition can become nominations. The official closing date is not yet confirmed on this page.</p>
+    <div class="lfv3-actions">
+      <a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_nominations_closed') }}">Nominations <span aria-hidden="true">→</span></a>
+      <a class="lfv3-button lfv3-button-gold" href="{{ url_for('round2') }}">Category results <span aria-hidden="true">→</span></a>
+    </div>
   </section>
 </main>
 {% else %}
