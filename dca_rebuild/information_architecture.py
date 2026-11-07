@@ -6,6 +6,8 @@ from flask import g, request, render_template, redirect, abort, jsonify, session
 from dca_rebuild.models import LedgerEra, BetaChangelog, VaultArchiveVerification
 from dca_rebuild.public_site_updates import PUBLIC_SITE_UPDATES
 from dca_rebuild.archive_history_guide import load_history_guide
+from dca_rebuild.timeline_catalog import timeline_browse, timeline_payload
+from dca_rebuild.upcoming_calendar import upcoming_calendar
 from dca_rebuild.archive_catalog import (
     COLLECTIONS, PAGE_SIZE, all_records, browse, find_record,
     listing_payload, public_record,
@@ -18,7 +20,7 @@ SECTION_CATALOG = (
     ('people', 'People', '/people', False),
     ('stories', 'Stories & Media', '/stories', False),
     ('awards', 'Awards', '/awards', True),
-    ('community', 'Community', '/community', True),
+    ('community', 'Community', '/community', False),
     ('about', 'About', '/about', True),
 )
 CONTACT = 'mailto:teethecreative@gmail.com?subject=LiteFeet%20Vault%20Enquiry'
@@ -49,26 +51,22 @@ def install_information_architecture(app, ns):
         content = public_content()
         children = {
             'archive': [dict(label='Browse collections', href='/archive#collections'),
-                        dict(label='Cultural History', href='/archive/history'),
-                        dict(label='History & Timeline', href='/archive/timeline')],
+                        dict(label='History & Timeline', href='/archive/timeline'),
+                        dict(label='Contribute & Correct', href='/community#contribute')],
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
                        dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
                        dict(label='Historical Results', href='/awards/dancers-choice/2023')],
-            'community': [dict(label='Contribute to the Archive', href='/community#contribute'),
-                          dict(label='Suggest Corrections', href='/awards/litefeet-awards#contribute')] +
-                         ([dict(label='Community Updates', href='/community#updates')] if content['updates'] else []),
-            'about': [dict(label="Founder's Letter", href='/about#letter'),
-                      dict(label='Our Mission', href='/about#mission'),
-                      dict(label='About the Archive', href='/about#archive'),
-                      dict(label='How It Works', href='/about#how-it-works'),
-                      dict(label='Contact', href='/about#contact')],
+            'about': [dict(label="Founder's Letter", href='/about/letter'),
+                      dict(label='Our Mission', href='/about/mission'),
+                      dict(label='About the Archive', href='/about/archive'),
+                      dict(label='How It Works', href='/about/how-it-works'),
+                      dict(label='Contact', href='/about/contact')],
         }
         path = request.path
         active = 'home' if path == '/' else (
             'awards' if path.startswith(('/awards', '/dca', '/litefeet-awards', '/hypeitup-awards')) else
-            'archive' if path.startswith('/archive') else
-            'community' if path.startswith(('/community', '/submit', '/newsletter')) else
-            'about' if path == '/about' else None)
+            'archive' if path.startswith(('/archive', '/community', '/submit', '/newsletter')) else
+            'about' if path.startswith('/about') else None)
         navigation = [dict(key=k, label=label, href=href, active=k == active,
                            children=children.get(k, [])) for k, label, href, ready in SECTION_CATALOG if ready]
         breadcrumbs = []
@@ -78,7 +76,7 @@ def install_information_architecture(app, ns):
             section = next((s for s in navigation if s['key'] == active), None)
             labels = {'vault_archive': 'The Archive', 'vault_timeline': 'Historical Timeline',
                       'vault_history_guide': 'Cultural History',
-                      'vault_community': 'Community', 'legacy_about': 'About', 'awards_home': 'Awards',
+                      'vault_community': 'Contribute & Correct', 'legacy_about': 'About', 'awards_home': 'Awards',
                       'vault_dca_program': 'Dancer’s Choice Awards', 'dca_2026_home': '2026',
                       'dca_2023_home': '2023 archive', 'round1': 'Category survey', 'round2': 'Category results',
                       'lfa_year': 'LiteFeet Awards ' + str((request.view_args or {}).get('year', '')),
@@ -100,13 +98,13 @@ def install_information_architecture(app, ns):
                 breadcrumbs = []
         if path.startswith('/awards/dancers-choice'):
             program = [dict(label='2026', href='/awards/dancers-choice/2026'),
-                       dict(label='2023 archive', href='/awards/dancers-choice/2023'),
-                       dict(label='Category results', href='/awards/dancers-choice/category-voting')]
+                       dict(label='2023', href='/awards/dancers-choice/2023')]
         elif path.startswith('/awards/litefeet-awards'):
             program = [dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
                        dict(label='Contribute historical records', href='/awards/litefeet-awards#contribute')]
         return dict(vault_navigation=navigation, vault_breadcrumbs=breadcrumbs,
                     vault_program_navigation=program, vault_emit_chrome=emit_chrome,
+                    vault_upcoming_calendar=upcoming_calendar(),
                     vault_site_updates=PUBLIC_SITE_UPDATES,
                     vault_updates=content['updates'], vault_eras=content['eras'], vault_contact=CONTACT)
 
@@ -117,9 +115,10 @@ def install_information_architecture(app, ns):
     def archive_page(section):
         timeline = section == 'timeline'
         current_page = max(1, request.args.get('page', 1, type=int) or 1)
-        filtered = browse(query=request.args.get('q', ''),
-                          collection=request.args.get('collection', 'all'),
-                          page=current_page, timeline=timeline)
+        search = dict(query=request.args.get('q', ''),
+                      collection=request.args.get('collection', 'all'),
+                      page=current_page)
+        filtered = timeline_browse(**search, eras=public_content()['eras']) if timeline else browse(**search)
         return section_page(section, archive_items=filtered['items'],
                             archive_pagination=filtered, archive_collections=COLLECTIONS,
                             archive_timeline=timeline,
@@ -135,18 +134,19 @@ def install_information_architecture(app, ns):
 
     @app.get('/archive/history', endpoint='vault_history_guide')
     def history_guide():
-        return render_template('archive_history_guide.html',
-                               history=load_history_guide(), **public_content())
+        # Preserve bookmarks: source-linked research now lives in the unified timeline.
+        return redirect(url_for('vault_timeline'), code=302)
 
     @app.get('/archive/api/records', endpoint='vault_archive_api')
     def archive_api():
         page = max(1, request.args.get('page', 1, type=int) or 1)
         timeline_only = request.args.get('timeline') == '1'
-        result = browse(query=request.args.get('q', ''),
-                        collection=request.args.get('collection', 'all'),
-                        page=page, timeline=timeline_only)
+        search = dict(query=request.args.get('q', ''),
+                      collection=request.args.get('collection', 'all'), page=page)
+        result = timeline_browse(**search, eras=public_content()['eras']) if timeline_only else browse(**search)
         response = jsonify({
-            'records': [listing_payload(x) for x in result['items']],
+            'records': [(timeline_payload(x) if timeline_only else listing_payload(x))
+                        for x in result['items']],
             'page': result['page'], 'next_page': result['next_page'],
             'has_more': result['has_more'], 'total': result['count'],
         })
@@ -243,6 +243,19 @@ def install_information_architecture(app, ns):
 
     app.view_functions['awards_home'] = lambda: section_page('awards')
     app.view_functions['legacy_about'] = lambda: section_page('about')
+    for about_path, page, label in (
+        ('letter', 'letter', "FOUNDER'S LETTER"),
+        ('mission', 'mission', 'OUR MISSION'),
+        ('archive', 'archive', 'ABOUT THE ARCHIVE'),
+        ('how-it-works', 'how_it_works', 'HOW IT WORKS'),
+        ('contact', 'contact', 'CONTACT'),
+    ):
+        def about_view(page=page, label=label):
+            return render_template('about_' + page.replace('_', '-') + '.html',
+                                   page_title=label, **public_content())
+        app.add_url_rule('/about/' + about_path, endpoint='vault_about_' + page,
+                         view_func=about_view, methods=['GET'])
+
     # Previously homepage loops; retain paths and route names, use a real hub.
     for endpoint in ('legacy_submit', 'legacy_submit_start', 'legacy_contributor'):
         if endpoint in app.view_functions:

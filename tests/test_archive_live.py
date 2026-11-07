@@ -28,7 +28,7 @@ def test_public_archive_and_scroll_api_show_real_entries(website):
     page = client.get('/archive')
     assert page.status_code == 200
     html = page.get_data(as_text=True)
-    for text in ('EXPLORE COLLECTIONS','BROWSE RECORDS','HISTORY &amp; TIMELINE',
+    for text in ('EXPLORE COLLECTIONS','BROWSE RECORDS','HISTORY &amp; RESEARCH',
                  'LOAD MORE RECORDS', 'Battles &amp; Events', 'Awards &amp; Recognition'):
         assert text in html
     assert 'More than a directory' not in html
@@ -57,8 +57,11 @@ def test_search_filters_all_records_not_just_first_page(website):
     assert timeline.status_code == 200
     timeline_json = client.get('/archive/api/records?timeline=1').get_json()
     assert timeline_json['total'] >= 20
-    assert all(r['collection'] == 'events' and r['date'] for r in timeline_json['records'])
-    assert timeline_json['records'][0]['date'] >= timeline_json['records'][-1]['date']
+    assert timeline_json['total'] > client.get('/archive/api/records').get_json()['total']
+    assert all(r['kind'] in ('record', 'chapter', 'milestone', 'era') for r in timeline_json['records'])
+    researched = client.get('/archive/api/records?timeline=1&collection=history&q=harlem').get_json()
+    assert researched['total'] >= 2
+    assert all(r['collection'] == 'history' for r in researched['records'])
 
 
 def test_source_specific_event_and_research_pages(website):

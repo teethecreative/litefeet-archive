@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/archive-v1.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/archive-v2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/archive-v3.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
 </head><body>{% include "_navigation.html" %}
 <main class="vault-section-page" id="vault-section-{{ section }}">
 {% if section == 'archive' or section == 'timeline' %}
@@ -19,32 +20,20 @@
 <section><h2>Historical Results</h2><a href="{{ url_for('dca_2023_home') }}">August 2023 Dancer’s Choice Awards</a></section>
 {% elif section == 'dca' %}
 <header><p class="vault-kicker">AWARDS</p><h1>Dancer’s Choice Awards</h1><p>Community recognition, current nominations and historical results.</p></header>
-<div class="vault-section-grid"><a class="vault-collection" href="{{ url_for('dca_2026_home') }}"><strong>2026 edition</strong><span>Categories, nominations and participation.</span></a><a class="vault-collection" href="{{ url_for('dca_2023_home') }}"><strong>August 2023 archive</strong><span>Recorded winners and nominees.</span></a></div>
+<div class="vault-section-grid"><a class="vault-collection" href="{{ url_for('dca_2026_home') }}"><strong>2026</strong><span>Categories, nominations and participation.</span></a><a class="vault-collection" href="{{ url_for('dca_2023_home') }}"><strong>2023</strong><span>Recorded winners and nominees.</span></a></div>
 {% elif section == 'community' %}
 <header><p class="vault-kicker">COMMUNITY</p><h1>Help preserve LiteFeet history.</h1><p>Share sources, correct the record and keep the community informed.</p></header>
 <section id="contribute"><h2>Historical information & corrections</h2><p>Submit award records, corrections and supporting sources through the existing review form.</p><a href="{{ url_for('lfa_home') }}#contribute">Contribute historical information</a></section>
 <section><h2>Media & general enquiries</h2><p>For photographs, footage or other archive enquiries, contact the Vault team.</p><a href="{{ vault_contact }}">Contact the Vault</a></section>
 {% if updates %}<section id="updates"><h2>Community updates</h2>{% for update in updates %}<article class="vault-update"><h3>{{ update.title }}</h3><time datetime="{{ update.created_at.isoformat() }}">{{ update.created_at.strftime('%B %d, %Y') }}</time><p>{{ update.details }}</p></article>{% endfor %}</section>{% endif %}
 {% elif section == 'about' %}
-<header><p class="vault-kicker">ABOUT THE VAULT</p><h1>Our history. Our stories. Our culture.</h1><p>A living record of LiteFeet, shaped by the people who made it.</p></header>
-<section id="letter" class="lfv1-founder-letter" aria-labelledby="founder-letter-title">
-  <p class="vault-kicker">FROM THE FOUNDER</p>
-  <h2 id="founder-letter-title">Dear LiteFeet,</h2>
-  <div class="lfv1-letter-body">
-    <p>LiteFeet is more than dance. It's a culture built through creativity, individuality, competition, community, and the people who have continued to push it forward.</p>
-    <p>Over the years, the culture has created countless moments, memories, movements, and contributions that deserve to be remembered.</p>
-    <p>But not everything has been documented. Not every name has been recognized. Not every story has been told.</p>
-    <p>That's part of why I created <strong>The LiteFeet Vault</strong>.</p>
-    <p>I wanted to build a space where our history could be preserved, where our contributions could be acknowledged, and where the community could have a role in telling its own story.</p>
-    <p>This isn't just about looking back. It's about documenting what's happening now, connecting the past to the present, and creating something future generations can learn from.</p>
-    <p>The Vault is meant to continue growing alongside the culture. It won't be complete overnight, and it shouldn't depend on any one person's perspective.</p>
-    <p>Because LiteFeet's history belongs to the people who made it.</p>
-  </div>
-  <p class="lfv1-letter-signoff"><strong>With love for the culture,</strong><span>Tee</span><small>Founder, The LiteFeet Vault</small></p>
-</section>
-<section id="mission"><h2>Our Mission</h2><p>Document, preserve and celebrate LiteFeet culture through historical records, community knowledge, recognition and sourced storytelling—connecting the past, present and future.</p></section>
-<section id="archive"><h2>About the Archive</h2><p>The Vault brings together LiteFeet history, people, teams, battles, events, music and awards. We are building toward a connected cultural archive and editorial platform.</p></section>
-<section id="how-it-works"><h2>How It Works</h2><p>Historical sources and community contributions help build the record. Contributions are reviewed before publication; corrections keep the archive accountable to the culture.</p><a href="{{ url_for('vault_community') }}#contribute">Contribute to the Archive</a></section>
-<section id="contact"><h2>Contact</h2><a href="{{ vault_contact }}">Contact the Vault team</a></section>
+<header class="lfv-about-index-header"><p class="vault-kicker">ABOUT THE VAULT</p><h1>OUR HISTORY. OUR STORIES. OUR CULTURE.</h1><p>WHAT THE VAULT IS, WHY IT EXISTS, AND HOW THE COMMUNITY HELPS PRESERVE ITS HISTORY.</p></header>
+<nav class="lfv-about-index" aria-label="ABOUT PAGES">
+  <a href="{{ url_for('vault_about_letter') }}" id="letter"><span>01 / FOUNDER'S LETTER</span><span aria-hidden="true">→</span></a>
+  <a href="{{ url_for('vault_about_mission') }}" id="mission"><span>02 / OUR MISSION</span><span aria-hidden="true">→</span></a>
+  <a href="{{ url_for('vault_about_archive') }}" id="archive"><span>03 / ABOUT THE ARCHIVE</span><span aria-hidden="true">→</span></a>
+  <a href="{{ url_for('vault_about_how_it_works') }}" id="how-it-works"><span>04 / HOW IT WORKS</span><span aria-hidden="true">→</span></a>
+  <a href="{{ url_for('vault_about_contact') }}" id="contact"><span>05 / CONTACT</span><span aria-hidden="true">→</span></a>
+</nav>
 {% endif %}
-</main>{% include "_footer.html" %}<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>{% if section == 'archive' or section == 'timeline' %}<script defer src="{{ url_for('static', filename='js/archive-v1.js') }}"></script>{% endif %}</body></html>
+</main>{% include "_footer.html" %}<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>{% if section == 'archive' %}<script defer src="{{ url_for('static', filename='js/archive-v1.js') }}"></script>{% elif section == 'timeline' %}<script defer src="{{ url_for('static', filename='js/timeline-v2.js') }}"></script>{% endif %}</body></html>

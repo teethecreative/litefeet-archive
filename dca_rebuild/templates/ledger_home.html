@@ -160,6 +160,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v3.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-identity-phase1.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-home-v4.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
 </head>
 
 <body>
@@ -176,7 +177,7 @@
         <p>LiteFeet is more than dance. It's a culture built through creativity, individuality, competition, community, and the people who have continued to push it forward.</p>
         <p>But not everything has been documented. Not every name has been recognized. Not every story has been told. That's part of why I created The LiteFeet Vault.</p>
       </div>
-      <a class="lfv4-text-link" href="{{ url_for('legacy_about') }}#letter">Read more <span aria-hidden="true">→</span></a>
+      <a class="lfv4-text-link" href="{{ url_for('vault_about_letter') }}">Read more <span aria-hidden="true">→</span></a>
     </div>
   </section>
 
@@ -196,23 +197,31 @@
     </div>
   </section>
 
-  <section class="lfv3-section lfv4-site-updates" id="whats-new" aria-labelledby="new-title">
-    <div class="lfv4-section-topline"><p class="lfv3-eyebrow">ON THE WEBSITE</p></div>
-    <h2 id="new-title">Latest Updates</h2>
-    <p class="lfv4-updates-intro">New pages and features you can explore on the Vault.</p>
-    <div class="lfv4-update-list">
-      {% for update in vault_site_updates[:3] %}
-        <article class="lfv4-update">
-          <time datetime="{{ update.date }}">{{ update.date_label }}</time>
-          <div>
-            <h3><a href="{{ update.href }}">{{ update.title }}</a></h3>
-            <p>{{ update.description }}</p>
-          </div>
-          <a class="lfv4-update-arrow" href="{{ update.href }}" aria-label="Explore {{ update.title }}">View <span aria-hidden="true">→</span></a>
-        </article>
+  <section class="lfv3-section lfv5-month-calendar" id="whats-new" aria-labelledby="month-title">
+    <div class="lfv4-section-topline"><p class="lfv3-eyebrow">WHAT'S HAPPENING</p><span>{{ vault_upcoming_calendar.label }}</span></div>
+    <h2 id="month-title">THIS MONTH IN LITEFEET</h2>
+    <p class="lfv5-calendar-intro">UPCOMING BATTLES, EVENTS AND COMMUNITY GATHERINGS IN THE NEXT 30 DAYS.</p>
+    <div class="lfv5-calendar-strip" aria-label="NEXT 30 DAYS">
+      {% for day in vault_upcoming_calendar.days %}
+      <a class="lfv5-calendar-day{% if day.today %} is-today{% endif %}{% if day.events %} has-events{% endif %}" href="#calendar-events" aria-label="{{ day.month }} {{ day.number }}: {{ day.events|length }} EVENTS">
+        <small>{{ day.weekday }}</small><strong>{{ day.number }}</strong><span>{{ day.month }}</span>
+        {% if day.events %}<i aria-hidden="true"></i>{% endif %}
+      </a>
       {% endfor %}
     </div>
-    <p class="lfv4-contribution-line">Have historical information or a correction to share? <a href="{{ url_for('vault_community') }}#contribute">Contribute to the Vault <span aria-hidden="true">→</span></a></p>
+    <div class="lfv5-calendar-events" id="calendar-events">
+    {% for event in vault_upcoming_calendar.events %}
+      <article class="lfv5-calendar-event">
+        <time datetime="{{ event.date }}">{{ event.date }}</time>
+        <div><h3><a href="{{ event.href }}">{{ event.title }}</a></h3>
+          {% if event.description %}<p>{{ event.description }}</p>{% endif %}</div>
+        <span>{{ event.status }}</span>
+      </article>
+    {% else %}
+      <p class="lfv5-calendar-empty">NO UPCOMING EVENTS HAVE BEEN CONFIRMED FOR THE NEXT 30 DAYS. HAVE A FLYER OR AN EVENT TO SHARE? <a href="{{ url_for('vault_community') }}#contribute">SUBMIT AN EVENT →</a></p>
+    {% endfor %}
+    </div>
+    <a class="lfv5-minimal-action" href="{{ url_for('vault_timeline') }}">EXPLORE THE FULL TIMELINE <span aria-hidden="true">→</span></a>
   </section>
 </main>
 

@@ -639,7 +639,7 @@ def install_phase9e(app, ns):
             if who or results_view:
                 nominees, support = get_counts(db, edition, include_pending=True)
                 history = defaultdict(list)
-                for entry, nominee in (category_history(db, edition.id, who) if who and not results_view else []):
+                for entry, nominee in (category_history(db, edition.id, who) if who else []):
                     history[nominee.category_id].append(dict(name=nominee.name,
                         status=nominee.moderation_status, at=entry.submitted_at.isoformat() + 'Z'))
                 rules, floor, requirement = qualification(db, edition, stages)

@@ -1,3 +1,6 @@
+{% if archive_timeline %}
+{% include "archive_unified_timeline.html" %}
+{% else %}
 <header class="lfv-archive-intro">
   <p class="vault-kicker">THE ARCHIVE</p>
   {% if archive_timeline %}
@@ -11,19 +14,19 @@
 
 <nav class="lfv-archive-subnav" aria-label="ARCHIVE SECTIONS">
   <a href="{{ url_for('vault_archive') }}" {% if not archive_timeline %}aria-current="page"{% endif %}>BROWSE THE ARCHIVE</a>
-  <a href="{{ url_for('vault_history_guide') }}">CULTURAL HISTORY</a>
-  <a href="{{ url_for('vault_timeline') }}" {% if archive_timeline %}aria-current="page"{% endif %}>HISTORY &amp; TIMELINE</a>
+  <a href="{{ url_for('vault_timeline') }}">HISTORY &amp; RESEARCH</a>
+  
   <a href="{{ url_for('dca_2023_home') }}">2023 AWARDS</a>
 </nav>
 
 {% if not archive_timeline %}
 <section id="history-guide-feature" class="lfv-archive-research-feature" aria-labelledby="culture-history-title">
   <div>
-    <p class="vault-kicker">RESEARCH / 11 CHAPTERS / ORIGINAL SOURCES</p>
+    <p class="vault-kicker">RESEARCH / SOURCED HISTORY / DATED EVENTS</p>
     <h2 id="culture-history-title">THE HISTORY OF LITEFEET</h2>
     <p>FROM THE HARLEM SHAKE TO GET LITE, THE DANCERS, THE MUSIC, THE BATTLES AND THE CULTURE THAT CONTINUES TO GROW.</p>
   </div>
-  <a href="{{ url_for('vault_history_guide') }}" aria-label="READ THE CULTURAL HISTORY RESEARCH">READ THE RESEARCH <span aria-hidden="true">→</span></a>
+  <a href="{{ url_for('vault_timeline') }}" aria-label="READ THE CULTURAL HISTORY RESEARCH">EXPLORE THE TIMELINE <span aria-hidden="true">→</span></a>
 </section>
 
 <section id="collections" class="lfv-archive-collections" aria-labelledby="collection-heading">
@@ -101,4 +104,5 @@
   <div><h2>2023 AWARDS ARCHIVE</h2><p>31 CATEGORIES · 152 NOMINEE ENTRIES · 32 RECORDED WINNING ENTRIES</p></div>
   <a href="{{ url_for('dca_2023_home') }}">VIEW HISTORICAL RESULTS <span aria-hidden="true">→</span></a>
 </section>
+{% endif %}
 {% endif %}

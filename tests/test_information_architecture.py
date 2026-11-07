@@ -21,7 +21,7 @@ def test_ready_navigation_and_every_active_link(website):
     html = client.get('/').get_data(as_text=True)
     items = navigation(html)
     assert [x[1] for x in SECTION_CATALOG] == ['Home','The Archive','People','Stories & Media','Awards','Community','About']
-    assert [x['label'] for x in items] == ['Home','The Archive','Awards','Community','About']
+    assert [x['label'] for x in items] == ['Home','The Archive','Awards','About']
     links = [x['href'] for x in items] + [c['href'] for x in items for c in x['children']]
     assert not any('/admin' in x or '/nominations' in x for x in links)
     assert not any(x in links for x in ['/people','/stories','/awards/hypeitup'])
@@ -54,7 +54,7 @@ def test_publication_filters_and_no_data_mutation(website, database):
         page = client.get(path)
         assert page.status_code == 200
         assert 'PRIVATE' not in page.get_data(as_text=True)
-    timeline = client.get('/archive/timeline').get_data(as_text=True)
+    timeline = client.get('/archive/timeline?q=Published+era').get_data(as_text=True)
     assert 'Published era' in timeline and '2000' in timeline
     assert 'Public update' in client.get('/community').get_data(as_text=True)
     assert '/archive/timeline' in [c['href'] for n in navigation(client.get('/').get_data(as_text=True)) for c in n['children']]
@@ -66,7 +66,7 @@ def test_unpublished_eras_are_not_leaked_into_public_timeline(website):
     client = website.test_client()
     page = client.get('/archive/timeline')
     assert page.status_code == 200
-    assert 'CHRONOLOGICAL TIMELINE' in page.get_data(as_text=True)
+    assert 'HISTORY &amp; TIMELINE' in page.get_data(as_text=True)
     items = navigation(client.get('/').get_data(as_text=True))
     assert any(c['href'] == '/archive/timeline' for n in items for c in n['children'])
     assert 'id="updates"' not in client.get('/community').get_data(as_text=True)
@@ -129,7 +129,7 @@ def test_nested_right_drawer_keyboard_and_program_links(website,width):
             assert panel.is_visible()
             page.screenshot(path=f'/tmp/vault-phase1-menu-{width}.png')
             assert abs(panel.bounding_box()['x']+panel.bounding_box()['width']-width) <= 1
-            assert panel.locator('[data-section]').all_text_contents() == ['Home','The Archive','Awards','Community','About']
+            assert panel.locator('[data-section]').all_text_contents() == ['Home','The Archive','Awards','About']
             assert page.locator('main').evaluate('node=>node.inert') is True
             page.keyboard.press('Shift+Tab')
             assert panel.locator('[data-section="about"]').evaluate('node=>node===document.activeElement')

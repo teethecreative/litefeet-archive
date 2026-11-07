@@ -1,0 +1,76 @@
+"""Public calendar for the next 30 days; never surface historical flyers as upcoming.
+
+Uses event records with ISO dates and confirmed-year metadata, plus an optional
+curated JSON file. No speculative events, private admin notes, or test entries.
+"""
+from datetime import date, timedelta, datetime
+from zoneinfo import ZoneInfo
+from functools import lru_cache
+from pathlib import Path
+import json
+
+from dca_rebuild.archive_catalog import all_records
+
+CURATED_PATH = Path(__file__).parent / "data" / "upcoming_public_events.json"
+
+
+@lru_cache(maxsize=1)
+def curated_events():
+    if not CURATED_PATH.exists():
+        return ()
+    with CURATED_PATH.open(encoding="utf-8") as handle:
+        items = json.load(handle).get("events", [])
+    return tuple(item for item in items if item.get("status") == "published")
+
+
+def upcoming_calendar(today=None):
+    """Return 30 inclusive local calendar days (NY-local date provided by caller)."""
+    today = today or datetime.now(ZoneInfo("America/New_York")).date()
+    end = today + timedelta(days=29)
+    entries = []
+    seen = set()
+    for record in all_records():
+        if record.get("collection") != "events" or not record.get("date"):
+            continue
+        if record.get("date_certainty") in ("unconfirmed_year", "unknown", "undated"):
+            continue
+        try:
+            event_date = date.fromisoformat(record["date"])
+        except (TypeError, ValueError):
+            continue
+        if not (today <= event_date <= end):
+            continue
+        identity = (event_date.isoformat(), record["title"].casefold())
+        if identity in seen:
+            continue
+        seen.add(identity)
+        entries.append(dict(date=event_date.isoformat(), title=record["title"],
+                            href="/archive/records/" + record["slug"],
+                            status="ANNOUNCED", description=record.get("summary") or ""))
+    for item in curated_events():
+        try:
+            event_date = date.fromisoformat(item["date"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if not (today <= event_date <= end):
+            continue
+        identity = (event_date.isoformat(), item["title"].casefold())
+        if identity in seen:
+            continue
+        seen.add(identity)
+        entries.append(dict(date=event_date.isoformat(), title=item["title"],
+                            href=item.get("href") or "/archive/timeline",
+                            status="UPCOMING", description=item.get("venue") or ""))
+    entries.sort(key=lambda item: (item["date"], item["title"]))
+    by_day = {}
+    for item in entries:
+        by_day.setdefault(item["date"], []).append(item)
+    days = []
+    for offset in range(30):
+        day = today + timedelta(days=offset)
+        days.append(dict(iso=day.isoformat(), number=day.day,
+                         weekday=day.strftime("%a").upper(), month=day.strftime("%b").upper(),
+                         events=by_day.get(day.isoformat(), []), today=offset == 0))
+    return dict(start=today.isoformat(), end=end.isoformat(),
+                label=today.strftime("%B %d").upper() + " – " + end.strftime("%B %d, %Y").upper(),
+                days=days, events=entries)
