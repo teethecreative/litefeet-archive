@@ -1,0 +1,64 @@
+<header class="lfv-unified-hero">
+  <p class="vault-kicker">THE ARCHIVE / CULTURAL HISTORY</p>
+  <h1>HISTORY &amp; TIMELINE</h1>
+  <p>ONE CHRONOLOGICAL RECORD OF LITEFEET, GET LITE, THE HARLEM SHAKE, DANCERS, CREWS, MOVES, MUSIC AND EVENTS. EXPAND RESEARCH TO SEE THE EVIDENCE.</p>
+</header>
+<nav class="lfv-archive-subnav" aria-label="ARCHIVE NAVIGATION">
+  <a href="{{ url_for('vault_archive') }}">BROWSE THE ARCHIVE</a>
+  <a href="{{ url_for('vault_timeline') }}" aria-current="page">HISTORY &amp; TIMELINE</a>
+  <a href="{{ url_for('dca_2023_home') }}">2023 AWARDS</a>
+</nav>
+<section class="lfv-unified-timeline" id="timeline" data-unified-timeline>
+  <div class="lfv-archive-list-head"><h2>THE CULTURAL RECORD</h2><span data-timeline-count>{{ archive_pagination.count }} ENTRIES</span></div>
+  <form role="search" method="get" action="{{ url_for('vault_timeline') }}" data-timeline-search class="lfv-unified-search">
+    <label for="timeline-search">SEARCH THE TIMELINE</label>
+    <div>
+      <input id="timeline-search" type="search" name="q" maxlength="120" placeholder="SEARCH PEOPLE, HISTORY, EVENTS, MOVES…" value="{{ request.args.get('q','') }}">
+      <select name="collection" aria-label="FILTER THE TIMELINE">
+        {% for key,label in [('all','ALL RECORDS'),('history','HISTORY & RESEARCH'),('events','EVENTS & BATTLES'),('people','PEOPLE & CREWS'),('moves','MOVES'),('music','MUSIC'),('awards','AWARDS')] %}
+        <option value="{{ key }}" {% if archive_pagination.collection == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">SEARCH</button>
+    </div>
+  </form>
+  <div class="lfv-unified-list" data-timeline-list role="list">
+    {% for entry in archive_items %}
+    <article class="lfv-unified-item" role="listitem">
+      <p class="lfv-unified-meta"><span>{{ entry.period }}</span> <span aria-hidden="true">/</span> <span>{{ entry.collection }}</span></p>
+      {% if entry.kind == 'chapter' %}
+      <details class="lfv-unified-expand">
+        <summary><strong>{{ entry.title }}</strong><span aria-hidden="true">+</span></summary>
+        <p class="lfv-unified-summary">{{ entry.summary }}</p>
+        {% for item in entry.detail %}
+        <div class="lfv-unified-evidence">
+          <p>{{ item.text }}</p>
+          <p class="lfv-unified-source">{% for source in item.sources %}<a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }} ↗</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+        </div>
+        {% endfor %}
+      </details>
+      {% elif entry.kind == 'milestone' %}
+      <details class="lfv-unified-expand">
+        <summary><strong>{{ entry.title }}</strong><span aria-hidden="true">+</span></summary>
+        <p class="lfv-unified-source">{% for source in entry.sources %}<a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }} ↗</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+      </details>
+      {% else %}
+      <h3><a href="{{ entry.href }}">{{ entry.title }}</a></h3>
+      {% if entry.summary %}<p class="lfv-unified-summary">{{ entry.summary }}</p>{% endif %}
+      <div class="lfv-unified-row-links">
+        <a href="{{ entry.href }}">VIEW RECORD <span aria-hidden="true">→</span></a>
+        {% if entry.sources %}<details><summary>SOURCES ({{ entry.sources|length }})</summary>
+          <p class="lfv-unified-source">{% for source in entry.sources %}<a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }} ↗</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+        </details>{% endif %}
+      </div>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  <p class="lfv-unified-empty" data-timeline-empty {% if archive_items %}hidden{% endif %}>NO MATCHING RECORDS.</p>
+  <div class="lfv-archive-pagination">
+    <p aria-live="polite" data-timeline-state>{% if archive_pagination.has_more %}SCROLL FOR MORE{% else %}ALL RECORDS LOADED{% endif %}</p>
+    <button type="button" data-timeline-more {% if not archive_pagination.has_more %}hidden{% endif %}>LOAD MORE</button>
+    <noscript>{% if archive_pagination.has_more %}<a href="?page={{ archive_pagination.next_page }}#timeline">NEXT PAGE</a>{% endif %}</noscript>
+  </div>
+</section>
