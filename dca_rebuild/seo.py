@@ -35,6 +35,7 @@ PAGES = {
     ),
 }
 PAGES.update({
+    "/archive/lock-in": ("Lock In | The LiteFeet Card Battle Game", "Learn the rules, browse sample decks, play a practice round and contribute to the LiteFeet card game."),
     "/archive": ("The Archive | The LiteFeet Vault", "Browse LiteFeet historical research, original battle announcements, moves, events, dancer references and preserved award records."),
     "/archive/timeline": ("History & Timeline | The LiteFeet Vault", "Explore a chronological LiteFeet event timeline and historical research, with sources and verification status."),
     "/archive/history": ("History of LiteFeet, Get Lite & the Harlem Shake | The LiteFeet Vault", "Explore sourced chapters about the original Harlem Shake, Get Lite origins, LiteFeet dancers and crews, music, moves, battle culture and subway performance."),
@@ -55,6 +56,7 @@ PAGES.update({
 SITEMAP_PATHS = (
     "/",
     "/archive",
+    "/archive/lock-in",
     "/archive/timeline",
     "/awards",
     "/awards/dancers-choice",
