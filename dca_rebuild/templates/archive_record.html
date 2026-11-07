@@ -22,7 +22,7 @@
     <h1>{{ record.title }}</h1>
     <div class="lfv-archive-tags">
       <span>{{ record.date_label }}</span>
-      <span>Research under review</span>
+      <span>{{ record.editorial_status }}</span>
       {% if record.series %}<span>{{ record.series }}</span>{% endif %}
     </div>
     {% if record.date_certainty == 'unconfirmed_year' %}
@@ -34,7 +34,6 @@
       {% if record.record_type == 'event' %}
         <section>
           <h2>Event information</h2>
-          <p>{{ record.description }}</p>
           <dl class="lfv-archive-facts">
           {% for label, detail in record.information %}
             <div><dt>{{ label }}</dt><dd>{{ detail }}</dd></div>
@@ -44,7 +43,7 @@
         {% if record.battles %}
           <section>
             <h2>Announced lineup</h2>
-            <p>These are advertised matchups and participants. The flyer does not establish which battles were completed or who won.</p>
+            <p>Advertised lineup · Results not confirmed</p>
             {% for group in record.battles %}
             <h3>{{ group.section }}</h3>
             <ol class="lfv-archive-battles">
@@ -53,18 +52,14 @@
               {% endfor %}
             </ol>
             {% endfor %}
-            {% if record.source_kind == 'legacy' and record.source_details.get('battles') %}
-              {% for battle in record.source_details['battles'] %}
-                {% if battle.get('featuring') %}
-                <p class="lfv-archive-participants"><strong>{{ battle.name }} participants:</strong> {{ battle.featuring | join(', ') }}</p>
-                {% endif %}
-              {% endfor %}
-            {% endif %}
+            {% for battle in record.lineup_participants | default([]) %}
+              <p class="lfv-archive-participants"><strong>{{ battle.name }} PARTICIPANTS:</strong> {{ battle.featuring | join(', ') }}</p>
+            {% endfor %}
           </section>
         {% endif %}
         {% if record.notes %}
         <section>
-          <h2>Announcements &amp; research notes</h2>
+          <h2>Event highlights</h2>
           <ul class="lfv-archive-notes">{% for note in record.notes %}<li>{{ note }}</li>{% endfor %}</ul>
         </section>
         {% endif %}
@@ -84,13 +79,14 @@
           <h2>{% if record.collection == 'people' %}Documented research{% elif record.collection == 'moves' %}Movement research{% else %}Historical context{% endif %}</h2>
           <p>{{ record.description }}</p>
           {% if record.related_to %}<p><strong>Related subjects:</strong> {{ record.related_to }}</p>{% endif %}
-          {% for note in record.research_details %}
-            {% if note.label not in ['Claim Text','Move Origin / Context','Known For','Dancer Name / Alias','Move / Style Name','Archive Note'] %}
-            <div class="lfv-archive-research-detail">
-              <strong>{{ note.label }}</strong><p>{{ note.value }}</p>
-            </div>
-            {% endif %}
-          {% endfor %}
+          {% if record.research_findings %}
+            <h3>Additional sourced findings</h3>
+            <ol class="lfv-archive-findings">
+            {% for finding in record.research_findings %}
+              <li>{{ finding }}</li>
+            {% endfor %}
+            </ol>
+          {% endif %}
         </section>
       {% endif %}
       {% if record.can_verify %}
@@ -123,18 +119,21 @@
       {% endif %}
     </div>
     <aside class="lfv-archive-source-panel" aria-label="Sources and record status">
-      <h2>Source &amp; provenance</h2>
-      <p><strong>Current status:</strong> Research under review</p>
-      <p><strong>Record source:</strong> {{ record.source_label }}</p>
-      {% if record.source_url %}
-        <p><a href="{{ record.source_url }}" target="_blank" rel="noopener noreferrer">View the original linked source <span aria-hidden="true">↗</span></a></p>
+      <h2>Sources</h2>
+      {% if record.research_sources %}
+        <ol class="lfv-archive-source-links">
+        {% for source in record.research_sources %}
+          <li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }} <span aria-hidden="true">↗</span></a>
+            {% if source.date %}<time datetime="{{ source.date }}">{{ source.date }}</time>{% endif %}</li>
+        {% endfor %}
+        </ol>
+      {% elif record.source_url and record.source_url.startswith('https://') %}
+        <p><a href="{{ record.source_url }}" target="_blank" rel="noopener noreferrer">View original source ↗</a></p>
       {% else %}
-        <p>Source material is held in the archive research files. Original flyer images are not published here yet.</p>
+        <p>{{ record.source_label }}</p>
       {% endif %}
-      <p>Names, dates and planned battle lineups can be corrected as additional reliable evidence becomes available.</p>
       <div class="lfv-archive-redirect">
-        <a href="{{ url_for('vault_community') }}#contribute">Submit a source or correction <span aria-hidden="true">→</span></a>
-        <a href="{{ url_for('vault_timeline') }}">Browse the timeline <span aria-hidden="true">→</span></a>
+        <a href="{{ url_for('vault_community') }}#contribute">Contribute a source ↗</a>
       </div>
     </aside>
   </div>
