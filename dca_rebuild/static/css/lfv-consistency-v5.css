@@ -326,3 +326,23 @@ html.lfv-sitewide .ledger-newsletter-form button[type="submit"] {
 @media(max-width:560px) {
   html.lfv-sitewide .ledger-newsletter-form {gap:10px!important;flex-wrap:wrap!important;}
 }
+
+
+/* One brand CTA design, regardless of prior link-specific declarations. */
+html.lfv-sitewide #vault-home a.lfv-primary-cta,
+html.lfv-sitewide #vault-home a.lfv-primary-cta:link,
+html.lfv-sitewide #vault-home a.lfv-primary-cta:visited {
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ box-sizing:border-box!important;gap:20px!important;width:fit-content!important;
+ max-width:100%!important;min-height:48px!important;padding:15px 26px!important;
+ background:#c9a52b!important;color:#091b36!important;
+ border:0!important;border-radius:11px!important;text-decoration:none!important;
+ font-weight:850!important;font-size:clamp(.83rem,1.16vw,1rem)!important;
+ line-height:1.35!important;white-space:normal!important;
+}
+html.lfv-sitewide #vault-home a.lfv-primary-cta:hover {background:#d6b445!important}
+@media(max-width:600px) {
+ html.lfv-sitewide #vault-home a.lfv-primary-cta {
+  padding:14px 21px!important;min-height:46px!important;gap:13px!important;
+ }
+}
