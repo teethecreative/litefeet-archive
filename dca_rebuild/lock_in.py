@@ -2,14 +2,24 @@
 
 DECKS = {
     "performance": dict(name="Performance", dancer="DC", arena="The Lite House",
+                        roster=("DC", "Airman", "Aquaman", "Baby Doll", "C Boogie",
+                                "E Nauti", "J Dot", "Leaf Mojo", "Lock In Lance", "Maze",
+                                "Ms. Flexy", "Nae Davis", "Nem Lite", "Relly Rellz", "Soundcloud",
+                                "Wonder Woman", "Action Kid", "A Gutta", "Boog Star", "C Eazy",
+                                "Chubz Lite", "Dat Smooth", "Dill Star", "Doofy", "D Sparkz"),
                         song="Pure Imagination", setup="Tone Whop",
                         moves=("Knee Drop", "Needle & Thread", "Hoodie of Death", "Coin Drop"),
-                        extra_type="Setup", extra="Rev Up", favored="Hoodie of Death",
+                        favored="Hoodie of Death",
                         note="DC submitted Performance as the highest stat, Hoodie of Death as a signature move, and a TKO counter as a possible ability."),
     "spank": dict(name="Spank", dancer="K Cosmic", arena="Slattery Park",
+                     roster=("K Cosmic", "Fro Man", "Goya", "Hoodstar", "J Rite",
+                             "Kid 50", "Kid Patt", "Larry Smooth", "Mike Gz", "Oyey",
+                             "Ramz Lite", "Smooth Chick", "Spot Lite", "Star Live", "Tye Smooth",
+                             "Live Motion", "Noah", "Red Ink", "All American Pop", "Cheddar Bob",
+                             "Birdman", "Ducksauce", "Dot Lite", "Falcon", "Future"),
                      song="Lonely Nights", setup="Rev Up",
                      moves=("Baggage Claim", "False Alarm", "Stutter Step", "Swiss Drop"),
-                     extra_type="Trick", extra="Shoe Trick", favored="False Alarm",
+                     favored="False Alarm",
                      note="K Cosmic chose Spank as the highest stat, named Baggage Claim and False Alarm as signatures, and picked Slattery Park for an arena advantage. False Alarm resets a fake-out and flows back into freestyle."),
 }
 

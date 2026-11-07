@@ -7,7 +7,7 @@
 <section id="rules">
   <h2>How to play</h2>
   <ol>
-    <li><strong>Set the battle.</strong> The draft supports 1v1, 2v2 tag teams, and 3v3 teams. Shuffle and cut your 25–50 card decks. Spin the adidas counter. The winner picks the arena and decides who goes first.</li>
+    <li><strong>Set the battle.</strong> The draft supports 1v1, 2v2 tag teams, and 3v3 teams. Each sample deck has 25 different dancers. Spin the adidas counter. The winner picks the arena and decides who goes first.</li>
     <li><strong>Build your round.</strong> Start with a dancer and song. For a 1v1, the draft gives each player a seven-card hand. Play a setup like Rev Up or Tone Whop, then lay up to three move cards face down. Arena, producer, song, and trick cards can change how your round scores.</li>
     <li><strong>Lock in.</strong> Say “locked in” before your opponent begins. In the draft, they can call out a missed lock-in for a 10 Battle Point penalty. Compare points to decide the round. Some cards introduce special outcomes, including TKOs.</li>
   </ol>
@@ -15,18 +15,14 @@
 </section>
 <section id="decks">
   <h2>Sample decks</h2>
-  <p>Each example contains 25 cards. DC and K Cosmic supplied their dancer profiles, signature moves, and arena picks. The pairings and copy counts are practice builds. Both tracks come from Reel Hectic’s Common song submissions.</p>
+  <p>Each deck contains 25 dancers, one card per person. These sample rosters draw from Tee’s planning document and the card submissions. The guided rounds feature DC and K Cosmic, with arenas, moves, and songs supplied separately for play. Both tracks are from Reel Hectic’s Common song submissions.</p>
   <div class="lock-decks">
   {% for key, sample in decks.items() %}
-    <article><p class="vault-kicker">{{ sample.name }}</p><h3>{{ sample.dancer }}’s deck</h3><p>{{ sample.note }}</p>
-      <details><summary>View all 25 cards</summary><ul>
-        <li>Dancer · {{ sample.dancer }} × 1</li><li>Arena · {{ sample.arena }} × 1</li>
-        <li>Producer · Reel Hectic × 1</li><li>Song · {{ sample.song }} × 1</li>
-        <li>Setup · {{ sample.setup }} × 3</li>
-        {% for move in sample.moves %}<li>Move · {{ move }} × 3</li>{% endfor %}
-        <li>{{ sample.extra_type }} · {{ sample.extra }} × 3</li><li>Upgrade · Fake out × 3</li>
-      </ul></details>
-      <a href="{{ url_for('vault_lock_in', deck=key) }}#practice">Play {{ sample.dancer }}’s deck</a>
+    <article><p class="vault-kicker">{{ sample.name }}</p><h3>Sample deck featuring {{ sample.dancer }}</h3><p>{{ sample.note }}</p>
+      <details><summary>View all {{ sample.roster|length }} dancers</summary>
+        <ol>{% for dancer in sample.roster %}<li>{{ dancer }}</li>{% endfor %}</ol>
+      </details>
+      <a href="{{ url_for('vault_lock_in', deck=key) }}#practice">Practice with {{ sample.dancer }}</a>
     </article>
   {% endfor %}</div>
 </section>
