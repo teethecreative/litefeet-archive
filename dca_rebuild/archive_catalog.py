@@ -22,6 +22,7 @@ COLLECTIONS = (
 )
 PAGE_SIZE = 8
 MAX_PAGE_SIZE = 16
+PEOPLE_CLOUD_LIMIT = 20
 
 # Only explicitly program-oriented details are suitable for the public record.
 # Editorial doubts, missing citations and publishing instructions are admin-only.
@@ -288,5 +289,5 @@ def people_crew_cloud():
             weight=1 + mentions,
         ))
     result.sort(key=lambda item: (-item['weight'], item['title'].casefold()))
-    return result
+    return result[:PEOPLE_CLOUD_LIMIT]
 
