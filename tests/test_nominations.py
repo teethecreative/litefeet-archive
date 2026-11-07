@@ -149,7 +149,11 @@ def test_validation_gates_and_skips(website, monkeypatch):
     assert client.post(PATH, data=dict(csrf_token=token, category_id=999, name='Dancer')).status_code == 400
     assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='!')).status_code == 400
     response = client.post(PATH, data=dict(csrf_token=token, category_id=1, action='skip'), follow_redirects=True)
-    assert b'<strong>1</strong><span>SKIPPED THIS VISIT' in response.data
+    assert response.status_code == 200
+    assert b'Nominate for the 2026 Awards' in response.data
+    assert b'Your nomination activity' not in response.data
+    with client.session_transaction() as sess:
+        assert 1 in sess['lf9e_skipped']
     monkeypatch.setenv('DCA_2026_NOMINATIONS_CLOSE_AT', '2020-01-01T00:00:00Z')
     assert client.post(PATH, data=dict(csrf_token=token, category_id=2, name='Dancer')).status_code == 403
     monkeypatch.setenv('DCA_2026_NOMINATIONS_ENABLED', 'false')
@@ -366,4 +370,25 @@ def test_introduction_lists_process_and_categories_before_email(website):
         token = sess['lf9e_nomination_csrf']
     assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One')).status_code == 400
     identify(client)
-    assert b'CHOOSE YOUR CATEGORY' in client.get(PATH).data
+    assert b'Nominate for the 2026 Awards' in client.get(PATH).data
+
+
+def test_category_grid_has_clear_invitation_without_activity_dashboard(website):
+    client = website.test_client()
+    identify(client)
+    response = client.get(PATH)
+    html = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert '<h1 class="lf9e-nomination-heading">Nominate for the 2026 Awards</h1>' in html
+    assert 'Nominations are open for suggestions.' in html
+    assert 'Suggest a new entry or support an existing nominee.' in html
+    assert 'the top five eligible nominees in each category advance to the final vote.' in html
+    assert 'You can submit one nomination per category every rolling 24 hours.' in html
+    assert 'Your cooldown is shown on each category before you open it.' not in html
+    assert 'Your nomination activity' not in html
+    assert 'lf9e-summary-stats' not in html
+    assert 'NOMINATIONS SUBMITTED' not in html
+    assert 'SKIPPED THIS VISIT' not in html
+    assert 'id="official-title"' in html
+    assert html.count('data-category-id=') == 25
+    assert 'WRITE-IN CATEGORIES' in html

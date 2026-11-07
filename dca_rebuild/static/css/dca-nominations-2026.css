@@ -24,3 +24,19 @@
 .lf-9d-confirm{display:grid;gap:7px;margin:20px 0;max-width:320px}
 .lf-9d-confirm input{font:inherit;padding:12px;border:1px solid currentColor;background:transparent;color:inherit}
 @media(max-width:700px){.lf-9d-select-row{grid-template-columns:25px 1fr}.lf-9d-select-note{grid-column:2}}
+
+/* 2026 nomination category grid: compact, sentence-case introduction. */
+html.lfv-sitewide main#nominations.lf9e h1.lf9e-nomination-heading {
+  font-size: clamp(1.65rem, 3.3vw, 2.4rem) !important;
+  line-height: 1.2 !important;
+  letter-spacing: -.025em !important;
+  text-transform: none !important;
+  margin: 1.1rem 0 .75rem !important;
+}
+html.lfv-sitewide main#nominations.lf9e .lf9e-nomination-description {
+  max-width: 75ch;
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+  text-transform: none !important;
+  margin: 0 0 1.75rem !important;
+}
