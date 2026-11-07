@@ -101,7 +101,7 @@ def all_timeline_entries():
     return tuple(entries)
 
 
-def timeline_browse(query="", collection="all", page=1, page_size=PAGE_SIZE):
+def timeline_browse(query="", collection="all", page=1, page_size=PAGE_SIZE, eras=()):
     query = re.sub(r"\s+", " ", (query or "").strip()).casefold()[:120]
     page = max(1, min(int(page), 10000))
     page_size = max(1, min(int(page_size), MAX_PAGE_SIZE))
@@ -109,7 +109,23 @@ def timeline_browse(query="", collection="all", page=1, page_size=PAGE_SIZE):
     if collection not in available:
         collection = "all"
     tokens = query.split()
-    records = [item for item in all_timeline_entries()
+    entries = list(all_timeline_entries())
+    for index, era in enumerate(eras or ()):
+        year = int(era.get("start_year") or 0)
+        span = str(year) if year else "PERIOD UNDATED"
+        if era.get("end_year") and int(era["end_year"]) != year:
+            span += "–" + str(era["end_year"])
+        description = era.get("description") or ""
+        entries.append(dict(
+            slug="published-era-" + str(index), title=era.get("name") or "HISTORICAL ERA",
+            collection="history", date="", date_label=span,
+            period=span + " / PUBLISHED ERA", sort_year=year,
+            sort_date=f"{year:04d}-01-01" if year else "",
+            href="", summary=description, detail=[], sources=[], kind="era",
+            search=(" ".join([str(era.get("name") or ""), description, span])).casefold()
+        ))
+    entries.sort(key=lambda x: (x["sort_year"], x["sort_date"], x["slug"]), reverse=True)
+    records = [item for item in entries
                if (collection == "all" or item["collection"] == collection)
                and all(token in item["search"] for token in tokens)]
     start = (page - 1) * page_size
