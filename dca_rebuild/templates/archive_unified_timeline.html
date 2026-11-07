@@ -1,6 +1,6 @@
 <header class="lfv-unified-hero">
   <p class="vault-kicker">THE ARCHIVE / CULTURAL HISTORY</p>
-  <h1>HISTORY &amp; TIMELINE</h1>
+  <h1>{% if archive_overview | default(false) %}THE ARCHIVE TIMELINE{% else %}HISTORY &amp; TIMELINE{% endif %}</h1>
   <p>ONE CHRONOLOGICAL RECORD OF LITEFEET, GET LITE, THE HARLEM SHAKE, DANCERS, CREWS, MOVES, MUSIC AND EVENTS. EXPAND RESEARCH TO SEE THE EVIDENCE.</p>
 </header>
 <nav class="lfv-archive-subnav" aria-label="ARCHIVE NAVIGATION">
@@ -25,7 +25,15 @@
   <div class="lfv-unified-list" data-timeline-list role="list">
     {% for entry in archive_items %}
     <article class="lfv-unified-item" role="listitem">
-      <p class="lfv-unified-meta"><span>{{ entry.period }}</span> <span aria-hidden="true">/</span> <span>{{ entry.collection }}</span></p>
+      <p class="lfv-unified-meta">
+        {% if entry.kind == 'record' and entry.meta_parts %}
+          {% for segment in entry.meta_parts %}
+          <span>{{ segment }}</span>{% if not loop.last %}<span aria-hidden="true">/</span>{% endif %}
+          {% endfor %}
+        {% else %}
+          <span>{{ entry.period }}</span><span aria-hidden="true">/</span><span>{{ entry.collection | upper }}</span>
+        {% endif %}
+      </p>
       {% if entry.kind == 'chapter' %}
       <details class="lfv-unified-expand">
         <summary><strong>{{ entry.title }}</strong><span aria-hidden="true">+</span></summary>
