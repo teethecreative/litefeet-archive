@@ -1,0 +1,91 @@
+<header class="lfv-archive-intro">
+  <p class="vault-kicker">THE ARCHIVE</p>
+  {% if archive_timeline %}
+    <h1>History &amp; Timeline</h1>
+    <p>Follow documented moments in LiteFeet culture. Scroll to explore more events, with original announcements separated from confirmed results.</p>
+  {% else %}
+    <h1>Keep the culture on record.</h1>
+    <p>Explore LiteFeet history through the people, moves, battles, music, events and records that shaped it.</p>
+  {% endif %}
+</header>
+
+<div class="lfv-archive-subnav">
+  <a href="{{ url_for('vault_archive') }}" {% if not archive_timeline %}aria-current="page"{% endif %}>Explore the Archive</a>
+  <a href="{{ url_for('vault_timeline') }}" {% if archive_timeline %}aria-current="page"{% endif %}>History &amp; Timeline</a>
+  <a href="{{ url_for('dca_2023_home') }}">2023 Awards Archive</a>
+</div>
+
+{% if not archive_timeline %}
+<section id="collections" class="lfv-archive-collections" aria-labelledby="collection-heading">
+  <h2 id="collection-heading">Explore collections</h2>
+  <div class="lfv-archive-collection-grid">
+    {% for key, label in archive_collections if key != 'all' %}
+      <a href="{{ url_for('vault_archive', collection=key) }}#records">
+        <strong>{{ label }}</strong><span aria-hidden="true">→</span>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% elif eras %}
+<section class="lfv-archive-eras" aria-label="Published historical eras">
+  <h2>Historical eras</h2>
+  <ol>{% for era in eras %}
+    <li>
+      <strong>{{ era.name }}</strong>
+      {% if era.start_year %}<span>{{ era.start_year }}{% if era.end_year and era.end_year != era.start_year %}–{{ era.end_year }}{% endif %}</span>{% endif %}
+      {% if era.description %}<p>{{ era.description }}</p>{% endif %}
+    </li>
+  {% endfor %}</ol>
+</section>
+{% endif %}
+
+<section class="lfv-archive-index" id="records" data-archive-browser data-timeline="{{ '1' if archive_timeline else '0' }}" aria-labelledby="archive-list-title">
+  <div class="lfv-archive-list-head">
+    <h2 id="archive-list-title">{% if archive_timeline %}Chronological timeline{% else %}Browse records{% endif %}</h2>
+    <span data-archive-count>{{ archive_pagination.count }} {% if archive_pagination.count == 1 %}entry{% else %}entries{% endif %}</span>
+  </div>
+  <form class="lfv-archive-filter" action="{{ url_for('vault_timeline') if archive_timeline else url_for('vault_archive') }}" method="get" role="search" data-archive-filter>
+    <label for="archive-search-input">Search archive records</label>
+    <div class="lfv-archive-searchline">
+      <input type="search" id="archive-search-input" name="q" value="{{ request.args.get('q','') }}" maxlength="120" placeholder="Search dancers, events, moves, music…">
+      {% if not archive_timeline %}
+      <select name="collection" aria-label="Choose archive collection">
+        {% for key, label in archive_collections %}
+          <option value="{{ key }}" {% if archive_pagination.collection == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      {% endif %}
+      <button type="submit">Search</button>
+    </div>
+  </form>
+  <div class="lfv-archive-entry-list" data-archive-list role="list">
+    {% for entry in archive_items %}
+      <article class="lfv-archive-entry" role="listitem">
+        <div class="lfv-archive-entry-main">
+          <p class="lfv-archive-entry-meta">{{ entry.date_label }} <span aria-hidden="true">·</span> {{ entry.collection | capitalize }} <span aria-hidden="true">·</span> Under review</p>
+          <h3><a href="{{ url_for('vault_archive_record', slug=entry.slug) }}">{{ entry.title }}</a></h3>
+          <p>{{ entry.summary }}</p>
+        </div>
+        <a class="lfv-archive-open" href="{{ url_for('vault_archive_record', slug=entry.slug) }}" aria-label="View {{ entry.title }}">View record <span aria-hidden="true">→</span></a>
+      </article>
+    {% endfor %}
+  </div>
+  <p class="lfv-archive-empty" data-archive-empty {% if archive_items %}hidden{% endif %}>No matching records. Try another search or collection.</p>
+  <div class="lfv-archive-pagination">
+    <p class="lfv-archive-load-state" aria-live="polite" data-archive-state>{% if archive_pagination.has_more %}Scroll for more records{% else %}All matching records loaded{% endif %}</p>
+    <button type="button" data-archive-load {% if not archive_pagination.has_more %}hidden{% endif %}>Load more records</button>
+    <noscript>
+      {% if archive_pagination.has_more %}
+      <a href="?page={{ archive_pagination.next_page }}{% if request.args.get('q') %}&amp;q={{ request.args.get('q') | urlencode }}{% endif %}{% if not archive_timeline %}&amp;collection={{ archive_pagination.collection }}{% endif %}#records">Next page of records</a>
+      {% endif %}
+    </noscript>
+  </div>
+</section>
+
+{% if not archive_timeline %}
+<section class="lfv-archive-provenance">
+  <h2>Historical awards</h2>
+  <p>The August 2023 Dancer’s Choice Awards archive preserves 31 categories, 152 nominee entries and 32 winning entries.</p>
+  <a href="{{ url_for('dca_2023_home') }}">Explore the original 2023 award records <span aria-hidden="true">→</span></a>
+</section>
+{% endif %}
