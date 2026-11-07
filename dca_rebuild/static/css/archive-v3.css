@@ -208,7 +208,7 @@ html.lfv-sitewide #vault-section-archive .lfv-archive-provenance>a:link{
 
 /* HISTORY PAGE — publication typography, chapter links and readable citations */
 html.lfv-sitewide #archive-history-guide{
-  text-transform:none!important;
+  text-transform:uppercase!important;
   width:min(calc(100% - 32px),1170px)!important;
   max-width:1170px!important;margin:0 auto!important;
 }
