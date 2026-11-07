@@ -119,7 +119,8 @@ def test_email_first_history_and_return_to_grid(website, database):
     assert client.post(PATH, data={'category_id': 1, 'name': 'Dancer'}).status_code == 400
     token = identify(client, ' PERSON@example.com ')
     grid = client.get(PATH)
-    assert grid.data.count(b'data-category-id=') == 27
+    assert grid.data.count(b'data-category-id=') == 25
+    assert b'WRITE-IN CATEGORIES' in grid.data
     assert b'person@example.com' not in grid.data
     assert 'no-store' in grid.headers['Cache-Control']
     result = client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One', team='Crew'), follow_redirects=True)
@@ -131,7 +132,7 @@ def test_email_first_history_and_return_to_grid(website, database):
     assert b'Your nomination summary' not in result.data
     assert b'Return tomorrow' not in result.data
     assert b'Dancer One' in result.data
-    assert client.get(PATH).data.count(b'data-category-id=') == 27
+    assert client.get(PATH).data.count(b'data-category-id=') == 25
     assert client.post(PATH, data=dict(csrf_token=token, category_id=2, name='Dancer Two')).status_code == 302
     assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Other')).status_code == 302
     with database[1]() as db:
@@ -354,9 +355,12 @@ def test_introduction_lists_process_and_categories_before_email(website):
     assert response.status_code == 200
     html = response.get_data(as_text=True)
     assert html.index('id="intro-title"') < html.index('id="lf9e-intro-categories"') < html.index('id="lf9e-email-start"')
-    assert 'Category 25' in html and 'Category 26' in html and 'Category 27' in html
-    assert 'One nomination per category every 24 hours.' in html
-    assert 'advance to final voting' in html
+    assert 'Category 25' in html
+    assert 'WRITE-IN CATEGORIES' in html
+    # Community write-ins have their own searchable page rather than appearing in the Top 25 preview.
+    assert 'Category 26' not in html and 'Category 27' not in html
+    assert 'Submit one nomination per category every rolling 24 hours.' in html
+    assert 'become the finalists' in html
     assert 'Your previous nominations' not in html
     with client.session_transaction() as sess:
         token = sess['lf9e_nomination_csrf']

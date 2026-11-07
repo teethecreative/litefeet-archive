@@ -11,7 +11,7 @@ from dca_rebuild.timeline_catalog import timeline_browse, timeline_payload
 from dca_rebuild.upcoming_calendar import upcoming_calendar
 from dca_rebuild.archive_catalog import (
     COLLECTIONS, PAGE_SIZE, all_records, browse, find_record,
-    listing_payload, public_record,
+    listing_payload, public_record, people_crew_cloud,
 )
 
 # Stable future catalog; readiness is separate from the intended ordering.
@@ -54,7 +54,7 @@ def install_information_architecture(app, ns):
             'archive': [dict(label='Browse collections', href='/archive#collections'),
                         dict(label='History & Timeline', href='/archive/timeline'),
                         dict(label='Lock In · Card Battle Game', href='/archive/lock-in'),
-                        dict(label='Contribute & Correct', href='/community#contribute')],
+                        dict(label='Submit', href='/submit')],
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
                        dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
                        dict(label='Historical Results', href='/awards/dancers-choice/2023')],
@@ -106,7 +106,7 @@ def install_information_architecture(app, ns):
                        dict(label='Contribute historical records', href='/awards/litefeet-awards#contribute')]
         return dict(vault_navigation=navigation, vault_breadcrumbs=breadcrumbs,
                     vault_program_navigation=program, vault_emit_chrome=emit_chrome,
-                    vault_upcoming_calendar=upcoming_calendar(),
+                    vault_upcoming_calendar=upcoming_calendar(session_factory=ns['SessionLocal']),
                     vault_site_updates=PUBLIC_SITE_UPDATES,
                     vault_updates=content['updates'], vault_eras=content['eras'], vault_contact=CONTACT)
 
@@ -124,6 +124,8 @@ def install_information_architecture(app, ns):
         return section_page(section, archive_items=filtered['items'],
                             archive_pagination=filtered, archive_collections=COLLECTIONS,
                             archive_timeline=timeline,
+                            people_cloud=(people_crew_cloud() if not timeline and search['collection'] == 'people'
+                                          else []),
                             archive_start_page=current_page)
 
     @app.get('/archive', endpoint='vault_archive')

@@ -1,0 +1,58 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SUBMIT | THE LITEFEET VAULT</title>
+{% include "_seo_head.html" %}
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-consistency-v5.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/vault-submit.css') }}">
+</head><body>
+{% include "_navigation.html" %}
+<main class="lfv-submit" id="vault-submit">
+<nav class="lfv-submit-breadcrumb"><a href="{{ url_for('vault_archive') }}">THE ARCHIVE</a> / SUBMIT</nav>
+<header><p class="lfv-submit-kicker">ADD TO THE CULTURE</p><h1>SUBMIT</h1>
+<p>Help keep the culture connected. Share a battle, lab session, link-up, workshop, class or other gathering.</p>
+</header>
+{% with messages=get_flashed_messages() %}{% for message in messages %}<p class="lfv-submit-warning" role="alert">{{ message }}</p>{% endfor %}{% endwith %}
+<form method="post" action="{{ url_for('vault_submit') }}" class="lfv-submit-form">
+<input type="hidden" name="csrf_token" value="{{ submit_csrf }}">
+<div class="lfv-submit-trap" aria-hidden="true"><label>WEBSITE <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+<div class="lfv-submit-two">
+<label>What are you sharing? <select name="gathering_type" required><option value="">Choose one</option>
+{% for value,label in submission_types %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+</select></label>
+<label>Name / title <input name="title" maxlength="240" placeholder="What is it called?" required></label>
+</div>
+<div class="lfv-submit-two">
+<label>Start date <input type="date" name="start_date" required></label>
+<label>End date <span class="lfv-submit-optional">Optional</span><input type="date" name="end_date"></label>
+</div>
+<div class="lfv-submit-two">
+<label>Start time <span class="lfv-submit-optional">Optional</span><input type="time" name="start_time"></label>
+<label>End time <span class="lfv-submit-optional">Optional</span><input type="time" name="end_time"></label>
+</div>
+<div class="lfv-submit-two">
+<label>Location / venue <span class="lfv-submit-optional">Optional</span><input name="venue" maxlength="240" placeholder="Venue or meeting place"></label>
+<label>City / borough <span class="lfv-submit-optional">Optional</span><input name="city" maxlength="120" placeholder="HARLEM, BRONX, BROOKLYN…"></label>
+</div>
+<label>Street address <span class="lfv-submit-optional">Optional</span><input name="address" maxlength="350" placeholder="If applicable"></label>
+<label class="lfv-submit-check"><input type="checkbox" name="virtual" value="1"> This is online / virtual</label>
+<div class="lfv-submit-two">
+<label>Host / organizer <span class="lfv-submit-optional">Optional</span><input name="hosts" maxlength="400" placeholder="Who's putting it together?"></label>
+<label>Admission <span class="lfv-submit-optional">Optional</span><input name="admission" maxlength="160" placeholder="Free, $10, donation…"></label>
+</div>
+<label>Details <span class="lfv-submit-optional">Optional</span><textarea name="description" maxlength="3000" rows="3" placeholder="What should people know?"></textarea></label>
+<label>Event / registration / source link <span class="lfv-submit-optional">Optional</span><input type="url" name="link" maxlength="1200" placeholder="HTTPS://…"></label>
+<details class="lfv-submit-more"><summary>Contact & additional notes (optional)</summary>
+<div class="lfv-submit-two">
+<label>Contact name <input name="contact_name" maxlength="160"></label>
+<label>Email <input type="email" name="contact_email" maxlength="255" placeholder="For follow-up only"></label>
+</div>
+<label>Additional notes <textarea name="additional_notes" maxlength="2000" rows="3" placeholder="Anything the Vault should review?"></textarea></label>
+</details>
+<p class="lfv-submit-privacy">Submissions are reviewed before being added to the public calendar. Contact information and private notes are never displayed publicly. No flyer or account required.</p>
+<button class="lfv-primary-cta" type="submit">Submit <span aria-hidden="true">→</span></button>
+</form>
+</main>{% include "_footer.html" %}
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+</body></html>

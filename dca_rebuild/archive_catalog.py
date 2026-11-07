@@ -22,6 +22,7 @@ COLLECTIONS = (
 )
 PAGE_SIZE = 8
 MAX_PAGE_SIZE = 16
+PEOPLE_CLOUD_LIMIT = 20
 
 # Only explicitly program-oriented details are suitable for the public record.
 # Editorial doubts, missing citations and publishing instructions are admin-only.
@@ -251,3 +252,42 @@ def listing_payload(item):
         "slug", "title", "collection", "record_type", "date", "date_label",
         "date_certainty", "editorial_status", "summary", "series"
     )}
+
+
+def people_crew_cloud():
+    """Weighted index of known public people/crew profiles.
+
+    Names and aliases are derived exclusively from published archive profiles;
+    do not create public ghost profiles from unverified event lineups.
+    A record contributes at most one mention for each matched profile.
+    """
+    profiles = [r for r in all_records() if r['collection'] == 'people']
+    documents = [r for r in all_records() if r['collection'] != 'people']
+    result = []
+    for profile in profiles:
+        aliases = [v.strip() for v in profile['title'].split('/') if v.strip()]
+        # Short aliases risk matching unrelated words; require at least 4 letters.
+        patterns = [re.compile(r'(?<!\\w)' + re.escape(alias) + r'(?!\\w)', re.I)
+                    for alias in aliases if len(alias) >= 4]
+        mentions = 0
+        for doc in documents:
+            fragments = [doc.get('title', ''), doc.get('description', ''),
+                         doc.get('related_to', '')]
+            if doc.get('collection') == 'events':
+                for group in doc.get('battles', []):
+                    fragments.extend(str(i) for i in group.get('items', []))
+                for pair in doc.get('lineup_participants', []):
+                    fragments.extend(pair.get('featuring', []))
+            if any(pattern.search(' '.join(fragments)) for pattern in patterns):
+                mentions += 1
+        result.append(dict(
+            title=profile['title'].split('/')[0].strip(),
+            full_name=profile['title'],
+            slug=profile['slug'],
+            mentions=mentions,
+            # Baseline weight of one, growing with documented cross-references.
+            weight=1 + mentions,
+        ))
+    result.sort(key=lambda item: (-item['weight'], item['title'].casefold()))
+    return result[:PEOPLE_CLOUD_LIMIT]
+

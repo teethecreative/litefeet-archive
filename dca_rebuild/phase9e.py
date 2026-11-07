@@ -496,6 +496,161 @@ def install_phase9e(app, ns):
         finally:
             db.close()
 
+    @app.get('/awards/dancers-choice/write-ins', endpoint='phase9e_writeins')
+    def writein_categories_9e():
+        """All moderator-approved categories outside the Top 25, not only published write-ins.
+
+        Unapproved/rejected category suggestions and private supporter details stay private.
+        Viewing does not publish, approve, or otherwise mutate a category.
+        """
+        db = SessionLocal()
+        try:
+            edition = db.query(DCAEdition).filter_by(year=2026).first()
+            entries = []
+            requirement = 20
+            floor = 0
+            if edition:
+                stages = stages_for(db, edition)
+                top_names = {
+                    normalized(cat.name) for stage, cat in stages if stage.stage == 'top25'
+                }
+                live_writeins = {
+                    normalized(cat.name): (stage, cat)
+                    for stage, cat in stages if stage.stage in ('write_in', 'qualified')
+                }
+                qualifying, floor, requirement = qualification(db, edition, stages)
+                # Include ALL submitted category names not in the Top 25,
+                # including pending ones. Merged aliases are grouped, rejected
+                # entries remain excluded to avoid resurfacing spam or abuse.
+                # Listing a suggestion does not silently promote it to a finalist.
+                historical = db.query(DCAEdition).filter_by(year=2023).first()
+                candidates = {}
+                if historical:
+                    for cat in db.query(DCACategory).filter_by(edition_id=historical.id).all():
+                        key = normalized(cat.name)
+                        if key not in top_names:
+                            candidates[key] = dict(name=cat.name,
+                                                   description=cat.description or '')
+                for group in ns['dca_new_category_groups'](db, edition.id):
+                    key = normalized(group['name'])
+                    if key not in top_names:
+                        candidates[key] = dict(
+                            name=group['name'],
+                            description=group.get('description') or '',
+                        )
+                for name, (stage, cat) in live_writeins.items():
+                    candidates[name] = dict(name=cat.name,
+                                            description=cat.description or '')
+                for key, item in sorted(candidates.items(),
+                                        key=lambda pair: pair[1]['name'].casefold()):
+                    staged = live_writeins.get(key)
+                    stage, cat = staged if staged else (None, None)
+                    counts = qualifying.get(cat.id, {}) if cat is not None else {}
+                    entries.append(dict(
+                        name=item['name'], description=item['description'],
+                        category_id=cat.id if cat is not None else None,
+                        open_for_nominations=bool(
+                            stage and stage.stage in ('write_in', 'qualified')
+                            and edition.phase == 'nominations'
+                            and os.getenv('DCA_2026_NOMINATIONS_ENABLED') == 'true'
+                            and not is_closed()
+                        ),
+                        published=bool(stage),
+                        qualified=bool(stage and stage.stage == 'qualified'),
+                        meets_threshold=bool(counts.get('met')),
+                        supporters=counts.get('supporters', 0),
+                        nominees=counts.get('eligible_nominees', 0),
+                    ))
+            total = len(entries)
+            search = (request.args.get('q') or '').strip()[:100]
+            if search:
+                entries = [
+                    item for item in entries
+                    if search.casefold() in (item['name'] + ' ' + item['description']).casefold()
+                ]
+            session.setdefault('lf9e_writeins_csrf', secrets.token_urlsafe(32))
+            response = render_template(
+                'dca_writeins.html', entries=entries, total=total, search=search,
+                requirement=requirement, floor=floor,
+                writeins_csrf=session['lf9e_writeins_csrf'],
+            )
+            return response
+        finally:
+            db.close()
+
+    @app.post('/awards/dancers-choice/write-ins/activate', endpoint='phase9e_activate_writein')
+    def activate_writein_9e():
+        """Community access to a proposed category without unavailable admin tooling.
+
+        No public activation after nomination close; Top 25 and historical
+        categories are not modified. Previously rejected suggestions are excluded.
+        """
+        expected = session.get('lf9e_writeins_csrf', '')
+        submitted = request.form.get('csrf_token', '')
+        if not expected or not secrets.compare_digest(expected, submitted):
+            abort(400, 'Invalid submission token')
+        key = normalized((request.form.get('category') or '').strip()[:250])
+        if not key:
+            abort(400, 'Choose a category')
+        db = SessionLocal()
+        try:
+            edition = db.query(DCAEdition).filter_by(year=2026).first()
+            if (not edition or edition.phase != 'nominations'
+                or os.getenv('DCA_2026_NOMINATIONS_ENABLED') != 'true'
+                or is_closed()):
+                abort(409, 'Nominations are not open')
+            stages = stages_for(db, edition)
+            if len([stage for stage, _ in stages if stage.stage == 'top25']) != 25:
+                abort(409, 'The official Top 25 must be finalized first')
+            existing = next((cat for stage, cat in stages
+                             if normalized(cat.name) == key), None)
+            if existing:
+                return redirect(url_for('dca_nominations_closed', category=existing.id))
+            # Only names already provided through the recorded category round.
+            # Reject names previously moderated out of the public list.
+            historical = db.query(DCAEdition).filter_by(year=2023).first()
+            possible = {}
+            if historical:
+                for cat in db.query(DCACategory).filter_by(edition_id=historical.id).all():
+                    possible[normalized(cat.name)] = dict(
+                        name=cat.name, description=cat.description or '',
+                        source_type='returning', source_category_id=cat.id)
+            for group in ns['dca_new_category_groups'](db, edition.id):
+                possible[normalized(group['name'])] = dict(
+                    name=group['name'], description=group.get('description') or '',
+                    source_type='new', source_category_id=None)
+            item = possible.get(key)
+            if not item:
+                abort(404, 'Unknown category')
+            record = db.query(DCACategory).filter_by(
+                edition_id=edition.id, normalized_name=key).first()
+            if record is None:
+                record = DCACategory(
+                    edition_id=edition.id, name=item['name'],
+                    normalized_name=key, description=item['description'],
+                    source_type=item['source_type'],
+                    source_category_id=item['source_category_id'],
+                    status='write_in_eligible')
+                db.add(record)
+                db.flush()
+            else:
+                record.status = 'write_in_eligible'
+            db.add(CategoryStage9E(
+                edition_id=edition.id, category_id=record.id, stage='write_in',
+                position=max((stage.position for stage, _ in stages), default=25) + 1))
+            db.commit()
+            return redirect(url_for('dca_nominations_closed', category=record.id))
+        except IntegrityError:
+            db.rollback()
+            # Another visitor may have already activated this category.
+            existing = next((cat for stage, cat in stages_for(db, edition)
+                             if normalized(cat.name) == key), None)
+            if existing:
+                return redirect(url_for('dca_nominations_closed', category=existing.id))
+            raise
+        finally:
+            db.close()
+
     @app.after_request
     def private_nomination_response(response):
         if request.endpoint == 'dca_nominations_closed':
@@ -569,6 +724,15 @@ def install_phase9e(app, ns):
                     if who != session.get('lf9e_recent_hash'):
                         session.pop('lf9e_skipped', None)
                     session['lf9e_recent_hash'] = who
+                    requested = request.form.get('return_category', '').strip()
+                    if requested:
+                        try:
+                            requested_id = int(requested)
+                        except ValueError:
+                            abort(400, 'Invalid return category')
+                        if requested_id not in allowed:
+                            abort(404)
+                        return redirect(url_for('dca_nominations_closed', category=requested_id))
                     return redirect(url_for('dca_nominations_closed'))
                 who = session.get('lf9e_recent_hash')
                 if not who:
@@ -686,6 +850,8 @@ def install_phase9e(app, ns):
                                    intro_writeins=[dict(id=c.id, name=c.name) for _, c in other],
                                    selected=selected, suggestion=suggestion, suggestion_details=suggestion_details,
                                    show_form=request.args.get('nominate') == '1' or 'draft' in request.args,
+                                   requested_category_id=(request.args.get('category', type=int)
+                                                          if request.args.get('category', type=int) in allowed else None),
                                    identified=bool(who), results_view=results_view, summary=summary,
                                    csrf_token=session['lf9e_nomination_csrf'], closed=is_closed())
         finally:

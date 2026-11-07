@@ -177,7 +177,7 @@
         <p>LiteFeet is more than dance. It's a culture built through creativity, individuality, competition, community, and the people who have continued to push it forward.</p>
         <p>But not everything has been documented. Not every name has been recognized. Not every story has been told. That's part of why I created The LiteFeet Vault.</p>
       </div>
-      <a class="lfv4-text-link" href="{{ url_for('vault_about_letter') }}">Read more <span aria-hidden="true">→</span></a>
+      <a class="lfv3-button lfv3-button-gold lfv-primary-cta" href="{{ url_for('vault_about_letter') }}">Read more <span aria-hidden="true">→</span></a>
     </div>
   </section>
 
@@ -187,7 +187,7 @@
       <div class="lfv4-awards-copy">
         <h2 id="awards-title">Dancer’s Choice Awards 2026</h2>
         <p>Recognition shaped by the LiteFeet community. Explore the 2026 categories, nomination information and official program updates.</p>
-        <a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_2026_home') }}">Explore the 2026 Awards <span aria-hidden="true">→</span></a>
+        <a class="lfv3-button lfv3-button-gold lfv-primary-cta" href="{{ url_for('dca_2026_home') }}">Explore the 2026 Awards <span aria-hidden="true">→</span></a>
       </div>
       <div class="lfv4-awards-side" aria-hidden="true">
         <span>THE DANCER’S CHOICE</span>
@@ -195,12 +195,6 @@
         <span>THE LITEFEET VAULT</span>
       </div>
     </div>
-  </section>
-
-  <section class="lfv3-section" id="lock-in" aria-labelledby="lock-in-title">
-    <h2 id="lock-in-title">Lock In: The LiteFeet Card Battle Game</h2>
-    <p>Browse the dancer decks, choose your moves, and lock in a practice round.</p>
-    <a class="lfv3-button lfv3-button-gold" href="{{ url_for('vault_lock_in') }}">Play Lock In <span aria-hidden="true">→</span></a>
   </section>
 
   <section class="lfv3-section lfv5-month-calendar" id="whats-new" aria-labelledby="month-title">
@@ -224,7 +218,7 @@
         <span>{{ event.status }}</span>
       </article>
     {% else %}
-      <p class="lfv5-calendar-empty">NO UPCOMING EVENTS HAVE BEEN CONFIRMED FOR THE NEXT 30 DAYS. HAVE A FLYER OR AN EVENT TO SHARE? <a href="{{ url_for('vault_community') }}#contribute">SUBMIT AN EVENT →</a></p>
+      <p class="lfv5-calendar-empty">NO UPCOMING GATHERINGS HAVE BEEN LISTED FOR THE NEXT 30 DAYS. KNOW ABOUT A BATTLE, LAB, CLASS OR LINK-UP? <a href="{{ url_for('vault_submit') }}">SUBMIT →</a></p>
     {% endfor %}
     </div>
     <a class="lfv5-minimal-action" href="{{ url_for('vault_timeline') }}">EXPLORE THE FULL TIMELINE <span aria-hidden="true">→</span></a>

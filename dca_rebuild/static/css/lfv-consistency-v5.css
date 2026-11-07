@@ -1,11 +1,15 @@
 /* V5: unified uppercase identity, compact disclosures, shared gold CTA, About + 30-day calendar.
    Admin interfaces intentionally excluded. */
-html.lfv-sitewide body:not(:has(.admin-dashboard)):not(:has(.admin-main)) :is(
- .lfv3-hub,.vault-section-page,.lf-nom-2026,.lf9e-standings-page,.awards-global-nav,
- .lfv-breadcrumbs,.lfv-program-nav,.lfv-site-footer
-){text-transform:uppercase}
-html.lfv-sitewide :is(#vault-home,#vault-section-about,#vault-section-archive,#vault-section-timeline,.lfv-about-page,.lf-nom-2026) :is(h1,h2,h3,h4,p,span,a,button,label,li,summary,option,small,strong,time,th,td){
- text-transform:uppercase;
+/* Headings, section labels and navigational controls are uppercase.
+   Body text, descriptions and explanatory copy retain natural sentence case. */
+html.lfv-sitewide :is(.lfv3-hub,.vault-section-page,.lf-nom-2026,.lf9e-standings-page,.lfv-site-footer) {
+  text-transform: none;
+}
+html.lfv-sitewide :is(.lfv3-hub,.vault-section-page,.lf-nom-2026,.lf9e-standings-page,.lfv-site-footer) :is(h1,h2,h3,h4,h5,h6) {
+  text-transform: uppercase;
+}
+html.lfv-sitewide :is(.awards-global-nav,.lfv-breadcrumbs,.lfv-program-nav,.lfv-site-footer .ledger-footer-links) {
+  text-transform: uppercase;
 }
 /* Buttons that are true actions share the 2026 Awards feature gold shape. */
 html.lfv-sitewide :is(.lfv4-awards-copy,.lfv-about-page,.lf9e,.lfv5-month-calendar) :is(
@@ -269,4 +273,232 @@ html.lfv-sitewide .lfv-unified-row-links>details>summary{
  ){
   padding:14px 21px!important;gap:13px!important;min-height:46px!important;
  }
+}
+
+
+/* November editorial typography: modest tracking across the public site;
+   do not alter the separate /beta experience or admin control panels. */
+html.lfv-sitewide :is(#vault-home,.vault-section-page,.lfv-about-page,.lf9e,.lf-nom-2026,.lfv-site-footer,.lfv-submit) :is(p,li,dd,blockquote,td,.lfv4-excerpt,.lfv-unified-summary) {
+  letter-spacing: .012em !important;
+  text-transform: none !important;
+}
+html.lfv-sitewide :is(#vault-home,.vault-section-page,.lfv-about-page,.lf9e,.lf-nom-2026,.lfv-site-footer,.lfv-submit) :is(h1,h2,h3,h4,h5,h6) {
+  letter-spacing: .012em !important;
+  text-transform: uppercase !important;
+}
+html.lfv-sitewide :is(.awards-global-nav,.lfv-breadcrumbs,.lfv-program-nav,.lfv-site-footer .ledger-footer-links,.lfv-shell) :is(a,summary,button) {
+  letter-spacing: .03em !important;
+  text-transform: uppercase !important;
+}
+/* Eyebrow metadata and interactive buttons keep consistent uppercase. */
+html.lfv-sitewide :is(#vault-home,.vault-section-page,.lfv-about-page,.lf9e,.lf-nom-2026,.lfv-submit) :is(
+  .lfv3-eyebrow,.vault-kicker,.lfv4-section-topline,.lfv-submit-kicker,
+  label,button,summary,[role="tab"],.lfv-primary-cta
+) {
+  letter-spacing: .025em !important;
+  text-transform: uppercase !important;
+}
+html.lfv-sitewide :is(#vault-home,.vault-section-page,.lfv-about-page,.lf9e,.lf-nom-2026,.lfv-submit) :is(
+  .lfv3-button,.lfv3-button-gold,.lfv-primary-cta,.lfv5-minimal-action
+) {letter-spacing:.02em!important;text-transform:uppercase!important;}
+/* CSS in previous releases applied all caps to every child; restore
+   natural capitalization on regular copy even with those inherited rules. */
+html.lfv-sitewide :is(#vault-home,.vault-section-page,.lfv-about-page,.lf9e,.lf-nom-2026) :is(
+  .lfv4-excerpt p,.lfv4-awards-copy p,.lfv-about-page-body p,
+  .lfv-unified-summary,.lfv-unified-description,p:not(.lfv3-eyebrow):not(.vault-kicker)
+) {text-transform:none!important;}
+/* Footer subscription controls need visible separation across all widths. */
+html.lfv-sitewide .ledger-newsletter-form {
+  display:flex !important;
+  align-items:stretch !important;
+  gap:12px !important;
+}
+html.lfv-sitewide .ledger-newsletter-form input[type="email"] {
+  flex:1 1 230px !important;
+  min-width:0 !important;
+  border-radius:10px !important;
+}
+html.lfv-sitewide .ledger-newsletter-form button[type="submit"] {
+  flex:0 0 auto !important;
+  margin:0 !important;
+  border-radius:11px !important;
+}
+@media(max-width:560px) {
+  html.lfv-sitewide .ledger-newsletter-form {gap:10px!important;flex-wrap:wrap!important;}
+}
+
+
+/* One brand CTA design, regardless of prior link-specific declarations. */
+html.lfv-sitewide #vault-home a.lfv-primary-cta,
+html.lfv-sitewide #vault-home a.lfv-primary-cta:link,
+html.lfv-sitewide #vault-home a.lfv-primary-cta:visited {
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ box-sizing:border-box!important;gap:20px!important;width:fit-content!important;
+ max-width:100%!important;min-height:48px!important;padding:15px 26px!important;
+ background:#c9a52b!important;color:#091b36!important;
+ border:0!important;border-radius:11px!important;text-decoration:none!important;
+ font-weight:850!important;font-size:clamp(.83rem,1.16vw,1rem)!important;
+ line-height:1.35!important;white-space:normal!important;
+}
+html.lfv-sitewide #vault-home a.lfv-primary-cta:hover {background:#d6b445!important}
+@media(max-width:600px) {
+ html.lfv-sitewide #vault-home a.lfv-primary-cta {
+  padding:14px 21px!important;min-height:46px!important;gap:13px!important;
+ }
+}
+
+
+/* Only headings, navigation, and section identifiers are set in all caps.
+   Buttons and form controls use their natural written capitalization. */
+html.lfv-sitewide :is(#vault-home,.vault-section-page,.lfv-about-page,.lf9e,.lf-nom-2026,.lfv-submit) :is(
+ a.lfv-primary-cta,a.lfv3-button,a.lfv3-button-gold,a.lfv5-minimal-action,
+ button,input:not([type="hidden"]),textarea,select,label
+) {text-transform:none!important;letter-spacing:.018em!important;}
+html.lfv-sitewide #vault-home a.lfv-primary-cta {text-transform:none!important;}
+html.lfv-sitewide .ledger-newsletter-form :is(input,button) {text-transform:none!important;letter-spacing:.018em!important;}
+html.lfv-sitewide :is(.awards-global-nav,.lfv-breadcrumbs,.lfv-program-nav) :is(a,summary,button) {
+ text-transform:uppercase!important;letter-spacing:.035em!important;
+}
+
+
+/* DCA editorial and responsive nomination category grid: never more than 5 columns. */
+html.lfv-sitewide .lf9e:not(.lf9e-standings-page) {
+  width:calc(100% - 2 * var(--lfv-gutter, 24px))!important;
+  max-width:1440px!important;
+  margin-inline:auto!important;
+}
+html.lfv-sitewide .lf9e .lf9e-category-grid {
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:12px!important;
+  align-items:start;
+  width:100%;
+  max-width:100%;
+}
+html.lfv-sitewide .lf9e .lf9e-category-grid > details.lfv5-category-disclosure {
+  min-width:0!important;
+  padding:0 12px!important;
+  border:1px solid var(--lfv-line)!important;
+  border-radius:8px!important;
+  background:var(--lfv-surface)!important;
+}
+html.lfv-sitewide .lf9e .lfv5-category-disclosure>summary {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 14px!important;
+  grid-template-rows:auto auto;
+  min-height:82px!important;
+  padding:12px 0!important;
+  gap:6px 8px!important;
+  align-content:center!important;
+}
+html.lfv-sitewide .lf9e .lfv5-category-name {
+  grid-column:1; grid-row:1;
+  font-size:.84rem!important;line-height:1.27!important;
+}
+html.lfv-sitewide .lf9e .lfv5-category-status {
+  grid-column:1;grid-row:2;
+  font-size:.66rem!important;letter-spacing:.02em!important;
+  white-space:normal!important;
+}
+html.lfv-sitewide .lf9e .lfv5-category-chevron {
+  grid-column:2;grid-row:1 / 3;align-self:center;
+}
+html.lfv-sitewide .lf9e .lfv5-category-panel {padding-bottom:14px!important;}
+html.lfv-sitewide .lf9e .lf9e-intro-categories {
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;
+}
+html.lfv-sitewide .lf9e .lf9e-intro-categories li {
+  list-style-position:inside;
+  border:1px solid var(--lfv-line);border-radius:6px;padding:10px;
+}
+html.lfv-sitewide .lfv-dca-overview .lfv3-awards-hero {margin-bottom:30px!important;}
+html.lfv-sitewide .lfv-dca-overview .lfv3-awards-intro {max-width:950px;}
+html.lfv-sitewide .lfv-dca-overview .lfv3-awards-intro>p:not(.lfv3-eyebrow),
+html.lfv-sitewide .lfv-dca-overview .lfv-dca-current>p:not(.lfv3-eyebrow) {
+  max-width:860px!important;line-height:1.65!important;
+  text-transform:none!important;letter-spacing:.012em!important;
+}
+html.lfv-sitewide .lfv-dca-overview .lfv-dca-current {padding-top:26px;border-top:1px solid var(--lfv-line);}
+html.lfv-sitewide .lfv-dca-overview .lfv-dca-stages {
+  list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  padding:0;margin:24px 0;gap:12px;
+}
+html.lfv-sitewide .lfv-dca-overview .lfv-dca-stages li {
+  display:flex;flex-direction:column;gap:10px;
+  min-width:0;padding:18px;border:1px solid var(--lfv-line);border-radius:8px;
+  font-size:.9rem;line-height:1.5;text-transform:none;
+}
+html.lfv-sitewide .lfv-dca-overview .lfv-dca-stages strong {
+  color:var(--lfv-gold);font-size:.75rem;letter-spacing:.06em;
+}
+html.lfv-sitewide .lfv-dca-overview .lfv3-actions {
+  display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;
+}
+html.lfv-sitewide .lf9e .lf9e-round-notice {
+  max-width:850px;
+  border-left:3px solid var(--lfv-gold);
+  padding:9px 0 9px 16px;
+  line-height:1.65!important;
+  text-transform:none!important;
+}
+html.lfv-sitewide .lf9e .lf9e-round-notice strong {text-transform:none!important;}
+@media (max-width:1299px) {
+ html.lfv-sitewide .lf9e .lf9e-category-grid,
+ html.lfv-sitewide .lf9e .lf9e-intro-categories {grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+}
+@media (max-width:1030px) {
+ html.lfv-sitewide .lf9e .lf9e-category-grid,
+ html.lfv-sitewide .lf9e .lf9e-intro-categories {grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+ html.lfv-sitewide .lfv-dca-overview .lfv-dca-stages {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media (max-width:710px) {
+ html.lfv-sitewide .lf9e .lf9e-category-grid,
+ html.lfv-sitewide .lf9e .lf9e-intro-categories {grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+}
+@media (max-width:460px) {
+ html.lfv-sitewide .lf9e .lf9e-category-grid,
+ html.lfv-sitewide .lf9e .lf9e-intro-categories,
+ html.lfv-sitewide .lfv-dca-overview .lfv-dca-stages {grid-template-columns:1fr!important;}
+}
+
+
+/* Public People & Crews word cloud, scaled from actual archive cross-references. */
+html.lfv-sitewide .lfv-people-cloud-section {
+  padding:clamp(18px,3vw,32px);
+  margin:24px 0 30px;
+  border:1px solid var(--lfv-line, #415371);
+  border-radius:10px;
+  background:var(--lfv-surface, #18243b);
+}
+html.lfv-sitewide .lfv-people-cloud-heading h2{
+  font-size:clamp(1.35rem,2.2vw,2rem);margin:0 0 8px;letter-spacing:.025em;
+}
+html.lfv-sitewide .lfv-people-cloud-heading p {
+  max-width:70ch;margin:0 0 24px;line-height:1.55;
+  letter-spacing:.012em;text-transform:none;
+}
+html.lfv-sitewide .lfv-people-wordcloud {
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+  gap:clamp(8px,1.6vw,18px) clamp(13px,2vw,26px);
+  min-height:110px;padding:8px 3px;
+}
+html.lfv-sitewide .lfv-people-wordcloud .lfv-people-word {
+  display:inline-block;max-width:100%;overflow-wrap:anywhere;
+  font-size:clamp(1rem,calc(.9rem + var(--word-weight) * .27rem),2.7rem);
+  font-weight:750;line-height:1.15;letter-spacing:.015em;
+  text-align:center;text-transform:uppercase;color:var(--lfv-text, #f2f3f8);
+  text-decoration:none;border-radius:6px;padding:6px 8px;
+  transition:color .15s ease,background-color .15s ease;
+}
+html.lfv-sitewide .lfv-people-wordcloud .lfv-people-word:hover,
+html.lfv-sitewide .lfv-people-wordcloud .lfv-people-word:focus-visible {
+  color:var(--lfv-gold, #d3aa31);
+  background:rgba(160,160,160,.1);
+  outline-offset:3px;
+}
+@media (max-width:600px) {
+  html.lfv-sitewide .lfv-people-wordcloud {justify-content:flex-start;gap:8px 12px;}
+  html.lfv-sitewide .lfv-people-wordcloud .lfv-people-word {
+    font-size:clamp(.95rem,calc(.85rem + var(--word-weight) * .17rem),2rem);
+  }
 }

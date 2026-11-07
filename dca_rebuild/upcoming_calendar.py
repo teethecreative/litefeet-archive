@@ -10,6 +10,7 @@ from pathlib import Path
 import json
 
 from dca_rebuild.archive_catalog import all_records
+from dca_rebuild.models import VaultGatheringSubmission
 
 CURATED_PATH = Path(__file__).parent / "data" / "upcoming_public_events.json"
 
@@ -23,7 +24,7 @@ def curated_events():
     return tuple(item for item in items if item.get("status") == "published")
 
 
-def upcoming_calendar(today=None):
+def upcoming_calendar(today=None, session_factory=None):
     """Return 30 inclusive local calendar days (NY-local date provided by caller)."""
     today = today or datetime.now(ZoneInfo("America/New_York")).date()
     end = today + timedelta(days=29)
@@ -47,6 +48,22 @@ def upcoming_calendar(today=None):
         entries.append(dict(date=event_date.isoformat(), title=record["title"],
                             href="/archive/records/" + record["slug"],
                             status="ANNOUNCED", description=record.get("summary") or ""))
+    # Approved public contributions only; private contact and notes never leave admin.
+    if session_factory is not None:
+        with session_factory() as db:
+            approved = db.query(VaultGatheringSubmission).filter(
+                VaultGatheringSubmission.status == "approved",
+                VaultGatheringSubmission.start_date >= today.isoformat(),
+                VaultGatheringSubmission.start_date <= end.isoformat()
+            ).all()
+            for item in approved:
+                identity = (item.start_date, item.title.casefold())
+                if identity in seen:
+                    continue
+                seen.add(identity)
+                entries.append(dict(date=item.start_date, title=item.title,
+                                    href=item.link or "/submit", status="COMMUNITY",
+                                    description=item.venue or item.city or item.gathering_type))
     for item in curated_events():
         try:
             event_date = date.fromisoformat(item["date"])

@@ -18,12 +18,24 @@
 {% elif section == 'lock-in' %}
 {% include "lock_in.html" %}
 {% elif section == 'awards' %}
-<header><p class="vault-kicker">AWARDS</p><h1>Recognition from the culture.</h1></header>
-<div class="vault-section-grid"><a class="vault-collection" href="{{ url_for('vault_dca_program') }}"><strong>Dancer’s Choice Awards</strong><span>Current participation and the 2023 historical archive.</span></a><a class="vault-collection" href="{{ url_for('lfa_home') }}"><strong>LiteFeet Awards</strong><span>Historical contributions and award records.</span></a></div>
-<section><h2>Historical Results</h2><a href="{{ url_for('dca_2023_home') }}">August 2023 Dancer’s Choice Awards</a></section>
+<header><p class="vault-kicker">AWARDS</p><h1>Recognition from the culture.</h1><p>Two distinct awards programs documenting and recognizing the LiteFeet community.</p></header>
+<div class="vault-section-grid">
+  <a class="vault-collection" href="{{ url_for('vault_dca_program') }}"><strong>Dancer’s Choice Awards</strong><span>Community-led categories, nominations, and voting. Explore 2026 or earlier DCA editions.</span></a>
+  <a class="vault-collection" href="{{ url_for('lfa_home') }}"><strong>LiteFeet Awards</strong><span>The established annual awards program and its historical records.</span></a>
+</div>
 {% elif section == 'dca' %}
-<header><p class="vault-kicker">AWARDS</p><h1>Dancer’s Choice Awards</h1><p>Community recognition, current nominations and historical results.</p></header>
-<div class="vault-section-grid"><a class="vault-collection" href="{{ url_for('dca_2026_home') }}"><strong>2026</strong><span>Categories, nominations and participation.</span></a><a class="vault-collection" href="{{ url_for('dca_2023_home') }}"><strong>2023</strong><span>Recorded winners and nominees.</span></a></div>
+<header><p class="vault-kicker">DANCER'S CHOICE AWARDS</p><h1>The community chooses.</h1>
+<p>The Dancer’s Choice Awards were created in response to a simple concern: LiteFeet community members wanted a meaningful say in who received recognition. While the LiteFeet Awards have their own awards process, DCA lets the culture shape its categories, nominate the people it believes deserve recognition, and vote for the final winners.</p>
+<p>The idea is to give people a constructive way to recognize dancers, creators, crews, and contributors they feel were overlooked. Recognition should not end with one awards ceremony.</p></header>
+<section class="lfv-dca-process" aria-labelledby="dca-process-title">
+<h2 id="dca-process-title">How DCA works</h2>
+<ol><li><strong>Suggest categories:</strong> community members help decide what should be recognized.</li>
+<li><strong>Nominate:</strong> suggest an eligible person or add another nomination to someone already listed. Each nomination increases that candidate's total.</li>
+<li><strong>Top five:</strong> the five most-nominated eligible candidates per category advance to the final voting round.</li>
+<li><strong>Vote:</strong> the community selects the winner from those finalists once voting opens.</li></ol>
+<p>Nominations are designed to continue beyond LiteFeet Awards weekend, giving people time to turn disagreements about recognition into support for their own choices. The exact nomination closing date will be announced separately.</p>
+</section>
+<div class="vault-section-grid lfv-dca-editions"><a class="vault-collection" href="{{ url_for('dca_2026_home') }}"><strong>2026</strong><span>Current DCA process, nominations and category results.</span></a><a class="vault-collection" href="{{ url_for('dca_2023_home') }}"><strong>2023</strong><span>Earlier DCA categories, nominees and award results.</span></a></div>
 {% elif section == 'community' %}
 <header><p class="vault-kicker">COMMUNITY</p><h1>Help preserve LiteFeet history.</h1><p>Share sources, correct the record and keep the community informed.</p></header>
 <section id="contribute"><h2>Historical information & corrections</h2><p>Submit award records, corrections and supporting sources through the existing review form.</p><a href="{{ url_for('lfa_home') }}#contribute">Contribute historical information</a></section>
