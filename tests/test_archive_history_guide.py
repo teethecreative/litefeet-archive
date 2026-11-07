@@ -62,3 +62,15 @@ def test_guide_seo_redirect_preserves_search_canonical(website):
     assert "https://thelitefeetvault.com/archive/timeline" in head
     sitemap = client.get("/sitemap.xml").get_data(as_text=True)
     assert "https://thelitefeetvault.com/archive/timeline</loc>" in sitemap
+
+
+def test_timeline_dates_use_full_month_names_on_page_and_api(website):
+    client = website.test_client()
+    html = client.get("/archive?collection=events").get_data(as_text=True)
+    assert "October" in html
+    assert "September" in html
+    assert "August" in html
+    records = client.get("/archive/api/records?timeline=1&collection=events").get_json()["records"]
+    dated = next(item for item in records if item["slug"] == "litefeet-massacre-pt2-2026")
+    assert dated["meta_parts"] == ["2026", "October", "24", "EVENTS", "HypeItUpTV"]
+    assert dated["date"] == "2026-10-24"

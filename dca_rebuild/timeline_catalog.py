@@ -6,6 +6,7 @@ research chapters describe an era, not a claimed date of creation.
 """
 from functools import lru_cache
 import re
+from calendar import month_name
 
 from dca_rebuild.archive_catalog import all_records, PAGE_SIZE, MAX_PAGE_SIZE
 from dca_rebuild.archive_history_guide import load_history_guide
@@ -60,8 +61,11 @@ def record_metadata(item):
             )
             for index, name in enumerate(month_labels, 1):
                 if re.search(r"\b" + name + r"\b", label, re.I):
-                    month = f"{index:02d}"
+                    month = name
                     break
+
+    if month.isdigit() and 1 <= int(month) <= 12:
+        month = month_name[int(month)]
 
     collection = item.get("collection")
     if collection == "events":
