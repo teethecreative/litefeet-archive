@@ -5,7 +5,7 @@ from dca_rebuild.models import VaultArchiveVerification, DCACategory, DCANominat
 
 def test_catalog_has_real_source_rows_and_distinct_editions():
     entries = all_records()
-    assert len(entries) == 43  # 12 submitted flyers, 12 legacy events, 18 research records, 1 historical awards index
+    assert len(entries) >= 173  # Existing 43 records plus deduplicated published legacy-name records
     assert len({e['slug'] for e in entries}) == len(entries)
     assert len([e for e in entries if e['source_kind'] == 'flyers']) == 12
     assert len([e for e in entries if e['source_kind'] == 'legacy']) == 12
@@ -32,9 +32,9 @@ def test_public_archive_and_scroll_api_show_real_entries(website):
                  'HISTORY &amp; TIMELINE', 'PEOPLE &amp; CREWS'):
         assert text in html
     assert 'More than a directory' not in html
-    assert 'Wes the MAB' not in html  # private legacy ghost directory has not been published
+    assert 'This is a ghost profile' not in html  # Never publish fabricated legacy biographies
     endpoint = client.get('/archive/api/records').get_json()
-    assert endpoint['total'] == 43
+    assert endpoint['total'] == len(all_records())
     assert len(endpoint['records']) == 8
     assert endpoint['has_more']
     next_page = client.get('/archive/api/records?page=2').get_json()

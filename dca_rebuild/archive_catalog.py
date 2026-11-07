@@ -174,6 +174,53 @@ def _research(raw, enrichment=None):
     return record
 
 
+
+def _legacy_public_people(research):
+    """Public name-only index from the preserved archive, not verified biographies.
+
+    Consolidate exactly matching normalized legacy names for display, retaining
+    every source ID. Existing published research profiles win when an exact
+    primary name or slash-separated alias matches: avoid duplicate pages.
+    """
+    published = _read("archive_recovered_identities.json").get("records") or []
+    def identity_key(value):
+        return re.sub(r"[^a-z0-9]", "", str(value or "").casefold())
+
+    known = {
+        identity_key(part.strip())
+        for original in research if original.get("collection") == "people"
+        for part in original["title"].split("/")
+    }
+    records = []
+    for row in published:
+        if identity_key(row["name"]) in known:
+            continue
+        aliases = row.get("aliases") or []
+        roles = row.get("reported_roles") or []
+        summary = ("Name preserved in a 2026 LiteFeet archive export. "
+                   "Biographical details and affiliations have not been verified.")
+        records.append({
+            "slug": row["slug"], "title": row["name"],
+            "collection": "people", "record_type": "legacy_identity",
+            "date": "", "date_label": "Date not recorded",
+            "date_certainty": "unspecified", "source_kind": "legacy_name",
+            "editorial_status": "Recovered name · details unverified",
+            "source_url": "",
+            "source_label": "August 29, 2026 legacy preservation export",
+            "summary": summary, "description": summary,
+            "presenter": "", "series": "", "related_to": "",
+            "information": [
+                ("Preserved source IDs", ", ".join(map(str, row["source_ids"]))),
+                ("Recorded name variations", ", ".join(aliases) if aliases else "None"),
+                ("Original role labels (unverified)", ", ".join(roles) if roles else "Not recorded"),
+            ],
+            "battles": [], "notes": [],
+            "search": " ".join([row["name"], *aliases, *roles, summary]).casefold(),
+            "can_verify": False, "claim": "",
+        })
+    return records
+
+
 @lru_cache(maxsize=1)
 def all_records():
     flyers = _read("archive_editor_flyers.json").get("events") or []
@@ -204,6 +251,7 @@ def all_records():
     entries = ([_event(x, "flyers") for x in flyers]
                + [_event(x, "legacy") for x in legacy]
                + [_research(x, enrichments.get(x["slug"])) for x in research]
+               + _legacy_public_people(research)
                + [awards_archive])
     slugs = [e["slug"] for e in entries]
     if len(slugs) != len(set(slugs)):

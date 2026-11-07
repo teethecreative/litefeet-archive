@@ -1,0 +1,1915 @@
+{
+  "source": "August 29, 2026 legacy dancer profile preservation export",
+  "publication_scope": "Public historical name index. Names originate in a preserved 2026 archive; identities, roles and affiliations are not independently verified. Three duplicate-name groups are consolidated for display with all source IDs retained.",
+  "records": [
+    {
+      "name": "2 Eazy",
+      "slug": "legacy-2eazy",
+      "source_ids": [
+        101
+      ],
+      "legacy_slugs": [
+        "2eazy"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "40 Kal",
+      "slug": "legacy-40kal",
+      "source_ids": [
+        98
+      ],
+      "legacy_slugs": [
+        "40kal"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "40 Pounds",
+      "slug": "legacy-40pounds",
+      "source_ids": [
+        47
+      ],
+      "legacy_slugs": [
+        "40pounds"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Ash Rocket",
+      "slug": "legacy-ashrocket",
+      "source_ids": [
+        72
+      ],
+      "legacy_slugs": [
+        "ashrocket"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "B Lyve",
+      "slug": "legacy-blyve",
+      "source_ids": [
+        68
+      ],
+      "legacy_slugs": [
+        "blyve"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "BBQ",
+      "slug": "legacy-bbq",
+      "source_ids": [
+        127
+      ],
+      "legacy_slugs": [
+        "bbq"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Black The Beast",
+      "slug": "legacy-blackthebeast",
+      "source_ids": [
+        122
+      ],
+      "legacy_slugs": [
+        "blackthebeast"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer",
+        "Judge"
+      ]
+    },
+    {
+      "name": "BOLITE",
+      "slug": "legacy-bolite",
+      "source_ids": [
+        13
+      ],
+      "legacy_slugs": [
+        "bolite"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Boy Q",
+      "slug": "legacy-boyq",
+      "source_ids": [
+        124
+      ],
+      "legacy_slugs": [
+        "boyq"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Bre Dash",
+      "slug": "legacy-bredash",
+      "source_ids": [
+        8
+      ],
+      "legacy_slugs": [
+        "bredash"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Brotherhood",
+      "slug": "legacy-brotherhood",
+      "source_ids": [
+        136
+      ],
+      "legacy_slugs": [
+        "brotherhood"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Judge"
+      ]
+    },
+    {
+      "name": "BSNYEA",
+      "slug": "legacy-bsnyea",
+      "source_ids": [
+        11,
+        118
+      ],
+      "legacy_slugs": [
+        "bsnyea",
+        "bsnyea2"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer",
+        "Producer"
+      ]
+    },
+    {
+      "name": "Buzz Lite",
+      "slug": "legacy-buzzlite",
+      "source_ids": [
+        61
+      ],
+      "legacy_slugs": [
+        "buzzlite"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Chrybaby",
+      "slug": "legacy-chrybaby",
+      "source_ids": [
+        95
+      ],
+      "legacy_slugs": [
+        "chrybaby"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Coma",
+      "slug": "legacy-coma",
+      "source_ids": [
+        115
+      ],
+      "legacy_slugs": [
+        "coma"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Producer"
+      ]
+    },
+    {
+      "name": "Crazy C",
+      "slug": "legacy-crazyc",
+      "source_ids": [
+        97
+      ],
+      "legacy_slugs": [
+        "crazyc"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "D Lite",
+      "slug": "legacy-dlite",
+      "source_ids": [
+        58
+      ],
+      "legacy_slugs": [
+        "dlite"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "D Rillz",
+      "slug": "legacy-drillz",
+      "source_ids": [
+        129
+      ],
+      "legacy_slugs": [
+        "drillz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "DC",
+      "slug": "legacy-dc",
+      "source_ids": [
+        4
+      ],
+      "legacy_slugs": [
+        "dc"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Dope",
+      "slug": "legacy-dope",
+      "source_ids": [
+        54
+      ],
+      "legacy_slugs": [
+        "dope"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Dot Lite",
+      "slug": "legacy-dotlite",
+      "source_ids": [
+        36
+      ],
+      "legacy_slugs": [
+        "dotlite"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "DuckSauce",
+      "slug": "legacy-ducksauce",
+      "source_ids": [
+        49
+      ],
+      "legacy_slugs": [
+        "ducksauce"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "E Solo",
+      "slug": "legacy-esolo",
+      "source_ids": [
+        6
+      ],
+      "legacy_slugs": [
+        "esolo"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer",
+        "Judge"
+      ]
+    },
+    {
+      "name": "Fili Boogie",
+      "slug": "legacy-filiboogie",
+      "source_ids": [
+        133
+      ],
+      "legacy_slugs": [
+        "filiboogie"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Judge"
+      ]
+    },
+    {
+      "name": "Flight",
+      "slug": "legacy-flight",
+      "source_ids": [
+        121
+      ],
+      "legacy_slugs": [
+        "flight"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer",
+        "Judge"
+      ]
+    },
+    {
+      "name": "Flii Boogie",
+      "slug": "legacy-fliiboogie",
+      "source_ids": [
+        79
+      ],
+      "legacy_slugs": [
+        "fliiboogie"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Fox 5",
+      "slug": "legacy-fox5",
+      "source_ids": [
+        113
+      ],
+      "legacy_slugs": [
+        "fox5"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Producer"
+      ]
+    },
+    {
+      "name": "Fox Lite",
+      "slug": "legacy-foxlite",
+      "source_ids": [
+        28
+      ],
+      "legacy_slugs": [
+        "foxlite"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Future",
+      "slug": "legacy-future",
+      "source_ids": [
+        15
+      ],
+      "legacy_slugs": [
+        "future"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "GameBreakerz",
+      "slug": "legacy-gamebreakerz",
+      "source_ids": [
+        132
+      ],
+      "legacy_slugs": [
+        "gamebreakerz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Judge"
+      ]
+    },
+    {
+      "name": "Ginger Spice",
+      "slug": "legacy-gingerspice",
+      "source_ids": [
+        32
+      ],
+      "legacy_slugs": [
+        "gingerspice"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Giz Da Wiz",
+      "slug": "legacy-gizdawiz",
+      "source_ids": [
+        34
+      ],
+      "legacy_slugs": [
+        "gizdawiz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Greklite",
+      "slug": "legacy-greklite",
+      "source_ids": [
+        3
+      ],
+      "legacy_slugs": [
+        "greklite"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Haz Money",
+      "slug": "legacy-hazmoney",
+      "source_ids": [
+        5
+      ],
+      "legacy_slugs": [
+        "hazmoney"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Hype Baby",
+      "slug": "legacy-hypebaby",
+      "source_ids": [
+        22
+      ],
+      "legacy_slugs": [
+        "hypebaby"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Hype Star",
+      "slug": "legacy-hypestar",
+      "source_ids": [
+        40
+      ],
+      "legacy_slugs": [
+        "hypestar"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "ICEMAN",
+      "slug": "legacy-iceman",
+      "source_ids": [
+        18
+      ],
+      "legacy_slugs": [
+        "iceman"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "J Black",
+      "slug": "legacy-jblack",
+      "source_ids": [
+        45
+      ],
+      "legacy_slugs": [
+        "jblack"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Jada Chanel",
+      "slug": "legacy-jadachanel",
+      "source_ids": [
+        52
+      ],
+      "legacy_slugs": [
+        "jadachanel"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Jada Chanell",
+      "slug": "legacy-jadachanell",
+      "source_ids": [
+        123
+      ],
+      "legacy_slugs": [
+        "jadachanell"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Jay Bullet",
+      "slug": "legacy-jaybullet",
+      "source_ids": [
+        87
+      ],
+      "legacy_slugs": [
+        "jaybullet"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Jay Wavvy",
+      "slug": "legacy-jaywavvy",
+      "source_ids": [
+        43
+      ],
+      "legacy_slugs": [
+        "jaywavvy"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Jayy Wavy",
+      "slug": "legacy-jayywavy",
+      "source_ids": [
+        131
+      ],
+      "legacy_slugs": [
+        "jayywavy"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Judge"
+      ]
+    },
+    {
+      "name": "Jo Smooth",
+      "slug": "legacy-josmooth",
+      "source_ids": [
+        82
+      ],
+      "legacy_slugs": [
+        "josmooth"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "K Cosmic",
+      "slug": "legacy-kcosmic",
+      "source_ids": [
+        33
+      ],
+      "legacy_slugs": [
+        "kcosmic"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "K Shakes",
+      "slug": "legacy-kshakes",
+      "source_ids": [
+        88
+      ],
+      "legacy_slugs": [
+        "kshakes"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "K Smoove",
+      "slug": "legacy-ksmoove",
+      "source_ids": [
+        48
+      ],
+      "legacy_slugs": [
+        "ksmoove"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Kari",
+      "slug": "legacy-kari",
+      "source_ids": [
+        114
+      ],
+      "legacy_slugs": [
+        "kari"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Producer"
+      ]
+    },
+    {
+      "name": "KennDot",
+      "slug": "legacy-kenndot",
+      "source_ids": [
+        117
+      ],
+      "legacy_slugs": [
+        "kenndot"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Producer"
+      ]
+    },
+    {
+      "name": "Kid Fox",
+      "slug": "legacy-kidfox",
+      "source_ids": [
+        110
+      ],
+      "legacy_slugs": [
+        "kidfox"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Kid Mix",
+      "slug": "legacy-kidmix",
+      "source_ids": [
+        106
+      ],
+      "legacy_slugs": [
+        "kidmix"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Kid Patt",
+      "slug": "legacy-kidpatt",
+      "source_ids": [
+        94
+      ],
+      "legacy_slugs": [
+        "kidpatt"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Kid Smoove",
+      "slug": "legacy-kidsmoove",
+      "source_ids": [
+        27
+      ],
+      "legacy_slugs": [
+        "kidsmoove"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer",
+        "Producer",
+        "Host",
+        "Judge"
+      ]
+    },
+    {
+      "name": "Kid The Wiz",
+      "slug": "legacy-kidthewiz",
+      "source_ids": [
+        59
+      ],
+      "legacy_slugs": [
+        "kidthewiz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer",
+        "Judge"
+      ]
+    },
+    {
+      "name": "Koopa",
+      "slug": "legacy-koopa",
+      "source_ids": [
+        19
+      ],
+      "legacy_slugs": [
+        "koopa"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Ky Butta",
+      "slug": "legacy-kybutta",
+      "source_ids": [
+        42
+      ],
+      "legacy_slugs": [
+        "kybutta"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Lady Live",
+      "slug": "legacy-ladylive",
+      "source_ids": [
+        70
+      ],
+      "legacy_slugs": [
+        "ladylive"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Larry Smoove",
+      "slug": "legacy-larrysmoove",
+      "source_ids": [
+        46
+      ],
+      "legacy_slugs": [
+        "larrysmoove"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Lil Live",
+      "slug": "legacy-lillive",
+      "source_ids": [
+        119
+      ],
+      "legacy_slugs": [
+        "lillive"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Producer"
+      ]
+    },
+    {
+      "name": "Man From Da Video",
+      "slug": "legacy-manfromdavideo",
+      "source_ids": [
+        38
+      ],
+      "legacy_slugs": [
+        "manfromdavideo"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Matt Live",
+      "slug": "legacy-mattlive",
+      "source_ids": [
+        51
+      ],
+      "legacy_slugs": [
+        "mattlive"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Mel Butta",
+      "slug": "legacy-melbutta",
+      "source_ids": [
+        84
+      ],
+      "legacy_slugs": [
+        "melbutta"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Mel Live",
+      "slug": "legacy-mellive",
+      "source_ids": [
+        99
+      ],
+      "legacy_slugs": [
+        "mellive"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Melly Mellz",
+      "slug": "legacy-mellymellz",
+      "source_ids": [
+        102
+      ],
+      "legacy_slugs": [
+        "mellymellz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Moe Black",
+      "slug": "legacy-moeblack",
+      "source_ids": [
+        80
+      ],
+      "legacy_slugs": [
+        "moeblack"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Money Mase",
+      "slug": "legacy-moneymase",
+      "source_ids": [
+        53
+      ],
+      "legacy_slugs": [
+        "moneymase"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Moon Lite",
+      "slug": "legacy-moonlite",
+      "source_ids": [
+        126
+      ],
+      "legacy_slugs": [
+        "moonlite"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Moon Live",
+      "slug": "legacy-moonlive",
+      "source_ids": [
+        100
+      ],
+      "legacy_slugs": [
+        "moonlive"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Mr Jones",
+      "slug": "legacy-mrjones",
+      "source_ids": [
+        81
+      ],
+      "legacy_slugs": [
+        "mrjones"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Mr YouTube",
+      "slug": "legacy-mryoutube",
+      "source_ids": [
+        39
+      ],
+      "legacy_slugs": [
+        "mryoutube"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Mystery Man",
+      "slug": "legacy-mysteryman",
+      "source_ids": [
+        137
+      ],
+      "legacy_slugs": [
+        "mysteryman"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Judge"
+      ]
+    },
+    {
+      "name": "Na Na",
+      "slug": "legacy-nana",
+      "source_ids": [
+        24
+      ],
+      "legacy_slugs": [
+        "nana"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Nae Davis",
+      "slug": "legacy-naedavis",
+      "source_ids": [
+        85
+      ],
+      "legacy_slugs": [
+        "naedavis"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Nem Lite",
+      "slug": "legacy-nemlite",
+      "source_ids": [
+        125
+      ],
+      "legacy_slugs": [
+        "nemlite"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Nhim Lite",
+      "slug": "legacy-nhimlite",
+      "source_ids": [
+        21
+      ],
+      "legacy_slugs": [
+        "nhimlite"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Nightwalkersz",
+      "slug": "legacy-nightwalkersz",
+      "source_ids": [
+        134
+      ],
+      "legacy_slugs": [
+        "nightwalkersz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Judge"
+      ]
+    },
+    {
+      "name": "Noah Lot",
+      "slug": "legacy-noahlot",
+      "source_ids": [
+        44
+      ],
+      "legacy_slugs": [
+        "noahlot"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Note",
+      "slug": "legacy-note",
+      "source_ids": [
+        17
+      ],
+      "legacy_slugs": [
+        "note"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "O Wizard",
+      "slug": "legacy-owizard",
+      "source_ids": [
+        50
+      ],
+      "legacy_slugs": [
+        "owizard"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Paul Gee",
+      "slug": "legacy-paulgee",
+      "source_ids": [
+        9
+      ],
+      "legacy_slugs": [
+        "paulgee"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Phresh Tune",
+      "slug": "legacy-phreshtune",
+      "source_ids": [
+        31
+      ],
+      "legacy_slugs": [
+        "phreshtune"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer",
+        "Producer"
+      ]
+    },
+    {
+      "name": "PRockz",
+      "slug": "legacy-prockz",
+      "source_ids": [
+        12,
+        135
+      ],
+      "legacy_slugs": [
+        "prockz",
+        "prockz2"
+      ],
+      "aliases": [
+        "P Rockz"
+      ],
+      "reported_roles": [
+        "Dancer",
+        "Judge"
+      ]
+    },
+    {
+      "name": "Radar",
+      "slug": "legacy-radar",
+      "source_ids": [
+        128
+      ],
+      "legacy_slugs": [
+        "radar"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Ray-Dot",
+      "slug": "legacy-raydot",
+      "source_ids": [
+        30
+      ],
+      "legacy_slugs": [
+        "raydot"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Reel Hectic",
+      "slug": "legacy-reelhectic",
+      "source_ids": [
+        120
+      ],
+      "legacy_slugs": [
+        "reelhectic"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer",
+        "Judge"
+      ]
+    },
+    {
+      "name": "Rell Smoove",
+      "slug": "legacy-rellsmoove",
+      "source_ids": [
+        62
+      ],
+      "legacy_slugs": [
+        "rellsmoove"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Rich Dollaz",
+      "slug": "legacy-richdollaz",
+      "source_ids": [
+        105
+      ],
+      "legacy_slugs": [
+        "richdollaz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Richie Rich",
+      "slug": "legacy-richierich",
+      "source_ids": [
+        103
+      ],
+      "legacy_slugs": [
+        "richierich"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Robbie Rob",
+      "slug": "legacy-robbierob",
+      "source_ids": [
+        64
+      ],
+      "legacy_slugs": [
+        "robbierob"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Sah",
+      "slug": "legacy-sah",
+      "source_ids": [
+        14
+      ],
+      "legacy_slugs": [
+        "sah"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "SammyC",
+      "slug": "legacy-sammyc",
+      "source_ids": [
+        26
+      ],
+      "legacy_slugs": [
+        "sammyc"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Seed",
+      "slug": "legacy-seed",
+      "source_ids": [
+        25
+      ],
+      "legacy_slugs": [
+        "seed"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Sha Money X",
+      "slug": "legacy-shamoneyx",
+      "source_ids": [
+        55
+      ],
+      "legacy_slugs": [
+        "shamoneyx"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "SHOWDEM",
+      "slug": "legacy-showdem",
+      "source_ids": [
+        7
+      ],
+      "legacy_slugs": [
+        "showdem"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Sky Boogz",
+      "slug": "legacy-skyboogz",
+      "source_ids": [
+        74
+      ],
+      "legacy_slugs": [
+        "skyboogz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Slim Baby",
+      "slug": "legacy-slimbaby",
+      "source_ids": [
+        56
+      ],
+      "legacy_slugs": [
+        "slimbaby"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Smoove Biz",
+      "slug": "legacy-smoovebiz",
+      "source_ids": [
+        23
+      ],
+      "legacy_slugs": [
+        "smoovebiz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Smoove Eazy",
+      "slug": "legacy-smooveeazy",
+      "source_ids": [
+        108
+      ],
+      "legacy_slugs": [
+        "smooveeazy"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "SNS",
+      "slug": "legacy-sns",
+      "source_ids": [
+        69
+      ],
+      "legacy_slugs": [
+        "sns"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "So Q",
+      "slug": "legacy-soq",
+      "source_ids": [
+        90
+      ],
+      "legacy_slugs": [
+        "soq"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Spank",
+      "slug": "legacy-spank",
+      "source_ids": [
+        75
+      ],
+      "legacy_slugs": [
+        "spank"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Sparkz Rah",
+      "slug": "legacy-sparkzrah",
+      "source_ids": [
+        66
+      ],
+      "legacy_slugs": [
+        "sparkzrah"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Spider Jackson",
+      "slug": "legacy-spiderjackson",
+      "source_ids": [
+        76
+      ],
+      "legacy_slugs": [
+        "spiderjackson"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Splash Ocean",
+      "slug": "legacy-splashocean",
+      "source_ids": [
+        111
+      ],
+      "legacy_slugs": [
+        "splashocean"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Strike Litening",
+      "slug": "legacy-strikelitening",
+      "source_ids": [
+        16
+      ],
+      "legacy_slugs": [
+        "strikelitening"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Supa Nova",
+      "slug": "legacy-supanova",
+      "source_ids": [
+        63
+      ],
+      "legacy_slugs": [
+        "supanova"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Supreme",
+      "slug": "legacy-supreme",
+      "source_ids": [
+        86
+      ],
+      "legacy_slugs": [
+        "supreme"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Sylencer",
+      "slug": "legacy-sylencer",
+      "source_ids": [
+        96
+      ],
+      "legacy_slugs": [
+        "sylencer"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "T Rex",
+      "slug": "legacy-trex",
+      "source_ids": [
+        60
+      ],
+      "legacy_slugs": [
+        "trex"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Tah Swag",
+      "slug": "legacy-tahswag",
+      "source_ids": [
+        65
+      ],
+      "legacy_slugs": [
+        "tahswag"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Talented Sparkz",
+      "slug": "legacy-talentedsparkz",
+      "source_ids": [
+        116
+      ],
+      "legacy_slugs": [
+        "talentedsparkz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Producer"
+      ]
+    },
+    {
+      "name": "Team Rocket",
+      "slug": "legacy-teamrocket",
+      "source_ids": [
+        130
+      ],
+      "legacy_slugs": [
+        "teamrocket"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Judge"
+      ]
+    },
+    {
+      "name": "Tee Slims",
+      "slug": "legacy-teeslims",
+      "source_ids": [
+        89
+      ],
+      "legacy_slugs": [
+        "teeslims"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Tee The Creative",
+      "slug": "legacy-teethecreative",
+      "source_ids": [
+        71
+      ],
+      "legacy_slugs": [
+        "teethecreative"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Teeth",
+      "slug": "legacy-teeth",
+      "source_ids": [
+        41
+      ],
+      "legacy_slugs": [
+        "teeth"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Tokyo",
+      "slug": "legacy-tokyo",
+      "source_ids": [
+        37
+      ],
+      "legacy_slugs": [
+        "tokyo"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Top Fliqht",
+      "slug": "legacy-topfliqht",
+      "source_ids": [
+        109
+      ],
+      "legacy_slugs": [
+        "topfliqht"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Top Star",
+      "slug": "legacy-topstar",
+      "source_ids": [
+        91
+      ],
+      "legacy_slugs": [
+        "topstar"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Top Villian",
+      "slug": "legacy-topvillian",
+      "source_ids": [
+        107
+      ],
+      "legacy_slugs": [
+        "topvillian"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Trebuckz",
+      "slug": "legacy-trebuckz",
+      "source_ids": [
+        104
+      ],
+      "legacy_slugs": [
+        "trebuckz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Trell Mix",
+      "slug": "legacy-trellmix",
+      "source_ids": [
+        83
+      ],
+      "legacy_slugs": [
+        "trellmix"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Tugz",
+      "slug": "legacy-tugz",
+      "source_ids": [
+        92
+      ],
+      "legacy_slugs": [
+        "tugz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Tweek Baby",
+      "slug": "legacy-tweekbaby",
+      "source_ids": [
+        35
+      ],
+      "legacy_slugs": [
+        "tweekbaby"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Ty Live",
+      "slug": "legacy-tylive",
+      "source_ids": [
+        138
+      ],
+      "legacy_slugs": [
+        "tylive"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Judge"
+      ]
+    },
+    {
+      "name": "Ty Shotz",
+      "slug": "legacy-tyshotz",
+      "source_ids": [
+        20
+      ],
+      "legacy_slugs": [
+        "tyshotz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Uncle Gz",
+      "slug": "legacy-unclegz",
+      "source_ids": [
+        67
+      ],
+      "legacy_slugs": [
+        "unclegz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "UnkDes",
+      "slug": "legacy-unkdes",
+      "source_ids": [
+        2
+      ],
+      "legacy_slugs": [
+        "unkdes"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Venom",
+      "slug": "legacy-venom",
+      "source_ids": [
+        29,
+        112
+      ],
+      "legacy_slugs": [
+        "venom",
+        "venom2"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Vick Live",
+      "slug": "legacy-vicklive",
+      "source_ids": [
+        57
+      ],
+      "legacy_slugs": [
+        "vicklive"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Visionsz",
+      "slug": "legacy-visionsz",
+      "source_ids": [
+        10
+      ],
+      "legacy_slugs": [
+        "visionsz"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Wes the MAB",
+      "slug": "legacy-westhemab",
+      "source_ids": [
+        1
+      ],
+      "legacy_slugs": [
+        "westhemab"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "X Live",
+      "slug": "legacy-xlive",
+      "source_ids": [
+        78
+      ],
+      "legacy_slugs": [
+        "xlive"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Xo Wavy",
+      "slug": "legacy-xowavy",
+      "source_ids": [
+        73
+      ],
+      "legacy_slugs": [
+        "xowavy"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Young Pop",
+      "slug": "legacy-youngpop",
+      "source_ids": [
+        77
+      ],
+      "legacy_slugs": [
+        "youngpop"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    },
+    {
+      "name": "Zebb Live",
+      "slug": "legacy-zebblive",
+      "source_ids": [
+        93
+      ],
+      "legacy_slugs": [
+        "zebblive"
+      ],
+      "aliases": [],
+      "reported_roles": [
+        "Dancer"
+      ]
+    }
+  ]
+}

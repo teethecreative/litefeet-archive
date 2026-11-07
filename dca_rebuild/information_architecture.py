@@ -9,6 +9,7 @@ from dca_rebuild.archive_history_guide import load_history_guide
 from dca_rebuild.lock_in import practice_view
 from dca_rebuild.timeline_catalog import timeline_browse, timeline_payload
 from dca_rebuild.upcoming_calendar import upcoming_calendar
+from dca_rebuild.archive_recovery import recovery_review
 from dca_rebuild.archive_catalog import (
     COLLECTIONS, PAGE_SIZE, all_records, browse, find_record,
     listing_payload, public_record, people_crew_cloud,
@@ -242,7 +243,8 @@ def install_information_architecture(app, ns):
             for item in all_records()
         ]
         return render_template('admin_archive_research_review.html',
-                               review_records=review)
+                               review_records=review,
+                               recovery_profiles=recovery_review(all_records()))
 
     @app.get('/community', endpoint='vault_community')
     def community():
