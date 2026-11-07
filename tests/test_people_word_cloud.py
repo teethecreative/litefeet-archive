@@ -45,3 +45,12 @@ def test_people_cloud_is_just_clickable_words_not_gold_buttons():
     assert 'font-size:var(--word-size,1.25rem)!important;' in cloud_css
     assert 'text-decoration:underline!important;' in cloud_css
     assert 'background:#c9a52b' not in cloud_css
+
+
+def test_people_collection_query_opens_people_browser_not_timeline(website):
+    response = website.test_client().get('/archive?collection=people')
+    assert response.status_code == 200
+    page = response.get_data(as_text=True)
+    assert 'lfv-people-wordcloud' in page
+    assert 'SEARCH PEOPLE &amp; CREWS' in page
+    assert 'CHRONOLOGICAL TIMELINE' not in page
