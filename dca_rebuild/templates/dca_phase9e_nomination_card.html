@@ -7,6 +7,8 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <input type="hidden" name="category_id" value="{{ category.id }}">
       <label>Nominee name <span aria-hidden="true">*</span><input name="name" maxlength="250" minlength="2" required placeholder="Dancer, team, or nominee" autocomplete="off" value="{{ suggestion.name if suggestion else '' }}"></label>
+      <p class="lf9e-name-check" data-name-check role="status" aria-live="polite" hidden></p>
+      <label class="lf9e-distinct-confirm" data-name-distinct hidden><input type="checkbox" name="confirm_distinct" value="1"> THIS IS A DIFFERENT PERSON FROM THE SIMILAR NOMINEE ABOVE.</label>
       <label>Team <span class="lf9e-optional">(optional)</span><input name="team" maxlength="250" placeholder="Team or crew"></label>
       <label>Location <span class="lf9e-optional">(optional)</span><input name="location" maxlength="250" placeholder="City / state"></label>
       <label>Instagram <span class="lf9e-optional">(optional)</span><input name="instagram" maxlength="100" placeholder="@username"></label>
