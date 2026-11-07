@@ -346,3 +346,16 @@ html.lfv-sitewide #vault-home a.lfv-primary-cta:hover {background:#d6b445!import
   padding:14px 21px!important;min-height:46px!important;gap:13px!important;
  }
 }
+
+
+/* Only headings, navigation, and section identifiers are set in all caps.
+   Buttons and form controls use their natural written capitalization. */
+html.lfv-sitewide :is(#vault-home,.vault-section-page,.lfv-about-page,.lf9e,.lf-nom-2026,.lfv-submit) :is(
+ a.lfv-primary-cta,a.lfv3-button,a.lfv3-button-gold,a.lfv5-minimal-action,
+ button,input:not([type="hidden"]),textarea,select,label
+) {text-transform:none!important;letter-spacing:.018em!important;}
+html.lfv-sitewide #vault-home a.lfv-primary-cta {text-transform:none!important;}
+html.lfv-sitewide .ledger-newsletter-form :is(input,button) {text-transform:none!important;letter-spacing:.018em!important;}
+html.lfv-sitewide :is(.awards-global-nav,.lfv-breadcrumbs,.lfv-program-nav) :is(a,summary,button) {
+ text-transform:uppercase!important;letter-spacing:.035em!important;
+}
