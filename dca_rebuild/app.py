@@ -3702,8 +3702,8 @@ LEGACY_HOME_ROUTES = [
     "/about",
     "/contributor",
     "/event-affiliates",
-    "/submit",
-    "/submit/success",
+    # /submit and /submit/success are handled by the dedicated public
+    # gathering-submission routes; do not register legacy redirects first.
     "/submit/start",
     "/calendar",
     "/events",
