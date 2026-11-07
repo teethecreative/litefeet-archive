@@ -36,25 +36,41 @@ def _sources(guide, refs):
 
 
 def record_metadata(item):
-    """Chronological tags with explicit unknown dates and event host attribution."""
+    """Archive metadata: year/month/date/type, plus host for events only.
+
+    Unknown dates remain explicitly unknown instead of being inferred from
+    contextual sorting anchors or unpublished research.
+    """
     full_date = item.get("date") or ""
-    year, month, day = ("DATE UNKNOWN", "MONTH UNKNOWN", "DAY UNKNOWN")
-    if re.fullmatch(r"\\d{4}-\\d{2}-\\d{2}", full_date):
+    year, month, day = ("YEAR UNKNOWN", "MONTH UNKNOWN", "DATE UNKNOWN")
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", full_date):
         year, month, day = full_date.split("-")
-    elif re.fullmatch(r"\\d{4}-\\d{2}", full_date):
+    elif re.fullmatch(r"\d{4}-\d{2}", full_date):
         year, month = full_date.split("-")
-    elif re.fullmatch(r"\\d{4}", full_date):
+    elif re.fullmatch(r"\d{4}", full_date):
         year = full_date
-    elif item.get("date_label") and re.search(r"\\b(?:19|20)\\d{2}\\b", item["date_label"]):
-        year = re.search(r"\\b(?:19|20)\\d{2}\\b", item["date_label"]).group()
+    else:
+        label = item.get("date_label") or ""
+        match = re.search(r"\b(?:19|20)\d{2}\b", label)
+        if match:
+            year = match.group()
+            month_labels = (
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            )
+            for index, name in enumerate(month_labels, 1):
+                if re.search(r"\b" + name + r"\b", label, re.I):
+                    month = f"{index:02d}"
+                    break
 
     collection = item.get("collection")
     if collection == "events":
         hosts = [value for label, value in (item.get("information") or [])
-                 if label in ("Host", "Hosts", "Presented by") and value]
+                 if label in ("Host", "Hosts") and value]
         presenter = item.get("presenter") or ""
-        organizer = presenter or (hosts[0] if hosts else "HOST NOT CONFIRMED")
-        return dict(meta_parts=(year, month, day, "EVENTS", organizer))
+        # An organization on the actual flyer, not a guessed promoter.
+        organization = (hosts[0] if hosts else presenter) or "HOST NOT CONFIRMED"
+        return dict(meta_parts=(year, month, day, "EVENTS", organization))
     kind = {
         "dancer_profile": "DANCER",
         "team_profile": "TEAM",
@@ -171,8 +187,11 @@ def timeline_browse(query="", collection="all", page=1, page_size=PAGE_SIZE, era
 
 
 def timeline_payload(entry):
-    """All fields are public, sourced, with no user submissions or admin notes."""
-    return {key: entry[key] for key in (
+    """Public-safe, consistent payload for both static and loaded timeline rows."""
+    payload = {key: entry[key] for key in (
         "slug", "title", "collection", "date", "date_label", "period",
         "href", "summary", "detail", "sources", "kind"
     )}
+    if "meta_parts" in entry:
+        payload["meta_parts"] = list(entry["meta_parts"])
+    return payload
