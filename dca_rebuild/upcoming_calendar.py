@@ -3,7 +3,8 @@
 Uses event records with ISO dates and confirmed-year metadata, plus an optional
 curated JSON file. No speculative events, private admin notes, or test entries.
 """
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
+from zoneinfo import ZoneInfo
 from functools import lru_cache
 from pathlib import Path
 import json
@@ -24,7 +25,7 @@ def curated_events():
 
 def upcoming_calendar(today=None):
     """Return 30 inclusive local calendar days (NY-local date provided by caller)."""
-    today = today or date.today()
+    today = today or datetime.now(ZoneInfo("America/New_York")).date()
     end = today + timedelta(days=29)
     entries = []
     seen = set()
