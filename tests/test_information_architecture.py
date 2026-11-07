@@ -106,7 +106,7 @@ def test_standings_share_card_is_public_query_aware_and_private(website):
     assert image.data[:8] == b'\x89PNG\r\n\x1a\n'
     assert struct.unpack('>II',image.data[16:24]) == (1200,630)
     nomination_head = client.get('/awards/dancers-choice/nominations').get_data(as_text=True).split('</head>',1)[0]
-    assert 'DCA 2026 Nominations | The LiteFeet Vault' in nomination_head
+    assert "Nominate for Dancer" in nomination_head
     assert 'private@example.com' not in nomination_head
 
 

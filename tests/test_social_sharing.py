@@ -11,7 +11,7 @@ def _head(res):
     return res.get_data(as_text=True).split("</head>", 1)[0]
 
 def _meta(head, attribute, name):
-    matches = re.findall(r'<meta\\s+[^>]*'+re.escape(attribute)+
+    matches = re.findall(r'<meta\s+[^>]*'+re.escape(attribute)+
                          r'="'+re.escape(name)+r'"[^>]*>', head)
     assert len(matches) == 1, (attribute, name, len(matches))
     value = re.search(r'content="([^"]+)"', matches[0])
