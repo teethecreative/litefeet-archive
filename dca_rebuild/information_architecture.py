@@ -19,7 +19,7 @@ SECTION_CATALOG = (
     ('people', 'People', '/people', False),
     ('stories', 'Stories & Media', '/stories', False),
     ('awards', 'Awards', '/awards', True),
-    ('community', 'Community', '/community', True),
+    ('community', 'Community', '/community', False),
     ('about', 'About', '/about', True),
 )
 CONTACT = 'mailto:teethecreative@gmail.com?subject=LiteFeet%20Vault%20Enquiry'
@@ -50,13 +50,11 @@ def install_information_architecture(app, ns):
         content = public_content()
         children = {
             'archive': [dict(label='Browse collections', href='/archive#collections'),
-                        dict(label='History & Timeline', href='/archive/timeline')],
+                        dict(label='History & Timeline', href='/archive/timeline'),
+                        dict(label='Contribute & Correct', href='/community#contribute')],
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
                        dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
                        dict(label='Historical Results', href='/awards/dancers-choice/2023')],
-            'community': [dict(label='Contribute to the Archive', href='/community#contribute'),
-                          dict(label='Suggest Corrections', href='/awards/litefeet-awards#contribute')] +
-                         ([dict(label='Community Updates', href='/community#updates')] if content['updates'] else []),
             'about': [dict(label="Founder's Letter", href='/about/letter'),
                       dict(label='Our Mission', href='/about/mission'),
                       dict(label='About the Archive', href='/about/archive'),
@@ -66,8 +64,7 @@ def install_information_architecture(app, ns):
         path = request.path
         active = 'home' if path == '/' else (
             'awards' if path.startswith(('/awards', '/dca', '/litefeet-awards', '/hypeitup-awards')) else
-            'archive' if path.startswith('/archive') else
-            'community' if path.startswith(('/community', '/submit', '/newsletter')) else
+            'archive' if path.startswith(('/archive', '/community', '/submit', '/newsletter')) else
             'about' if path.startswith('/about') else None)
         navigation = [dict(key=k, label=label, href=href, active=k == active,
                            children=children.get(k, [])) for k, label, href, ready in SECTION_CATALOG if ready]
@@ -78,7 +75,7 @@ def install_information_architecture(app, ns):
             section = next((s for s in navigation if s['key'] == active), None)
             labels = {'vault_archive': 'The Archive', 'vault_timeline': 'Historical Timeline',
                       'vault_history_guide': 'Cultural History',
-                      'vault_community': 'Community', 'legacy_about': 'About', 'awards_home': 'Awards',
+                      'vault_community': 'Contribute & Correct', 'legacy_about': 'About', 'awards_home': 'Awards',
                       'vault_dca_program': 'Dancer’s Choice Awards', 'dca_2026_home': '2026',
                       'dca_2023_home': '2023 archive', 'round1': 'Category survey', 'round2': 'Category results',
                       'lfa_year': 'LiteFeet Awards ' + str((request.view_args or {}).get('year', '')),
