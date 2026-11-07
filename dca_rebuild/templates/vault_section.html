@@ -6,15 +6,11 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-identity-phase1.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/archive-v1.css') }}">
 </head><body>{% include "_navigation.html" %}
 <main class="vault-section-page" id="vault-section-{{ section }}">
-{% if section == 'archive' %}
-<header><p class="vault-kicker">THE ARCHIVE</p><h1>Keep the culture on record.</h1><p>Explore preserved LiteFeet records and the sources behind them.</p></header>
-<section id="collections"><h2>Historical collections</h2><a class="vault-collection" href="{{ url_for('dca_2023_home') }}"><strong>Dancer’s Choice Awards · August 2023</strong><span>31 categories · 152 nominee entries · 32 winning entries</span></a></section>
-{% if eras %}<section><h2>LiteFeet history</h2><p>Browse published historical eras.</p><a href="{{ url_for('vault_timeline') }}">Historical Timeline</a></section>{% endif %}
-{% elif section == 'timeline' %}
-<header><p class="vault-kicker">THE ARCHIVE</p><h1>Historical Timeline</h1></header>
-<ol class="vault-timeline">{% for era in eras %}<li><h2>{{ era.name }}</h2>{% if era.start_year %}<p>{{ era.start_year }}{% if era.end_year and era.end_year != era.start_year %}–{{ era.end_year }}{% endif %}</p>{% endif %}{% if era.description %}<p>{{ era.description }}</p>{% endif %}</li>{% endfor %}</ol>
+{% if section == 'archive' or section == 'timeline' %}
+{% include "archive_hub.html" %}
 {% elif section == 'awards' %}
 <header><p class="vault-kicker">AWARDS</p><h1>Recognition from the culture.</h1></header>
 <div class="vault-section-grid"><a class="vault-collection" href="{{ url_for('vault_dca_program') }}"><strong>Dancer’s Choice Awards</strong><span>Current participation and the 2023 historical archive.</span></a><a class="vault-collection" href="{{ url_for('lfa_home') }}"><strong>LiteFeet Awards</strong><span>Historical contributions and award records.</span></a></div>
@@ -49,4 +45,4 @@
 <section id="how-it-works"><h2>How It Works</h2><p>Historical sources and community contributions help build the record. Contributions are reviewed before publication; corrections keep the archive accountable to the culture.</p><a href="{{ url_for('vault_community') }}#contribute">Contribute to the Archive</a></section>
 <section id="contact"><h2>Contact</h2><a href="{{ vault_contact }}">Contact the Vault team</a></section>
 {% endif %}
-</main>{% include "_footer.html" %}<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script></body></html>
+</main>{% include "_footer.html" %}<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>{% if section == 'archive' or section == 'timeline' %}<script defer src="{{ url_for('static', filename='js/archive-v1.js') }}"></script>{% endif %}</body></html>
