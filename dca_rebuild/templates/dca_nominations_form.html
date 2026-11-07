@@ -44,7 +44,7 @@
         {% for category in intro_categories %}<li>{{ category.name }}</li>{% endfor %}
       </ol>
     </div>
-    {% if intro_writeins %}<details class="lf9e-intro-writeins"><summary>Additional write-in categories ({{ intro_writeins|length }})</summary><ul class="lf9e-intro-categories">{% for category in intro_writeins %}<li>{{ category.name }}</li>{% endfor %}</ul></details>{% endif %}
+    <p class="lf9e-writein-link"><a href="{{ url_for('phase9e_writeins') }}">WRITE-IN CATEGORIES →</a> <span>View every community-suggested category and learn how write-ins qualify.</span></p>
     <form method="post" class="lf9e-entry-form lf9e-email-form" id="lf9e-email-start" aria-labelledby="email-title">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <input type="hidden" name="action" value="identify">
@@ -88,10 +88,7 @@
       <section aria-labelledby="official-title"><h2 id="official-title">Official Top 25</h2>
         <div class="lf9e-category-grid">{% for category in categories %}{% include "dca_nomination_grid_card.html" %}{% endfor %}</div>
       </section>
-      <details class="lf9e-writeins" id="writeins"><summary>Additional write-in categories ({{ writeins|length }})</summary>
-        <p class="lf9e-note">Write-ins need more unique supporters than the least-supported Top 25 category, at least 20 unique supporters, and five eligible nominees. Qualification is reviewed after nominations close.</p>
-        <div class="lf9e-category-grid">{% for category in writeins %}{% include "dca_nomination_grid_card.html" %}{% else %}<p>No additional categories are available yet.</p>{% endfor %}</div>
-      </details>
+      <p class="lf9e-writein-link"><a href="{{ url_for('phase9e_writeins') }}">WRITE-IN CATEGORIES →</a> <span>Browse all submitted categories, nominate and see qualification rules.</span></p>
       <section class="lf9e-saved-ideas" aria-labelledby="lf9e-saved-title">
         <h2 id="lf9e-saved-title">Saved nomination ideas</h2>
         <p class="lf9e-note">Private drafts stored in this browser. These have not been submitted.</p>
