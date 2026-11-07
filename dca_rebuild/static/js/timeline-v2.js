@@ -20,7 +20,15 @@ function addSources(parent,sources){
 function make(entry){
  const row=document.createElement("article");row.className="lfv-unified-item";row.setAttribute("role","listitem");
  const meta=document.createElement("p");meta.className="lfv-unified-meta";
- meta.textContent=(entry.period||"DATE UNDER REVIEW")+" / "+entry.collection;row.append(meta);
+ if(Array.isArray(entry.meta_parts)&&entry.meta_parts.length){
+  entry.meta_parts.forEach((part,index)=>{
+   if(index){const slash=document.createElement("span");slash.setAttribute("aria-hidden","true");slash.textContent="/";meta.append(slash);}
+   const tag=document.createElement("span");tag.textContent=part;meta.append(tag);
+  });
+ }else{
+  meta.textContent=(entry.period||"DATE UNDER REVIEW")+" / "+String(entry.collection||"").toUpperCase();
+ }
+ row.append(meta);
  if(entry.kind==="chapter"||entry.kind==="milestone"||entry.kind==="era"){
   const details=document.createElement("details");details.className="lfv-unified-expand";
   const summary=document.createElement("summary");const heading=document.createElement("strong");heading.textContent=entry.title;
@@ -57,6 +65,7 @@ async function load(next,replace){
   if(replace){const url=new URL(location.href);url.searchParams.delete("page");
     params.get("q")?url.searchParams.set("q",params.get("q")):url.searchParams.delete("q");
     params.get("collection")!=="all"?url.searchParams.set("collection",params.get("collection")):url.searchParams.delete("collection");
+    url.searchParams.delete("view");
     history.replaceState(null,"",url);}
  }catch(_){state.textContent="COULD NOT LOAD RECORDS. TRY AGAIN.";more.hidden=false;hasMore=true;}
  finally{busy=false;more.disabled=false;}

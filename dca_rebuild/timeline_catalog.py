@@ -35,6 +35,57 @@ def _sources(guide, refs):
     ]
 
 
+def record_metadata(item):
+    """Archive metadata: year/month/date/type, plus host for events only.
+
+    Unknown dates remain explicitly unknown instead of being inferred from
+    contextual sorting anchors or unpublished research.
+    """
+    full_date = item.get("date") or ""
+    year, month, day = ("YEAR UNKNOWN", "MONTH UNKNOWN", "DATE UNKNOWN")
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", full_date):
+        year, month, day = full_date.split("-")
+    elif re.fullmatch(r"\d{4}-\d{2}", full_date):
+        year, month = full_date.split("-")
+    elif re.fullmatch(r"\d{4}", full_date):
+        year = full_date
+    else:
+        label = item.get("date_label") or ""
+        match = re.search(r"\b(?:19|20)\d{2}\b", label)
+        if match:
+            year = match.group()
+            month_labels = (
+                "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+            )
+            for index, name in enumerate(month_labels, 1):
+                if re.search(r"\b" + name + r"\b", label, re.I):
+                    month = f"{index:02d}"
+                    break
+
+    collection = item.get("collection")
+    if collection == "events":
+        hosts = [value for label, value in (item.get("information") or [])
+                 if label in ("Host", "Hosts") and value]
+        presenter = item.get("presenter") or ""
+        # An organization on the actual flyer, not a guessed promoter.
+        organization = (hosts[0] if hosts else presenter) or "HOST NOT CONFIRMED"
+        return dict(meta_parts=(year, month, day, "EVENTS", organization))
+    kind = {
+        "dancer_profile": "DANCER",
+        "team_profile": "TEAM",
+        "crew_profile": "TEAM",
+        "move_info": "LITEFEET MOVE",
+        "historical_claim": "HISTORY",
+        "award_archive": "AWARDS",
+    }.get(item.get("record_type"))
+    if not kind:
+        kind = {"people": "DANCER / TEAM", "music": "LITEFEET MUSIC",
+                "moves": "LITEFEET MOVE", "awards": "AWARDS",
+                "history": "HISTORY"}.get(collection, "ARCHIVE")
+    return dict(meta_parts=(year, month, day, kind))
+
+
 def _milestone_year(label):
     years = re.findall(r"(?:19|20)\d{2}", label)
     return int(years[0]) if years else 0
@@ -58,6 +109,7 @@ def all_timeline_entries():
             href="/archive/records/" + item["slug"],
             summary=item.get("summary") or "",
             detail=[], sources=sources, kind="record",
+            **record_metadata(item),
             search=" ".join([item["title"], item.get("summary") or "",
                              item.get("collection") or ""]).casefold(),
         ))
@@ -135,8 +187,11 @@ def timeline_browse(query="", collection="all", page=1, page_size=PAGE_SIZE, era
 
 
 def timeline_payload(entry):
-    """All fields are public, sourced, with no user submissions or admin notes."""
-    return {key: entry[key] for key in (
+    """Public-safe, consistent payload for both static and loaded timeline rows."""
+    payload = {key: entry[key] for key in (
         "slug", "title", "collection", "date", "date_label", "period",
         "href", "summary", "detail", "sources", "kind"
     )}
+    if "meta_parts" in entry:
+        payload["meta_parts"] = list(entry["meta_parts"])
+    return payload

@@ -51,7 +51,7 @@ def install_information_architecture(app, ns):
     def vault_site_context():
         content = public_content()
         children = {
-            'archive': [dict(label='Browse collections', href='/archive#collections'),
+            'archive': [dict(label='People & Crews', href='/archive?view=people&collection=people'),
                         dict(label='History & Timeline', href='/archive/timeline'),
                         dict(label='Lock In · Card Battle Game', href='/archive/lock-in'),
                         dict(label='Submit', href='/submit')],
@@ -115,7 +115,10 @@ def install_information_architecture(app, ns):
                                **public_content(), **extra)
 
     def archive_page(section):
-        timeline = section == 'timeline'
+        # Archive Overview is timeline-first. Keep the dedicated People & Crews
+        # collection browser so its ranked profile cloud remains accessible.
+        overview = section == 'archive' and request.args.get('view') != 'people'
+        timeline = section == 'timeline' or overview
         current_page = max(1, request.args.get('page', 1, type=int) or 1)
         search = dict(query=request.args.get('q', ''),
                       collection=request.args.get('collection', 'all'),
@@ -123,7 +126,7 @@ def install_information_architecture(app, ns):
         filtered = timeline_browse(**search, eras=public_content()['eras']) if timeline else browse(**search)
         return section_page(section, archive_items=filtered['items'],
                             archive_pagination=filtered, archive_collections=COLLECTIONS,
-                            archive_timeline=timeline,
+                            archive_timeline=timeline, archive_overview=overview,
                             people_cloud=(people_crew_cloud() if not timeline and search['collection'] == 'people'
                                           else []),
                             archive_start_page=current_page)

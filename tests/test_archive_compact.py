@@ -8,7 +8,7 @@ def test_compact_archive_rows_and_source_separation(website):
     assert page.status_code == 200
     html = page.get_data(as_text=True)
     assert 'archive-v2.css' in html
-    assert 'lfv-archive-entry-date' in html
+    assert 'data-unified-timeline' in html
     assert 'lfv-archive-entry-meta' not in html
     assert 'View record <span' not in html
     assert 'More than a directory' not in html

@@ -1,16 +1,17 @@
 <header class="lfv-unified-hero">
   <p class="vault-kicker">THE ARCHIVE / CULTURAL HISTORY</p>
-  <h1>HISTORY &amp; TIMELINE</h1>
+  <h1>{% if archive_overview | default(false) %}THE ARCHIVE TIMELINE{% else %}HISTORY &amp; TIMELINE{% endif %}</h1>
   <p>ONE CHRONOLOGICAL RECORD OF LITEFEET, GET LITE, THE HARLEM SHAKE, DANCERS, CREWS, MOVES, MUSIC AND EVENTS. EXPAND RESEARCH TO SEE THE EVIDENCE.</p>
 </header>
 <nav class="lfv-archive-subnav" aria-label="ARCHIVE NAVIGATION">
-  <a href="{{ url_for('vault_archive') }}">BROWSE THE ARCHIVE</a>
-  <a href="{{ url_for('vault_timeline') }}" aria-current="page">HISTORY &amp; TIMELINE</a>
+  <a href="{{ url_for('vault_archive') }}" {% if archive_overview | default(false) %}aria-current="page"{% endif %}>THE ARCHIVE</a>
+  <a href="{{ url_for('vault_archive', view='people', collection='people') }}">PEOPLE &amp; CREWS</a>
+  <a href="{{ url_for('vault_timeline') }}" {% if not archive_overview | default(false) %}aria-current="page"{% endif %}>HISTORY &amp; TIMELINE</a>
   <a href="{{ url_for('dca_2023_home') }}">2023 AWARDS</a>
 </nav>
 <section class="lfv-unified-timeline" id="timeline" data-unified-timeline>
   <div class="lfv-archive-list-head"><h2>THE CULTURAL RECORD</h2><span data-timeline-count>{{ archive_pagination.count }} ENTRIES</span></div>
-  <form role="search" method="get" action="{{ url_for('vault_timeline') }}" data-timeline-search class="lfv-unified-search">
+  <form role="search" method="get" action="{{ url_for('vault_archive') if archive_overview | default(false) else url_for('vault_timeline') }}" data-timeline-search class="lfv-unified-search">
     <label for="timeline-search">SEARCH THE TIMELINE</label>
     <div>
       <input id="timeline-search" type="search" name="q" maxlength="120" placeholder="SEARCH PEOPLE, HISTORY, EVENTS, MOVES…" value="{{ request.args.get('q','') }}">
@@ -25,7 +26,15 @@
   <div class="lfv-unified-list" data-timeline-list role="list">
     {% for entry in archive_items %}
     <article class="lfv-unified-item" role="listitem">
-      <p class="lfv-unified-meta"><span>{{ entry.period }}</span> <span aria-hidden="true">/</span> <span>{{ entry.collection }}</span></p>
+      <p class="lfv-unified-meta">
+        {% if entry.kind == 'record' and entry.meta_parts %}
+          {% for segment in entry.meta_parts %}
+          <span>{{ segment }}</span>{% if not loop.last %}<span aria-hidden="true">/</span>{% endif %}
+          {% endfor %}
+        {% else %}
+          <span>{{ entry.period }}</span><span aria-hidden="true">/</span><span>{{ entry.collection | upper }}</span>
+        {% endif %}
+      </p>
       {% if entry.kind == 'chapter' %}
       <details class="lfv-unified-expand">
         <summary><strong>{{ entry.title }}</strong><span aria-hidden="true">+</span></summary>

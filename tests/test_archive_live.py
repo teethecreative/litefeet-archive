@@ -28,8 +28,8 @@ def test_public_archive_and_scroll_api_show_real_entries(website):
     page = client.get('/archive')
     assert page.status_code == 200
     html = page.get_data(as_text=True)
-    for text in ('EXPLORE COLLECTIONS','BROWSE RECORDS','HISTORY &amp; RESEARCH',
-                 'LOAD MORE RECORDS', 'Battles &amp; Events', 'Awards &amp; Recognition'):
+    for text in ('THE ARCHIVE TIMELINE','SEARCH THE TIMELINE','THE CULTURAL RECORD',
+                 'HISTORY &amp; TIMELINE', 'PEOPLE &amp; CREWS'):
         assert text in html
     assert 'More than a directory' not in html
     assert 'Wes the MAB' not in html  # private legacy ghost directory has not been published
