@@ -1,7 +1,7 @@
 """The LiteFeet Vault public search metadata, crawl directives and XML sitemap."""
 import re
 from xml.sax.saxutils import escape
-from flask import Response, request
+from flask import Response, request, abort
 
 SITE_URL = "https://thelitefeetvault.com"
 PAGES = {
@@ -11,7 +11,7 @@ PAGES = {
     ),
     "/awards/dancers-choice/2026": (
         "Dancer's Choice Awards 2026 | The LiteFeet Vault",
-        "Follow the 2026 Dancer's Choice Awards, from community category selection to nominations, voting and official results on The LiteFeet Vault.",
+        "Explore the 2026 Dancer's Choice Awards: nominations, official categories and community write-ins.",
     ),
     "/awards/dancers-choice/2023": (
         "Dancer's Choice Awards 2023 Archive | The LiteFeet Vault",
@@ -31,7 +31,7 @@ PAGES = {
     ),
     "/awards/dancers-choice/category-voting": (
         "Dancer's Choice 2026 Category Results | The LiteFeet Vault",
-        "Explore recorded category-selection results and updates for the 2026 Dancer's Choice Awards. Results remain subject to final review.",
+        "Review the Dancer's Choice Awards 2026 category-selection results and how categories were considered.",
     ),
 }
 PAGES.update({
@@ -52,10 +52,20 @@ PAGES.update({
     "/about/how-it-works": ("How It Works | The LiteFeet Vault", "Learn how to explore LiteFeet records, share evidence and suggest corrections."),
     "/about/contact": ("Contact | The LiteFeet Vault", "Reach the Vault team about preserving the history of LiteFeet."),
 
-    "/awards/dancers-choice/nominations": ("DCA 2026 Nominations | The LiteFeet Vault", "Explore the categories and nominate the people who represent LiteFeet culture."),
+    "/awards/dancers-choice/nominations": ("Nominate for Dancer's Choice Awards 2026 | The LiteFeet Vault", "Browse official and write-in categories. Nominate or support a LiteFeet community member once per category every rolling 24 hours."),
 })
 
-# Only advertise curated public entry points. Some linked pages are unfinished.
+# Public short links are real pages, not third-party shortening services.
+# Legacy deep links still render and share the same canonical short URL.
+PAGES["/write-ins"] = (
+    "Write-In Categories | Dancer's Choice Awards 2026 | The LiteFeet Vault",
+    "Explore community-suggested categories for the 2026 Dancer's Choice Awards. Find a category, nominate someone and help build support for its inclusion.",
+)
+CANONICAL_ALIASES = {
+    "/awards/dancers-choice/write-ins": "/write-ins",
+}
+
+# Index curated public pages only; omit private forms and confirmation pages.
 SITEMAP_PATHS = (
     "/",
     "/archive/lock-in",
@@ -63,6 +73,7 @@ SITEMAP_PATHS = (
     "/archive/timeline",
     "/awards",
     "/awards/dancers-choice",
+    "/write-ins",
     "/community",
     "/about",
     "/about/letter",
@@ -73,13 +84,39 @@ SITEMAP_PATHS = (
     "/awards/dancers-choice/2026",
     "/awards/dancers-choice/2023",
     "/awards/litefeet-awards",
+    "/awards/litefeet-awards/2023",
+    "/awards/litefeet-awards/2024",
+    "/awards/litefeet-awards/2025",
+    "/awards/litefeet-awards/2026",
+    "/awards/hypeitup",
+    "/submit",
+    "/awards/dancers-choice/nominations",
     "/awards/dancers-choice/category-suggestions",
     "/awards/dancers-choice/category-voting",
 )
 
 
+def card_key_for_path(path):
+    if path == "/":
+        return "home"
+    if path.startswith("/archive/records/"):
+        return "record--" + path[len("/archive/records/"):]
+    return path.strip("/").replace("/", "--")
+
+
+def path_for_card_key(key):
+    if key == "home":
+        return "/"
+    if key.startswith("record--"):
+        return "/archive/records/" + key[len("record--"):]
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,210}", key):
+        return None
+    return "/" + key.replace("--", "/")
+
+
 def metadata_for_path(path, view=None):
-    record = PAGES.get(path)
+    canonical_path = CANONICAL_ALIASES.get(path, path)
+    record = PAGES.get(canonical_path)
     if record is None:
         match = re.fullmatch(r"/awards/litefeet-awards/(2023|2024|2025|2026)", path)
         if match:
@@ -88,13 +125,18 @@ def metadata_for_path(path, view=None):
                 f"LiteFeet Awards {year} Archive | The LiteFeet Vault",
                 f"Explore the LiteFeet Awards {year} archive and its preserved awards history on The LiteFeet Vault.",
             )
-    if record is None and path.startswith("/archive/records/"):
+    if record is None and canonical_path.startswith("/archive/records/"):
         from dca_rebuild.archive_catalog import find_record
-        item = find_record(path[len("/archive/records/"):])
+        item = find_record(canonical_path[len("/archive/records/"):])
         if item:
+            summary = " ".join((item.get("summary") or "").split())
+            label = ("Archived results" if item.get("editorial_status") == "Archived results"
+                     else "Historical research")
+            if len(summary) < 40:
+                summary = f"{item['title']}: {summary}. Explore this entry in The LiteFeet Vault's historical archive."
             record = (
                 item["title"] + " | The LiteFeet Vault Archive",
-                ("Research under review: " + item["summary"])[:200],
+                (label + ": " + summary)[:180],
             )
     if record is None:
         return None
@@ -103,8 +145,11 @@ def metadata_for_path(path, view=None):
         record = ("DCA 2026 Nominee Standings | The LiteFeet Vault",
                   "See current Dancer’s Choice Awards 2026 nominees and nomination totals across every category on The LiteFeet Vault.")
     title, description = record
-    canonical = SITE_URL + path + ('?view=results' if results else '')
-    image_url = SITE_URL + '/static/social/dca-2026-standings-v1.png' if results else None
+    canonical = SITE_URL + canonical_path + ('?view=results' if results else '')
+    image_url = (SITE_URL + '/static/social/dca-2026-standings-v1.png' if results
+                 else SITE_URL + '/social/cards/' + card_key_for_path(canonical_path) + '.png')
+    image_alt = (("Dancer's Choice Awards 2026 nominee standings" if results else title)
+                 + " — The LiteFeet Vault social preview")
     website = {"@type": "WebSite", "name": "The LiteFeet Vault", "url": SITE_URL + "/"}
     page = {
         "@type": "WebPage",
@@ -117,10 +162,38 @@ def metadata_for_path(path, view=None):
         {**website, "@id": SITE_URL + "/#website"}, page,
     ]}
     return {"title": title, "description": description, "canonical": canonical, "schema": schema,
-            "image": image_url, "image_alt": "The LiteFeet Vault — Dancer’s Choice Awards 2026 nominee standings" if results else None}
+            "image": image_url, "image_alt": image_alt}
 
 
 def register_seo(app):
+    from dca_rebuild.social_cards import render_social_card
+
+    @app.get("/social/cards/<card>.png")
+    def litefeet_social_card(card):
+        path = path_for_card_key(card)
+        if not path:
+            abort(404)
+        metadata = metadata_for_path(path)
+        if not metadata:
+            abort(404)
+        kind = "vault" if path == "/" else "write-ins" if path == "/write-ins" else "page"
+        return Response(
+            render_social_card(kind, metadata["title"], metadata["description"]),
+            mimetype="image/png",
+            headers={"Cache-Control": "public, max-age=604800",
+                     "X-Content-Type-Options": "nosniff"},
+        )
+
+    @app.get("/social/<card>.png")
+    def litefeet_legacy_social_card(card):
+        if card not in ("vault", "write-ins"):
+            abort(404)
+        path = "/" if card == "vault" else "/write-ins"
+        meta = metadata_for_path(path)
+        return Response(render_social_card(card, meta["title"], meta["description"]),
+                        mimetype="image/png",
+                        headers={"Cache-Control": "public, max-age=604800"})
+
     @app.context_processor
     def litefeet_seo_context():
         return {"seo": metadata_for_path(request.path, request.args.get("view"))}
@@ -135,9 +208,13 @@ def register_seo(app):
 
     @app.get("/sitemap.xml")
     def litefeet_sitemap():
+        from dca_rebuild.archive_catalog import all_records
+        paths = list(SITEMAP_PATHS) + [
+            "/archive/records/" + item["slug"] for item in all_records()
+        ]
         entries = "".join(
             "<url><loc>" + escape(SITE_URL + path) + "</loc></url>"
-            for path in SITEMAP_PATHS
+            for path in dict.fromkeys(paths)
         )
         return Response(
             '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -155,6 +232,8 @@ def register_seo(app):
             or path == "/beta" or path.startswith("/beta/")
             or path == "/newsletter" or path.startswith("/newsletter/")
             or path == "/health" or path.startswith("/health/")
+            or path in {"/submit/thank-you", "/awards/litefeet-awards/submit"}
+            or path.endswith("/check-email")
         )
         if restricted or request.method == "POST" and "text/html" in response.content_type.lower():
             response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"

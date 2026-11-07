@@ -1,4 +1,5 @@
 Flask
+Pillow>=10,<13
 python-dotenv
 gunicorn
 SQLAlchemy

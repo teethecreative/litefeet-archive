@@ -496,7 +496,12 @@ def install_phase9e(app, ns):
         finally:
             db.close()
 
-    @app.get('/awards/dancers-choice/write-ins', endpoint='phase9e_writeins')
+    @app.get('/awards/dancers-choice/write-ins', endpoint='phase9e_writeins_legacy')
+    def legacy_writein_categories_9e():
+        query = request.args.get('q', '').strip()[:100]
+        return redirect(url_for('phase9e_writeins', **({'q': query} if query else {})), code=301)
+
+    @app.get('/write-ins', endpoint='phase9e_writeins')
     def writein_categories_9e():
         """All moderator-approved categories outside the Top 25, not only published write-ins.
 
