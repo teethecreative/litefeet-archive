@@ -460,3 +460,45 @@ html.lfv-sitewide .lf9e .lf9e-round-notice strong {text-transform:none!important
  html.lfv-sitewide .lf9e .lf9e-intro-categories,
  html.lfv-sitewide .lfv-dca-overview .lfv-dca-stages {grid-template-columns:1fr!important;}
 }
+
+
+/* Public People & Crews word cloud, scaled from actual archive cross-references. */
+html.lfv-sitewide .lfv-people-cloud-section {
+  padding:clamp(18px,3vw,32px);
+  margin:24px 0 30px;
+  border:1px solid var(--lfv-line, #415371);
+  border-radius:10px;
+  background:var(--lfv-surface, #18243b);
+}
+html.lfv-sitewide .lfv-people-cloud-heading h2{
+  font-size:clamp(1.35rem,2.2vw,2rem);margin:0 0 8px;letter-spacing:.025em;
+}
+html.lfv-sitewide .lfv-people-cloud-heading p {
+  max-width:70ch;margin:0 0 24px;line-height:1.55;
+  letter-spacing:.012em;text-transform:none;
+}
+html.lfv-sitewide .lfv-people-wordcloud {
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+  gap:clamp(8px,1.6vw,18px) clamp(13px,2vw,26px);
+  min-height:110px;padding:8px 3px;
+}
+html.lfv-sitewide .lfv-people-wordcloud .lfv-people-word {
+  display:inline-block;max-width:100%;overflow-wrap:anywhere;
+  font-size:clamp(1rem,calc(.9rem + var(--word-weight) * .27rem),2.7rem);
+  font-weight:750;line-height:1.15;letter-spacing:.015em;
+  text-align:center;text-transform:uppercase;color:var(--lfv-text, #f2f3f8);
+  text-decoration:none;border-radius:6px;padding:6px 8px;
+  transition:color .15s ease,background-color .15s ease;
+}
+html.lfv-sitewide .lfv-people-wordcloud .lfv-people-word:hover,
+html.lfv-sitewide .lfv-people-wordcloud .lfv-people-word:focus-visible {
+  color:var(--lfv-gold, #d3aa31);
+  background:rgba(160,160,160,.1);
+  outline-offset:3px;
+}
+@media (max-width:600px) {
+  html.lfv-sitewide .lfv-people-wordcloud {justify-content:flex-start;gap:8px 12px;}
+  html.lfv-sitewide .lfv-people-wordcloud .lfv-people-word {
+    font-size:clamp(.95rem,calc(.85rem + var(--word-weight) * .17rem),2rem);
+  }
+}
