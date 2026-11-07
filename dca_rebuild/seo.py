@@ -37,6 +37,7 @@ PAGES = {
 PAGES.update({
     "/archive": ("The Archive | The LiteFeet Vault", "Browse LiteFeet historical research, original battle announcements, moves, events, dancer references and preserved award records."),
     "/archive/timeline": ("History & Timeline | The LiteFeet Vault", "Explore a chronological LiteFeet event timeline and historical research, with sources and verification status."),
+    "/archive/history": ("History of LiteFeet, Get Lite & the Harlem Shake | The LiteFeet Vault", "Explore sourced chapters about the original Harlem Shake, Get Lite origins, LiteFeet dancers and crews, music, moves, battle culture and subway performance."),
     "/awards": ("Awards | The LiteFeet Vault", "Explore LiteFeet award programs, current participation and historical results."),
     "/awards/dancers-choice": ("Dancer’s Choice Awards | The LiteFeet Vault", "Explore Dancer’s Choice award editions, current participation and historical archives."),
     "/community": ("Community | The LiteFeet Vault", "Contribute historical sources, suggest corrections and follow public community updates."),
@@ -48,6 +49,7 @@ PAGES.update({
 SITEMAP_PATHS = (
     "/",
     "/archive",
+    "/archive/history",
     "/archive/timeline",
     "/awards",
     "/awards/dancers-choice",

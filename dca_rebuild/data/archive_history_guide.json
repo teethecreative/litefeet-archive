@@ -1,0 +1,845 @@
+{
+  "published_context": "Cultural history research review, November 2026",
+  "introduction": "The Harlem Shake, Get Lite and LiteFeet belong to a connected, evolving New York dance history. This guide collects dated reporting and participant accounts while distinguishing disputed origin claims from documented events.",
+  "sources": {
+    "smithsonian": {
+      "title": "Smithsonian Magazine — Presenting the Real Harlem Shake",
+      "url": "https://www.smithsonianmag.com/smart-news/presenting-the-real-harlem-shake-21838530/",
+      "published": "2013-02-20",
+      "type": "Historical reporting"
+    },
+    "iuda1": {
+      "title": "International Urban Dance Academy — LiteFeet History Part 1",
+      "url": "https://www.iuda.dance/courses/584986/lectures/11658475",
+      "type": "Community-authored history"
+    },
+    "iuda2": {
+      "title": "International Urban Dance Academy — LiteFeet History Part 2",
+      "url": "https://www.iuda.dance/courses/litefeet-summer22/lectures/38812947",
+      "type": "Community-authored history"
+    },
+    "iuda3": {
+      "title": "International Urban Dance Academy — LiteFeet History Part 3",
+      "url": "https://www.iuda.dance/courses/litefeet1/lectures/53781311",
+      "type": "Community-authored history"
+    },
+    "iudacourse": {
+      "title": "International Urban Dance Academy — LiteFeet Teaching Syllabus",
+      "url": "https://www.iuda.dance/p/litefeet",
+      "type": "Technical teaching curriculum"
+    },
+    "redbull": {
+      "title": "Red Bull Music Academy — Litefeet: New York's New Dance Step",
+      "url": "https://daily.redbullmusicacademy.com/2013/05/new-york-stories-emma-warren/",
+      "published": "2013-05-28",
+      "type": "Contemporary reporting"
+    },
+    "vice": {
+      "title": "VICE / Noisey — Sound of the Underground",
+      "url": "https://www.vice.com/en/article/litefeet-hann-kid-the-wiz-m-live-new-york-subway-dancers-showtime-music/",
+      "type": "Producer interviews and reporting"
+    },
+    "fact": {
+      "title": "FACT — Litefeet: Sound of the Subway",
+      "url": "https://www.factmag.com/2015/06/10/litefeet-sound-of-the-subway/",
+      "published": "2015-06-10",
+      "type": "Documentary and original soundtrack"
+    },
+    "steezy": {
+      "title": "STEEZY — Learn About Lite Feet",
+      "url": "https://www.steezy.co/posts/learn-about-lite-feet-the-newest-evolution-in-hip-hop-dance",
+      "published": "2024-01-23",
+      "type": "Mr. YouTube instructional interview"
+    },
+    "cozie": {
+      "title": "The Dance Enthusiast — Interview with Chrybaby Cozie",
+      "url": "https://www.dance-enthusiast.com/features/the-dance-enthusiast-asks/view/Lite-Feet-Chrybaby-Cozie",
+      "published": "2014-07-22",
+      "type": "Firsthand interview"
+    },
+    "gothamist": {
+      "title": "Gothamist — Two Showtime Dancers Explain LiteFeet",
+      "url": "https://tollbit.gothamist.com/2015/06/29/two_showtime_dancers_give_us_the_lo.php",
+      "published": "2015-06-29",
+      "type": "Firsthand interviews"
+    },
+    "subway": {
+      "title": "CBS New York — NYPD Crackdown on Subway Acrobats",
+      "url": "https://www.cbsnews.com/newyork/news/nypd-to-subway-acrobats-sit-down/",
+      "published": "2014-07-01",
+      "type": "Contemporary enforcement reporting"
+    },
+    "cbs": {
+      "title": "CBS Sports — Lock In: A Litefeet Story",
+      "url": "https://www.paramountpressexpress.com/cbs-sports/releases/?view=108339-in-celebration-of-50th-anniversary-of-hip-hop-cbs-sports-to-premiere-original-documentary-lock-in-a-litefeet-story",
+      "published": "2023-08-08",
+      "type": "Documentary release"
+    },
+    "works": {
+      "title": "Works & Process — Chrysolation at the Guggenheim",
+      "url": "https://www.worksandprocess.org/calendar/works-and-process-underground-uptown-dance-festival-at-guggenheim-new-york-2026-chrybaby-cozie-nj-ballet",
+      "published": "2026-01-10",
+      "type": "Institutional performance program"
+    },
+    "dartmouth": {
+      "title": "Hopkins Center, Dartmouth — Chrybaby Cozie & Harlem Lite",
+      "url": "https://hop.dartmouth.edu/events/chrybaby-cozie-harlem-lite",
+      "published": "2026-01-07",
+      "type": "Institutional biography and program"
+    },
+    "tuc": {
+      "title": "TUC Magazine — Interview with Mr. YouTube",
+      "url": "https://www.tucmag.net/next-up/next-up-the-king-of-lite-feet-mr-youtube-is-making-nyc-dance-culture-global/",
+      "type": "Firsthand interview"
+    },
+    "vulture": {
+      "title": "Vulture — The Rise of Litefeet",
+      "url": "https://www.vulture.com/2015/09/how-litefeet-moved-from-subway-to-mainstream.html",
+      "published": "2015-09-07",
+      "type": "Illustrated movement glossary"
+    }
+  },
+  "chapters": [
+    {
+      "id": "what-is-litefeet",
+      "title": "Harlem Shake, Get Lite & LiteFeet",
+      "subtitle": "Connected histories, distinct terms",
+      "paragraphs": [
+        {
+          "text": "The original Harlem Shake is an earlier Harlem dance tradition that predates LiteFeet. Get Lite is closely connected to the uptown party movement and its music. LiteFeet grew into a more expansive freestyle vocabulary, battle practice, musical scene and set of community institutions during the early-to-mid 2000s.",
+          "sources": [
+            "smithsonian",
+            "iuda2",
+            "redbull"
+          ]
+        },
+        {
+          "text": "Contemporary writers place the emerging style in Harlem and the Bronx, with dancing at basketball events, parks, parties, recreation centers, school gatherings and battles. Subway Showtime later became one of its most visible public expressions, rather than the point at which all of LiteFeet originated.",
+          "sources": [
+            "redbull",
+            "gothamist",
+            "cozie"
+          ]
+        },
+        {
+          "text": "The spelling LiteFeet, Lite Feet and Get Lite has varied between performers, journalists and teaching programs. The Vault uses LiteFeet as its editorial house style but retains original source spellings, aliases and movement names.",
+          "sources": [
+            "steezy",
+            "dartmouth"
+          ]
+        }
+      ],
+      "items": [
+        [
+          "Harlem Shake",
+          "Older upper-body Harlem social-dance tradition; the exact origin remains debated.",
+          [
+            "smithsonian",
+            "iuda1"
+          ]
+        ],
+        [
+          "Get Lite",
+          "Party and musical movement connecting Harlem's earlier steps to emerging LiteFeet culture.",
+          [
+            "vice",
+            "iuda2"
+          ]
+        ],
+        [
+          "LiteFeet",
+          "NYC freestyle practice encompassing moves, battles, music, performances and crews.",
+          [
+            "redbull",
+            "steezy"
+          ]
+        ],
+        [
+          "Showtime",
+          "Subway-performance practice with distinctive skills; not synonymous with the culture.",
+          [
+            "gothamist",
+            "fact"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "harlem-shake",
+      "title": "The original Harlem Shake",
+      "subtitle": "Rucker Park, early performers, music videos and a contested origin",
+      "paragraphs": [
+        {
+          "text": "Smithsonian's 2013 account credits Al B with performing an earlier Harlem Shake during Rucker Park basketball breaks beginning around 1981. Its reporting characterizes the dance through jerking and shaking of the arms and upper body. The 1981 date is a reported historical account rather than an independently verified first performance.",
+          "sources": [
+            "smithsonian"
+          ]
+        },
+        {
+          "text": "IUDA identifies the Go Crazy Boyz, including Smiley, Motion, Dirty Kirk, No Bones and M5, as early performers whose group style contributed to the Harlem Shake's public visibility. Its own account distinguishes Al B's reputation as an early popularizer from the collective development of a dance style. These origin and authorship claims should remain attributed to the source and open to corroboration.",
+          "sources": [
+            "iuda1"
+          ]
+        },
+        {
+          "text": "Historical media leads include the 2001 music videos for G. Dep's Let's Get It and Special Delivery, Eve's Who's That Girl? and Jadakiss's Put Ya Hands Up. Documenting exactly who appears in each scene requires direct footage review; a source listing a video is not proof of every dancer's identity.",
+          "sources": [
+            "iuda1",
+            "smithsonian"
+          ]
+        },
+        {
+          "text": "The viral 2013 internet meme associated with Baauer's Harlem Shake track did not generally reproduce the original Harlem dance. Reporting from Harlem in 2013 documented objections to the cultural displacement created when the meme used the neighborhood's dance name.",
+          "sources": [
+            "smithsonian",
+            "cozie"
+          ]
+        }
+      ],
+      "items": [
+        [
+          "Al B / Albee / Al Cisco",
+          "An early Harlem Shake figure in reporting about Rucker Park.",
+          [
+            "smithsonian",
+            "iuda1"
+          ]
+        ],
+        [
+          "Go Crazy Boyz",
+          "Group named by IUDA in histories of the early style; members and contributions require separately verified profiles.",
+          [
+            "iuda1"
+          ]
+        ],
+        [
+          "2013 meme",
+          "A separate internet phenomenon; should not be archived as the original Harlem Shake.",
+          [
+            "smithsonian"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "early-get-lite",
+      "title": "Get Lite and the early movement",
+      "subtitle": "Naming, Team LiteFeet and formative NYC gatherings",
+      "paragraphs": [
+        {
+          "text": "IUDA places the formative period roughly between 1999 and 2005 and credits AG the Voice of Harlem with the LiteFeet name and the creation of Team LiteFeet. These are a community historian's claims, not a definitive independently settled invention date.",
+          "sources": [
+            "iuda2"
+          ]
+        },
+        {
+          "text": "Contemporary interviews with Chrybaby Cozie and Mr. YouTube place personal encounters with the developing culture around 2004–2005. Mr. YouTube describes starting at parties and learning the dance through self-taught practice; Cozie describes the party scene as the dance's home.",
+          "sources": [
+            "cozie",
+            "tuc"
+          ]
+        },
+        {
+          "text": "IUDA highlights an ATM Live showcase at Milbank Community Center in 2006, with AG announcing and Team LiteFeet participating. It identifies early teams and teachers associated with Bronx and Queens participation, showing how the movement was not contained within one block or borough.",
+          "sources": [
+            "iuda3"
+          ]
+        },
+        {
+          "text": "Early party dances identified by IUDA include the Harlem Shake, Tone Whop, Chicken Noodle Soup, Aunt Jackie and Bad One. The combinations and individual variations developed as dancers battled, taught one another and created new forms.",
+          "sources": [
+            "iuda2",
+            "steezy"
+          ]
+        }
+      ],
+      "items": [
+        [
+          "AG the Voice of Harlem",
+          "Early name, performance and music association; IUDA credits AG with Team LiteFeet.",
+          [
+            "iuda2",
+            "vice"
+          ]
+        ],
+        [
+          "Team LiteFeet",
+          "Early collective: IUDA lists Teyana Taylor, Matt, Kanye East, Charlie Rockz, Ralph, Bri Beauty, Gusto, KP, Chrybaby Cozie and others.",
+          [
+            "iuda2"
+          ]
+        ],
+        [
+          "Milbank / ATM Live",
+          "Early basketball-centered performance and training history, reported for 2006.",
+          [
+            "iuda3"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "people-crews",
+      "title": "People, dancers and crews",
+      "subtitle": "Documented names without inventing biographies",
+      "paragraphs": [
+        {
+          "text": "Dancers, DJs, MCs, crew founders, teachers and producers all contributed to LiteFeet's history. The earliest publicly available coverage concentrates on visible performers; a full archive must also document organizers and people whose work was not recorded on social media.",
+          "sources": [
+            "redbull",
+            "cozie",
+            "iuda3"
+          ]
+        },
+        {
+          "text": "Firsthand accounts link Chrybaby Cozie with Breakfast Club E.A.T. and Lite Feet Nation, Mr. YouTube with the Brotherhood team and teaching, and Andrew Goofy Saunders with the formation of W.A.F.F.L.E. in 2011. These links should be kept separate from claims that any individual invented the whole style.",
+          "sources": [
+            "cozie",
+            "tuc",
+            "gothamist",
+            "dartmouth"
+          ]
+        },
+        {
+          "text": "Red Bull's on-location 2013 report documented dancers including Boy Aero, Sha Smoove, Lady Slic, Sonic and Goofy, and named crews W.A.F.F.L.E., Brotherhood, 2Real Boyz, Team Rocket and Demon. It also reported an established scene outside New York.",
+          "sources": [
+            "redbull"
+          ]
+        },
+        {
+          "text": "IUDA's early team lists identify Teyana Taylor, Bri Beauty, Monique, Peaches and other women among original participants. More direct interviews and archival footage are needed to create balanced, detailed profiles rather than leaving women as passing names in somebody else's history.",
+          "sources": [
+            "iuda2",
+            "iuda3"
+          ]
+        }
+      ],
+      "items": [
+        [
+          "Chrybaby Cozie / Daniel Holloway",
+          "Dancer, teaching and preservation leader; founder of Breakfast Club E.A.T. and Lite Feet Nation.",
+          [
+            "cozie",
+            "dartmouth"
+          ]
+        ],
+        [
+          "Mr. YouTube",
+          "Early dancer, Brotherhood leader and instructor; interviewed about learning and teaching the style.",
+          [
+            "tuc",
+            "steezy",
+            "iuda3"
+          ]
+        ],
+        [
+          "Andrew 'Goofy' Saunders",
+          "W.A.F.F.L.E. founder in his 2015 firsthand account.",
+          [
+            "gothamist",
+            "redbull"
+          ]
+        ],
+        [
+          "Kid The Wiz / Randy Vargas",
+          "Dancer and producer associated with later LiteFeet music production.",
+          [
+            "vice",
+            "redbull"
+          ]
+        ],
+        [
+          "D Cole, SNS, Hann",
+          "Music and battle contributors named in producer and documentary histories.",
+          [
+            "vice",
+            "fact"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "movement-vocabulary",
+      "title": "Moves, tricks and freestyle",
+      "subtitle": "Foundation, technique, variation and attribution",
+      "paragraphs": [
+        {
+          "text": "The movement vocabulary should distinguish a foundational party step from a dancer's later variation, an invented combination or an athletic technique. Instructor sources document the use of a move; they do not automatically establish who invented it first.",
+          "sources": [
+            "steezy",
+            "iudacourse"
+          ]
+        },
+        {
+          "text": "STEEZY's Mr. YouTube interview identifies Tone Wop, Chicken Noodle Soup, Rev Up, shoe tricks, hat tricks and the Lock In as widely taught concepts, with Lock In functioning as a punctuation at the end of a phrase.",
+          "sources": [
+            "steezy"
+          ]
+        },
+        {
+          "text": "IUDA's technical syllabus further identifies Bad One, Ankles, Tic Tac Toe, Drops, Threads, named ankle variations and combinations. These can support movement-library entries with demonstration clips, technique descriptions, aliases and community origin testimony.",
+          "sources": [
+            "iudacourse"
+          ]
+        },
+        {
+          "text": "Shoe and hat tricks are established LiteFeet vocabulary in contemporary writing, but an exact performance, creator and first appearance require evidence from footage or first-person participants.",
+          "sources": [
+            "redbull",
+            "steezy",
+            "vulture"
+          ]
+        }
+      ],
+      "items": [
+        [
+          "Foundational steps",
+          "Harlem Shake, Tone Whop, Chicken Noodle Soup, Aunt Jackie, Bad One.",
+          [
+            "iuda2"
+          ]
+        ],
+        [
+          "Footwork and variations",
+          "Rev Up, Tic Tac Toe, Ankles and named variations such as Butterfly, Switch and Tornado Spin.",
+          [
+            "iudacourse",
+            "steezy"
+          ]
+        ],
+        [
+          "Tricks and finishers",
+          "Shoe tricks, hat tricks, Lock Ins, drops, threads and individualized transitions.",
+          [
+            "steezy",
+            "iudacourse"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "music-history",
+      "title": "From Get Lite songs to LiteFeet beats",
+      "subtitle": "Producers shaped the movement, not just its soundtrack",
+      "paragraphs": [
+        {
+          "text": "VICE/Noisey traces Get Lite music to uptown party and rap records, describing songs designed to emphasize named neighborhood dances. Its account identifies AG's No Music as an important early phrase-and-sound reference, while later producers created more elaborate tracks for the expanding battle scene.",
+          "sources": [
+            "vice"
+          ]
+        },
+        {
+          "text": "Chicken Noodle Soup by DJ Webstar and Young B with AG played a key role in the national circulation of Harlem youth dance in 2006. Jason Fox's Aunt Jackie and the broader Ron Browz-era uptown scene are separate tracks in the movement's musical history.",
+          "sources": [
+            "iuda2",
+            "cbs",
+            "vice"
+          ]
+        },
+        {
+          "text": "By the early 2010s, producers such as Kid The Wiz and Hann were producing rhythmic arrangements, chants, samples and changes in momentum specifically for battle technique. Red Bull documents Kid The Wiz's tracks Dark Gospel and Beverages Are Needed in 2013.",
+          "sources": [
+            "vice",
+            "redbull"
+          ]
+        },
+        {
+          "text": "FACT's 2015 Sound of the Subway documentary published a soundtrack list naming HannBeats, Kid The Wiz, Webstar, Young B, D. Cole, Lil Live and Paul Gee. These are documented selections, not a complete discography or proof of original production ownership.",
+          "sources": [
+            "fact"
+          ]
+        }
+      ],
+      "items": [
+        [
+          "Early songs",
+          "AG — No Music; Webstar & Young B — Chicken Noodle Soup; Jason Fox — Aunt Jackie.",
+          [
+            "vice",
+            "iuda2"
+          ]
+        ],
+        [
+          "Producer history",
+          "Kid The Wiz, Hann, D Cole, SNS and other producers helped develop dedicated battle instrumentals.",
+          [
+            "vice",
+            "fact"
+          ]
+        ],
+        [
+          "2015 soundtrack examples",
+          "HannBeats — Willy Wrap / Keep It Locked; Kid The Wiz — The Ender; D. Cole featuring Nino Man — Come On; Lil Live & Kid The Wiz — Do It for the Vine.",
+          [
+            "fact"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "battles-spaces",
+      "title": "Battles, cyphers and community spaces",
+      "subtitle": "How LiteFeet was passed between generations",
+      "paragraphs": [
+        {
+          "text": "Organized battles, informal cyphers, basketball courts, parks, clubs and youth programs helped build a shared technique and reputation system before contemporary web platforms. Early accounts name Rucker Park, Milbank, Union Square and NYC recreation spaces as important settings.",
+          "sources": [
+            "iuda1",
+            "iuda3",
+            "redbull"
+          ]
+        },
+        {
+          "text": "IUDA credits Brotherhood with developing LiteFeet Lab training sessions and names early groups participating in the Golden Era. These program histories need original event posters, photos and participant testimony before a definitive event chronology can be published.",
+          "sources": [
+            "iuda3"
+          ]
+        },
+        {
+          "text": "Red Bull observed a live Union Square cypher in May 2013 and documented dancers, crews and producers active at that moment. That kind of dated eyewitness reporting supports a specific historical event record more strongly than undated later recollections.",
+          "sources": [
+            "redbull"
+          ]
+        },
+        {
+          "text": "Current grassroots flyers in the Vault document announced lineups, venue details, prices and event formats. A promotional battle list is evidence that a matchup was advertised, not evidence that the battle happened or who won.",
+          "sources": [
+            "redbull"
+          ]
+        }
+      ],
+      "items": [
+        [
+          "Important sites",
+          "Rucker Park, Milbank Community Center, Union Square, parks, clubs, recreation centers, dance studios and subway trains.",
+          [
+            "iuda1",
+            "iuda3",
+            "redbull"
+          ]
+        ],
+        [
+          "Organized culture",
+          "Battle cards, DJs, judging, cyphers, showcases, training sessions, individual and crew rivalries.",
+          [
+            "iuda3",
+            "redbull"
+          ]
+        ],
+        [
+          "Evidence distinction",
+          "Event announcement ≠ completed event ≠ verified outcome.",
+          [
+            "redbull"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "showtime",
+      "title": "Subway Showtime and public space",
+      "subtitle": "Art, employment, athletic practice and policing",
+      "paragraphs": [
+        {
+          "text": "Showtime performers adapted LiteFeet, prop manipulation and acrobatics to the spatial limitations and rhythm of subway cars. Dancers organized crews and earned income by entertaining passengers, while the proximity and moving trains raised safety concerns.",
+          "sources": [
+            "gothamist",
+            "fact",
+            "subway"
+          ]
+        },
+        {
+          "text": "In a 2015 interview Andrew Goofy Saunders said he formed W.A.F.F.L.E. in 2011 after participating in a scene connected through streets, MySpace, YouTube and regular battles. This is a direct account of one crew's emergence, not a precise start date for all subway dancing.",
+          "sources": [
+            "gothamist"
+          ]
+        },
+        {
+          "text": "NYPD enforcement increased in 2014. CBS New York reported more than 240 arrests connected with subway acrobatics by July 1, versus fewer than 40 at the same point a year earlier. These figures describe a specific reporting period and enforcement category, not necessarily arrests of LiteFeet dancers alone.",
+          "sources": [
+            "subway"
+          ]
+        },
+        {
+          "text": "Contemporary coverage records conflicting views: authorities emphasized physical risk to passengers, while dancers and advocates emphasized expression, income and community opportunity. The Vault should preserve the voices and context of both parties without allowing policing coverage to define the entire culture.",
+          "sources": [
+            "subway",
+            "gothamist",
+            "fact"
+          ]
+        }
+      ],
+      "items": [
+        [
+          "W.A.F.F.L.E.",
+          "The crew's public performances, documentaries and music helped broaden LiteFeet exposure.",
+          [
+            "gothamist",
+            "fact"
+          ]
+        ],
+        [
+          "2014 enforcement",
+          "NYPD crackdown and reported rise in subway-acrobatics arrests.",
+          [
+            "subway"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "beyond-new-york",
+      "title": "International teaching and evolving culture",
+      "subtitle": "Independent practice, instruction and collaboration",
+      "paragraphs": [
+        {
+          "text": "By May 2013, Red Bull's contemporary reporting identified LiteFeet activity outside New York, including London and Tokyo and communities in Connecticut, Virginia and Florida. That is earlier than many social-media-era narratives of a later global breakout.",
+          "sources": [
+            "redbull"
+          ]
+        },
+        {
+          "text": "Mr. YouTube described teaching the dance abroad and the benefits of documenting both the historical movement and its music. STEEZY's 2024 instructional interview emphasizes technical training as well as the cultural context behind the steps.",
+          "sources": [
+            "tuc",
+            "steezy"
+          ]
+        },
+        {
+          "text": "Chrybaby Cozie's 2014 interview documents university workshops and concerns that the form could enter professional studios without its community history. It is evidence that preservation and attribution debates have been part of the culture for over a decade.",
+          "sources": [
+            "cozie"
+          ]
+        },
+        {
+          "text": "Dartmouth's January 2026 program identifies Cozie's teaching and institutional involvement, while Works & Process documents the January 10, 2026 Guggenheim premiere of Chrysolation with Harlem Lite Feet/Bomb Squad artists.",
+          "sources": [
+            "dartmouth",
+            "works"
+          ]
+        }
+      ],
+      "items": [
+        [
+          "2013 documentation",
+          "London, Tokyo and several U.S. communities outside New York already had LiteFeet activity.",
+          [
+            "redbull"
+          ]
+        ],
+        [
+          "2014 teaching",
+          "Chrybaby Cozie gave a Barnard dance workshop and discussed preservation in a firsthand interview.",
+          [
+            "cozie"
+          ]
+        ],
+        [
+          "2026 performances",
+          "Chrysolation was presented at Dartmouth and premiered at the Guggenheim.",
+          [
+            "dartmouth",
+            "works"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "documentaries",
+      "title": "Documentaries, interviews and archives",
+      "subtitle": "Where to hear participants describe the culture",
+      "paragraphs": [
+        {
+          "text": "An archive should index original documentary release dates, filmmakers, interviewed dancers, credited music, where the recording can be viewed, and who owns the footage. A press article about a film is a source for the existence of the film, not a license to reproduce it.",
+          "sources": [
+            "fact",
+            "cbs"
+          ]
+        },
+        {
+          "text": "FACT's 2015 Litefeet: Sound of the Subway interviewed Chrybaby Cozie, Kid The Wiz, Hann and W.A.F.F.L.E. and focused on music, dancing and the police crackdown. CBS Sports' 2023 Lock In: A Litefeet Story documented major Harlem dance styles and their basketball-court setting.",
+          "sources": [
+            "fact",
+            "cbs"
+          ]
+        },
+        {
+          "text": "The Dance Enthusiast's 2014 Chrybaby Cozie interview and the 2015 Gothamist interviews with Goofy and Cozie are especially useful firsthand records for training, cultural memory and community economics.",
+          "sources": [
+            "cozie",
+            "gothamist"
+          ]
+        }
+      ],
+      "items": [
+        [
+          "Litefeet: Sound of the Subway",
+          "FACT, June 10, 2015; filmmakers Ezra Marcus and KJ Rothweiler.",
+          [
+            "fact"
+          ]
+        ],
+        [
+          "Lock In: A Litefeet Story",
+          "CBS Sports, premiere August 11, 2023.",
+          [
+            "cbs"
+          ]
+        ],
+        [
+          "Firsthand interviews",
+          "Cozie (2014), Goofy and Cozie (2015), Mr. YouTube (2021).",
+          [
+            "cozie",
+            "gothamist",
+            "tuc"
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "open-questions",
+      "title": "Questions the archive should keep open",
+      "subtitle": "Community research is not a popularity contest",
+      "paragraphs": [
+        {
+          "text": "The exact first person to perform the Harlem Shake, the earliest use of the name LiteFeet, the first dedicated LiteFeet recording, and the formation sequence of all early crews are not settled solely by the sources listed here. Distinguish invention from popularization and a dated performance from a memory of an earlier event.",
+          "sources": [
+            "smithsonian",
+            "iuda1",
+            "iuda2",
+            "vice"
+          ]
+        },
+        {
+          "text": "Written recollections, dated footage, social posts, original flyers, reliable interviews and archival records offer different strengths of evidence. A record can contain a named, attributed claim without editorial endorsement; conflicting claims should remain visible alongside the material that supports them.",
+          "sources": [
+            "redbull",
+            "cozie",
+            "iuda1"
+          ]
+        },
+        {
+          "text": "The True / False / Debatable community responses are feedback about a specific claim, not proof of historical truth. Questions about identity, crew membership, disputed authorship, outcomes and missing women or under-documented organizers require evidence and responsible editorial review.",
+          "sources": [
+            "cozie",
+            "steezy"
+          ]
+        }
+      ],
+      "items": [
+        [
+          "Origin claims",
+          "Attribute who said what, when, and on what basis.",
+          [
+            "iuda1",
+            "smithsonian"
+          ]
+        ],
+        [
+          "Musical credits",
+          "Confirm artist, producer, first release date, alternate mixes and ownership before publishing definite credits.",
+          [
+            "vice",
+            "fact"
+          ]
+        ],
+        [
+          "Battles and events",
+          "Preserve original flyer version, advertised lineup and outcomes as separate fields.",
+          [
+            "redbull"
+          ]
+        ],
+        [
+          "Unrecorded contributors",
+          "Invite firsthand accounts, original photographs, videos and corrections with provenance.",
+          [
+            "cozie",
+            "redbull"
+          ]
+        ]
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "year": "1981 (reported)",
+      "detail": "Al B-associated Harlem Shake performances at Rucker Park described in later reporting.",
+      "sources": [
+        "smithsonian"
+      ]
+    },
+    {
+      "year": "1999–2005 (attributed)",
+      "detail": "IUDA's periodization of the Harlem Shake movement and the early development of LiteFeet and Team LiteFeet.",
+      "sources": [
+        "iuda1",
+        "iuda2"
+      ]
+    },
+    {
+      "year": "2004–2005",
+      "detail": "Mr. YouTube and Chrybaby Cozie recall learning and participating in formative party and freestyle culture.",
+      "sources": [
+        "tuc",
+        "cozie"
+      ]
+    },
+    {
+      "year": "2006",
+      "detail": "IUDA's account places Team LiteFeet at ATM Live/Milbank; Chicken Noodle Soup reaches broader audiences.",
+      "sources": [
+        "iuda3",
+        "cbs"
+      ]
+    },
+    {
+      "year": "2009–2012",
+      "detail": "More organized battle and technique development; increasing specialization of LiteFeet beats.",
+      "sources": [
+        "vice",
+        "iuda3"
+      ]
+    },
+    {
+      "year": "2013",
+      "detail": "Red Bull observes an active Union Square cypher and notes London/Tokyo activity; Harlem Shake meme renews attribution disputes.",
+      "sources": [
+        "redbull",
+        "smithsonian"
+      ]
+    },
+    {
+      "year": "2014",
+      "detail": "Subway-performance enforcement intensifies; Cozie teaches and discusses cultural history at Barnard.",
+      "sources": [
+        "subway",
+        "cozie"
+      ]
+    },
+    {
+      "year": "2015",
+      "detail": "FACT documentary and Gothamist interviews preserve accounts of LiteFeet music, crews and subway performances.",
+      "sources": [
+        "fact",
+        "gothamist"
+      ]
+    },
+    {
+      "year": "2023",
+      "detail": "CBS Sports premieres Lock In: A Litefeet Story.",
+      "sources": [
+        "cbs"
+      ]
+    },
+    {
+      "year": "2026",
+      "detail": "Cozie's Chrysolation premieres at the Guggenheim after a Dartmouth presentation.",
+      "sources": [
+        "works",
+        "dartmouth"
+      ]
+    }
+  ]
+}

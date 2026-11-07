@@ -5,6 +5,7 @@ import secrets
 from flask import g, request, render_template, redirect, abort, jsonify, session, url_for, flash, current_app
 from dca_rebuild.models import LedgerEra, BetaChangelog, VaultArchiveVerification
 from dca_rebuild.public_site_updates import PUBLIC_SITE_UPDATES
+from dca_rebuild.archive_history_guide import load_history_guide
 from dca_rebuild.archive_catalog import (
     COLLECTIONS, PAGE_SIZE, all_records, browse, find_record,
     listing_payload, public_record,
@@ -48,6 +49,7 @@ def install_information_architecture(app, ns):
         content = public_content()
         children = {
             'archive': [dict(label='Browse collections', href='/archive#collections'),
+                        dict(label='Cultural History', href='/archive/history'),
                         dict(label='History & Timeline', href='/archive/timeline')],
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
                        dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
@@ -75,6 +77,7 @@ def install_information_architecture(app, ns):
             breadcrumbs = [dict(label='Home', href='/')]
             section = next((s for s in navigation if s['key'] == active), None)
             labels = {'vault_archive': 'The Archive', 'vault_timeline': 'Historical Timeline',
+                      'vault_history_guide': 'Cultural History',
                       'vault_community': 'Community', 'legacy_about': 'About', 'awards_home': 'Awards',
                       'vault_dca_program': 'Dancer’s Choice Awards', 'dca_2026_home': '2026',
                       'dca_2023_home': '2023 archive', 'round1': 'Category survey', 'round2': 'Category results',
@@ -129,6 +132,11 @@ def install_information_architecture(app, ns):
     @app.get('/archive/timeline', endpoint='vault_timeline')
     def timeline():
         return archive_page('timeline')
+
+    @app.get('/archive/history', endpoint='vault_history_guide')
+    def history_guide():
+        return render_template('archive_history_guide.html',
+                               history=load_history_guide(), **public_content())
 
     @app.get('/archive/api/records', endpoint='vault_archive_api')
     def archive_api():
