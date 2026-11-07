@@ -132,6 +132,8 @@ def metadata_for_path(path, view=None):
             summary = " ".join((item.get("summary") or "").split())
             label = ("Archived results" if item.get("editorial_status") == "Archived results"
                      else "Historical research")
+            if len(summary) < 40:
+                summary = f"{item['title']}: {summary}. Explore this entry in The LiteFeet Vault's historical archive."
             record = (
                 item["title"] + " | The LiteFeet Vault Archive",
                 (label + ": " + summary)[:180],
