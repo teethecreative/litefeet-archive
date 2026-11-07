@@ -1,5 +1,6 @@
 """Source-linked research in unified timeline, with compact, safe progressive API."""
 from dca_rebuild.archive_history_guide import load_history_guide
+from dca_rebuild.archive_catalog import all_records
 from dca_rebuild.timeline_catalog import all_timeline_entries
 
 
@@ -35,7 +36,7 @@ def test_all_research_chapters_and_milestones_are_in_timeline(website):
     events = [entry for entry in entries if entry["kind"] == "record"]
     assert len(chapters) == 11
     assert len(milestones) >= 10
-    assert len(events) == 43
+    assert len(events) == len(all_records())
     assert all(chapter["detail"] and chapter["sources"] for chapter in chapters)
     client = website.test_client()
     history = client.get("/archive/api/records?timeline=1&collection=history&q=harlem+shake").get_json()
