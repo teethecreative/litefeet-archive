@@ -10,7 +10,7 @@ from dca_rebuild.timeline_catalog import timeline_browse, timeline_payload
 from dca_rebuild.upcoming_calendar import upcoming_calendar
 from dca_rebuild.archive_catalog import (
     COLLECTIONS, PAGE_SIZE, all_records, browse, find_record,
-    listing_payload, public_record,
+    listing_payload, public_record, people_crew_cloud,
 )
 
 # Stable future catalog; readiness is separate from the intended ordering.
@@ -122,6 +122,8 @@ def install_information_architecture(app, ns):
         return section_page(section, archive_items=filtered['items'],
                             archive_pagination=filtered, archive_collections=COLLECTIONS,
                             archive_timeline=timeline,
+                            people_cloud=(people_crew_cloud() if not timeline and search['collection'] == 'people'
+                                          else []),
                             archive_start_page=current_page)
 
     @app.get('/archive', endpoint='vault_archive')
