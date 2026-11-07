@@ -2,31 +2,36 @@
 from dca_rebuild.models import BetaChangelog
 
 
-def test_homepage_has_distinct_public_sections_and_real_destinations(website):
+def test_homepage_is_letter_then_current_awards_then_real_site_updates(website):
     client = website.test_client()
     response = client.get('/')
     assert response.status_code == 200
     html = response.get_data(as_text=True)
     positions = [
         html.index('id="vault-heading"'),
-        html.index('id="whats-new"'),
-        html.index('id="featured"'),
-        html.index('id="explore"'),
         html.index('id="recognition"'),
-        html.index('id="contribute"'),
+        html.index('id="whats-new"'),
     ]
     assert positions == sorted(positions)
-    assert 'THE CULTURE DESERVES TO <span class="lfv1-headline-pair">BE REMEMBERED.</span>' in html
-    assert 'class="lfv1-founder-greeting">Dear LiteFeet,</p>' in html
-    assert 'lfv1-founder-excerpt' in html
+    assert '<h1 id="vault-heading">Dear LiteFeet,</h1>' in html
+    assert "But not everything has been documented." in html
+    assert "That's part of why I created The LiteFeet Vault." in html
     assert 'Read more' in html
-    assert 'Read Dear LiteFeet' not in html
     assert 'href="/about#letter"' in html
-    assert 'August 2023: on the record.' in html
+    assert 'Dancer’s Choice Awards 2026' in html
     assert 'href="/awards/dancers-choice/2026"' in html
+    assert 'Latest Updates' in html
+    assert 'Explore the expanded LiteFeet Archive' in html
+    assert 'href="/archive"' in html
     assert 'href="/community#contribute"' in html
-    assert 'lfv-identity-phase1.css' in html
-    assert 'No stories found' not in html
+    assert 'lfv-home-v4.css' in html
+    # No repeated large menu tiles, placeholder stories, backend changelog, or 2023 feature block.
+    assert 'Find your way into the culture.' not in html
+    assert 'August 2023: on the record.' not in html
+    assert 'New stories and community updates are on the way' not in html
+    assert 'Browse the Archive' not in html
+    assert 'lfv1-feed-empty' not in html
+    assert html.count('id="recognition"') == 1
 
 
 def test_founders_letter_is_public_and_preserves_mission(website):
@@ -44,20 +49,24 @@ def test_founders_letter_is_public_and_preserves_mission(website):
     assert 'lfv-identity-phase1.css' in html
 
 
-def test_homepage_only_shows_public_published_updates(website, database):
+def test_homepage_news_is_real_public_site_releases_not_changelog(website, database):
     with database[1].begin() as db:
         db.add_all([
-            BetaChangelog(title='Public archive update', details='Published and public', visibility='public', is_published=True),
+            BetaChangelog(title='Public archive update', details='Internal changelog entry', visibility='public', is_published=True),
             BetaChangelog(title='Private preview', details='Never show this', visibility='beta', is_published=True),
             BetaChangelog(title='Unpublished draft', details='Never publish this', visibility='public', is_published=False),
         ])
     client = website.test_client()
-    html = client.get('/').get_data(as_text=True)
-    assert 'Public archive update' in html
-    assert 'Private preview' not in html
-    assert 'Unpublished draft' not in html
-    assert 'Never show this' not in html
-    assert 'Never publish this' not in html
+    home = client.get('/').get_data(as_text=True)
+    community = client.get('/community').get_data(as_text=True)
+    assert 'Explore the expanded LiteFeet Archive' in home
+    assert 'Internal changelog entry' not in home
+    assert 'Public archive update' not in home
+    assert 'Private preview' not in home
+    assert 'Unpublished draft' not in home
+    assert 'Never show this' not in home
+    assert 'Never publish this' not in home
+    assert 'Public archive update' in community  # Existing community activity left intact.
 
 
 def test_phase1_keeps_archive_awards_and_community_routes(website):

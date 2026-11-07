@@ -4,6 +4,7 @@ import hashlib
 import secrets
 from flask import g, request, render_template, redirect, abort, jsonify, session, url_for, flash, current_app
 from dca_rebuild.models import LedgerEra, BetaChangelog, VaultArchiveVerification
+from dca_rebuild.public_site_updates import PUBLIC_SITE_UPDATES
 from dca_rebuild.archive_catalog import (
     COLLECTIONS, PAGE_SIZE, all_records, browse, find_record, listing_payload,
 )
@@ -102,6 +103,7 @@ def install_information_architecture(app, ns):
                        dict(label='Contribute historical records', href='/awards/litefeet-awards#contribute')]
         return dict(vault_navigation=navigation, vault_breadcrumbs=breadcrumbs,
                     vault_program_navigation=program, vault_emit_chrome=emit_chrome,
+                    vault_site_updates=PUBLIC_SITE_UPDATES,
                     vault_updates=content['updates'], vault_eras=content['eras'], vault_contact=CONTACT)
 
     def section_page(page, **extra):
