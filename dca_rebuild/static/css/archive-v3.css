@@ -1,0 +1,428 @@
+/* ARCHIVE V3: genuine minimal links + aligned mobile rows + sourced cultural history.
+   Loaded last, archive-scoped; old sitewide CTA styles must never spill into lists. */
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-intro{
+  display:block!important;min-height:0!important;
+  padding:28px 0 25px!important;margin:0!important;
+  border-top:2px solid var(--lfv-gold)!important;
+  border-bottom:1px solid var(--lfv-line)!important;
+  background:transparent!important;box-shadow:none!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-intro h1{
+  font-size:clamp(1.9rem,4.2vw,3.5rem)!important;line-height:1.1!important;
+  letter-spacing:-.046em!important;margin:8px 0 12px!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-intro>p:last-child{
+  max-width:740px!important;font-size:.88rem!important;line-height:1.55!important;
+  margin:0!important;letter-spacing:.015em;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-subnav{
+  display:flex!important;flex-wrap:wrap!important;gap:3px 20px!important;
+  align-items:center!important;min-height:0!important;
+  padding:12px 0!important;margin:0 0 25px!important;
+  border-bottom:1px solid var(--lfv-line)!important;background:transparent!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-subnav>a,
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-subnav>a:link,
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-subnav>a:visited{
+  display:inline-flex!important;align-items:center!important;
+  width:auto!important;min-width:0!important;min-height:40px!important;
+  margin:0!important;padding:6px 0!important;
+  background:transparent!important;box-shadow:none!important;
+  border:0!important;border-radius:0!important;
+  color:var(--lfv-muted)!important;text-decoration:none!important;
+  font-size:.72rem!important;letter-spacing:.035em!important;font-weight:800!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-subnav>a[aria-current="page"]{
+  color:var(--lfv-ink)!important;text-decoration:underline!important;
+  text-decoration-color:var(--lfv-gold)!important;text-decoration-thickness:2px!important;text-underline-offset:5px!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline)
+:is(.lfv-archive-research-feature,.lfv-archive-collections,.lfv-archive-index,.lfv-archive-provenance){
+  display:block!important;background:transparent!important;
+  box-shadow:none!important;border-radius:0!important;
+  border:0!important;padding:0!important;margin:0 0 28px!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-research-feature{
+  display:flex!important;justify-content:space-between!important;
+  align-items:center!important;gap:20px!important;
+  border-top:2px solid var(--lfv-gold)!important;
+  border-bottom:1px solid var(--lfv-line)!important;
+  padding:18px 0!important;min-height:0!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-research-feature .vault-kicker{
+  font-size:.65rem!important;letter-spacing:.09em!important;margin:0 0 6px!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-research-feature h2{
+  font-size:clamp(1.17rem,2vw,1.65rem)!important;line-height:1.14!important;
+  margin:0 0 7px!important;color:var(--lfv-ink)!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-research-feature p:not(.vault-kicker){
+  font-size:.75rem!important;line-height:1.4!important;color:var(--lfv-muted)!important;
+  margin:0!important;max-width:700px;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-research-feature>a,
+html.lfv-sitewide #vault-section-archive .lfv-archive-research-feature>a:link{
+  display:inline-flex!important;align-items:center!important;gap:8px!important;
+  background:transparent!important;color:var(--lfv-ink)!important;
+  padding:7px 0!important;margin:0!important;
+  border:0!important;border-bottom:1px solid var(--lfv-gold)!important;
+  border-radius:0!important;box-shadow:none!important;
+  text-decoration:none!important;font-size:.75rem!important;font-weight:850!important;
+  line-height:1.3!important;white-space:nowrap!important;
+  min-height:44px!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-collections h2{
+  font-size:1.35rem!important;margin:0 0 12px!important;
+  padding:0!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-collection-grid{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  border-top:1px solid var(--lfv-line)!important;
+  border-left:0!important;border-right:0!important;border-bottom:0!important;
+  gap:0 22px!important;
+  background:transparent!important;padding:0!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-collection-grid>a,
+html.lfv-sitewide #vault-section-archive .lfv-archive-collection-grid>a:link,
+html.lfv-sitewide #vault-section-archive .lfv-archive-collection-grid>a:visited{
+  display:flex!important;justify-content:space-between!important;align-items:center!important;
+  gap:8px!important;min-height:46px!important;min-width:0!important;
+  padding:9px 0!important;margin:0!important;background:transparent!important;
+  color:var(--lfv-ink)!important;border:0!important;
+  border-bottom:1px solid var(--lfv-line)!important;border-radius:0!important;
+  box-shadow:none!important;text-decoration:none!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-collection-grid>a strong{
+  font-size:.77rem!important;font-weight:800!important;line-height:1.35!important;
+  letter-spacing:.01em!important;text-transform:uppercase!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-collection-grid>a span{
+  font-size:1rem!important;color:var(--lfv-gold)!important;flex:0 0 auto!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-index{
+  border-top:1px solid var(--lfv-line)!important;padding:16px 0 0!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-list-head{
+  border-top:0!important;padding:0!important;margin:0 0 10px!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-list-head h2{
+  margin:0!important;font-size:clamp(1.15rem,2vw,1.55rem)!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-filter{margin:0 0 14px!important;}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-filter>label{
+  font-size:.69rem!important;margin:0 0 6px!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-searchline{
+  display:flex!important;flex-wrap:wrap!important;align-items:stretch!important;
+  gap:8px!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-searchline input{
+  flex:1 1 220px!important;min-width:0!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-searchline select{
+  flex:0 1 185px!important;min-width:0!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-entry-list{
+  border-top:1px solid var(--lfv-line)!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-entry{
+  display:grid!important;grid-template-columns:minmax(0,1fr) 34px!important;
+  column-gap:12px!important;align-items:center!important;
+  min-height:0!important;padding:12px 0!important;margin:0!important;
+  border:0!important;border-bottom:1px solid var(--lfv-line)!important;
+  background:transparent!important;box-shadow:none!important;border-radius:0!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-entry-main{
+  display:block!important;min-width:0!important;margin:0!important;padding:0!important;
+  flex:none!important;background:transparent!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-row-meta{
+  display:flex!important;align-items:center!important;gap:7px!important;
+  flex-wrap:wrap!important;min-width:0!important;
+  font-size:.65rem!important;line-height:1.3!important;
+  letter-spacing:.04em!important;text-transform:uppercase!important;
+  font-weight:800!important;color:var(--lfv-gold)!important;
+  margin:0 0 5px!important;padding:0!important;
+  background:transparent!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-entry-date{
+  display:inline!important;min-width:0!important;width:auto!important;
+  background:transparent!important;position:static!important;
+  padding:0!important;margin:0!important;color:var(--lfv-gold)!important;
+  font-size:inherit!important;font-weight:inherit!important;line-height:inherit!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-entry-type{
+  color:var(--lfv-muted)!important;font-size:inherit!important;line-height:inherit!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-entry h3{
+  font-size:clamp(.9rem,1.3vw,1.15rem)!important;
+  line-height:1.25!important;margin:0 0 4px!important;
+  padding:0!important;color:var(--lfv-ink)!important;
+  overflow-wrap:anywhere!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-entry h3>a,
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-entry h3>a:link,
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-entry h3>a:visited{
+  display:inline!important;width:auto!important;height:auto!important;
+  background:transparent!important;border:0!important;
+  border-radius:0!important;box-shadow:none!important;padding:0!important;
+  margin:0!important;min-height:0!important;
+  font:inherit!important;line-height:inherit!important;color:inherit!important;
+  text-decoration:none!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-entry .lfv-archive-entry-main>p:last-child{
+  display:-webkit-box!important;-webkit-box-orient:vertical!important;
+  -webkit-line-clamp:1!important;overflow:hidden!important;
+  margin:0!important;padding:0!important;
+  font-size:.72rem!important;line-height:1.35!important;
+  color:var(--lfv-muted)!important;
+}
+html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-entry>a.lfv-archive-open{
+  display:flex!important;justify-content:center!important;align-items:center!important;
+  width:34px!important;min-width:34px!important;min-height:44px!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  background:transparent!important;color:var(--lfv-gold)!important;
+  margin:0!important;padding:0!important;font-size:1.25rem!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-provenance{
+  display:flex!important;justify-content:space-between!important;align-items:center!important;
+  gap:16px!important;border-top:1px solid var(--lfv-line)!important;
+  margin:16px 0 0!important;padding:19px 0!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-provenance h2{
+  font-size:1rem!important;margin:0 0 6px!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-provenance p{
+  font-size:.76rem!important;margin:0!important;line-height:1.4!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-archive-provenance>a,
+html.lfv-sitewide #vault-section-archive .lfv-archive-provenance>a:link{
+  display:inline-flex!important;align-items:center!important;gap:8px!important;
+  min-height:44px!important;white-space:nowrap!important;
+  background:transparent!important;box-shadow:none!important;
+  border:0!important;border-bottom:1px solid var(--lfv-gold)!important;
+  border-radius:0!important;padding:5px 0!important;margin:0!important;
+  color:var(--lfv-ink)!important;text-decoration:none!important;font-size:.73rem!important;
+  font-weight:850!important;
+}
+
+/* HISTORY PAGE — publication typography, chapter links and readable citations */
+html.lfv-sitewide #archive-history-guide{
+  text-transform:none!important;
+  width:min(calc(100% - 32px),1170px)!important;
+  max-width:1170px!important;margin:0 auto!important;
+}
+html.lfv-sitewide #archive-history-guide :is(h1,h2,h3,h4){text-transform:uppercase!important;}
+html.lfv-sitewide #archive-history-guide .lfv-history-breadcrumb{
+  display:flex;gap:10px;padding:16px 0 26px;
+  color:var(--lfv-muted);font-size:.75rem;font-weight:800;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-breadcrumb a{
+  color:var(--lfv-ink)!important;text-decoration:none!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-header{
+  border-top:3px solid var(--lfv-gold);border-bottom:1px solid var(--lfv-line);
+  padding:33px 0!important;margin:0 0 20px!important;
+  background:transparent!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-header h1{
+  font-size:clamp(2.05rem,5vw,4.5rem)!important;
+  line-height:1.04!important;letter-spacing:-.055em!important;
+  margin:11px 0 11px!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-header .lfv-history-deck{
+  font-size:clamp(.86rem,1.25vw,1.14rem)!important;letter-spacing:.05em;
+  font-weight:850!important;color:var(--lfv-gold)!important;margin:0 0 25px!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-header>p:not(.vault-kicker,.lfv-history-deck){
+  font-size:clamp(.95rem,1.3vw,1.08rem)!important;line-height:1.68!important;
+  max-width:860px;color:var(--lfv-muted)!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-header .lfv-history-disclaimer{
+  font-size:.74rem!important;letter-spacing:.015em!important;
+  border-left:2px solid var(--lfv-gold);padding:7px 0 7px 12px;
+  margin:24px 0 0!important;
+}
+html.lfv-sitewide #archive-history-guide :is(.lfv-history-chapter-nav,.lfv-history-timeline,.lfv-history-chapter,.lfv-history-bibliography){
+  padding:24px 0!important;margin:0 0 24px!important;
+  background:transparent!important;box-shadow:none!important;
+  border:0!important;border-bottom:1px solid var(--lfv-line)!important;
+  border-radius:0!important;min-height:0!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-chapter-nav h2{
+  font-size:.85rem!important;letter-spacing:.08em!important;margin:0 0 13px!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-chapter-nav ol{
+  list-style:none!important;margin:0!important;padding:0!important;
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:0 24px!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-chapter-nav li{
+  min-width:0!important;margin:0!important;padding:0!important;
+  border-bottom:1px solid var(--lfv-line)!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-chapter-nav a,
+html.lfv-sitewide #archive-history-guide .lfv-history-chapter-nav a:link{
+  display:flex!important;align-items:center!important;gap:12px!important;
+  min-height:42px!important;padding:9px 0!important;
+  margin:0!important;background:transparent!important;border:0!important;
+  box-shadow:none!important;border-radius:0!important;
+  color:var(--lfv-ink)!important;font-size:.77rem!important;font-weight:750!important;
+  text-decoration:none!important;text-transform:uppercase!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-chapter-nav a span:first-child{
+  color:var(--lfv-gold);font-size:.72rem;flex:0 0 auto;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-chapter-nav a span:last-child{
+  color:var(--lfv-gold);margin-left:auto;font-size:.8rem;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-section-number{
+  font-size:.7rem!important;letter-spacing:.11em!important;font-weight:850!important;
+  color:var(--lfv-gold)!important;margin:0 0 12px!important;text-transform:uppercase!important;
+}
+html.lfv-sitewide #archive-history-guide :is(.lfv-history-timeline,.lfv-history-chapter,.lfv-history-bibliography)>h2{
+  font-size:clamp(1.55rem,3.1vw,2.65rem)!important;
+  letter-spacing:-.045em!important;line-height:1.1!important;
+  margin:0 0 14px!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-subtitle{
+  font-size:.92rem!important;color:var(--lfv-muted)!important;
+  margin:0 0 25px!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-timeline>ol{
+  padding:0!important;margin:0!important;list-style:none!important;
+  max-width:960px;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-timeline>ol>li{
+  display:grid!important;grid-template-columns:minmax(120px,.23fr) minmax(0,1fr)!important;
+  align-items:start!important;gap:18px!important;border-bottom:1px solid var(--lfv-line)!important;
+  padding:13px 0!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-timeline>ol>li>strong{
+  color:var(--lfv-gold)!important;font-size:.85rem!important;line-height:1.35!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-timeline>ol>li p{
+  font-size:.89rem!important;line-height:1.54!important;
+  color:var(--lfv-ink)!important;margin:0 0 7px!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-prose{max-width:860px;}
+html.lfv-sitewide #archive-history-guide .lfv-history-paragraph{margin:0 0 21px!important;}
+html.lfv-sitewide #archive-history-guide .lfv-history-paragraph>p:first-child{
+  font-size:clamp(.95rem,1.25vw,1.06rem)!important;
+  line-height:1.73!important;color:var(--lfv-ink)!important;margin:0 0 8px!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-refs{
+  margin:0!important;font-size:.68rem!important;line-height:1.5!important;
+  color:var(--lfv-muted)!important;text-transform:uppercase!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-refs>a,
+html.lfv-sitewide #archive-history-guide .lfv-history-refs>a:link{
+  display:inline!important;background:transparent!important;
+  padding:0!important;border:0!important;box-shadow:none!important;
+  color:var(--lfv-muted)!important;text-decoration:underline!important;
+  text-underline-offset:3px!important;text-decoration-color:var(--lfv-gold)!important;
+  font:inherit!important;overflow-wrap:anywhere!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-ledger{
+  margin:25px 0 0!important;padding:15px 0 0!important;
+  max-width:960px;border-top:1px solid var(--lfv-line)!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-ledger h3{
+  font-size:.74rem!important;letter-spacing:.09em!important;margin:0 0 14px!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-ledger>article{
+  display:grid!important;grid-template-columns:minmax(170px,.36fr) minmax(0,1fr)!important;
+  gap:4px 18px!important;align-items:start!important;
+  background:transparent!important;border:0!important;
+  border-bottom:1px solid var(--lfv-line)!important;box-shadow:none!important;
+  padding:12px 0!important;margin:0!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-ledger>article h4{
+  font-size:.9rem!important;line-height:1.3!important;margin:0!important;
+  overflow-wrap:anywhere!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-ledger>article>p:not(.lfv-history-refs){
+  font-size:.84rem!important;line-height:1.55!important;margin:0!important;
+  color:var(--lfv-muted)!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-ledger>article>.lfv-history-refs{
+  grid-column:2!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-back{
+  display:inline-block!important;background:transparent!important;
+  border:0!important;border-bottom:1px solid var(--lfv-gold)!important;
+  box-shadow:none!important;border-radius:0!important;
+  margin:17px 0 0!important;padding:6px 0!important;
+  color:var(--lfv-ink)!important;text-decoration:none!important;
+  font-size:.72rem!important;font-weight:850!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-bibliography>p{
+  font-size:.87rem!important;line-height:1.55!important;color:var(--lfv-muted)!important;
+  max-width:850px;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-bibliography>ol{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 22px;
+  margin:20px 0!important;padding:0!important;list-style:none!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-bibliography>ol>li{
+  padding:12px 0!important;margin:0!important;
+  border-bottom:1px solid var(--lfv-line)!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-bibliography>ol>li>a,
+html.lfv-sitewide #archive-history-guide .lfv-history-bibliography>ol>li>a:link{
+  display:block!important;background:transparent!important;
+  padding:0!important;border:0!important;border-radius:0!important;
+  box-shadow:none!important;color:var(--lfv-ink)!important;text-decoration:none!important;
+  font-size:.82rem!important;font-weight:800!important;line-height:1.42!important;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-bibliography>ol>li>span{
+  display:block;color:var(--lfv-muted);font-size:.7rem;line-height:1.45;margin-top:5px;
+}
+html.lfv-sitewide #archive-history-guide .lfv-history-contribute a{
+  display:inline!important;color:var(--lfv-ink)!important;
+  background:transparent!important;border:0!important;
+  box-shadow:none!important;text-decoration:underline!important;
+  text-decoration-color:var(--lfv-gold)!important;text-underline-offset:4px!important;
+  padding:0!important;
+}
+@media(max-width:680px){
+  html.lfv-sitewide #vault-section-archive .lfv-archive-research-feature{
+    align-items:flex-start!important;flex-direction:column!important;gap:7px!important;
+  }
+  html.lfv-sitewide #vault-section-archive .lfv-archive-research-feature>a{min-height:33px!important;}
+  html.lfv-sitewide #vault-section-archive .lfv-archive-collection-grid{
+    grid-template-columns:1fr!important;gap:0!important;
+  }
+  html.lfv-sitewide #vault-section-archive .lfv-archive-collection-grid>a{min-height:42px!important;}
+  html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-searchline input{
+    flex:1 1 100%!important;width:100%!important;
+  }
+  html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-searchline select{
+    flex:1 1 auto!important;width:55%!important;
+  }
+  html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-entry{
+    grid-template-columns:minmax(0,1fr) 27px!important;gap:8px!important;
+    padding:10px 0!important;
+  }
+  html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-entry h3{
+    font-size:.91rem!important;line-height:1.2!important;
+  }
+  html.lfv-sitewide :is(#vault-section-archive,#vault-section-timeline) .lfv-archive-row-meta{
+    font-size:.64rem!important;
+  }
+  html.lfv-sitewide #vault-section-archive .lfv-archive-provenance{
+    flex-direction:column!important;align-items:flex-start!important;gap:5px!important;
+  }
+  html.lfv-sitewide #archive-history-guide .lfv-history-chapter-nav ol,
+  html.lfv-sitewide #archive-history-guide .lfv-history-bibliography>ol{
+    grid-template-columns:1fr!important;
+  }
+  html.lfv-sitewide #archive-history-guide .lfv-history-timeline>ol>li{
+    grid-template-columns:1fr!important;gap:5px!important;
+  }
+  html.lfv-sitewide #archive-history-guide .lfv-history-ledger>article{
+    grid-template-columns:1fr!important;gap:6px!important;
+  }
+  html.lfv-sitewide #archive-history-guide .lfv-history-ledger>article>.lfv-history-refs{
+    grid-column:1!important;
+  }
+}
