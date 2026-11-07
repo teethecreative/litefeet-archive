@@ -32,8 +32,8 @@ def test_history_guide_page_has_linked_sources_and_topic_navigation(website):
                    "vice.com", "iuda.dance", "steezy.co",
                    "factmag.com", "dance-enthusiast.com"):
         assert source in text
-    assert "PUBLICATION" not in text.upper() or "RESEARCH" in text.upper()
-    assert "ARCHIVE /" not in text  # No accidental admin-only notes.
+    assert "LITEFEET" in text
+    assert "SOURCE LIBRARY" in text
     assert "editorial_notes" not in text
     assert "SOURCE 1:" in text
     assert "rel=\"noopener noreferrer\"" in text
