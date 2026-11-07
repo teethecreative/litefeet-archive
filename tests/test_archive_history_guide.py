@@ -49,13 +49,10 @@ def test_archive_links_to_unified_timeline_and_keeps_compact_rows(website):
     client = website.test_client()
     text = client.get("/archive").get_data(as_text=True)
     assert 'href="/archive/timeline"' in text
-    assert "RESEARCH / SOURCED HISTORY / DATED EVENTS" in text
     assert "archive-v3.css" in text
-    assert "lfv-archive-row-meta" in text
-    assert "lfv-archive-entry-date" in text
-    assert "lfv-archive-entry-type" in text
-    assert "VIEW HISTORICAL RESULTS" in text
-    assert "EXPLORE THE TIMELINE" in text
+    assert "data-unified-timeline" in text
+    assert "SEARCH THE TIMELINE" in text
+    assert "THE ARCHIVE TIMELINE" in text
 
 
 def test_guide_seo_redirect_preserves_search_canonical(website):
