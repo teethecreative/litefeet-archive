@@ -49,7 +49,6 @@ def install_information_architecture(app, ns):
         content = public_content()
         children = {
             'archive': [dict(label='Browse collections', href='/archive#collections'),
-                        dict(label='Cultural History', href='/archive/history'),
                         dict(label='History & Timeline', href='/archive/timeline')],
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
                        dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
@@ -57,18 +56,18 @@ def install_information_architecture(app, ns):
             'community': [dict(label='Contribute to the Archive', href='/community#contribute'),
                           dict(label='Suggest Corrections', href='/awards/litefeet-awards#contribute')] +
                          ([dict(label='Community Updates', href='/community#updates')] if content['updates'] else []),
-            'about': [dict(label="Founder's Letter", href='/about#letter'),
-                      dict(label='Our Mission', href='/about#mission'),
-                      dict(label='About the Archive', href='/about#archive'),
-                      dict(label='How It Works', href='/about#how-it-works'),
-                      dict(label='Contact', href='/about#contact')],
+            'about': [dict(label="Founder's Letter", href='/about/letter'),
+                      dict(label='Our Mission', href='/about/mission'),
+                      dict(label='About the Archive', href='/about/archive'),
+                      dict(label='How It Works', href='/about/how-it-works'),
+                      dict(label='Contact', href='/about/contact')],
         }
         path = request.path
         active = 'home' if path == '/' else (
             'awards' if path.startswith(('/awards', '/dca', '/litefeet-awards', '/hypeitup-awards')) else
             'archive' if path.startswith('/archive') else
             'community' if path.startswith(('/community', '/submit', '/newsletter')) else
-            'about' if path == '/about' else None)
+            'about' if path.startswith('/about') else None)
         navigation = [dict(key=k, label=label, href=href, active=k == active,
                            children=children.get(k, [])) for k, label, href, ready in SECTION_CATALOG if ready]
         breadcrumbs = []
@@ -135,8 +134,8 @@ def install_information_architecture(app, ns):
 
     @app.get('/archive/history', endpoint='vault_history_guide')
     def history_guide():
-        return render_template('archive_history_guide.html',
-                               history=load_history_guide(), **public_content())
+        # Preserve bookmarks: source-linked research now lives in the unified timeline.
+        return redirect(url_for('vault_timeline'), code=302)
 
     @app.get('/archive/api/records', endpoint='vault_archive_api')
     def archive_api():
@@ -243,6 +242,19 @@ def install_information_architecture(app, ns):
 
     app.view_functions['awards_home'] = lambda: section_page('awards')
     app.view_functions['legacy_about'] = lambda: section_page('about')
+    for about_path, page, label in (
+        ('letter', 'letter', "FOUNDER'S LETTER"),
+        ('mission', 'mission', 'OUR MISSION'),
+        ('archive', 'archive', 'ABOUT THE ARCHIVE'),
+        ('how-it-works', 'how_it_works', 'HOW IT WORKS'),
+        ('contact', 'contact', 'CONTACT'),
+    ):
+        def about_view(page=page, label=label):
+            return render_template('about_' + page + '.html',
+                                   page_title=label, **public_content())
+        app.add_url_rule('/about/' + about_path, endpoint='vault_about_' + page,
+                         view_func=about_view, methods=['GET'])
+
     # Previously homepage loops; retain paths and route names, use a real hub.
     for endpoint in ('legacy_submit', 'legacy_submit_start', 'legacy_contributor'):
         if endpoint in app.view_functions:
