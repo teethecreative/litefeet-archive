@@ -1,57 +1,95 @@
-"""Short branded links and page-specific crawler previews."""
+"""Exhaustive public URL and social metadata regression checks."""
+import re
 import struct
+import xml.etree.ElementTree as ET
+from html import unescape
+from urllib.parse import urlsplit
 
-def _head(response):
-    return response.get_data(as_text=True).split("</head>", 1)[0]
+from dca_rebuild.seo import metadata_for_path
 
+def _head(res):
+    return res.get_data(as_text=True).split("</head>", 1)[0]
 
-def test_writeins_short_url_preserves_legacy_and_search(website):
+def _meta(head, attribute, name):
+    matches = re.findall(r'<meta\\s+[^>]*'+re.escape(attribute)+
+                         r'="'+re.escape(name)+r'"[^>]*>', head)
+    assert len(matches) == 1, (attribute, name, len(matches))
+    value = re.search(r'content="([^"]+)"', matches[0])
+    assert value, name
+    return unescape(value.group(1))
+
+def test_old_writeins_links_redirect_to_canonical_and_preserve_search(website):
     client = website.test_client()
-    for path in ("/write-ins", "/awards/dancers-choice/write-ins"):
-        response = client.get(path + "?q=Category")
-        assert response.status_code == 200, path
-        head = _head(response)
-        assert "Write-In Categories | Dancer" in head
-        assert '<link rel="canonical" href="https://thelitefeetvault.com/write-ins">' in head
-        assert '<meta property="og:url" content="https://thelitefeetvault.com/write-ins">' in head
-        assert '<meta name="twitter:url" content="https://thelitefeetvault.com/write-ins">' in head
-        assert '<meta property="og:image" content="https://thelitefeetvault.com/social/write-ins.png">' in head
-        assert "Help shape" not in head or "categories" in head
-        assert "q=Category" not in head
-        assert 'action="/write-ins"' in response.get_data(as_text=True)
-    assert "https://thelitefeetvault.com/write-ins</loc>" in client.get("/sitemap.xml").get_data(as_text=True)
+    for legacy, target in [
+        ("/awards/dancers-choice/write-ins", "/write-ins"),
+        ("/awards/dancers-choice/write-ins?q=Category", "/write-ins?q=Category"),
+    ]:
+        response = client.get(legacy)
+        assert response.status_code == 301
+        assert response.headers["Location"] == target
+    res = client.get("/write-ins?q=Category")
+    assert res.status_code == 200
+    head = _head(res)
+    assert _meta(head, "property", "og:url") == "https://thelitefeetvault.com/write-ins"
+    assert _meta(head, "name", "twitter:url") == "https://thelitefeetvault.com/write-ins"
+    assert _meta(head, "property", "og:image").endswith("/social/cards/write-ins.png")
+    assert "q=Category" not in head
+    assert 'action="/write-ins"' in res.get_data(as_text=True)
 
-
-def test_sitewide_previews_are_distinct_and_have_images(website):
+def test_public_sitemap_pages_have_consistent_unique_metadata_and_valid_images(website):
     client = website.test_client()
-    pages = {
-        "/": "The LiteFeet Vault | LiteFeet Culture",
-        "/archive": "The Archive | The LiteFeet Vault",
-        "/awards": "Awards | The LiteFeet Vault",
-        "/about": "About The LiteFeet Vault",
-        "/awards/dancers-choice/2026": "Dancer's Choice Awards 2026",
-    }
-    for path, title in pages.items():
+    sitemap = client.get("/sitemap.xml")
+    assert sitemap.status_code == 200
+    xml = ET.fromstring(sitemap.data)
+    urls = [node.text for node in xml.findall(".//{*}loc")]
+    assert len(urls) == len(set(urls)), "Duplicate sitemap entries"
+    assert len(urls) > 35, "Expected public archive records, not just navigation"
+    assert "https://thelitefeetvault.com/write-ins" in urls
+    for url in urls:
+        path = urlsplit(url).path
+        res = client.get(path)
+        assert res.status_code == 200, (path, res.status_code)
+        head = _head(res)
+        meta = metadata_for_path(path)
+        assert meta is not None, path
+        title = re.search(r'<title[^>]*>(.*?)</title>', head, re.S)
+        assert title and unescape(title.group(1)).strip() == meta["title"], path
+        assert _meta(head, "name", "description") == meta["description"], path
+        assert 30 <= len(meta["description"]) <= 200, path
+        assert _meta(head, "property", "og:title") == meta["title"], path
+        assert _meta(head, "property", "og:description") == meta["description"], path
+        assert _meta(head, "name", "twitter:title") == meta["title"], path
+        assert _meta(head, "name", "twitter:description") == meta["description"], path
+        assert _meta(head, "property", "og:url") == url, path
+        assert _meta(head, "name", "twitter:url") == url, path
+        image_url = _meta(head, "property", "og:image")
+        assert image_url.startswith("https://thelitefeetvault.com/social/cards/"), path
+        assert _meta(head, "name", "twitter:image") == image_url, path
+        assert _meta(head, "property", "og:image:width") == "1200", path
+        assert _meta(head, "property", "og:image:height") == "630", path
+        assert _meta(head, "name", "twitter:card") == "summary_large_image", path
+        assert head.count('<link rel="canonical"') == 1, path
+        asset = client.get(urlsplit(image_url).path)
+        assert asset.status_code == 200, (path, image_url)
+        assert asset.mimetype == "image/png", image_url
+        assert asset.data[:8] == bytes.fromhex("89504e470d0a1a0a")
+        assert struct.unpack(">II", asset.data[16:24]) == (1200, 630)
+
+def test_query_privacy_and_special_standings_preview(website):
+    client = website.test_client()
+    res = client.get("/awards/dancers-choice/nominations?view=results&email=private@example.com&category=22")
+    head = _head(res)
+    assert _meta(head, "property", "og:url") == "https://thelitefeetvault.com/awards/dancers-choice/nominations?view=results"
+    assert "private@example.com" not in head
+    assert _meta(head, "property", "og:image").endswith("/static/social/dca-2026-standings-v1.png")
+    assert _meta(head, "name", "twitter:card") == "summary_large_image"
+
+def test_private_and_confirmation_urls_are_not_advertised(website):
+    client = website.test_client()
+    for path in ("/submit/thank-you", "/awards/litefeet-awards/submit", "/admin"):
         response = client.get(path)
-        assert response.status_code == 200, path
-        head = _head(response)
-        assert title in head, path
-        assert 'property="og:description"' in head
-        assert 'property="og:image" content="https://thelitefeetvault.com/social/vault.png"' in head
-        assert 'name="twitter:card" content="summary_large_image"' in head
-        assert 'property="og:url" content="https://thelitefeetvault.com' + path + '"' in head
-
-
-def test_social_assets_are_png_1200_by_630_and_standings_keeps_own_card(website):
-    client = website.test_client()
-    for path in ("/social/vault.png", "/social/write-ins.png"):
-        response = client.get(path)
-        assert response.status_code == 200
-        assert response.mimetype == "image/png"
-        assert response.data[:8] == b"\\x89PNG\\r\\n\\x1a\\n"
-        assert struct.unpack(">II", response.data[16:24]) == (1200, 630)
-        assert "public" in response.headers["Cache-Control"]
-    assert client.get("/social/invalid.png").status_code == 404
-    head = _head(client.get("/awards/dancers-choice/nominations?view=results&email=secret@example.org"))
-    assert "dca-2026-standings-v1.png" in head
-    assert "secret@example.org" not in head
+        assert response.headers.get("X-Robots-Tag", "").startswith("noindex"), path
+    assert client.get("/social/cards/not-real.png").status_code == 404
+    robots = client.get("/robots.txt")
+    assert robots.status_code == 200
+    assert "https://thelitefeetvault.com/sitemap.xml" in robots.get_data(as_text=True)
