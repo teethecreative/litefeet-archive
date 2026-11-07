@@ -1,11 +1,15 @@
 /* V5: unified uppercase identity, compact disclosures, shared gold CTA, About + 30-day calendar.
    Admin interfaces intentionally excluded. */
-html.lfv-sitewide body:not(:has(.admin-dashboard)):not(:has(.admin-main)) :is(
- .lfv3-hub,.vault-section-page,.lf-nom-2026,.lf9e-standings-page,.awards-global-nav,
- .lfv-breadcrumbs,.lfv-program-nav,.lfv-site-footer
-){text-transform:uppercase}
-html.lfv-sitewide :is(#vault-home,#vault-section-about,#vault-section-archive,#vault-section-timeline,.lfv-about-page,.lf-nom-2026) :is(h1,h2,h3,h4,p,span,a,button,label,li,summary,option,small,strong,time,th,td){
- text-transform:uppercase;
+/* Headings, section labels and navigational controls are uppercase.
+   Body text, descriptions and explanatory copy retain natural sentence case. */
+html.lfv-sitewide :is(.lfv3-hub,.vault-section-page,.lf-nom-2026,.lf9e-standings-page,.lfv-site-footer) {
+  text-transform: none;
+}
+html.lfv-sitewide :is(.lfv3-hub,.vault-section-page,.lf-nom-2026,.lf9e-standings-page,.lfv-site-footer) :is(h1,h2,h3,h4,h5,h6) {
+  text-transform: uppercase;
+}
+html.lfv-sitewide :is(.awards-global-nav,.lfv-breadcrumbs,.lfv-program-nav,.lfv-site-footer .ledger-footer-links) {
+  text-transform: uppercase;
 }
 /* Buttons that are true actions share the 2026 Awards feature gold shape. */
 html.lfv-sitewide :is(.lfv4-awards-copy,.lfv-about-page,.lf9e,.lfv5-month-calendar) :is(
@@ -269,4 +273,56 @@ html.lfv-sitewide .lfv-unified-row-links>details>summary{
  ){
   padding:14px 21px!important;gap:13px!important;min-height:46px!important;
  }
+}
+
+
+/* November editorial typography: modest tracking across the public site;
+   do not alter the separate /beta experience or admin control panels. */
+html.lfv-sitewide :is(#vault-home,.vault-section-page,.lfv-about-page,.lf9e,.lf-nom-2026,.lfv-site-footer,.lfv-submit) :is(p,li,dd,blockquote,td,.lfv4-excerpt,.lfv-unified-summary) {
+  letter-spacing: .012em !important;
+  text-transform: none !important;
+}
+html.lfv-sitewide :is(#vault-home,.vault-section-page,.lfv-about-page,.lf9e,.lf-nom-2026,.lfv-site-footer,.lfv-submit) :is(h1,h2,h3,h4,h5,h6) {
+  letter-spacing: .012em !important;
+  text-transform: uppercase !important;
+}
+html.lfv-sitewide :is(.awards-global-nav,.lfv-breadcrumbs,.lfv-program-nav,.lfv-site-footer .ledger-footer-links,.lfv-shell) :is(a,summary,button) {
+  letter-spacing: .03em !important;
+  text-transform: uppercase !important;
+}
+/* Eyebrow metadata and interactive buttons keep consistent uppercase. */
+html.lfv-sitewide :is(#vault-home,.vault-section-page,.lfv-about-page,.lf9e,.lf-nom-2026,.lfv-submit) :is(
+  .lfv3-eyebrow,.vault-kicker,.lfv4-section-topline,.lfv-submit-kicker,
+  label,button,summary,[role="tab"],.lfv-primary-cta
+) {
+  letter-spacing: .025em !important;
+  text-transform: uppercase !important;
+}
+html.lfv-sitewide :is(#vault-home,.vault-section-page,.lfv-about-page,.lf9e,.lf-nom-2026,.lfv-submit) :is(
+  .lfv3-button,.lfv3-button-gold,.lfv-primary-cta,.lfv5-minimal-action
+) {letter-spacing:.02em!important;text-transform:uppercase!important;}
+/* CSS in previous releases applied all caps to every child; restore
+   natural capitalization on regular copy even with those inherited rules. */
+html.lfv-sitewide :is(#vault-home,.vault-section-page,.lfv-about-page,.lf9e,.lf-nom-2026) :is(
+  .lfv4-excerpt p,.lfv4-awards-copy p,.lfv-about-page-body p,
+  .lfv-unified-summary,.lfv-unified-description,p:not(.lfv3-eyebrow):not(.vault-kicker)
+) {text-transform:none!important;}
+/* Footer subscription controls need visible separation across all widths. */
+html.lfv-sitewide .ledger-newsletter-form {
+  display:flex !important;
+  align-items:stretch !important;
+  gap:12px !important;
+}
+html.lfv-sitewide .ledger-newsletter-form input[type="email"] {
+  flex:1 1 230px !important;
+  min-width:0 !important;
+  border-radius:10px !important;
+}
+html.lfv-sitewide .ledger-newsletter-form button[type="submit"] {
+  flex:0 0 auto !important;
+  margin:0 !important;
+  border-radius:11px !important;
+}
+@media(max-width:560px) {
+  html.lfv-sitewide .ledger-newsletter-form {gap:10px!important;flex-wrap:wrap!important;}
 }
