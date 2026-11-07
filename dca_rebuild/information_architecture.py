@@ -117,7 +117,8 @@ def install_information_architecture(app, ns):
     def archive_page(section):
         # Archive Overview is timeline-first. Keep the dedicated People & Crews
         # collection browser so its ranked profile cloud remains accessible.
-        overview = section == 'archive' and request.args.get('view') != 'people'
+        overview = (section == 'archive' and request.args.get('view') != 'people'
+                    and request.args.get('collection') != 'people')
         timeline = section == 'timeline' or overview
         current_page = max(1, request.args.get('page', 1, type=int) or 1)
         search = dict(query=request.args.get('q', ''),
