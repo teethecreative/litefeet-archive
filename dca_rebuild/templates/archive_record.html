@@ -67,6 +67,17 @@
           <ul class="lfv-archive-notes">{% for note in record.notes %}<li>{{ note }}</li>{% endfor %}</ul>
         </section>
         {% endif %}
+      {% elif record.record_type == 'award_archive' %}
+        <section>
+          <h2>Historical award records</h2>
+          <p>{{ record.description }}</p>
+          <dl class="lfv-archive-facts">
+            {% for label, detail in record.information %}
+              <div><dt>{{ label }}</dt><dd>{{ detail }}</dd></div>
+            {% endfor %}
+          </dl>
+          <p><a href="{{ url_for('dca_2023_home') }}">Browse the complete August 2023 nominees and winning entries <span aria-hidden="true">→</span></a></p>
+        </section>
       {% else %}
         <section>
           <h2>{% if record.collection == 'people' %}Documented research{% elif record.collection == 'moves' %}Movement research{% else %}Historical context{% endif %}</h2>
