@@ -51,7 +51,7 @@ def install_information_architecture(app, ns):
     def vault_site_context():
         content = public_content()
         children = {
-            'archive': [dict(label='Browse collections', href='/archive#collections'),
+            'archive': [dict(label='People & Crews', href='/archive?view=people&collection=people'),
                         dict(label='History & Timeline', href='/archive/timeline'),
                         dict(label='Lock In · Card Battle Game', href='/archive/lock-in'),
                         dict(label='Submit', href='/submit')],
