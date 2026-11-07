@@ -174,5 +174,5 @@ def timeline_payload(entry):
     """All fields are public, sourced, with no user submissions or admin notes."""
     return {key: entry[key] for key in (
         "slug", "title", "collection", "date", "date_label", "period",
-        "href", "summary", "detail", "sources", "kind", "meta_parts"
+        "href", "summary", "detail", "sources", "kind"
     )}
