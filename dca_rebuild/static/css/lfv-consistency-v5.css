@@ -359,3 +359,104 @@ html.lfv-sitewide .ledger-newsletter-form :is(input,button) {text-transform:none
 html.lfv-sitewide :is(.awards-global-nav,.lfv-breadcrumbs,.lfv-program-nav) :is(a,summary,button) {
  text-transform:uppercase!important;letter-spacing:.035em!important;
 }
+
+
+/* DCA editorial and responsive nomination category grid: never more than 5 columns. */
+html.lfv-sitewide .lf9e:not(.lf9e-standings-page) {
+  width:calc(100% - 2 * var(--lfv-gutter, 24px))!important;
+  max-width:1440px!important;
+  margin-inline:auto!important;
+}
+html.lfv-sitewide .lf9e .lf9e-category-grid {
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:12px!important;
+  align-items:start;
+  width:100%;
+  max-width:100%;
+}
+html.lfv-sitewide .lf9e .lf9e-category-grid > details.lfv5-category-disclosure {
+  min-width:0!important;
+  padding:0 12px!important;
+  border:1px solid var(--lfv-line)!important;
+  border-radius:8px!important;
+  background:var(--lfv-surface)!important;
+}
+html.lfv-sitewide .lf9e .lfv5-category-disclosure>summary {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 14px!important;
+  grid-template-rows:auto auto;
+  min-height:82px!important;
+  padding:12px 0!important;
+  gap:6px 8px!important;
+  align-content:center!important;
+}
+html.lfv-sitewide .lf9e .lfv5-category-name {
+  grid-column:1; grid-row:1;
+  font-size:.84rem!important;line-height:1.27!important;
+}
+html.lfv-sitewide .lf9e .lfv5-category-status {
+  grid-column:1;grid-row:2;
+  font-size:.66rem!important;letter-spacing:.02em!important;
+  white-space:normal!important;
+}
+html.lfv-sitewide .lf9e .lfv5-category-chevron {
+  grid-column:2;grid-row:1 / 3;align-self:center;
+}
+html.lfv-sitewide .lf9e .lfv5-category-panel {padding-bottom:14px!important;}
+html.lfv-sitewide .lf9e .lf9e-intro-categories {
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;
+}
+html.lfv-sitewide .lf9e .lf9e-intro-categories li {
+  list-style-position:inside;
+  border:1px solid var(--lfv-line);border-radius:6px;padding:10px;
+}
+html.lfv-sitewide .lfv-dca-overview .lfv3-awards-hero {margin-bottom:30px!important;}
+html.lfv-sitewide .lfv-dca-overview .lfv3-awards-intro {max-width:950px;}
+html.lfv-sitewide .lfv-dca-overview .lfv3-awards-intro>p:not(.lfv3-eyebrow),
+html.lfv-sitewide .lfv-dca-overview .lfv-dca-current>p:not(.lfv3-eyebrow) {
+  max-width:860px!important;line-height:1.65!important;
+  text-transform:none!important;letter-spacing:.012em!important;
+}
+html.lfv-sitewide .lfv-dca-overview .lfv-dca-current {padding-top:26px;border-top:1px solid var(--lfv-line);}
+html.lfv-sitewide .lfv-dca-overview .lfv-dca-stages {
+  list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  padding:0;margin:24px 0;gap:12px;
+}
+html.lfv-sitewide .lfv-dca-overview .lfv-dca-stages li {
+  display:flex;flex-direction:column;gap:10px;
+  min-width:0;padding:18px;border:1px solid var(--lfv-line);border-radius:8px;
+  font-size:.9rem;line-height:1.5;text-transform:none;
+}
+html.lfv-sitewide .lfv-dca-overview .lfv-dca-stages strong {
+  color:var(--lfv-gold);font-size:.75rem;letter-spacing:.06em;
+}
+html.lfv-sitewide .lfv-dca-overview .lfv3-actions {
+  display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;
+}
+html.lfv-sitewide .lf9e .lf9e-round-notice {
+  max-width:850px;
+  border-left:3px solid var(--lfv-gold);
+  padding:9px 0 9px 16px;
+  line-height:1.65!important;
+  text-transform:none!important;
+}
+html.lfv-sitewide .lf9e .lf9e-round-notice strong {text-transform:none!important;}
+@media (max-width:1299px) {
+ html.lfv-sitewide .lf9e .lf9e-category-grid,
+ html.lfv-sitewide .lf9e .lf9e-intro-categories {grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+}
+@media (max-width:1030px) {
+ html.lfv-sitewide .lf9e .lf9e-category-grid,
+ html.lfv-sitewide .lf9e .lf9e-intro-categories {grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+ html.lfv-sitewide .lfv-dca-overview .lfv-dca-stages {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media (max-width:710px) {
+ html.lfv-sitewide .lf9e .lf9e-category-grid,
+ html.lfv-sitewide .lf9e .lf9e-intro-categories {grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+}
+@media (max-width:460px) {
+ html.lfv-sitewide .lf9e .lf9e-category-grid,
+ html.lfv-sitewide .lf9e .lf9e-intro-categories,
+ html.lfv-sitewide .lfv-dca-overview .lfv-dca-stages {grid-template-columns:1fr!important;}
+}
