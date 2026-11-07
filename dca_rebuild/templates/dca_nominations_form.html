@@ -73,18 +73,9 @@
         {% include "dca_nomination_suggestions.html" %}
       {% endif %}
     {% else %}
-      <h1>CHOOSE YOUR CATEGORY.</h1>
-      <p class="lf9e-round-notice"><strong>Nominations are open for suggestions, not votes for winners.</strong> Nominate a new name or support an existing nominee. Each nomination adds one to that person's total; the top five eligible nominees advance to the final vote.</p>
-      <p>One nomination per category every rolling 24 hours. Your cooldown is shown on each category before you open it.</p>
+      <h1 class="lf9e-nomination-heading">Nominate for the 2026 Awards</h1>
+      <p class="lf9e-nomination-description">Nominations are open for suggestions. Suggest a new entry or support an existing nominee. Each nomination adds one to that nominee's total; the top five eligible nominees in each category advance to the final vote. You can submit one nomination per category every rolling 24 hours.</p>
       {% if closed %}<p class="lf9e-message">Nominations are closed. Your history and suggestions remain available inside each category.</p>{% endif %}
-      <details class="lf9e-activity"><summary>Your nomination activity</summary>
-      <section aria-label="Your nomination summary" class="lf9e-summary-stats">
-        <p><strong>{{ summary.submitted }}</strong><span>NOMINATIONS SUBMITTED</span></p>
-        <p><strong>{{ summary.available }}</strong><span>CATEGORIES AVAILABLE</span></p>
-        <p><strong>{{ summary.cooldown }}</strong><span>ON COOLDOWN</span></p>
-        <p><strong>{{ summary.skipped }}</strong><span>SKIPPED THIS VISIT</span></p>
-      </section>
-      </details>
       <section aria-labelledby="official-title"><h2 id="official-title">Official Top 25</h2>
         <div class="lf9e-category-grid">{% for category in categories %}{% include "dca_nomination_grid_card.html" %}{% endfor %}</div>
       </section>
