@@ -496,6 +496,76 @@ def install_phase9e(app, ns):
         finally:
             db.close()
 
+    @app.get('/awards/dancers-choice/write-ins', endpoint='phase9e_writeins')
+    def writein_categories_9e():
+        """All moderator-approved categories outside the Top 25, not only published write-ins.
+
+        Unapproved/rejected category suggestions and private supporter details stay private.
+        Viewing does not publish, approve, or otherwise mutate a category.
+        """
+        db = SessionLocal()
+        try:
+            edition = db.query(DCAEdition).filter_by(year=2026).first()
+            entries = []
+            requirement = 20
+            floor = 0
+            if edition:
+                stages = stages_for(db, edition)
+                top_names = {
+                    normalized(cat.name) for stage, cat in stages if stage.stage == 'top25'
+                }
+                live_writeins = {
+                    normalized(cat.name): (stage, cat)
+                    for stage, cat in stages if stage.stage in ('write_in', 'qualified')
+                }
+                qualifying, floor, requirement = qualification(db, edition, stages)
+                # The ranked list contains previously recorded categories and new
+                # suggestions only after moderator approval. Staged categories are
+                # also included even if an older ranking source is no longer present.
+                candidates = {
+                    normalized(item['name']): dict(name=item['name'],
+                                                  description=item.get('description') or '')
+                    for item in ranked_candidates(db, ns, edition)
+                    if normalized(item['name']) not in top_names
+                }
+                for name, (stage, cat) in live_writeins.items():
+                    candidates[name] = dict(name=cat.name,
+                                            description=cat.description or '')
+                for key, item in sorted(candidates.items(),
+                                        key=lambda pair: pair[1]['name'].casefold()):
+                    staged = live_writeins.get(key)
+                    stage, cat = staged if staged else (None, None)
+                    counts = qualifying.get(cat.id, {}) if cat is not None else {}
+                    entries.append(dict(
+                        name=item['name'], description=item['description'],
+                        category_id=cat.id if cat is not None else None,
+                        open_for_nominations=bool(
+                            stage and stage.stage in ('write_in', 'qualified')
+                            and edition.phase == 'nominations'
+                            and os.getenv('DCA_2026_NOMINATIONS_ENABLED') == 'true'
+                            and not is_closed()
+                        ),
+                        published=bool(stage),
+                        qualified=bool(stage and stage.stage == 'qualified'),
+                        meets_threshold=bool(counts.get('met')),
+                        supporters=counts.get('supporters', 0),
+                        nominees=counts.get('eligible_nominees', 0),
+                    ))
+            total = len(entries)
+            search = (request.args.get('q') or '').strip()[:100]
+            if search:
+                entries = [
+                    item for item in entries
+                    if search.casefold() in (item['name'] + ' ' + item['description']).casefold()
+                ]
+            response = render_template(
+                'dca_writeins.html', entries=entries, total=total, search=search,
+                requirement=requirement, floor=floor,
+            )
+            return response
+        finally:
+            db.close()
+
     @app.after_request
     def private_nomination_response(response):
         if request.endpoint == 'dca_nominations_closed':
@@ -569,6 +639,15 @@ def install_phase9e(app, ns):
                     if who != session.get('lf9e_recent_hash'):
                         session.pop('lf9e_skipped', None)
                     session['lf9e_recent_hash'] = who
+                    requested = request.form.get('return_category', '').strip()
+                    if requested:
+                        try:
+                            requested_id = int(requested)
+                        except ValueError:
+                            abort(400, 'Invalid return category')
+                        if requested_id not in allowed:
+                            abort(404)
+                        return redirect(url_for('dca_nominations_closed', category=requested_id))
                     return redirect(url_for('dca_nominations_closed'))
                 who = session.get('lf9e_recent_hash')
                 if not who:
@@ -686,6 +765,8 @@ def install_phase9e(app, ns):
                                    intro_writeins=[dict(id=c.id, name=c.name) for _, c in other],
                                    selected=selected, suggestion=suggestion, suggestion_details=suggestion_details,
                                    show_form=request.args.get('nominate') == '1' or 'draft' in request.args,
+                                   requested_category_id=(request.args.get('category', type=int)
+                                                          if request.args.get('category', type=int) in allowed else None),
                                    identified=bool(who), results_view=results_view, summary=summary,
                                    csrf_token=session['lf9e_nomination_csrf'], closed=is_closed())
         finally:
