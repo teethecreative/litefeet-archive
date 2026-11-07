@@ -134,7 +134,10 @@
         <p>{{ record.source_label }}</p>
       {% endif %}
       <div class="lfv-archive-redirect">
-        <a href="{{ url_for('vault_community') }}#contribute">Contribute a source ↗</a>
+        {% if record.source_kind == 'research' %}
+        <a href="{{ url_for('vault_history_guide') }}">READ THE FULL CULTURAL HISTORY <span aria-hidden="true">→</span></a>
+        {% endif %}
+        <a href="{{ url_for('vault_community') }}#contribute">CONTRIBUTE A SOURCE <span aria-hidden="true">→</span></a>
       </div>
     </aside>
   </div>
