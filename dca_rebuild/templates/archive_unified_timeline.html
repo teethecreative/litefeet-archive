@@ -37,10 +37,11 @@
         </div>
         {% endfor %}
       </details>
-      {% elif entry.kind == 'milestone' %}
+      {% elif entry.kind in ('milestone','era') %}
       <details class="lfv-unified-expand">
         <summary><strong>{{ entry.title }}</strong><span aria-hidden="true">+</span></summary>
-        <p class="lfv-unified-source">{% for source in entry.sources %}<a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }} ↗</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+        {% if entry.summary %}<p class="lfv-unified-summary">{{ entry.summary }}</p>{% endif %}
+        {% if entry.sources %}<p class="lfv-unified-source">{% for source in entry.sources %}<a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }} ↗</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
       </details>
       {% else %}
       <h3><a href="{{ entry.href }}">{{ entry.title }}</a></h3>
