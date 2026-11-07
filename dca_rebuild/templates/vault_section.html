@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/archive-v1.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/archive-v2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/archive-v3.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
 </head><body>{% include "_navigation.html" %}
 <main class="vault-section-page" id="vault-section-{{ section }}">
 {% if section == 'archive' or section == 'timeline' %}
@@ -35,4 +36,4 @@
   <a href="{{ url_for('vault_about_contact') }}" id="contact"><span>05 / CONTACT</span><span aria-hidden="true">→</span></a>
 </nav>
 {% endif %}
-</main>{% include "_footer.html" %}<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>{% if section == 'archive' or section == 'timeline' %}<script defer src="{{ url_for('static', filename='js/archive-v1.js') }}"></script>{% endif %}</body></html>
+</main>{% include "_footer.html" %}<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>{% if section == 'archive' %}<script defer src="{{ url_for('static', filename='js/archive-v1.js') }}"></script>{% elif section == 'timeline' %}<script defer src="{{ url_for('static', filename='js/timeline-v2.js') }}"></script>{% endif %}</body></html>
