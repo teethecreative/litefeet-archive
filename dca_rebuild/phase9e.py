@@ -21,7 +21,9 @@ from dca_rebuild.models import (
     Base, DCACategory, DCACategorySuggestionSubmission, DCAReturnCategoryVote,
     DCAEdition, DCANominee, DCANominationSubmission,
 )
-from dca_rebuild.nomination_service import add_nomination
+from dca_rebuild.nomination_service import (
+    add_nomination, canonical_nominee_name, canonical_nominee_key, candidate_matches,
+)
 
 NY = ZoneInfo('America/New_York')
 
@@ -193,9 +195,10 @@ def stages_for(db, edition):
 
 
 def get_counts(db, edition, *, include_pending=False):
-    """Public suggestions include pending names; qualification stays moderated.
+    """Count existing aliases together without deleting or rewriting votes.
 
-    Rejected suggestions remain hidden without deleting any submissions.
+    Only explicitly confirmed aliases are grouped. Other near-matches remain
+    separate pending a human identity check.
     """
     statuses = ('pending', 'approved') if include_pending else ('approved',)
     nominees = (db.query(DCANominee).filter(
@@ -205,21 +208,35 @@ def get_counts(db, edition, *, include_pending=False):
     counts = defaultdict(int)
     supporters = defaultdict(set)
     if nominee_ids:
-        rows = (db.query(DCANominationSubmission.nominee_id, DCANominationSubmission.submitter_hash)
+        rows = (db.query(DCANominationSubmission.nominee_id,
+                         DCANominationSubmission.submitter_hash)
                 .filter(DCANominationSubmission.edition_id == edition.id,
                         DCANominationSubmission.nominee_id.in_(nominee_ids)).all())
         for nid, supporter in rows:
             counts[nid] += 1
             supporters[nid].add(supporter)
-    by_cat = defaultdict(list)
+    grouped = defaultdict(list)
     for n in nominees:
-        by_cat[n.category_id].append(dict(id=n.id, name=n.name, count=counts[n.id]))
+        grouped[(n.category_id, canonical_nominee_key(n.name))].append(n)
+    by_cat = defaultdict(list)
+    category_supporters = defaultdict(set)
+    for (cid, _), matching in grouped.items():
+        # Prefer the canonical ID for new submissions; previous alias IDs
+        # remain linked via the ids list for existing justification records.
+        display, canonical_key = canonical_nominee_name(matching[0].name)
+        matching.sort(key=lambda n: (n.normalized_name != canonical_key, n.id))
+        primary = matching[0]
+        members = [n.id for n in matching]
+        total = sum(counts[nid] for nid in members)
+        by_cat[cid].append(dict(
+            id=primary.id, ids=members, name=display, count=total,
+        ))
+        for nid in members:
+            category_supporters[cid].update(supporters[nid])
     for vals in by_cat.values():
         vals.sort(key=lambda x: (-x['count'], x['name'].casefold()))
-    category_support = {cid: len(set().union(*(supporters[x['id']] for x in vals)))
-                        for cid, vals in by_cat.items()}
+    category_support = {cid: len(people) for cid, people in category_supporters.items()}
     return by_cat, category_support
-
 
 def qualification(db, edition, stages=None):
     if stages is None:
