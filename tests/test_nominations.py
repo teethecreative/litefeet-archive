@@ -149,7 +149,11 @@ def test_validation_gates_and_skips(website, monkeypatch):
     assert client.post(PATH, data=dict(csrf_token=token, category_id=999, name='Dancer')).status_code == 400
     assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='!')).status_code == 400
     response = client.post(PATH, data=dict(csrf_token=token, category_id=1, action='skip'), follow_redirects=True)
-    assert b'<strong>1</strong><span>SKIPPED THIS VISIT' in response.data
+    assert response.status_code == 200
+    assert b'Nominate for the 2026 Awards' in response.data
+    assert b'Your nomination activity' not in response.data
+    with client.session_transaction() as sess:
+        assert 1 in sess['lf9e_skipped']
     monkeypatch.setenv('DCA_2026_NOMINATIONS_CLOSE_AT', '2020-01-01T00:00:00Z')
     assert client.post(PATH, data=dict(csrf_token=token, category_id=2, name='Dancer')).status_code == 403
     monkeypatch.setenv('DCA_2026_NOMINATIONS_ENABLED', 'false')
