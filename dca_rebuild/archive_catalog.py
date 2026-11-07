@@ -291,3 +291,46 @@ def people_crew_cloud():
     result.sort(key=lambda item: (-item['weight'], item['title'].casefold()))
     return result[:PEOPLE_CLOUD_LIMIT]
 
+
+
+def reconcile_historical_profile_rows(rows):
+    """Prepare legacy dancer rows for editorial review, never for public rendering.
+
+    The August 2026 preservation CSV contains ghost/placeholder biographies.
+    Historical 'Active' status is NOT publication approval. Retain source IDs
+    and slugs, and separate uncertain affiliations from possible aliases.
+    No identities are merged automatically.
+    """
+    def identity_key(name):
+        return re.sub(r"[^a-z0-9]", "", str(name or "").casefold())
+
+    prepared = []
+    by_identity = {}
+    for row in rows:
+        source_id = str(row.get("id") or "").strip()
+        name = str(row.get("dance_name") or "").strip()
+        if not source_id or not name:
+            continue
+        candidate = {
+            "source_id": source_id,
+            "source_slug": str(row.get("profile_slug") or "").strip(),
+            "display_name": name,
+            "role_tags": str(row.get("role_tags") or "").strip(),
+            "original_affiliation": str(row.get("team_affiliation") or "").strip(),
+            "source_status": str(row.get("status") or "").strip(),
+            "review_status": "identity_review_required",
+            "publishable": False,
+            "duplicate_source_ids": [],
+        }
+        prepared.append(candidate)
+        by_identity.setdefault(identity_key(name), []).append(candidate)
+
+    for group in by_identity.values():
+        if len(group) > 1:
+            for candidate in group:
+                candidate["duplicate_source_ids"] = [
+                    other["source_id"] for other in group
+                    if other["source_id"] != candidate["source_id"]
+                ]
+                candidate["review_status"] = "possible_duplicate_review_required"
+    return prepared
