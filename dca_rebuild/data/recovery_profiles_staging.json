@@ -1,0 +1,992 @@
+{
+  "schema_version": 1,
+  "source": "2026-08-29 historical_dancers.csv recovery export",
+  "record_count": 138,
+  "publication_policy": "staging_only_no_auto_publish",
+  "notes": [
+    "Preserve every original ID; no automatic merges based on spelling or aliases.",
+    "Original generated ghost-profile bios intentionally excluded.",
+    "Unverified team affiliations, private details, and source status values intentionally excluded.",
+    "Import requires explicit editorial identity verification before enabling public profiles."
+  ],
+  "profiles": [
+    {
+      "legacy_id": 1,
+      "display_name": "Wes the MAB",
+      "legacy_slug": "westhemab",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 2,
+      "display_name": "UnkDes",
+      "legacy_slug": "unkdes",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 3,
+      "display_name": "Greklite",
+      "legacy_slug": "greklite",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 4,
+      "display_name": "DC",
+      "legacy_slug": "dc",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 5,
+      "display_name": "Haz Money",
+      "legacy_slug": "hazmoney",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 6,
+      "display_name": "E Solo",
+      "legacy_slug": "esolo",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 7,
+      "display_name": "SHOWDEM",
+      "legacy_slug": "showdem",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 8,
+      "display_name": "Bre Dash",
+      "legacy_slug": "bredash",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 9,
+      "display_name": "Paul Gee",
+      "legacy_slug": "paulgee",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 10,
+      "display_name": "Visionsz",
+      "legacy_slug": "visionsz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 11,
+      "display_name": "BSNYEA",
+      "legacy_slug": "bsnyea",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": [
+        118
+      ]
+    },
+    {
+      "legacy_id": 12,
+      "display_name": "PRockz",
+      "legacy_slug": "prockz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": [
+        135
+      ]
+    },
+    {
+      "legacy_id": 13,
+      "display_name": "BOLITE",
+      "legacy_slug": "bolite",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 14,
+      "display_name": "Sah",
+      "legacy_slug": "sah",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 15,
+      "display_name": "Future",
+      "legacy_slug": "future",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 16,
+      "display_name": "Strike Litening",
+      "legacy_slug": "strikelitening",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 17,
+      "display_name": "Note",
+      "legacy_slug": "note",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 18,
+      "display_name": "ICEMAN",
+      "legacy_slug": "iceman",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 19,
+      "display_name": "Koopa",
+      "legacy_slug": "koopa",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 20,
+      "display_name": "Ty Shotz",
+      "legacy_slug": "tyshotz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 21,
+      "display_name": "Nhim Lite",
+      "legacy_slug": "nhimlite",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 22,
+      "display_name": "Hype Baby",
+      "legacy_slug": "hypebaby",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 23,
+      "display_name": "Smoove Biz",
+      "legacy_slug": "smoovebiz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 24,
+      "display_name": "Na Na",
+      "legacy_slug": "nana",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 25,
+      "display_name": "Seed",
+      "legacy_slug": "seed",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 26,
+      "display_name": "SammyC",
+      "legacy_slug": "sammyc",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 27,
+      "display_name": "Kid Smoove",
+      "legacy_slug": "kidsmoove",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 28,
+      "display_name": "Fox Lite",
+      "legacy_slug": "foxlite",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 29,
+      "display_name": "Venom",
+      "legacy_slug": "venom",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": [
+        112
+      ]
+    },
+    {
+      "legacy_id": 30,
+      "display_name": "Ray-Dot",
+      "legacy_slug": "raydot",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 31,
+      "display_name": "Phresh Tune",
+      "legacy_slug": "phreshtune",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 32,
+      "display_name": "Ginger Spice",
+      "legacy_slug": "gingerspice",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 33,
+      "display_name": "K Cosmic",
+      "legacy_slug": "kcosmic",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 34,
+      "display_name": "Giz Da Wiz",
+      "legacy_slug": "gizdawiz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 35,
+      "display_name": "Tweek Baby",
+      "legacy_slug": "tweekbaby",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 36,
+      "display_name": "Dot Lite",
+      "legacy_slug": "dotlite",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 37,
+      "display_name": "Tokyo",
+      "legacy_slug": "tokyo",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 38,
+      "display_name": "Man From Da Video",
+      "legacy_slug": "manfromdavideo",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 39,
+      "display_name": "Mr YouTube",
+      "legacy_slug": "mryoutube",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 40,
+      "display_name": "Hype Star",
+      "legacy_slug": "hypestar",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 41,
+      "display_name": "Teeth",
+      "legacy_slug": "teeth",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 42,
+      "display_name": "Ky Butta",
+      "legacy_slug": "kybutta",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 43,
+      "display_name": "Jay Wavvy",
+      "legacy_slug": "jaywavvy",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 44,
+      "display_name": "Noah Lot",
+      "legacy_slug": "noahlot",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 45,
+      "display_name": "J Black",
+      "legacy_slug": "jblack",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 46,
+      "display_name": "Larry Smoove",
+      "legacy_slug": "larrysmoove",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 47,
+      "display_name": "40 Pounds",
+      "legacy_slug": "40pounds",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 48,
+      "display_name": "K Smoove",
+      "legacy_slug": "ksmoove",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 49,
+      "display_name": "DuckSauce",
+      "legacy_slug": "ducksauce",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 50,
+      "display_name": "O Wizard",
+      "legacy_slug": "owizard",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 51,
+      "display_name": "Matt Live",
+      "legacy_slug": "mattlive",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 52,
+      "display_name": "Jada Chanel",
+      "legacy_slug": "jadachanel",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 53,
+      "display_name": "Money Mase",
+      "legacy_slug": "moneymase",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 54,
+      "display_name": "Dope",
+      "legacy_slug": "dope",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 55,
+      "display_name": "Sha Money X",
+      "legacy_slug": "shamoneyx",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 56,
+      "display_name": "Slim Baby",
+      "legacy_slug": "slimbaby",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 57,
+      "display_name": "Vick Live",
+      "legacy_slug": "vicklive",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 58,
+      "display_name": "D Lite",
+      "legacy_slug": "dlite",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 59,
+      "display_name": "Kid The Wiz",
+      "legacy_slug": "kidthewiz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 60,
+      "display_name": "T Rex",
+      "legacy_slug": "trex",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 61,
+      "display_name": "Buzz Lite",
+      "legacy_slug": "buzzlite",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 62,
+      "display_name": "Rell Smoove",
+      "legacy_slug": "rellsmoove",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 63,
+      "display_name": "Supa Nova",
+      "legacy_slug": "supanova",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 64,
+      "display_name": "Robbie Rob",
+      "legacy_slug": "robbierob",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 65,
+      "display_name": "Tah Swag",
+      "legacy_slug": "tahswag",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 66,
+      "display_name": "Sparkz Rah",
+      "legacy_slug": "sparkzrah",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 67,
+      "display_name": "Uncle Gz",
+      "legacy_slug": "unclegz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 68,
+      "display_name": "B Lyve",
+      "legacy_slug": "blyve",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 69,
+      "display_name": "SNS",
+      "legacy_slug": "sns",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 70,
+      "display_name": "Lady Live",
+      "legacy_slug": "ladylive",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 71,
+      "display_name": "Tee The Creative",
+      "legacy_slug": "teethecreative",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 72,
+      "display_name": "Ash Rocket",
+      "legacy_slug": "ashrocket",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 73,
+      "display_name": "Xo Wavy",
+      "legacy_slug": "xowavy",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 74,
+      "display_name": "Sky Boogz",
+      "legacy_slug": "skyboogz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 75,
+      "display_name": "Spank",
+      "legacy_slug": "spank",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 76,
+      "display_name": "Spider Jackson",
+      "legacy_slug": "spiderjackson",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 77,
+      "display_name": "Young Pop",
+      "legacy_slug": "youngpop",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 78,
+      "display_name": "X Live",
+      "legacy_slug": "xlive",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 79,
+      "display_name": "Flii Boogie",
+      "legacy_slug": "fliiboogie",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 80,
+      "display_name": "Moe Black",
+      "legacy_slug": "moeblack",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 81,
+      "display_name": "Mr Jones",
+      "legacy_slug": "mrjones",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 82,
+      "display_name": "Jo Smooth",
+      "legacy_slug": "josmooth",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 83,
+      "display_name": "Trell Mix",
+      "legacy_slug": "trellmix",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 84,
+      "display_name": "Mel Butta",
+      "legacy_slug": "melbutta",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 85,
+      "display_name": "Nae Davis",
+      "legacy_slug": "naedavis",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 86,
+      "display_name": "Supreme",
+      "legacy_slug": "supreme",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 87,
+      "display_name": "Jay Bullet",
+      "legacy_slug": "jaybullet",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 88,
+      "display_name": "K Shakes",
+      "legacy_slug": "kshakes",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 89,
+      "display_name": "Tee Slims",
+      "legacy_slug": "teeslims",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 90,
+      "display_name": "So Q",
+      "legacy_slug": "soq",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 91,
+      "display_name": "Top Star",
+      "legacy_slug": "topstar",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 92,
+      "display_name": "Tugz",
+      "legacy_slug": "tugz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 93,
+      "display_name": "Zebb Live",
+      "legacy_slug": "zebblive",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 94,
+      "display_name": "Kid Patt",
+      "legacy_slug": "kidpatt",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 95,
+      "display_name": "Chrybaby",
+      "legacy_slug": "chrybaby",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 96,
+      "display_name": "Sylencer",
+      "legacy_slug": "sylencer",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 97,
+      "display_name": "Crazy C",
+      "legacy_slug": "crazyc",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 98,
+      "display_name": "40 Kal",
+      "legacy_slug": "40kal",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 99,
+      "display_name": "Mel Live",
+      "legacy_slug": "mellive",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 100,
+      "display_name": "Moon Live",
+      "legacy_slug": "moonlive",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 101,
+      "display_name": "2 Eazy",
+      "legacy_slug": "2eazy",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 102,
+      "display_name": "Melly Mellz",
+      "legacy_slug": "mellymellz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 103,
+      "display_name": "Richie Rich",
+      "legacy_slug": "richierich",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 104,
+      "display_name": "Trebuckz",
+      "legacy_slug": "trebuckz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 105,
+      "display_name": "Rich Dollaz",
+      "legacy_slug": "richdollaz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 106,
+      "display_name": "Kid Mix",
+      "legacy_slug": "kidmix",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 107,
+      "display_name": "Top Villian",
+      "legacy_slug": "topvillian",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 108,
+      "display_name": "Smoove Eazy",
+      "legacy_slug": "smooveeazy",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 109,
+      "display_name": "Top Fliqht",
+      "legacy_slug": "topfliqht",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 110,
+      "display_name": "Kid Fox",
+      "legacy_slug": "kidfox",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 111,
+      "display_name": "Splash Ocean",
+      "legacy_slug": "splashocean",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 112,
+      "display_name": "Venom",
+      "legacy_slug": "venom2",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": [
+        29
+      ]
+    },
+    {
+      "legacy_id": 113,
+      "display_name": "Fox 5",
+      "legacy_slug": "fox5",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 114,
+      "display_name": "Kari",
+      "legacy_slug": "kari",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 115,
+      "display_name": "Coma",
+      "legacy_slug": "coma",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 116,
+      "display_name": "Talented Sparkz",
+      "legacy_slug": "talentedsparkz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 117,
+      "display_name": "KennDot",
+      "legacy_slug": "kenndot",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 118,
+      "display_name": "BSNYEA",
+      "legacy_slug": "bsnyea2",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": [
+        11
+      ]
+    },
+    {
+      "legacy_id": 119,
+      "display_name": "Lil Live",
+      "legacy_slug": "lillive",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 120,
+      "display_name": "Reel Hectic",
+      "legacy_slug": "reelhectic",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 121,
+      "display_name": "Flight",
+      "legacy_slug": "flight",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 122,
+      "display_name": "Black The Beast",
+      "legacy_slug": "blackthebeast",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 123,
+      "display_name": "Jada Chanell",
+      "legacy_slug": "jadachanell",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 124,
+      "display_name": "Boy Q",
+      "legacy_slug": "boyq",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 125,
+      "display_name": "Nem Lite",
+      "legacy_slug": "nemlite",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 126,
+      "display_name": "Moon Lite",
+      "legacy_slug": "moonlite",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 127,
+      "display_name": "BBQ",
+      "legacy_slug": "bbq",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 128,
+      "display_name": "Radar",
+      "legacy_slug": "radar",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 129,
+      "display_name": "D Rillz",
+      "legacy_slug": "drillz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 130,
+      "display_name": "Team Rocket",
+      "legacy_slug": "teamrocket",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 131,
+      "display_name": "Jayy Wavy",
+      "legacy_slug": "jayywavy",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 132,
+      "display_name": "GameBreakerz",
+      "legacy_slug": "gamebreakerz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 133,
+      "display_name": "Fili Boogie",
+      "legacy_slug": "filiboogie",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 134,
+      "display_name": "Nightwalkersz",
+      "legacy_slug": "nightwalkersz",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 135,
+      "display_name": "P Rockz",
+      "legacy_slug": "prockz2",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": [
+        12
+      ]
+    },
+    {
+      "legacy_id": 136,
+      "display_name": "Brotherhood",
+      "legacy_slug": "brotherhood",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 137,
+      "display_name": "Mystery Man",
+      "legacy_slug": "mysteryman",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    },
+    {
+      "legacy_id": 138,
+      "display_name": "Ty Live",
+      "legacy_slug": "tylive",
+      "review_status": "pending_identity_review",
+      "normalized_duplicate_ids": []
+    }
+  ]
+}
