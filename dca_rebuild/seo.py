@@ -35,8 +35,8 @@ PAGES = {
     ),
 }
 PAGES.update({
-    "/archive": ("The Archive | The LiteFeet Vault", "Explore preserved LiteFeet historical collections and published records."),
-    "/archive/timeline": ("Historical Timeline | The LiteFeet Vault", "Browse published historical eras in the LiteFeet archive."),
+    "/archive": ("The Archive | The LiteFeet Vault", "Browse LiteFeet historical research, original battle announcements, moves, events, dancer references and preserved award records."),
+    "/archive/timeline": ("History & Timeline | The LiteFeet Vault", "Explore a chronological LiteFeet event timeline and historical research, with sources and verification status."),
     "/awards": ("Awards | The LiteFeet Vault", "Explore LiteFeet award programs, current participation and historical results."),
     "/awards/dancers-choice": ("Dancer’s Choice Awards | The LiteFeet Vault", "Explore Dancer’s Choice award editions, current participation and historical archives."),
     "/community": ("Community | The LiteFeet Vault", "Contribute historical sources, suggest corrections and follow public community updates."),
@@ -48,6 +48,7 @@ PAGES.update({
 SITEMAP_PATHS = (
     "/",
     "/archive",
+    "/archive/timeline",
     "/awards",
     "/awards/dancers-choice",
     "/community",
@@ -69,6 +70,14 @@ def metadata_for_path(path, view=None):
             record = (
                 f"LiteFeet Awards {year} Archive | The LiteFeet Vault",
                 f"Explore the LiteFeet Awards {year} archive and its preserved awards history on The LiteFeet Vault.",
+            )
+    if record is None and path.startswith("/archive/records/"):
+        from dca_rebuild.archive_catalog import find_record
+        item = find_record(path[len("/archive/records/"):])
+        if item:
+            record = (
+                item["title"] + " | The LiteFeet Vault Archive",
+                ("Research under review: " + item["summary"])[:200],
             )
     if record is None:
         return None
