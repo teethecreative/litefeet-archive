@@ -6,7 +6,8 @@ from flask import g, request, render_template, redirect, abort, jsonify, session
 from dca_rebuild.models import LedgerEra, BetaChangelog, VaultArchiveVerification
 from dca_rebuild.public_site_updates import PUBLIC_SITE_UPDATES
 from dca_rebuild.archive_catalog import (
-    COLLECTIONS, PAGE_SIZE, all_records, browse, find_record, listing_payload,
+    COLLECTIONS, PAGE_SIZE, all_records, browse, find_record,
+    listing_payload, public_record,
 )
 
 # Stable future catalog; readiness is separate from the intended ordering.
@@ -156,8 +157,8 @@ def install_information_architecture(app, ns):
             if item['slug'] != slug and record.get('series')
             and item.get('series') == record['series']
         ][:8]
-        return render_template('archive_record.html', record=record,
-                               related_records=related_records,
+        return render_template('archive_record.html', record=public_record(record),
+                               related_records=[public_record(item) for item in related_records],
                                archive_csrf=session['vault_archive_csrf'],
                                **public_content())
 
@@ -202,6 +203,27 @@ def install_information_architecture(app, ns):
                     created_at=now, updated_at=now))
         flash('Response received for editorial review.', 'archive')
         return redirect(url_for('vault_archive_record', slug=slug) + '#verification', code=303)
+
+    @app.get('/admin/archive/research-review', endpoint='vault_archive_admin_review')
+    @ns['admin_login_required']
+    def archive_admin_review():
+        """Private editorial notes and source conflicts, never a public endpoint."""
+        review = [
+            {
+                'slug': item['slug'],
+                'title': item['title'],
+                'source_kind': item['source_kind'],
+                'editorial_status': item['editorial_status'],
+                'date_label': item.get('date_label', ''),
+                'editorial_notes': item.get('editorial_notes') or [],
+                'original_research': item.get('research_details') or [],
+                'source_details': item.get('source_details') or {},
+                'source_links': item.get('research_sources') or [],
+            }
+            for item in all_records()
+        ]
+        return render_template('admin_archive_research_review.html',
+                               review_records=review)
 
     @app.get('/community', endpoint='vault_community')
     def community():
