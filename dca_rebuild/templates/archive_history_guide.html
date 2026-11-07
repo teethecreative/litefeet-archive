@@ -60,10 +60,10 @@
       </div>
       {% endfor %}
     </div>
-    {% if chapter.items %}
+    {% if chapter['items'] %}
     <div class="lfv-history-ledger">
       <h3>PEOPLE / RECORDS / REFERENCES</h3>
-      {% for name, detail, source_ids in chapter.items %}
+      {% for name, detail, source_ids in chapter['items'] %}
       <article>
         <h4>{{ name }}</h4>
         <p>{{ detail }}</p>
