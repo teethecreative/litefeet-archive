@@ -21,7 +21,7 @@ function make(entry){
  const row=document.createElement("article");row.className="lfv-unified-item";row.setAttribute("role","listitem");
  const meta=document.createElement("p");meta.className="lfv-unified-meta";
  meta.textContent=(entry.period||"DATE UNDER REVIEW")+" / "+entry.collection;row.append(meta);
- if(entry.kind==="chapter"||entry.kind==="milestone"){
+ if(entry.kind==="chapter"||entry.kind==="milestone"||entry.kind==="era"){
   const details=document.createElement("details");details.className="lfv-unified-expand";
   const summary=document.createElement("summary");const heading=document.createElement("strong");heading.textContent=entry.title;
   const plus=document.createElement("span");plus.textContent="+";plus.setAttribute("aria-hidden","true");summary.append(heading,plus);details.append(summary);
@@ -29,7 +29,7 @@ function make(entry){
     const intro=document.createElement("p");intro.className="lfv-unified-summary";intro.textContent=entry.summary;details.append(intro);
     (entry.detail||[]).forEach(part=>{const box=document.createElement("div");box.className="lfv-unified-evidence";
       const paragraph=document.createElement("p");paragraph.textContent=part.text;box.append(paragraph);addSources(box,part.sources||[]);details.append(box);});
-  }else addSources(details,entry.sources||[]);
+  }else {if(entry.summary){const info=document.createElement("p");info.className="lfv-unified-summary";info.textContent=entry.summary;details.append(info);}if(entry.sources&&entry.sources.length)addSources(details,entry.sources);}
   row.append(details);
  } else {
   const h=document.createElement("h3");const link=document.createElement("a");link.href=entry.href;link.textContent=entry.title;h.append(link);row.append(h);
