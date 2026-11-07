@@ -15,7 +15,7 @@
 </section>
 <section id="decks">
   <h2>Sample decks</h2>
-  <p>Each deck contains 25 dancers, one card per person. These sample rosters draw from Tee’s planning document and the card submissions. The guided rounds feature DC and K Cosmic, with arenas, moves, and songs supplied separately for play. Both tracks are from Reel Hectic’s Common song submissions.</p>
+  <p>Each deck contains 25 dancers, one card per person. These sample rosters draw from Tee’s planning document and the card submissions. DC and K Cosmic’s practice tracks come from Reel Hectic’s Common song submissions. More dancer challenges are available below.</p>
   <div class="lock-decks">
   {% for key, sample in decks.items() %}
     <article><p class="vault-kicker">{{ sample.name }}</p><h3>Sample deck featuring {{ sample.dancer }}</h3><p>{{ sample.note }}</p>
@@ -28,18 +28,27 @@
 </section>
 <section id="practice">
   <h2>Play a practice round</h2>
-  <p><strong>{{ deck.name }} deck</strong> · {{ deck.dancer }} at {{ deck.arena }} with Reel Hectic’s <i>{{ deck.song }}</i>.</p>
-  <p>You’ve played {{ deck.setup }}. Your opponent locked in three moves for 6 BP. Pick up to three moves from your practice hand. Each earns 2 BP, and {{ deck.favored }} adds a 2 BP deck bonus.</p>
   <form action="{{ url_for('vault_lock_in') }}#practice" method="get">
-    <input type="hidden" name="deck" value="{{ deck_key }}"><input type="hidden" name="play" value="1">
+    <label for="round-picker">Choose a dancer challenge</label>
+    <select name="round" id="round-picker">
+      {% for key, option in rounds.items() %}<option value="{{ key }}" {% if key == round_key %}selected{% endif %}>{{ option.dancer }} · {{ option.scene }}</option>{% endfor %}
+    </select>
+    <button type="submit">Start round</button>
+  </form>
+  <h3>{{ battle.dancer }} · {{ battle.scene }}</h3>
+  <p>{{ battle.cue }}</p>
+  <p>Your opponent starts at {{ battle.opponent }} BP. Choose up to three moves for 2 BP each.
+     Include {{ battle.combo|join(' + ') }} to {% if battle.reduce %}remove {{ battle.reduce }} BP from your opponent’s score{% else %}earn {{ battle.bonus }} extra BP{% endif %}.</p>
+  <form action="{{ url_for('vault_lock_in') }}#practice" method="get">
+    <input type="hidden" name="round" value="{{ round_key }}"><input type="hidden" name="play" value="1">
     <fieldset><legend>Your move set</legend>
-    {% for move in deck.moves %}<label><input type="checkbox" name="move" value="{{ move }}" {% if move in selected %}checked{% endif %}> {{ move }}</label>{% endfor %}
+    {% for move in battle.moves %}<label><input type="checkbox" name="move" value="{{ move }}" {% if move in selected %}checked{% endif %}> {{ move }}</label>{% endfor %}
     </fieldset><button type="submit">Lock in my moves</button>
   </form>
   {% if error %}<p role="alert">{{ error }}</p>{% endif %}
-  {% if result %}<div class="lock-result"><h3>{{ result.outcome }} · {{ result.score }} to 6 BP</h3>
-  <p>{{ selected|join(' + ') }} earned {{ result.base }} BP, plus {{ result.bonus }} BP in deck bonuses.</p>
-  <a href="{{ url_for('vault_lock_in', deck=deck_key) }}#practice">Reset this round</a></div>{% endif %}
+  {% if result %}<div class="lock-result"><h3>{{ result.outcome }} · {{ result.score }} to {{ result.opponent }} BP</h3>
+  <p>{{ selected|join(' + ') }} earned {{ result.base }} BP, plus {{ result.bonus }} BP in bonuses.{% if result.reduction %} Your counter removed {{ result.reduction }} opponent BP.{% endif %}</p>
+  <a href="{{ url_for('vault_lock_in', round=round_key) }}#practice">Replay this round</a> · <a href="{{ url_for('vault_lock_in', round=next_key) }}#practice">Next round · {{ rounds[next_key].dancer }}</a></div>{% endif %}
 </section>
 <section id="join"><h2>Be part of Lock In</h2>
   <p>Dancers can pitch five stats, their strongest stat, a signature move, and what it should do in a battle. Producers can send tracks grouped as Common, Rare, and Legendary. You can also suggest an arena, explain a team or song connection, or volunteer to playtest.</p>
