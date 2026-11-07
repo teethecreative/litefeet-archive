@@ -65,7 +65,7 @@ async function load(next,replace){
   if(replace){const url=new URL(location.href);url.searchParams.delete("page");
     params.get("q")?url.searchParams.set("q",params.get("q")):url.searchParams.delete("q");
     params.get("collection")!=="all"?url.searchParams.set("collection",params.get("collection")):url.searchParams.delete("collection");
-    if(location.pathname==="/archive"&&params.get("collection")==="people")url.searchParams.set("view","timeline");else url.searchParams.delete("view");
+    url.searchParams.delete("view");
     history.replaceState(null,"",url);}
  }catch(_){state.textContent="COULD NOT LOAD RECORDS. TRY AGAIN.";more.hidden=false;hasMore=true;}
  finally{busy=false;more.disabled=false;}
