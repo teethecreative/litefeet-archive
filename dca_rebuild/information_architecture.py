@@ -119,7 +119,7 @@ def install_information_architecture(app, ns):
         search = dict(query=request.args.get('q', ''),
                       collection=request.args.get('collection', 'all'),
                       page=current_page)
-        filtered = timeline_browse(**search) if timeline else browse(**search)
+        filtered = timeline_browse(**search, eras=public_content()['eras']) if timeline else browse(**search)
         return section_page(section, archive_items=filtered['items'],
                             archive_pagination=filtered, archive_collections=COLLECTIONS,
                             archive_timeline=timeline,
@@ -144,7 +144,7 @@ def install_information_architecture(app, ns):
         timeline_only = request.args.get('timeline') == '1'
         search = dict(query=request.args.get('q', ''),
                       collection=request.args.get('collection', 'all'), page=page)
-        result = timeline_browse(**search) if timeline_only else browse(**search)
+        result = timeline_browse(**search, eras=public_content()['eras']) if timeline_only else browse(**search)
         response = jsonify({
             'records': [(timeline_payload(x) if timeline_only else listing_payload(x))
                         for x in result['items']],
