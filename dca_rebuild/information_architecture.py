@@ -52,7 +52,7 @@ def install_information_architecture(app, ns):
         children = {
             'archive': [dict(label='Browse collections', href='/archive#collections'),
                         dict(label='History & Timeline', href='/archive/timeline'),
-                        dict(label='Contribute & Correct', href='/community#contribute')],
+                        dict(label='Submit', href='/submit')],
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
                        dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
                        dict(label='Historical Results', href='/awards/dancers-choice/2023')],
