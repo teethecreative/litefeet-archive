@@ -462,43 +462,110 @@ html.lfv-sitewide .lf9e .lf9e-round-notice strong {text-transform:none!important
 }
 
 
-/* Public People & Crews word cloud, scaled from actual archive cross-references. */
-html.lfv-sitewide .lfv-people-cloud-section {
-  padding:clamp(18px,3vw,32px);
-  margin:24px 0 30px;
-  border:1px solid var(--lfv-line, #415371);
-  border-radius:10px;
-  background:var(--lfv-surface, #18243b);
+/* People & Crews: typography-only word cloud, never a group of CTA buttons.
+   We keep clickable, keyboard-accessible profile links without boxed styling. */
+html.lfv-sitewide #vault-section-archive .lfv-people-cloud-section {
+  padding:18px 0 12px!important;
+  margin:20px 0 30px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
 }
-html.lfv-sitewide .lfv-people-cloud-heading h2{
-  font-size:clamp(1.35rem,2.2vw,2rem);margin:0 0 8px;letter-spacing:.025em;
+html.lfv-sitewide #vault-section-archive .lfv-people-cloud-heading h2 {
+  font-size:clamp(1.28rem,2.1vw,1.85rem)!important;
+  margin:0 0 8px!important;
+  letter-spacing:.022em!important;
 }
-html.lfv-sitewide .lfv-people-cloud-heading p {
-  max-width:70ch;margin:0 0 24px;line-height:1.55;
-  letter-spacing:.012em;text-transform:none;
+html.lfv-sitewide #vault-section-archive .lfv-people-cloud-heading p {
+  margin:0 0 18px!important;
+  max-width:62ch;
+  font-size:.91rem!important;
+  line-height:1.5!important;
+  color:var(--lfv-muted)!important;
+  letter-spacing:.012em!important;
+  text-transform:none!important;
 }
-html.lfv-sitewide .lfv-people-wordcloud {
-  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
-  gap:clamp(8px,1.6vw,18px) clamp(13px,2vw,26px);
-  min-height:110px;padding:8px 3px;
+html.lfv-sitewide #vault-section-archive nav.lfv-people-wordcloud {
+  display:flex!important;
+  flex-wrap:wrap!important;
+  align-items:baseline!important;
+  justify-content:center!important;
+  column-gap:clamp(12px,2vw,22px)!important;
+  row-gap:clamp(4px,.75vw,10px)!important;
+  max-width:900px;
+  min-height:54px!important;
+  padding:8px 4px 12px!important;
+  margin:0 auto!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
 }
-html.lfv-sitewide .lfv-people-wordcloud .lfv-people-word {
-  display:inline-block;max-width:100%;overflow-wrap:anywhere;
-  font-size:clamp(1rem,calc(.9rem + var(--word-weight) * .27rem),2.7rem);
-  font-weight:750;line-height:1.15;letter-spacing:.015em;
-  text-align:center;text-transform:uppercase;color:var(--lfv-text, #f2f3f8);
-  text-decoration:none;border-radius:6px;padding:6px 8px;
-  transition:color .15s ease,background-color .15s ease;
+/* An explicit reset wins over global button/CTA link rules.
+   The Jinja variable is a valid CSS font size computed from archive mentions. */
+html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word,
+html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:link,
+html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:visited {
+  display:inline-block!important;
+  position:static!important;
+  flex:0 0 auto!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:100%!important;
+  min-height:0!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  background-image:none!important;
+  box-shadow:none!important;
+  color:var(--lfv-ink)!important;
+  font-size:var(--word-size,1.25rem)!important;
+  line-height:1.1!important;
+  font-weight:750!important;
+  letter-spacing:-.015em!important;
+  text-align:center!important;
+  text-decoration:none!important;
+  text-transform:uppercase!important;
+  white-space:normal!important;
+  overflow-wrap:normal!important;
+  cursor:pointer;
 }
-html.lfv-sitewide .lfv-people-wordcloud .lfv-people-word:hover,
-html.lfv-sitewide .lfv-people-wordcloud .lfv-people-word:focus-visible {
-  color:var(--lfv-gold, #d3aa31);
-  background:rgba(160,160,160,.1);
-  outline-offset:3px;
+html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n + 1) {
+  color:var(--lfv-gold)!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n + 2) {
+  color:var(--lfv-muted)!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n) {
+  color:#9cbedb!important;
+}
+html[data-theme="light"].lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n + 1) {
+  color:#806200!important;
+}
+html[data-theme="light"].lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n) {
+  color:#285487!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:is(:hover,:focus-visible) {
+  background:transparent!important;
+  box-shadow:none!important;
+  text-decoration:underline!important;
+  text-decoration-color:var(--lfv-gold)!important;
+  text-decoration-thickness:2px!important;
+  text-underline-offset:.14em!important;
+}
+html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:focus-visible {
+  outline:2px solid var(--lfv-gold)!important;
+  outline-offset:5px!important;
 }
 @media (max-width:600px) {
-  html.lfv-sitewide .lfv-people-wordcloud {justify-content:flex-start;gap:8px 12px;}
-  html.lfv-sitewide .lfv-people-wordcloud .lfv-people-word {
-    font-size:clamp(.95rem,calc(.85rem + var(--word-weight) * .17rem),2rem);
+  html.lfv-sitewide #vault-section-archive nav.lfv-people-wordcloud {
+    justify-content:center!important;
+    column-gap:12px!important;
+    row-gap:7px!important;
+  }
+  html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word {
+    font-size:clamp(.95rem,var(--word-size,1.25rem),2.25rem)!important;
   }
 }
