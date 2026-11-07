@@ -519,15 +519,25 @@ def install_phase9e(app, ns):
                     for stage, cat in stages if stage.stage in ('write_in', 'qualified')
                 }
                 qualifying, floor, requirement = qualification(db, edition, stages)
-                # The ranked list contains previously recorded categories and new
-                # suggestions only after moderator approval. Staged categories are
-                # also included even if an older ranking source is no longer present.
-                candidates = {
-                    normalized(item['name']): dict(name=item['name'],
-                                                  description=item.get('description') or '')
-                    for item in ranked_candidates(db, ns, edition)
-                    if normalized(item['name']) not in top_names
-                }
+                # Include ALL submitted category names not in the Top 25,
+                # including pending ones. Merged aliases are grouped, rejected
+                # entries remain excluded to avoid resurfacing spam or abuse.
+                # Listing a suggestion does not silently promote it to a finalist.
+                historical = db.query(DCAEdition).filter_by(year=2023).first()
+                candidates = {}
+                if historical:
+                    for cat in db.query(DCACategory).filter_by(edition_id=historical.id).all():
+                        key = normalized(cat.name)
+                        if key not in top_names:
+                            candidates[key] = dict(name=cat.name,
+                                                   description=cat.description or '')
+                for group in ns['dca_new_category_groups'](db, edition.id):
+                    key = normalized(group['name'])
+                    if key not in top_names:
+                        candidates[key] = dict(
+                            name=group['name'],
+                            description=group.get('description') or '',
+                        )
                 for name, (stage, cat) in live_writeins.items():
                     candidates[name] = dict(name=cat.name,
                                             description=cat.description or '')
@@ -558,11 +568,86 @@ def install_phase9e(app, ns):
                     item for item in entries
                     if search.casefold() in (item['name'] + ' ' + item['description']).casefold()
                 ]
+            session.setdefault('lf9e_writeins_csrf', secrets.token_urlsafe(32))
             response = render_template(
                 'dca_writeins.html', entries=entries, total=total, search=search,
                 requirement=requirement, floor=floor,
+                writeins_csrf=session['lf9e_writeins_csrf'],
             )
             return response
+        finally:
+            db.close()
+
+    @app.post('/awards/dancers-choice/write-ins/activate', endpoint='phase9e_activate_writein')
+    def activate_writein_9e():
+        """Community access to a proposed category without unavailable admin tooling.
+
+        No public activation after nomination close; Top 25 and historical
+        categories are not modified. Previously rejected suggestions are excluded.
+        """
+        expected = session.get('lf9e_writeins_csrf', '')
+        submitted = request.form.get('csrf_token', '')
+        if not expected or not secrets.compare_digest(expected, submitted):
+            abort(400, 'Invalid submission token')
+        key = normalized((request.form.get('category') or '').strip()[:250])
+        if not key:
+            abort(400, 'Choose a category')
+        db = SessionLocal()
+        try:
+            edition = db.query(DCAEdition).filter_by(year=2026).first()
+            if (not edition or edition.phase != 'nominations'
+                or os.getenv('DCA_2026_NOMINATIONS_ENABLED') != 'true'
+                or is_closed()):
+                abort(409, 'Nominations are not open')
+            stages = stages_for(db, edition)
+            if len([stage for stage, _ in stages if stage.stage == 'top25']) != 25:
+                abort(409, 'The official Top 25 must be finalized first')
+            existing = next((cat for stage, cat in stages
+                             if normalized(cat.name) == key), None)
+            if existing:
+                return redirect(url_for('dca_nominations_closed', category=existing.id))
+            # Only names already provided through the recorded category round.
+            # Reject names previously moderated out of the public list.
+            historical = db.query(DCAEdition).filter_by(year=2023).first()
+            possible = {}
+            if historical:
+                for cat in db.query(DCACategory).filter_by(edition_id=historical.id).all():
+                    possible[normalized(cat.name)] = dict(
+                        name=cat.name, description=cat.description or '',
+                        source_type='returning', source_category_id=cat.id)
+            for group in ns['dca_new_category_groups'](db, edition.id):
+                possible[normalized(group['name'])] = dict(
+                    name=group['name'], description=group.get('description') or '',
+                    source_type='new', source_category_id=None)
+            item = possible.get(key)
+            if not item:
+                abort(404, 'Unknown category')
+            record = db.query(DCACategory).filter_by(
+                edition_id=edition.id, normalized_name=key).first()
+            if record is None:
+                record = DCACategory(
+                    edition_id=edition.id, name=item['name'],
+                    normalized_name=key, description=item['description'],
+                    source_type=item['source_type'],
+                    source_category_id=item['source_category_id'],
+                    status='write_in_eligible')
+                db.add(record)
+                db.flush()
+            else:
+                record.status = 'write_in_eligible'
+            db.add(CategoryStage9E(
+                edition_id=edition.id, category_id=record.id, stage='write_in',
+                position=max((stage.position for stage, _ in stages), default=25) + 1))
+            db.commit()
+            return redirect(url_for('dca_nominations_closed', category=record.id))
+        except IntegrityError:
+            db.rollback()
+            # Another visitor may have already activated this category.
+            existing = next((cat for stage, cat in stages_for(db, edition)
+                             if normalized(cat.name) == key), None)
+            if existing:
+                return redirect(url_for('dca_nominations_closed', category=existing.id))
+            raise
         finally:
             db.close()
 
