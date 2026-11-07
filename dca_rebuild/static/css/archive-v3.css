@@ -426,3 +426,33 @@ html.lfv-sitewide #archive-history-guide .lfv-history-contribute a{
     grid-column:1!important;
   }
 }
+
+
+/* Archive record details: use a compact, readable fact grid on wide screens. */
+html.lfv-sitewide #archive-record .lfv-archive-facts{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  column-gap:28px!important;
+  row-gap:0!important;
+}
+html.lfv-sitewide #archive-record .lfv-archive-facts>div{
+  display:grid!important;
+  grid-template-columns:minmax(96px,0.43fr) minmax(0,1fr)!important;
+  align-items:baseline!important;
+  gap:8px 12px!important;
+  min-width:0!important;
+}
+html.lfv-sitewide .lfv-unified-meta{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:3px 9px!important;
+  align-items:center!important;
+}
+@media(max-width:750px){
+  html.lfv-sitewide #archive-record .lfv-archive-facts{
+    grid-template-columns:1fr!important;
+  }
+  html.lfv-sitewide #archive-record .lfv-archive-facts>div{
+    grid-template-columns:minmax(90px,0.4fr) minmax(0,1fr)!important;
+  }
+}
