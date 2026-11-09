@@ -98,7 +98,14 @@
             <label>History of this space <textarea name="arena_history" maxlength="700" rows="2"></textarea></label>
           </div>
           <div class="lock-request-fields" data-request-type="Move" hidden>
-            <label>Move style or setup <input name="move_style" maxlength="160" placeholder="Footwork, combo, setup…"></label>
+            <label>Move category
+              <select name="move_category" id="lock-request-move-category">
+                <option value="">Choose a category</option>
+                <option value="Footwork">Footwork</option>
+                <option value="Combo">Combo</option>
+                <option value="Trick">Trick</option>
+              </select></label>
+            <label>Variation or move style <input name="move_style" maxlength="160" placeholder="What is the move called?"></label>
             <label>Who or what can use this move? <input name="move_connection" maxlength="280"></label>
           </div>
           <div class="lock-request-fields" data-request-type="Trick" hidden>
@@ -153,7 +160,9 @@
               </article>
             </div>
             <h5>Your response</h5>
-            <p>Rev Up → Footwork / Combo / Trick → Optional Trick Card → Lock In</p>
+            <p>Rev Up → Footwork / Combo / Trick → Optional Frib Card → Lock In</p>
+            <p>Know another variation? Help expand the Footwork, Combo, and Trick moves in the game.</p>
+            <button type="button" id="lock-suggest-move">Suggest a move</button>
             <p id="lock-response-count" role="status" aria-live="polite">Choose your Rev Up first</p>
             <div id="lock-selected-moves" class="lock-selected-moves" aria-label="Your Lock In sequence"></div>
             <div id="lock-response-moves" class="lock-response-cards" aria-label="Available cards for the current phase"></div>

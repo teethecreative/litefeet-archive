@@ -336,16 +336,47 @@ def test_lock_in_move_families_preserve_individual_moves(website):
 
 def test_lock_in_practice_follows_required_move_phases(website):
     html=website.test_client().get('/archive/lock-in').get_data(as_text=True)
-    assert 'Rev Up → Footwork / Combo / Trick → Optional Trick Card → Lock In' in html
+    assert 'Rev Up → Footwork / Combo / Trick → Optional Frib Card → Lock In' in html
     assert 'Choose your Rev Up first' in html
     from pathlib import Path
     js=(Path(__file__).resolve().parents[1]/'dca_rebuild/static/js/lock-in-game.js').read_text()
-    assert 'stage=!sc.rev?"rev":!sc.main?"main":"trick"' in js
+    assert 'stage=!sc.rev?"rev":!sc.main?"main":"frib"' in js
     assert 'var ready=!!sc.rev&&!!sc.main' in js
     assert 'el("#lock-score-response").disabled=!ready' in js
     assert 'if(stage==="main") eligible=sc.moves' in js
     assert 'card.type==="Trick"' in js
-    assert 'stage==="trick"' in js
-    assert 'No Trick Card' in js
+    assert 'stage==="frib"' in js
+    assert 'No Frib Card' in js
     assert 'practiceScenario.trick' in js
     assert 'picks.length*2' not in js
+
+
+def test_frib_optional_and_community_move_suggestions(website, database):
+    from dca_rebuild.models import LockInCardRequest
+    client=website.test_client()
+    page=client.get('/archive/lock-in').get_data(as_text=True)
+    assert 'Optional Frib Card' in page
+    assert 'id="lock-suggest-move"' in page
+    assert 'name="move_category"' in page
+    from pathlib import Path
+    js=(Path(__file__).resolve().parents[1]/'dca_rebuild/static/js/lock-in-game.js').read_text()
+    assert 'practiceCandidates("Frib")' in js
+    assert 'phase==="frib"&&card.type==="Frib"' in js
+    assert 'No Frib Card' in js
+    with client.session_transaction() as session:
+        token=session['lock_card_csrf']
+    missing=client.post('/archive/lock-in/card-requests',data={
+        'csrf_token':token,'card_type':'Move','card_name':'Community Variation',
+        'email':'dancer@example.org','move_category':''
+    })
+    assert missing.status_code==400
+    submitted=client.post('/archive/lock-in/card-requests',data={
+        'csrf_token':token,'card_type':'Move','card_name':'Community Variation',
+        'email':'dancer@example.org','move_category':'Footwork',
+        'move_style':'Variation suggested by community'
+    })
+    assert submitted.status_code==201
+    with database[1]() as db:
+        item=db.query(LockInCardRequest).filter_by(card_name='Community Variation').one()
+        assert item.status=='pending'
+        assert '"move_category": "Footwork"' in item.details_json
