@@ -8,7 +8,7 @@
     <p>EXPLORE DATED RECORDS THROUGH TIME. ORIGINAL ANNOUNCEMENTS ARE NOT CONFIRMED RESULTS.</p>
   {% else %}
     <h1>KEEP THE CULTURE ON RECORD.</h1>
-    <p>PEOPLE. DANCES. MUSIC. BATTLES. EVENTS. THE STORY OF LITEFEET.</p>
+    <p>PEOPLE. DANCES. BATTLES. EVENTS. THE STORY OF LITEFEET.</p>
   {% endif %}
 </header>
 
@@ -32,7 +32,7 @@
 <section id="collections" class="lfv-archive-collections" aria-labelledby="collection-heading">
   <h2 id="collection-heading">EXPLORE COLLECTIONS</h2>
   <div class="lfv-archive-collection-grid">
-    {% for key, label in archive_collections if key != 'all' %}
+    {% for key, label in archive_collections if key not in ('all', 'music') %}
       <a href="{{ url_for('vault_archive', collection=key) }}#records">
         <strong>{{ label }}</strong><span aria-hidden="true">→</span>
       </a>
@@ -78,10 +78,10 @@
   <form class="lfv-archive-filter" action="{{ url_for('vault_timeline') if archive_timeline else url_for('vault_archive') }}" method="get" role="search" data-archive-filter>
     <label for="archive-search-input">SEARCH ARCHIVE RECORDS</label>
     <div class="lfv-archive-searchline">
-      <input type="search" id="archive-search-input" name="q" value="{{ request.args.get('q','') }}" maxlength="120" placeholder="SEARCH DANCERS, EVENTS, MOVES, MUSIC…">
+      <input type="search" id="archive-search-input" name="q" value="{{ request.args.get('q','') }}" maxlength="120" placeholder="SEARCH DANCERS, EVENTS, MOVES…">
       {% if not archive_timeline %}
       <select name="collection" aria-label="CHOOSE ARCHIVE COLLECTION">
-        {% for key, label in archive_collections %}
+        {% for key, label in archive_collections if key != 'music' %}
           <option value="{{ key }}" {% if archive_pagination.collection == key %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
