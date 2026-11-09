@@ -241,15 +241,40 @@ def test_yearly_virtual_submission_is_pending(website, database):
         assert item.status == "pending"
 
 
-def test_calendar_grid_shows_category_counts_without_gold_event_tiles(website):
+def test_calendar_grid_shows_event_titles_and_day_navigation(website):
     client = website.test_client()
     response = client.get("/calendar?date=2026-11-10")
     assert response.status_code == 200
     html = response.get_data(as_text=True)
-    assert "2 Lab Sessions" in html
-    assert "lfv-calendar-category-counts" in html
-    assert "lfv-calendar-date-number" in html
+    grid = html.split('class="lfv-calendar-month-grid"', 1)[1].split("</table>", 1)[0]
+    assert "lfv-calendar-category-counts" not in grid
+    assert "lfv-calendar-tile-event" in grid
+    assert "Let&#39;s Lab at the ARC" in grid or "Let's Lab at the ARC" in grid
+    assert "Teen Nite" in grid
+    assert '/calendar/events/2026-11-10/let-s-lab-at-the-arc' in grid
+    assert "day=2026-11-10" in grid.replace("&amp;", "&")
     assert "lfv-calendar-event-copy" in html
+
+
+def test_calendar_busy_day_shows_two_events_and_see_more(website, database):
+    client = website.test_client()
+    with database[1].begin() as db:
+        db.add(VaultGatheringSubmission(
+            title="Community Dance Class", gathering_type="class",
+            start_date="2026-11-10", status="approved",
+            start_time="17:00", end_time="18:00",
+            hosts="Dance Instructor", address="123 Main Street"))
+    html = client.get("/calendar?date=2026-11-10").get_data(as_text=True)
+    grid = html.split('class="lfv-calendar-month-grid"', 1)[1].split("</table>", 1)[0]
+    assert "See 1 more" in grid
+    assert "day=2026-11-10" in grid.replace("&amp;", "&")
+    assert grid.count('class="lfv-calendar-tile-event"') >= 2
+    assert "Community Dance Class" in html
+    assert '/calendar/events/2026-11-10/community-dance-class' in html
+    day = client.get("/calendar?date=2026-11-10&day=2026-11-10").get_data(as_text=True)
+    assert "Community Dance Class" in day
+    assert "Teen Nite" in day
+    assert "Let&#39;s Lab" in day or "Let's Lab" in day
 
 
 def test_upcoming_calendar_category_counts_are_per_day(website, database):
