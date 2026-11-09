@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{{ item.display_title or item.title }} | LiteFeet Music</title>
+<title>{{ seo.title if seo else (item.display_title or item.title) ~ ' | LiteFeet Music' }}</title>
 {% include "_seo_head.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
