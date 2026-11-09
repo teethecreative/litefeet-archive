@@ -126,12 +126,12 @@ def test_lock_in_sample_decks_follow_rulebook_card_categories(website):
     response = website.test_client().get("/archive/lock-in")
     assert response.status_code == 200
     html = response.get_data(as_text=True)
-    assert "25 total cards" in html
+    assert "25 cards" in html and "35 cards" in html
     assert "25 dancer cards" not in html
     assert "25 different dancers" not in html
-    assert "Move cards (7)" in html
-    assert "Arena cards (2)" in html
-    assert "This is a short move-combination drill" in html
+    assert "Move (7)" in html
+    assert "Arena (2)" in html
+    assert "Choose a challenge and put together your three-move set." in html
 
 
 
@@ -140,9 +140,9 @@ def test_lock_in_rulebook_and_mixed_deck_builder_present(website):
     assert 'How to battle' in html
     assert 'Winning a round' in html
     assert 'Battle conditions' in html.lower() or 'Battle conditions' in html
-    assert 'seven-card hand' in html
+    assert 'Draw seven cards' in html
     assert 'Round of Fire' in html
-    assert 'still under development' in html or 'not yet written' in html
+    assert 'Final BP and TKO targets will be announced.' in html
     assert 'id="lock-workbench"' in html
     assert 'id="lock-count"' in html
     assert 'id="lock-deck-list"' in html
