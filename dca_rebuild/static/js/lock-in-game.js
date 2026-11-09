@@ -209,6 +209,31 @@
       (bonus?" + "+bonus+" conditional bonus":"")+
       ". Bonuses are not automatically awarded.";
   }
+  var STANDARD_ROUND_BP=100;
+  function upgradeRule(card){
+    return card.type==="Upgrade" ? (pool[card.id]||card) : null;
+  }
+  function upgradeEligibility(card,dancer){
+    var rule=upgradeRule(card);
+    if(!rule)return {eligible:false,known:false};
+    var team=rule.required_team||null;
+    var eligible=!team || documentedTeams("Dancer::"+dancer).includes(team);
+    return {eligible:eligible,known:true,requiredTeam:team,
+      bonus:Number.isInteger(rule.upgrade_bp)?rule.upgrade_bp:null};
+  }
+  function selectedUpgradeSummary(){
+    var bonus=0,notScored=[],rejected=[];
+    selected.forEach(function(i){
+      var card=hand[i];
+      if(!card||card.type!=="Upgrade")return;
+      var rule=upgradeEligibility(card,chosen.dancer);
+      if(!rule.eligible){rejected.push(card.name);return;}
+      if(rule.bonus===null){notScored.push(card.name);return;}
+      bonus+=rule.bonus;
+    });
+    return {bonus:bonus,pending:notScored,rejected:rejected,
+      total:STANDARD_ROUND_BP+bonus};
+  }
   function drawBattle(){
     var table=el("#lock-battle");table.hidden=false;
     table.innerHTML='<h3>Round '+round+' · Arena and card setup</h3><p>Shuffle and cut the decks, then spin the adidas counter. Record the first turn below; a physical spin is not simulated.</p>'+
@@ -225,17 +250,30 @@
     var table=el("#lock-battle");
     table.innerHTML='<h3>Round '+round+' · Move set</h3><p>'+escape(chosen.dancer+' · '+chosen.song+' · '+chosen.arena)+'</p>'+
       '<p>Hand cards: '+hand.length+'. Choose up to three move cards. Special effects not assigned BP in the rulebook must be adjudicated manually.</p>'+
-      '<div class="lock-hand">'+hand.map(function(c,i){return '<label><input type="checkbox" data-pick="'+i+'"> '+escape(c.type+" · "+c.name)+'</label>';}).join("")+'</div>'+
+      '<div class="lock-hand">'+hand.map(function(c,i){
+        var restriction=upgradeEligibility(c,chosen.dancer);
+        var blocked=c.type==="Upgrade"&&!restriction.eligible;
+        var hint=blocked?" · Requires "+restriction.requiredTeam+" dancer":
+          c.type==="Upgrade"&&restriction.requiredTeam?" · "+restriction.requiredTeam+" only":"";
+        return '<label><input type="checkbox" data-pick="'+i+'" '+(blocked?'disabled':'')+
+          '> '+escape(c.type+" · "+c.name+hint)+'</label>';
+      }).join("")+'</div>'+
       '<p id="lock-selection" aria-live="polite">0 / 3 moves selected</p><button type="button" id="lock-announce">Announce locked in</button>';
   }
   function renderScoring(){
+    var effects=selectedUpgradeSummary();
+    var notices=effects.pending.map(function(name){return name+" has no assigned BP yet.";})
+      .concat(effects.rejected.map(function(name){return name+" is not eligible for "+chosen.dancer+"."; }));
     el("#lock-battle").innerHTML='<h3>Round '+round+' · Resolve</h3>'+
       '<p>Moves and effects played: '+escape(selected.map(function(i){return hand[i].name;}).join(" · ")||"none")+'</p>'+
-      '<p>Enter adjudicated points from your card rules. The full card BP table is not final; this prototype does not award arbitrary bonuses.</p>'+
       '<p class="lock-rulebook-reference">'+escape(selected.map(function(i){
         return proposedShoeTrickEffect(hand[i].name,chosen.dancer);
       }).filter(Boolean).join(" · "))+'</p>'+
-      '<label>Your BP <input type="number" id="lock-my-bp" value="100"></label>'+
+      '<p><strong>Standard completed round: '+STANDARD_ROUND_BP+' BP</strong></p>'+
+      '<p>Eligible upgrades: +'+effects.bonus+' BP</p>'+
+      (notices.length?'<p>'+escape(notices.join(" "))+'</p>':'')+
+      '<p>Team and dancer-specific upgrades require a matching roster. Pending effects, Fribs and special bonuses are not automatically scored.</p>'+
+      '<label>Your BP before penalties <input type="number" id="lock-my-bp" value="'+effects.total+'" readonly></label>'+
       '<label>Opponent BP <input type="number" id="lock-their-bp" value="100"></label>'+
       '<label><input type="checkbox" id="lock-missed"> Missed Lock In called out (−10 BP)</label>'+
       '<label><input type="checkbox" id="lock-challenge"> Incorrect card-validity challenge (−50 BP)</label>'+
@@ -257,7 +295,15 @@
     }
     if(e.target.hasAttribute("data-pick")){
       var i=Number(e.target.getAttribute("data-pick")),isMove=hand[i].type==="Move";
-      if(e.target.checked){if(isMove&&selected.filter(function(j){return hand[j].type==="Move";}).length>=3){e.target.checked=false;return;}selected.push(i);}
+      if(e.target.checked){
+        if(hand[i].type==="Upgrade"&&!upgradeEligibility(hand[i],chosen.dancer).eligible){
+          e.target.checked=false;return;
+        }
+        if(isMove&&selected.filter(function(j){return hand[j].type==="Move";}).length>=3){
+          e.target.checked=false;return;
+        }
+        selected.push(i);
+      }
       else selected=selected.filter(function(j){return j!==i;});
       el("#lock-selection").textContent=selected.filter(function(j){return hand[j].type==="Move";}).length+" / 3 moves selected";
     }
@@ -339,9 +385,11 @@
     }
     if(b.id==="lock-announce")renderScoring();
     if(b.id==="lock-resolve"){
-      var mine=el("#lock-my-bp"),other=el("#lock-their-bp");
-      if(mine.value===""||other.value==="")return;
-      var p=Number(mine.value),q=Number(other.value);
+      var other=el("#lock-their-bp");
+      if(other.value==="")return;
+      var scores=selectedUpgradeSummary();
+      if(scores.rejected.length)return;
+      var p=scores.total,q=Number(other.value);
       if(!Number.isFinite(p)||!Number.isFinite(q))return;
       p-=el("#lock-missed").checked?10:0;
       p-=el("#lock-challenge").checked?50:0;
