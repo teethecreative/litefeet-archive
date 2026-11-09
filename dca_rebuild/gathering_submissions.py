@@ -22,7 +22,7 @@ GATHERING_TYPES = (
     ("other", "OTHER"),
 )
 VALID_TYPES = {key for key, _ in GATHERING_TYPES}
-RECURRENCE_CHOICES = (("none", "Does not repeat"), ("daily", "Daily"), ("weekly", "Weekly"), ("monthly", "Monthly"))
+RECURRENCE_CHOICES = (("none", "Does not repeat"), ("daily", "Daily"), ("weekly", "Weekly"), ("monthly", "Monthly"), ("yearly", "Yearly"))
 VALID_RECURRENCE = {key for key, _ in RECURRENCE_CHOICES}
 
 
@@ -67,6 +67,9 @@ def install_gathering_submissions(app, ns):
         start = trim(request.form, "start_time", 5)
         end = trim(request.form, "end_time", 5)
         email = trim(request.form, "contact_email", 255).lower()
+        hosts = trim(request.form, "hosts", 400)
+        address = trim(request.form, "address", 350)
+        is_virtual = bool(request.form.get("virtual"))
         repeat = trim(request.form, "recurrence_rule", 16) or "none"
         weekday_values = request.form.getlist("recurrence_weekdays")
         repeat_until = trim(request.form, "recurrence_until", 10)
@@ -98,6 +101,14 @@ def install_gathering_submissions(app, ns):
                 if time_text:
                     datetime.strptime(time_text, "%H:%M")
             link = parse_http_url(trim(request.form, "link", 1200))
+            if not start or not end:
+                raise ValueError("START AND END TIMES ARE REQUIRED.")
+            if end <= start:
+                raise ValueError("END TIME MUST BE AFTER START TIME.")
+            if not hosts:
+                raise ValueError("ENTER THE EVENT HOST OR ORGANIZER.")
+            if not address:
+                raise ValueError("ENTER A STREET ADDRESS OR, FOR A VIRTUAL EVENT, A MEETING LINK OR JOINING INSTRUCTIONS.")
             if not title or len(title) < 3 or kind not in VALID_TYPES:
                 raise ValueError("ADD A NAME AND SELECT THE TYPE OF GATHERING.")
             if email and ("@" not in email or "." not in email.split("@")[-1]):
@@ -119,11 +130,11 @@ def install_gathering_submissions(app, ns):
                 start_time=start or None,
                 end_time=end or None,
                 venue=trim(request.form, "venue", 240) or None,
-                address=trim(request.form, "address", 350) or None,
+                address=address,
                 city=trim(request.form, "city", 120) or None,
-                virtual=bool(request.form.get("virtual")),
+                virtual=is_virtual,
                 link=link or None,
-                hosts=trim(request.form, "hosts", 400) or None,
+                hosts=hosts,
                 admission=trim(request.form, "admission", 160) or None,
                 contact_name=trim(request.form, "contact_name", 160) or None,
                 contact_email=email or None,
