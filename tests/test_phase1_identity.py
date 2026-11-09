@@ -525,3 +525,52 @@ def test_baby_o_step_spank_and_source_roster_membership(website):
     assert 'trick==="shoe clap"' in js
     assert 'trick==="shoe foot clap"' in js
     assert '["Footwork","Combo","Bad One","Spank"].includes(card.move_family)' in js
+
+
+def test_lock_in_standard_round_and_team_upgrades_use_rosters(website):
+    from dca_rebuild.lock_in import (
+        STANDARD_ROUND_BP, UPGRADE_RULES, TEAM_UPGRADE_RULES,
+        documented_teams, upgrade_eligibility, score_standard_round, public_card_catalog,
+    )
+    assert STANDARD_ROUND_BP == 100
+    assert UPGRADE_RULES["Chant"]["bonus_bp"] == 1
+    assert UPGRADE_RULES["Fake Out"]["bonus_bp"] == 10
+    assert "Public Enemies" in documented_teams("Ben 10")
+    team_card = TEAM_UPGRADE_RULES["Public Enemies Upgrade"]
+    assert team_card["required_team"] == "Public Enemies"
+    assert team_card["bonus_bp"] is None
+    assert upgrade_eligibility("Public Enemies Upgrade", "Ben 10")["eligible"]
+    assert upgrade_eligibility("Public Enemies Upgrade", "J Man")["eligible"]
+    assert not upgrade_eligibility("Public Enemies Upgrade", "Jo Smooth")["eligible"]
+    assert not upgrade_eligibility("Public Enemies Upgrade", "Ben")["eligible"]
+    assert upgrade_eligibility("Chant", "Jo Smooth")["eligible"]
+    assert not upgrade_eligibility("Nonexistent Upgrade", "Ben 10")["eligible"]
+    assert score_standard_round("Jo Smooth")["total_bp"] == 100
+    assert score_standard_round("Jo Smooth", ("Chant",))["total_bp"] == 101
+    assert score_standard_round("Jo Smooth", ("Fake Out",))["total_bp"] == 110
+    assert score_standard_round("Ben 10", ("Chant", "Fake Out"))["total_bp"] == 111
+    pending = score_standard_round("Ben 10", ("Public Enemies Upgrade",))
+    assert pending["total_bp"] == 100
+    assert pending["upgrades"][0]["eligible"]
+    assert pending["upgrades"][0]["applied_bp"] == 0
+    invalid = score_standard_round("Jo Smooth", ("Public Enemies Upgrade",))
+    assert invalid["total_bp"] == 100
+    assert not invalid["upgrades"][0]["eligible"]
+    catalog = {card["id"]: card for card in public_card_catalog()}
+    assert catalog["Upgrade::Public Enemies Upgrade"]["required_team"] == "Public Enemies"
+    assert catalog["Upgrade::Public Enemies Upgrade"]["upgrade_bp"] is None
+    assert catalog["Upgrade::Chant"]["upgrade_bp"] == 1
+    assert catalog["Upgrade::Fake Out"]["upgrade_bp"] == 10
+    assert catalog["Dancer::Ben 10"]["documented_teams"] == ("Public Enemies",)
+    html = website.test_client().get("/archive/lock-in").get_data(as_text=True)
+    assert "standard completed round starts at 100 BP" in html
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[1] /
+          "dca_rebuild/static/js/lock-in-game.js").read_text()
+    assert "var STANDARD_ROUND_BP=100;" in js
+    assert "function upgradeEligibility(card,dancer)" in js
+    assert 'documentedTeams("Dancer::"+dancer).includes(team)' in js
+    assert 'var scores=selectedUpgradeSummary();' in js
+    assert "bonus+=rule.bonus" in js
+    assert 'readonly></label>' in js
+    assert 'disabled' in js
