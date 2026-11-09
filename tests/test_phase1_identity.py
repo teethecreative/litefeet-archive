@@ -329,15 +329,15 @@ def test_lock_in_move_families_preserve_individual_moves(website):
     from pathlib import Path
     js = (Path(__file__).resolve().parents[1] /
           "dca_rebuild/static/js/lock-in-game.js").read_text()
-    assert 'card.move_family==="Rev Ups"' in js
+    assert '["Rev Ups","Wops"].includes(card.move_family)' in js
     assert 'card.move_family==="Footwork"' in js
     assert 'practiceScenario.trick' in js
 
 
 def test_lock_in_practice_follows_required_move_phases(website):
     html=website.test_client().get('/archive/lock-in').get_data(as_text=True)
-    assert 'Rev Up → Footwork / Combo / Trick → Optional Frib Card → Lock In' in html
-    assert 'Choose your Rev Up first' in html
+    assert 'Rev Up or Tone Wop → Footwork / Combo / Trick → Optional Frib Card → Lock In' in html
+    assert 'Choose a Rev Up or Tone Wop first' in html
     from pathlib import Path
     js=(Path(__file__).resolve().parents[1]/'dca_rebuild/static/js/lock-in-game.js').read_text()
     assert 'stage=!sc.rev?"rev":!sc.main?"main":"frib"' in js
@@ -380,3 +380,12 @@ def test_frib_optional_and_community_move_suggestions(website, database):
         item=db.query(LockInCardRequest).filter_by(card_name='Community Variation').one()
         assert item.status=='pending'
         assert '"move_category": "Footwork"' in item.details_json
+
+
+def test_move_set_accepts_rev_up_or_tone_wop_opening(website):
+    html=website.test_client().get('/archive/lock-in').get_data(as_text=True)
+    assert 'Rev Up or Tone Wop → Footwork / Combo / Trick' in html
+    from pathlib import Path
+    js=(Path(__file__).resolve().parents[1]/'dca_rebuild/static/js/lock-in-game.js').read_text()
+    assert 'if(phase==="rev"&&card.type==="Move"&&["Rev Ups","Wops"].includes(card.move_family))' in js
+    assert 'card.move_family==="Wops"?"TONE WOP":"REV UP"' in js
