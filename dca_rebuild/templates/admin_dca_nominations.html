@@ -3,6 +3,9 @@
 <title>DCA Admin — Nominations</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
 <style>
+.dca-nom-table th a{display:inline-flex;gap:.35rem;align-items:center;color:inherit;text-decoration:none;font-weight:inherit}
+.dca-nom-table th a:hover,.dca-nom-table th a:focus-visible{text-decoration:underline;text-underline-offset:3px}
+.dca-nom-table th[aria-sort="ascending"] a,.dca-nom-table th[aria-sort="descending"] a{color:var(--gold-light,#e7cb68)}
 .dca-nominations-admin{max-width:1040px;margin:3rem auto;padding:0 1.25rem}
 .dca-nominations-admin h1{margin-bottom:.5rem}
 .dca-nom-table{width:100%;border-collapse:collapse}
@@ -30,6 +33,8 @@
 <p><a href="{{ url_for('admin_dca_nomination_preview') }}">Preview nomination form →</a></p>
 
 <form method="get" class="lf-nom-filters" role="search">
+<input type="hidden" name="sort" value="{{ sort }}">
+<input type="hidden" name="direction" value="{{ direction }}">
 <label>SEARCH <input name="q" maxlength="100" value="{{ search }}" placeholder="Nominee or category"></label>
 <label>STATUS <select name="status">
 {% for option in ['all','pending','approved','rejected'] %}
@@ -39,13 +44,18 @@
 </form>
 <p class="lf-nom-summary">{{ total }} matching nominees · Showing up to 15 per page</p>
 {% if rows %}
-<table class="dca-nom-table"><thead><tr><th>Category</th><th>Nominee</th><th>Submissions</th><th>Review</th></tr></thead><tbody>
+<table class="dca-nom-table"><thead><tr><th scope="col" aria-sort="{% if sort == 'category' %}{{ 'ascending' if direction == 'asc' else 'descending' }}{% else %}none{% endif %}"><a href="{{ url_for('admin_dca_nominations', q=search, status=status, sort='category', direction=('desc' if sort == 'category' and direction == 'asc' else 'asc'), page=1) }}" aria-label="Sort by Category">{% if sort == 'category' %}<span aria-hidden="true">{{ '↑' if direction == 'asc' else '↓' }}</span>{% endif %}Category</a></th><th scope="col" aria-sort="{% if sort == 'nominee' %}{{ 'ascending' if direction == 'asc' else 'descending' }}{% else %}none{% endif %}"><a href="{{ url_for('admin_dca_nominations', q=search, status=status, sort='nominee', direction=('desc' if sort == 'nominee' and direction == 'asc' else 'asc'), page=1) }}" aria-label="Sort by Nominee">{% if sort == 'nominee' %}<span aria-hidden="true">{{ '↑' if direction == 'asc' else '↓' }}</span>{% endif %}Nominee</a></th><th scope="col" aria-sort="{% if sort == 'submissions' %}{{ 'ascending' if direction == 'asc' else 'descending' }}{% else %}none{% endif %}"><a href="{{ url_for('admin_dca_nominations', q=search, status=status, sort='submissions', direction=('desc' if sort == 'submissions' and direction == 'asc' else 'asc'), page=1) }}" aria-label="Sort by Submissions">{% if sort == 'submissions' %}<span aria-hidden="true">{{ '↑' if direction == 'asc' else '↓' }}</span>{% endif %}Submissions</a></th><th scope="col">Review</th></tr></thead><tbody>
 {% for nominee, category_name, total in rows %}
 <tr><td>{{ category_name }}</td><td>{{ nominee.name }}</td><td>{{ total }}</td><td>
 <form method="post" action="{{ url_for('admin_dca_nominations') }}">
 <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">
 <input type="hidden" name="action" value="review">
 <input type="hidden" name="nominee_id" value="{{ nominee.id }}">
+<input type="hidden" name="page" value="{{ page }}">
+<input type="hidden" name="q" value="{{ search }}">
+<input type="hidden" name="status" value="{{ status }}">
+<input type="hidden" name="sort" value="{{ sort }}">
+<input type="hidden" name="direction" value="{{ direction }}">
 <select name="decision" aria-label="Review {{ nominee.name }}">
 {% for choice in ['pending','approved','rejected'] %}
 <option value="{{ choice }}" {% if nominee.moderation_status == choice %}selected{% endif %}>{{ choice|capitalize }}</option>
@@ -53,9 +63,9 @@
 </td></tr>{% endfor %}</tbody></table>
 {% else %}<p>No nominations have been submitted yet. This is expected while public nominations are closed.</p>{% endif %}
 <nav class="lf-nom-pagination" aria-label="Nomination review pages">
-{% if page > 1 %}<a href="{{ url_for('admin_dca_nominations', page=page-1, q=search, status=status) }}">← PREVIOUS</a>{% endif %}
+{% if page > 1 %}<a href="{{ url_for('admin_dca_nominations', page=page-1, q=search, status=status, sort=sort, direction=direction) }}">← PREVIOUS</a>{% endif %}
 <span>PAGE {{ page }} OF {{ pages }}</span>
-{% if page < pages %}<a href="{{ url_for('admin_dca_nominations', page=page+1, q=search, status=status) }}">NEXT →</a>{% endif %}
+{% if page < pages %}<a href="{{ url_for('admin_dca_nominations', page=page+1, q=search, status=status, sort=sort, direction=direction) }}">NEXT →</a>{% endif %}
 </nav>
 </main>  <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script> <!-- LFV_SITEWIDE_V1 -->
 </body></html>
