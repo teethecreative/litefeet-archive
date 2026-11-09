@@ -133,6 +133,25 @@ SHARE_UI = """
     <button class="lfv-share-close" type="button" id="lfv-share-close" aria-label="Close sharing">×</button>
   </div>
   <p class="lfv-share-copy">Create a graphic to share on Instagram, or copy the page link.</p>
+  <section id="lfv-awards-controls" hidden aria-label="Award graphic options">
+    <label for="lfv-awards-scope">Share</label>
+    <select id="lfv-awards-scope">
+      <option value="awards">The whole awards</option>
+      <option value="category">A category</option>
+      <option value="nominees">Category + nominees</option>
+      <option value="nominee">Category + one nominee</option>
+    </select>
+    <label for="lfv-awards-category" id="lfv-awards-category-label" hidden>Category</label>
+    <select id="lfv-awards-category" hidden></select>
+    <label for="lfv-awards-nominee" id="lfv-awards-nominee-label" hidden>Nominee</label>
+    <select id="lfv-awards-nominee" hidden></select>
+    <fieldset class="lfv-share-theme">
+      <legend>Graphic theme</legend>
+      <label><input type="radio" name="lfv-share-theme" value="light" checked> Light</label>
+      <label><input type="radio" name="lfv-share-theme" value="dark"> Dark</label>
+    </fieldset>
+    <p id="lfv-share-pages" class="lfv-share-status" hidden></p>
+  </section>
   <div class="lfv-share-formats" aria-label="Instagram graphic format">
     <button type="button" data-lfv-format="story" aria-pressed="true">Story</button>
     <button type="button" data-lfv-format="post" aria-pressed="false">Post</button>
