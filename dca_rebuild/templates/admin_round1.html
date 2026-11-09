@@ -81,8 +81,8 @@
   <section class="lf-ws-panel" id="lf-categories-section" aria-labelledby="lf-categories-title">
     <div class="lf-ws-panel-heading">
       <div><div class="lf-ws-number">02 / CATEGORY DECISIONS</div><h2 id="lf-categories-title">Master Category List</h2>
-        <p>Search, sort and edit categories directly in the table. Click Edit in any row to change its description or moderation decision.</p></div>
-      <span class="lf-ws-count">{{ category_rows|length }} CATEGORIES</span>
+        <p>Search, sort and edit the full category history, including rejected and merged suggestions. Click Edit in any row to change its description or moderation decision.</p></div>
+      <span class="lf-ws-count">{{ category_rows|length }} CATEGORIES · {{ category_rows|selectattr('status', 'equalto', 'rejected')|list|length }} REJECTED</span>
     </div>
     <div class="lf-ws-toolbar lf-ws-category-toolbar">
       <label>SEARCH CATEGORY
@@ -98,7 +98,7 @@
           <option value="missing">Missing description</option>
           <option value="pending">Pending review</option>
           <option value="approved">Approved</option>
-          <option value="rejected">Not approved</option>
+          <option value="rejected">Rejected</option>
           <option value="merged">Merged</option>
         </select>
       </label>
@@ -145,7 +145,7 @@
             <td class="lf-ws-right lf-ws-votes">{{ row.yes if row.yes is not none else '—' }}</td>
             <td class="lf-ws-right lf-ws-votes">{{ row.no if row.no is not none else '—' }}</td>
             <td class="lf-ws-right lf-ws-votes">{% if (row.yes or 0) + (row.no or 0) > 0 %}{{ ((((row.yes or 0) * 100) / ((row.yes or 0) + (row.no or 0)))|round(1)) }}%{% else %}—{% endif %}</td>
-            <td><span class="lf-ws-source">{{ row.status|upper }}</span></td>
+            <td><span class="lf-ws-source" data-moderation-status="{{ row.status|lower }}">{{ row.status|upper }}</span></td>
             <td class="lf-ws-description">
               <div class="lf-ws-description-text">{{ row.description or 'Description needed' }}</div>
               <div class="lf-ws-inline-editor"><button type="button" class="lf-ws-small-action lf-ws-open-editor">EDIT</button>
@@ -183,7 +183,7 @@
         </tbody>
       </table>
     </div>
-    <div id="lf-category-empty" class="lf-ws-empty" hidden>No categories match your search or filter.</div>
+    <div id="lf-category-empty" class="lf-ws-empty" hidden>No categories match the selected filter. Rejected suggestions remain in the database and can be found under Rejected.</div>
     <div class="lf-ws-pager" data-pager="category">
       <span id="lf-category-range" aria-live="polite">Showing {{ [category_rows|length, 10]|min }} of {{ category_rows|length }}</span>
       <div class="lf-ws-pager-buttons">
