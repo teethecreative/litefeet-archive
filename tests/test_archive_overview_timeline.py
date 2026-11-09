@@ -3,10 +3,12 @@ from dca_rebuild.archive_catalog import find_record
 from dca_rebuild.timeline_catalog import all_timeline_entries, record_metadata
 
 
-def test_overview_is_timeline_and_uses_timeline_script(website):
+def test_archive_overview_links_to_timeline_and_timeline_uses_script(website):
     client = website.test_client()
-    assert client.get('/archive').status_code == 301
-    assert client.get('/archive').headers['Location'].endswith('/archive/timeline')
+    overview = client.get('/archive')
+    assert overview.status_code == 200
+    assert 'Submit to the Archive' in overview.get_data(as_text=True)
+    assert '/archive/timeline' in overview.get_data(as_text=True)
     html = client.get('/archive/timeline').get_data(as_text=True)
     assert 'HISTORY &amp; TIMELINE' in html
     assert 'SEARCH THE TIMELINE' in html
@@ -32,7 +34,7 @@ def test_timeline_filter_and_pagination_use_full_catalog(website):
     html = client.get('/archive/people').get_data(as_text=True)
     assert 'lfv-people-wordcloud' in html
     assert 'data-unified-timeline' not in html
-    assert client.get('/archive?collection=people').status_code == 301
+    assert client.get('/archive?collection=people').status_code == 302
     payload = client.get('/archive/api/records?timeline=1&collection=events').get_json()
     assert payload['total'] >= 24
     assert payload['records']
