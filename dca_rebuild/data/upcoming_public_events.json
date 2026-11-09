@@ -35,6 +35,20 @@
       "href": "https://www.instagram.com/teennightnyc/",
       "notice": "Check @teennightnyc on Instagram for closure notifications or schedule changes before attending.",
       "status": "published"
+    },
+    {
+      "title": "Let's Lab at the ARC",
+      "weekdays": [
+        0,
+        1,
+        2
+      ],
+      "time": "6:00–9:30 PM",
+      "venue": "The ARC · 501 Carlton Avenue, Brooklyn, NYC",
+      "host": null,
+      "href": "/submit",
+      "notice": "Recurring Monday–Wednesday. Check with the organizer for closures or schedule changes.",
+      "status": "published"
     }
   ]
 }
