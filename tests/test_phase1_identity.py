@@ -91,3 +91,21 @@ def test_teen_nite_recurs_tuesday_thursday_with_closure_notice():
     assert all('237 East 104th Street' in e['description'] for e in sessions)
     assert all('Check @teennightnyc on Instagram for closure notifications' in e['description'] for e in sessions)
     assert all(e['href'] == 'https://www.instagram.com/teennightnyc/' for e in sessions)
+
+
+def test_lock_in_sample_decks_are_neutral_and_practice_does_not_spotlight_two_submitters(website):
+    client = website.test_client()
+    page = client.get('/archive/lock-in')
+    assert page.status_code == 200
+    html = page.get_data(as_text=True)
+    assert 'Sample deck 1' in html and 'Sample deck 2' in html
+    assert 'Sample deck featuring DC' not in html
+    assert 'Sample deck featuring K Cosmic' not in html
+    assert 'DC submitted Performance' not in html
+    assert 'K Cosmic chose Spank' not in html
+    assert 'DC and K Cosmic' not in html
+    assert 'Airman' in html
+    from dca_rebuild.lock_in import ROUNDS, practice_view
+    assert 'performance' not in ROUNDS and 'spank' not in ROUNDS
+    from werkzeug.datastructures import MultiDict
+    assert practice_view(MultiDict())['round_key'] == 'greklite'

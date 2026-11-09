@@ -15,14 +15,16 @@
 </section>
 <section id="decks">
   <h2>Sample decks</h2>
-  <p>Each deck contains 25 dancers, one card per person. These sample rosters draw from Tee’s planning document and the card submissions. DC and K Cosmic’s practice tracks come from Reel Hectic’s Common song submissions. More dancer challenges are available below.</p>
+  <p>Browse two sample decks built from the original card submissions. Each contains 25 dancer cards.</p>
   <div class="lock-decks">
   {% for key, sample in decks.items() %}
-    <article><p class="vault-kicker">{{ sample.name }}</p><h3>Sample deck featuring {{ sample.dancer }}</h3><p>{{ sample.note }}</p>
+    <article>
+      <h3>Sample deck {{ loop.index }}</h3>
+      <p>{{ sample.roster|length }} dancer cards</p>
       <details><summary>View all {{ sample.roster|length }} dancers</summary>
         <ol>{% for dancer in sample.roster %}<li>{{ dancer }}</li>{% endfor %}</ol>
       </details>
-      <a href="{{ url_for('vault_lock_in', deck=key) }}#practice">Practice with {{ sample.dancer }}</a>
+      <a href="#practice">Try a practice round</a>
     </article>
   {% endfor %}</div>
 </section>
