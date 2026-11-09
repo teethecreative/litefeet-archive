@@ -5036,6 +5036,10 @@ install_award_sharing(app)
 from dca_rebuild.admin_workspace import install_admin_workspace
 install_admin_workspace(app, globals())
 
+# Public aliases and canonical paths; existing submission and admin URLs persist.
+from dca_rebuild.public_urls import install_clean_public_urls
+install_clean_public_urls(app, SessionLocal)
+
 
 # Every unknown route, including old URLs without a valid destination, uses
 # the same branded 404 page. Return 404 (not a redirect or a soft 404) so
