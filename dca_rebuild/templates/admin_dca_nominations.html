@@ -31,8 +31,12 @@
 <a class="lfv-admin-back-link" href="{{ url_for('admin_dca_workspace') }}">← DCA 2026 Overview</a>
 <header class="lfv-admin-plain-head"><p class="lfv-admin-overline">DCA 2026 / NOMINEES</p><h1>Nominee Review</h1>
 <p>Review nominee records and their approval status. Nomination submissions and standings are on separate pages.</p></header>
-<p><a href="{{ url_for('admin_dca_workspace_section',section='categories') }}">2026 Categories</a> · <a href="{{ url_for('admin_dca_workspace_section',section='activity') }}">Nomination Activity</a> · <a href="{{ url_for('admin_dca_workspace_section',section='results') }}">Standings</a></p>
-<p><a href="{{ url_for('admin_dca_nomination_preview') }}">Preview nomination form →</a></p>
+<nav class="lfv-admin-subnav" aria-label="DCA administration pages">
+<a href="{{ url_for('admin_dca_workspace_section',section='categories') }}">2026 Categories</a>
+<a href="{{ url_for('admin_dca_workspace_section',section='activity') }}">Nomination Activity</a>
+<a href="{{ url_for('admin_dca_workspace_section',section='results') }}">Standings</a>
+</nav>
+<p><a class="lfv-admin-primary" href="{{ url_for('admin_dca_nomination_preview') }}">Preview nomination form →</a></p>
 
 <form method="get" class="lf-nom-filters" role="search">
 <input type="hidden" name="sort" value="{{ sort }}">
