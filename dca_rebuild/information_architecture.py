@@ -23,7 +23,7 @@ SECTION_CATALOG = (
     ('archive', 'The Archive', '/archive/timeline', True),
     ('people', 'People', '/people', False),
     ('music', 'Music', '/litefeet-music', True),
-    ('media', 'Media', '/media', True),
+    ('media', 'Media', '/media', False),
     ('stories', 'Stories & Media', '/stories', False),
     ('awards', 'Awards', '/awards', True),
     ('community', 'Community', '/community', False),
