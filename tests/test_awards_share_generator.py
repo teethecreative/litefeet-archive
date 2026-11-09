@@ -75,3 +75,28 @@ def test_bundle_is_a_zip_of_generated_nominee_images(website, database):
         files = archive.namelist()
         assert files
         assert archive.read(files[0])[:8] == bytes.fromhex("89504e470d0a1a0a")
+
+
+def test_single_nominee_supporter_reasons_are_opt_in_and_not_saved(website, database):
+    from dca_rebuild.models import DCACategory
+    with database[1].begin() as db:
+        cat = db.query(DCACategory).filter_by(edition_id=database[2]).first()
+        cid = cat.id
+        nominee = DCANominee(edition_id=database[2], category_id=cid, name="Test Dancer",
+                             normalized_name="test dancer", moderation_status="approved")
+        db.add(nominee)
+        db.flush()
+        nid = nominee.id
+    client = website.test_client()
+    base = f"/social/awards/story/light/nominee.png?category={cid}&nominee={nid}"
+    assert _dimensions(client.get(base + "&reason=creativity")) == (1080, 1920)
+    assert _dimensions(client.post(base, data={
+        "category":str(cid), "nominee":str(nid), "reason_mode":"custom",
+        "reason_text":"I want to recognize their original style and dedication."
+    })) == (1080, 1920)
+    assert client.get(base + "&reason=custom").status_code == 400
+    assert client.post(base, data={"category":str(cid), "nominee":str(nid),
+        "reason_mode":"custom","reason_text":"x"*181}).status_code == 400
+    html = client.get("/awards/dancers-choice/2026").get_data(as_text=True)
+    assert 'id="lfv-reason-choice"' in html
+    assert 'id="lfv-reason-custom"' in html
