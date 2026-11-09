@@ -330,7 +330,7 @@ def test_lock_in_move_families_preserve_individual_moves(website):
     assert moves["Rev Up"]["move_family"] == "Rev Ups"
     assert moves["Tone Whop"]["move_family"] == "Wops"
     assert "Footwork" not in moves
-    assert moves["Knee Drop"]["move_family"] == ""
+    assert moves["Knee Drop"]["move_family"] == "Combo"
     from pathlib import Path
     js = (Path(__file__).resolve().parents[1] /
           "dca_rebuild/static/js/lock-in-game.js").read_text()
@@ -394,3 +394,50 @@ def test_move_set_accepts_rev_up_or_tone_wop_opening(website):
     js=(Path(__file__).resolve().parents[1]/'dca_rebuild/static/js/lock-in-game.js').read_text()
     assert 'if(phase==="rev"&&card.type==="Move"&&["Rev Ups","Wops"].includes(card.move_family))' in js
     assert 'card.move_family==="Wops"?"TONE WOP":"REV UP"' in js
+
+
+def test_source_grounded_lock_in_move_taxonomy_and_sample_readiness(website):
+    from dca_rebuild.lock_in import (
+        MOVE_FAMILIES, OPENING_FAMILIES, MAIN_MOVE_FAMILIES,
+        public_card_catalog, public_sample_decks, sample_deck_readiness
+    )
+    footwork = ("Butterfly", "Tweak", "Around The World", "Gangsta Lean", "Stutter Step")
+    combos = ("Knee Drop", "Swiss Drop", "Coin Drop", "Kiss Of Death",
+              "Needle & Thread", "Villain Swoop", "Streetfighter Walk",
+              "No Gwop", "Slatter Gwop")
+    assert all(MOVE_FAMILIES[name.casefold()] == "Footwork" for name in footwork)
+    assert all(MOVE_FAMILIES[name.casefold()] == "Combo" for name in combos)
+    assert MOVE_FAMILIES["bad one"] == "Legacy setup — review"
+    assert OPENING_FAMILIES == {"Rev Ups", "Wops"}
+    assert MAIN_MOVE_FAMILIES == {"Footwork", "Combo"}
+    catalog = public_card_catalog()
+    by_id = {card["id"]: card for card in catalog}
+    assert by_id["Move::Bad One"]["review_status"] == "source-draft"
+    assert by_id["Move::Knee Drop"]["move_family"] == "Combo"
+    assert by_id["Trick::Shoe Trick"]["type"] == "Trick"
+    assert by_id["Frib::No Hype"]["type"] == "Frib"
+    assert all(card["review_status"] in ("source-draft", "reference-only")
+               for card in catalog)
+    decks = public_sample_decks()
+    assert [d["total"] for d in decks] == [25, 35]
+    assert all(d["readiness"]["playable"] for d in decks)
+    assert all(d["readiness"]["opening_count"] >= 1 for d in decks)
+    assert all(d["readiness"]["main_count"] >= 1 for d in decks)
+    missing = sample_deck_readiness((
+        ("Dancer", ("Example Dancer",)),
+        ("Song", ("Example Song",)),
+        ("Arena", ("Example Arena",)),
+        ("Move", ("Bad One",)),
+    ))
+    assert not missing["playable"]
+    assert missing["opening_count"] == 0
+    assert missing["main_count"] == 0
+    html = website.test_client().get("/archive/lock-in").get_data(as_text=True)
+    assert "Producer Cards are reserved for a separate future producer-battle format." in html
+    assert "Historical names and planning entries are not all approved playable cards." in html
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[1] /
+          "dca_rebuild/static/js/lock-in-game.js").read_text()
+    assert "Add a Rev Up or Tone Wop opening card." in js
+    assert "Add at least one Footwork, Combo, or Trick main-move card." in js
+    assert '["Footwork","Combo"].includes(card.move_family)' in js
