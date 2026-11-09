@@ -54,3 +54,41 @@
 .lfv-workspace-honeypot{position:absolute;left:-10000px;height:1px;overflow:hidden}
 @media(max-width:850px){.lfv-admin-quick-links{grid-template-columns:repeat(2,minmax(0,1fr))}.lfv-admin-state-counts{grid-template-columns:repeat(3,minmax(0,1fr))}.lfv-admin-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.lfv-admin-workspace{padding:24px 16px 70px}.lfv-admin-quick-links{grid-template-columns:1fr}.lfv-admin-workspace-heading{align-items:start;flex-direction:column}.lfv-admin-workspace-filters{align-items:stretch;flex-direction:column}.lfv-admin-workspace-filters label{width:100%}}
+
+/* Admin workspace: undo the generic awards hero and section presentation. */
+html.lfv-sitewide body.ledger-admin main.lfv-admin-workspace,
+body.ledger-admin main.lfv-admin-workspace{width:min(1250px,calc(100% - 36px));max-width:1250px;margin:0 auto;padding:32px 18px 90px;color:var(--text);background:transparent}
+body.ledger-admin main.lfv-admin-workspace > header.lfv-admin-workspace-head{
+ background:transparent!important;color:var(--text)!important;border:0!important;border-bottom:1px solid var(--border)!important;
+ border-radius:0!important;margin:0 0 28px!important;padding:12px 0 26px!important;overflow:visible!important
+}
+body.ledger-admin main.lfv-admin-workspace > header.lfv-admin-workspace-head::after{content:none!important}
+body.ledger-admin .lfv-admin-workspace-head h1{color:var(--text)!important;font-size:clamp(2rem,4vw,3.3rem)!important;letter-spacing:-.035em!important;line-height:1.12!important;margin:8px 0 12px!important}
+body.ledger-admin .lfv-admin-workspace-head .lfv-admin-overline{color:var(--muted)!important;font-size:.76rem;line-height:1.5}
+body.ledger-admin .lfv-admin-workspace-head > p:last-child{color:var(--muted)!important;font-size:1rem;max-width:70ch;margin:0}
+body.ledger-admin main.lfv-admin-workspace > section.lfv-admin-workspace-section{
+ background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--border)!important;
+ border-top:3px solid var(--gold)!important;border-radius:5px!important;margin:0 0 24px!important;
+ padding:clamp(18px,2.7vw,30px)!important
+}
+body.ledger-admin .lfv-admin-workspace-heading{align-items:center;flex-wrap:wrap}
+body.ledger-admin .lfv-admin-workspace-heading p{color:var(--muted)!important}
+body.ledger-admin .lfv-admin-workspace-heading h2{color:var(--text)!important}
+body.ledger-admin .lfv-admin-metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 30px;border:0}
+body.ledger-admin .lfv-admin-metrics a{
+ display:flex;flex-direction:column;gap:7px;min-width:0;padding:18px;
+ background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--gold);
+ color:var(--text);text-decoration:none;border-radius:5px
+}
+body.ledger-admin .lfv-admin-metrics strong{font-size:clamp(1.7rem,2.6vw,2.2rem);line-height:1.1}
+body.ledger-admin .lfv-admin-metrics span{color:var(--muted);font-size:.8rem;line-height:1.35}
+body.ledger-admin .lfv-admin-review-table{color:var(--text);background:transparent}
+body.ledger-admin .lfv-admin-review-table td,body.ledger-admin .lfv-admin-review-table th{color:inherit;border-color:var(--border)}
+body.ledger-admin .lfv-admin-review-table th{color:var(--muted)}
+body.ledger-admin .lfv-admin-workspace :is(input,select,textarea){background:var(--surface);color:var(--text);border-color:var(--border)}
+body.ledger-admin .lfv-admin-quick-links a{color:var(--text)}
+body.ledger-admin .lfv-admin-quick-links a span{color:var(--muted)}
+html[data-theme="dark"] body.ledger-admin .lfv-admin-workspace-head,
+html[data-theme="dark"] body.ledger-admin .lfv-admin-workspace-section{color:var(--text)}
+@media(max-width:900px){body.ledger-admin .lfv-admin-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){html.lfv-sitewide body.ledger-admin main.lfv-admin-workspace,body.ledger-admin main.lfv-admin-workspace{width:calc(100% - 24px);padding:22px 0 70px}body.ledger-admin .lfv-admin-metrics{gap:8px}body.ledger-admin .lfv-admin-metrics a{padding:12px}body.ledger-admin .lfv-admin-workspace-heading>a{width:100%}}
