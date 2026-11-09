@@ -312,3 +312,19 @@ def test_move_set_practice_generates_opponent_move_song_and_arena(website):
     assert '× 2 BP' in js
     assert 'function generateSituation()' in js
     assert 'Special card effects and counters are not automatically scored' not in js
+
+
+def test_lock_in_move_families_preserve_individual_moves(website):
+    from dca_rebuild.lock_in import public_card_catalog
+    moves = {card["name"]:card for card in public_card_catalog() if card["type"] == "Move"}
+    assert moves["Stutter Step"]["move_family"] == "Footwork"
+    assert moves["Rev Up"]["move_family"] == "Rev Ups"
+    assert moves["Tone Whop"]["move_family"] == "Wops"
+    assert "Footwork" not in moves
+    assert moves["Knee Drop"]["move_family"] == ""
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[1] /
+          "dca_rebuild/static/js/lock-in-game.js").read_text()
+    assert 'var families=["Rev Ups","Wops","Footwork"]' in js
+    assert 'card.move_family||"Other moves"' in js
+    assert 'responses=shuffle(responses)' in js
