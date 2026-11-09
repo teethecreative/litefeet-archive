@@ -136,20 +136,34 @@
         <section id="practice" class="lock-move-set-practice">
           <h4>Move-Set Practice</h4>
           <p>See what your opponent throws, then put together your response.</p>
-          <button type="button" id="lock-generate-situation">Generate a situation</button>
-          <div id="lock-generated-situation" hidden aria-live="polite">
-            <div class="lock-situation-details">
-              <p><strong>Opponent's move</strong><span id="lock-opponent-move"></span></p>
-              <p><strong>Song</strong><span id="lock-opponent-song"></span></p>
-              <p><strong>Arena</strong><span id="lock-opponent-arena"></span></p>
+          <div id="lock-generated-situation" hidden>
+            <h5>Opponent's turn</h5>
+            <div class="lock-situation-details" aria-label="Opponent's move, song, and arena">
+              <article class="lock-game-card lock-opponent-card" data-card-type="move">
+                <span class="lock-card-category">MOVE</span>
+                <strong id="lock-opponent-move"></strong>
+              </article>
+              <article class="lock-game-card lock-opponent-card" data-card-type="song">
+                <span class="lock-card-category">SONG</span>
+                <strong id="lock-opponent-song"></strong>
+              </article>
+              <article class="lock-game-card lock-opponent-card" data-card-type="arena">
+                <span class="lock-card-category">ARENA</span>
+                <strong id="lock-opponent-arena"></strong>
+              </article>
             </div>
-            <fieldset id="lock-response-fieldset">
-              <legend>Choose up to 3 moves to respond</legend>
-              <div id="lock-response-moves"></div>
-            </fieldset>
-            <button type="button" id="lock-score-response" disabled>Test my moves</button>
+            <h5>Your response</h5>
+            <p>Pick up to three moves in the order you'd play them.</p>
+            <p id="lock-response-count" role="status" aria-live="polite">0 of 3 moves selected</p>
+            <div id="lock-selected-moves" class="lock-selected-moves" aria-label="Your move sequence"></div>
+            <div id="lock-response-moves" class="lock-response-cards" aria-label="Available move cards"></div>
+            <div class="lock-practice-actions">
+              <button type="button" id="lock-score-response" disabled>Test my moves</button>
+              <button type="button" id="lock-generate-situation">Generate Another Round</button>
+            </div>
             <div id="lock-response-result" hidden aria-live="polite"></div>
           </div>
+          <button type="button" id="lock-first-situation">Start practice</button>
         </section>
       </div>
     </div>

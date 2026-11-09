@@ -289,6 +289,11 @@ def test_move_set_practice_generates_opponent_move_song_and_arena(website):
     assert 'id="lock-opponent-arena"' in html
     assert 'id="lock-response-moves"' in html
     assert 'id="lock-score-response"' in html
+    assert 'id="lock-selected-moves"' in html
+    assert 'id="lock-response-count"' in html
+    assert 'id="lock-generate-situation"' in html
+    assert 'id="lock-first-situation"' in html
+    assert 'class="lock-game-card lock-opponent-card"' in html
     from pathlib import Path
     js = (Path(__file__).resolve().parents[1] /
           "dca_rebuild/static/js/lock-in-game.js").read_text()
@@ -296,6 +301,14 @@ def test_move_set_practice_generates_opponent_move_song_and_arena(website):
     assert 'practiceCandidates("Move")' in js
     assert 'practiceCandidates("Song")' in js
     assert 'practiceCandidates("Arena")' in js
-    assert 'practiceScenario.selected.length>=3' in js
+    assert 'selectedMoves.length<3' in js
     assert 'function scoreSituation()' in js
-    assert 'Special card effects and counters are not automatically scored' in js
+    assert 'function renderPracticeSelection()' in js
+    assert 'data-response-id' in js
+    assert 'data-move-up' in js and 'data-move-down' in js
+    assert 'data-move-remove' in js
+    assert 'Generate Another Round' in html
+    assert 'not an official win or loss' in js
+    assert '× 2 BP' in js
+    assert 'function generateSituation()' in js
+    assert 'Special card effects and counters are not automatically scored' not in js
