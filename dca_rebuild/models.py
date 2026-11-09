@@ -957,3 +957,26 @@ class VaultDevelopmentFeedback(Base):
     status = Column(String(24), nullable=False, default="new", index=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     reviewed_at = Column(DateTime, nullable=True)
+
+
+# LiteFeet World Record attempt: private expressions of interest only.
+# Participation and official event registration are deliberately separate.
+class WorldRecordInterest(Base):
+    __tablename__ = "vault_world_record_interests"
+
+    id = Column(Integer, primary_key=True)
+    contact_name = Column(String(160), nullable=False)
+    email = Column(String(320), nullable=False, index=True)
+    role = Column(String(32), nullable=False, index=True)
+    dance_name = Column(String(160))
+    team = Column(String(160))
+    borough = Column(String(120))
+    experience = Column(Text)
+    venue_name = Column(String(200))
+    venue_capacity = Column(String(80))
+    availability = Column(String(300))
+    notes = Column(Text)
+    guardian_submission = Column(Boolean, nullable=False, default=False)
+    contact_permission = Column(Boolean, nullable=False, default=False)
+    status = Column(String(32), nullable=False, default="interested", index=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)

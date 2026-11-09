@@ -5063,6 +5063,11 @@ from dca_rebuild.dca_admin_workspace import install_dca_admin_workspace
 install_dca_admin_workspace(app, globals())
 
 
+# Proposed LiteFeet World Record community initiative and private interest roster.
+from dca_rebuild.world_record import install_world_record
+install_world_record(app, globals())
+
+
 # Every unknown route, including old URLs without a valid destination, uses
 # the same branded 404 page. Return 404 (not a redirect or a soft 404) so
 # search engines can remove genuinely missing URLs from their index.

@@ -69,6 +69,8 @@
             COMMUNITY
         </a>
 
+        <a href="{{ url_for('admin_world_record') }}" {% if request.endpoint in ['admin_world_record','admin_world_record_status'] %}aria-current="page"{% endif %}>WORLD RECORD</a>
+
         <a href="{{ url_for('admin_beta_features') }}">
             BETA
         </a>
