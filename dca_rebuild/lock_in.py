@@ -101,7 +101,7 @@ RULEBOOK_CARDS = {
              "Villain Swoop", "Streetfighter Walk", "No Gwop", "Slatter Gwop"),
     "Trick": ("Shoe Trick", "Shoe Clap", "Shoe Foot Clap", "Hat Trick",
               "Shirt Trick", "Animation", "Connects"),
-    "Upgrade": ("Fake Out", "Tag In", "Chant"),
+    "Upgrade": ("Fake Out", "Tag In", "Chant", "Public Enemies Upgrade"),
     "Frib": ("Restart Round", "Slippery Floors", "Team Beef Chant", "No Hype",
               "Tweak Out", "Talking Shit"),
 }
@@ -186,7 +186,10 @@ UPGRADE_RULES = {
 # A team-restricted upgrade is only eligible when its required team is present
 # in the historical/reference roster for the chosen dancer. Register actual
 # named team cards here when confirmed, not automatically from name similarity.
-TEAM_UPGRADE_RULES = {}
+TEAM_UPGRADE_RULES = {
+    # Provisional team-specific card; no bonus is assigned until approved.
+    "Public Enemies Upgrade": {"bonus_bp": None, "required_team": "Public Enemies"},
+}
 
 
 def upgrade_eligibility(card_name, dancer_name):
