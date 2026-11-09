@@ -38,9 +38,9 @@ SOURCES = (
     ("community", BetaFeedback, "status", "new", "created_at",
      "message", "Beta feedback", "admin_beta_feedback"),
     ("archive", VaultArchiveVerification, "moderation_status", "pending", "created_at",
-     "record_slug", "Archive response", "vault_archive_admin_review"),
+     "record_slug", "Archive response", "admin_vault_auxiliary_review"),
     ("lock-in", LockInCardRequest, "status", "pending", "created_at",
-     "card_name", "Lock In card request", None),
+     "card_name", "Lock In card request", "admin_vault_auxiliary_review"),
     ("community", VaultDevelopmentFeedback, "status", "new", "created_at",
      "title", "Website feedback", "admin_vault_development"),
 )
@@ -114,6 +114,50 @@ def install_admin_workspace(app, ns):
                                section=section, sort=sort, page=page,
                                total=total, pages=(total + PAGE_SIZE - 1) // PAGE_SIZE,
                                sections=QUEUE_SECTIONS)
+
+    @app.get("/admin/review-records", endpoint="admin_vault_auxiliary_review")
+    @admin_required
+    def auxiliary_review():
+        source = request.args.get("source") or "all"
+        if source not in ("all", "archive", "lock-in"):
+            abort(400)
+        with SessionLocal() as db:
+            archive = db.query(VaultArchiveVerification).filter_by(
+                moderation_status="pending").order_by(
+                VaultArchiveVerification.created_at.asc()).limit(100).all() if source != "lock-in" else []
+            cards = db.query(LockInCardRequest).filter_by(
+                status="pending").order_by(
+                LockInCardRequest.created_at.asc()).limit(100).all() if source != "archive" else []
+            archive_rows = [dict(id=x.id, slug=x.record_slug, vote=x.vote,
+                                 explanation=x.explanation, at=x.created_at) for x in archive]
+            card_rows = [dict(id=x.id, name=x.card_name, kind=x.card_type,
+                              details=x.details_json, source=x.source_url,
+                              at=x.created_at) for x in cards]
+        return render_template("admin_workspace_auxiliary.html", archive=archive_rows,
+                               cards=card_rows, source=source, csrf_token=_admin_token())
+
+    @app.post("/admin/review-records/<source>/<int:record_id>", endpoint="admin_vault_auxiliary_decision")
+    @admin_required
+    def auxiliary_decision(source, record_id):
+        _require_admin_token()
+        decision = request.form.get("decision")
+        if source not in ("archive", "lock-in") or decision not in ("approved", "rejected"):
+            abort(400)
+        model = VaultArchiveVerification if source == "archive" else LockInCardRequest
+        status_field = "moderation_status" if source == "archive" else "status"
+        with SessionLocal.begin() as db:
+            entry = db.get(model, record_id)
+            if entry is None:
+                abort(404)
+            if getattr(entry, status_field) != "pending":
+                abort(400)
+            setattr(entry, status_field, decision)
+            if source == "lock-in":
+                entry.reviewed_at = datetime.utcnow()
+            else:
+                entry.updated_at = datetime.utcnow()
+        flash("Record review saved.", "admin")
+        return redirect(url_for("admin_vault_auxiliary_review", source=source), code=303)
 
     @app.get("/admin/development", endpoint="admin_vault_development")
     @admin_required
