@@ -6,7 +6,9 @@
       "venue": "Bronx, New York · press conference (exact venue to verify)",
       "href": "https://www.instagram.com/p/DfSiFkAijqf/",
       "status": "published",
-      "category": "press_conference"
+      "category": "press_conference",
+      "venue_name": "Bronx, New York",
+      "location_note": "Exact venue not yet confirmed"
     },
     {
       "date": "2026-11-21",
@@ -14,7 +16,11 @@
       "venue": "Poe Park Gallery · 2640 Grand Concourse, Bronx, NY 10458 · 6–10 PM",
       "href": "https://www.instagram.com/p/DecJMjIOd2z/",
       "status": "published",
-      "category": "battle"
+      "category": "battle",
+      "venue_name": "Poe Park Gallery",
+      "address": "2640 Grand Concourse, Bronx, NY 10458",
+      "start_time": "18:00",
+      "end_time": "22:00"
     },
     {
       "date": "2026-11-22",
@@ -22,7 +28,11 @@
       "venue": "District 385 · 57-36 Myrtle Avenue, Ridgewood, NY 11385 · 6–11 PM",
       "href": "https://www.instagram.com/p/DfSiFkAijqf/",
       "status": "published",
-      "category": "awards"
+      "category": "awards",
+      "venue_name": "District 385",
+      "address": "57-36 Myrtle Avenue, Ridgewood, NY 11385",
+      "start_time": "18:00",
+      "end_time": "23:00"
     }
   ],
   "weekly_events": [
@@ -38,7 +48,11 @@
       "href": "https://www.instagram.com/teennightnyc/",
       "notice": "Check @teennightnyc on Instagram for closure notifications or schedule changes before attending.",
       "status": "published",
-      "category": "lab"
+      "category": "lab",
+      "venue_name": "Union Settlement GWCC",
+      "address": "237 East 104th Street, Manhattan, NY",
+      "start_time": "18:00",
+      "end_time": "21:00"
     },
     {
       "title": "Let's Lab at the ARC",
@@ -53,7 +67,11 @@
       "href": "/submit",
       "notice": "Recurring Monday–Wednesday. Check with the organizer for closures or schedule changes.",
       "status": "published",
-      "category": "lab"
+      "category": "lab",
+      "venue_name": "The ARC",
+      "address": "501 Carlton Avenue, Brooklyn, NYC",
+      "start_time": "18:00",
+      "end_time": "21:30"
     }
   ]
 }
