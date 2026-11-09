@@ -3722,7 +3722,6 @@ LEGACY_HOME_ROUTES = [
     "/verify",
     "/ask",
     "/community-perspectives",
-    "/litefeet-music",
     "/releases/submit",
 ]
 
@@ -3738,7 +3737,7 @@ ARCHIVE_PLACEHOLDER_ROUTES = {
     "/people": "people", "/dancers": "people", "/people/dancers": "people",
     "/teams": "teams", "/people/teams": "teams",
     "/people-teams": "teams", "/people-and-teams": "teams",
-    "/litefeet-music": "music", "/battles": "battles",
+    "/battles": "battles",
     "/events": "events", "/calendar": "events",
 }
 
@@ -3781,7 +3780,6 @@ for legacy_route in LEGACY_HOME_ROUTES:
 @app.route("/events/<path:legacy_path>")
 @app.route("/teams/<path:legacy_path>")
 @app.route("/battles/<path:legacy_path>")
-@app.route("/litefeet-music/<path:legacy_path>")
 @app.route("/music/<path:legacy_path>")
 @app.route("/verify/<path:legacy_path>")
 @app.route("/ask/<path:legacy_path>")
@@ -4902,3 +4900,9 @@ install_information_architecture(app, globals())
 # Moderated public submissions for battles, labs, link-ups, classes and workshops.
 from dca_rebuild.gathering_submissions import install_gathering_submissions
 install_gathering_submissions(app, globals())
+
+
+# Public music routes must be registered against the deployed app, not the
+# original app.py legacy template. Keep other legacy routes unchanged.
+from dca_rebuild.music_public import install_music_public
+install_music_public(app, engine)
