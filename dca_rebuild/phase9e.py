@@ -949,6 +949,14 @@ def install_phase9e(app, ns):
                             set_={'email_address': email, 'updated_at': datetime.utcnow()},
                         )
                     )
+                    # A returning participant can safely reconnect their
+                    # own older hash-only nominations to the email they supplied.
+                    # Never attempt to reverse or expose an email hash.
+                    db.query(DCANominationSubmission).filter(
+                        DCANominationSubmission.edition_id == edition.id,
+                        DCANominationSubmission.submitter_hash == who,
+                        DCANominationSubmission.submitter_email.is_(None),
+                    ).update({'submitter_email': email}, synchronize_session=False)
                     db.commit()
                     if who != session.get('lf9e_recent_hash'):
                         session.pop('lf9e_skipped', None)
