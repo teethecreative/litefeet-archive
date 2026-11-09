@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Website Feedback | The LiteFeet Vault{% endblock %}
+{% block meta_description %}Share a website improvement idea or report a technical problem.{% endblock %}
+{% block content %}
+<section class="lfv-feedback">
+ <p class="lfv-feedback-kicker">THE LITEFEET VAULT</p>
+ {% if submitted %}
+ <h1>Feedback received</h1><p>Thank you for helping improve The LiteFeet Vault. Your message was submitted for review.</p><a href="/">Return to website</a>
+ {% else %}
+ <h1>Website feedback</h1><p>Tell us about something that is broken, confusing, missing, or could work better. For historical record corrections, use the relevant record's correction form instead.</p>
+ {% if error %}<p role="alert" class="lfv-feedback-error">{{ error }}</p>{% endif %}
+ <form method="post" action="/feedback/development">
+   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+   <div class="lfv-feedback-trap" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+   <label>What is this about?<select name="category" required><option>Bug</option><option>Feature Request</option><option>Design</option><option>Accessibility</option><option>Other</option></select></label>
+   <label>Short title<input type="text" name="title" required maxlength="140" minlength="3" placeholder="A short summary"></label>
+   <label>Details<textarea name="description" required minlength="10" maxlength="4000" rows="5" placeholder="What happened, or what would you like improved?"></textarea></label>
+   <label>Related page (optional)<input type="text" name="page_url" maxlength="500" placeholder="Paste a page path or URL"></label>
+   <label>Email for follow-up (optional)<input type="email" name="email" maxlength="254" autocomplete="email" placeholder="you@example.com"></label>
+   <p class="lfv-feedback-note">Your email, if provided, is used only for follow-up on this submission. Avoid submitting sensitive personal information.</p>
+   <button type="submit">Send feedback</button>
+ </form>
+ {% endif %}
+</section>
+<style>
+.lfv-feedback{width:min(100% - 32px,660px);margin:48px auto 85px;color:var(--text-color,#f0f4ff)}.lfv-feedback h1{font-size:clamp(28px,4vw,42px);line-height:1.15}.lfv-feedback p{line-height:1.6}.lfv-feedback-kicker{font-size:12px;letter-spacing:.08em;font-weight:800;color:#e2ba51}.lfv-feedback form{display:grid;gap:16px;margin-top:25px}.lfv-feedback label{display:grid;gap:6px;font-weight:700;font-size:13px}.lfv-feedback input,.lfv-feedback select,.lfv-feedback textarea{padding:12px;border-radius:7px;width:100%;border:1px solid #77849b;background:#fff;color:#162747;font:inherit}.lfv-feedback button{background:#dcb44b;color:#112747;border:0;border-radius:7px;padding:12px 20px;font-weight:800;width:fit-content;cursor:pointer}.lfv-feedback-note{font-size:12px}.lfv-feedback-error{color:#b91c1c;background:#fff3f3;padding:12px}.lfv-feedback-trap{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+</style>
+{% endblock %}
