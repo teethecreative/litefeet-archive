@@ -23,7 +23,9 @@ def test_submission_requires_csrf_and_saves_pending_only(website, database):
     client = website.test_client()
     soon = (datetime.now(ZoneInfo("America/New_York")).date() + timedelta(days=5)).isoformat()
     data = dict(title="Sunday Lab Session", gathering_type="lab",
-                start_date=soon, venue="The Studio", city="Harlem",
+                start_date=soon, start_time="18:00", end_time="20:00",
+                hosts="Community Organizer", address="123 Main Street, New York, NY",
+                venue="The Studio", city="Harlem",
                 contact_email="organizer@example.com",
                 additional_notes="Do not publish contact information.",
                 link="https://example.com/session")
@@ -81,11 +83,13 @@ def test_submission_validates_future_date_and_url(website, database):
         token = sess["lfv_submit_csrf"]
     yesterday = (datetime.now(ZoneInfo("America/New_York")).date() - timedelta(days=1)).isoformat()
     response = client.post("/submit", data=dict(csrf_token=token, title="Past Battle",
-                      gathering_type="battle", start_date=yesterday))
+                      gathering_type="battle", start_date=yesterday, start_time="18:00", end_time="20:00",
+                      hosts="Organizer", address="123 Main Street"))
     assert response.status_code == 302
     future = (datetime.now(ZoneInfo("America/New_York")).date() + timedelta(days=6)).isoformat()
     response = client.post("/submit", data=dict(csrf_token=token, title="Bad Link",
-                      gathering_type="battle", start_date=future, link="javascript:alert(1)"))
+                      gathering_type="battle", start_date=future, start_time="18:00", end_time="20:00",
+                      hosts="Organizer", address="123 Main Street", link="javascript:alert(1)"))
     assert response.status_code == 302
     with database[1]() as db:
         assert db.query(VaultGatheringSubmission).count() == 0
@@ -110,6 +114,8 @@ def test_weekly_submission_expands_on_selected_weekdays_only(website, database):
         ("start_time", "18:00"),
         ("end_time", "21:30"),
         ("venue", "The ARC"),
+        ("hosts", "ARC Team"),
+        ("address", "123 Main Street, New York, NY"),
         ("recurrence_rule", "weekly"),
         ("recurrence_weekdays", "0"),
         ("recurrence_weekdays", "1"),
@@ -191,3 +197,45 @@ def test_calendar_day_filters_and_detail_stays_on_site(website):
     assert "https://www.instagram.com/teennightnyc/" in body
     not_found = client.get("/calendar/events/2026-11-10/does-not-exist")
     assert not_found.status_code == 404
+
+
+def test_submission_requires_time_host_and_location(website, database):
+    client = website.test_client()
+    day = (datetime.now(ZoneInfo("America/New_York")).date() + timedelta(days=3)).isoformat()
+    client.get("/submit")
+    with client.session_transaction() as sess:
+        token = sess["lfv_submit_csrf"]
+    common = dict(csrf_token=token, title="Community Class",
+                  gathering_type="class", start_date=day)
+    incomplete = [
+        dict(start_time="18:00", end_time="19:00", hosts="Teacher"),
+        dict(start_time="18:00", end_time="19:00", address="123 Main St"),
+        dict(start_time="18:00", hosts="Teacher", address="123 Main St"),
+        dict(start_time="19:00", end_time="18:00", hosts="Teacher", address="123 Main St"),
+    ]
+    for fields in incomplete:
+        response = client.post("/submit", data=dict(common, **fields))
+        assert response.status_code == 302
+    with database[1]() as db:
+        assert db.query(VaultGatheringSubmission).count() == 0
+
+
+def test_yearly_virtual_submission_is_pending(website, database):
+    client = website.test_client()
+    day = (datetime.now(ZoneInfo("America/New_York")).date() + timedelta(days=7)).isoformat()
+    client.get("/submit")
+    with client.session_transaction() as sess:
+        token = sess["lfv_submit_csrf"]
+    response = client.post("/submit", data=dict(
+        csrf_token=token, title="Online Annual Event", gathering_type="event",
+        start_date=day, start_time="12:00", end_time="13:00",
+        hosts="Online Organizer", virtual="1", address="Zoom link sent upon registration",
+        recurrence_rule="yearly",
+    ))
+    assert response.status_code == 303
+    with database[1]() as db:
+        item = db.query(VaultGatheringSubmission).one()
+        assert item.recurrence_rule == "yearly"
+        assert item.virtual is True
+        assert item.address == "Zoom link sent upon registration"
+        assert item.status == "pending"

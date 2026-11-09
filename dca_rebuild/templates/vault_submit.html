@@ -23,40 +23,45 @@
 </select></label>
 <label>Name / title <input name="title" maxlength="240" placeholder="What is it called?" required></label>
 </div>
+<p class="lfv-submit-hint">Fields marked * are required.</p>
 <div class="lfv-submit-two">
-<label>Start date <input type="date" name="start_date" required></label>
-<label>End date <span class="lfv-submit-optional">Optional</span><input type="date" name="end_date"></label>
+<label>Start date * <input type="date" name="start_date" id="start-date" required></label>
+<label>End date <span class="lfv-submit-optional">Optional — multi-day events only</span><input type="date" name="end_date" id="end-date"></label>
 </div>
-<fieldset class="lfv-submit-repeat" style="border:1px solid #9b9b9b;border-radius:10px;padding:16px;margin:12px 0">
-<legend>Repeat schedule</legend>
-<label>Repeats <select name="recurrence_rule" id="recurrence-rule">
-{% for value,label in recurrence_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+<div class="lfv-submit-two">
+<label>Start time * <input type="time" name="start_time" required></label>
+<label>End time * <input type="time" name="end_time" required></label>
+</div>
+<div class="lfv-submit-recurrence">
+<label class="lfv-submit-check"><input type="checkbox" id="repeat-toggle"> This event repeats</label>
+<div id="repeat-options" hidden>
+<input type="hidden" name="recurrence_rule" id="recurrence-rule" value="none">
+<div class="lfv-submit-two">
+<label>Repeat <select id="repeat-frequency">
+{% for value,label in recurrence_choices %}{% if value != 'none' %}<option value="{{ value }}" {% if value == 'weekly' %}selected{% endif %}>{{ label }}</option>{% endif %}{% endfor %}
 </select></label>
+<label>Until <span class="lfv-submit-optional">Optional</span><input type="date" name="recurrence_until" id="recurrence-until"></label>
+</div>
 <div id="recurrence-weekdays" hidden>
-<p>Which days does this happen?</p>
-<div class="lfv-repeat-days" style="display:flex;flex-wrap:wrap;gap:12px">
+<span class="lfv-submit-days-title">Repeat on</span>
+<div class="lfv-repeat-days">
 {% for value,label in [('0','Mon'),('1','Tue'),('2','Wed'),('3','Thu'),('4','Fri'),('5','Sat'),('6','Sun')] %}
 <label><input type="checkbox" name="recurrence_weekdays" value="{{ value }}"> {{ label }}</label>
 {% endfor %}
 </div>
 </div>
-<label id="recurrence-until" hidden>Repeat until <span class="lfv-submit-optional">Optional</span><input type="date" name="recurrence_until"></label>
-<p class="lfv-submit-privacy">For repeating events, use Start date as the first session. Leave End date empty; Repeat until controls the final session.</p>
-</fieldset>
-<div class="lfv-submit-two">
-<label>Start time <span class="lfv-submit-optional">Optional</span><input type="time" name="start_time"></label>
-<label>End time <span class="lfv-submit-optional">Optional</span><input type="time" name="end_time"></label>
+</div>
 </div>
 <div class="lfv-submit-two">
-<label>Location / venue <span class="lfv-submit-optional">Optional</span><input name="venue" maxlength="240" placeholder="Venue or meeting place"></label>
-<label>City / borough <span class="lfv-submit-optional">Optional</span><input name="city" maxlength="120" placeholder="HARLEM, BRONX, BROOKLYN…"></label>
-</div>
-<label>Street address <span class="lfv-submit-optional">Optional</span><input name="address" maxlength="350" placeholder="If applicable"></label>
-<label class="lfv-submit-check"><input type="checkbox" name="virtual" value="1"> This is online / virtual</label>
-<div class="lfv-submit-two">
-<label>Host / organizer <span class="lfv-submit-optional">Optional</span><input name="hosts" maxlength="400" placeholder="Who's putting it together?"></label>
+<label>Host / organizer * <input name="hosts" maxlength="400" placeholder="Who's hosting?" required></label>
 <label>Admission <span class="lfv-submit-optional">Optional</span><input name="admission" maxlength="160" placeholder="Free, $10, donation…"></label>
 </div>
+<label class="lfv-submit-check"><input type="checkbox" name="virtual" id="virtual-event" value="1"> This is a virtual event</label>
+<div class="lfv-submit-two">
+<label>Location / venue <span class="lfv-submit-optional">Optional</span><input name="venue" maxlength="240" placeholder="Venue or meeting place"></label>
+<label>City / borough <span class="lfv-submit-optional">Optional</span><input name="city" maxlength="120" placeholder="Harlem, Bronx, Brooklyn…"></label>
+</div>
+<label><span id="location-label">Street address *</span><input name="address" id="event-location" maxlength="350" placeholder="Street address for in-person events" required><span class="lfv-submit-optional" id="location-help">For virtual events, enter the Zoom/meeting link or instructions for getting it.</span></label>
 <label>Details <span class="lfv-submit-optional">Optional</span><textarea name="description" maxlength="3000" rows="3" placeholder="What should people know?"></textarea></label>
 <label>Event / registration / source link <span class="lfv-submit-optional">Optional</span><input type="url" name="link" maxlength="1200" placeholder="HTTPS://…"></label>
 <details class="lfv-submit-more"><summary>Contact & additional notes (optional)</summary>
@@ -73,24 +78,44 @@
 <script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
 <script>
 (function(){
+  const repeatToggle=document.getElementById('repeat-toggle');
+  const repeatOptions=document.getElementById('repeat-options');
   const rule=document.getElementById('recurrence-rule');
+  const frequency=document.getElementById('repeat-frequency');
   const weekdays=document.getElementById('recurrence-weekdays');
   const until=document.getElementById('recurrence-until');
-  const date=document.querySelector('[name="start_date"]');
+  const startDate=document.getElementById('start-date');
+  const endDate=document.getElementById('end-date');
   const boxes=[...document.querySelectorAll('[name="recurrence_weekdays"]')];
-  function sync(){
-    const recurring=rule.value!=='none';
-    weekdays.hidden=rule.value!=='weekly';
-    until.hidden=!recurring;
-    if(!recurring){until.querySelector('input').value='';}
-    if(rule.value==='weekly'&&!boxes.some(x=>x.checked)&&date.value){
-      const day=new Date(date.value+'T12:00:00').getDay();
+  const virtualToggle=document.getElementById('virtual-event');
+  const locationInput=document.getElementById('event-location');
+  const locationLabel=document.getElementById('location-label');
+
+  function syncRepeat(){
+    const recurring=repeatToggle.checked;
+    repeatOptions.hidden=!recurring;
+    rule.value=recurring?frequency.value:'none';
+    weekdays.hidden=!recurring||frequency.value!=='weekly';
+    endDate.disabled=recurring;
+    if(recurring)endDate.value='';
+    if(!recurring){until.value='';boxes.forEach(box=>box.checked=false);}
+    if(recurring&&frequency.value==='weekly'&&!boxes.some(box=>box.checked)&&startDate.value){
+      const day=new Date(startDate.value+'T12:00:00').getDay();
       boxes[(day+6)%7].checked=true;
     }
-    if(rule.value!=='weekly')boxes.forEach(x=>x.checked=false);
+    if(frequency.value!=='weekly')boxes.forEach(box=>box.checked=false);
   }
-  rule.addEventListener('change',sync);
-  date.addEventListener('change',sync);
-  sync();
+  function syncLocation(){
+    const virtual=virtualToggle.checked;
+    locationLabel.textContent=virtual?'Meeting link or joining instructions *':'Street address *';
+    locationInput.placeholder=virtual?'Zoom URL or how to receive the meeting link':'Street address for in-person events';
+    locationInput.setAttribute('autocomplete',virtual?'off':'street-address');
+  }
+  repeatToggle.addEventListener('change',syncRepeat);
+  frequency.addEventListener('change',syncRepeat);
+  startDate.addEventListener('change',syncRepeat);
+  virtualToggle.addEventListener('change',syncLocation);
+  syncRepeat();
+  syncLocation();
 })();
 </script></body></html>
