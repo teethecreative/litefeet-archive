@@ -4939,3 +4939,6 @@ install_music_public(app, engine)
 # Sitewide browser identity, social previews and Instagram-ready sharing.
 from dca_rebuild.share_sitewide import install_sharing
 install_sharing(app)
+
+from dca_rebuild.share_awards import install_award_sharing
+install_award_sharing(app)
