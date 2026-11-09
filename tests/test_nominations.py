@@ -545,3 +545,67 @@ def test_writein_directory_shows_same_nominee_totals_as_standings(website, datab
     standings = client.get(PATH + '?view=results').get_data(as_text=True)
     assert 'Write In Dancer' in standings
     assert '<td>2</td>' in standings
+
+
+def test_done_from_grid_clears_email_and_keeps_nomination_cooldown(website, database):
+    """Done changes browser identity, not permanent nomination rules."""
+    client = website.test_client()
+    token = identify(client, 'first@example.com')
+    nomination = client.post(PATH, data={
+        'csrf_token': token, 'category_id': 1, 'name': 'Dancer One',
+        'reason': 'Participated in documented LiteFeet events during 2026.'
+    })
+    assert nomination.status_code == 302
+    with database[1]() as db:
+        assert db.query(DCANominationSubmission).count() == 1
+    grid = client.get(PATH).get_data(as_text=True)
+    assert 'DONE / VIEW NOMINEE STANDINGS' in grid
+    assert 'name="action" value="done"' in grid
+    bad_token = client.post(PATH, data={
+        'csrf_token': 'invalid', 'action': 'done', 'next': 'standings'
+    })
+    assert bad_token.status_code == 400
+    with client.session_transaction() as sess:
+        assert sess.get('lf9e_recent_hash')
+
+    done = client.post(PATH, data={
+        'csrf_token': token, 'action': 'done', 'next': 'standings'
+    })
+    assert done.status_code == 303
+    assert done.headers['Location'].endswith('?view=results')
+    standings = client.get(done.headers['Location']).get_data(as_text=True)
+    assert 'NOMINEE STANDINGS' in standings
+    assert 'Done / Reset email' not in standings
+    with client.session_transaction() as sess:
+        assert 'lf9e_recent_hash' not in sess
+        assert 'lf9e_skipped' not in sess
+    entry = client.get(PATH).get_data(as_text=True)
+    assert 'name="email"' in entry
+    assert 'data-category-id=' not in entry
+    with database[1]() as db:
+        assert db.query(DCANominationSubmission).count() == 1
+
+    # Same email still has the same rolling 24-hour category cooldown.
+    identify(client, 'first@example.com')
+    assert 'Already nominated / cooldown active' in client.get(
+        PATH + '?category=1').get_data(as_text=True)
+    client.post(PATH, data={'csrf_token': token, 'action': 'done'})
+    # Different email gets its own independent category availability.
+    identify(client, 'second@example.com')
+    grid = client.get(PATH).get_data(as_text=True)
+    assert 'AVAILABLE NOW' in grid
+
+
+def test_done_on_standings_returns_to_email_entry(website):
+    client = website.test_client()
+    token = identify(client, 'first@example.com')
+    page = client.get(PATH + '?view=results').get_data(as_text=True)
+    assert 'Done / Reset email' in page
+    response = client.post(PATH, data={
+        'csrf_token': token, 'action': 'done'
+    }, follow_redirects=True)
+    assert response.status_code == 200
+    assert b'name="email"' in response.data
+    assert b'data-category-id=' not in response.data
+    with client.session_transaction() as sess:
+        assert 'lf9e_recent_hash' not in sess

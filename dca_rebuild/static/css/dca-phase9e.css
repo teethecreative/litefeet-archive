@@ -15,6 +15,11 @@
 .lf9e-secondary,.lf9e-add{background:transparent;border:1px solid currentColor;color:inherit;padding:13px 18px}
 .lf9e button:disabled{opacity:.5;cursor:not-allowed}
 .lf9e-buttons{display:flex;flex-wrap:wrap;gap:12px;margin:1.5rem 0}
+.lf9e-done-form{margin:0}
+.lf9e-done-button{font:inherit;cursor:pointer;min-height:40px;border-radius:8px}
+.lf9e-standings-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.lf9e-standings-actions .lf9e-done-button{font-size:.85rem;padding:8px 12px}
+.lf9e-done-button:focus-visible{outline:2px solid var(--lfv-gold,#d5ad27);outline-offset:3px}
 .lf9e-leaderboard{border:1px solid rgba(130,130,130,.45);padding:1.2rem;min-width:0;align-self:start}
 .lf9e-leaderboard h2{margin-top:0}.lf9e-leaderboard ol{padding:0;list-style:none}
 .lf9e-leaderboard li{display:flex;justify-content:space-between;gap:12px;align-items:start;padding:11px 0;border-bottom:1px solid rgba(130,130,130,.25);font-size:.9rem}

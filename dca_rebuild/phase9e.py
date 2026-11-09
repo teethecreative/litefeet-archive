@@ -929,10 +929,14 @@ def install_phase9e(app, ns):
                 if not token or not secrets.compare_digest(token, session['lf9e_nomination_csrf']):
                     abort(400, 'Invalid submission token')
                 action = request.form.get('action', 'nominate')
-                if action == 'change-email':
+                if action in ('change-email', 'done'):
+                    # Done ends only this visitor's selected email session.
+                    # Persistent per-email nomination cooldowns and submissions stay intact.
                     session.pop('lf9e_recent_hash', None)
                     session.pop('lf9e_skipped', None)
-                    return redirect(url_for('dca_nominations_closed'))
+                    if action == 'done' and request.form.get('next') == 'standings':
+                        return redirect(url_for('dca_nominations_closed', view='results'), code=303)
+                    return redirect(url_for('dca_nominations_closed'), code=303)
                 if action == 'identify':
                     email = request.form.get('email', '').strip().casefold()
                     if len(email) > 254 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
