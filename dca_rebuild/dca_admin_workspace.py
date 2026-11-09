@@ -15,6 +15,7 @@ from dca_rebuild.models import (
 
 SECTIONS = ("overview", "categories", "activity", "results", "history")
 PAGE_SIZE = 20
+CATEGORY_PAGE_SIZE = 10
 
 
 def _page():
@@ -38,6 +39,7 @@ def install_dca_admin_workspace(app, ns):
         if section not in SECTIONS:
             abort(404)
         page = _page()
+        page_size = CATEGORY_PAGE_SIZE if section == "categories" else PAGE_SIZE
         term = (request.args.get("q") or "").strip()[:100]
         with ns["SessionLocal"]() as db:
             edition = db.query(DCAEdition).filter_by(year=2026).first()
@@ -67,7 +69,7 @@ def install_dca_admin_workspace(app, ns):
                              status=x.status, source=x.source_type)
                         for x in query.order_by(DCACategory.name.asc(),
                                                 DCACategory.id.asc()).offset(
-                                                    (page-1)*PAGE_SIZE).limit(PAGE_SIZE).all()]
+                                                    (page-1)*page_size).limit(page_size).all()]
             elif section == "activity":
                 query = (db.query(DCANominationSubmission, DCANominee.name, DCACategory.name)
                          .join(DCANominee, DCANominee.id == DCANominationSubmission.nominee_id)
@@ -111,6 +113,7 @@ def install_dca_admin_workspace(app, ns):
                 total = 0
         return render_template(
             "admin_dca_workspace.html", section=section, stats=stats,
-            rows=rows, total=total, page=page, pages=max(1,(total+PAGE_SIZE-1)//PAGE_SIZE),
+            rows=rows, total=total, page=page, page_size=page_size,
+            pages=max(1,(total+page_size-1)//page_size),
             search=term,
         )
