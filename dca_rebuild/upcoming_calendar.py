@@ -39,6 +39,70 @@ def curated_weekly_events():
     return tuple(item for item in items if item.get("status") == "published")
 
 
+CATEGORY_NAMES = {
+    "lab": "Lab Session", "class": "Class", "battle": "Battle",
+    "workshop": "Workshop", "link_up": "Link-Up", "press_conference": "Press Conference",
+    "awards": "Awards Ceremony", "community": "Community Gathering",
+    "other": "Other Event", "event": "Event",
+}
+WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+
+
+def _friendly_time(value):
+    """Format an ISO 24-hour time without changing already human-readable times."""
+    if not value:
+        return ""
+    try:
+        return datetime.strptime(value, "%H:%M").strftime("%I:%M %p").lstrip("0")
+    except (ValueError, TypeError):
+        return value
+
+
+def _time_range(start, end):
+    start_display, end_display = _friendly_time(start), _friendly_time(end)
+    return (start_display + "–" + end_display if start_display and end_display
+            else start_display or end_display)
+
+
+def _recurrence_label(rule, weekdays=None, until=None):
+    if not rule or rule == "none":
+        return ""
+    if rule == "weekly":
+        try:
+            days = sorted({int(x) for x in (weekdays or "").split(",") if x != ""})
+            names = [WEEKDAYS[x] for x in days if 0 <= x <= 6]
+        except (TypeError, ValueError):
+            names = []
+        if len(names) == 1:
+            label = "Every " + names[0]
+        elif len(names) > 1:
+            label = "Every " + ", ".join(names[:-1]) + " and " + names[-1]
+        else:
+            label = "Every week"
+    else:
+        label = {"daily": "Every day", "monthly": "Every month",
+                 "yearly": "Every year"}.get(rule, "")
+    if until and label:
+        try:
+            label += " through " + date.fromisoformat(until).strftime("%B %-d, %Y")
+        except (TypeError, ValueError):
+            pass
+    return label
+
+
+def _clean_description(description, *duplicates):
+    """Do not show details already displayed in venue, timing, or change notices."""
+    value = (description or "").strip()
+    if not value:
+        return ""
+    if value in {part for part in duplicates if part}:
+        return ""
+    # Legacy curated summaries commonly concatenate the exact same fields with middots.
+    parts = [p.strip() for p in value.split(" · ")]
+    known = {part.strip() for part in duplicates if part}
+    parts = [part for part in parts if part and part not in known]
+    return " · ".join(parts)
+
 def upcoming_calendar(today=None, session_factory=None, window_days=30):
     """Return an inclusive NY-local calendar window (30 days by default)."""
     today = today or datetime.now(ZoneInfo("America/New_York")).date()
@@ -67,7 +131,8 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
                             href="/archive/records/" + record["slug"],
                             status="ANNOUNCED", description=record.get("summary") or "",
                             venue=record.get("venue") or "", event_time=record.get("time") or "",
-                            organizer=record.get("host") or ""))
+                            organizer=record.get("host") or "", virtual=False))
+
     # Approved public contributions only; private contact and notes never leave admin.
     if session_factory is not None:
         with session_factory() as db:
@@ -79,6 +144,7 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
                 try:
                     first_day = date.fromisoformat(item.start_date)
                     until = date.fromisoformat(item.recurrence_until) if item.recurrence_until else None
+                    last_day = date.fromisoformat(item.end_date) if item.end_date else first_day
                 except (TypeError, ValueError):
                     continue
                 rule = item.recurrence_rule or "none"
@@ -103,27 +169,31 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
                         # Monthly on the same day number; nonexistent dates are skipped.
                         matches = day.day == first_day.day
                     elif rule == "yearly":
-                        # Anniversaries on leap day occur only in leap years.
                         matches = (day.month, day.day) == (first_day.month, first_day.day)
                     else:
-                        matches = day == first_day
+                        # Multi-day, nonrepeating events appear on every scheduled date.
+                        matches = first_day <= day <= last_day
                     if not matches:
                         continue
                     identity = (day.isoformat(), item.title.casefold())
                     if identity in seen:
                         continue
                     seen.add(identity)
-                    details = " · ".join(part for part in (
-                        "–".join((item.start_time or "", item.end_time or "")) if item.start_time and item.end_time else (item.start_time or ""),
-                        item.venue, item.address, item.city
-                    ) if part)
-                    entries.append(dict(date=day.isoformat(), title=item.title,
-                                        category=item.gathering_type or "event",
-                                        href=item.link or "", status="COMMUNITY",
-                                        description=item.description or details or item.gathering_type,
-                                        venue=item.venue or "", address=item.address or "",
-                                        city=item.city or "", event_time=(item.start_time or "") + (("–" + item.end_time) if item.end_time else ""),
-                                        organizer=item.hosts or "", admission=item.admission or ""))
+                    entries.append(dict(
+                        date=day.isoformat(), title=item.title,
+                        category=item.gathering_type or "event",
+                        href=item.link or "", status="COMMUNITY",
+                        description=item.description or "",
+                        venue=item.venue or "", address=item.address or "",
+                        city=item.city or "", virtual=bool(item.virtual),
+                        event_time=_time_range(item.start_time, item.end_time),
+                        start_time=item.start_time or "", end_time=item.end_time or "",
+                        timezone=item.timezone or "America/New_York",
+                        organizer=item.hosts or "", admission=item.admission or "",
+                        recurrence=_recurrence_label(rule, item.recurrence_weekdays, item.recurrence_until),
+                        series_start=item.start_date, series_end=item.end_date or "",
+                        recurrence_rule=rule,
+                    ))
     for item in curated_events():
         try:
             event_date = date.fromisoformat(item["date"])
@@ -138,9 +208,19 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
         entries.append(dict(date=event_date.isoformat(), title=item["title"],
                             category=item.get("category") or "event",
                             href=item.get("href") or "",
-                            status="UPCOMING", description=item.get("venue") or "",
-                            venue=item.get("venue") or "", event_time=item.get("time") or "",
-                            organizer=item.get("host") or "", notice=item.get("notice") or ""))
+                            status="UPCOMING",
+                            description=item.get("description") or "",
+                            venue=item.get("venue_name") or item.get("venue") or "",
+                            address=item.get("address") or "",
+                            location_note=item.get("location_note") or "",
+                            event_time=_time_range(item.get("start_time"), item.get("end_time")) or item.get("time") or "",
+                            start_time=item.get("start_time") or "",
+                            end_time=item.get("end_time") or "",
+                            timezone="America/New_York",
+                            organizer=item.get("host") or "", admission=item.get("admission") or "",
+                            notice=item.get("notice") or "", virtual=False,
+                            recurrence="", series_start=item["date"], series_end=""))
+
     # Recurring public sessions are expanded only within the visible calendar window.
     # Closures and schedule changes remain subject to organizer notifications.
     for item in curated_weekly_events():
@@ -153,16 +233,38 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
             if identity in seen:
                 continue
             seen.add(identity)
-            details = " · ".join(part for part in (
-                item.get("time"), item.get("venue"), item.get("notice")) if part)
+            recurrence_days = ",".join(str(i) for i in weekdays)
             entries.append(dict(date=event_date.isoformat(), title=item["title"],
                                 category=item.get("category") or "event",
                                 href=item.get("href") or "",
-                                status="WEEKLY", description=details,
-                                venue=item.get("venue") or "", event_time=item.get("time") or "",
-                                organizer=item.get("host") or "", notice=item.get("notice") or ""))
+                                status="WEEKLY", description=item.get("description") or "",
+                                venue=item.get("venue_name") or item.get("venue") or "",
+                                address=item.get("address") or "",
+                                event_time=_time_range(item.get("start_time"), item.get("end_time")) or item.get("time") or "",
+                                start_time=item.get("start_time") or "",
+                                end_time=item.get("end_time") or "",
+                                timezone="America/New_York",
+                                organizer=item.get("host") or "", notice=item.get("notice") or "",
+                                virtual=False,
+                                recurrence=_recurrence_label("weekly", recurrence_days),
+                                series_start="", series_end=""))
     for entry in entries:
         entry["display_date"] = date.fromisoformat(entry["date"]).strftime("%B %-d, %Y")
+        entry["category_label"] = CATEGORY_NAMES.get(entry.get("category"), "Event")
+        if entry.get("series_end") and entry.get("recurrence_rule") == "none":
+            try:
+                entry["date_range"] = (
+                    date.fromisoformat(entry["series_start"]).strftime("%B %-d, %Y")
+                    + " – " + date.fromisoformat(entry["series_end"]).strftime("%B %-d, %Y")
+                )
+            except (TypeError, ValueError):
+                entry["date_range"] = ""
+        else:
+            entry["date_range"] = ""
+        entry["description"] = _clean_description(
+            entry.get("description"), entry.get("venue"),
+            entry.get("address"), entry.get("event_time"), entry.get("notice"),
+        )
         source = entry.pop("href", "")
         entry["source_href"] = source if source and source != "/submit" else ""
         entry["href"] = "/calendar/events/" + entry["date"] + "/" + event_slug(entry["title"])

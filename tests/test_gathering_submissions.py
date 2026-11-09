@@ -284,3 +284,74 @@ def test_upcoming_calendar_category_counts_are_per_day(website, database):
     assert calendar["days"][0]["category_counts"] == [
         {"count": 2, "label": "Lab Sessions"}
     ]
+
+
+def test_calendar_detail_displays_recurring_schedule_without_duplicate_location(website):
+    client = website.test_client()
+    response = client.get("/calendar/events/2026-11-11/let-s-lab-at-the-arc")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert "Lab Session" in html
+    assert "Every Monday, Tuesday and Wednesday" in html
+    assert "501 Carlton Avenue" in html
+    assert "Google Calendar" in html
+    assert "Apple / Outlook calendar" in html
+    assert "Directions" in html
+    # The source venue is not also displayed as the event's descriptive body.
+    assert "About this event" not in html
+    ics = client.get("/calendar/events/2026-11-11/let-s-lab-at-the-arc/calendar.ics")
+    assert ics.status_code == 200
+    assert "text/calendar" in ics.content_type
+    assert "DTSTART;TZID=America/New_York:20261111T180000" in ics.get_data(as_text=True)
+
+
+def test_virtual_event_access_and_private_fields_not_exposed(website, database):
+    from datetime import date
+    chosen = date.today() + timedelta(days=8)
+    with database[1].begin() as db:
+        db.add(VaultGatheringSubmission(
+            title="Virtual Practice Session", gathering_type="lab",
+            start_date=chosen.isoformat(), start_time="17:00", end_time="18:00",
+            hosts="Online Team", virtual=True,
+            address="Zoom joining information provided after registration",
+            contact_email="private@example.org",
+            additional_notes="Internal moderation note",
+            status="approved",
+        ))
+    client = website.test_client()
+    path = f"/calendar/events/{chosen.isoformat()}/virtual-practice-session"
+    response = client.get(path)
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert "Virtual event" in html
+    assert "How to join" in html
+    assert "Zoom joining information provided after registration" in html
+    assert "Directions" not in html
+    assert "private@example.org" not in html
+    assert "Internal moderation note" not in html
+
+
+def test_multi_day_event_appears_each_day_and_shows_full_range(website, database):
+    from datetime import date
+    start = datetime.now(ZoneInfo("America/New_York")).date() + timedelta(days=9)
+    finish = start + timedelta(days=2)
+    with database[1].begin() as db:
+        db.add(VaultGatheringSubmission(
+            title="Three Day Community Workshop", gathering_type="workshop",
+            start_date=start.isoformat(), end_date=finish.isoformat(),
+            start_time="13:00", end_time="15:00",
+            hosts="Community Organizer", address="123 Main Street, Brooklyn, NY",
+            status="approved",
+        ))
+    calendar = upcoming_calendar(today=start, window_days=3, session_factory=database[1])
+    occurrences = [x for x in calendar["events"] if x["title"] == "Three Day Community Workshop"]
+    assert [x["date"] for x in occurrences] == [
+        start.isoformat(), (start + timedelta(days=1)).isoformat(), finish.isoformat()
+    ]
+    page = website.test_client().get(
+        f"/calendar/events/{(start + timedelta(days=1)).isoformat()}/three-day-community-workshop")
+    assert page.status_code == 200
+    html = page.get_data(as_text=True)
+    assert "Workshop" in html
+    assert start.strftime("%B") in html
+    assert finish.strftime("%Y") in html

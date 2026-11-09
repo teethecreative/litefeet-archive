@@ -87,9 +87,11 @@ def test_teen_nite_recurs_tuesday_thursday_with_closure_notice():
     assert len(sessions) == 9
     assert all(date.fromisoformat(e['date']).weekday() in (1, 3) for e in sessions)
     assert sessions[0]['date'] == '2026-11-10'
-    assert all('6:00–9:00 PM' in e['description'] for e in sessions)
-    assert all('237 East 104th Street' in e['description'] for e in sessions)
-    assert all('Check @teennightnyc on Instagram for closure notifications' in e['description'] for e in sessions)
+    # Timing, location and closure notices are structured fields, not repeated in descriptions.
+    assert all(e['start_time'] == '18:00' and e['end_time'] == '21:00' for e in sessions)
+    assert all('237 East 104th Street' in e['address'] for e in sessions)
+    assert all('Check @teennightnyc on Instagram for closure notifications' in e['notice'] for e in sessions)
+    assert all(not e['description'] for e in sessions)
     assert all(e['href'].startswith('/calendar/events/') for e in sessions)
     assert all(e['source_href'] == 'https://www.instagram.com/teennightnyc/' for e in sessions)
 
