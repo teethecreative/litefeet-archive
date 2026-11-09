@@ -30,6 +30,7 @@
   {% elif not identified %}
   <section class="lf9e-introduction" aria-labelledby="intro-title">
     <h1 id="intro-title">NOMINATIONS</h1>
+    {% include "dca_eligibility_notice.html" %}
     <p class="lf9e-round-notice"><strong>THIS IS THE NOMINATION ROUND, NOT THE FINAL VOTE.</strong> You're suggesting who deserves to be a finalist. Nothing you submit here counts as a vote for the award winner.</p>
     <ol class="lf9e-intro-steps">
       <li>Pick a category and nominate a dancer, producer, crew, creator or other eligible candidate.</li>
@@ -62,6 +63,7 @@
     {% if selected %}
       {% set category = selected %}
       <h1 class="lf9e-category-title">{{ category.name }}</h1>
+      <p class="lf9e-note">Nominees must have relevant LiteFeet activity between November 2025 and November 2026. New nominations require a reason.</p>
       <p>{{ category.description }}</p>
       <p class="lf9e-round-notice">Suggest a new name or add a nomination to someone already listed. Each nomination increases the candidate's total; this is not a vote for the winner.</p>
       {% if show_form %}
@@ -74,6 +76,7 @@
       {% endif %}
     {% else %}
       <h1 class="lf9e-nomination-heading">Nominate for the 2026 Awards</h1>
+      {% include "dca_eligibility_notice.html" %}
       <p class="lf9e-nomination-description">Nominations are open for suggestions. Suggest a new entry or support an existing nominee. Each nomination adds one to that nominee's total; the top five eligible nominees in each category advance to the final vote. You can submit one nomination per category every rolling 24 hours.</p>
       {% if closed %}<p class="lf9e-message">Nominations are closed. Your history and suggestions remain available inside each category.</p>{% endif %}
       <section aria-labelledby="official-title"><h2 id="official-title">Official Top 25</h2>
