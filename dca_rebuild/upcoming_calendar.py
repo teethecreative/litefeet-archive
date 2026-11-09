@@ -63,6 +63,7 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
             continue
         seen.add(identity)
         entries.append(dict(date=event_date.isoformat(), title=record["title"],
+                            category=record.get("gathering_type") or "event",
                             href="/archive/records/" + record["slug"],
                             status="ANNOUNCED", description=record.get("summary") or "",
                             venue=record.get("venue") or "", event_time=record.get("time") or "",
@@ -117,6 +118,7 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
                         item.venue, item.address, item.city
                     ) if part)
                     entries.append(dict(date=day.isoformat(), title=item.title,
+                                        category=item.gathering_type or "event",
                                         href=item.link or "", status="COMMUNITY",
                                         description=item.description or details or item.gathering_type,
                                         venue=item.venue or "", address=item.address or "",
@@ -134,6 +136,7 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
             continue
         seen.add(identity)
         entries.append(dict(date=event_date.isoformat(), title=item["title"],
+                            category=item.get("category") or "event",
                             href=item.get("href") or "",
                             status="UPCOMING", description=item.get("venue") or "",
                             venue=item.get("venue") or "", event_time=item.get("time") or "",
@@ -153,6 +156,7 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
             details = " · ".join(part for part in (
                 item.get("time"), item.get("venue"), item.get("notice")) if part)
             entries.append(dict(date=event_date.isoformat(), title=item["title"],
+                                category=item.get("category") or "event",
                                 href=item.get("href") or "",
                                 status="WEEKLY", description=details,
                                 venue=item.get("venue") or "", event_time=item.get("time") or "",
@@ -166,12 +170,36 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
     by_day = {}
     for item in entries:
         by_day.setdefault(item["date"], []).append(item)
+    category_names = {
+        "lab": ("Lab Session", "Lab Sessions"),
+        "class": ("Class", "Classes"),
+        "battle": ("Battle", "Battles"),
+        "workshop": ("Workshop", "Workshops"),
+        "link_up": ("Link-Up", "Link-Ups"),
+        "press_conference": ("Press Conference", "Press Conferences"),
+        "awards": ("Awards Ceremony", "Awards Ceremonies"),
+        "community": ("Community Gathering", "Community Gatherings"),
+        "other": ("Other Event", "Other Events"),
+        "event": ("Event", "Events"),
+    }
     days = []
     for offset in range(window_days):
         day = today + timedelta(days=offset)
+        day_events = by_day.get(day.isoformat(), [])
+        counts = {}
+        for event in day_events:
+            category = event.get("category") or "event"
+            if category not in category_names:
+                category = "event"
+            counts[category] = counts.get(category, 0) + 1
+        count_labels = [
+            {"count": count, "label": category_names[category][0 if count == 1 else 1]}
+            for category, count in counts.items()
+        ]
         days.append(dict(iso=day.isoformat(), number=day.day,
                          weekday=day.strftime("%a").upper(), month=day.strftime("%B").upper(),
-                         events=by_day.get(day.isoformat(), []), today=day == datetime.now(ZoneInfo('America/New_York')).date()))
+                         events=day_events, category_counts=count_labels,
+                         today=day == datetime.now(ZoneInfo("America/New_York")).date()))
     return dict(start=today.isoformat(), end=end.isoformat(),
                 label=today.strftime("%B %d").upper() + " – " + end.strftime("%B %d, %Y").upper(),
                 days=days, events=entries)
