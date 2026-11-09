@@ -461,7 +461,7 @@ def test_bad_one_family_variations_are_main_moves_not_openers(website):
     assert status["main_count"] == 1
     from pathlib import Path
     js = (Path(__file__).resolve().parents[1]/"dca_rebuild/static/js/lock-in-game.js").read_text()
-    assert '["Footwork","Combo","Bad One"].includes(card.move_family)' in js
+    assert '["Footwork","Combo","Bad One","Spank"].includes(card.move_family)' in js
 
 
 def test_lock_in_compact_rules_blank_deck_and_full_suggested_dancer_list(website):
