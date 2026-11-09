@@ -16,6 +16,8 @@
         </a>
 
 
+        <div class="lfv-admin-nav-actions">
+          <button type="button" class="lfv-admin-theme-toggle" aria-label="Switch to dark mode" aria-pressed="false"><span aria-hidden="true">◐</span> <span class="lfv-admin-theme-text">DARK MODE</span></button>
         <form
             method="post"
             action="{{ url_for('admin_logout') }}"
@@ -27,6 +29,7 @@
                 LOG OUT
             </button>
         </form>
+        </div>
 
     </div>
 
@@ -98,4 +101,37 @@
 @media(max-width:650px){.ledger-admin-nav__links .lf-admin-awards-dropdown__menu{left:auto;right:0;max-width:min(90vw,280px)}}
 </style>
 
+
+<style id="lfv-admin-theme-controls">
+.lfv-admin-nav-actions{display:flex;align-items:center;gap:10px}
+.lfv-admin-theme-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:9px 12px;border:1px solid var(--border,#d7dce5);background:var(--surface,#fff);color:var(--text,#09152a);font:800 11px Arial,Helvetica,sans-serif;cursor:pointer}
+.lfv-admin-theme-toggle:hover,.lfv-admin-theme-toggle:focus-visible{border-color:var(--gold,#c9a227)}
+html[data-theme="dark"] .ledger-admin-nav{background:var(--surface,#09111e);color:var(--text,#fff)}
+html[data-theme="dark"] .ledger-admin-nav__links a{color:var(--text,#fff)}
+html[data-theme="dark"] .ledger-admin-nav__links a:hover{color:var(--gold-light,#e7cb68)}
+@media(max-width:540px){.lfv-admin-nav-actions{gap:6px}.lfv-admin-theme-text{display:none}.lfv-admin-theme-toggle{min-width:38px;padding:8px}}
+</style>
+<script>
+(function(){
+ var key='litefeet-ledger-theme';
+ function apply(theme){
+  document.documentElement.dataset.theme=theme;
+  document.documentElement.classList.toggle('dark',theme==='dark');
+  document.querySelectorAll('.lfv-admin-theme-toggle').forEach(function(button){
+   button.setAttribute('aria-label','Switch to '+(theme==='dark'?'light':'dark')+' mode');
+   button.setAttribute('aria-pressed',String(theme==='dark'));
+   var label=button.querySelector('.lfv-admin-theme-text');
+   if(label) label.textContent=theme==='dark'?'LIGHT MODE':'DARK MODE';
+  });
+ }
+ var saved='light';try{saved=localStorage.getItem(key)||'light';}catch(_){}
+ apply(saved==='dark'?'dark':'light');
+ document.querySelectorAll('.lfv-admin-theme-toggle').forEach(function(button){
+  button.addEventListener('click',function(){
+   var next=document.documentElement.dataset.theme==='dark'?'light':'dark';
+   apply(next);try{localStorage.setItem(key,next);}catch(_){}
+  });
+ });
+})();
+</script>
 {% include "_site_chrome.html" %}
