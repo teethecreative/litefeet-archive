@@ -112,46 +112,9 @@ What makes someone part of the LiteFeet community?
 What questions do new people always ask about LiteFeet?
 What does the public misunderstand about LiteFeet?
 What should people know before speaking on LiteFeet?
-What LiteFeet chants do you know?
-What's your favorite LiteFeet chant?
-What chants are we missing?
-What team chants do you remember?
-Who created a LiteFeet chant you know?
-What chants are used in battles?
-What chant gets a crowd hyped?
-What chant throws off an opponent?
-What are the words to a chant you remember?
-What chant does your team use?
-What old-school LiteFeet chant do you remember?
-Are there different versions of the same chant?
-Which chant belongs to a specific dancer?
-Where did you first hear a LiteFeet chant?
-Which chants deserve Lock In cards?
-What chant starts a round?
-What chant ends a round?
-What chant does the crowd answer back to?
-What's a chant with a call and response?
-What chant is used when someone lands a trick?
-What chant is used when someone tweaks?
-What chant is used when a team enters?
-What chant is used after a win?
-What chant is used during a cypher?
-Which chant did you hear at an old LiteFeet event?
-What's a chant that newer dancers might not know?
-Which chant has more than one name?
-What chant does everyone get wrong?
-What does your favorite chant mean?
-Can you describe when a chant should be used?
-What teams have their own chants?
-Can a chant be used by anyone, or only one team?
-Who first taught you a LiteFeet chant?
-What is the origin of a chant you know?
-What chant would you teach the next generation?
-What chant was big during your LiteFeet era?
-Which chants should never be forgotten?
-Can you share a video showing a LiteFeet chant?
-What chant deserves its own archive entry?
-What chant needs its spelling or wording verified?
+What's your favorite chant?
+What chant don't you hear anymore?
+Which team has the best chant, and what is it?
 What LiteFeet combos do you know?
 What's your favorite LiteFeet combo?
 What combo variations should we archive?
@@ -162,20 +125,11 @@ What is your signature combo?
 Which combos work best after a Rev Up?
 What combo do you use after Tone Wop?
 What combos are best during a battle?
-What combo did your team use?
-What combos have different names?
 What combo do most people misidentify?
-What's the difference between two similar combos?
 Which old-school combos have disappeared?
-What combo works well with Knee Drop?
-Which combo transitions into Swiss Drop?
-Which combo leads into Coin Drop?
-What combos involve a floor drop?
-Which combos highlight musicality?
 What combo should become a Lock In card?
 Who taught you a combo you still use?
 Can you describe a combo step by step?
-Can you link a video of a combo?
 What combo did you invent or modify?
 What types of Bad One do you know?
 What's the difference between Bad One and Good One?
@@ -197,39 +151,22 @@ Can you describe how to do Good One?
 Can you share footage of a Bad One variation?
 What hat tricks do you know?
 What's your favorite LiteFeet hat trick?
-What hat trick variations are missing?
 Who created a hat trick you remember?
 Who is known for a signature hat trick?
-What hat tricks involve a toss?
-What hat tricks involve a catch?
-What hat tricks involve a spin?
 What is the hardest hat trick to execute?
-Which hat trick works best in a battle?
 What's a beginner-friendly hat trick?
 What is an advanced hat trick?
-What hat trick does your team use?
 What hat trick changed LiteFeet?
 Can you name three different hat tricks?
 What hat trick should become a Lock In card?
-Can you show footage of a hat trick variation?
-What hat tricks have different names?
-How do you transition from footwork into a hat trick?
 What LiteFeet footwork moves do you know?
 What's your favorite footwork variation?
 Who is known for a signature footwork step?
 What footwork should every beginner learn?
 What footwork variations are missing?
 What is the cleanest footwork you've seen?
-What footwork steps are commonly confused?
-What footwork can you do to a slow beat?
-What footwork works best on a fast beat?
 What is the hardest footwork variation?
-What is an old-school footwork step?
 What footwork move does your team use?
-What footwork combines well with a Bad One?
-What footwork combines well with a combo?
-What footwork connects to a hat trick?
-What is a Stutter Step variation?
 What Butterfly variations do you know?
 Who taught you your favorite footwork?
 What footwork should become a Lock In card?
@@ -242,13 +179,8 @@ Who is known for ankle work?
 What does good ankle control look like?
 What ankle move is hardest to learn?
 What ankle move is easiest to start with?
-What ankle move did your team use?
 What ankle moves were popular in your era?
-What's a variation of Around the World?
 What variations of Tweak do you know?
-What ankle moves combine with Stutter Step?
-Which ankle moves fit a fast song?
-Which ankle moves fit a slow song?
 What's the difference between ankle moves and footwork?
 Who created an ankle move you know?
 What ankle move should become a Lock In card?
@@ -257,9 +189,6 @@ Can you share footage of an ankle move?
 What Spank moves do you know?
 What's your favorite Spank move?
 What variations of Baby O Step do you know?
-Who taught you Baby O Step?
-Who made Baby O Step popular?
-How would you explain Baby O Step to someone new?
 What Spank moves should become Lock In cards?
 What Spank moves are missing from the Archive?
 What is the hardest Spank variation?
@@ -267,10 +196,7 @@ Which Spank moves are tied to particular dancers?
 What Spank moves were popular in your era?
 Can you link footage of a Spank move?
 What shoe tricks do you know?
-What's the difference between Shoe Clap and Shoe Foot Clap?
 What shirt tricks do you remember?
-What trick combines with a combo?
-Which trick is associated with Public Enemies?
 What tricks were invented by specific dancers?
 What tricks are missing from our card list?
 Which trick should get a Level 1, 2, or 3 card?
@@ -285,7 +211,6 @@ What dancers were in Brotherhood?
 Who was in Team Rocket?
 What roster changed during your LiteFeet era?
 What team nicknames or aliases do you remember?
-What team chant should be archived?
 What was your team's signature move?
 Which teams had rivalries?
 What team-only abilities would make sense as Lock In cards?
@@ -294,9 +219,7 @@ When was your team formed?
 When did a team change names?
 Which former members should be listed historically?
 Can you provide a roster source or team photo?
-What team-specific cards would be inaccurate?
 Which team events should be archived?
-What songs were used for old-school LiteFeet battles?
 Which beat works best for a Rev Up?
 What song is perfect for a Tone Wop?
 What song makes a Spank round hit harder?
@@ -311,8 +234,6 @@ Which 1v1 battle should be archived?
 Which 2v2 battle should be archived?
 Which team battle should be archived?
 What was the outcome of a battle you attended?
-Who hosted the battle?
-Do you remember the date or year of a battle?
 Which event had the best crowd energy?
 What LiteFeet classes or lab sessions do you remember?
 Which cypher locations should be documented?
@@ -323,7 +244,6 @@ What competition format did your favorite event use?
 What was the first battle you entered?
 What era of LiteFeet needs more documentation?
 What move deserves a Lock In card?
-What chant deserves a Lock In card?
 Which dancer's signature move should become a card?
 What team-specific upgrade card would you propose?
 What general upgrade should be available to everyone?
