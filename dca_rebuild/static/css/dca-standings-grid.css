@@ -1,0 +1,137 @@
+/* DCA 2026 standings: match the nomination category card grid.
+   Scoped to standings only; nomination and archive pages remain unchanged. */
+html.lfv-sitewide body.lfv-standings-body .lfv-breadcrumbs,
+html.lfv-sitewide body.lfv-standings-body .lfv-program-nav {
+  display: none !important;
+}
+html.lfv-sitewide body.lfv-standings-body main#nominations.lf9e-standings-page {
+  box-sizing: border-box;
+  width: min(calc(100% - 44px), 1140px) !important;
+  max-width: 1140px !important;
+  margin: 18px auto 56px !important;
+  padding: clamp(22px, 3vw, 34px) !important;
+  background: var(--lfv-surface, #fff) !important;
+  border: 1px solid var(--lfv-line, #cbd5e1);
+  border-radius: 12px;
+  color: var(--lfv-ink, #0b1932);
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings-surface {
+  display: block;
+  min-width: 0;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings-section-title {
+  font-size: clamp(1.15rem, 2vw, 1.45rem) !important;
+  line-height: 1.25;
+  margin: 26px 0 16px !important;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 0 22px !important;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings-heading h1 {
+  font-size: clamp(1.5rem, 3vw, 2.25rem) !important;
+  line-height: 1.15;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings-actions {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: start;
+  gap: 13px !important;
+  margin: 0 0 28px !important;
+  max-width: 100%;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings > details.lfv5-category-disclosure {
+  display: block !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 14px !important;
+  overflow: hidden;
+  background: var(--lfv-surface, #fff) !important;
+  border: 1px solid var(--lfv-line, #cbd5e1) !important;
+  border-radius: 9px !important;
+  box-shadow: none !important;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings > details.lfv5-category-disclosure > summary {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 16px !important;
+  grid-template-rows: auto auto;
+  align-content: center !important;
+  align-items: center !important;
+  column-gap: 10px !important;
+  row-gap: 6px !important;
+  min-height: 92px !important;
+  margin: 0 !important;
+  padding: 13px 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings .lfv5-category-name {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  font-size: .86rem !important;
+  font-weight: 850;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings .lfv5-category-status {
+  grid-column: 1;
+  grid-row: 2;
+  white-space: normal !important;
+  font-size: .68rem !important;
+  line-height: 1.35;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings .lfv5-category-chevron {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  justify-self: end;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings > details.lfv5-category-disclosure[open] {
+  border-color: var(--lfv-gold, #caa326) !important;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings .lfv5-category-panel {
+  border-top: 1px solid var(--lfv-line, #cbd5e1) !important;
+  padding: 10px 0 15px !important;
+  overflow-wrap: anywhere;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings .lfv5-category-panel table {
+  width: 100%;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings .lfv5-category-panel tr {
+  min-width: 0;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings .lfv5-category-panel :is(th, td) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+html.lfv-sitewide .lf9e-standings-page .lf9e-standings > details.lfv5-category-disclosure > summary:focus-visible {
+  outline: 3px solid var(--lfv-gold, #caa326);
+  outline-offset: -3px;
+}
+@media (max-width: 950px) {
+  html.lfv-sitewide .lf9e-standings-page .lf9e-standings {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 620px) {
+  html.lfv-sitewide body.lfv-standings-body main#nominations.lf9e-standings-page {
+    width: calc(100% - 24px) !important;
+    padding: 18px 14px !important;
+    margin-top: 12px !important;
+  }
+  html.lfv-sitewide .lf9e-standings-page .lf9e-standings {
+    grid-template-columns: 1fr !important;
+  }
+  html.lfv-sitewide .lf9e-standings-page .lf9e-standings-actions {
+    width: 100%;
+  }
+}
