@@ -264,7 +264,7 @@ def test_lock_in_has_one_game_testing_area_with_two_modes(website):
     assert 'id="lock-moves-mode" hidden' in html
     assert html.index('id="practice"') > html.index('id="lock-moves-mode"')
     assert html.index('id="practice"') < html.index('id="lock-samples"')
-    assert 'Score this move set' in html
+    assert 'Test my moves' in html
     assert 'Start 1v1' in html
     assert html.count('Practice the move-set phase') == 0
 
@@ -275,3 +275,27 @@ def test_lock_in_has_one_game_testing_area_with_two_modes(website):
     assert 'setGameMode("moves")' in js
     assert 'e.target.name==="lock-game-mode"' in js
     assert 'search.has("play")' in js
+
+
+def test_move_set_practice_generates_opponent_move_song_and_arena(website):
+    page = website.test_client().get("/archive/lock-in")
+    assert page.status_code == 200
+    html = page.get_data(as_text=True)
+    assert 'Choose a move-set challenge' not in html
+    assert 'id="round-picker"' not in html
+    assert 'id="lock-generate-situation"' in html
+    assert 'id="lock-opponent-move"' in html
+    assert 'id="lock-opponent-song"' in html
+    assert 'id="lock-opponent-arena"' in html
+    assert 'id="lock-response-moves"' in html
+    assert 'id="lock-score-response"' in html
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[1] /
+          "dca_rebuild/static/js/lock-in-game.js").read_text()
+    assert 'function generateSituation()' in js
+    assert 'practiceCandidates("Move")' in js
+    assert 'practiceCandidates("Song")' in js
+    assert 'practiceCandidates("Arena")' in js
+    assert 'practiceScenario.selected.length>=3' in js
+    assert 'function scoreSituation()' in js
+    assert 'Special card effects and counters are not automatically scored' in js
