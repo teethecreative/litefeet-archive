@@ -15,7 +15,7 @@
 <main class="lfv-writeins lfv3-wrap">
   <p class="lfv3-eyebrow">Dancer's Choice Awards / 2026</p>
   <h1>WRITE-IN CATEGORIES</h1>
-  <p class="lfv-writeins-lead">Every submitted category outside the official Top 25 is listed here, except entries removed for moderation. You can support a category by nominating someone in it. These are category suggestions, not a final ballot.</p>
+  <p class="lfv-writeins-lead">All eligible community-suggested categories outside the Top 25 are open for nomination support while nominations are active. Choose a category to nominate someone or support a nominee already listed. These are not final votes.</p>
   <section class="lfv-writeins-explainer" aria-labelledby="lfv-how-it-works">
     <h2 id="lfv-how-it-works">HOW WRITE-INS WORK</h2>
     <ol>
@@ -32,6 +32,7 @@
       <label for="lfv-writeins-query">Search write-in categories</label>
       <div><input id="lfv-writeins-query" type="search" name="q" value="{{ search }}" placeholder="Search category names"><button type="submit" class="lfv-writeins-button">SEARCH</button></div>
     </form>
+    <p class="lfv-writeins-note">Nomination totals include eligible-to-display submissions awaiting moderation; category qualification uses reviewed support.</p>
     <div class="lfv-writeins-list">
       {% for item in entries %}
       <article class="lfv-writeins-item">
@@ -39,18 +40,33 @@
           {% if item.description %}<p>{{ item.description }}</p>{% endif %}
           {% if item.qualified %}<span class="lfv-writeins-status">QUALIFIED</span>
           {% elif item.meets_threshold %}<span class="lfv-writeins-status">REQUIREMENTS MET</span>
-          {% elif item.published %}<span class="lfv-writeins-status">OPEN FOR SUPPORT</span>
+          {% elif item.accepting_support %}<span class="lfv-writeins-status">OPEN FOR SUPPORT</span>
+          {% elif item.published %}<span class="lfv-writeins-status">NOMINATIONS CLOSED</span>
           {% else %}<span class="lfv-writeins-status">COMMUNITY SUGGESTION</span>{% endif %}
-          {% if item.published %}<p class="lfv-writeins-count">{{ item.supporters }} unique supporters · {{ item.nominees }} nominees</p>{% endif %}
+          {% if item.published %}
+          <p class="lfv-writeins-count">{{ item.public_supporters }} unique supporters · {{ item.public_nominees | length }} nominees</p>
+          <details class="lfv-writeins-nominees">
+            <summary>View nominees ({{ item.public_nominees | length }}) <span class="lfv-writeins-nominees-plus" aria-hidden="true">+</span></summary>
+            {% if item.public_nominees %}
+            <table>
+              <caption class="lf9e-visually-hidden">{{ item.name }} nomination totals</caption>
+              <thead><tr><th scope="col">Nominee</th><th scope="col">Nominations</th></tr></thead>
+              <tbody>{% for nominee in item.public_nominees %}
+                <tr><th scope="row"><a href="{{ url_for('dca_nominations_closed', view='results', category=item.category_id, suggestion=nominee.id) }}">{{ nominee.name }}</a></th><td>{{ nominee.count }}</td></tr>
+              {% endfor %}</tbody>
+            </table>
+            {% else %}<p>No nominations yet.</p>{% endif %}
+          </details>
+          {% else %}<p class="lfv-writeins-count">No nominations yet. Support this category to begin.</p>{% endif %}
         </div>
         <div class="lfv-writeins-action">
           {% if item.category_id and item.open_for_nominations %}
-          <a class="lfv-writeins-button" href="{{ url_for('dca_nominations_closed', category=item.category_id) }}">NOMINATE <span aria-hidden="true">→</span></a>
-          {% elif not item.published %}
+          <a class="lfv-writeins-button" href="{{ url_for('dca_nominations_closed', category=item.category_id) }}">SUPPORT CATEGORY <span aria-hidden="true">→</span></a>
+          {% elif not item.published and item.accepting_support %}
           <form action="{{ url_for('phase9e_activate_writein') }}" method="post">
             <input type="hidden" name="csrf_token" value="{{ writeins_csrf }}">
             <input type="hidden" name="category" value="{{ item.name }}">
-            <button class="lfv-writeins-button" type="submit">NOMINATE <span aria-hidden="true">→</span></button>
+            <button class="lfv-writeins-button" type="submit">SUPPORT CATEGORY <span aria-hidden="true">→</span></button>
           </form>
           {% else %}<span class="lfv-writeins-closed">NOMINATIONS CLOSED</span>{% endif %}
         </div>

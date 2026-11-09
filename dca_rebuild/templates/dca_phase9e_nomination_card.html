@@ -12,7 +12,8 @@
       <label>Team <span class="lf9e-optional">(optional)</span><input name="team" maxlength="250" placeholder="Team or crew"></label>
       <label>Location <span class="lf9e-optional">(optional)</span><input name="location" maxlength="250" placeholder="City / state"></label>
       <label>Instagram <span class="lf9e-optional">(optional)</span><input name="instagram" maxlength="100" placeholder="@username"></label>
-      <label>Why are you nominating them? <span class="lf9e-optional">(optional)</span><textarea name="reason" maxlength="2000" rows="3" placeholder="What makes them stand out?"></textarea></label>
+      <label>Why does this nominee qualify? <span aria-hidden="true">*</span><textarea name="reason" minlength="20" maxlength="2000" rows="4" required placeholder="Describe their relevant LiteFeet activity or contributions during November 2025–November 2026."></textarea></label>
+      <p class="lf9e-note">Qualifications are based on activity between November 2025 and November 2026, not past reputation alone.</p>
       <button type="button" class="lf9e-add" data-add-later>+ SAVE ANOTHER IDEA FOR LATER</button>
       <p class="lf9e-note">The + saves a future nomination idea in this browser only. It is not submitted, and the category cooldown still applies.</p>
       <button type="submit" class="lf9e-primary" {% if not category.available %}disabled{% endif %}>{% if closed %}NOMINATIONS CLOSED{% elif category.remaining %}CATEGORY ON COOLDOWN{% else %}SUBMIT NOMINATION{% endif %}</button>
