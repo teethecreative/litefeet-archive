@@ -1,12 +1,13 @@
 <details class="lf9e-standings-category lfv5-category-disclosure" id="standings-{{ category.id }}" {% if selected and selected.id == category.id %}open{% endif %}>
   <summary>
     <span class="lfv5-category-name">{{ category.name }}</span>
+    {% if closed or identified %}
     <span class="lfv5-category-status">
       {% if closed %}CLOSED
       {% elif category.remaining %}COOLDOWN <span data-cooldown-until="{{ category.next_at }}">{{ (category.remaining // 3600) }}H {{ ((category.remaining % 3600) // 60) }}M</span>
-      {% elif identified %}AVAILABLE NOW
-      {% else %}IDENTIFY TO SEE COOLDOWN{% endif %}
+      {% else %}AVAILABLE NOW{% endif %}
     </span>
+    {% endif %}
     <span class="lfv5-category-chevron" aria-hidden="true">+</span>
   </summary>
   <div class="lfv5-category-panel">
