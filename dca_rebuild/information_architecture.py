@@ -65,7 +65,8 @@ def install_information_architecture(app, ns):
                         dict(label='Submit', href='/submit')],
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
                        dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
-                       dict(label='Historical Results', href='/awards/dancers-choice/2023')],
+                       dict(label='HypeItUpTV Awards', href='/awards/hypeitup'),
+                       dict(label='DCA 2023 Archive', href='/awards/dancers-choice/2023')],
             'about': [dict(label="Founder's Letter", href='/about/letter'),
                       dict(label='Our Mission', href='/about/mission'),
                       dict(label='About the Archive', href='/about/archive'),
@@ -109,12 +110,17 @@ def install_information_architecture(app, ns):
                 breadcrumbs.append(dict(label=section['label'] if path == section['href'] else 'Current page', href=None))
             else:
                 breadcrumbs = []
-        if path.startswith('/awards/dancers-choice'):
-            program = [dict(label='2026', href='/awards/dancers-choice/2026'),
-                       dict(label='2023', href='/awards/dancers-choice/2023')]
-        elif path.startswith('/awards/litefeet-awards'):
-            program = [dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
-                       dict(label='Contribute historical records', href='/awards/litefeet-awards#contribute')]
+        if path.startswith('/awards/') and not path.startswith('/awards/litefeet-awards/submit'):
+            program = [dict(label='Awards overview', href='/awards'),
+                       dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
+                       dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
+                       dict(label='HypeItUpTV Awards', href='/awards/hypeitup')]
+            if path.startswith('/awards/dancers-choice'):
+                program.extend([dict(label='DCA 2026', href='/awards/dancers-choice/2026'),
+                                dict(label='DCA 2023 Archive', href='/awards/dancers-choice/2023')])
+            elif path.startswith('/awards/litefeet-awards'):
+                program.append(dict(label='Contribute historical records',
+                                    href='/awards/litefeet-awards#contribute'))
         calendar = upcoming_calendar(session_factory=ns['SessionLocal'])
         page_size = 5
         selected_day = request.args.get('calendar_day', '').strip()

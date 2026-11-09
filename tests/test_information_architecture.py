@@ -24,7 +24,8 @@ def test_ready_navigation_and_every_active_link(website):
     assert [x['label'] for x in items] == ['Home','The Archive','Music','Media','Awards','About']
     links = [x['href'] for x in items] + [c['href'] for x in items for c in x['children']]
     assert not any('/admin' in x or '/nominations' in x for x in links)
-    assert not any(x in links for x in ['/people','/stories','/awards/hypeitup'])
+    assert not any(x in links for x in ['/people','/stories'])
+    assert '/awards/hypeitup' in links
     for href in links:
         url = urlsplit(href)
         response = client.get(url.path + ('?' + url.query if url.query else ''))
@@ -179,3 +180,51 @@ def test_nested_right_drawer_keyboard_and_program_links(website,width):
             browser.close()
     finally:
         server.shutdown();thread.join(timeout=5)
+
+
+def test_awards_overview_and_hypeitup_are_integrated_and_vault_branded(website):
+    client = website.test_client()
+    overview = client.get('/awards')
+    assert overview.status_code == 200
+    text = overview.get_data(as_text=True)
+    assert 'three distinct awards programs' in text
+    assert 'Two distinct awards programs' not in text
+    for name, href in [
+        ('Dancer’s Choice Awards', '/awards/dancers-choice'),
+        ('LiteFeet Awards', '/awards/litefeet-awards'),
+        ('HypeItUpTV Awards', '/awards/hypeitup'),
+    ]:
+        assert name in text
+        assert f'href="{href}"' in text
+
+    hype = client.get('/awards/hypeitup')
+    assert hype.status_code == 200
+    body = hype.get_data(as_text=True)
+    assert 'HypeItUpTV Awards' in body
+    assert 'THE LITEFEET VAULT / AWARDS' in body
+    assert 'LITEFEET LEDGER' not in body.upper()
+    assert 'href="/awards"' in body
+    assert 'aria-label="Award program navigation"' in body
+    assert 'HypeItUpTV Awards | The LiteFeet Vault' in body.split('</head>', 1)[0]
+
+    nav = next(item for item in navigation(text) if item['key'] == 'awards')
+    assert [child['href'] for child in nav['children']] == [
+        '/awards/dancers-choice', '/awards/litefeet-awards',
+        '/awards/hypeitup', '/awards/dancers-choice/2023',
+    ]
+    assert nav['children'][-1]['label'] == 'DCA 2023 Archive'
+
+    for path in ('/awards/dancers-choice/2026', '/awards/litefeet-awards',
+                 '/awards/hypeitup'):
+        page = client.get(path).get_data(as_text=True)
+        assert 'aria-label="Award program navigation"' in page
+        assert 'href="/awards/hypeitup"' in page
+        assert 'href="/awards/litefeet-awards"' in page
+        assert 'href="/awards/dancers-choice"' in page
+
+    archive = client.get('/archive/timeline').get_data(as_text=True)
+    nav_content = archive.split('aria-label="ARCHIVE NAVIGATION"', 1)[1].split('</nav>', 1)[0]
+    assert 'PEOPLE &amp; TEAMS' in nav_content
+    assert '>AWARDS</a>' in nav_content
+    assert '2023 AWARDS' not in nav_content
+    assert 'PEOPLE &amp; CREWS' not in nav_content

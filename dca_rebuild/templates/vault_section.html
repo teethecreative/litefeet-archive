@@ -20,10 +20,11 @@
 {% elif section == 'lock-in' %}
 {% include "lock_in.html" %}
 {% elif section == 'awards' %}
-<header><p class="vault-kicker">AWARDS</p><h1>Recognition from the culture.</h1><p>Two distinct awards programs documenting and recognizing the LiteFeet community.</p></header>
+<header><p class="vault-kicker">AWARDS</p><h1>Recognition from the culture.</h1><p>Explore three distinct awards programs recognizing the people and contributions that shape LiteFeet.</p></header>
 <div class="vault-section-grid">
-  <a class="vault-collection" href="{{ url_for('vault_dca_program') }}"><strong>Dancer’s Choice Awards</strong><span>Community-led categories, nominations, and voting. Explore 2026 or earlier DCA editions.</span></a>
-  <a class="vault-collection" href="{{ url_for('lfa_home') }}"><strong>LiteFeet Awards</strong><span>The established annual awards program and its historical records.</span></a>
+  <a class="vault-collection" href="{{ url_for('vault_dca_program') }}"><strong>Dancer’s Choice Awards</strong><span>Community-led categories, nominations, and voting. Explore the 2026 round and earlier editions.</span></a>
+  <a class="vault-collection" href="{{ url_for('lfa_home') }}"><strong>LiteFeet Awards</strong><span>Explore the annual awards program, preserved results, and community contributions.</span></a>
+  <a class="vault-collection" href="{{ url_for('hypeitup_awards') }}"><strong>HypeItUpTV Awards</strong><span>Follow the HypeItUpTV Awards. Program details and verified results will be added as they become available.</span></a>
 </div>
 {% elif section == 'dca' %}
 <header><p class="vault-kicker">DANCER'S CHOICE AWARDS</p><h1>The community chooses.</h1>
