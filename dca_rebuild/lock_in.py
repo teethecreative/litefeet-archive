@@ -95,7 +95,7 @@ RULEBOOK_CARDS = {
               "D Cole", "Devoe", "FNL", "L Pac", "Millbank", "Mindlezz Thoughtz",
               "NYC Subway", "Rucker Park / Kingdom", "Slattery Park", "Terror Dome",
               "Times Square", "The Lite House", "Union Square", "Wild Out Saturdays"),
-    "Move": ("Rev Up", "Bad One", "Jo Smooth Bad One", "Good One", "Tone Whop", "Butterfly", "Tweak",
+    "Move": ("Rev Up", "Bad One", "Jo Smooth Bad One", "Good One", "Baby O Step", "Tone Whop", "Butterfly", "Tweak",
              "Around The World", "Gangsta Lean", "Stutter Step", "Knee Drop",
              "Swiss Drop", "Coin Drop", "Kiss Of Death", "Needle & Thread",
              "Villain Swoop", "Streetfighter Walk", "No Gwop", "Slatter Gwop"),
@@ -120,6 +120,7 @@ MOVE_FAMILIES = {
     "bad one": "Bad One",
     "jo smooth bad one": "Bad One",
     "good one": "Bad One",
+    "baby o step": "Spank",
     "butterfly": "Footwork",
     "tweak": "Footwork",
     "around the world": "Footwork",
@@ -137,7 +138,58 @@ MOVE_FAMILIES = {
 }
 
 OPENING_FAMILIES = frozenset(("Rev Ups", "Wops"))
-MAIN_MOVE_FAMILIES = frozenset(("Footwork", "Combo", "Bad One"))
+MAIN_MOVE_FAMILIES = frozenset(("Footwork", "Combo", "Bad One", "Spank"))
+
+
+# Historical rosters transcribed from the user's Litefeet Card Planning rulebook.
+# These record documented team associations, not verified current membership.
+# Keep match rules exact; never infer membership from a partial name or surname.
+SOURCE_TEAM_ROSTERS = {
+    "Public Enemies": (
+        "Sha Illz", "Ben 10", "J Man", "J 10", "Willy Wonka", "Hellboy",
+        "Funny Black", "Reel Hetic", "M Cool", "AJO",
+    ),
+    "2 Real Boys": (
+        "Action Kid", "A Gutta", "Boog Star", "C Eazy", "Chubz Lite",
+        "Dat Smooth", "Dill Star", "Doofy", "D Sparkz", "Fro Man",
+        "Goya", "Hoodstar", "J Rite", "Kid 50", "Kid Patt",
+        "Larry Smooth", "Mike Gz", "Oyey", "Ramz Lite", "Smooth Chick",
+        "Smooth Kidd", "Spot Lite", "Star Live", "Tye Smooth",
+    ),
+    "Bomb Squad": ("Kid Smoove", "Live Motion", "Noah", "Red Ink"),
+    "Street Fighters": (
+        "40 Kal", "Baby Gwop", "Don Lite", "Hollywood", "J Hype",
+        "Melly Melz", "Scrappy Doo", "Slim Goodies", "Rick The Shooter",
+    ),
+    "Team Rocket": ("E Solo", "Soundwave", "QuTip"),
+}
+
+
+def documented_teams(dancer_name):
+    """Return team names with an exact case-insensitive name match in source rosters."""
+    name = str(dancer_name or "").strip().casefold()
+    return tuple(team for team, names in SOURCE_TEAM_ROSTERS.items()
+                 if name and any(member.casefold() == name for member in names))
+
+
+def proposed_shoe_trick_bp(trick_name, dancer_name):
+    """Rulebook draft values, for review; no runtime battle BP is awarded.
+
+    Named-dancer +10 and generic Public Enemies +5 are treated as alternative
+    proposed bonuses, not stacked, until rulebook approval.
+    """
+    name = str(trick_name or "").strip().casefold()
+    if name not in ("shoe clap", "shoe foot clap"):
+        return None
+    special = ("ben 10" if name == "shoe clap" else "j man")
+    teams = documented_teams(dancer_name)
+    bonus = 10 if str(dancer_name or "").strip().casefold() == special else (
+        5 if "Public Enemies" in teams else 0
+    )
+    return dict(base=3, conditional_bonus=bonus, proposed_total=3 + bonus,
+                condition=("named dancer" if bonus == 10 else
+                           "Public Enemies roster" if bonus == 5 else "none"),
+                source_status="rulebook draft — needs approval")
 
 
 def sample_deck_readiness(categories):
@@ -174,6 +226,7 @@ def public_card_catalog(extra_songs=()):
         if key not in catalog:
             catalog[key] = dict(id=f"{kind}::{name}", type=kind, name=name,
                                 move_family=MOVE_FAMILIES.get(name.casefold(), "") if kind == "Move" else "",
+                                documented_teams=documented_teams(name) if kind == "Dancer" else (),
                                 review_status="reference-only" if reference else "source-draft",
                                 producer="", artist="", source="", reference=reference)
         entry = catalog[key]
@@ -193,6 +246,9 @@ def public_card_catalog(extra_songs=()):
                 add(group["type"], name)
     for existing in DECKS.values():
         for name in existing["roster"]:
+            add("Dancer", name)
+    for roster in SOURCE_TEAM_ROSTERS.values():
+        for name in roster:
             add("Dancer", name)
     for kind, names in RULEBOOK_CARDS.items():
         for name in names:
