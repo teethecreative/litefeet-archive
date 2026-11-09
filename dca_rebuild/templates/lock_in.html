@@ -2,7 +2,7 @@
   <p class="vault-kicker">The LiteFeet Card Battle Game</p>
   <h1>Lock In</h1>
   <p>Build a round the way you’d build one on the floor. Pick your dancer, find the right track, and put your moves together before you call “locked in.” Lock In brings LiteFeet dancers, songs, moves, and battle spaces to the table.</p>
-  <nav aria-label="Game guide"><a href="#rules">How to play</a> · <a href="#decks">Build a deck</a> · <a href="#lock-workbench">Test the game</a> · <a href="#join">Get involved</a></nav>
+  <nav aria-label="Game guide"><a href="#rules">How to play</a> · <a href="#decks">Build a Sample Deck</a> · <a href="#lock-workbench">Test the Game</a> · <a href="#join">Get involved</a></nav>
 </header>
 <section id="rules">
   <h2>How to play</h2>
@@ -36,7 +36,7 @@
   <p>Build a 25–50 card deck with dancers, arenas, songs, moves, tricks, upgrades, fribs and other support cards. Producers are credited on Song Cards, not played as separate cards.</p>
 </section>
 <section id="decks" class="lock-deck-examples">
-  <h2>Build A Deck &amp; Test The Game</h2>
+  <h2>Build a Sample Deck</h2>
   <div class="lock-decks">
     {% for sample in sample_decks %}
     <article class="lock-sample-card">
@@ -54,7 +54,7 @@
 </section>
 <section id="lock-workbench" aria-labelledby="lock-builder-title">
   <h2 id="lock-builder-title">Your Deck</h2>
-  <p>Choose your cards, build a 25–50 card deck, then try a 1v1 battle.</p>
+  <p>Start with a sample deck or build your own, then choose a game mode.</p>
   <div class="lock-builder">
     <div>
       <h3>Build your deck</h3>
@@ -120,40 +120,50 @@
       <ul id="lock-deck-list" class="lock-card-list"></ul>
     </div>
     <div>
-      <h3>Test the game</h3>
-      <p>Pick your dancer, song and arena. Draw your hand, choose your moves, and lock in.</p>
-      <button id="lock-start" type="button">Start 1v1</button>
-      <div id="lock-battle" hidden aria-live="polite"></div>
+      <h3>Test the Game</h3>
+      <p>Choose how you want to play.</p>
+      <fieldset id="lock-mode-picker" class="lock-mode-picker">
+        <legend>Choose a game mode</legend>
+        <label><input type="radio" name="lock-game-mode" value="battle"> 1v1 Battle</label>
+        <label><input type="radio" name="lock-game-mode" value="moves"> Move-Set Practice</label>
+      </fieldset>
+      <div id="lock-battle-mode" hidden>
+        <p>Choose your dancer, song and arena, draw your hand, and lock in.</p>
+        <button id="lock-start" type="button">Start 1v1</button>
+        <div id="lock-battle" hidden aria-live="polite"></div>
+      </div>
+      <div id="lock-moves-mode" hidden>
+        <section id="practice" class="lock-move-set-practice">
+          <h4>Move-Set Practice</h4>
+          <p>Choose a challenge and put together your three-move set.</p>
+          <form action="{{ url_for('vault_lock_in') }}#practice" method="get">
+            <label for="round-picker">Choose a move-set challenge</label>
+            <select name="round" id="round-picker">
+              {% for key, option in rounds.items() %}<option value="{{ key }}" {% if key == round_key %}selected{% endif %}>{{ option.dancer }} · {{ option.scene }}</option>{% endfor %}
+            </select>
+            <button type="submit">Start drill</button>
+          </form>
+          <h3>{{ battle.dancer }} · {{ battle.scene }}</h3>
+          <p>{{ battle.cue }}</p>
+          <p>Your opponent starts at {{ battle.opponent }} BP. Choose up to three moves for 2 BP each.
+             Include {{ battle.combo|join(' + ') }} to {% if battle.reduce %}remove {{ battle.reduce }} BP from your opponent’s score{% else %}earn {{ battle.bonus }} extra BP{% endif %}.</p>
+          <form action="{{ url_for('vault_lock_in') }}#practice" method="get">
+            <input type="hidden" name="round" value="{{ round_key }}"><input type="hidden" name="play" value="1">
+            <fieldset><legend>Your move set</legend>
+            {% for move in battle.moves %}<label><input type="checkbox" name="move" value="{{ move }}" {% if move in selected %}checked{% endif %}> {{ move }}</label>{% endfor %}
+            </fieldset><button type="submit">Score this move set</button>
+          </form>
+          {% if error %}<p role="alert">{{ error }}</p>{% endif %}
+          {% if result %}<div class="lock-result"><h3>{{ result.outcome }} · {{ result.score }} to {{ result.opponent }} BP</h3>
+          <p>{{ selected|join(' + ') }} earned {{ result.base }} BP, plus {{ result.bonus }} BP in bonuses.{% if result.reduction %} Your counter removed {{ result.reduction }} opponent BP.{% endif %}</p>
+          <a href="{{ url_for('vault_lock_in', round=round_key) }}#practice">Replay this round</a> · <a href="{{ url_for('vault_lock_in', round=next_key) }}#practice">Next round · {{ rounds[next_key].dancer }}</a></div>{% endif %}
+        </section>
+      </div>
     </div>
   </div>
   <script id="lock-samples" type="application/json">{{ sample_decks|tojson }}</script>
   <script id="lock-card-catalog" type="application/json">{{ card_catalog|tojson }}</script>
   <script id="lock-restrictions" type="application/json">{{ card_restrictions|tojson }}</script>
-</section>
-<section id="practice">
-  <h2>Practice the move-set phase</h2>
-  <p>Choose a challenge and put together your three-move set.</p>
-  <form action="{{ url_for('vault_lock_in') }}#practice" method="get">
-    <label for="round-picker">Choose a move-set challenge</label>
-    <select name="round" id="round-picker">
-      {% for key, option in rounds.items() %}<option value="{{ key }}" {% if key == round_key %}selected{% endif %}>{{ option.dancer }} · {{ option.scene }}</option>{% endfor %}
-    </select>
-    <button type="submit">Start drill</button>
-  </form>
-  <h3>{{ battle.dancer }} · {{ battle.scene }}</h3>
-  <p>{{ battle.cue }}</p>
-  <p>Your opponent starts at {{ battle.opponent }} BP. Choose up to three moves for 2 BP each.
-     Include {{ battle.combo|join(' + ') }} to {% if battle.reduce %}remove {{ battle.reduce }} BP from your opponent’s score{% else %}earn {{ battle.bonus }} extra BP{% endif %}.</p>
-  <form action="{{ url_for('vault_lock_in') }}#practice" method="get">
-    <input type="hidden" name="round" value="{{ round_key }}"><input type="hidden" name="play" value="1">
-    <fieldset><legend>Your move set</legend>
-    {% for move in battle.moves %}<label><input type="checkbox" name="move" value="{{ move }}" {% if move in selected %}checked{% endif %}> {{ move }}</label>{% endfor %}
-    </fieldset><button type="submit">Score this move set</button>
-  </form>
-  {% if error %}<p role="alert">{{ error }}</p>{% endif %}
-  {% if result %}<div class="lock-result"><h3>{{ result.outcome }} · {{ result.score }} to {{ result.opponent }} BP</h3>
-  <p>{{ selected|join(' + ') }} earned {{ result.base }} BP, plus {{ result.bonus }} BP in bonuses.{% if result.reduction %} Your counter removed {{ result.reduction }} opponent BP.{% endif %}</p>
-  <a href="{{ url_for('vault_lock_in', round=round_key) }}#practice">Replay this round</a> · <a href="{{ url_for('vault_lock_in', round=next_key) }}#practice">Next round · {{ rounds[next_key].dancer }}</a></div>{% endif %}
 </section>
 <section id="join"><h2>Be part of Lock In</h2>
   <p>Dancers can pitch five stats, their strongest stat, a signature move, and what it should do in a battle. Song suggestions include producer credit and a proposed Common, Rare, or Legendary level. You can also suggest an arena, explain a team or song connection, or volunteer to playtest.</p>

@@ -171,7 +171,7 @@ def test_lock_in_has_compact_different_size_samples_and_search(website):
     response = website.test_client().get('/archive/lock-in')
     assert response.status_code == 200
     html = response.get_data(as_text=True)
-    assert 'Build A Deck &amp; Test The Game' in html
+    assert '<h2>Build a Sample Deck</h2>' in html
     assert 'id="lock-search"' in html
     assert 'id="lock-catalog"' in html
     assert 'id="lock-request-panel"' in html
@@ -251,3 +251,27 @@ def test_song_dropdown_alphabetical_and_producer_metadata(website):
     assert 'a.name.localeCompare(b.name' in js
     assert 'Prod. ' in js
     assert 'id="lock-producer"' not in js
+
+
+def test_lock_in_has_one_game_testing_area_with_two_modes(website):
+    html = website.test_client().get('/archive/lock-in').get_data(as_text=True)
+    assert '<h2>Build a Sample Deck</h2>' in html
+    assert html.count('id="practice"') == 1
+    assert html.count('id="lock-workbench"') == 1
+    assert 'name="lock-game-mode" value="battle"' in html
+    assert 'name="lock-game-mode" value="moves"' in html
+    assert 'id="lock-battle-mode" hidden' in html
+    assert 'id="lock-moves-mode" hidden' in html
+    assert html.index('id="practice"') > html.index('id="lock-moves-mode"')
+    assert html.index('id="practice"') < html.index('id="lock-samples"')
+    assert 'Score this move set' in html
+    assert 'Start 1v1' in html
+    assert html.count('Practice the move-set phase') == 0
+
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[1] /
+          'dca_rebuild/static/js/lock-in-game.js').read_text()
+    assert 'function setGameMode(mode)' in js
+    assert 'setGameMode("moves")' in js
+    assert 'e.target.name==="lock-game-mode"' in js
+    assert 'search.has("play")' in js

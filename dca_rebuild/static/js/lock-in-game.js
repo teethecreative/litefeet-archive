@@ -12,6 +12,14 @@
   var pool={}; all.forEach(function(a){a.forEach(function(c){pool[c.id]=c;});});
   JSON.parse(document.getElementById("lock-card-catalog").textContent).forEach(function(card){if(card.type!=="Producer")pool[card.id]=card;});
   var deck=all[0].slice(),round=1,hand=[],selected=[],history=[],chosen={};
+  function setGameMode(mode){
+    var battle=mode==="battle", moves=mode==="moves";
+    el("#lock-battle-mode").hidden=!battle;
+    el("#lock-moves-mode").hidden=!moves;
+    root.querySelectorAll('input[name="lock-game-mode"]').forEach(function(input){
+      input.checked=input.value===mode;
+    });
+  }
   function el(s){return root.querySelector(s);}
   function escape(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
   function amount(id){return deck.filter(function(c){return c.id===id;}).length;}
@@ -88,6 +96,7 @@
       '<button type="button" id="lock-resolve">Resolve round</button>';
   }
   root.addEventListener("change",function(e){
+    if(e.target.name==="lock-game-mode"){setGameMode(e.target.value);return;}
     if(e.target.id==="lock-sample"){deck=all[Number(e.target.value)].slice();el("#lock-battle").hidden=true;renderDeck();}
     if(e.target.id==="lock-filter")renderCatalog();
     if(e.target.id==="lock-request-type"){
@@ -189,4 +198,11 @@
       .finally(function(){button.disabled=false;});
   });
   renderCatalog();renderDeck();
+  // Preserve direct links and GET-based move-set practice results.
+  var search=new URLSearchParams(window.location.search);
+  if(window.location.hash==="#practice"||search.has("round")||search.has("play")){
+    setGameMode("moves");
+  } else {
+    setGameMode("");
+  }
 })();
