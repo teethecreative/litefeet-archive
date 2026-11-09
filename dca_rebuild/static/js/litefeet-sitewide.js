@@ -5,6 +5,9 @@
     if (document.getElementById('lfv-sitewide-v1')) return;
     const original = document.querySelector('.awards-global-nav, .ledger-admin-nav');
     if (!original) return;
+    // Admin pages own their authenticated navigation and theme control.
+    // Never mount a second public navigation shell above the admin console.
+    if (original.classList.contains('ledger-admin-nav')) return;
     let items;
     try { items = JSON.parse(document.getElementById('lfv-navigation-data').textContent); }
     catch (_) {
