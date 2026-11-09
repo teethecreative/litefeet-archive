@@ -576,7 +576,7 @@ html.lfv-sitewide {
   --lfv-reading-width:72ch;
   --lfv-reading-size:clamp(1rem,.3vw + .96rem,1.125rem);
 }
-html.lfv-sitewide :is(.lfv3-hub,.vault-section-page,.lfv-about-page,.lf-nom-2026,.lfv-submit) :is(p,dd,blockquote) {
+html.lfv-sitewide :is(.lfv3-hub,.vault-section-page,.lfv-about-page,.lf-nom-2026,.lfv-submit) :is(p:not(.lfv3-eyebrow):not(.lfv4-section-topline p),dd,blockquote) {
   text-transform:none!important;
   font-size:var(--lfv-reading-size);
   line-height:1.7!important;
