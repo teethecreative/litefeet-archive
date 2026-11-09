@@ -21,7 +21,7 @@
         content="width=device-width,initial-scale=1"
     >
 
-    <title>Admin Login — LiteFeet Ledger</title>
+    <title>Admin Login — The LiteFeet Vault</title>
 
     <link
         rel="stylesheet"
@@ -35,6 +35,12 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}"> <!-- LFV_SITEWIDE_V1 -->
   <!-- LFV_EDITORIAL_V2_20261102 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
+  <style>
+    .ledger-admin-login .label{color:var(--gold-light,#e7cb68);font-weight:800;letter-spacing:.09em}
+    .ledger-admin-login .description{color:var(--text,#fff);opacity:1;line-height:1.6}
+    .ledger-admin-login :is(input,button){max-width:100%;border-radius:5px}
+    .ledger-admin-login button.submit{background:var(--gold,#c9a227);color:#091b36;font-weight:800}
+  </style>
 </head>
 
 <body>
@@ -45,7 +51,7 @@
     <section class="ledger-admin-login">
 
         <div class="label">
-            LITEFEET LEDGER
+            THE LITEFEET VAULT
         </div>
 
         <h1>
@@ -53,7 +59,7 @@
         </h1>
 
         <p class="description">
-            Sign in to access Ledger administration.
+            Sign in to access The LiteFeet Vault administration.
         </p>
 
         {% if error %}
@@ -97,6 +103,7 @@
 
     </section>
 </main>
+{% include "_footer.html" %}
 
   <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script> <!-- LFV_SITEWIDE_V1 -->
 </body>
