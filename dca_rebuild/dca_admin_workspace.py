@@ -34,7 +34,7 @@ def install_dca_admin_workspace(app, ns):
                endpoint="admin_dca_workspace")
     @app.route("/admin/awards/<section>", endpoint="admin_dca_workspace_section")
     @admin_required
-    def awards_workspace(section):
+    def awards_workspace(section="overview"):
         if section not in SECTIONS:
             abort(404)
         page = _page()
