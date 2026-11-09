@@ -152,7 +152,7 @@ def test_lock_in_rulebook_and_mixed_deck_builder_present(website):
     js = (Path(__file__).resolve().parents[1] /
           'dca_rebuild/static/js/lock-in-game.js').read_text()
     assert 'deck.length<25||deck.length>50' in js
-    assert 'amount(c.id)<=3' in js
+    assert 'amount(c.id)<=limit(c.id)' in js
     assert 'slice(0,7)' in js
     assert 'selected.filter' in js
     assert 'Missed Lock In' in js
