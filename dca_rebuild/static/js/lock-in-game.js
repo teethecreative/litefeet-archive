@@ -66,7 +66,7 @@
   }
 
 
-  // Practice phases: Rev Up -> footwork/combo/trick -> optional Frib -> Lock In.
+  // Practice phases: Rev Up or Tone Wop -> footwork/combo/trick -> optional Frib -> Lock In.
   // Preserve names and don't infer undocumented move classifications.
   var practiceScenario=null;
   function practiceCandidates(type){
@@ -78,7 +78,7 @@
   function chooseResponse(id,phase){
     if(!practiceScenario||!pool[id])return;
     var card=pool[id];
-    if(phase==="rev"&&card.type==="Move"&&card.move_family==="Rev Ups"){
+    if(phase==="rev"&&card.type==="Move"&&["Rev Ups","Wops"].includes(card.move_family)){
       practiceScenario.rev=id;
     }
     if(phase==="main"&&(card.type==="Move"||card.type==="Trick")){
@@ -96,17 +96,17 @@
     var ready=!!sc.rev&&!!sc.main;
     var stage=!sc.rev?"rev":!sc.main?"main":"frib";
     el("#lock-response-count").textContent=!sc.rev?
-      "1. Choose your Rev Up":!sc.main?
+      "1. Choose a Rev Up or Tone Wop":!sc.main?
       "2. Choose Footwork, Combo, or Trick":
       "3. Add a Frib Card (optional), then Lock In";
     function describe(id, fallback){return id?escape(pool[id].name):fallback;}
     el("#lock-selected-moves").innerHTML=
-      '<div class="lock-sequence-card"><span>1. Rev Up · '+describe(sc.rev,"Choose a Rev Up")+'</span></div>'+
+      '<div class="lock-sequence-card"><span>1. Rev Up / Tone Wop · '+describe(sc.rev,"Choose a Rev Up or Tone Wop")+'</span></div>'+
       '<div class="lock-sequence-card"><span>2. Footwork / Combo / Trick · '+describe(sc.main,"Choose your main move")+'</span></div>'+
       '<div class="lock-sequence-card"><span>3. Optional Frib Card · '+describe(sc.trick,"None")+'</span></div>'+
       '<div class="lock-sequence-card"><span>4. Lock In</span></div>';
     var eligible;
-    if(stage==="rev") eligible=practiceCandidates("Move").filter(function(card){return card.move_family==="Rev Ups";});
+    if(stage==="rev") eligible=practiceCandidates("Move").filter(function(card){return ["Rev Ups","Wops"].includes(card.move_family);});
     else if(stage==="main") eligible=sc.moves;
     else eligible=sc.fribs.filter(function(card){return card.id!==sc.main;});
     if(stage==="main") {
@@ -122,14 +122,14 @@
       el("#lock-response-moves").innerHTML=eligible.map(function(card){
         return '<button type="button" class="lock-game-card lock-available-card" data-practice-phase="'+stage+'" data-card-id="'+escape(card.id)+'" '+
           (stage==="frib"&&sc.trick===card.id?'aria-pressed="true"':'aria-pressed="false"')+'>'+
-          '<span class="lock-card-category">'+(stage==="rev"?"REV UP":"FRIB CARD")+'</span>'+
+          '<span class="lock-card-category">'+(stage==="rev"?escape(card.move_family==="Wops"?"TONE WOP":"REV UP"):"FRIB CARD")+'</span>'+
           '<strong>'+escape(card.name)+'</strong><span class="lock-card-hint">'+
           (stage==="frib"&&sc.trick===card.id?"Selected · tap to remove":"Select card")+'</span></button>';
       }).join("");
       if(stage==="frib"){
         el("#lock-response-moves").innerHTML='<button type="button" class="lock-skip-trick" id="lock-no-trick">No Frib Card</button>'+
           '<button type="button" class="lock-practice-edit" id="lock-change-main">Change main move</button>'+
-          '<button type="button" class="lock-practice-edit" id="lock-change-rev">Change Rev Up</button>'+
+          '<button type="button" class="lock-practice-edit" id="lock-change-rev">Change opening move</button>'+
           el("#lock-response-moves").innerHTML;
       }
     }
@@ -139,15 +139,15 @@
   function generateSituation(){
     var moves=practiceCandidates("Move"),songs=practiceCandidates("Song"),
       arenas=practiceCandidates("Arena"),tricks=practiceCandidates("Trick"),fribs=practiceCandidates("Frib");
-    var revs=moves.filter(function(card){return card.move_family==="Rev Ups";});
-    if(!revs.length||moves.length<2||!songs.length||!arenas.length){
+    var openers=moves.filter(function(card){return ["Rev Ups","Wops"].includes(card.move_family);});
+    if(!openers.length||moves.length<2||!songs.length||!arenas.length){
       el("#lock-generated-situation").hidden=false;
       el("#lock-response-moves").textContent="There aren't enough cards to create a practice round.";
       el("#lock-score-response").disabled=true;
       return;
     }
     var opponent=randomOne(moves);
-    var mainMoves=shuffle(moves.filter(function(card){return card.id!==opponent.id&&card.move_family!=="Rev Ups";}));
+    var mainMoves=shuffle(moves.filter(function(card){return card.id!==opponent.id&&!["Rev Ups","Wops"].includes(card.move_family);}));
     // Include documented footwork and a mix of other moves and tricks.
     var footwork=mainMoves.find(function(card){return card.move_family==="Footwork";});
     var responses=footwork?[footwork]:[];
