@@ -101,7 +101,7 @@ RULEBOOK_CARDS = {
              "Villain Swoop", "Streetfighter Walk", "No Gwop", "Slatter Gwop"),
     "Trick": ("Shoe Trick", "Shoe Clap", "Shoe Foot Clap", "Hat Trick",
               "Shirt Trick", "Animation", "Connects"),
-    "Upgrade": ("Fake Out", "Tag In", "Chant"),
+    "Upgrade": ("Fake Out", "Tag In", "Chant", "Public Enemies Upgrade"),
     "Frib": ("Restart Round", "Slippery Floors", "Team Beef Chant", "No Hype",
               "Tweak Out", "Talking Shit"),
 }
@@ -172,6 +172,55 @@ def documented_teams(dancer_name):
                  if name and any(member.casefold() == name for member in names))
 
 
+# Standard completed rounds start at 100 BP. Approved upgrades are bonuses
+# above that baseline; penalties/Fribs are handled separately. Existing
+# general-upgrade values come from the user's rulebook.
+STANDARD_ROUND_BP = 100
+UPGRADE_RULES = {
+    "Chant": {"bonus_bp": 1, "required_team": None},
+    "Fake Out": {"bonus_bp": 10, "required_team": None},
+    # Tag In has no approved numeric BP value.
+    "Tag In": {"bonus_bp": None, "required_team": None},
+}
+
+# A team-restricted upgrade is only eligible when its required team is present
+# in the historical/reference roster for the chosen dancer. Register actual
+# named team cards here when confirmed, not automatically from name similarity.
+TEAM_UPGRADE_RULES = {
+    # Provisional team-specific card; no bonus is assigned until approved.
+    "Public Enemies Upgrade": {"bonus_bp": None, "required_team": "Public Enemies"},
+}
+
+
+def upgrade_eligibility(card_name, dancer_name):
+    """Evaluate exact team affiliation for an Upgrade card, not a name guess."""
+    rule = UPGRADE_RULES.get(card_name) or TEAM_UPGRADE_RULES.get(card_name)
+    if rule is None:
+        return dict(known=False, eligible=False, bonus_bp=None, required_team=None)
+    required = rule["required_team"]
+    eligible = not required or required in documented_teams(dancer_name)
+    return dict(known=True, eligible=bool(eligible),
+                bonus_bp=rule["bonus_bp"], required_team=required)
+
+
+def score_standard_round(dancer_name, played_upgrades=()):
+    """Compute only approved, non-duplicated upgrade BP above 100.
+
+    Unknown/ineligible/pending-BP upgrades never add points. This is not a
+    full effect engine and doesn't award team-specific trick bonuses.
+    """
+    effects, total = [], STANDARD_ROUND_BP
+    for card_name in played_upgrades:
+        result = upgrade_eligibility(card_name, dancer_name)
+        bp = result["bonus_bp"] if result["eligible"] else None
+        if bp is not None:
+            total += bp
+        effects.append(dict(card=card_name, **result,
+                            applied_bp=bp if bp is not None else 0))
+    return dict(baseline=STANDARD_ROUND_BP, upgrade_bp=total - STANDARD_ROUND_BP,
+                total_bp=total, upgrades=effects)
+
+
 def proposed_shoe_trick_bp(trick_name, dancer_name):
     """Rulebook draft values, for review; no runtime battle BP is awarded.
 
@@ -227,6 +276,8 @@ def public_card_catalog(extra_songs=()):
             catalog[key] = dict(id=f"{kind}::{name}", type=kind, name=name,
                                 move_family=MOVE_FAMILIES.get(name.casefold(), "") if kind == "Move" else "",
                                 documented_teams=documented_teams(name) if kind == "Dancer" else (),
+                                required_team=(UPGRADE_RULES.get(name) or TEAM_UPGRADE_RULES.get(name) or {}).get("required_team") if kind == "Upgrade" else None,
+                                upgrade_bp=(UPGRADE_RULES.get(name) or TEAM_UPGRADE_RULES.get(name) or {}).get("bonus_bp") if kind == "Upgrade" else None,
                                 review_status="reference-only" if reference else "source-draft",
                                 producer="", artist="", source="", reference=reference)
         entry = catalog[key]
