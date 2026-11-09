@@ -171,7 +171,7 @@ def test_lock_in_has_compact_different_size_samples_and_search(website):
     response = website.test_client().get('/archive/lock-in')
     assert response.status_code == 200
     html = response.get_data(as_text=True)
-    assert 'Build A Deck &amp; Test The Game' in html
+    assert '<h2>Build a Sample Deck</h2>' in html
     assert 'id="lock-search"' in html
     assert 'id="lock-catalog"' in html
     assert 'id="lock-request-panel"' in html
