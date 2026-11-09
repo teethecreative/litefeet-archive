@@ -1,1 +1,49 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Media | The LiteFeet Vault</title>{% include "_seo_head.html" %}<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-editorial-v2.css') }}"></head><body>{% include "_navigation.html" %}<main class="vault-section-page" style="max-width:1050px;margin:auto;padding:32px 22px 70px"><p class="vault-kicker">THE LITEFEET VAULT / MEDIA</p><h1>Media</h1><p>Video, photography, interviews, highlights, and creative coverage of LiteFeet culture.</p><section style="padding:22px 0"><h2>Media Feed</h2><p>Media features are being organized. No additional media entries have been published in this section yet.</p></section></main>{% include "_footer.html" %}<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script></body></html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Media | The LiteFeet Vault</title>
+{% include "_seo_head.html" %}
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-editorial-v2.css') }}">
+<style>
+.lfv-media-editorial{max-width:1180px;margin:0 auto;padding:35px 24px 85px}
+.lfv-media-eyebrow{font-weight:750;letter-spacing:.11em;text-transform:uppercase;color:#dfb344;font-size:.8rem}
+.lfv-media-editorial h1{font-size:clamp(3.2rem,8vw,6rem);letter-spacing:-.05em;line-height:1.03;margin:14px 0 20px}
+.lfv-media-editorial h2{font-size:clamp(1.45rem,3vw,2.15rem)}
+.lfv-media-intro{font-size:clamp(1.05rem,2vw,1.35rem);line-height:1.55;max-width:720px}
+.lfv-media-divider{border:0;border-top:1px solid #687993;margin:42px 0 28px}
+.lfv-media-topic-list{display:flex;gap:12px;flex-wrap:wrap;padding:0;list-style:none;margin:24px 0}
+.lfv-media-topic-list li{border-bottom:2px solid #d3a933;padding:6px 0;font-size:.9rem}
+.lfv-media-editorial .lfv-media-feature{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:32px;align-items:start}
+.lfv-media-editorial .lfv-media-photo-slot{aspect-ratio:16/10;border:1px solid #53657d;border-radius:5px;display:flex;justify-content:center;align-items:center;font-size:.9rem;color:#b8c4d6;background:rgba(104,130,164,.07)}
+.lfv-media-editorial .lfv-media-status{font-size:.85rem;opacity:.8}
+.lfv-media-editorial .lfv-media-feed{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:30px}
+.lfv-media-editorial .lfv-media-feed article{padding-top:15px;border-top:2px solid #60748c}
+.lfv-media-editorial .lfv-media-feed h3{font-size:1.15rem;line-height:1.35;margin:0 0 8px}
+.lfv-media-editorial .lfv-media-feed p{margin:0;color:#aebdd1}
+@media(max-width:750px){.lfv-media-editorial .lfv-media-feature,.lfv-media-editorial .lfv-media-feed{grid-template-columns:1fr}}
+</style></head>
+<body>{% include "_navigation.html" %}
+<main class="lfv-media-editorial">
+<header><p class="lfv-media-eyebrow">THE LITEFEET VAULT / EDITORIAL</p><h1>Media</h1>
+<p class="lfv-media-intro">The people, performances, conversations, and images behind LiteFeet culture.</p>
+<ul class="lfv-media-topic-list" aria-label="Editorial sections"><li>Stories</li><li>Interviews</li><li>Photography</li><li>Video</li><li>Highlights</li></ul>
+</header>
+<hr class="lfv-media-divider">
+<section aria-labelledby="media-feature-heading">
+<p class="lfv-media-eyebrow">Featured Story</p>
+<div class="lfv-media-feature"><div class="lfv-media-photo-slot">Featured community photograph — pending permissioned image</div>
+<div><h2 id="media-feature-heading">A place for the voices of LiteFeet</h2>
+<p>Features will connect interviews, photos, footage and personal accounts, with clear dates and sources.</p>
+<p class="lfv-media-status">Editorial draft — no featured story has been published.</p></div></div></section>
+<hr class="lfv-media-divider">
+<section aria-labelledby="media-latest-heading"><p class="lfv-media-eyebrow">The Feed</p><h2 id="media-latest-heading">Latest Media</h2>
+<div class="lfv-media-feed">
+<article><h3>Interviews</h3><p>Conversations with dancers, producers and community contributors.</p></article>
+<article><h3>Photo Essays</h3><p>Original imagery and documented moments from the scene.</p></article>
+<article><h3>Films &amp; Highlights</h3><p>Footage, performances and cultural coverage with original credits.</p></article>
+</div>
+<p class="lfv-media-status">These are editorial sections, not published articles. Content, photography and dates will be added after review.</p>
+</section>
+</main>{% include "_footer.html" %}
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script></body></html>
