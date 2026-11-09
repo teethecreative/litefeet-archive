@@ -40,6 +40,18 @@
   <!-- LFV_EDITORIAL_V2_20261102 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-gatherings.css') }}">
+
+<style>
+.lfv-admin-attention{margin:30px 0 46px;padding:26px 24px;border-top:2px solid var(--lfv-gold,#c9a52b);border-bottom:1px solid var(--lfv-line,#8795a4)}
+.lfv-admin-attention-head{display:flex;align-items:start;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:0 0 18px}
+.lfv-admin-attention-head .label{font-size:.7rem;letter-spacing:.045em}
+.lfv-admin-attention h2{margin:8px 0 6px!important;font-size:clamp(1.5rem,2.6vw,2rem)!important}
+.lfv-admin-attention p{margin:0;color:var(--lfv-muted,#627384);font-size:.9rem}
+.lfv-admin-attention-head>a{font-weight:750;color:inherit;text-underline-offset:4px}
+.lfv-admin-attention .lfv-gathering-table{min-width:630px}
+@media(max-width:650px){.lfv-admin-attention{padding:22px 12px}}
+</style>
+
 </head>
 
 <body class="ledger-admin">
@@ -915,14 +927,3 @@
   <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script> <!-- LFV_SITEWIDE_V1 -->
 </body>
 </html>
-
-<style>
-.lfv-admin-attention{margin:30px 0 46px;padding:26px 24px;border-top:2px solid var(--lfv-gold,#c9a52b);border-bottom:1px solid var(--lfv-line,#8795a4)}
-.lfv-admin-attention-head{display:flex;align-items:start;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:0 0 18px}
-.lfv-admin-attention-head .label{font-size:.7rem;letter-spacing:.045em}
-.lfv-admin-attention h2{margin:8px 0 6px!important;font-size:clamp(1.5rem,2.6vw,2rem)!important}
-.lfv-admin-attention p{margin:0;color:var(--lfv-muted,#627384);font-size:.9rem}
-.lfv-admin-attention-head>a{font-weight:750;color:inherit;text-underline-offset:4px}
-.lfv-admin-attention .lfv-gathering-table{min-width:630px}
-@media(max-width:650px){.lfv-admin-attention{padding:22px 12px}}
-</style>
