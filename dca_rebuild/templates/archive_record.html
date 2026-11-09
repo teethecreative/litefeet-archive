@@ -101,7 +101,7 @@
           {% endif %}
         </section>
       {% endif %}
-      {% if record.can_verify and not record.source_kind in ('flyers', 'research') %}
+      {% if record.can_verify and not (record.record_type == 'event' and record.source_kind == 'flyers') %}
       <section class="lfv-archive-verify" id="verification">
         <h2>Community verification</h2>
         {% if record.claim %}
