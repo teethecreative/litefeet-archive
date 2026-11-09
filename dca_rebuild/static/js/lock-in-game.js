@@ -38,7 +38,22 @@
   }
   function renderCatalog(){
     var type=el("#lock-filter").value;
-    el("#lock-catalog").innerHTML=Object.keys(pool).filter(function(id){return type==="all"||pool[id].type===type;}).map(function(id){return '<option value="'+escape(id)+'">'+escape(pool[id].type+" · "+pool[id].name)+'</option>';}).join("");
+    var query=(el("#lock-search").value||"").trim().toLocaleLowerCase();
+    var parts=query.split(/\s+/).filter(Boolean);
+    var candidates=Object.keys(pool).filter(function(id){
+      if(type!=="all"&&pool[id].type!==type)return false;
+      var searchable=(pool[id].type+" "+pool[id].name).toLocaleLowerCase();
+      return parts.every(function(word){return searchable.includes(word);});
+    }).sort(function(a,b){
+      var aa=pool[a].name.toLocaleLowerCase(),bb=pool[b].name.toLocaleLowerCase();
+      var astart=aa.startsWith(query)?0:1,bstart=bb.startsWith(query)?0:1;
+      return astart-bstart||aa.localeCompare(bb);
+    }).slice(0,30);
+    el("#lock-catalog").innerHTML=candidates.map(function(id){
+      return '<option value="'+escape(id)+'">'+escape(pool[id].type+" · "+pool[id].name)+'</option>';
+    }).join("");
+    el("#lock-search-feedback").textContent=candidates.length?candidates.length+" matching cards":"No matching cards. You can request a new one.";
+    el("#lock-add").disabled=candidates.length===0;
   }
   function shuffle(cards){var a=cards.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x;}return a;}
   function cardName(id){return pool[id]?pool[id].name:"";}
@@ -74,6 +89,10 @@
   root.addEventListener("change",function(e){
     if(e.target.id==="lock-sample"){deck=all[Number(e.target.value)].slice();el("#lock-battle").hidden=true;renderDeck();}
     if(e.target.id==="lock-filter")renderCatalog();
+    if(e.target.id==="lock-request-type"){
+      var kind=e.target.value;
+      root.querySelectorAll(".lock-request-fields").forEach(function(group){group.hidden=group.dataset.requestType!==kind;});
+    }
     if(e.target.hasAttribute("data-pick")){
       var i=Number(e.target.getAttribute("data-pick")),isMove=hand[i].type==="Move";
       if(e.target.checked){if(isMove&&selected.filter(function(j){return hand[j].type==="Move";}).length>=3){e.target.checked=false;return;}selected.push(i);}
@@ -85,7 +104,27 @@
     var b=e.target.closest("button");if(!b)return;
     if(b.hasAttribute("data-remove")){var id=b.getAttribute("data-remove"),i=deck.findIndex(function(c){return c.id===id;});if(i>=0)deck.splice(i,1);renderDeck();return;}
     if(b.hasAttribute("data-add")){var id=b.getAttribute("data-add");if(amount(id)<limit(id))deck.push(pool[id]);renderDeck();return;}
-    if(b.id==="lock-add"){var id=el("#lock-catalog").value;if(id&&amount(id)<limit(id))deck.push(pool[id]);renderDeck();}
+    if(b.id==="lock-add"){
+      var id=el("#lock-catalog").value;
+      if(id&&pool[id]&&amount(id)<limit(id)){deck.push(pool[id]);renderDeck();}
+    }
+    if(b.hasAttribute("data-deck-sample")){
+      var index=Number(b.getAttribute("data-deck-sample"));
+      if(all[index]){deck=all[index].slice();el("#lock-sample").value=String(index);renderDeck();document.getElementById("lock-workbench").scrollIntoView({block:"start",behavior:"smooth"});}
+      return;
+    }
+    if(b.id==="lock-request-open"){
+      var panel=el("#lock-request-panel");
+      panel.hidden=!panel.hidden;
+      b.setAttribute("aria-expanded",String(!panel.hidden));
+      if(!panel.hidden){
+        el("#lock-request-name").value=el("#lock-search").value.trim();
+        el("#lock-request-type").value=el("#lock-filter").value==="all"?"Dancer":el("#lock-filter").value;
+        el("#lock-request-type").dispatchEvent(new Event("change",{bubbles:true}));
+        el("#lock-request-name").focus();
+      }
+      return;
+    }
     if(b.id==="lock-save"){
       var issues=problems();
       if(issues.length){el("#lock-save-status").textContent="Cannot save: "+issues.join(" ");return;}
@@ -128,5 +167,24 @@
   });
   el("#lock-sample").innerHTML=samples.map(function(s,i){return '<option value="'+i+'">'+escape(s.name)+'</option>';}).join("");
   el("#lock-filter").innerHTML='<option value="all">All types</option>'+types.map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join("");
+  el("#lock-search").addEventListener("input",renderCatalog);
+  el("#lock-search").addEventListener("keydown",function(e){
+    if(e.key==="Enter"){e.preventDefault();el("#lock-add").click();}
+  });
+  el("#lock-request-form").addEventListener("submit",function(e){
+    e.preventDefault();
+    var form=e.currentTarget;
+    var feedback=el("#lock-request-feedback");
+    var button=form.querySelector('[type="submit"]');
+    button.disabled=true;
+    feedback.textContent="Sending…";
+    fetch(form.action,{method:"POST",body:new FormData(form),credentials:"same-origin",headers:{"Accept":"application/json"}})
+      .then(function(response){return response.json().then(function(json){return {ok:response.ok,data:json};});})
+      .then(function(result){
+        feedback.textContent=result.data.message||result.data.error||"Unable to send request.";
+        if(result.ok){form.reset();el("#lock-request-type").dispatchEvent(new Event("change",{bubbles:true}));}
+      }).catch(function(){feedback.textContent="Couldn't send your request. Please try again.";})
+      .finally(function(){button.disabled=false;});
+  });
   renderCatalog();renderDeck();
 })();
