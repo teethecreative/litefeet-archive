@@ -11,7 +11,7 @@
   var all=samples.map(function(s){return s.categories.reduce(function(a,g){return a.concat(g.type==="Producer"?[]:g.cards.map(function(n){return {id:g.type+"::"+n,type:g.type,name:n};}));},[]);});
   var pool={}; all.forEach(function(a){a.forEach(function(c){pool[c.id]=c;});});
   JSON.parse(document.getElementById("lock-card-catalog").textContent).forEach(function(card){if(card.type!=="Producer")pool[card.id]=card;});
-  var deck=all[0].slice(),round=1,hand=[],selected=[],history=[],chosen={};
+  var deck=[],round=1,hand=[],selected=[],history=[],chosen={};
   function setGameMode(mode){
     var battle=mode==="battle", moves=mode==="moves";
     el("#lock-battle-mode").hidden=!battle;
@@ -61,11 +61,11 @@
       var aa=pool[a].name.toLocaleLowerCase(),bb=pool[b].name.toLocaleLowerCase();
       var astart=aa.startsWith(query)?0:1,bstart=bb.startsWith(query)?0:1;
       return astart-bstart||aa.localeCompare(bb,undefined,{sensitivity:"base",numeric:true});
-    }).slice(0,30);
+    });
     el("#lock-catalog").innerHTML=candidates.map(function(id){
       return '<option value="'+escape(id)+'">'+escape(pool[id].type+" · "+pool[id].name+(pool[id].producer?" · Prod. "+pool[id].producer:""))+'</option>';
     }).join("");
-    el("#lock-search-feedback").textContent=candidates.length?candidates.length+" matching cards · Catalog entries include planning and reference cards, not all finalized.":"No matching cards. You can request a new one.";
+    el("#lock-search-feedback").textContent=candidates.length?candidates.length+" suggested cards · Includes the public People & Teams archive and source-draft cards.":"No suggested cards found. You can request one.";
     el("#lock-add").disabled=candidates.length===0;
   }
 
@@ -219,7 +219,7 @@
       setGameMode(e.target.value);
       return;
     }
-    if(e.target.id==="lock-sample"){deck=all[Number(e.target.value)].slice();el("#lock-battle").hidden=true;renderDeck();}
+    if(e.target.id==="lock-sample"){deck=e.target.value==="create"?[]:(all[Number(e.target.value)]||[]).slice();el("#lock-battle").hidden=true;renderDeck();}
     if(e.target.id==="lock-filter")renderCatalog();
     if(e.target.id==="lock-request-type"){
       var kind=e.target.value;
@@ -322,8 +322,9 @@
     if(b.id==="lock-next"){round++;drawBattle();}
     if(b.id==="lock-restart"){round=1;history=[];drawBattle();}
   });
-  el("#lock-sample").innerHTML=samples.map(function(s,i){return '<option value="'+i+'">'+escape(s.name)+'</option>';}).join("");
+  el("#lock-sample").innerHTML='<option value="create">Create a deck</option>'+samples.map(function(s,i){return '<option value="'+i+'">'+escape(s.name)+'</option>';}).join("");
   el("#lock-filter").innerHTML='<option value="all">All types</option>'+types.map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join("");
+  el("#lock-filter").value="Dancer";
   el("#lock-search").addEventListener("input",renderCatalog);
   el("#lock-search").addEventListener("keydown",function(e){
     if(e.key==="Enter"){e.preventDefault();el("#lock-add").click();}
