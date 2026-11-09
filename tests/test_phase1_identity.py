@@ -107,4 +107,5 @@ def test_lock_in_sample_decks_are_neutral_and_practice_does_not_spotlight_two_su
     assert 'Airman' in html
     from dca_rebuild.lock_in import ROUNDS, practice_view
     assert 'performance' not in ROUNDS and 'spank' not in ROUNDS
-    assert practice_view({})['round_key'] == 'greklite'
+    from werkzeug.datastructures import MultiDict
+    assert practice_view(MultiDict())['round_key'] == 'greklite'
