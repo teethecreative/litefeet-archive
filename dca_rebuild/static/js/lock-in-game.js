@@ -4,13 +4,13 @@
   var root=document.getElementById("lock-workbench");
   if(!root)return;
   var samples=JSON.parse(document.getElementById("lock-samples").textContent);
-  var types=["Dancer","Arena","Producer","Song","Move","Trick","Upgrade","Frib"];
+  var types=["Dancer","Arena","Song","Move","Trick","Upgrade","Frib"];
   var restrictions=JSON.parse(document.getElementById("lock-restrictions").textContent || "{}");
   var storeKey="litefeet-lockin-draft-deck-v1";
   function limit(id){return Object.prototype.hasOwnProperty.call(restrictions,id)?restrictions[id]:3;}
-  var all=samples.map(function(s){return s.categories.reduce(function(a,g){return a.concat(g.cards.map(function(n){return {id:g.type+"::"+n,type:g.type,name:n};}));},[]);});
+  var all=samples.map(function(s){return s.categories.reduce(function(a,g){return a.concat(g.type==="Producer"?[]:g.cards.map(function(n){return {id:g.type+"::"+n,type:g.type,name:n};}));},[]);});
   var pool={}; all.forEach(function(a){a.forEach(function(c){pool[c.id]=c;});});
-  JSON.parse(document.getElementById("lock-card-catalog").textContent).forEach(function(card){pool[card.id]=card;});
+  JSON.parse(document.getElementById("lock-card-catalog").textContent).forEach(function(card){if(card.type!=="Producer")pool[card.id]=card;});
   var deck=all[0].slice(),round=1,hand=[],selected=[],history=[],chosen={};
   function el(s){return root.querySelector(s);}
   function escape(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
@@ -25,7 +25,7 @@
   }
   function options(t){
     var seen={};
-    return deck.filter(function(c){if(c.type!==t||seen[c.id])return false;seen[c.id]=true;return true;}).map(function(c){return '<option value="'+escape(c.id)+'">'+escape(c.name)+'</option>';}).join("");
+    return deck.filter(function(c){if(c.type!==t||seen[c.id])return false;seen[c.id]=true;return true;}).sort(function(a,b){return a.name.localeCompare(b.name,undefined,{sensitivity:"base",numeric:true});}).map(function(c){var detail=t==="Song"&&pool[c.id]&&pool[c.id].producer?" · Prod. "+pool[c.id].producer:"";return '<option value="'+escape(c.id)+'">'+escape(c.name+detail)+'</option>';}).join("");
   }
   function renderDeck(){
     el("#lock-count").textContent=deck.length;
@@ -43,15 +43,15 @@
     var parts=query.split(/\s+/).filter(Boolean);
     var candidates=Object.keys(pool).filter(function(id){
       if(type!=="all"&&pool[id].type!==type)return false;
-      var searchable=(pool[id].type+" "+pool[id].name).toLocaleLowerCase();
+      var searchable=(pool[id].type+" "+pool[id].name+" "+(pool[id].producer||"")+" "+(pool[id].artist||"")).toLocaleLowerCase();
       return parts.every(function(word){return searchable.includes(word);});
     }).sort(function(a,b){
       var aa=pool[a].name.toLocaleLowerCase(),bb=pool[b].name.toLocaleLowerCase();
       var astart=aa.startsWith(query)?0:1,bstart=bb.startsWith(query)?0:1;
-      return astart-bstart||aa.localeCompare(bb);
+      return astart-bstart||aa.localeCompare(bb,undefined,{sensitivity:"base",numeric:true});
     }).slice(0,30);
     el("#lock-catalog").innerHTML=candidates.map(function(id){
-      return '<option value="'+escape(id)+'">'+escape(pool[id].type+" · "+pool[id].name)+'</option>';
+      return '<option value="'+escape(id)+'">'+escape(pool[id].type+" · "+pool[id].name+(pool[id].producer?" · Prod. "+pool[id].producer:""))+'</option>';
     }).join("");
     el("#lock-search-feedback").textContent=candidates.length?candidates.length+" matching cards":"No matching cards. You can request a new one.";
     el("#lock-add").disabled=candidates.length===0;
@@ -64,13 +64,13 @@
       '<label>Dancer <select id="lock-dancer">'+options("Dancer")+'</select></label>'+
       '<label>Song <select id="lock-song">'+options("Song")+'</select></label>'+
       '<label>Arena <select id="lock-arena">'+options("Arena")+'</select></label>'+
-      '<label>Producer <select id="lock-producer"><option value="">None</option>'+options("Producer")+'</select></label>'+
+      
       '<label>Who goes first? <select id="lock-order"><option>You</option><option>Opponent</option></select></label>'+
       '<button id="lock-draw" type="button">Set cards and draw hand</button>';
   }
   function renderHand(){
     var table=el("#lock-battle");
-    table.innerHTML='<h3>Round '+round+' · Move set</h3><p>'+escape(chosen.dancer+' · '+chosen.song+' · '+chosen.arena+(chosen.producer?' · '+chosen.producer:''))+'</p>'+
+    table.innerHTML='<h3>Round '+round+' · Move set</h3><p>'+escape(chosen.dancer+' · '+chosen.song+' · '+chosen.arena)+'</p>'+
       '<p>Hand cards: '+hand.length+'. Choose up to three move cards. Special effects not assigned BP in the rulebook must be adjudicated manually.</p>'+
       '<div class="lock-hand">'+hand.map(function(c,i){return '<label><input type="checkbox" data-pick="'+i+'"> '+escape(c.type+" · "+c.name)+'</label>';}).join("")+'</div>'+
       '<p id="lock-selection" aria-live="polite">0 / 3 moves selected</p><button type="button" id="lock-announce">Announce locked in</button>';
@@ -147,8 +147,8 @@
     }
     if(b.id==="lock-start"){if(!problems().length){round=1;history=[];drawBattle();}}
     if(b.id==="lock-draw"){
-      var played=[el("#lock-dancer").value,el("#lock-song").value,el("#lock-arena").value,el("#lock-producer").value];
-      chosen={dancer:cardName(played[0]),song:cardName(played[1]),arena:cardName(played[2]),producer:cardName(played[3]),first:el("#lock-order").value};
+      var played=[el("#lock-dancer").value,el("#lock-song").value,el("#lock-arena").value];
+      chosen={dancer:cardName(played[0]),song:cardName(played[1]),arena:cardName(played[2]),first:el("#lock-order").value};
       var eligible=deck.filter(function(c){return ["Move","Trick","Upgrade","Frib"].indexOf(c.type)>=0&&played.indexOf(c.id)<0;});
       hand=shuffle(eligible).slice(0,7);selected=[];renderHand();
     }
