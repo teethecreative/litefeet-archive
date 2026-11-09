@@ -50,7 +50,7 @@ def test_publication_filters_and_no_data_mutation(website, database):
     with database[1]() as db:
         before = (db.query(DCACategory).count(),db.query(DCANominationSubmission).count())
     client = website.test_client()
-    for path in ['/','/archive','/archive/timeline','/community','/about','/awards']:
+    for path in ['/','/archive/timeline','/community','/about','/awards']:
         page = client.get(path)
         assert page.status_code == 200
         assert 'PRIVATE' not in page.get_data(as_text=True)
@@ -86,7 +86,7 @@ def test_page_context_indexing_and_admin_routes(website):
     assert 'class="ledger-admin-nav"' in admin.get_data(as_text=True)
     assert 'Admin' not in [x['label'] for x in navigation(admin.get_data(as_text=True))]
     sitemap = client.get('/sitemap.xml').get_data(as_text=True)
-    for path in ['/archive','/awards','/community','/about','/awards/dancers-choice/2023']:
+    for path in ['/archive/timeline','/awards','/community','/about','/awards/dancers-choice/2023']:
         assert 'https://thelitefeetvault.com'+path+'</loc>' in sitemap
 
 
