@@ -464,7 +464,7 @@ html.lfv-sitewide .lf9e .lf9e-round-notice strong {text-transform:none!important
 
 /* People & Crews: typography-only word cloud, never a group of CTA buttons.
    We keep clickable, keyboard-accessible profile links without boxed styling. */
-html.lfv-sitewide #vault-section-archive .lfv-people-cloud-section {
+html.lfv-sitewide #vault-section-people .lfv-people-cloud-section {
   padding:18px 0 12px!important;
   margin:20px 0 30px!important;
   border:0!important;
@@ -472,12 +472,12 @@ html.lfv-sitewide #vault-section-archive .lfv-people-cloud-section {
   background:transparent!important;
   box-shadow:none!important;
 }
-html.lfv-sitewide #vault-section-archive .lfv-people-cloud-heading h2 {
+html.lfv-sitewide #vault-section-people .lfv-people-cloud-heading h2 {
   font-size:clamp(1.28rem,2.1vw,1.85rem)!important;
   margin:0 0 8px!important;
   letter-spacing:.022em!important;
 }
-html.lfv-sitewide #vault-section-archive .lfv-people-cloud-heading p {
+html.lfv-sitewide #vault-section-people .lfv-people-cloud-heading p {
   margin:0 0 18px!important;
   max-width:62ch;
   font-size:.91rem!important;
@@ -486,7 +486,7 @@ html.lfv-sitewide #vault-section-archive .lfv-people-cloud-heading p {
   letter-spacing:.012em!important;
   text-transform:none!important;
 }
-html.lfv-sitewide #vault-section-archive nav.lfv-people-wordcloud {
+html.lfv-sitewide #vault-section-people nav.lfv-people-wordcloud {
   display:flex!important;
   flex-wrap:wrap!important;
   align-items:baseline!important;
@@ -503,9 +503,9 @@ html.lfv-sitewide #vault-section-archive nav.lfv-people-wordcloud {
 }
 /* An explicit reset wins over global button/CTA link rules.
    The Jinja variable is a valid CSS font size computed from archive mentions. */
-html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word,
-html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:link,
-html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:visited {
+html.lfv-sitewide #vault-section-people .lfv-people-wordcloud > a.lfv-people-word,
+html.lfv-sitewide #vault-section-people .lfv-people-wordcloud > a.lfv-people-word:link,
+html.lfv-sitewide #vault-section-people .lfv-people-wordcloud > a.lfv-people-word:visited {
   display:inline-block!important;
   position:static!important;
   flex:0 0 auto!important;
@@ -532,22 +532,22 @@ html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-wo
   overflow-wrap:normal!important;
   cursor:pointer;
 }
-html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n + 1) {
+html.lfv-sitewide #vault-section-people .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n + 1) {
   color:var(--lfv-gold)!important;
 }
-html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n + 2) {
+html.lfv-sitewide #vault-section-people .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n + 2) {
   color:var(--lfv-muted)!important;
 }
-html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n) {
+html.lfv-sitewide #vault-section-people .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n) {
   color:#9cbedb!important;
 }
-html[data-theme="light"].lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n + 1) {
+html[data-theme="light"].lfv-sitewide #vault-section-people .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n + 1) {
   color:#806200!important;
 }
-html[data-theme="light"].lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n) {
+html[data-theme="light"].lfv-sitewide #vault-section-people .lfv-people-wordcloud > a.lfv-people-word:nth-child(4n) {
   color:#285487!important;
 }
-html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:is(:hover,:focus-visible) {
+html.lfv-sitewide #vault-section-people .lfv-people-wordcloud > a.lfv-people-word:is(:hover,:focus-visible) {
   background:transparent!important;
   box-shadow:none!important;
   text-decoration:underline!important;
@@ -555,17 +555,17 @@ html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-wo
   text-decoration-thickness:2px!important;
   text-underline-offset:.14em!important;
 }
-html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word:focus-visible {
+html.lfv-sitewide #vault-section-people .lfv-people-wordcloud > a.lfv-people-word:focus-visible {
   outline:2px solid var(--lfv-gold)!important;
   outline-offset:5px!important;
 }
 @media (max-width:600px) {
-  html.lfv-sitewide #vault-section-archive nav.lfv-people-wordcloud {
+  html.lfv-sitewide #vault-section-people nav.lfv-people-wordcloud {
     justify-content:center!important;
     column-gap:12px!important;
     row-gap:7px!important;
   }
-  html.lfv-sitewide #vault-section-archive .lfv-people-wordcloud > a.lfv-people-word {
+  html.lfv-sitewide #vault-section-people .lfv-people-wordcloud > a.lfv-people-word {
     font-size:clamp(.95rem,var(--word-size,1.25rem),2.25rem)!important;
   }
 }

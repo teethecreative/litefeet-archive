@@ -136,7 +136,7 @@ def install_information_architecture(app, ns):
             'items': [], 'count': 0, 'has_more': False, 'next_page': None,
             'page': current_page, 'collection': 'people'
         }
-        return section_page('people', archive_items=filtered,
+        return section_page('people', archive_items=filtered['items'],
                             archive_pagination=filtered, people_cloud=people_crew_cloud(),
                             archive_start_page=current_page)
 
