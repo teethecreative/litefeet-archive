@@ -14,17 +14,17 @@
 .lfv-music-filter input{flex:1;min-width:220px;padding:12px;border-radius:9px;border:1px solid #8894a8}
 .lfv-music-button{background:#d9b33e!important;color:#102a4c!important;font-weight:800!important;border-radius:9px;padding:9px 14px;text-decoration:none;display:inline-flex;align-items:center;border:0}
 .lfv-music-table-scroll{overflow-x:auto;border:1px solid #627287;border-radius:12px}
-.lfv-music-table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:810px}
+.lfv-music-table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:1050px}
 .lfv-music-table th{background:#132c4e;color:#f3cb5b;text-align:left;padding:14px 12px;font-size:.78rem;letter-spacing:.035em;text-transform:uppercase}
-.lfv-music-table th:nth-child(1){width:19%}.lfv-music-table th:nth-child(2){width:30%}
-.lfv-music-table th:nth-child(3){width:21%}.lfv-music-table th:nth-child(4){width:10%}
-.lfv-music-table th:nth-child(5){width:20%}
+.lfv-music-table th:nth-child(1){width:16%}.lfv-music-table th:nth-child(2){width:21%}
+.lfv-music-table th:nth-child(3){width:17%}.lfv-music-table th:nth-child(4){width:25%}
+.lfv-music-table th:nth-child(5){width:9%}.lfv-music-table th:nth-child(6){width:12%}
 .lfv-music-table td{padding:13px 12px;border-top:1px solid #455a75;vertical-align:middle}
 .lfv-music-table-date{font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
 .lfv-music-table-duration{white-space:nowrap;font-variant-numeric:tabular-nums}
 .lfv-music-title{font-size:1rem;line-height:1.35;font-weight:750;overflow-wrap:anywhere} .lfv-music-table td a.lfv-music-title-link,html.lfv-sitewide .lfv-music-table td a.lfv-music-title-link{display:inline!important;appearance:none!important;background:transparent!important;background-image:none!important;color:inherit!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline-offset:3px!important;padding:0!important;margin:0!important;min-height:0!important;min-width:0!important;line-height:1.35!important;text-align:left!important;text-transform:none!important;letter-spacing:normal!important;text-decoration:none!important}.lfv-music-title-link:hover,.lfv-music-title-link:focus-visible{text-decoration:underline;text-underline-offset:3px}
 .lfv-music-description{color:#c2cddd;font-size:.82rem;margin:6px 0 0;line-height:1.45;overflow-wrap:anywhere}
-.lfv-music-credits{overflow-wrap:anywhere}
+.lfv-music-credits{overflow-wrap:anywhere}.lfv-music-table-description{font-size:.86rem;line-height:1.4;color:#c2cddd;overflow-wrap:anywhere}
 .lfv-music-row-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .lfv-music-table a.lfv-music-button{padding:8px 10px;font-size:.82rem;white-space:nowrap}
 .lfv-music-table td a.lfv-music-source,html.lfv-sitewide .lfv-music-table td a.lfv-music-source{display:inline!important;background:transparent!important;background-image:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;margin:0!important;min-height:0!important;min-width:0!important;color:#f3cb5b!important;font-size:.85rem!important;text-decoration:underline!important;text-underline-offset:3px!important;text-transform:none!important}
@@ -40,7 +40,7 @@
 <p class="lfv-music-kicker">Music / Discovery</p><h2 id="music-releases-title">Release Radar</h2><p class="lfv-music-description">Includes sourced tracks and projects. Dates and durations are shown only where documented; some source links lead to artist profiles or full projects.</p>
 <div class="lfv-music-table-scroll">
 <table class="lfv-music-table">
-<thead><tr><th scope="col">Release Date</th><th scope="col">Song Name</th><th scope="col">Artist / Producer</th><th scope="col">Duration</th><th scope="col">Listen / Source</th></tr></thead>
+<thead><tr><th scope="col">Release Date</th><th scope="col">Song Name</th><th scope="col">Artist / Producer</th><th scope="col">Description</th><th scope="col">Duration</th><th scope="col">Listen / Source</th></tr></thead>
 <tbody>
 {% for item in releases %}
 {% set audio = item.playable_url or item.url or '' %}
@@ -48,8 +48,9 @@
 {% set direct_audio = audio_path.endswith('.mp3') or audio_path.endswith('.m4a') or audio_path.endswith('.ogg') or audio_path.endswith('.wav') or audio_path.endswith('.aac') or audio_path.endswith('.flac') %}
 <tr>
 <td class="lfv-music-table-date">{{ item.date_label }}</td>
-<td class="lfv-music-table-name"><a class="lfv-music-title lfv-music-title-link" href="{{ item.record_href }}">{{ item.title or 'Untitled release' }}</a>{% if item.description %}<p class="lfv-music-description">{{ item.description }}</p>{% endif %}</td>
+<td class="lfv-music-table-name"><a class="lfv-music-title lfv-music-title-link" href="{{ item.record_href }}">{{ item.title or 'Untitled release' }}</a></td>
 <td class="lfv-music-credits">{{ item.artist_or_creator or item.artist or item.producer_name or 'Not yet documented' }}{% if item.project_title %}<p class="lfv-music-description">From {{ item.project_title }}</p>{% elif item.kind == 'project' %}<p class="lfv-music-description">{{ item.record_type or 'Project' }}{% if item.expected_track_count %} · {{ item.expected_track_count }} tracks{% endif %}</p>{% endif %}</td>
+<td class="lfv-music-table-description">{% if item.description %}{{ item.description|striptags|truncate(85, True, '…') }}{% else %}—{% endif %}</td>
 <td class="lfv-music-table-duration">{{ item.duration_label }}</td>
 <td><div class="lfv-music-row-actions">
 {% if direct_audio %}
@@ -62,7 +63,7 @@
 </div></td>
 </tr>
 {% else %}
-<tr><td colspan="5">No published music releases are available in this site's current database. No historical records have been deleted.</td></tr>
+<tr><td colspan="6">No published music releases are available in this site's current database. No historical records have been deleted.</td></tr>
 {% endfor %}
 </tbody></table></div>
 </section>
