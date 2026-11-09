@@ -23,7 +23,7 @@ SECTION_CATALOG = (
     ('archive', 'The Archive', '/archive', True),
     ('people', 'People & Teams', '/archive/people', True),
     ('timeline', 'History & Timeline', '/archive/timeline', True),
-    ('calendar', 'Upcoming Calendar & Events', '/calendar', True),
+    ('calendar', 'Upcoming Calendar', '/calendar', True),
     ('awards', 'Awards & Recognition', '/awards', True),
     ('lock-in', 'Lock In Card Battle Game', '/archive/lock-in', True),
     ('music', 'Music', '/litefeet-music', True),
@@ -154,6 +154,12 @@ def install_information_architecture(app, ns):
             query = {k: v for k, v in request.args.items() if k != 'view'}
             return redirect(url_for('vault_timeline', **query), code=302)
         return section_page('overview')
+
+    @app.get('/calendar', endpoint='vault_calendar_public')
+    def public_calendar():
+        """Public upcoming event calendar; the existing event records are unchanged."""
+        return render_template('calendar_public.html',
+                               calendar=upcoming_calendar(session_factory=ns['SessionLocal']))
 
     @app.get('/archive/people', endpoint='vault_archive_people')
     def archive_people():
