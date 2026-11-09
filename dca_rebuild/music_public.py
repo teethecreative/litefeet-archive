@@ -8,7 +8,7 @@ from datetime import datetime, date
 import re
 from sqlalchemy import inspect, text
 from dca_rebuild.archive_catalog import all_records, find_record
-from dca_rebuild.music_batch_catalog import combined_releases, batch_record
+from dca_rebuild.music_batch_catalog import combined_releases, batch_record, batch_catalog
 
 def full_date(value):
     """Render stored release dates with spelled-out months; never invent precision."""
@@ -92,10 +92,15 @@ def install_music_public(app, engine):
         item = batch_record(kind, catalog_id)
         if item is None:
             abort(404)
+        tracks = ([dict(row, record_href="/litefeet-music/catalog/track/" + row["catalog_id"])
+                   for row in batch_catalog()
+                   if row["kind"] == "track" and row.get("project_id") == catalog_id]
+                  if kind == "project" else [])
+        tracks.sort(key=lambda row: int(row.get("track_number") or 999))
         return render_template("music_release_public.html", item=dict(
             item, date_label=(full_date(item.get("release_date"))
                  if item.get("release_date") else item.get("release_year") or "Date unknown"),
-            duration_label=music_duration(item)))
+            duration_label=music_duration(item)), project_tracks=tracks)
     
     @app.get("/media", endpoint="vault_media_public")
     def vault_media_public():
