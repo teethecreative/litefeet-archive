@@ -36,7 +36,7 @@ def _get_event_for_day(event_date, slug, session_factory):
     calendar = upcoming_calendar(today=selected_day, window_days=1,
                                  session_factory=session_factory)
     event = next((item for item in calendar["events"]
-                  if event_slug(item["title"]) == slug), None)
+                  if item["href"].rsplit("/", 1)[-1] == slug), None)
     if event is None:
         abort(404)
     return event
