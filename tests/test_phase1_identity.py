@@ -84,7 +84,7 @@ def test_teen_nite_recurs_tuesday_thursday_with_closure_notice():
     from dca_rebuild.upcoming_calendar import upcoming_calendar
     calendar = upcoming_calendar(today=date(2026, 11, 9))
     sessions = [e for e in calendar['events'] if e['title'].startswith('Teen Nite')]
-    assert len(sessions) == 8
+    assert len(sessions) == 9
     assert all(date.fromisoformat(e['date']).weekday() in (1, 3) for e in sessions)
     assert sessions[0]['date'] == '2026-11-10'
     assert all('6:00–9:00 PM' in e['description'] for e in sessions)
