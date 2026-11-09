@@ -5,17 +5,20 @@
   if(!root)return;
   var samples=JSON.parse(document.getElementById("lock-samples").textContent);
   var types=["Dancer","Arena","Producer","Song","Move","Trick","Upgrade","Frib"];
+  var restrictions=JSON.parse(document.getElementById("lock-restrictions").textContent || "{}");
+  var storeKey="litefeet-lockin-draft-deck-v1";
+  function limit(id){return Object.prototype.hasOwnProperty.call(restrictions,id)?restrictions[id]:3;}
   var all=samples.map(function(s){return s.categories.reduce(function(a,g){return a.concat(g.cards.map(function(n){return {id:g.type+"::"+n,type:g.type,name:n};}));},[]);});
   var pool={}; all.forEach(function(a){a.forEach(function(c){pool[c.id]=c;});});
   var deck=all[0].slice(),round=1,hand=[],selected=[],history=[],chosen={};
   function el(s){return root.querySelector(s);}
   function escape(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
   function amount(id){return deck.filter(function(c){return c.id===id;}).length;}
-  function limits(){return deck.every(function(c){return amount(c.id)<=3;});}
+  function limits(){return deck.every(function(c){return Number.isInteger(limit(c.id))&&limit(c.id)>=0&&limit(c.id)<=3&&amount(c.id)<=limit(c.id);});}
   function problems(){
     var p=[];
     if(deck.length<25||deck.length>50)p.push("A deck must contain 25–50 total cards.");
-    if(!limits())p.push("A card cannot appear more than three times.");
+    if(!limits())p.push("Card count exceeds its restriction: Unlimited 3, Semi-Limited 2, Limited 1, Forbidden 0.");
     ["Dancer","Song","Arena"].forEach(function(t){if(!deck.some(function(c){return c.type===t;}))p.push("A "+t+" card is required for this 1v1 setup.");});
     return p;
   }
@@ -28,7 +31,7 @@
     el("#lock-categories").textContent=types.filter(function(t){return deck.some(function(c){return c.type===t;});}).map(function(t){return t+": "+deck.filter(function(c){return c.type===t;}).length;}).join(" · ");
     var counts={};deck.forEach(function(c){counts[c.id]=(counts[c.id]||0)+1;});
     el("#lock-deck-list").innerHTML=Object.keys(counts).map(function(id){
-      var c=pool[id];return '<li><span>'+escape(c.type)+' · '+escape(c.name)+' ×'+counts[id]+'</span> <button data-remove="'+escape(id)+'" type="button" aria-label="Remove '+escape(c.name)+'">−</button><button data-add="'+escape(id)+'" type="button" '+(counts[id]>=3?"disabled":"")+' aria-label="Add '+escape(c.name)+'">+</button></li>';
+      var c=pool[id];return '<li><span>'+escape(c.type)+' · '+escape(c.name)+' ×'+counts[id]+'</span> <button data-remove="'+escape(id)+'" type="button" aria-label="Remove '+escape(c.name)+'">−</button><button data-add="'+escape(id)+'" type="button" '+(counts[id]>=limit(id)?"disabled":"")+' aria-label="Add '+escape(c.name)+'">+</button></li>';
     }).join("");
     var p=problems();el("#lock-validation").textContent=p.length?p.join(" "):"Deck meets the size and general three-copy limits.";
     el("#lock-start").disabled=!!p.length;
@@ -81,8 +84,26 @@
   root.addEventListener("click",function(e){
     var b=e.target.closest("button");if(!b)return;
     if(b.hasAttribute("data-remove")){var id=b.getAttribute("data-remove"),i=deck.findIndex(function(c){return c.id===id;});if(i>=0)deck.splice(i,1);renderDeck();return;}
-    if(b.hasAttribute("data-add")){var id=b.getAttribute("data-add");if(amount(id)<3)deck.push(pool[id]);renderDeck();return;}
-    if(b.id==="lock-add"){var id=el("#lock-catalog").value;if(id&&amount(id)<3)deck.push(pool[id]);renderDeck();}
+    if(b.hasAttribute("data-add")){var id=b.getAttribute("data-add");if(amount(id)<limit(id))deck.push(pool[id]);renderDeck();return;}
+    if(b.id==="lock-add"){var id=el("#lock-catalog").value;if(id&&amount(id)<limit(id))deck.push(pool[id]);renderDeck();}
+    if(b.id==="lock-save"){
+      var issues=problems();
+      if(issues.length){el("#lock-save-status").textContent="Cannot save: "+issues.join(" ");return;}
+      try{window.localStorage.setItem(storeKey,JSON.stringify(deck.map(function(card){return card.id;})));el("#lock-save-status").textContent="Saved to this browser only; no account or server storage."; }
+      catch(err){el("#lock-save-status").textContent="Local storage is unavailable in this browser.";}
+      return;
+    }
+    if(b.id==="lock-load"){
+      try{
+        var saved=JSON.parse(window.localStorage.getItem(storeKey)||"null");
+        if(!Array.isArray(saved)||saved.some(function(id){return !pool[id];})){el("#lock-save-status").textContent="No compatible saved deck found.";return;}
+        var previous=deck;deck=saved.map(function(id){return pool[id];});
+        var issues=problems();
+        if(issues.length){deck=previous;el("#lock-save-status").textContent="Saved deck is no longer valid: "+issues.join(" ");return;}
+        renderDeck();el("#lock-save-status").textContent="Loaded locally saved deck.";
+      }catch(err){el("#lock-save-status").textContent="Could not load saved deck.";}
+      return;
+    }
     if(b.id==="lock-start"){if(!problems().length){round=1;history=[];drawBattle();}}
     if(b.id==="lock-draw"){
       var played=[el("#lock-dancer").value,el("#lock-song").value,el("#lock-arena").value,el("#lock-producer").value];
