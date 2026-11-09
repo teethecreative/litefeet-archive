@@ -52,7 +52,7 @@ def install_information_architecture(app, ns):
     def vault_site_context():
         content = public_content()
         children = {
-            'archive': [dict(label='People & Crews', href='/archive?view=people&collection=people'),
+            'archive': [dict(label='People & Teams', href='/archive?view=people&collection=people'),
                         dict(label='History & Timeline', href='/archive/timeline'),
                         dict(label='Lock In · Card Battle Game', href='/archive/lock-in'),
                         dict(label='Submit', href='/submit')],
@@ -116,7 +116,7 @@ def install_information_architecture(app, ns):
                                **public_content(), **extra)
 
     def archive_page(section):
-        # Archive Overview is timeline-first. Keep the dedicated People & Crews
+        # Archive Overview is timeline-first. Keep the dedicated People & Teams
         # collection browser so its ranked profile cloud remains accessible.
         overview = section == 'archive' and request.args.get('view') != 'people'
         timeline = section == 'timeline' or overview
