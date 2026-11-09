@@ -78,6 +78,8 @@ def upcoming_calendar(today=None, session_factory=None):
         entries.append(dict(date=event_date.isoformat(), title=item["title"],
                             href=item.get("href") or "/archive/timeline",
                             status="UPCOMING", description=item.get("venue") or ""))
+    for entry in entries:
+        entry["display_date"] = date.fromisoformat(entry["date"]).strftime("%B %-d, %Y")
     entries.sort(key=lambda item: (item["date"], item["title"]))
     by_day = {}
     for item in entries:
@@ -86,7 +88,7 @@ def upcoming_calendar(today=None, session_factory=None):
     for offset in range(30):
         day = today + timedelta(days=offset)
         days.append(dict(iso=day.isoformat(), number=day.day,
-                         weekday=day.strftime("%a").upper(), month=day.strftime("%b").upper(),
+                         weekday=day.strftime("%a").upper(), month=day.strftime("%B").upper(),
                          events=by_day.get(day.isoformat(), []), today=offset == 0))
     return dict(start=today.isoformat(), end=end.isoformat(),
                 label=today.strftime("%B %d").upper() + " – " + end.strftime("%B %d, %Y").upper(),
