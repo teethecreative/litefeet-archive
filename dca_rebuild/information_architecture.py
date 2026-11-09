@@ -20,12 +20,15 @@ from dca_rebuild.archive_catalog import (
 # Stable future catalog; readiness is separate from the intended ordering.
 SECTION_CATALOG = (
     ('home', 'Home', '/', True),
-    ('archive', 'The Archive', '/archive/timeline', True),
-    ('people', 'People', '/people', False),
+    ('archive', 'The Archive', '/archive', True),
+    ('people', 'People & Teams', '/archive/people', True),
+    ('timeline', 'History & Timeline', '/archive/timeline', True),
+    ('calendar', 'Upcoming Calendar', '/calendar', True),
+    ('awards', 'Awards & Recognition', '/awards', True),
+    ('lock-in', 'Lock In Card Battle Game', '/archive/lock-in', True),
     ('music', 'Music', '/litefeet-music', True),
-    ('media', 'Media', '/media', True),
+    ('media', 'Media', '/media', False),
     ('stories', 'Stories & Media', '/stories', False),
-    ('awards', 'Awards', '/awards', True),
     ('community', 'Community', '/community', False),
     ('about', 'About', '/about', True),
 )
@@ -56,13 +59,6 @@ def install_information_architecture(app, ns):
     def vault_site_context():
         content = public_content()
         children = {
-            'archive': [dict(label='People & Teams', href='/archive/people'),
-                        dict(label='History & Timeline', href='/archive/timeline'),
-                        dict(label='Upcoming Calendar', href='/calendar'),
-                        dict(label='Events', href='/archive/timeline?collection=events'),
-                        dict(label='Awards & Recognition', href='/archive/timeline?collection=awards'),
-                        dict(label='Lock In · Card Battle Game', href='/archive/lock-in'),
-                        dict(label='Submit', href='/submit')],
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
                        dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
                        dict(label='HypeItUpTV Awards', href='/awards/hypeitup'),
@@ -75,6 +71,10 @@ def install_information_architecture(app, ns):
         }
         path = request.path
         active = 'home' if path == '/' else (
+            'people' if path.startswith('/archive/people') else
+            'timeline' if path.startswith(('/archive/timeline', '/archive/history', '/archive/records')) else
+            'lock-in' if path.startswith('/archive/lock-in') else
+            'calendar' if path.startswith(('/calendar', '/events')) else
             'awards' if path.startswith(('/awards', '/dca', '/litefeet-awards', '/hypeitup-awards')) else
             'music' if path.startswith('/litefeet-music') else
             'media' if path.startswith('/media') else
@@ -150,14 +150,21 @@ def install_information_architecture(app, ns):
 
     @app.get('/archive', endpoint='vault_archive')
     def archive():
-        """Permanent compatibility redirect; the old landing page no longer exists."""
+        """Direct Archive overview; preserve legacy bookmarked filters."""
         if request.args.get('collection') == 'music':
             return redirect(url_for('vault_music_public'), code=302)
         if request.args.get('view') == 'people' or request.args.get('collection') == 'people':
-            query = {k: v for k, v in request.args.items() if k not in ('view', 'collection')}
-            return redirect(url_for('vault_archive_people', **query), code=301)
-        query = {k: v for k, v in request.args.items() if k != 'view'}
-        return redirect(url_for('vault_timeline', **query), code=301)
+            query = {k: v for k, v in request.args.items() if k not in ('view','collection')}
+            return redirect(url_for('vault_archive_people', **query), code=302)
+        if request.args.get('collection') or request.args.get('q') or request.args.get('view') == 'timeline':
+            query = {k: v for k, v in request.args.items() if k != 'view'}
+            return redirect(url_for('vault_timeline', **query), code=302)
+        return section_page('overview')
+
+    @app.get('/calendar', endpoint='vault_calendar_public')
+    def public_calendar():
+        return render_template('calendar_public.html',
+                               calendar=upcoming_calendar(session_factory=ns['SessionLocal']))
 
     @app.get('/archive/people', endpoint='vault_archive_people')
     def archive_people():
