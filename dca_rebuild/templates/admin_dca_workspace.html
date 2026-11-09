@@ -44,7 +44,7 @@
 {% elif section in ['categories','activity','results'] %}
 <form method="get" class="lfv-admin-workspace-filters" role="search"><label>Search {{ section|replace('_',' ') }}
 <input name="q" value="{{ search }}" maxlength="100" placeholder="Category or nominee"></label><button type="submit">Search</button>{% if search %}<a href="{{ url_for('admin_dca_workspace_section',section=section) }}">Clear</a>{% endif %}</form>
-<p class="lfv-admin-workspace-count">{{ total }} record{% if total != 1 %}s{% endif %} · up to 20 per page</p>
+<p class="lfv-admin-workspace-count">{{ total }} record{% if total != 1 %}s{% endif %} · up to {{ page_size }} per page</p>
 <div class="lfv-admin-table-wrap"><table class="lfv-admin-review-table">
 {% if section == 'categories' %}
 <thead><tr><th scope="col">2026 Category</th><th scope="col">Status</th><th scope="col">Origin</th><th scope="col">Description</th></tr></thead>
