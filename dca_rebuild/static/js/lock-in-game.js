@@ -29,6 +29,10 @@
     if(deck.length<25||deck.length>50)p.push("A deck must contain 25–50 total cards.");
     if(!limits())p.push("Card count exceeds its restriction: Unlimited 3, Semi-Limited 2, Limited 1, Forbidden 0.");
     ["Dancer","Song","Arena"].forEach(function(t){if(!deck.some(function(c){return c.type===t;}))p.push("A "+t+" card is required for this 1v1 setup.");});
+    if(!deck.some(function(card){return card.type==="Move"&&["Rev Ups","Wops"].includes(pool[card.id]&&pool[card.id].move_family);}))
+      p.push("Add a Rev Up or Tone Wop opening card.");
+    if(!deck.some(function(card){var item=pool[card.id]||card;return item.type==="Trick"||(item.type==="Move"&&["Footwork","Combo"].includes(item.move_family));}))
+      p.push("Add at least one Footwork, Combo, or Trick main-move card.");
     return p;
   }
   function options(t){
@@ -61,7 +65,7 @@
     el("#lock-catalog").innerHTML=candidates.map(function(id){
       return '<option value="'+escape(id)+'">'+escape(pool[id].type+" · "+pool[id].name+(pool[id].producer?" · Prod. "+pool[id].producer:""))+'</option>';
     }).join("");
-    el("#lock-search-feedback").textContent=candidates.length?candidates.length+" matching cards":"No matching cards. You can request a new one.";
+    el("#lock-search-feedback").textContent=candidates.length?candidates.length+" matching cards · Catalog entries include planning and reference cards, not all finalized.":"No matching cards. You can request a new one.";
     el("#lock-add").disabled=candidates.length===0;
   }
 
@@ -81,7 +85,7 @@
     if(phase==="rev"&&card.type==="Move"&&["Rev Ups","Wops"].includes(card.move_family)){
       practiceScenario.rev=id;
     }
-    if(phase==="main"&&(card.type==="Move"||card.type==="Trick")){
+    if(phase==="main"&&(card.type==="Trick"||(card.type==="Move"&&["Footwork","Combo"].includes(card.move_family)))){
       practiceScenario.main=id;
       if(id===practiceScenario.trick)practiceScenario.trick="";
     }
@@ -107,7 +111,9 @@
       '<div class="lock-sequence-card"><span>4. Lock In</span></div>';
     var eligible;
     if(stage==="rev") eligible=practiceCandidates("Move").filter(function(card){return ["Rev Ups","Wops"].includes(card.move_family);});
-    else if(stage==="main") eligible=sc.moves;
+    else if(stage==="main") eligible=sc.moves.filter(function(card){
+      return card.type==="Trick"||["Footwork","Combo"].includes(card.move_family);
+    });
     else eligible=sc.fribs.filter(function(card){return card.id!==sc.main;});
     if(stage==="main") {
       // Stutter Step is documented footwork. Unclassified individual moves
@@ -147,7 +153,7 @@
       return;
     }
     var opponent=randomOne(moves);
-    var mainMoves=shuffle(moves.filter(function(card){return card.id!==opponent.id&&!["Rev Ups","Wops"].includes(card.move_family);}));
+    var mainMoves=shuffle(moves.filter(function(card){return card.id!==opponent.id&&["Footwork","Combo"].includes(card.move_family);}));
     // Include documented footwork and a mix of other moves and tricks.
     var footwork=mainMoves.find(function(card){return card.move_family==="Footwork";});
     var responses=footwork?[footwork]:[];
