@@ -486,3 +486,42 @@ def test_lock_in_compact_rules_blank_deck_and_full_suggested_dancer_list(website
     # All historical public people tagged as dancers remain in the card source,
     # rather than only the featured 20-person word cloud.
     assert len(dancers) > 30
+
+
+def test_baby_o_step_spank_and_source_roster_membership(website):
+    from dca_rebuild.lock_in import (
+        public_card_catalog, documented_teams, SOURCE_TEAM_ROSTERS,
+        proposed_shoe_trick_bp, sample_deck_readiness,
+    )
+    cards = {card["id"]: card for card in public_card_catalog()}
+    assert cards["Move::Baby O Step"]["move_family"] == "Spank"
+    assert "Spank" not in cards
+    assert "Public Enemies" in documented_teams("Ben 10")
+    assert "Public Enemies" in documented_teams("J Man")
+    assert "Public Enemies" in documented_teams("sha illz")
+    assert "Public Enemies" not in documented_teams("Jo Smooth")
+    assert documented_teams("Ben") == ()
+    assert cards["Dancer::Ben 10"]["documented_teams"] == ("Public Enemies",)
+    assert "2 Real Boys" in cards["Dancer::Kid Patt"]["documented_teams"]
+    assert len(SOURCE_TEAM_ROSTERS["Public Enemies"]) == 10
+    assert proposed_shoe_trick_bp("Shoe Clap", "Ben 10")["proposed_total"] == 13
+    assert proposed_shoe_trick_bp("Shoe Clap", "Sha Illz")["proposed_total"] == 8
+    assert proposed_shoe_trick_bp("Shoe Clap", "Jo Smooth")["proposed_total"] == 3
+    assert proposed_shoe_trick_bp("Shoe Foot Clap", "J Man")["proposed_total"] == 13
+    assert proposed_shoe_trick_bp("Shoe Foot Clap", "Funny Black")["proposed_total"] == 8
+    assert proposed_shoe_trick_bp("Hat Trick", "Ben 10") is None
+    assert sample_deck_readiness((
+        ("Dancer", ("Jo Smooth",)), ("Song", ("Beat",)),
+        ("Arena", ("Venue",)),
+        ("Move", ("Tone Whop", "Baby O Step")),
+    ))["playable"]
+    html = website.test_client().get("/archive/lock-in").get_data(as_text=True)
+    assert '<option value="Spank">Spank</option>' in html
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[1] /
+          "dca_rebuild/static/js/lock-in-game.js").read_text()
+    assert "function renderTeamContext()" in js
+    assert "function proposedShoeTrickEffect(name,dancer)" in js
+    assert 'trick==="shoe clap"' in js
+    assert 'trick==="shoe foot clap"' in js
+    assert '["Footwork","Combo","Bad One","Spank"].includes(card.move_family)' in js
