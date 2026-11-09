@@ -35,6 +35,12 @@ def test_dca_admin_sections_are_private_and_separate(website):
     assert client.get("/admin/awards/categories?page=0").status_code == 400
     html = client.get("/admin").get_data(as_text=True)
     assert 'href="/admin/awards"' in html
+    # The historical Round 1 route expects its 2023 reference edition.
+    # Seed it explicitly in this isolated test database; production already
+    # carries the archived edition and its survey data.
+    with database[1].begin() as db:
+        if not db.query(DCAEdition).filter_by(year=2023).first():
+            db.add(DCAEdition(year=2023, title="DCA 2023", phase="archived"))
     archive = client.get("/admin/round1").get_data(as_text=True)
     assert "Historical Round 1 category survey" in archive
     assert 'href="/admin/awards"' in archive
