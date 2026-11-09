@@ -144,3 +144,23 @@ def test_archive_and_lock_in_review_controls_do_not_publish_records(website, dat
     with database[1]() as db:
         assert db.get(LockInCardRequest, card_id).status == "approved"
         assert db.get(VaultArchiveVerification, archive_id).moderation_status == "rejected"
+
+
+def test_original_admin_control_room_is_restored_without_losing_new_overview(website, database):
+    client = website.test_client()
+    assert client.get("/admin/control-room").status_code in (302, 303, 401, 403)
+    with client.session_transaction() as state:
+        state["ledger_admin_authenticated"] = True
+    old = client.get("/admin/control-room")
+    assert old.status_code == 200
+    html = old.get_data(as_text=True)
+    assert "CONTROL" in html and "ROOM" in html
+    assert 'id="archive"' in html
+    assert 'id="awards"' in html
+    assert 'id="community"' in html
+    assert "EVENT SUBMISSIONS" in html
+    assert 'href="/admin"' in html
+    assert 'href="/admin/control-room"' in html
+    new = client.get("/admin")
+    assert new.status_code == 200
+    assert "Needs Attention" in new.get_data(as_text=True)
