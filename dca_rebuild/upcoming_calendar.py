@@ -24,6 +24,14 @@ def curated_events():
     return tuple(item for item in items if item.get("status") == "published")
 
 
+def curated_weekly_events():
+    if not CURATED_PATH.exists():
+        return ()
+    with CURATED_PATH.open(encoding="utf-8") as handle:
+        items = json.load(handle).get("weekly_events", [])
+    return tuple(item for item in items if item.get("status") == "published")
+
+
 def upcoming_calendar(today=None, session_factory=None):
     """Return 30 inclusive local calendar days (NY-local date provided by caller)."""
     today = today or datetime.now(ZoneInfo("America/New_York")).date()
@@ -78,6 +86,23 @@ def upcoming_calendar(today=None, session_factory=None):
         entries.append(dict(date=event_date.isoformat(), title=item["title"],
                             href=item.get("href") or "/archive/timeline",
                             status="UPCOMING", description=item.get("venue") or ""))
+    # Recurring public sessions are expanded only within the visible calendar window.
+    # Closures and schedule changes remain subject to organizer notifications.
+    for item in curated_weekly_events():
+        weekdays = item.get("weekdays", [])
+        for offset in range(30):
+            event_date = today + timedelta(days=offset)
+            if event_date.weekday() not in weekdays:
+                continue
+            identity = (event_date.isoformat(), item["title"].casefold())
+            if identity in seen:
+                continue
+            seen.add(identity)
+            details = " · ".join(part for part in (
+                item.get("time"), item.get("venue"), item.get("notice")) if part)
+            entries.append(dict(date=event_date.isoformat(), title=item["title"],
+                                href=item.get("href") or "/archive/timeline",
+                                status="WEEKLY", description=details))
     for entry in entries:
         entry["display_date"] = date.fromisoformat(entry["date"]).strftime("%B %-d, %Y")
     entries.sort(key=lambda item: (item["date"], item["title"]))

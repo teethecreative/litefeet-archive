@@ -77,3 +77,17 @@ def test_phase1_keeps_archive_awards_and_community_routes(website):
     for route in ('/archive', '/awards', '/awards/dancers-choice/2026',
                   '/awards/dancers-choice/2023', '/community', '/about'):
         assert client.get(route).status_code == 200, route
+
+
+def test_teen_nite_recurs_tuesday_thursday_with_closure_notice():
+    from datetime import date
+    from dca_rebuild.upcoming_calendar import upcoming_calendar
+    calendar = upcoming_calendar(today=date(2026, 11, 9))
+    sessions = [e for e in calendar['events'] if e['title'].startswith('Teen Nite')]
+    assert len(sessions) == 9
+    assert all(date.fromisoformat(e['date']).weekday() in (1, 3) for e in sessions)
+    assert sessions[0]['date'] == '2026-11-10'
+    assert all('6:00–9:00 PM' in e['description'] for e in sessions)
+    assert all('237 East 104th Street' in e['description'] for e in sessions)
+    assert all('Check @teennightnyc on Instagram for closure notifications' in e['description'] for e in sessions)
+    assert all(e['href'] == 'https://www.instagram.com/teennightnyc/' for e in sessions)

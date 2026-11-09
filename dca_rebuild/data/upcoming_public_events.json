@@ -21,5 +21,20 @@
       "href": "https://www.instagram.com/p/DfSiFkAijqf/",
       "status": "published"
     }
+  ],
+  "weekly_events": [
+    {
+      "title": "Teen Nite — LiteFeet / Harlem Shake Lab",
+      "weekdays": [
+        1,
+        3
+      ],
+      "time": "6:00–9:00 PM",
+      "venue": "Union Settlement GWCC · 237 East 104th Street, Manhattan, NY",
+      "host": "Teen Nite / Dr. Richard Reeves",
+      "href": "https://www.instagram.com/teennightnyc/",
+      "notice": "Check @teennightnyc on Instagram for closure notifications or schedule changes before attending.",
+      "status": "published"
+    }
   ]
 }
