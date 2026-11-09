@@ -20,6 +20,8 @@ SECTION_CATALOG = (
     ('home', 'Home', '/', True),
     ('archive', 'The Archive', '/archive', True),
     ('people', 'People', '/people', False),
+    ('music', 'Music', '/litefeet-music', True),
+    ('media', 'Media', '/media', True),
     ('stories', 'Stories & Media', '/stories', False),
     ('awards', 'Awards', '/awards', True),
     ('community', 'Community', '/community', False),
@@ -55,7 +57,6 @@ def install_information_architecture(app, ns):
             'archive': [dict(label='People & Teams', href='/archive?view=people&collection=people'),
                         dict(label='History & Timeline', href='/archive/timeline'),
                         dict(label='Events', href='/archive?collection=events'),
-                        dict(label='Music & Media', href='/archive?collection=music'),
                         dict(label='Awards & Recognition', href='/archive?collection=awards'),
                         dict(label='Lock In · Card Battle Game', href='/archive/lock-in'),
                         dict(label='Submit', href='/submit')],
@@ -71,6 +72,8 @@ def install_information_architecture(app, ns):
         path = request.path
         active = 'home' if path == '/' else (
             'awards' if path.startswith(('/awards', '/dca', '/litefeet-awards', '/hypeitup-awards')) else
+            'music' if path.startswith('/litefeet-music') else
+            'media' if path.startswith('/media') else
             'archive' if path.startswith(('/archive', '/community', '/submit', '/newsletter')) else
             'about' if path.startswith('/about') else None)
         navigation = [dict(key=k, label=label, href=href, active=k == active,
@@ -80,7 +83,8 @@ def install_information_architecture(app, ns):
         if path != '/' and not path.startswith(('/admin', '/beta')):
             breadcrumbs = [dict(label='Home', href='/')]
             section = next((s for s in navigation if s['key'] == active), None)
-            labels = {'vault_archive': 'The Archive', 'vault_timeline': 'Historical Timeline',
+            labels = {'vault_music_public': 'Release Radar', 'vault_music_release': 'Music Record',
+                      'vault_media_public': 'Media', 'vault_archive': 'The Archive', 'vault_timeline': 'Historical Timeline',
                       'vault_history_guide': 'Cultural History', 'vault_lock_in': 'Lock In',
                       'vault_community': 'Contribute & Correct', 'legacy_about': 'About', 'awards_home': 'Awards',
                       'vault_dca_program': 'Dancer’s Choice Awards', 'dca_2026_home': '2026',
@@ -119,6 +123,8 @@ def install_information_architecture(app, ns):
                                **public_content(), **extra)
 
     def archive_page(section):
+        if request.args.get('collection') == 'music':
+            return redirect(url_for('vault_music_public'), code=302)
         # Archive Overview is timeline-first. Keep the dedicated People & Teams
         # collection browser so its ranked profile cloud remains accessible.
         overview = (section == 'archive' and request.args.get('view') != 'people'
