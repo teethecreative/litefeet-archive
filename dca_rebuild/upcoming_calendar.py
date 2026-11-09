@@ -144,6 +144,7 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
                 try:
                     first_day = date.fromisoformat(item.start_date)
                     until = date.fromisoformat(item.recurrence_until) if item.recurrence_until else None
+                    last_day = date.fromisoformat(item.end_date) if item.end_date else first_day
                 except (TypeError, ValueError):
                     continue
                 rule = item.recurrence_rule or "none"
@@ -155,7 +156,6 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
                         continue
                     if not weekdays:
                         weekdays = {first_day.weekday()}
-                last_day = date.fromisoformat(item.end_date) if item.end_date else first_day
                 for offset in range(window_days):
                     day = today + timedelta(days=offset)
                     if day < first_day or (until and day > until):
