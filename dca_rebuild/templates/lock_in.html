@@ -97,6 +97,14 @@
             <label>Arena type <input name="arena_type" maxlength="120" placeholder="Park, community center, venue…"></label>
             <label>History of this space <textarea name="arena_history" maxlength="700" rows="2"></textarea></label>
           </div>
+          <div class="lock-request-fields" data-request-type="Move" hidden>
+            <label>Move style or setup <input name="move_style" maxlength="160" placeholder="Footwork, combo, setup…"></label>
+            <label>Who or what can use this move? <input name="move_connection" maxlength="280"></label>
+          </div>
+          <div class="lock-request-fields" data-request-type="Trick" hidden>
+            <label>Trick style or variation <input name="trick_style" maxlength="160" placeholder="Shoe, hat, shirt…"></label>
+            <label>Special conditions <input name="trick_connection" maxlength="280"></label>
+          </div>
           <label for="lock-request-connection">Gameplay idea / connections</label>
           <textarea name="gameplay" id="lock-request-connection" maxlength="1000" rows="3" placeholder="How should the card work? Who or what does it connect with?"></textarea>
           <label for="lock-request-source">Source or reference (optional)</label><input name="source" id="lock-request-source" type="url" maxlength="800" placeholder="https://…">
@@ -119,6 +127,7 @@
     </div>
   </div>
   <script id="lock-samples" type="application/json">{{ sample_decks|tojson }}</script>
+  <script id="lock-card-catalog" type="application/json">{{ card_catalog|tojson }}</script>
   <script id="lock-restrictions" type="application/json">{{ card_restrictions|tojson }}</script>
 </section>
 <section id="practice">
