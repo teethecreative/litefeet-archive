@@ -2366,25 +2366,20 @@ def lfa_submit():
 @app.route("/admin")
 @admin_login_required
 def admin_dashboard():
-    from dca_rebuild.models import VaultGatheringSubmission
+    from dca_rebuild.models import VaultGatheringSubmission, VaultDevelopmentItem, LedgerPageView
+    from dca_rebuild.admin_workspace import _queue
+    recent = datetime.utcnow() - timedelta(days=7)
     with SessionLocal() as db:
-        event_pending = db.query(VaultGatheringSubmission).filter(
-            VaultGatheringSubmission.status == "pending").count()
-        event_review_queue = db.query(VaultGatheringSubmission).filter(
-            VaultGatheringSubmission.status == "pending").order_by(
-            VaultGatheringSubmission.created_at.asc(),
-            VaultGatheringSubmission.id.asc()
-        ).limit(10).all()
-        event_review_queue = [
-            dict(id=x.id, title=x.title, date=x.start_date,
-                 kind=x.gathering_type, received=x.created_at)
-            for x in event_review_queue
-        ]
+        pending_total, rows = _queue(db, "all", 1, "oldest")
+        event_pending = db.query(VaultGatheringSubmission).filter_by(status="pending").count()
+        development_pending = db.query(VaultDevelopmentItem).filter_by(status="needs_review").count()
+        seven_day_views = db.query(LedgerPageView).filter(
+            LedgerPageView.viewed_at >= recent).count()
     return render_template(
-        "admin_dashboard.html",
-        event_pending=event_pending, event_review_queue=event_review_queue,
+        "admin_workspace_overview.html", pending_total=pending_total, rows=rows,
+        event_pending=event_pending, development_pending=development_pending,
+        seven_day_views=seven_day_views,
     )
-
 
 @app.route("/admin/lfa/submissions")
 @admin_login_required
@@ -5028,3 +5023,7 @@ install_sharing(app)
 
 from dca_rebuild.share_awards import install_award_sharing
 install_award_sharing(app)
+
+# Unified admin overview, pending review queue, development workspace and feedback.
+from dca_rebuild.admin_workspace import install_admin_workspace
+install_admin_workspace(app, globals())

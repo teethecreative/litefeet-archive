@@ -1,6 +1,6 @@
 <nav
     class="ledger-admin-nav"
-    aria-label="Ledger Admin"
+    aria-label="The LiteFeet Vault Admin"
 >
 
     <div class="ledger-admin-nav__top">
@@ -9,9 +9,9 @@
             class="ledger-admin-nav__brand"
             href="{{ url_for('admin_dashboard') }}"
         >
-            LITEFEET LEDGER
+            THE LITEFEET VAULT
             <span>
-                ADMIN CONTROL ROOM
+                ADMIN CONSOLE
             </span>
         </a>
 
@@ -33,9 +33,11 @@
 
     <div class="ledger-admin-nav__links">
 
-        <a href="{{ url_for('admin_dashboard') }}">
+        <a href="{{ url_for('admin_dashboard') }}" {% if request.endpoint == 'admin_dashboard' %}aria-current="page"{% endif %}>
             OVERVIEW
         </a>
+        <a href="{{ url_for('admin_vault_review_queue') }}" {% if request.endpoint in ['admin_vault_review_queue','admin_vault_auxiliary_review'] %}aria-current="page"{% endif %}>REVIEW QUEUE</a>
+        <a href="{{ url_for('admin_vault_development') }}" {% if request.endpoint == 'admin_vault_development' %}aria-current="page"{% endif %}>DEVELOPMENT</a>
 
         <a
             href="{{ url_for('admin_dashboard') }}#archive"
