@@ -13,7 +13,7 @@ from PIL import Image, ImageDraw
 from dca_rebuild.seo import SITE_URL, card_key_for_path, metadata_for_path, path_for_card_key
 from dca_rebuild.social_cards import _font, _wrap, render_social_card
 
-VERSION = "20261109"
+VERSION = "20261109-sharefix2"
 ICON_LINK = re.compile(
     r'<link\b(?=[^>]*\brel\s*=\s*(["\'])(?:icon|shortcut\s+icon|apple-touch-icon)\1)[^>]*>',
     re.I,
@@ -132,7 +132,7 @@ SHARE_UI = """
     <div><p class="lfv-share-eyebrow">THE LITEFEET VAULT</p><h2 id="lfv-share-title">Share this page</h2></div>
     <button class="lfv-share-close" type="button" id="lfv-share-close" aria-label="Close sharing">×</button>
   </div>
-  <p class="lfv-share-copy">Create a graphic to share on Instagram, or copy the page link.</p>
+  <p class="lfv-share-copy">Choose what to share, preview your graphic, and save or share it.</p>
   <section id="lfv-awards-controls" hidden aria-label="Award graphic options">
     <label for="lfv-awards-scope">Share</label>
     <select id="lfv-awards-scope">
@@ -151,14 +151,10 @@ SHARE_UI = """
       <label><input type="radio" name="lfv-share-theme" value="dark"> Dark</label>
     </fieldset>
     <div id="lfv-nominee-reason-controls" hidden>
-      <label for="lfv-reason-choice">Why do you want people to nominate them?</label>
+      <label for="lfv-reason-choice">Explanation for this nominee</label>
       <select id="lfv-reason-choice">
         <option value="none">No explanation</option>
-        <option value="impact">Their impact on LiteFeet</option>
-        <option value="creativity">Their creativity and originality</option>
-        <option value="consistency">Their consistency and dedication</option>
-        <option value="community">Their contributions to the community</option>
-        <option value="custom">Write my own reason</option>
+        <option value="custom">Write my own explanation</option>
       </select>
       <label id="lfv-reason-custom-label" for="lfv-reason-custom" hidden>Your message</label>
       <textarea id="lfv-reason-custom" maxlength="180" rows="3" placeholder="Why do you support this nominee?" hidden></textarea>
