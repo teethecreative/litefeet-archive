@@ -13,7 +13,7 @@ def _admin_client(website):
     return client
 
 
-def test_dca_admin_sections_are_private_and_separate(website):
+def test_dca_admin_sections_are_private_and_separate(website, database):
     guest = website.test_client()
     for path in ("/admin/awards", "/admin/awards/categories", "/admin/awards/activity",
                  "/admin/awards/results", "/admin/awards/history"):
