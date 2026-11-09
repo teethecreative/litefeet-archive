@@ -4934,3 +4934,8 @@ install_calendar_pages(app, globals())
 # original app.py legacy template. Keep other legacy routes unchanged.
 from dca_rebuild.music_public import install_music_public
 install_music_public(app, engine)
+
+
+# Sitewide browser identity, social previews and Instagram-ready sharing.
+from dca_rebuild.share_sitewide import install_sharing
+install_sharing(app)
