@@ -17,16 +17,19 @@
   <!-- LFV_EDITORIAL_V2_20261102 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dca-standings-grid.css') }}">
 </head>
-<body>
+<body{% if results_view %} class="lfv-standings-body"{% endif %}>
 {% include "_navigation.html" %}
 <main class="lf-nom-2026 lf9e{% if results_view %} lf9e-standings-page{% elif not identified %} lf9e-intro-page{% endif %}" id="nominations">
+  {% if results_view %}<section class="lf9e-standings-surface" aria-label="Nominee standings">{% endif %}
   <p class="lf-nom-eyebrow">{% if results_view or not identified %}DCA 2026{% else %}DANCER'S CHOICE AWARDS · 2026{% endif %}</p>
   {% with messages = get_flashed_messages() %}{% for message in messages %}
     <p class="lf9e-message" role="status">{{ message }}</p>
   {% endfor %}{% endwith %}
   {% if results_view %}
     {% include "dca_nominee_standings.html" %}
+    </section>
   {% elif not identified %}
   <section class="lf9e-introduction" aria-labelledby="intro-title">
     <h1 id="intro-title">NOMINATIONS</h1>
