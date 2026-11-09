@@ -100,6 +100,10 @@ def all_timeline_entries():
     guide = load_history_guide()
     entries = []
     for item in all_records():
+        # Music releases/research have separate Music and Media destinations.
+        # Retain the source record and canonical detail URL for old bookmarks.
+        if item.get("collection") == "music":
+            continue
         label = item.get("date_label") or "DATE UNDER REVIEW"
         year = int(item["date"][:4]) if item.get("date") else 0
         sources = item.get("research_sources") or []
@@ -161,7 +165,10 @@ def timeline_browse(query="", collection="all", page=1, page_size=PAGE_SIZE, era
     query = re.sub(r"\s+", " ", (query or "").strip()).casefold()[:120]
     page = max(1, min(int(page), 10000))
     page_size = max(1, min(int(page_size), MAX_PAGE_SIZE))
-    available = {"all", "events", "history", "moves", "music", "people", "awards"}
+    available = {"all", "events", "history", "moves", "people", "awards"}
+    if collection == "music":
+        return {"items": [], "count": 0, "page": page, "has_more": False,
+                "next_page": None, "query": query, "collection": collection}
     if collection not in available:
         collection = "all"
     tokens = query.split()

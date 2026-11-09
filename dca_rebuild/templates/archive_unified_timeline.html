@@ -1,7 +1,7 @@
 <header class="lfv-unified-hero">
   <p class="vault-kicker">THE ARCHIVE / CULTURAL HISTORY</p>
   <h1>HISTORY &amp; TIMELINE</h1>
-  <p>ONE CHRONOLOGICAL RECORD OF LITEFEET, GET LITE, THE HARLEM SHAKE, DANCERS, CREWS, MOVES, MUSIC AND EVENTS. EXPAND RESEARCH TO SEE THE EVIDENCE.</p>
+  <p>ONE CHRONOLOGICAL RECORD OF LITEFEET, GET LITE, THE HARLEM SHAKE, DANCERS, TEAMS, MOVES AND EVENTS. EXPAND RESEARCH TO SEE THE EVIDENCE.</p>
 </header>
 <nav class="lfv-archive-subnav" aria-label="ARCHIVE NAVIGATION">
   <a href="{{ url_for('vault_timeline') }}" aria-current="page">THE ARCHIVE</a>
@@ -15,7 +15,7 @@
     <div>
       <input id="timeline-search" type="search" name="q" maxlength="120" placeholder="SEARCH PEOPLE, HISTORY, EVENTS, MOVES…" value="{{ request.args.get('q','') }}">
       <select name="collection" aria-label="FILTER THE TIMELINE">
-        {% for key,label in [('all','ALL RECORDS'),('history','HISTORY & RESEARCH'),('events','EVENTS & BATTLES'),('people','PEOPLE & TEAMS'),('moves','MOVES'),('music','MUSIC'),('awards','AWARDS')] %}
+        {% for key,label in [('all','ALL RECORDS'),('history','HISTORY & RESEARCH'),('events','EVENTS & BATTLES'),('people','PEOPLE & TEAMS'),('moves','MOVES'),('awards','AWARDS')] %}
         <option value="{{ key }}" {% if archive_pagination.collection == key %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>

@@ -50,8 +50,10 @@ def test_search_filters_all_records_not_just_first_page(website):
     assert search['total'] == 1
     assert search['records'][0]['title'] == 'Clash of the Lites'
     musicians = client.get('/archive/api/records?collection=music').get_json()
-    assert musicians['total'] >= 1
-    assert 'music' in {r['collection'] for r in musicians['records']}
+    assert musicians['total'] == 0  # Music now has its own Release Radar.
+    assert find_record('research-get-lite-to-litefeet-music-evolution') is not None or any(
+        r['title'] == 'Get Lite to LiteFeet Music Evolution' for r in all_records()
+    )
     awards = client.get('/archive/api/records?collection=awards').get_json()
     assert awards['total'] == 1
     timeline = client.get('/archive/timeline')

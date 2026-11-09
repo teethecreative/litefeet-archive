@@ -20,8 +20,8 @@ def test_ready_navigation_and_every_active_link(website):
     client = website.test_client()
     html = client.get('/').get_data(as_text=True)
     items = navigation(html)
-    assert [x[1] for x in SECTION_CATALOG] == ['Home','The Archive','People','Stories & Media','Awards','Community','About']
-    assert [x['label'] for x in items] == ['Home','The Archive','Awards','About']
+    assert [x[1] for x in SECTION_CATALOG] == ['Home','The Archive','People','Music','Media','Stories & Media','Awards','Community','About']
+    assert [x['label'] for x in items] == ['Home','The Archive','Music','Media','Awards','About']
     links = [x['href'] for x in items] + [c['href'] for x in items for c in x['children']]
     assert not any('/admin' in x or '/nominations' in x for x in links)
     assert not any(x in links for x in ['/people','/stories','/awards/hypeitup'])
