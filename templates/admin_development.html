@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Development | The LiteFeet Vault Admin{% endblock %}
+{% block content %}
+<div class="lfv-dev">
+  <header class="lfv-dev-head"><div><a href="/admin">← Back to Overview</a><p class="dev-kicker">THE LITEFEET VAULT · ADMIN</p><h1>Development</h1><p>Track what is planned, active, needs work, or awaiting review. Community reports appear here.</p></div><a href="/feedback/development" target="_blank" rel="noopener">Public feedback form ↗</a></header>
+  <section class="dev-strip">{% for st in dev_statuses %}<a href="/admin/development?status={{ st | urlencode }}"><span>{{ st }}</span><strong>{{ dev_summary.get(st, 0) }}</strong></a>{% endfor %}</section>
+  <section class="dev-panel"><h2>Add development item</h2>
+    <form method="post" action="/admin/development/new" class="dev-create">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>Title<input name="title" maxlength="140" required placeholder="What needs to change?"></label>
+      <label>Category<select name="category">{% for c in dev_categories %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</select></label>
+      <label>Status<select name="status">{% for s in dev_statuses %}<option value="{{ s }}" {% if s == 'Planned' %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></label>
+      <label>Section<input name="section_name" maxlength="80" placeholder="e.g., Awards"></label>
+      <label class="dev-wide">Details<textarea name="description" rows="3" maxlength="4000" required></textarea></label>
+      <label class="dev-wide">Related page (optional)<input name="page_url" maxlength="500" placeholder="/awards/..."></label>
+      <button type="submit">Add item</button>
+    </form>
+  </section>
+  <section class="dev-panel"><div class="dev-row"><h2>Development queue</h2>
+    <form method="get"><label>Filter by status <select name="status" onchange="this.form.submit()"><option value="All">All statuses</option>{% for s in dev_statuses %}<option value="{{ s }}" {% if dev_filter == s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></label><noscript><button type="submit">Apply</button></noscript></form></div>
+    <div class="dev-table-wrap"><table><thead><tr><th>Received</th><th>Item</th><th>Category</th><th>Source</th><th>Status</th><th>Update</th></tr></thead><tbody>
+      {% for item in dev_items %}<tr id="dev-item-{{ item.id }}">
+        <td>{{ item.date_label }}</td><td><strong>{{ item.title }}</strong><p>{{ item.description }}</p>{% if item.page_url %}<small>{{ item.page_url }}</small>{% endif %}{% if item.contact_email %}<small>Contact: {{ item.contact_email }}</small>{% endif %}</td>
+        <td>{{ item.category }}</td><td>{{ item.source }}</td><td>{{ item.status }}</td>
+        <td><form method="post" action="/admin/development/{{ item.id }}/status"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="current_filter" value="{{ dev_filter }}"><input type="hidden" name="page" value="{{ dev_page }}"><select name="status" aria-label="New status for {{ item.title }}">{% for s in dev_statuses %}<option value="{{ s }}" {% if item.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select><button type="submit">Save</button></form></td>
+      </tr>{% else %}<tr><td colspan="6">No development items in this status.</td></tr>{% endfor %}
+    </tbody></table></div>
+    <div class="dev-page"><span>{{ dev_total }} items · Page {{ dev_page }} of {{ dev_pages }}</span><div>{% if dev_page > 1 %}<a href="/admin/development?status={{ dev_filter | urlencode }}&amp;page={{ dev_page - 1 }}">Previous</a>{% endif %}{% if dev_page < dev_pages %}<a href="/admin/development?status={{ dev_filter | urlencode }}&amp;page={{ dev_page + 1 }}">Next</a>{% endif %}</div></div>
+  </section>
+</div>
+<style>
+body:has(.lfv-dev) .site-shell>header,body:has(.lfv-dev) .site-shell>footer,body:has(.lfv-dev) .phase13-mobile-bar{display:none}
+body:has(.lfv-dev) .site-shell,body:has(.lfv-dev) .site-shell>main{max-width:none!important;width:100%;padding:0;margin:0}
+.lfv-dev{--ink:#162845;--muted:#68758a;--line:#dbe2eb;background:#f6f8fb;color:var(--ink);min-height:100vh;padding:28px clamp(16px,4vw,64px) 70px}
+html[data-theme=dark] .lfv-dev{--ink:#edf2fa;--muted:#afbdd1;--line:#394960;background:#0d1a2f}
+.lfv-dev *{box-sizing:border-box}.lfv-dev a{color:inherit}.lfv-dev-head{display:flex;justify-content:space-between;gap:15px;align-items:start;margin-bottom:24px}.lfv-dev-head>a{font-size:13px;font-weight:700}.lfv-dev-head h1{font-size:32px;color:var(--ink);margin:6px 0}.lfv-dev-head p{color:var(--muted);margin:0}.lfv-dev .dev-kicker{font-size:11px;letter-spacing:.1em;font-weight:700;margin-top:20px}.dev-strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:23px}.dev-strip a{background:transparent;border:1px solid var(--line);padding:13px;display:grid;gap:6px;border-radius:7px;text-decoration:none}.dev-strip span{color:var(--muted);font-size:11px}.dev-strip strong{font-size:24px}
+.dev-panel{background:transparent;border:1px solid var(--line);padding:20px;border-radius:9px;margin:15px 0}.dev-panel h2{color:var(--ink);font-size:19px;margin:0 0 15px}
+.dev-create{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}.dev-create label,.dev-row label{font-size:12px;font-weight:650;display:grid;gap:5px}.dev-create input,.dev-create textarea,.dev-create select,.dev-row select,.dev-table-wrap select{background:transparent;border:1px solid var(--line);border-radius:6px;padding:9px;color:var(--ink);width:100%;font:inherit}.dev-create .dev-wide{grid-column:span 4}.dev-create button,.dev-table-wrap button{background:#102a54;color:#fff;border:0;border-radius:6px;padding:9px 13px;cursor:pointer}.dev-create button{grid-column:span 2}.dev-row{display:flex;justify-content:space-between;align-items:start;gap:15px}
+.dev-table-wrap{overflow-x:auto}.dev-table-wrap table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}.dev-table-wrap th,.dev-table-wrap td{text-align:left;vertical-align:top;border-bottom:1px solid var(--line);padding:13px 10px;overflow-wrap:anywhere}.dev-table-wrap th{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}.dev-table-wrap th:nth-child(1){width:130px}.dev-table-wrap th:nth-child(2){width:34%}.dev-table-wrap th:last-child{width:150px}.dev-table-wrap td p{margin:6px 0;white-space:pre-wrap}.dev-table-wrap td small{display:block;color:var(--muted)}.dev-table-wrap td form{display:grid;gap:7px}
+.dev-page{display:flex;justify-content:space-between;gap:15px;padding-top:15px;font-size:12px}.dev-page div{display:flex;gap:15px}@media(max-width:900px){.dev-strip{grid-template-columns:repeat(3,1fr)}.dev-create{grid-template-columns:repeat(2,1fr)}.dev-create .dev-wide{grid-column:span 2}}@media(max-width:560px){.dev-strip{grid-template-columns:repeat(2,1fr)}.dev-create{display:block}.dev-create label{margin-bottom:10px}.dev-table-wrap table{min-width:740px}.lfv-dev-head{display:block}}
+</style>
+{% endblock %}
