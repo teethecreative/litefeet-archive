@@ -240,7 +240,12 @@ def install_clean_public_urls(app, session_factory):
 
     @app.context_processor
     def clean_page_links():
+        def person_link(record_slug):
+            record = next((r for r in all_records() if r["slug"] == record_slug), None)
+            return (person_href(record, all_records()) if record else
+                    "/archive/records/" + record_slug)
         return {
             "clean_category_url": lambda c: category_href(c, categories()),
             "clean_nominee_url": lambda c, n: nominee_href(c, n, categories()),
+            "clean_person_link": person_link,
         }
