@@ -264,7 +264,7 @@ def test_lock_in_has_one_game_testing_area_with_two_modes(website):
     assert 'id="lock-moves-mode" hidden' in html
     assert html.index('id="practice"') > html.index('id="lock-moves-mode"')
     assert html.index('id="practice"') < html.index('id="lock-samples"')
-    assert 'Test my moves' in html
+    assert '>Lock In</button>' in html
     assert 'Start 1v1' in html
     assert html.count('Practice the move-set phase') == 0
 
@@ -301,15 +301,17 @@ def test_move_set_practice_generates_opponent_move_song_and_arena(website):
     assert 'practiceCandidates("Move")' in js
     assert 'practiceCandidates("Song")' in js
     assert 'practiceCandidates("Arena")' in js
-    assert 'selectedMoves.length<3' in js
+    assert 'practiceScenario.rev' in js
+    assert 'practiceScenario.main' in js
     assert 'function scoreSituation()' in js
     assert 'function renderPracticeSelection()' in js
-    assert 'data-response-id' in js
-    assert 'data-move-up' in js and 'data-move-down' in js
-    assert 'data-move-remove' in js
+    assert 'data-practice-phase' in js
+    assert 'data-card-id' in js
+    assert 'lock-change-main' in js and 'lock-change-rev' in js
+    assert 'lock-no-trick' in js
     assert 'Generate Another Round' in html
-    assert 'not an official win or loss' in js
-    assert '× 2 BP' in js
+    assert 'finalized card rules' in js
+    assert '→ Lock In' in js
     assert 'function generateSituation()' in js
     assert 'Special card effects and counters are not automatically scored' not in js
 
@@ -325,6 +327,23 @@ def test_lock_in_move_families_preserve_individual_moves(website):
     from pathlib import Path
     js = (Path(__file__).resolve().parents[1] /
           "dca_rebuild/static/js/lock-in-game.js").read_text()
-    assert 'var families=["Rev Ups","Wops","Footwork"]' in js
-    assert 'card.move_family||"Other moves"' in js
-    assert 'responses=shuffle(responses)' in js
+    assert 'card.move_family==="Rev Ups"' in js
+    assert 'card.move_family==="Footwork"' in js
+    assert 'practiceScenario.trick' in js
+
+
+def test_lock_in_practice_follows_required_move_phases(website):
+    html=website.test_client().get('/archive/lock-in').get_data(as_text=True)
+    assert 'Rev Up → Footwork / Combo / Trick → Optional Trick Card → Lock In' in html
+    assert 'Choose your Rev Up first' in html
+    from pathlib import Path
+    js=(Path(__file__).resolve().parents[1]/'dca_rebuild/static/js/lock-in-game.js').read_text()
+    assert 'stage=!sc.rev?"rev":!sc.main?"main":"trick"' in js
+    assert 'var ready=!!sc.rev&&!!sc.main' in js
+    assert 'el("#lock-score-response").disabled=!ready' in js
+    assert 'if(stage==="main") eligible=sc.moves' in js
+    assert 'card.type==="Trick"' in js
+    assert 'stage==="trick"' in js
+    assert 'No Trick Card' in js
+    assert 'practiceScenario.trick' in js
+    assert 'picks.length*2' not in js
