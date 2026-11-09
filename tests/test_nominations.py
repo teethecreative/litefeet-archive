@@ -392,3 +392,23 @@ def test_category_grid_has_clear_invitation_without_activity_dashboard(website):
     assert 'id="official-title"' in html
     assert html.count('data-category-id=') == 25
     assert 'WRITE-IN CATEGORIES' in html
+
+
+def test_event_of_2023_category_renamed_only_for_2026(database):
+    from dca_rebuild.models import DCAEdition, DCACategory
+    from dca_rebuild.phase9e import correct_2026_event_category_title
+    _, factory, edition_id = database
+    with factory.begin() as db:
+        event = DCACategory(edition_id=edition_id, name='Best Event of 2023',
+                            normalized_name='best event of 2023',
+                            source_type='returning', status='official')
+        db.add(event)
+        db.flush()
+        original_id = event.id
+    assert correct_2026_event_category_title(factory)
+    assert not correct_2026_event_category_title(factory)
+    with factory() as db:
+        renamed = db.get(DCACategory, original_id)
+        assert renamed.name == 'Best Event of the Year'
+        assert renamed.normalized_name == 'best event of the year'
+        assert renamed.id == original_id
