@@ -13,7 +13,20 @@
 {% if section == 'lock-in' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/lock-in.css') }}">{% endif %}
 </head><body>{% include "_navigation.html" %}
 <main class="vault-section-page" id="vault-section-{{ section }}">
-{% if section == 'timeline' %}
+{% if section == 'overview' %}
+<header><p class="vault-kicker">THE LITEFEET VAULT / ARCHIVE</p><h1>The Archive</h1><p>Explore LiteFeet's people, events, awards, and cultural history.</p></header>
+<section aria-labelledby="archive-overview-title"><h2 id="archive-overview-title">Explore the Vault</h2>
+<div class="vault-section-grid">
+<a class="vault-collection" href="{{ url_for('vault_archive_people') }}"><strong>People &amp; Teams</strong><span>Discover dancers, teams and community profiles.</span></a>
+<a class="vault-collection" href="{{ url_for('vault_timeline') }}"><strong>History &amp; Timeline</strong><span>Browse the cultural record and its sources.</span></a>
+<a class="vault-collection" href="{{ url_for('vault_calendar_public') }}"><strong>Upcoming Calendar &amp; Events</strong><span>Find battles, classes, labs and gatherings.</span></a>
+<a class="vault-collection" href="{{ url_for('awards_home') }}"><strong>Awards &amp; Recognition</strong><span>Explore awards programs and documented recognition.</span></a>
+<a class="vault-collection" href="{{ url_for('vault_lock_in') }}"><strong>Lock In Card Battle Game</strong><span>Build decks and test the game.</span></a>
+</div></section>
+<section aria-labelledby="archive-contribute-title"><h2 id="archive-contribute-title">Contribute to the Vault</h2>
+<p>Share a flyer, event, correction, profile update, or historical source.</p>
+<a class="lfv-primary-cta" href="{{ url_for('vault_submit') }}">Submit to the Archive</a></section>
+{% elif section == 'timeline' %}
 {% include "archive_unified_timeline.html" %}
 {% elif section == 'people' %}
 {% include "archive_people_browser.html" %}
