@@ -101,7 +101,33 @@
           {% endif %}
         </section>
       {% endif %}
-      {% if record.can_verify %}
+      {% if record.record_type == 'event' %}
+      <section class="lfv-archive-outcomes" id="community-outcomes">
+        <h2>Community-reported outcomes</h2>
+        <p>These reports are community contributions, not official results. Only reviewed reports appear publicly.</p>
+        {% for report in community_outcome_reports %}
+          <article class="lfv-archive-outcome">
+            {% if report.winner %}<p><strong>Reported winner:</strong> {{ report.winner }}</p>{% endif %}
+            {% if report.loser %}<p><strong>Reported loser:</strong> {{ report.loser }}</p>{% endif %}
+            {% if report.explanation %}<p>{{ report.explanation }}</p>{% endif %}
+            {% if report.evidence_url %}<p><a href="{{ report.evidence_url }}" rel="nofollow noopener noreferrer" target="_blank">Supporting source</a></p>{% endif %}
+          </article>
+        {% else %}<p>No reviewed community outcome reports yet.</p>{% endfor %}
+        {% for message in get_flashed_messages(category_filter=['archive']) %}<p role="status">{{ message }}</p>{% endfor %}
+        <details>
+          <summary>Report a winner or loser</summary>
+          <form method="post" action="{{ url_for('vault_archive_report_outcome', slug=record.slug) }}">
+            <input type="hidden" name="csrf_token" value="{{ archive_csrf }}">
+            <label>Reported winner (optional)<input name="winner" maxlength="250"></label>
+            <label>Reported loser (optional)<input name="loser" maxlength="250"></label>
+            <label>Details (optional)<textarea name="explanation" maxlength="1500" rows="3"></textarea></label>
+            <label>Source link (optional)<input name="evidence_url" type="url" maxlength="500"></label>
+            <button type="submit">Submit for review</button>
+          </form>
+        </details>
+      </section>
+      {% endif %}
+      {% if record.can_verify and not (record.record_type == 'event' and record.source_kind == 'flyers') %}
       <section class="lfv-archive-verify" id="verification">
         <h2>Community verification</h2>
         {% if record.claim %}

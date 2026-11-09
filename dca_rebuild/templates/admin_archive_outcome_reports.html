@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Community outcome reports | The LiteFeet Vault Admin</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}"></head>
+<body class="ledger-admin">{% include "_admin_navigation.html" %}
+<main class="lfv-admin-workspace">
+<p><a href="{{ url_for('admin_dashboard') }}">← Admin overview</a></p>
+<header class="lfv-admin-workspace-head"><p class="lfv-admin-overline">ARCHIVE / COMMUNITY SUBMISSIONS</p><h1>Reported battle outcomes</h1>
+<p>These are unverified community reports, separate from the official historical record. Approval publishes them as community-reported outcomes without changing verified results.</p></header>
+<section class="lfv-admin-workspace-section"><h2>Review reports</h2>
+<div class="lfv-admin-table-wrap"><table class="lfv-admin-review-table">
+<thead><tr><th scope="col">Event</th><th scope="col">Reported outcome / evidence</th><th scope="col">Status</th><th scope="col">Review</th></tr></thead>
+<tbody>{% for report in reports %}<tr>
+<td><a href="{{ url_for('vault_archive_record',slug=report.slug) }}">{{ report.slug }}</a></td>
+<td>{% if report.winner %}<strong>Winner: {{ report.winner }}</strong>{% endif %}
+{% if report.loser %}<small>Loser: {{ report.loser }}</small>{% endif %}
+{% if report.explanation %}<small>{{ report.explanation }}</small>{% endif %}
+{% if report.evidence_url %}<small><a href="{{ report.evidence_url }}" rel="nofollow noopener noreferrer" target="_blank">Supporting source</a></small>{% endif %}</td>
+<td>{{ report.status|title }}</td>
+<td><form method="post" class="lfv-admin-inline-form" style="flex-wrap:wrap">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="report_id" value="{{ report.id }}">
+<button name="status" value="approved" type="submit">Approve report</button>
+<button name="status" value="rejected" type="submit">Reject</button>
+<button name="status" value="pending" type="submit">Pending</button></form></td></tr>
+{% else %}<tr><td colspan="4">No community outcome reports submitted.</td></tr>{% endfor %}</tbody></table></div>
+</section></main>
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script></body></html>
