@@ -66,7 +66,7 @@
         {% for value, label in roles %}<option value="{{ value }}" {% if values.get('role') == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
       </select>
       <div class="lfwr-form-grid">
-        <div><label for="lfwr-name">Adult contact name <span>*</span></label><input id="lfwr-name" name="contact_name" maxlength="160" autocomplete="name" value="{{ values.get('contact_name', '') }}" required></div>
+        <div><label for="lfwr-name">Name <span>*</span></label><input id="lfwr-name" name="contact_name" maxlength="160" autocomplete="name" value="{{ values.get('contact_name', '') }}" required></div>
         <div><label for="lfwr-email">Contact email <span>*</span></label><input id="lfwr-email" type="email" name="email" maxlength="320" autocomplete="email" value="{{ values.get('email', '') }}" required></div>
         <div class="lfwr-conditional" data-for-roles="dancer choreography captain"><label for="lfwr-dance">Dance name (optional)</label><input id="lfwr-dance" name="dance_name" maxlength="160" value="{{ values.get('dance_name', '') }}"></div>
         <div class="lfwr-conditional" data-for-roles="dancer choreography captain"><label for="lfwr-team">Team (optional)</label><input id="lfwr-team" name="team" maxlength="160" value="{{ values.get('team', '') }}"></div>

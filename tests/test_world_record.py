@@ -69,3 +69,26 @@ def test_world_record_csrf_and_guardian_consent(website, database):
     assert missing.status_code == 400
     with database[1]() as db:
         assert db.query(WorldRecordInterest).count() == 0
+
+
+def test_world_record_name_labels_and_theme_styles(website):
+    client = website.test_client()
+    public = client.get("/world-record")
+    assert public.status_code == 200
+    assert b'for="lfwr-name">Name ' in public.data
+    assert b"Adult contact name" not in public.data
+    with client.session_transaction() as sess:
+        sess["ledger_admin_authenticated"] = True
+    admin = client.get("/admin/world-record")
+    assert admin.status_code == 200
+    assert b"<th>Name</th>" in admin.data
+    assert b"<th>Adult contact</th>" not in admin.data
+
+def test_world_record_theme_tokens_use_shared_palette():
+    from pathlib import Path
+    css = (Path(__file__).resolve().parents[1] /
+           "dca_rebuild/static/css/lfv-world-record.css").read_text()
+    assert "--wr-gold:var(--lfv-gold" in css
+    assert "--wr-ink:var(--text" in css
+    assert 'html[data-theme="light"] .lfwr>.lfwr-hero' in css
+    assert "background:var(--wr-navy)!important" in css
