@@ -239,3 +239,23 @@ def test_yearly_virtual_submission_is_pending(website, database):
         assert item.virtual is True
         assert item.address == "Zoom link sent upon registration"
         assert item.status == "pending"
+
+
+def test_calendar_grid_shows_category_counts_without_gold_event_tiles(website):
+    client = website.test_client()
+    response = client.get("/calendar?date=2026-11-10")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert "2 Lab Sessions" in html
+    assert "lfv-calendar-category-counts" in html
+    assert "lfv-calendar-date-number" in html
+    assert "lfv-calendar-event-copy" in html
+
+
+def test_upcoming_calendar_category_counts_are_per_day(website, database):
+    from datetime import date
+    calendar = upcoming_calendar(today=date(2026, 11, 10),
+                                 session_factory=database[1], window_days=1)
+    assert calendar["days"][0]["category_counts"] == [
+        {"count": 2, "label": "Lab Sessions"}
+    ]
