@@ -10,6 +10,7 @@
   function limit(id){return Object.prototype.hasOwnProperty.call(restrictions,id)?restrictions[id]:3;}
   var all=samples.map(function(s){return s.categories.reduce(function(a,g){return a.concat(g.cards.map(function(n){return {id:g.type+"::"+n,type:g.type,name:n};}));},[]);});
   var pool={}; all.forEach(function(a){a.forEach(function(c){pool[c.id]=c;});});
+  JSON.parse(document.getElementById("lock-card-catalog").textContent).forEach(function(card){pool[card.id]=card;});
   var deck=all[0].slice(),round=1,hand=[],selected=[],history=[],chosen={};
   function el(s){return root.querySelector(s);}
   function escape(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
@@ -119,7 +120,8 @@
       b.setAttribute("aria-expanded",String(!panel.hidden));
       if(!panel.hidden){
         el("#lock-request-name").value=el("#lock-search").value.trim();
-        el("#lock-request-type").value=el("#lock-filter").value==="all"?"Dancer":el("#lock-filter").value;
+        var requestTypes=["Dancer","Song","Arena","Move","Trick","Upgrade","Frib"];
+        el("#lock-request-type").value=requestTypes.includes(el("#lock-filter").value)?el("#lock-filter").value:"Dancer";
         el("#lock-request-type").dispatchEvent(new Event("change",{bubbles:true}));
         el("#lock-request-name").focus();
       }
