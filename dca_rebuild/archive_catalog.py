@@ -17,7 +17,6 @@ COLLECTIONS = (
     ("history", "History & Origins"),
     ("people", "People & Crews"),
     ("moves", "Moves & Technique"),
-    ("music", "Music & Media"),
     ("awards", "Awards & Recognition"),
 )
 PAGE_SIZE = 8
@@ -275,6 +274,8 @@ def browse(query="", collection="all", page=1, page_size=PAGE_SIZE, timeline=Fal
     tokens = query.split()
     filtered = []
     for item in all_records():
+        if item.get("collection") == "music":
+            continue
         if timeline and (item["collection"] != "events" or not item["date"]):
             continue
         if not timeline and collection != "all" and item["collection"] != collection:
