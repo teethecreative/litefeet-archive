@@ -11,7 +11,7 @@ import json
 import re
 
 from dca_rebuild.archive_catalog import all_records
-from dca_rebuild.models import VaultGatheringSubmission
+from dca_rebuild.models import VaultGatheringSubmission, VaultGatheringOccurrenceOverride
 
 CURATED_PATH = Path(__file__).parent / "data" / "upcoming_public_events.json"
 
@@ -140,6 +140,16 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
                 VaultGatheringSubmission.status == "approved",
                 VaultGatheringSubmission.start_date <= end.isoformat()
             ).all()
+            approved_ids = [item.id for item in approved]
+            cancelled = {
+                (override.submission_id, override.occurrence_date)
+                for override in db.query(VaultGatheringOccurrenceOverride).filter(
+                    VaultGatheringOccurrenceOverride.submission_id.in_(approved_ids),
+                    VaultGatheringOccurrenceOverride.is_cancelled.is_(True),
+                    VaultGatheringOccurrenceOverride.occurrence_date >= today.isoformat(),
+                    VaultGatheringOccurrenceOverride.occurrence_date <= end.isoformat()
+                ).all()
+            } if approved_ids else set()
             for item in approved:
                 try:
                     first_day = date.fromisoformat(item.start_date)
@@ -173,14 +183,12 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
                     else:
                         # Multi-day, nonrepeating events appear on every scheduled date.
                         matches = first_day <= day <= last_day
-                    if not matches:
+                    if not matches or (item.id, day.isoformat()) in cancelled:
                         continue
-                    identity = (day.isoformat(), item.title.casefold())
-                    if identity in seen:
-                        continue
-                    seen.add(identity)
+                    # Separate approved IDs represent separate events even if their
+                    # public titles and dates match. Do not erase legitimate entries.
                     entries.append(dict(
-                        date=day.isoformat(), title=item.title,
+                        date=day.isoformat(), title=item.title, submission_id=item.id,
                         category=item.gathering_type or "event",
                         href=item.link or "", status="COMMUNITY",
                         description=item.description or "",
@@ -269,6 +277,13 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
         entry["source_href"] = source if source and source != "/submit" else ""
         entry["href"] = "/calendar/events/" + entry["date"] + "/" + event_slug(entry["title"])
     entries.sort(key=lambda item: (item["date"], item["title"]))
+    # Preserve legacy first-occurrence URLs. Distinguish separate approved
+    # submissions with the same title/date only when a collision occurs.
+    hrefs = set()
+    for entry in entries:
+        if entry["href"] in hrefs and entry.get("submission_id"):
+            entry["href"] += "-" + str(entry["submission_id"])
+        hrefs.add(entry["href"])
     by_day = {}
     for item in entries:
         by_day.setdefault(item["date"], []).append(item)

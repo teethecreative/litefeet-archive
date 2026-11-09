@@ -1,7 +1,72 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GATHERING SUBMISSIONS | ADMIN</title><link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/compact-collections.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/vault-submit.css') }}"></head><body>{% include "_admin_navigation.html" %}<main class="lfv-submit lfv-admin-gatherings"><h1>COMMUNITY SUBMISSIONS</h1><p>REVIEW BATTLES, LABS, LINK-UPS, WORKSHOPS, CLASSES AND OTHER GATHERINGS BEFORE THEY GO PUBLIC.</p>{% with messages=get_flashed_messages() %}{% for message in messages %}<p>{{ message }}</p>{% endfor %}{% endwith %}
-{% for item in submissions %}<article class="lfv-submission-review"><p class="lfv-submit-kicker">{{ item.status|upper }} · {{ item.gathering_type|replace('_',' ')|upper }} · {{ item.date }}</p><h2>{{ item.title }}</h2><p>{{ item.time or 'TIME NOT PROVIDED' }} · {{ item.venue or 'VENUE NOT PROVIDED' }} · {{ item.city or '' }}{% if item.end_date %} · TO {{ item.end_date }}{% endif %}</p>
-{% if item.description %}<p>{{ item.description }}</p>{% endif %}{% if item.hosts %}<p>HOSTS: {{ item.hosts }}</p>{% endif %}{% if item.admission %}<p>ADMISSION: {{ item.admission }}</p>{% endif %}{% if item.link %}<p><a href="{{ item.link }}" target="_blank" rel="noopener noreferrer">EVENT / SOURCE LINK ↗</a></p>{% endif %}
-{% if item.notes %}<details><summary>PRIVATE NOTES</summary><p>{{ item.notes }}</p></details>{% endif %}
-{% if item.contact %}<p>PRIVATE CONTACT: {{ item.contact }}</p>{% endif %}
-{% if item.status == 'pending' %}<div class="lfv-submission-actions">{% for action in ['approve','reject'] %}<form method="post" action="{{ url_for('admin_vault_gathering_decision',submission_id=item.id,decision=action) }}"><input type="hidden" name="csrf_token" value="{{ moderation_csrf }}"><button type="submit">{{ action|upper }}</button></form>{% endfor %}</div>{% endif %}</article>
-{% else %}<p>NO SUBMISSIONS YET.</p>{% endfor %}</main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Event Submissions | The LiteFeet Vault Admin</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/admin-gatherings.css') }}">
+</head>
+<body class="ledger-admin">
+{% include "_admin_navigation.html" %}
+<main class="lfv-gathering-admin">
+  <nav class="lfv-gathering-back"><a href="{{ url_for('admin_dashboard') }}">← Admin overview</a></nav>
+  <header class="lfv-gathering-header">
+    <p class="lfv-gathering-eyebrow">COMMUNITY / EVENT SUBMISSIONS</p>
+    <h1>Event Review</h1>
+    <p>Review submissions in the order received. Open a record to edit details, manage publication, or cancel recurring dates.</p>
+  </header>
+  {% with messages=get_flashed_messages() %}{% for message in messages %}<p class="lfv-admin-flash" role="status">{{ message }}</p>{% endfor %}{% endwith %}
+  <section class="lfv-gathering-counts" aria-label="Event submission status counts">
+    <a href="{{ url_for('admin_vault_gatherings',status='pending') }}"><strong>{{ status_counts.get('pending',0) }}</strong><span>Pending</span></a>
+    <a href="{{ url_for('admin_vault_gatherings',status='approved') }}"><strong>{{ status_counts.get('approved',0) }}</strong><span>Approved</span></a>
+    <a href="{{ url_for('admin_vault_gatherings',status='unpublished') }}"><strong>{{ status_counts.get('unpublished',0) }}</strong><span>Unpublished</span></a>
+    <a href="{{ url_for('admin_vault_gatherings',status='rejected') }}"><strong>{{ status_counts.get('rejected',0) }}</strong><span>Rejected</span></a>
+  </section>
+  <form class="lfv-gathering-filters" method="get" action="{{ url_for('admin_vault_gatherings') }}">
+    <label>Search events or hosts<input name="q" value="{{ search_term }}" placeholder="Search title or host"></label>
+    <label>Status<select name="status">
+      {% for s in ['all','pending','approved','unpublished','rejected'] %}<option value="{{ s }}" {% if s == selected_status %}selected{% endif %}>{{ s|capitalize }}</option>{% endfor %}
+    </select></label>
+    <label>Event type<select name="type">
+      <option value="all">All types</option>
+      {% for key,label in submission_types %}<option value="{{ key }}" {% if key == selected_type %}selected{% endif %}>{{ label|title }}</option>{% endfor %}
+    </select></label>
+    <button type="submit">Filter</button>
+    <a href="{{ url_for('admin_vault_gatherings') }}">Clear</a>
+  </form>
+  <p class="lfv-gathering-result-total">{{ total }} submission{% if total != 1 %}s{% endif %} · oldest received first · {{ per_page }} per page</p>
+  <div class="lfv-gathering-table-wrap">
+    <table class="lfv-gathering-table">
+      <thead><tr><th scope="col">Received</th><th scope="col">Event</th><th scope="col">Scheduled</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col">Review</th></tr></thead>
+      <tbody>
+      {% for item in submissions %}
+      <tr>
+        <td><time datetime="{{ item.received.isoformat() if item.received else '' }}">{{ item.received.strftime('%b %-d, %Y') if item.received else '—' }}</time></td>
+        <td><strong>{{ item.title }}</strong>
+          {% if item.hosts %}<small>{{ item.hosts }}</small>{% endif %}
+          {% if item.duplicate_ids %}<small class="lfv-gathering-duplicate">Possible duplicate: #{{ item.duplicate_ids|join(', #') }}</small>{% endif %}
+        </td>
+        <td><time datetime="{{ item.date }}">{{ item.date }}</time>{% if item.end_date %}<small>Through {{ item.end_date }}</small>{% endif %}
+          {% if item.recurrence_rule and item.recurrence_rule != 'none' %}<small>Repeats {{ item.recurrence_rule }}</small>{% endif %}
+        </td>
+        <td>{{ item.gathering_type|replace('_',' ')|title }}</td>
+        <td><span class="lfv-gathering-status">{{ item.status|capitalize }}</span></td>
+        <td><a href="{{ url_for('admin_vault_gathering_edit',submission_id=item.id) }}">Review / Edit</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6">No submissions match these filters.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if pages > 1 %}
+  <nav class="lfv-gathering-pages" aria-label="Submission pages">
+    {% if page > 1 %}<a href="{{ url_for('admin_vault_gatherings',status=selected_status,type=selected_type,q=search_term,page=page-1) }}">← Previous</a>{% endif %}
+    <span>Page {{ page }} of {{ pages }}</span>
+    {% if page < pages %}<a href="{{ url_for('admin_vault_gatherings',status=selected_status,type=selected_type,q=search_term,page=page+1) }}">Next →</a>{% endif %}
+  </nav>
+  {% endif %}
+</main>
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+</body></html>

@@ -3,13 +3,14 @@
 All user submissions are pending until reviewed by an administrator. No flyer
 or account is required, and user contact details never appear on the calendar.
 """
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 import secrets
 
 from flask import abort, redirect, render_template, request, session, url_for, flash
-from dca_rebuild.models import VaultGatheringSubmission
+from sqlalchemy import or_, func
+from dca_rebuild.models import VaultGatheringSubmission, VaultGatheringReviewHistory, VaultGatheringOccurrenceOverride
 
 GATHERING_TYPES = (
     ("battle", "BATTLE / COMPETITION"),
@@ -148,44 +149,270 @@ def install_gathering_submissions(app, ns):
     def success():
         return render_template("vault_submit_success.html")
 
-    @app.get("/admin/gatherings", endpoint="admin_vault_gatherings")
-    @ns["admin_login_required"]
-    def admin_gatherings():
-        with ns["SessionLocal"]() as db:
-            submissions = db.query(VaultGatheringSubmission).order_by(
-                VaultGatheringSubmission.created_at.desc(),
-                VaultGatheringSubmission.id.desc()).limit(200).all()
-            items = [
-                dict(id=x.id, title=x.title, gathering_type=x.gathering_type,
-                     date=x.start_date, end_date=x.end_date, time=x.start_time,
-                     recurrence_rule=x.recurrence_rule, recurrence_weekdays=x.recurrence_weekdays,
-                     recurrence_until=x.recurrence_until,
-                     venue=x.venue, city=x.city, hosts=x.hosts, admission=x.admission,
-                     link=x.link, description=x.description, notes=x.additional_notes,
-                     contact=x.contact_email, status=x.status)
-                for x in submissions
-            ]
-        return render_template("admin_vault_gatherings.html", submissions=items,
-                               moderation_csrf=admin_csrf())
-
     def admin_csrf():
         if "lfv_gathering_admin_csrf" not in session:
             session["lfv_gathering_admin_csrf"] = secrets.token_urlsafe(32)
         return session["lfv_gathering_admin_csrf"]
 
-    @app.post("/admin/gatherings/<int:submission_id>/<decision>", endpoint="admin_vault_gathering_decision")
+    def verify_admin_csrf():
+        token = session.get("lfv_gathering_admin_csrf")
+        if not token or not secrets.compare_digest(str(token), str(request.form.get("csrf_token") or "")):
+            abort(400)
+
+    def log_action(db, item, action, summary=""):
+        db.add(VaultGatheringReviewHistory(
+            submission_id=item.id, action=action, change_summary=summary[:2000]))
+
+    def nearby_duplicate_ids(db, item):
+        # Flag for human review; never automatically merge or delete records.
+        if not item.start_date or not item.title:
+            return []
+        rows = db.query(VaultGatheringSubmission).filter(
+            VaultGatheringSubmission.id != item.id,
+            VaultGatheringSubmission.start_date == item.start_date,
+            VaultGatheringSubmission.status != "rejected",
+        ).all()
+        key = " ".join(item.title.casefold().split())
+        return [row.id for row in rows if " ".join(row.title.casefold().split()) == key]
+
+    def admin_form_fields(form, existing):
+        """Validate every editable public field before committing any changes."""
+        values = {
+            "title": trim(form, "title", 240),
+            "gathering_type": trim(form, "gathering_type", 40),
+            "description": trim(form, "description", 3000) or None,
+            "start_date": trim(form, "start_date", 10),
+            "end_date": trim(form, "end_date", 10) or None,
+            "start_time": trim(form, "start_time", 5),
+            "end_time": trim(form, "end_time", 5),
+            "recurrence_rule": trim(form, "recurrence_rule", 16) or "none",
+            "recurrence_until": trim(form, "recurrence_until", 10) or None,
+            "venue": trim(form, "venue", 240) or None,
+            "address": trim(form, "address", 350),
+            "city": trim(form, "city", 120) or None,
+            "virtual": bool(form.get("virtual")),
+            "hosts": trim(form, "hosts", 400),
+            "admission": trim(form, "admission", 160) or None,
+            "link": parse_http_url(trim(form, "link", 1200)) or None,
+            "contact_name": trim(form, "contact_name", 160) or None,
+            "contact_email": trim(form, "contact_email", 255).lower() or None,
+            "additional_notes": trim(form, "additional_notes", 2000) or None,
+        }
+        if not values["title"] or len(values["title"]) < 3:
+            raise ValueError("Event title must be at least three characters.")
+        if values["gathering_type"] not in VALID_TYPES:
+            raise ValueError("Choose a valid event type.")
+        day = date.fromisoformat(values["start_date"])
+        if values["end_date"] and date.fromisoformat(values["end_date"]) < day:
+            raise ValueError("End date must not precede start date.")
+        if values["recurrence_rule"] not in VALID_RECURRENCE:
+            raise ValueError("Choose a valid repeat schedule.")
+        if values["recurrence_rule"] != "none" and values["end_date"]:
+            raise ValueError("Use Repeat Until instead of End Date for repeating events.")
+        if values["recurrence_until"] and (values["recurrence_rule"] == "none" or date.fromisoformat(values["recurrence_until"]) < day):
+            raise ValueError("Repeat Until must be on or after the start of a repeating event.")
+        if not values["start_time"] or not values["end_time"]:
+            raise ValueError("Start and end times are required.")
+        for key in ("start_time", "end_time"):
+            datetime.strptime(values[key], "%H:%M")
+        if values["end_time"] <= values["start_time"]:
+            raise ValueError("End time must be after start time.")
+        if not values["hosts"] or not values["address"]:
+            raise ValueError("Host and street address or virtual joining instructions are required.")
+        if values["contact_email"] and ("@" not in values["contact_email"] or "." not in values["contact_email"].split("@")[-1]):
+            raise ValueError("Enter a valid email or leave it empty.")
+        days = form.getlist("recurrence_weekdays")
+        if any(d not in {str(i) for i in range(7)} for d in days):
+            raise ValueError("Invalid repeat weekdays.")
+        if values["recurrence_rule"] == "weekly":
+            if not days:
+                days = [str(day.weekday())]
+            if str(day.weekday()) not in days:
+                raise ValueError("Start date must match one of the repeat weekdays.")
+            values["recurrence_weekdays"] = ",".join(sorted(set(days), key=int))
+        else:
+            if days:
+                raise ValueError("Weekday selections require a weekly repeat schedule.")
+            values["recurrence_weekdays"] = None
+        return values
+
+    @app.get("/admin/gatherings", endpoint="admin_vault_gatherings")
+    @ns["admin_login_required"]
+    def admin_gatherings():
+        status = (request.args.get("status") or "all").lower()
+        kind = (request.args.get("type") or "all").lower()
+        q = (request.args.get("q") or "").strip()[:120]
+        if status not in {"all", "pending", "approved", "rejected", "unpublished"}:
+            abort(400)
+        if kind != "all" and kind not in VALID_TYPES:
+            abort(400)
+        try:
+            page = int(request.args.get("page", 1))
+            if page < 1:
+                raise ValueError()
+        except (TypeError, ValueError):
+            abort(400)
+        per_page = 20
+        with ns["SessionLocal"]() as db:
+            query = db.query(VaultGatheringSubmission)
+            if status != "all":
+                query = query.filter(VaultGatheringSubmission.status == status)
+            if kind != "all":
+                query = query.filter(VaultGatheringSubmission.gathering_type == kind)
+            if q:
+                pattern = "%" + q.replace("%", r"\%").replace("_", r"\_") + "%"
+                query = query.filter(or_(
+                    VaultGatheringSubmission.title.ilike(pattern, escape="\\"),
+                    VaultGatheringSubmission.hosts.ilike(pattern, escape="\\"),
+                ))
+            total = query.count()
+            rows = query.order_by(
+                VaultGatheringSubmission.created_at.asc(),
+                VaultGatheringSubmission.id.asc()
+            ).offset((page - 1) * per_page).limit(per_page).all()
+            submissions = [
+                dict(id=x.id, title=x.title, gathering_type=x.gathering_type,
+                     date=x.start_date, end_date=x.end_date,
+                     start_time=x.start_time, end_time=x.end_time,
+                     hosts=x.hosts, venue=x.venue, virtual=x.virtual,
+                     status=x.status, received=x.created_at,
+                     duplicate_ids=nearby_duplicate_ids(db, x))
+                for x in rows
+            ]
+            status_counts = dict(db.query(
+                VaultGatheringSubmission.status,
+                func.count(VaultGatheringSubmission.id)
+            ).group_by(VaultGatheringSubmission.status).all())
+        return render_template(
+            "admin_vault_gatherings.html", submissions=submissions,
+            moderation_csrf=admin_csrf(), status_counts=status_counts,
+            selected_status=status, selected_type=kind, search_term=q,
+            submission_types=GATHERING_TYPES, page=page, total=total,
+            per_page=per_page, pages=(total + per_page - 1) // per_page)
+
+    @app.route("/admin/gatherings/<int:submission_id>", methods=["GET", "POST"],
+               endpoint="admin_vault_gathering_edit")
+    @ns["admin_login_required"]
+    def admin_edit(submission_id):
+        if request.method == "POST":
+            verify_admin_csrf()
+            try:
+                with ns["SessionLocal"].begin() as db:
+                    item = db.get(VaultGatheringSubmission, submission_id)
+                    if item is None:
+                        abort(404)
+                    values = admin_form_fields(request.form, item)
+                    changed = [key for key, value in values.items() if getattr(item, key) != value]
+                    for key, value in values.items():
+                        setattr(item, key, value)
+                    if changed:
+                        log_action(db, item, "edit", "Fields changed: " + ", ".join(changed))
+            except (ValueError, TypeError) as exc:
+                flash("Couldn't save: " + str(exc))
+                return redirect(url_for("admin_vault_gathering_edit", submission_id=submission_id), code=303)
+            flash("Event details saved.")
+            return redirect(url_for("admin_vault_gathering_edit", submission_id=submission_id), code=303)
+        with ns["SessionLocal"]() as db:
+            item = db.get(VaultGatheringSubmission, submission_id)
+            if item is None:
+                abort(404)
+            values = {name: getattr(item, name) for name in (
+                "id", "title", "gathering_type", "description", "start_date", "end_date",
+                "start_time", "end_time", "recurrence_rule", "recurrence_weekdays",
+                "recurrence_until", "venue", "address", "city", "virtual", "hosts",
+                "admission", "link", "contact_name", "contact_email",
+                "additional_notes", "status", "created_at", "reviewed_at"
+            )}
+            duplicate_ids = nearby_duplicate_ids(db, item)
+            history = db.query(VaultGatheringReviewHistory).filter_by(
+                submission_id=submission_id).order_by(
+                    VaultGatheringReviewHistory.created_at.desc(),
+                    VaultGatheringReviewHistory.id.desc()).all()
+            overrides = db.query(VaultGatheringOccurrenceOverride).filter_by(
+                submission_id=submission_id).order_by(
+                    VaultGatheringOccurrenceOverride.occurrence_date.asc()).all()
+            history = [dict(action=h.action, summary=h.change_summary, at=h.created_at) for h in history]
+            overrides = [dict(date=o.occurrence_date, reason=o.reason) for o in overrides if o.is_cancelled]
+        return render_template(
+            "admin_vault_gathering_edit.html", item=values, history=history,
+            overrides=overrides, duplicate_ids=duplicate_ids,
+            submission_types=GATHERING_TYPES, recurrence_choices=RECURRENCE_CHOICES,
+            moderation_csrf=admin_csrf())
+
+    @app.post("/admin/gatherings/<int:submission_id>/<decision>",
+              endpoint="admin_vault_gathering_decision")
     @ns["admin_login_required"]
     def decide(submission_id, decision):
-        token = session.get("lfv_gathering_admin_csrf")
-        if not token or not secrets.compare_digest(token, request.form.get("csrf_token") or ""):
+        verify_admin_csrf()
+        status_for_action = {
+            "approve": "approved",
+            "reject": "rejected",
+            "unpublish": "unpublished",
+            "restore": "approved",
+            "reconsider": "pending",
+        }
+        if decision not in status_for_action:
             abort(400)
-        if decision not in {"approve", "reject"}:
+        allowed_from = {
+            "approve": {"pending", "rejected", "unpublished"},
+            "reject": {"pending", "approved", "unpublished"},
+            "unpublish": {"approved"},
+            "restore": {"unpublished"},
+            "reconsider": {"rejected", "unpublished"},
+        }
+        with ns["SessionLocal"].begin() as db:
+            item = db.get(VaultGatheringSubmission, submission_id)
+            if item is None:
+                abort(404)
+            if item.status not in allowed_from[decision]:
+                abort(400)
+            item.status = status_for_action[decision]
+            item.reviewed_at = datetime.utcnow()
+            log_action(db, item, decision, "Status set to " + item.status)
+        flash("Event status updated.")
+        return redirect(url_for("admin_vault_gathering_edit", submission_id=submission_id), code=303)
+
+    @app.post("/admin/gatherings/<int:submission_id>/occurrences",
+              endpoint="admin_vault_gathering_occurrence")
+    @ns["admin_login_required"]
+    def occurrence(submission_id):
+        verify_admin_csrf()
+        action = request.form.get("action") or ""
+        if action not in {"cancel", "restore"}:
+            abort(400)
+        try:
+            day = date.fromisoformat(request.form.get("date") or "")
+        except ValueError:
             abort(400)
         with ns["SessionLocal"].begin() as db:
             item = db.get(VaultGatheringSubmission, submission_id)
             if item is None:
                 abort(404)
-            item.status = "approved" if decision == "approve" else "rejected"
-            item.reviewed_at = datetime.utcnow()
-        flash("SUBMISSION REVIEW UPDATED.")
-        return redirect(url_for("admin_vault_gatherings"), code=303)
+            if item.recurrence_rule in (None, "none"):
+                abort(400)
+            first = date.fromisoformat(item.start_date)
+            until = date.fromisoformat(item.recurrence_until) if item.recurrence_until else None
+            if day < first or (until and day > until):
+                abort(400)
+            if item.recurrence_rule == "weekly":
+                weekdays = {int(x) for x in (item.recurrence_weekdays or "").split(",") if x}
+                if day.weekday() not in (weekdays or {first.weekday()}):
+                    abort(400)
+            elif item.recurrence_rule == "monthly" and day.day != first.day:
+                abort(400)
+            elif item.recurrence_rule == "yearly" and (day.month, day.day) != (first.month, first.day):
+                abort(400)
+            row = db.query(VaultGatheringOccurrenceOverride).filter_by(
+                submission_id=item.id, occurrence_date=day.isoformat()).first()
+            if action == "cancel":
+                if row is None:
+                    row = VaultGatheringOccurrenceOverride(
+                        submission_id=item.id, occurrence_date=day.isoformat())
+                    db.add(row)
+                row.is_cancelled = True
+                row.reason = trim(request.form, "reason", 500) or None
+            elif row is not None:
+                row.is_cancelled = False
+            log_action(db, item, action + "_occurrence", day.isoformat())
+        flash("Occurrence schedule updated.")
+        return redirect(url_for("admin_vault_gathering_edit", submission_id=submission_id), code=303)

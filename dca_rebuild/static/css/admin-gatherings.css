@@ -1,0 +1,53 @@
+/* Compact Vault admin: table-first moderation, no oversized cards. */
+.lfv-gathering-admin{max-width:1180px;margin:0 auto;padding:36px 24px 90px;color:var(--lfv-ink,#102038);text-transform:none}
+.lfv-gathering-admin *{box-sizing:border-box}
+.lfv-gathering-back{margin-bottom:20px}
+.lfv-gathering-back a,.lfv-gathering-admin a{color:inherit;text-underline-offset:3px}
+.lfv-gathering-header{padding:18px 0 24px;border-bottom:1px solid var(--lfv-line,#cad1d7)}
+.lfv-gathering-eyebrow{font-size:.74rem;font-weight:800;letter-spacing:.055em;color:var(--lfv-muted,#5b6977)}
+.lfv-gathering-header h1{margin:8px 0;font-size:clamp(1.9rem,3vw,2.7rem);line-height:1.15}
+.lfv-gathering-header p:last-child{max-width:750px;line-height:1.6;color:var(--lfv-muted,#5b6977);margin-bottom:0}
+.lfv-admin-flash{border-left:3px solid var(--lfv-gold,#c9a52b);padding:12px 15px;margin:20px 0}
+.lfv-gathering-counts{display:flex;flex-wrap:wrap;gap:22px;padding:20px 0;border-bottom:1px solid var(--lfv-line,#cad1d7)}
+.lfv-gathering-counts a{display:flex;align-items:center;gap:8px;text-decoration:none}
+.lfv-gathering-counts strong{font-size:1.2rem}
+.lfv-gathering-counts span{font-size:.83rem;color:var(--lfv-muted,#5b6977)}
+.lfv-gathering-filters{display:grid;grid-template-columns:minmax(200px,2fr) minmax(135px,1fr) minmax(135px,1fr) auto auto;gap:14px;align-items:end;margin:24px 0 12px}
+.lfv-gathering-filters label,.lfv-gathering-edit-form label,.lfv-gathering-occurrence-form label{display:grid;gap:7px;font-size:.78rem;font-weight:750}
+.lfv-gathering-admin :is(input:not([type=checkbox]),select,textarea){width:100%;min-width:0;min-height:43px;padding:9px 11px;border:1px solid var(--lfv-line,#8795a4);border-radius:5px;background:var(--lfv-surface,#fff);color:var(--lfv-ink,#102038);font:inherit}
+.lfv-gathering-admin textarea{resize:vertical}
+.lfv-gathering-admin button{cursor:pointer;min-height:43px;padding:9px 16px;border:1px solid var(--lfv-line,#8795a4);border-radius:5px;background:transparent;color:var(--lfv-ink,#102038);font:inherit;font-weight:750}
+.lfv-gathering-admin button.lfv-gathering-primary{background:var(--lfv-gold,#c9a52b);border-color:var(--lfv-gold,#c9a52b);color:#091b36}
+.lfv-gathering-result-total{font-size:.8rem;color:var(--lfv-muted,#5b6977);margin:12px 0}
+.lfv-gathering-table-wrap{overflow-x:auto}
+.lfv-gathering-table{width:100%;border-collapse:collapse;font-size:.86rem}
+.lfv-gathering-table th{text-align:left;font-size:.74rem;letter-spacing:.035em;color:var(--lfv-muted,#5b6977);padding:14px 12px;border-bottom:2px solid var(--lfv-line,#8795a4)}
+.lfv-gathering-table td{vertical-align:top;padding:15px 12px;border-bottom:1px solid var(--lfv-line,#cad1d7);line-height:1.4}
+.lfv-gathering-table td strong{display:block;font-weight:750}
+.lfv-gathering-table td small{display:block;margin-top:6px;font-size:.75rem;color:var(--lfv-muted,#5b6977)}
+.lfv-gathering-duplicate{color:#ac6c12!important;font-weight:750;line-height:1.5}
+.lfv-gathering-status{font-weight:750}
+.lfv-gathering-table td:last-child a{white-space:nowrap;text-decoration:underline;text-decoration-color:var(--lfv-gold,#c9a52b)}
+.lfv-gathering-pages{display:flex;align-items:center;justify-content:center;gap:22px;margin:24px 0}
+.lfv-gathering-pages span{font-size:.86rem;color:var(--lfv-muted,#5b6977)}
+.lfv-gathering-review-actions{display:flex;flex-wrap:wrap;gap:12px;margin:22px 0}
+.lfv-gathering-panel{border-top:1px solid var(--lfv-line,#cad1d7);padding:25px 0;margin:22px 0}
+.lfv-gathering-panel h2{font-size:1.4rem;margin:0 0 14px}
+.lfv-gathering-panel h3{font-size:1rem;margin:24px 0 12px}
+.lfv-gathering-panel p{line-height:1.6;color:var(--lfv-muted,#5b6977)}
+.lfv-gathering-edit-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 22px}
+.lfv-gathering-edit-form .full,.lfv-gathering-private-grid .full{grid-column:1 / -1}
+.lfv-gathering-edit-form fieldset{margin:0;padding:12px;border:1px solid var(--lfv-line,#cad1d7);display:flex;flex-wrap:wrap;gap:16px}
+.lfv-gathering-edit-form fieldset legend{font-size:.78rem;font-weight:750;padding:0 6px}
+.lfv-gathering-check{display:inline-flex!important;flex-direction:row!important;align-items:center;gap:7px!important}
+.lfv-gathering-check input{width:17px;height:17px;margin:0}
+.lfv-gathering-private{padding-top:13px;border-top:1px solid var(--lfv-line,#cad1d7)}
+.lfv-gathering-private summary{cursor:pointer;font-weight:750}
+.lfv-gathering-private-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:20px}
+.lfv-gathering-occurrence-form{display:grid;grid-template-columns:1fr 2fr auto;gap:14px;align-items:end}
+.lfv-gathering-panel li{margin:10px 0}
+.lfv-gathering-panel li form{display:inline-block;margin-left:12px}
+.lfv-gathering-history{padding-left:22px}
+.lfv-gathering-history p{margin:4px 0}
+@media(max-width:800px){.lfv-gathering-filters{grid-template-columns:1fr 1fr}.lfv-gathering-filters label:first-child{grid-column:1/-1}.lfv-gathering-occurrence-form{grid-template-columns:1fr}.lfv-gathering-table{min-width:700px}}
+@media(max-width:550px){.lfv-gathering-admin{padding:25px 16px 70px}.lfv-gathering-filters{grid-template-columns:1fr}.lfv-gathering-filters label:first-child{grid-column:auto}.lfv-gathering-edit-form,.lfv-gathering-private-grid{grid-template-columns:1fr}.lfv-gathering-counts{gap:16px}}

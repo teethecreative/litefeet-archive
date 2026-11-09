@@ -894,6 +894,31 @@ class VaultGatheringSubmission(Base):
     reviewed_at = Column(DateTime, nullable=True)
 
 
+
+class VaultGatheringReviewHistory(Base):
+    """Append-only administrative audit trail; contact details remain private."""
+    __tablename__ = "vault_gathering_review_history"
+    id = Column(Integer, primary_key=True)
+    submission_id = Column(Integer, ForeignKey("vault_gathering_submissions.id"), nullable=False, index=True)
+    action = Column(String(40), nullable=False)
+    actor = Column(String(160), nullable=False, default="administrator")
+    change_summary = Column(Text, nullable=False, default="")
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class VaultGatheringOccurrenceOverride(Base):
+    """Explicit cancellation of one occurrence without changing its recurring series."""
+    __tablename__ = "vault_gathering_occurrence_overrides"
+    id = Column(Integer, primary_key=True)
+    submission_id = Column(Integer, ForeignKey("vault_gathering_submissions.id"), nullable=False, index=True)
+    occurrence_date = Column(String(10), nullable=False)
+    is_cancelled = Column(Boolean, nullable=False, default=True)
+    reason = Column(String(500), nullable=True)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    __table_args__ = (UniqueConstraint("submission_id", "occurrence_date", name="uq_gathering_occurrence_date"),)
+
+
+
 class LockInCardRequest(Base):
     """Unpublished suggestions; not part of the playable card catalog until reviewed."""
     __tablename__ = "vault_lock_in_card_requests"
