@@ -1,0 +1,45 @@
+/* World Record community initiative: scoped editorial styling, light/dark. */
+.lfwr,.lfwr-admin{--wr-navy:#101f41;--wr-gold:#d9b75d;--wr-border:var(--lfv-line,#d6dce5);--wr-ink:var(--lfv-ink,#12213d);--wr-muted:var(--lfv-muted,#52617a);width:min(calc(100% - 36px),1160px);margin:0 auto;color:var(--wr-ink)}
+.lfwr{padding:34px 0 76px}.lfwr-section{padding:46px 0;border-bottom:1px solid var(--wr-border)}
+.lfwr .lfwr-kicker,.lfwr-admin .lfwr-kicker{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:850;color:#9b7617}
+.lfwr-hero{padding:clamp(28px,5vw,64px);background:var(--wr-navy);border-top:5px solid var(--wr-gold);color:#fff;border-radius:6px}
+.lfwr-hero .lfwr-kicker{color:#e7ca83}
+.lfwr-hero h1{color:#fff;font-size:clamp(2.2rem,5vw,4.7rem);line-height:1.04;letter-spacing:-.04em;margin:15px 0 20px;max-width:800px}
+.lfwr-intro{font-size:clamp(1rem,1.5vw,1.25rem);line-height:1.65;max-width:850px;color:#e4eaf4}
+.lfwr-facts{display:flex;gap:clamp(18px,4vw,55px);flex-wrap:wrap;margin:32px 0;align-items:center}
+.lfwr-facts>div{display:flex;flex-direction:column;gap:5px}.lfwr-facts strong{font-size:clamp(1.4rem,2.2vw,2rem);color:#fff}.lfwr-facts span{font-size:.72rem;color:#cbd5e7;text-transform:uppercase;letter-spacing:.06em}
+.lfwr-actions{display:flex;align-items:center;gap:26px;flex-wrap:wrap}.lfwr-button,.lfwr a.lfwr-button,.lfwr button.lfwr-button{display:inline-flex;gap:14px;align-items:center;justify-content:center;min-height:46px;padding:12px 21px;border:0;border-radius:7px;background:var(--wr-gold);color:#0f2043!important;text-decoration:none;font-size:.87rem;font-weight:850;cursor:pointer}
+.lfwr-text-link{color:#fff!important;font-size:.85rem;font-weight:750;text-decoration:underline;text-underline-offset:5px}
+.lfwr-disclaimer{font-size:.77rem;line-height:1.55;color:#d0d8e5;max-width:800px;margin:28px 0 0}
+.lfwr h2{font-size:clamp(1.65rem,3vw,2.7rem);line-height:1.15;letter-spacing:-.03em;margin:10px 0 19px;color:var(--wr-ink)}
+.lfwr-section>p:not(.lfwr-kicker){line-height:1.7;max-width:860px;font-size:1rem;color:var(--wr-muted)}
+.lfwr-role-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:24px}
+.lfwr-role-grid article{padding:26px 24px;border:1px solid var(--wr-border);border-radius:7px;background:var(--lfv-surface,#fff)}
+.lfwr-num{font-size:.76rem;color:#9b7617;font-weight:850}.lfwr-role-grid h3{font-size:1.3rem;margin:13px 0 12px;color:var(--wr-ink)}
+.lfwr-role-grid p{font-size:.95rem;line-height:1.6;color:var(--wr-muted);margin:0}.lfwr-role-wide{grid-column:1 / -1}
+.lfwr-prep ol{padding-left:24px;max-width:900px}.lfwr-prep li{line-height:1.7;margin:0 0 13px}
+.lfwr-form-intro{max-width:850px;margin-bottom:26px}.lfwr-form{display:grid;gap:17px;max-width:900px}
+.lfwr-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.lfwr-form label,.lfwr-consent legend{display:block;font-size:.84rem;font-weight:800;line-height:1.4;color:var(--wr-ink);margin-bottom:7px}
+.lfwr-form label span{color:#a46b17}
+.lfwr-form :is(input:not([type="checkbox"]),select,textarea),.lfwr-admin :is(select){display:block;width:100%;min-height:44px;border:1px solid var(--wr-border);background:var(--lfv-surface,#fff);color:var(--wr-ink);padding:11px 12px;border-radius:5px;font:inherit;box-sizing:border-box}
+.lfwr-form textarea{resize:vertical;min-height:90px}.lfwr-form :is(input,textarea,select):focus-visible{outline:2px solid var(--wr-gold);outline-offset:2px}
+.lfwr-conditional[hidden],.lfwr-honeypot{display:none!important}.lfwr-consent{padding:19px;border:1px solid var(--wr-border);border-radius:6px;display:grid;gap:10px}
+.lfwr-consent label{font-weight:600;display:flex;gap:11px;align-items:flex-start;margin:0}.lfwr-consent input{width:18px;height:18px;flex:none;margin-top:1px}
+.lfwr-privacy{font-size:.8rem;line-height:1.6;color:var(--wr-muted);max-width:700px}.lfwr-form-error{border-left:4px solid #b62836;background:#fce7e8;color:#8b1c29;padding:13px;margin:13px 0}
+.lfwr-thanks{padding:90px 0 170px;min-height:300px}.lfwr-thanks h1{font-size:clamp(2rem,4vw,3.5rem)}
+.lfv-world-home-feature{margin-bottom:clamp(34px,4.5vw,64px)!important}.lfv-world-home-feature-inner{display:flex;gap:24px;align-items:center;justify-content:space-between;padding:25px 0;border-bottom:1px solid var(--lfv-line)}
+.lfv-world-home-feature-inner>div{max-width:810px}.lfv-world-home-feature-inner h2{font-size:clamp(1.6rem,3vw,2.7rem)!important;letter-spacing:-.03em;margin:0 0 12px!important}
+.lfv-world-home-feature-inner p{color:var(--lfv-muted);line-height:1.6;font-size:.95rem;margin:0 0 9px}
+.lfv-world-home-note{font-size:.76rem!important}.lfv-world-home-feature-inner>a{flex:none}
+.lfwr-admin{padding:38px 0 80px}.lfwr-admin h1{font-size:clamp(2rem,3vw,3rem)}.lfwr-admin-counts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:20px 0}
+.lfwr-admin-counts>div{border:1px solid var(--wr-border);padding:17px}.lfwr-admin-counts strong{display:block;font-size:1.8rem}.lfwr-admin-counts span{font-size:.78rem}
+.lfwr-admin-filter{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin:22px 0}.lfwr-admin-filter select{max-width:270px}
+.lfwr-admin button{min-height:40px;padding:9px 13px;background:var(--wr-navy);color:#fff;border:0;border-radius:5px;cursor:pointer}
+.lfwr-admin-table-scroll{overflow-x:auto}.lfwr-admin-table{width:100%;border-collapse:collapse;min-width:760px;font-size:.87rem}
+.lfwr-admin-table th,.lfwr-admin-table td{text-align:left;vertical-align:top;border-bottom:1px solid var(--wr-border);padding:14px 10px;overflow-wrap:anywhere}
+.lfwr-admin-table th{background:var(--lfv-surface,#eef2f7)}.lfwr-admin-table form{display:flex;gap:7px}
+.lfwr-admin-table form select{min-width:125px}.lfwr-admin-footnote{font-size:.78rem;color:var(--wr-muted);margin:14px 0}
+html[data-theme="dark"] .lfwr,html[data-theme="dark"] .lfwr-admin{--wr-ink:#edf2ff;--wr-muted:#c0cade;--wr-border:#526075}
+html[data-theme="dark"] .lfwr-role-grid article,html[data-theme="dark"] .lfwr-form :is(input:not([type="checkbox"]),select,textarea),html[data-theme="dark"] .lfwr-admin select{background:#142443;color:#edf2ff}
+@media(max-width:760px){.lfwr-role-grid,.lfwr-form-grid,.lfwr-admin-counts{grid-template-columns:1fr}.lfwr-role-wide{grid-column:auto}.lfv-world-home-feature-inner{display:block}.lfv-world-home-feature-inner>a{margin-top:16px}.lfwr-hero{padding:29px 22px}.lfwr-facts{gap:22px}}

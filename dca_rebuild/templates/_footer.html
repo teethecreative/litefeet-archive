@@ -55,6 +55,7 @@
         </div>
 
         <div class="ledger-footer-links">{% for item in vault_navigation %}<a href="{{ item.href }}">{{ item.label }}</a>{% endfor %}
+        <a href="{{ url_for('vault_world_record') }}">World Record Attempt</a>
         <a class="lfv-footer-admin-link" href="{{ url_for('admin_dashboard') }}">Admin{% if session.get('ledger_admin_authenticated') %} console{% endif %}</a>
         </div>
 

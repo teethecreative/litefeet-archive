@@ -5,6 +5,10 @@ from flask import Response, request, abort, current_app
 
 SITE_URL = "https://thelitefeetvault.com"
 PAGES = {
+    "/world-record": (
+        "LiteFeet World Record Attempt | Join the Community | The LiteFeet Vault",
+        "Help plan a proposed 2027 LiteFeet world record attempt in Harlem. Join as a dancer, choreographer, rehearsal captain, volunteer or rehearsal-space partner.",
+    ),
     "/": (
         "The LiteFeet Vault | LiteFeet Culture & History",
         "Discover the people, history and creativity of LiteFeet in a living cultural archive built to preserve the culture.",
@@ -72,6 +76,7 @@ CANONICAL_ALIASES = {
 # Index curated public pages only; omit private forms and confirmation pages.
 SITEMAP_PATHS = (
     "/",
+    "/world-record",
     "/archive/lock-in",
     "/archive/timeline",
     "/archive/people",

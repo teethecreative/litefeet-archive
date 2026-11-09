@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ seo.title }}</title>
+  {% include "_seo_head.html" %}
+  <script>(function(){try{document.documentElement.dataset.theme=localStorage.getItem("litefeet-ledger-theme")==="dark"?"dark":"light"}catch(e){document.documentElement.dataset.theme="light"}})();</script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v3.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-world-record.css') }}">
+</head>
+<body>
+{% include "_navigation.html" %}{% include "_beta_bar.html" %}
+<main class="lfwr" id="main-content">
+  <section class="lfwr-hero">
+    <p class="lfwr-kicker">THE LITEFEET VAULT / COMMUNITY INITIATIVES</p>
+    <h1>Let's Make LiteFeet History.</h1>
+    <p class="lfwr-intro">We're bringing the LiteFeet community together to plan a synchronized dance world record attempt rooted in Harlem. We need the people who dance the culture and the people who help make it possible.</p>
+    <div class="lfwr-facts" aria-label="Planning details">
+      <div><strong>500+</strong><span>Dancer goal</span></div>
+      <div><strong>Harlem</strong><span>Proposed location</span></div>
+      <div><strong>2027</strong><span>Target year</span></div>
+    </div>
+    <div class="lfwr-actions"><a class="lfwr-button" href="#get-involved">Express Interest <span aria-hidden="true">→</span></a><a href="#the-plan" class="lfwr-text-link">Explore the plan</a></div>
+    <p class="lfwr-disclaimer">This is a proposed community-led record attempt. No record title, venue, date, or participant threshold has been approved by Guinness World Records.</p>
+  </section>
+
+  <section class="lfwr-section" id="the-plan">
+    <p class="lfwr-kicker">01 / THE VISION</p><h2>One culture. One routine. One community.</h2>
+    <p>LiteFeet has always been shaped by its dancers, teams, creators, music and Harlem roots. This initiative aims to bring people together across generations for one coordinated performance, and to document the work, people and history behind it.</p>
+    <p>We're in the planning and recruitment stage. The choreography, official record application, rehearsal locations, date and main venue are still being developed.</p>
+  </section>
+
+  <section class="lfwr-section" id="roles">
+    <p class="lfwr-kicker">02 / COMMUNITY / GET INVOLVED</p><h2>We need the community.</h2>
+    <div class="lfwr-role-grid">
+      <article><span class="lfwr-num">01</span><h3>Choreography Team</h3><p>Help create one coordinated LiteFeet routine that can be taught consistently and performed by hundreds of dancers.</p></article>
+      <article><span class="lfwr-num">02</span><h3>Rehearsal Captains</h3><p>Train groups using the same approved choreography, music, movement counts and teaching materials.</p></article>
+      <article><span class="lfwr-num">03</span><h3>Rehearsal Spaces</h3><p>Offer a dance studio, gym, school or community space for local and combined rehearsals.</p></article>
+      <article><span class="lfwr-num">04</span><h3>Dancers & Teams</h3><p>Join the interest list, recruit dancers from your community and learn the routine when it is finalized.</p></article>
+      <article class="lfwr-role-wide"><span class="lfwr-num">05</span><h3>Volunteers, Media & Partners</h3><p>Support coordination, documentation, event production, outreach, equipment and community partnerships.</p></article>
+    </div>
+  </section>
+
+  <section class="lfwr-section lfwr-prep">
+    <p class="lfwr-kicker">03 / THE PROCESS</p><h2>How we prepare.</h2>
+    <ol>
+      <li><strong>Build the choreography.</strong> Collaborative development followed by one approved final version.</li>
+      <li><strong>Train the captains.</strong> Share consistent music, counts, tutorials and teaching instructions.</li>
+      <li><strong>Open local rehearsals.</strong> Organize approved spaces so groups can practice the same routine.</li>
+      <li><strong>Bring the community together.</strong> Coordinate combined rehearsals and event-day verification after official requirements are confirmed.</li>
+    </ol>
+  </section>
+
+  <section class="lfwr-section lfwr-interest" id="get-involved">
+    <div class="lfwr-form-intro"><p class="lfwr-kicker">04 / EXPRESS INTEREST</p><h2>Be part of the attempt.</h2><p>This form is for early planning and outreach, not confirmed event registration. We'll contact you only about this initiative if you opt in.</p></div>
+    {% if error %}<div class="lfwr-form-error" role="alert">{{ error }}</div>{% endif %}
+    <form method="post" action="{{ url_for('vault_world_record') }}" class="lfwr-form">
+      <input type="hidden" name="csrf_token" value="{{ token }}">
+      <div class="lfwr-honeypot" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+      <label for="lfwr-role">How would you like to contribute? <span>*</span></label>
+      <select id="lfwr-role" name="role" required>
+        <option value="">Choose a role</option>
+        {% for value, label in roles %}<option value="{{ value }}" {% if values.get('role') == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+      <div class="lfwr-form-grid">
+        <div><label for="lfwr-name">Adult contact name <span>*</span></label><input id="lfwr-name" name="contact_name" maxlength="160" autocomplete="name" value="{{ values.get('contact_name', '') }}" required></div>
+        <div><label for="lfwr-email">Contact email <span>*</span></label><input id="lfwr-email" type="email" name="email" maxlength="320" autocomplete="email" value="{{ values.get('email', '') }}" required></div>
+        <div class="lfwr-conditional" data-for-roles="dancer choreography captain"><label for="lfwr-dance">Dance name (optional)</label><input id="lfwr-dance" name="dance_name" maxlength="160" value="{{ values.get('dance_name', '') }}"></div>
+        <div class="lfwr-conditional" data-for-roles="dancer choreography captain"><label for="lfwr-team">Team (optional)</label><input id="lfwr-team" name="team" maxlength="160" value="{{ values.get('team', '') }}"></div>
+        <div><label for="lfwr-borough">Borough / area</label><input id="lfwr-borough" name="borough" maxlength="120" value="{{ values.get('borough', '') }}" placeholder="Harlem, Bronx, Brooklyn, etc."></div>
+        <div><label for="lfwr-availability">Availability</label><input id="lfwr-availability" name="availability" maxlength="300" value="{{ values.get('availability', '') }}" placeholder="Weekends, evenings, flexible..."></div>
+        <div class="lfwr-conditional" data-for-roles="space"><label for="lfwr-venue">Space / organization name</label><input id="lfwr-venue" name="venue_name" maxlength="200" value="{{ values.get('venue_name', '') }}"></div>
+        <div class="lfwr-conditional" data-for-roles="space"><label for="lfwr-capacity">Estimated rehearsal capacity</label><input id="lfwr-capacity" name="venue_capacity" maxlength="80" value="{{ values.get('venue_capacity', '') }}" placeholder="Approximate number of dancers"></div>
+      </div>
+      <div class="lfwr-conditional" data-for-roles="choreography captain space volunteer">
+        <label for="lfwr-experience">Experience / how you can help</label>
+        <textarea id="lfwr-experience" name="experience" rows="3" maxlength="1200" placeholder="Teaching experience, choreography experience, space details or the support you can offer">{{ values.get('experience', '') }}</textarea>
+      </div>
+      <label for="lfwr-notes">Anything else we should know? (optional)</label>
+      <textarea id="lfwr-notes" name="notes" rows="3" maxlength="1500" placeholder="Questions, ideas, needs or other ways to help">{{ values.get('notes', '') }}</textarea>
+      <fieldset class="lfwr-consent">
+        <legend>Before you submit</legend>
+        <label><input type="checkbox" name="adult_or_guardian" value="yes" required {% if values.get('adult_or_guardian') == 'yes' %}checked{% endif %}> I am at least 18, or I am a parent/legal guardian submitting on behalf of a minor. <span>*</span></label>
+        <label><input type="checkbox" name="guardian_submission" value="yes" {% if values.get('guardian_submission') == 'yes' %}checked{% endif %}> I am a parent/guardian submitting on behalf of a minor.</label>
+        <label><input type="checkbox" name="contact_permission" value="yes" required {% if values.get('contact_permission') == 'yes' %}checked{% endif %}> I agree to be contacted about planning the LiteFeet World Record Attempt. <span>*</span></label>
+      </fieldset>
+      <p class="lfwr-privacy">Your contact details are stored privately for organizer outreach, not displayed publicly, and not counted as confirmed participants. Contact the Vault if you want your interest removed.</p>
+      <button type="submit" class="lfwr-button">Submit Interest <span aria-hidden="true">→</span></button>
+    </form>
+  </section>
+  <section class="lfwr-section lfwr-updates"><p class="lfwr-kicker">05 / PROJECT UPDATES</p><h2>Follow the progress.</h2><p>As the project develops, this page will publish confirmed news about choreography, rehearsal opportunities, venue arrangements and the official record application. The attempt is not yet formally approved.</p></section>
+</main>
+{% include "_footer.html" %}
+<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>
+<script>
+(function(){var select=document.getElementById("lfwr-role");if(!select)return;function show(){var v=select.value;document.querySelectorAll(".lfwr-conditional").forEach(function(el){el.hidden=!!v && !el.dataset.forRoles.split(" ").includes(v);});}select.addEventListener("change",show);show();})();
+</script>
+</body></html>
