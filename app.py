@@ -24322,18 +24322,27 @@ def hp_active_prompts():
 
 
 def hp_pick_prompt():
-    prompts = hp_active_prompts()
+    """Show each active prompt once per shuffled cycle before repeating."""
+    import hashlib
 
+    prompts = hp_active_prompts()
     if not prompts:
         return None
-
-    answered_ids = set(str(value) for value in session.get("homepage_prompt_answered_ids", []))
-    available = [prompt for prompt in prompts if str(prompt.get("id")) not in answered_ids]
-
-    if not available:
-        available = prompts
-
-    return _hp_random.choice(available)
+    fingerprint = hashlib.sha256(
+        ",".join(str(prompt["id"]) for prompt in prompts).encode("utf-8")
+    ).hexdigest()[:16]
+    if session.get("homepage_prompt_cycle_fingerprint") != fingerprint:
+        session["homepage_prompt_cycle_fingerprint"] = fingerprint
+        session["homepage_prompt_cycle_seed"] = _hp_random.randrange(1, 2**31)
+        session["homepage_prompt_cycle_index"] = 0
+    index = int(session.get("homepage_prompt_cycle_index") or 0)
+    if index >= len(prompts):
+        session["homepage_prompt_cycle_seed"] = _hp_random.randrange(1, 2**31)
+        index = 0
+    shuffled = list(prompts)
+    _hp_random.Random(session["homepage_prompt_cycle_seed"]).shuffle(shuffled)
+    session["homepage_prompt_cycle_index"] = index + 1
+    return shuffled[index]
 
 
 def hp_escape(value):
@@ -24344,18 +24353,7 @@ def hp_home_widget():
     try:
         hp_ensure_tables()
 
-        if session.get("homepage_prompt_answered_once") and not session.get("homepage_prompt_answer_more"):
-            return """
-            <section class="homepage-prompt-widget homepage-prompt-thanks">
-                <div class="homepage-prompt-inner">
-                    <p class="eyebrow">LiteFeet Ledger Question</p>
-                    <h2>Thanks for adding your answer.</h2>
-                    <p>Your response was saved for Ledger review.</p>
-                    <a class="button secondary homepage-answer-more-button" href="/home-prompt/more">Answer more</a>
-                </div>
-            </section>
-            """ + hp_widget_css()
-
+        answered_recently = bool(session.pop("homepage_prompt_answered_once", False))
         session.pop("homepage_prompt_answer_more", None)
 
         prompt = hp_pick_prompt()
@@ -24370,9 +24368,10 @@ def hp_home_widget():
         <section class="homepage-prompt-widget">
             <div class="homepage-prompt-inner">
                 <div class="homepage-prompt-copy">
-                    <p class="eyebrow">LiteFeet Ledger Question</p>
+                    <p class="eyebrow">The LiteFeet Vault / Community Question</p>
                     <h2>{question}</h2>
-                    <p>Answer one community question. Your response helps build the Ledger with real LiteFeet knowledge.</p>
+                    <p>Share what you know. Your response will be saved for community archive review.</p>
+                    {'<p role="status">Your answer was saved. Thank you.</p>' if answered_recently else ''}
                 </div>
 
                 <form method="post" action="/home-prompt/answer" class="homepage-prompt-form">
@@ -24380,7 +24379,7 @@ def hp_home_widget():
                     <textarea name="answer_text" rows="4" placeholder="Type your answer here..." required></textarea>
                     <div class="homepage-prompt-actions">
                         <button class="button primary" type="submit">Submit answer</button>
-                        <a class="button secondary homepage-answer-more-button" href="/home-prompt/more">Answer more</a>
+                        <a class="button secondary homepage-answer-more-button" href="/home-prompt/more">Another question</a>
                     </div>
                 </form>
             </div>
