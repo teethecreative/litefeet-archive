@@ -7,7 +7,7 @@ import unicodedata
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
-from dca_rebuild.models import DCACategory, DCANominee, DCANominationSubmission, NominationCooldown
+from dca_rebuild.models import DCACategory, DCAEdition, DCANominee, DCANominationSubmission, NominationCooldown
 
 
 def utc_now():
@@ -35,34 +35,65 @@ def normalize_nominee_name(value):
 # similar spelling alone. Keys/values use normalized_nominee_name syntax.
 CONFIRMED_NOMINEE_ALIASES = {
     "a astro": ("D Astro", "d astro"),
+    "d ski": ("D Ski", "d ski"),
+    "dski": ("D Ski", "d ski"),
+    "bsn": ("BSNYEA", "bsnyea"),
+    "bsnyea": ("BSNYEA", "bsnyea"),
+    "d rillz": ("D Rillz", "d rillz"),
+    "ty shots": ("Ty Shotz", "ty shotz"),
+    "ty shotz": ("Ty Shotz", "ty shotz"),
+    "noah lot": ("Noahlot", "noahlot"),
+    "noahalot": ("Noahlot", "noahlot"),
+    "noahlot": ("Noahlot", "noahlot"),
 }
 
 
-def canonical_nominee_name(value):
+def canonical_nominee_name(value, *, category_name=None):
+    """Apply owner-confirmed aliases without conflating dance and production credits."""
     display, normalized = normalize_nominee_name(value)
+    if normalized in ("aye jae", "aye jae beats"):
+        if category_name is not None:
+            return (("Aye Jae Beats", "aye jae beats") if "produc" in category_name.casefold()
+                    else ("Aye Jae", "aye jae"))
+        return (("Aye Jae Beats", "aye jae beats") if normalized == "aye jae beats"
+                else ("Aye Jae", "aye jae"))
     return CONFIRMED_NOMINEE_ALIASES.get(normalized, (display, normalized))
 
 
-def canonical_nominee_key(value):
-    return canonical_nominee_name(value)[1]
+def canonical_nominee_key(value, *, category_name=None):
+    return canonical_nominee_name(value, category_name=category_name)[1]
+
+
+def _related_category_ids(db, category):
+    """Return the linked producer write-in category IDs, retaining original records."""
+    from dca_rebuild.phase9e import producer_writein_alias_map
+    edition = db.get(DCAEdition, category.edition_id)
+    aliases = producer_writein_alias_map(db, edition) if edition else {}
+    canonical = aliases.get(category.id, category.id)
+    return canonical, {canonical} | {cid for cid, target in aliases.items() if target == canonical}
 
 
 def candidate_matches(db, *, category_id, name):
     """Check existing nominees before submit; confirmed aliases aren't guesses."""
-    display, name_key = canonical_nominee_name(name)
+    category = db.get(DCACategory, category_id)
+    if category is None:
+        return []
+    canonical_id, related_ids = _related_category_ids(db, category)
+    canonical_category = db.get(DCACategory, canonical_id)
+    display, name_key = canonical_nominee_name(name, category_name=canonical_category.name)
     choices = db.query(DCANominee).filter(
-        DCANominee.category_id == category_id,
+        DCANominee.category_id.in_(related_ids),
         DCANominee.moderation_status.in_(('pending', 'approved')),
     ).all()
     found = []
     for nominee in choices:
-        existing_key = canonical_nominee_key(nominee.name)
+        existing_key = canonical_nominee_key(nominee.name, category_name=canonical_category.name)
         exact = existing_key == name_key
         score = SequenceMatcher(None, name_key, existing_key).ratio()
         if exact or (len(name_key) >= 4 and len(existing_key) >= 4 and score >= 0.84):
             found.append({
                 "id": nominee.id,
-                "name": (display if exact and name_key == "d astro" else nominee.name),
+                "name": display if exact else nominee.name,
                 "type": "existing" if exact else "similar",
                 "score": score,
             })
@@ -107,12 +138,14 @@ def add_nomination(db, *, edition_id, category_id, name, submitter_hash, ip_hash
     workers. The claim, nominee and submission commit or roll back together.
     Historical entries are checked while holding this category/identity lock.
     """
-    display, normalized = canonical_nominee_name(name)
     if not isinstance(submitter_hash, str) or not submitter_hash.strip():
         raise ValueError("Submitter identity is required")
     category = db.get(DCACategory, category_id)
     if not category or category.edition_id != edition_id:
         raise ValueError("Category and edition mismatch")
+    category_id, related_ids = _related_category_ids(db, category)
+    category = db.get(DCACategory, category_id)
+    display, normalized = canonical_nominee_name(name, category_name=category.name)
     now = as_utc(now or utc_now())
     key = dict(edition_id=edition_id, category_id=category_id, submitter_hash=submitter_hash)
     db.execute(insert_for(db, NominationCooldown).values(**key, next_eligible_at=now)
@@ -126,17 +159,18 @@ def add_nomination(db, *, edition_id, category_id, name, submitter_hash, ip_hash
               .join(DCANominee, DCANominee.id == DCANominationSubmission.nominee_id)
               .filter(DCANominationSubmission.edition_id == edition_id,
                       DCANominationSubmission.submitter_hash == submitter_hash,
-                      DCANominee.category_id == category_id)
+                      DCANominee.category_id.in_(related_ids))
               .order_by(DCANominationSubmission.submitted_at.desc()).first())
     if latest and remaining_seconds(latest[0], now):
         return None, False
     # Known aliases (e.g. A Astro / D Astro) count for the established
     # person. All older submissions remain attached to their original IDs.
     matching = [
-        nominee for nominee in db.query(DCANominee).filter_by(category_id=category_id).all()
-        if canonical_nominee_key(nominee.name) == normalized
+        nominee for nominee in db.query(DCANominee).filter(
+            DCANominee.category_id.in_(related_ids)).all()
+        if canonical_nominee_key(nominee.name, category_name=category.name) == normalized
     ]
-    matching.sort(key=lambda n: (n.normalized_name != normalized, n.id))
+    matching.sort(key=lambda n: (n.category_id != category_id, n.normalized_name != normalized, n.id))
     nominee = matching[0] if matching else None
     if nominee is None:
         db.execute(insert_for(db, DCANominee).values(
