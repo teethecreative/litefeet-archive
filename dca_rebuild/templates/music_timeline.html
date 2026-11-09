@@ -37,7 +37,7 @@
 <header class="lfv-music-header"><p class="lfv-music-kicker">The LiteFeet Vault / Music</p><h1>LiteFeet Music</h1><p class="lfv-music-subtitle">New releases, tracks, and projects from LiteFeet producers. Find out what is circulating now.</p></header>
 <form class="lfv-music-filter" method="get" action="{{ url_for('vault_music_public') }}"><label for="music-q" class="sr-only">Search releases</label><input id="music-q" type="search" name="q" value="{{ search }}" placeholder="Search titles, artists, producers"><button type="submit" class="lfv-music-button">Search</button></form>
 <section aria-labelledby="music-releases-title">
-<p class="lfv-music-kicker">Music / Discovery</p><h2 id="music-releases-title">Release Radar</h2>
+<p class="lfv-music-kicker">Music / Discovery</p><h2 id="music-releases-title">Release Radar</h2><p class="lfv-music-description">Includes sourced tracks and projects. Dates and durations are shown only where documented; some source links lead to artist profiles or full projects.</p>
 <div class="lfv-music-table-scroll">
 <table class="lfv-music-table">
 <thead><tr><th scope="col">Release Date</th><th scope="col">Song Name</th><th scope="col">Artist / Producer</th><th scope="col">Duration</th><th scope="col">Record / Listen</th></tr></thead>
@@ -49,12 +49,12 @@
 <tr>
 <td class="lfv-music-table-date">{{ item.date_label }}</td>
 <td class="lfv-music-table-name"><span class="lfv-music-title">{{ item.title or 'Untitled release' }}</span>{% if item.description %}<p class="lfv-music-description">{{ item.description }}</p>{% endif %}</td>
-<td class="lfv-music-credits">{{ item.artist_or_creator or item.artist or item.producer_name or 'Not yet documented' }}</td>
+<td class="lfv-music-credits">{{ item.artist_or_creator or item.artist or item.producer_name or 'Not yet documented' }}{% if item.project_title %}<p class="lfv-music-description">From {{ item.project_title }}</p>{% elif item.kind == 'project' %}<p class="lfv-music-description">{{ item.record_type or 'Project' }}{% if item.expected_track_count %} · {{ item.expected_track_count }} tracks{% endif %}</p>{% endif %}</td>
 <td class="lfv-music-table-duration">{{ item.duration_label }}</td>
 <td><div class="lfv-music-row-actions">
 {% if direct_audio %}<button type="button" class="lfv-music-play" data-audio="{{ audio }}" data-track="{{ item.title }}" aria-label="Play {{ item.title }}" aria-pressed="false">▶</button>{% endif %}
-<a class="lfv-music-button" href="{{ url_for('vault_music_release', item_id=item.id) }}">View Record</a>
-{% if item.url %}<a class="lfv-music-source" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">Source</a>{% endif %}
+<a class="lfv-music-button" href="{{ item.record_href }}">View Record</a>
+{% if item.url %}<a class="lfv-music-source" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ 'Source profile / project' if item.kind else 'Source' }}</a>{% endif %}
 </div></td>
 </tr>
 {% else %}
