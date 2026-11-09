@@ -27,6 +27,22 @@
 <label>Start date <input type="date" name="start_date" required></label>
 <label>End date <span class="lfv-submit-optional">Optional</span><input type="date" name="end_date"></label>
 </div>
+<fieldset class="lfv-submit-repeat" style="border:1px solid #9b9b9b;border-radius:10px;padding:16px;margin:12px 0">
+<legend>Repeat schedule</legend>
+<label>Repeats <select name="recurrence_rule" id="recurrence-rule">
+{% for value,label in recurrence_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+</select></label>
+<div id="recurrence-weekdays" hidden>
+<p>Which days does this happen?</p>
+<div class="lfv-repeat-days" style="display:flex;flex-wrap:wrap;gap:12px">
+{% for value,label in [('0','Mon'),('1','Tue'),('2','Wed'),('3','Thu'),('4','Fri'),('5','Sat'),('6','Sun')] %}
+<label><input type="checkbox" name="recurrence_weekdays" value="{{ value }}"> {{ label }}</label>
+{% endfor %}
+</div>
+</div>
+<label id="recurrence-until" hidden>Repeat until <span class="lfv-submit-optional">Optional</span><input type="date" name="recurrence_until"></label>
+<p class="lfv-submit-privacy">For repeating events, use Start date as the first session. Leave End date empty; Repeat until controls the final session.</p>
+</fieldset>
 <div class="lfv-submit-two">
 <label>Start time <span class="lfv-submit-optional">Optional</span><input type="time" name="start_time"></label>
 <label>End time <span class="lfv-submit-optional">Optional</span><input type="time" name="end_time"></label>
@@ -55,4 +71,26 @@
 </form>
 </main>{% include "_footer.html" %}
 <script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
-</body></html>
+<script>
+(function(){
+  const rule=document.getElementById('recurrence-rule');
+  const weekdays=document.getElementById('recurrence-weekdays');
+  const until=document.getElementById('recurrence-until');
+  const date=document.querySelector('[name="start_date"]');
+  const boxes=[...document.querySelectorAll('[name="recurrence_weekdays"]')];
+  function sync(){
+    const recurring=rule.value!=='none';
+    weekdays.hidden=rule.value!=='weekly';
+    until.hidden=!recurring;
+    if(!recurring){until.querySelector('input').value='';}
+    if(rule.value==='weekly'&&!boxes.some(x=>x.checked)&&date.value){
+      const day=new Date(date.value+'T12:00:00').getDay();
+      boxes[(day+6)%7].checked=true;
+    }
+    if(rule.value!=='weekly')boxes.forEach(x=>x.checked=false);
+  }
+  rule.addEventListener('change',sync);
+  date.addEventListener('change',sync);
+  sync();
+})();
+</script></body></html>

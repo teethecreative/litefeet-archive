@@ -58,6 +58,30 @@ def ledger_template_globals():
     }
 
 Base.metadata.create_all(engine)
+
+# Existing databases need additive columns; create_all does not alter existing
+# tables. Keep one-off gatherings intact and safely default them to "none".
+def ensure_vault_gathering_recurrence_columns():
+    from sqlalchemy import inspect, text as sql_text
+    table = "vault_gathering_submissions"
+    inspector = inspect(engine)
+    if table not in inspector.get_table_names():
+        return
+    existing = {column["name"] for column in inspector.get_columns(table)}
+    additions = (
+        ("recurrence_rule", "VARCHAR(16) NOT NULL DEFAULT 'none'"),
+        ("recurrence_weekdays", "VARCHAR(32)"),
+        ("recurrence_until", "VARCHAR(10)"),
+    )
+    with engine.begin() as connection:
+        for column, definition in additions:
+            if column not in existing:
+                connection.execute(sql_text(
+                    f'ALTER TABLE "{table}" ADD COLUMN "{column}" {definition}'
+                ))
+
+
+ensure_vault_gathering_recurrence_columns()
 SessionLocal = sessionmaker(bind=engine)
 
 

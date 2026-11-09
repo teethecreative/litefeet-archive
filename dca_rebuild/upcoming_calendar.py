@@ -61,17 +61,50 @@ def upcoming_calendar(today=None, session_factory=None):
         with session_factory() as db:
             approved = db.query(VaultGatheringSubmission).filter(
                 VaultGatheringSubmission.status == "approved",
-                VaultGatheringSubmission.start_date >= today.isoformat(),
                 VaultGatheringSubmission.start_date <= end.isoformat()
             ).all()
             for item in approved:
-                identity = (item.start_date, item.title.casefold())
-                if identity in seen:
+                try:
+                    first_day = date.fromisoformat(item.start_date)
+                    until = date.fromisoformat(item.recurrence_until) if item.recurrence_until else None
+                except (TypeError, ValueError):
                     continue
-                seen.add(identity)
-                entries.append(dict(date=item.start_date, title=item.title,
-                                    href=item.link or "/submit", status="COMMUNITY",
-                                    description=item.venue or item.city or item.gathering_type))
+                rule = item.recurrence_rule or "none"
+                weekdays = set()
+                if rule == "weekly":
+                    try:
+                        weekdays = {int(d) for d in (item.recurrence_weekdays or "").split(",") if d}
+                    except ValueError:
+                        continue
+                    if not weekdays:
+                        weekdays = {first_day.weekday()}
+                for offset in range(30):
+                    day = today + timedelta(days=offset)
+                    if day < first_day or (until and day > until):
+                        continue
+                    matches = False
+                    if rule == "daily":
+                        matches = True
+                    elif rule == "weekly":
+                        matches = day.weekday() in weekdays
+                    elif rule == "monthly":
+                        # Monthly on the same day number; nonexistent dates are skipped.
+                        matches = day.day == first_day.day
+                    else:
+                        matches = day == first_day
+                    if not matches:
+                        continue
+                    identity = (day.isoformat(), item.title.casefold())
+                    if identity in seen:
+                        continue
+                    seen.add(identity)
+                    details = " · ".join(part for part in (
+                        "–".join((item.start_time or "", item.end_time or "")) if item.start_time and item.end_time else (item.start_time or ""),
+                        item.venue, item.address, item.city
+                    ) if part)
+                    entries.append(dict(date=day.isoformat(), title=item.title,
+                                        href=item.link or "/submit", status="COMMUNITY",
+                                        description=details or item.gathering_type))
     for item in curated_events():
         try:
             event_date = date.fromisoformat(item["date"])

@@ -89,3 +89,54 @@ def test_submission_validates_future_date_and_url(website, database):
     assert response.status_code == 302
     with database[1]() as db:
         assert db.query(VaultGatheringSubmission).count() == 0
+
+
+def test_weekly_submission_expands_on_selected_weekdays_only(website, database):
+    from datetime import date
+    client = website.test_client()
+    today = datetime.now(ZoneInfo("America/New_York")).date()
+    monday = today + timedelta(days=(7 - today.weekday()) % 7)
+    if monday <= today:
+        monday += timedelta(days=7)
+    client.get("/submit")
+    with client.session_transaction() as sess:
+        token = sess["lfv_submit_csrf"]
+    response = client.post("/submit", data=[
+        ("csrf_token", token),
+        ("title", "Let's Lab at the ARC"),
+        ("gathering_type", "lab"),
+        ("start_date", monday.isoformat()),
+        ("start_time", "18:00"),
+        ("end_time", "21:30"),
+        ("venue", "The ARC"),
+        ("recurrence_rule", "weekly"),
+        ("recurrence_weekdays", "0"),
+        ("recurrence_weekdays", "1"),
+        ("recurrence_weekdays", "2"),
+    ])
+    assert response.status_code == 303
+    with database[1].begin() as db:
+        item = db.query(VaultGatheringSubmission).filter_by(title="Let's Lab at the ARC").one()
+        assert item.status == "pending"
+        assert item.recurrence_rule == "weekly"
+        assert item.recurrence_weekdays == "0,1,2"
+        item.status = "approved"
+    calendar = upcoming_calendar(today=monday, session_factory=database[1])
+    days = [date.fromisoformat(e["date"]).weekday() for e in calendar["events"] if e["title"] == "Let's Lab at the ARC"]
+    assert days
+    assert set(days) == {0, 1, 2}
+
+
+def test_repeating_event_rejects_end_date_conflict(website, database):
+    client = website.test_client()
+    start = (datetime.now(ZoneInfo("America/New_York")).date() + timedelta(days=5)).isoformat()
+    client.get("/submit")
+    with client.session_transaction() as sess:
+        token = sess["lfv_submit_csrf"]
+    response = client.post("/submit", data=dict(
+        csrf_token=token, title="Bad Repeat", gathering_type="lab",
+        start_date=start, end_date=start, recurrence_rule="weekly",
+    ))
+    assert response.status_code == 302
+    with database[1]() as db:
+        assert db.query(VaultGatheringSubmission).filter_by(title="Bad Repeat").count() == 0
