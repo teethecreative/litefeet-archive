@@ -152,6 +152,8 @@ def install_information_architecture(app, ns):
 
     @app.get('/archive/timeline', endpoint='vault_timeline')
     def timeline():
+        if request.args.get('collection') == 'music':
+            return redirect(url_for('vault_music_public'), code=302)
         current_page = max(1, request.args.get('page', 1, type=int) or 1)
         search = dict(query=request.args.get('q', ''),
                       collection=request.args.get('collection', 'all'), page=current_page)
