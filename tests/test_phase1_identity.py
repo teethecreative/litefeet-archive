@@ -163,3 +163,54 @@ def test_lock_in_rulebook_and_mixed_deck_builder_present(website):
     assert 'lockin-draft-deck-v1' in js
     assert 'limit(c.id)' in js
     assert 'restrictions[id]' in js
+
+
+def test_lock_in_has_compact_different_size_samples_and_search(website):
+    from dca_rebuild.lock_in import public_sample_decks
+    assert [d['total'] for d in public_sample_decks()] == [25, 35]
+    response = website.test_client().get('/archive/lock-in')
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert 'Build A Deck &amp; Test The Game' in html
+    assert 'id="lock-search"' in html
+    assert 'id="lock-catalog"' in html
+    assert 'id="lock-request-panel"' in html
+    assert 'data-deck-sample="0"' in html
+    assert 'data-deck-sample="1"' in html
+    assert 'Adapted directly from the' not in html
+    assert 'Use the mixed-card examples to build' not in html
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[1] / 'dca_rebuild/static/js/lock-in-game.js').read_text()
+    assert 'el("#lock-search").addEventListener("input",renderCatalog)' in js
+    assert 'lock-request-form' in js
+    assert 'pool[id].name' in js
+
+
+def test_lock_in_card_request_is_csrf_protected_and_moderated(website, database):
+    from dca_rebuild.models import LockInCardRequest
+    client = website.test_client()
+    rejected = client.post('/archive/lock-in/card-requests',
+                           data=dict(card_type='Song', card_name='My Song', email='x@example.org', producer='Example'))
+    assert rejected.status_code == 400
+    client.get('/archive/lock-in')
+    with client.session_transaction() as session:
+        token = session['lock_card_csrf']
+    missing_producer = client.post('/archive/lock-in/card-requests',
+                                   data=dict(csrf_token=token, card_type='Song',
+                                             card_name='Example Song',email='x@example.org'))
+    assert missing_producer.status_code == 400
+    accepted = client.post('/archive/lock-in/card-requests',
+                           data=dict(csrf_token=token,card_type='Song',card_name='Example Song',
+                                     email='x@example.org',producer='Example Producer',
+                                     gameplay='A beat for battles'))
+    assert accepted.status_code == 201
+    assert accepted.get_json()['ok']
+    with database[1]() as db:
+        entry = db.query(LockInCardRequest).filter_by(card_name='Example Song').one()
+        assert entry.card_type == 'Song'
+        assert entry.status == 'pending'
+        assert 'Example Producer' in entry.details_json
+    repeat = client.post('/archive/lock-in/card-requests',
+                         data=dict(csrf_token=token,card_type='Song',card_name='Another Song',
+                                   email='x@example.org',producer='Example Producer'))
+    assert repeat.status_code == 429
