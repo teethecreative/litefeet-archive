@@ -28,6 +28,10 @@ def test_ready_navigation_and_every_active_link(website):
     assert '/archive' in links and '/archive/people' in links and '/calendar' in links
     assert not next(x for x in items if x['label'] == 'The Archive')['children']
     assert '/awards/hypeitup' in links
+    # About is a direct top-level link, never a submenu or nested overview.
+    about_item = next(x for x in items if x['label'] == 'About')
+    assert about_item['href'] == '/about'
+    assert about_item['children'] == []
     for href in links:
         url = urlsplit(href)
         response = client.get(url.path + ('?' + url.query if url.query else ''))
