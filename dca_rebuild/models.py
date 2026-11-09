@@ -858,6 +858,10 @@ class VaultGatheringSubmission(Base):
     description = Column(Text, nullable=True)
     start_date = Column(String(10), nullable=False, index=True)
     end_date = Column(String(10), nullable=True)
+    # Repeating sessions are expanded on demand into calendar occurrences.
+    recurrence_rule = Column(String(16), nullable=False, default="none")
+    recurrence_weekdays = Column(String(32), nullable=True)
+    recurrence_until = Column(String(10), nullable=True)
     start_time = Column(String(5), nullable=True)
     end_time = Column(String(5), nullable=True)
     timezone = Column(String(64), nullable=False, default="America/New_York")
