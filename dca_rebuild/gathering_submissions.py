@@ -22,6 +22,8 @@ GATHERING_TYPES = (
     ("other", "OTHER"),
 )
 VALID_TYPES = {key for key, _ in GATHERING_TYPES}
+RECURRENCE_CHOICES = (("none", "Does not repeat"), ("daily", "Daily"), ("weekly", "Weekly"), ("monthly", "Monthly"))
+VALID_RECURRENCE = {key for key, _ in RECURRENCE_CHOICES}
 
 
 def trim(form, name, length):
@@ -49,7 +51,7 @@ def install_gathering_submissions(app, ns):
     @app.route("/submit", methods=["GET", "POST"], endpoint="vault_submit")
     def submit():
         if request.method == "GET":
-            return render_template("vault_submit.html", submission_types=GATHERING_TYPES, submit_csrf=csrf_token())
+            return render_template("vault_submit.html", submission_types=GATHERING_TYPES, recurrence_choices=RECURRENCE_CHOICES, submit_csrf=csrf_token())
 
         if not secrets.compare_digest(str(session.get("lfv_submit_csrf", "")), str(request.form.get("csrf_token") or "")) or not session.get("lfv_submit_csrf"):
             abort(400)
@@ -65,10 +67,31 @@ def install_gathering_submissions(app, ns):
         start = trim(request.form, "start_time", 5)
         end = trim(request.form, "end_time", 5)
         email = trim(request.form, "contact_email", 255).lower()
+        repeat = trim(request.form, "recurrence_rule", 16) or "none"
+        weekday_values = request.form.getlist("recurrence_weekdays")
+        repeat_until = trim(request.form, "recurrence_until", 10)
         try:
             parsed_day = date.fromisoformat(day)
             if parsed_day < datetime.now(ZoneInfo("America/New_York")).date():
                 raise ValueError("PLEASE ENTER A CURRENT OR FUTURE DATE.")
+            if repeat not in VALID_RECURRENCE:
+                raise ValueError("SELECT A VALID REPEAT SCHEDULE.")
+            if repeat != "none" and end_day:
+                raise ValueError("FOR REPEATING EVENTS, USE REPEAT UNTIL INSTEAD OF END DATE.")
+            if repeat_until:
+                until = date.fromisoformat(repeat_until)
+                if repeat == "none":
+                    raise ValueError("REPEAT UNTIL REQUIRES A REPEATING EVENT.")
+                if until < parsed_day:
+                    raise ValueError("REPEAT UNTIL CANNOT PRECEDE THE FIRST EVENT.")
+            if any(day not in {str(i) for i in range(7)} for day in weekday_values):
+                raise ValueError("SELECT VALID RECURRING DAYS.")
+            if repeat == "weekly" and not weekday_values:
+                weekday_values = [str(parsed_day.weekday())]
+            if repeat != "weekly" and weekday_values:
+                raise ValueError("RECURRING WEEKDAYS REQUIRE A WEEKLY SCHEDULE.")
+            if repeat == "weekly" and str(parsed_day.weekday()) not in weekday_values:
+                raise ValueError("FIRST DATE MUST MATCH ONE OF THE SELECTED WEEKDAYS.")
             if end_day and date.fromisoformat(end_day) < parsed_day:
                 raise ValueError("THE END DATE CANNOT PRECEDE THE START DATE.")
             for time_text in (start, end):
@@ -90,6 +113,9 @@ def install_gathering_submissions(app, ns):
                 description=trim(request.form, "description", 3000) or None,
                 start_date=day,
                 end_date=end_day or None,
+                recurrence_rule=repeat,
+                recurrence_weekdays=",".join(sorted(set(weekday_values), key=int)) if repeat == "weekly" else None,
+                recurrence_until=repeat_until or None,
                 start_time=start or None,
                 end_time=end or None,
                 venue=trim(request.form, "venue", 240) or None,
@@ -121,6 +147,8 @@ def install_gathering_submissions(app, ns):
             items = [
                 dict(id=x.id, title=x.title, gathering_type=x.gathering_type,
                      date=x.start_date, end_date=x.end_date, time=x.start_time,
+                     recurrence_rule=x.recurrence_rule, recurrence_weekdays=x.recurrence_weekdays,
+                     recurrence_until=x.recurrence_until,
                      venue=x.venue, city=x.city, hosts=x.hosts, admission=x.admission,
                      link=x.link, description=x.description, notes=x.additional_notes,
                      contact=x.contact_email, status=x.status)
