@@ -36,6 +36,8 @@ CONTACT = 'mailto:teethecreative@gmail.com?subject=LiteFeet%20Vault%20Enquiry'
 
 
 def install_information_architecture(app, ns):
+    # Read-only access for SEO on current approved calendar occurrences.
+    app.extensions["vault_seo_session_factory"] = ns["SessionLocal"]
     def public_content():
         if not hasattr(g, 'vault_public_content'):
             with ns['SessionLocal']() as db:
