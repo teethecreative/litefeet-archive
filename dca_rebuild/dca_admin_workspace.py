@@ -62,10 +62,8 @@ def install_dca_admin_workspace(app, ns):
             status_options = []
             if status_column is not None:
                 model = DCACategory if section == "categories" else DCANominee
-                status_options = sorted({
-                    value for (value,) in db.query(status_column).filter(
-                        model.edition_id == edition.id).distinct().all() if value
-                })
+                status_options = sorted({value for (value,) in db.query(status_column).filter(
+                    model.edition_id == edition.id).distinct().all() if value} | {"rejected"})
             if selected_status != "all" and selected_status not in status_options:
                 selected_status = "all"
             if section == "categories":
