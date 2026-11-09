@@ -20,11 +20,13 @@ def test_ready_navigation_and_every_active_link(website):
     client = website.test_client()
     html = client.get('/').get_data(as_text=True)
     items = navigation(html)
-    assert [x[1] for x in SECTION_CATALOG] == ['Home','The Archive','People','Music','Media','Stories & Media','Awards','Community','About']
-    assert [x['label'] for x in items] == ['Home','The Archive','Music','Media','Awards','About']
+    assert [x[1] for x in SECTION_CATALOG] == ['Home','The Archive','People & Teams','History & Timeline','Upcoming Calendar','Awards & Recognition','Lock In Card Battle Game','Music','Media','Stories & Media','Community','About']
+    assert [x['label'] for x in items] == ['Home','The Archive','People & Teams','History & Timeline','Upcoming Calendar','Awards & Recognition','Lock In Card Battle Game','Music','About']
     links = [x['href'] for x in items] + [c['href'] for x in items for c in x['children']]
     assert not any('/admin' in x or '/nominations' in x for x in links)
-    assert not any(x in links for x in ['/people','/stories'])
+    assert not any(x in links for x in ['/people','/stories','/media'])
+    assert '/archive' in links and '/archive/people' in links and '/calendar' in links
+    assert not next(x for x in items if x['label'] == 'The Archive')['children']
     assert '/awards/hypeitup' in links
     for href in links:
         url = urlsplit(href)
@@ -51,14 +53,15 @@ def test_publication_filters_and_no_data_mutation(website, database):
     with database[1]() as db:
         before = (db.query(DCACategory).count(),db.query(DCANominationSubmission).count())
     client = website.test_client()
-    for path in ['/','/archive/timeline','/community','/about','/awards']:
+    for path in ['/','/archive','/archive/timeline','/calendar','/community','/about','/awards']:
         page = client.get(path)
         assert page.status_code == 200
         assert 'PRIVATE' not in page.get_data(as_text=True)
     timeline = client.get('/archive/timeline?q=Published+era').get_data(as_text=True)
     assert 'Published era' in timeline and '2000' in timeline
     assert 'Public update' in client.get('/community').get_data(as_text=True)
-    assert '/archive/timeline' in [c['href'] for n in navigation(client.get('/').get_data(as_text=True)) for c in n['children']]
+    assert '/archive/timeline' in [n['href'] for n in navigation(client.get('/').get_data(as_text=True))]
+    assert 'Submit to the Archive' in client.get('/archive').get_data(as_text=True)
     with database[1]() as db:
         assert (db.query(DCACategory).count(),db.query(DCANominationSubmission).count()) == before
 
@@ -69,7 +72,7 @@ def test_unpublished_eras_are_not_leaked_into_public_timeline(website):
     assert page.status_code == 200
     assert 'HISTORY &amp; TIMELINE' in page.get_data(as_text=True)
     items = navigation(client.get('/').get_data(as_text=True))
-    assert any(c['href'] == '/archive/timeline' for n in items for c in n['children'])
+    assert any(n['href'] == '/archive/timeline' for n in items)
     assert 'id="updates"' not in client.get('/community').get_data(as_text=True)
 
 
@@ -130,7 +133,7 @@ def test_nested_right_drawer_keyboard_and_program_links(website,width):
             assert panel.is_visible()
             page.screenshot(path=f'/tmp/vault-phase1-menu-{width}.png')
             assert abs(panel.bounding_box()['x']+panel.bounding_box()['width']-width) <= 1
-            assert panel.locator('[data-section]').all_text_contents() == ['Home','The Archive','Awards','About']
+            assert panel.locator('[data-section]').all_text_contents() == ['Home','The Archive','People & Teams','History & Timeline','Upcoming Calendar','Awards & Recognition','Lock In Card Battle Game','Music','About']
             assert page.locator('main').evaluate('node=>node.inert') is True
             page.keyboard.press('Shift+Tab')
             assert panel.locator('[data-section="about"]').evaluate('node=>node===document.activeElement')
@@ -228,3 +231,14 @@ def test_awards_overview_and_hypeitup_are_integrated_and_vault_branded(website):
     assert '>AWARDS</a>' in nav_content
     assert '2023 AWARDS' not in nav_content
     assert 'PEOPLE &amp; CREWS' not in nav_content
+
+
+def test_archive_overview_and_unpublished_media(website):
+    client = website.test_client()
+    assert client.get('/archive').status_code == 200
+    assert 'Submit to the Archive' in client.get('/archive').get_data(as_text=True)
+    assert client.get('/archive?collection=people').status_code == 302
+    assert client.get('/media').status_code == 404
+    assert client.get('/calendar').status_code == 200
+    nav = navigation(client.get('/').get_data(as_text=True))
+    assert not next(row for row in nav if row['key'] == 'archive')['children']
