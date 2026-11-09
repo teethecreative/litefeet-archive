@@ -35,7 +35,11 @@ PAGES = {
     ),
 }
 PAGES.update({
-    "/archive/lock-in": ("Lock In | The LiteFeet Card Battle Game", "Learn the rules, browse sample decks, play a practice round and contribute to the LiteFeet card game."),
+    "/archive/people": ("People & Teams | The LiteFeet Vault",
+                        "Search LiteFeet dancers, teams and community profiles, and discover their connections through sourced cultural records."),
+    "/litefeet-music": ("LiteFeet Music Release Radar | The LiteFeet Vault",
+                        "Discover LiteFeet tracks, albums and projects with release dates, artist and producer credits, durations, and original sources."),
+        "/archive/lock-in": ("Lock In | The LiteFeet Card Battle Game", "Learn the rules, browse sample decks, play a practice round and contribute to the LiteFeet card game."),
     "/calendar": ("LiteFeet Events Calendar | The LiteFeet Vault", "Browse the community calendar for upcoming LiteFeet labs, battles, classes, workshops, recurring sessions and events."),
     "/submit": ("Submit a Battle, Lab, Link-Up or Class | The LiteFeet Vault",
                 "Submit an upcoming battle, lab session, link-up, workshop, class or community gathering for review on The LiteFeet Vault."),
@@ -70,6 +74,8 @@ SITEMAP_PATHS = (
     "/",
     "/archive/lock-in",
     "/archive/timeline",
+    "/archive/people",
+    "/litefeet-music",
     "/calendar",
     "/awards",
     "/awards/dancers-choice",
@@ -94,6 +100,64 @@ SITEMAP_PATHS = (
     "/awards/dancers-choice/category-suggestions",
     "/awards/dancers-choice/category-voting",
 )
+
+
+def _published_music_rows():
+    """Use only public releases, never draft/private media rows."""
+    from flask import current_app
+    loader = current_app.extensions.get("vault_published_music_rows")
+    return loader() if loader else []
+
+
+def _music_detail_record(path):
+    from dca_rebuild.music_batch_catalog import batch_record
+    match = re.fullmatch(r"/litefeet-music/catalog/(track|project)/([a-zA-Z0-9_-]+)", path)
+    if match:
+        return batch_record(match.group(1), match.group(2))
+    match = re.fullmatch(r"/litefeet-music/release/([0-9]+)", path)
+    if match:
+        return next((r for r in _published_music_rows() if str(r.get("id")) == match.group(1)), None)
+    return None
+
+
+def _music_detail_metadata(path):
+    item = _music_detail_record(path)
+    if item is None:
+        return None
+    from dca_rebuild.music_presentation import with_release_display
+    item = with_release_display(dict(item))
+    name = " ".join(str(item.get("display_title") or item.get("title") or "Untitled release").split())
+    artist = " ".join(str(item.get("artist_or_creator") or item.get("artist") or
+                          item.get("producer_name") or "").split())
+    kind = "project" if item.get("kind") == "project" else "track"
+    title = f"{name} | LiteFeet Music | The LiteFeet Vault"
+    description = (f"Discover the LiteFeet music {kind} {name}" +
+                   (f" by {artist}" if artist else "") +
+                   ". Explore documented credits, release details, and original listening sources.")
+    return title[:180], description[:190]
+
+
+def _published_calendar_events():
+    """Current scheduled public occurrences only; future dates are transient."""
+    from flask import current_app
+    from dca_rebuild.upcoming_calendar import upcoming_calendar
+    factory = current_app.extensions.get("vault_seo_session_factory")
+    return upcoming_calendar(session_factory=factory)["events"] if factory else []
+
+
+def _calendar_detail_metadata(path):
+    match = re.fullmatch(r"/calendar/events/(\\d{4}-\\d{2}-\\d{2})/([a-z0-9-]+)", path)
+    if not match:
+        return None
+    from dca_rebuild.upcoming_calendar import event_slug
+    item = next((event for event in _published_calendar_events()
+                 if event["date"] == match.group(1) and event_slug(event["title"]) == match.group(2)), None)
+    if item is None:
+        return None
+    title = f"{item['title']} | LiteFeet Calendar | The LiteFeet Vault"
+    description = (f"{item['title']} on {item['display_date']}. " +
+                   "Find event details, location, organizer and original sources on The LiteFeet Vault.")
+    return title[:180], description[:190]
 
 
 def card_key_for_path(path):
@@ -125,6 +189,10 @@ def metadata_for_path(path, view=None):
                 f"LiteFeet Awards {year} Archive | The LiteFeet Vault",
                 f"Explore the LiteFeet Awards {year} archive and its preserved awards history on The LiteFeet Vault.",
             )
+    if record is None and canonical_path.startswith("/litefeet-music/"):
+        record = _music_detail_metadata(canonical_path)
+    if record is None and canonical_path.startswith("/calendar/events/"):
+        record = _calendar_detail_metadata(canonical_path)
     if record is None and canonical_path.startswith("/archive/records/"):
         from dca_rebuild.archive_catalog import find_record
         item = find_record(canonical_path[len("/archive/records/"):])
@@ -209,8 +277,19 @@ def register_seo(app):
     @app.get("/sitemap.xml")
     def litefeet_sitemap():
         from dca_rebuild.archive_catalog import all_records
+        from dca_rebuild.music_batch_catalog import batch_catalog
+        from dca_rebuild.upcoming_calendar import event_slug
         paths = list(SITEMAP_PATHS) + [
             "/archive/records/" + item["slug"] for item in all_records()
+        ] + [
+            "/litefeet-music/catalog/" + item["kind"] + "/" + item["catalog_id"]
+            for item in batch_catalog()
+        ] + [
+            "/litefeet-music/release/" + str(item["id"])
+            for item in _published_music_rows()
+        ] + [
+            "/calendar/events/" + item["date"] + "/" + event_slug(item["title"])
+            for item in _published_calendar_events()
         ]
         entries = "".join(
             "<url><loc>" + escape(SITE_URL + path) + "</loc></url>"
