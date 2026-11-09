@@ -63,6 +63,19 @@ SAMPLE_DECKS = {
 def public_sample_decks():
     result = []
     for index, (key, categories) in enumerate(SAMPLE_DECKS.items(), start=1):
+        # Different sample sizes help players see how a mixed deck grows.
+        # The 10 additional cards are existing names from the planning source,
+        # not new invented cards or a mandated type distribution.
+        if index == 2:
+            categories = tuple(
+                (kind, tuple(cards) + {
+                    "Dancer": ("Live Motion", "Noah", "Red Ink"),
+                    "Arena": ("Slattery Park", "FNL"),
+                    "Move": ("Butterfly", "Knee Drop", "Needle & Thread"),
+                    "Trick": ("Hat Trick",),
+                    "Frib": ("No Hype",),
+                }.get(kind, ())) for kind, cards in categories
+            )
         total = sum(len(cards) for _, cards in categories)
         if not 25 <= total <= 50:
             raise ValueError("Sample deck must contain 25–50 total cards")
