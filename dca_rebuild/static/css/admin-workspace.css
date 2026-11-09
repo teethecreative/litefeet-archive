@@ -1,0 +1,56 @@
+/* LiteFeet Vault compact Admin Overview, moderation and development workspaces */
+.lfv-admin-workspace{max-width:1250px;margin:auto;padding:36px 24px 96px;color:var(--lfv-ink,#13263d);text-transform:none}
+.lfv-admin-workspace *{box-sizing:border-box}
+.lfv-admin-workspace a{color:inherit;text-underline-offset:4px}
+.lfv-admin-workspace-head{border-bottom:1px solid var(--lfv-line,#a6afbb);padding:12px 0 30px;margin-bottom:24px}
+.lfv-admin-overline{font-size:.75rem;letter-spacing:.07em;text-transform:uppercase;color:var(--lfv-muted,#53667d);font-weight:800}
+.lfv-admin-workspace-head h1{font-size:clamp(2.1rem,4vw,3.6rem);margin:7px 0 12px;line-height:1.15}
+.lfv-admin-workspace-head>p:last-child{max-width:760px;line-height:1.65;color:var(--lfv-muted,#53667d)}
+.lfv-admin-metrics,.lfv-admin-state-counts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-bottom:1px solid var(--lfv-line,#a6afbb);margin-bottom:34px}
+.lfv-admin-metrics a,.lfv-admin-state-counts a{display:grid;gap:4px;text-decoration:none;padding:16px 20px 20px 0}
+.lfv-admin-metrics strong,.lfv-admin-state-counts strong{font-size:clamp(1.6rem,3vw,2.15rem);font-variant-numeric:tabular-nums}
+.lfv-admin-metrics span,.lfv-admin-state-counts span{font-size:.8rem;color:var(--lfv-muted,#53667d)}
+.lfv-admin-state-counts{grid-template-columns:repeat(6,minmax(0,1fr))}
+.lfv-admin-workspace-section{margin:0 0 42px;padding-top:5px}
+.lfv-admin-workspace-heading{display:flex;align-items:end;justify-content:space-between;gap:22px;margin:0 0 16px}
+.lfv-admin-workspace-heading h2,.lfv-admin-workspace-section>h2{margin:6px 0 8px;font-size:clamp(1.4rem,2.4vw,1.9rem);line-height:1.2}
+.lfv-admin-workspace-heading p{margin:5px 0;font-size:.87rem;color:var(--lfv-muted,#53667d);line-height:1.55}
+.lfv-admin-workspace-heading>a{font-size:.86rem;font-weight:700}
+.lfv-admin-table-wrap{width:100%;overflow-x:auto}
+.lfv-admin-review-table{width:100%;border-collapse:collapse;font-size:.84rem;min-width:670px}
+.lfv-admin-review-table th{text-align:left;color:var(--lfv-muted,#53667d);font-size:.73rem;font-weight:800;border-bottom:2px solid var(--lfv-line,#a6afbb);padding:12px 10px}
+.lfv-admin-review-table td{vertical-align:top;border-bottom:1px solid var(--lfv-line,#a6afbb);padding:14px 10px;line-height:1.5}
+.lfv-admin-review-table td strong{font-weight:750}
+.lfv-admin-review-table td small{display:block;font-size:.76rem;margin-top:5px;color:var(--lfv-muted,#53667d);max-width:60ch;white-space:pre-wrap}
+.lfv-admin-review-table td:last-child a{font-weight:750;white-space:nowrap}
+.lfv-admin-quick-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:24px}
+.lfv-admin-quick-links a{border-top:1px solid var(--lfv-line,#a6afbb);padding:15px 0;display:grid;gap:5px;text-decoration:none}
+.lfv-admin-quick-links a strong{font-size:.93rem}
+.lfv-admin-quick-links a span{font-size:.76rem;color:var(--lfv-muted,#53667d)}
+.lfv-admin-workspace-toolbar{display:flex;flex-wrap:wrap;gap:12px 26px}
+.lfv-admin-workspace-filters,.lfv-admin-inline-form{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:12px 0 16px}
+.lfv-admin-workspace-filters label{display:grid;gap:6px;font-size:.78rem;font-weight:750;min-width:160px}
+.lfv-admin-workspace :is(input,select,textarea),.lfv-public-feedback :is(input,select,textarea){padding:10px 12px;min-height:42px;border-radius:6px;border:1px solid var(--lfv-line,#8795a4);background:var(--lfv-surface,#fff);color:var(--lfv-ink,#13263d);font:inherit}
+.lfv-admin-workspace button,.lfv-public-feedback button{border-radius:6px;min-height:42px;padding:10px 18px;border:0;background:var(--lfv-gold,#c9a52b);color:#091b36;font:inherit;font-weight:800;cursor:pointer}
+.lfv-admin-inline-form{margin:0;align-items:center;gap:8px;flex-wrap:nowrap}
+.lfv-admin-inline-form select{min-width:145px;max-width:200px;font-size:.8rem}
+.lfv-admin-inline-form button,.lfv-admin-decision button{min-height:38px;padding:7px 10px}
+.lfv-admin-decision{display:inline;margin-right:8px}
+.lfv-admin-workspace-count{font-size:.83rem;color:var(--lfv-muted,#53667d)}
+.lfv-admin-workspace-pagination{display:flex;align-items:center;justify-content:center;gap:24px;padding:24px 0;font-size:.84rem}
+.lfv-admin-add-form{border-top:1px solid var(--lfv-line,#8795a4);padding:18px 0;margin:25px 0}
+.lfv-admin-add-form summary{font-weight:800;cursor:pointer}
+.lfv-admin-add-form form{display:grid;gap:15px;margin-top:20px;max-width:640px}
+.lfv-admin-add-form label{display:grid;gap:6px;font-weight:700;font-size:.8rem}
+.lfv-admin-workspace-flash{border-left:3px solid var(--lfv-gold,#c9a52b);padding:10px 15px}
+.lfv-admin-visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.lfv-public-feedback{max-width:760px;margin:auto;padding:48px 24px 100px;color:var(--lfv-ink,#13263d)}
+.lfv-public-feedback h1{font-size:clamp(2.1rem,4vw,3.2rem);margin:10px 0}
+.lfv-public-feedback p{line-height:1.7}
+.lfv-public-feedback form{display:grid;gap:20px;margin-top:28px}
+.lfv-public-feedback label{display:grid;gap:8px;font-weight:750}
+.lfv-public-feedback textarea{resize:vertical}
+.lfv-feedback-privacy{font-size:.78rem;color:var(--lfv-muted,#53667d)}
+.lfv-workspace-honeypot{position:absolute;left:-10000px;height:1px;overflow:hidden}
+@media(max-width:850px){.lfv-admin-quick-links{grid-template-columns:repeat(2,minmax(0,1fr))}.lfv-admin-state-counts{grid-template-columns:repeat(3,minmax(0,1fr))}.lfv-admin-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.lfv-admin-workspace{padding:24px 16px 70px}.lfv-admin-quick-links{grid-template-columns:1fr}.lfv-admin-workspace-heading{align-items:start;flex-direction:column}.lfv-admin-workspace-filters{align-items:stretch;flex-direction:column}.lfv-admin-workspace-filters label{width:100%}}
