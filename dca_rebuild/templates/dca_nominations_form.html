@@ -49,6 +49,7 @@
     <form method="post" class="lf9e-entry-form lf9e-email-form" id="lf9e-email-start" aria-labelledby="email-title">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <input type="hidden" name="action" value="identify">
+      {% if requested_category_id %}<input type="hidden" name="return_category" value="{{ requested_category_id }}">{% endif %}
       <label id="email-title">Your email<input name="email" type="email" maxlength="254" autocomplete="email" required></label>
       <button type="submit" class="lf9e-primary">CONTINUE</button>
     </form>
