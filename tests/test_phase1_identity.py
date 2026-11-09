@@ -407,9 +407,11 @@ def test_source_grounded_lock_in_move_taxonomy_and_sample_readiness(website):
               "No Gwop", "Slatter Gwop")
     assert all(MOVE_FAMILIES[name.casefold()] == "Footwork" for name in footwork)
     assert all(MOVE_FAMILIES[name.casefold()] == "Combo" for name in combos)
-    assert MOVE_FAMILIES["bad one"] == "Legacy setup — review"
+    assert MOVE_FAMILIES["bad one"] == "Bad One"
+    assert MOVE_FAMILIES["jo smooth bad one"] == "Bad One"
+    assert MOVE_FAMILIES["good one"] == "Bad One"
     assert OPENING_FAMILIES == {"Rev Ups", "Wops"}
-    assert MAIN_MOVE_FAMILIES == {"Footwork", "Combo"}
+    assert MAIN_MOVE_FAMILIES == {"Footwork", "Combo", "Bad One"}
     catalog = public_card_catalog()
     by_id = {card["id"]: card for card in catalog}
     assert by_id["Move::Bad One"]["review_status"] == "source-draft"
@@ -431,7 +433,7 @@ def test_source_grounded_lock_in_move_taxonomy_and_sample_readiness(website):
     ))
     assert not missing["playable"]
     assert missing["opening_count"] == 0
-    assert missing["main_count"] == 0
+    assert missing["main_count"] == 1
     html = website.test_client().get("/archive/lock-in").get_data(as_text=True)
     assert "Producer Cards are reserved for a separate future producer-battle format." in html
     assert "Historical names and planning entries are not all approved playable cards." in html
@@ -439,5 +441,24 @@ def test_source_grounded_lock_in_move_taxonomy_and_sample_readiness(website):
     js = (Path(__file__).resolve().parents[1] /
           "dca_rebuild/static/js/lock-in-game.js").read_text()
     assert "Add a Rev Up or Tone Wop opening card." in js
-    assert "Add at least one Footwork, Combo, or Trick main-move card." in js
-    assert '["Footwork","Combo"].includes(card.move_family)' in js
+    assert "Add at least one Footwork, Combo, Bad One variation, or Trick main-move card." in js
+    assert '["Footwork","Combo","Bad One"].includes(card.move_family)' in js
+
+
+def test_bad_one_family_variations_are_main_moves_not_openers(website):
+    from dca_rebuild.lock_in import public_card_catalog, sample_deck_readiness
+    catalog = {x["id"]:x for x in public_card_catalog()}
+    for name in ("Bad One", "Jo Smooth Bad One", "Good One"):
+        card = catalog["Move::"+name]
+        assert card["move_family"] == "Bad One"
+        assert card["type"] == "Move"
+    # A Bad One variation can be a main move, but cannot by itself open a round.
+    groups = (("Dancer", ("Example",)), ("Song", ("Beat",)),
+              ("Arena", ("Venue",)), ("Move", ("Good One",)))
+    status = sample_deck_readiness(groups)
+    assert not status["playable"]
+    assert status["opening_count"] == 0
+    assert status["main_count"] == 1
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[1]/"dca_rebuild/static/js/lock-in-game.js").read_text()
+    assert '["Footwork","Combo","Bad One"].includes(card.move_family)' in js
