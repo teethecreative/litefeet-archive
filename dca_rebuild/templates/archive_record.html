@@ -17,7 +17,7 @@
 <body>
 {% include "_navigation.html" %}
 <main class="vault-section-page lfv-archive-detail" id="archive-record">
-  <div class="lfv-archive-back"><a href="{{ url_for('vault_archive') }}">The Archive</a> <span aria-hidden="true">/</span> {{ record.collection | capitalize }}</div>
+  <div class="lfv-archive-back"><a class="lfv-archive-back-link" href="{{ url_for('vault_archive') }}">The Archive</a> <span aria-hidden="true">/</span> {{ record.collection | capitalize }}</div>
   <header class="lfv-archive-record-hero">
     <p class="vault-kicker">{{ 'Battles & Events' if record.collection == 'events' else record.collection | capitalize }}</p>
     <h1>{{ record.title }}</h1>
@@ -101,7 +101,26 @@
           {% endif %}
         </section>
       {% endif %}
-      {% if record.can_verify %}
+      {% if record.record_type == 'event' %}
+      <section class="lfv-archive-verify lfv-archive-correction" id="correction">
+        <h2>Submit a correction</h2>
+        <p>Have an original flyer, recording, or firsthand documentation that clarifies this event? Submit the corrected information and the source. Reports are reviewed privately and never change the historical record automatically.</p>
+        {% for message in get_flashed_messages(category_filter=['archive']) %}
+          <p class="lfv-archive-success" role="status">{{ message }}</p>
+        {% endfor %}
+        <form action="{{ url_for('vault_archive_correction',slug=record.slug) }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ archive_csrf }}">
+          <label for="event-correction">What should be corrected? <span aria-hidden="true">*</span></label>
+          <textarea id="event-correction" name="correction" required minlength="10" maxlength="700" rows="4" placeholder="Describe the event detail and the accurate information"></textarea>
+          <label for="event-source-url">Supporting source link (if available)</label>
+          <input id="event-source-url" name="source_url" type="url" maxlength="500" placeholder="https://">
+          <label for="event-source-note">Supporting source description (if no link)</label>
+          <textarea id="event-source-note" name="source_note" maxlength="180" rows="2" placeholder="Name the flyer, footage, firsthand account or other evidence"></textarea>
+          <button type="submit" class="lfv-archive-submit">Submit for review</button>
+        </form>
+        <p class="lfv-archive-fineprint">This is an editorial correction request, not a public vote. Community recollections and official results remain distinct.</p>
+      </section>
+      {% elif record.can_verify %}
       <section class="lfv-archive-verify" id="verification">
         <h2>Community verification</h2>
         {% if record.claim %}
