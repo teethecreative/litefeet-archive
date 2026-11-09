@@ -575,7 +575,7 @@ def test_done_from_grid_clears_email_and_keeps_nomination_cooldown(website, data
     assert done.headers['Location'].endswith('?view=results')
     standings = client.get(done.headers['Location']).get_data(as_text=True)
     assert 'NOMINEE STANDINGS' in standings
-    assert 'Done / Reset email' not in standings
+    assert 'class="lf9e-done-form"' not in standings
     with client.session_transaction() as sess:
         assert 'lf9e_recent_hash' not in sess
         assert 'lf9e_skipped' not in sess
@@ -600,7 +600,8 @@ def test_done_on_standings_returns_to_email_entry(website):
     client = website.test_client()
     token = identify(client, 'first@example.com')
     page = client.get(PATH + '?view=results').get_data(as_text=True)
-    assert 'Done / Reset email' in page
+    assert '>Done</button>' in page
+    assert 'Reset email' not in page
     response = client.post(PATH, data={
         'csrf_token': token, 'action': 'done'
     }, follow_redirects=True)
