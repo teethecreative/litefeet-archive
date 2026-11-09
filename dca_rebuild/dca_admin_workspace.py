@@ -41,6 +41,7 @@ def install_dca_admin_workspace(app, ns):
         page = _page()
         page_size = CATEGORY_PAGE_SIZE if section == "categories" else PAGE_SIZE
         term = (request.args.get("q") or "").strip()[:100]
+        selected_status = (request.args.get("status") or "all").strip().lower()
         with ns["SessionLocal"]() as db:
             edition = db.query(DCAEdition).filter_by(year=2026).first()
             if not edition:
@@ -58,8 +59,19 @@ def install_dca_admin_workspace(app, ns):
                          nomination_total=nomination_total, survey_total=survey_total,
                          edition_phase=edition.phase)
             rows, total = [], 0
+            status_column = (DCACategory.status if section == "categories"
+                             else DCANominee.moderation_status if section == "results" else None)
+            status_options = []
+            if status_column is not None:
+                model = DCACategory if section == "categories" else DCANominee
+                status_options = sorted({value for (value,) in db.query(status_column).filter(
+                    model.edition_id == edition.id).distinct().all() if value} | {"rejected"})
+            if selected_status != "all" and selected_status not in status_options:
+                selected_status = "all"
             if section == "categories":
                 query = categories_query
+                if selected_status != "all":
+                    query = query.filter(DCACategory.status == selected_status)
                 if term:
                     query = query.filter(DCACategory.name.ilike(
                         "%" + term.replace("%", r"\%").replace("_", r"\_") + "%",
@@ -95,6 +107,8 @@ def install_dca_admin_workspace(app, ns):
                                     DCANominationSubmission.nominee_id == DCANominee.id)
                          .filter(DCACategory.edition_id == edition.id,
                                  DCANominee.edition_id == edition.id))
+                if selected_status != "all":
+                    query = query.filter(DCANominee.moderation_status == selected_status)
                 if term:
                     pattern = "%" + term.replace("%", r"\%").replace("_", r"\_") + "%"
                     query = query.filter(DCACategory.name.ilike(pattern, escape="\\") |
@@ -115,5 +129,5 @@ def install_dca_admin_workspace(app, ns):
             "admin_dca_workspace.html", section=section, stats=stats,
             rows=rows, total=total, page=page, page_size=page_size,
             pages=max(1,(total+page_size-1)//page_size),
-            search=term,
+            search=term, selected_status=selected_status, status_options=status_options,
         )
