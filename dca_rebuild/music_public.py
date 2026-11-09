@@ -65,11 +65,6 @@ def install_music_public(app, engine):
                                  THEN '0000' ELSE release_date END DESC, id DESC"""
             )).mappings()]
 
-    def history_rows():
-        return [record for record in all_records()
-                if record.get("collection") == "music"
-                and record.get("source_kind") == "research"]
-
     @app.get("/litefeet-music", endpoint="vault_music_public")
     def vault_music_public():
         search = (request.args.get("q") or "").strip().casefold()[:120]
@@ -81,8 +76,7 @@ def install_music_public(app, engine):
             ).casefold()]
         releases = [dict(row, date_label=full_date(row.get("release_date")),
                          duration_label=music_duration(row)) for row in releases]
-        return render_template("music_timeline.html", releases=releases,
-                               history=history_rows(), search=search)
+        return render_template("music_timeline.html", releases=releases, search=search)
 
     @app.get("/litefeet-music/release/<int:item_id>", endpoint="vault_music_release")
     def vault_music_release(item_id):
@@ -90,6 +84,10 @@ def install_music_public(app, engine):
         if item is None:
             abort(404)
         return render_template("music_release_public.html", item=item)
+
+    @app.get("/media", endpoint="vault_media_public")
+    def vault_media_public():
+        return render_template("media_home.html")
 
     @app.get("/litefeet-music/history/<slug>", endpoint="vault_music_history")
     def vault_music_history(slug):
