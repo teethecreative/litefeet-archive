@@ -131,7 +131,7 @@ def insert_for(db, model):
     raise RuntimeError('Nomination cooldowns require PostgreSQL or SQLite')
 
 
-def add_nomination(db, *, edition_id, category_id, name, submitter_hash, ip_hash=None, description=None, now=None):
+def add_nomination(db, *, edition_id, category_id, name, submitter_hash, ip_hash=None, description=None, submitter_email=None, now=None):
     """Caller owns the transaction and MUST roll back when created is False.
 
     A conditional UPDATE of a composite primary key serializes requests across
@@ -140,6 +140,10 @@ def add_nomination(db, *, edition_id, category_id, name, submitter_hash, ip_hash
     """
     if not isinstance(submitter_hash, str) or not submitter_hash.strip():
         raise ValueError("Submitter identity is required")
+    if submitter_email is not None:
+        submitter_email = str(submitter_email).strip().casefold()
+        if len(submitter_email) > 254 or not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", submitter_email):
+            raise ValueError("Enter a valid email")
     category = db.get(DCACategory, category_id)
     if not category or category.edition_id != edition_id:
         raise ValueError("Category and edition mismatch")
@@ -181,6 +185,7 @@ def add_nomination(db, *, edition_id, category_id, name, submitter_hash, ip_hash
         nominee = db.scalars(select(DCANominee).filter_by(
             category_id=category_id, normalized_name=normalized)).one()
     db.add(DCANominationSubmission(edition_id=edition_id, nominee_id=nominee.id,
-                                 submitter_hash=submitter_hash, ip_hash=ip_hash, submitted_at=now))
+                                 submitter_hash=submitter_hash, submitter_email=submitter_email,
+                                 ip_hash=ip_hash, submitted_at=now))
     db.flush()
     return nominee, True

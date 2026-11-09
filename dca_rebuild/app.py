@@ -6,7 +6,7 @@ import hashlib
 import os
 import secrets
 
-from flask import Flask, flash, redirect, render_template, request, url_for, abort, session
+from flask import Flask, flash, redirect, render_template, request, url_for, abort, session, Response
 from sqlalchemy import create_engine, func, or_
 from sqlalchemy.orm import sessionmaker
 
@@ -31,6 +31,7 @@ from dca_rebuild.models import (
     DCACategoryDraftSelection,
     DCANominee,
     DCANominationSubmission,
+    DCANominationContact,
     LedgerPageView,
 )
 from dca_rebuild.models import LedgerEra
@@ -58,6 +59,25 @@ def ledger_template_globals():
     }
 
 Base.metadata.create_all(engine)
+
+# Existing production databases predate the private nomination-email field.
+# Add only the nullable column; never recreate, drop, or rewrite entries.
+def ensure_dca_nomination_email_column():
+    from sqlalchemy import inspect, text as sql_text
+
+    table_name = DCANominationSubmission.__tablename__
+    inspector = inspect(engine)
+    if table_name not in inspector.get_table_names():
+        return
+    existing = {col["name"] for col in inspector.get_columns(table_name)}
+    if "submitter_email" not in existing:
+        with engine.begin() as connection:
+            connection.execute(sql_text(
+                f'ALTER TABLE "{table_name}" ADD COLUMN submitter_email VARCHAR(320)'
+            ))
+
+
+ensure_dca_nomination_email_column()
 
 # Existing databases need additive columns; create_all does not alter existing
 # tables. Keep one-off gatherings intact and safely default them to "none".
@@ -2003,7 +2023,7 @@ def dca_nominations_closed():
                 nominee, created = add_nomination(
                     db, edition_id=edition.id, category_id=category_id,
                     name=name, submitter_hash=private_hash("dca-nomination:" + email),
-                    description=reason or None,
+                    submitter_email=email, description=reason or None,
                 )
                 if created:
                     db.commit()
@@ -2121,6 +2141,57 @@ def admin_dca_nominations():
             "admin_dca_nominations.html", rows=rows, search=search,
             status=status, page=page, pages=pages, total=total,
         )
+    finally:
+        db.close()
+
+
+@app.route("/admin/dca/nominations/participant-emails.txt", methods=["GET"])
+@admin_login_required
+def admin_dca_nomination_participant_emails():
+    """Private, deduplicated export of recoverable 2026 participant emails."""
+    db = SessionLocal()
+    try:
+        edition = db.query(DCAEdition).filter_by(year=2026).first()
+        if edition is None:
+            abort(404, description="DCA 2026 edition not found")
+        rows = [
+            email for email, in (
+                db.query(DCANominationSubmission.submitter_email)
+                .filter(DCANominationSubmission.edition_id == edition.id)
+                .all()
+            )
+        ]
+        # Include verified returning participants whose earlier entries
+        # may still have been recorded in the hash-only format.
+        rows.extend(
+            email for email, in (
+                db.query(DCANominationContact.email_address)
+                .join(DCANominationSubmission,
+                      DCANominationContact.submitter_hash ==
+                      DCANominationSubmission.submitter_hash)
+                .filter(DCANominationSubmission.edition_id == edition.id)
+                .all()
+            )
+        )
+        rows.extend(
+            email for email, in (
+                db.query(DCACategorySuggestionSubmission.email_address)
+                .filter(DCACategorySuggestionSubmission.edition_id == edition.id)
+                .all()
+            )
+        )
+        emails = sorted({
+            email.strip().casefold() for email in rows
+            if email and re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email.strip())
+        })
+        response = Response("\n".join(emails) + ("\n" if emails else ""),
+                            mimetype="text/plain; charset=utf-8")
+        response.headers["Content-Disposition"] = (
+            "attachment; filename=dca-2026-participant-emails.txt"
+        )
+        response.headers["Cache-Control"] = "private, no-store"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
     finally:
         db.close()
 

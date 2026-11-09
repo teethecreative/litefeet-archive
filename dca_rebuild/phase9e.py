@@ -19,10 +19,10 @@ from sqlalchemy.exc import IntegrityError
 
 from dca_rebuild.models import (
     Base, DCACategory, DCACategorySuggestionSubmission, DCAReturnCategoryVote,
-    DCAEdition, DCANominee, DCANominationSubmission,
+    DCAEdition, DCANominee, DCANominationSubmission, DCANominationContact,
 )
 from dca_rebuild.nomination_service import (
-    add_nomination, canonical_nominee_name, canonical_nominee_key, candidate_matches,
+    add_nomination, canonical_nominee_name, canonical_nominee_key, candidate_matches, insert_for,
 )
 
 NY = ZoneInfo('America/New_York')
@@ -942,6 +942,26 @@ def install_phase9e(app, ns):
                     if len(email) > 254 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
                         abort(400, 'Enter a valid email')
                     who = private_hash('dca-nomination:' + email)
+                    # Store the normalized email on the server, never in the
+                    # signed (readable) browser session.
+                    db.execute(
+                        insert_for(db, DCANominationContact)
+                        .values(submitter_hash=who, email_address=email,
+                                updated_at=datetime.utcnow())
+                        .on_conflict_do_update(
+                            index_elements=['submitter_hash'],
+                            set_={'email_address': email, 'updated_at': datetime.utcnow()},
+                        )
+                    )
+                    # A returning participant can safely reconnect their
+                    # own older hash-only nominations to the email they supplied.
+                    # Never attempt to reverse or expose an email hash.
+                    db.query(DCANominationSubmission).filter(
+                        DCANominationSubmission.edition_id == edition.id,
+                        DCANominationSubmission.submitter_hash == who,
+                        DCANominationSubmission.submitter_email.is_(None),
+                    ).update({'submitter_email': email}, synchronize_session=False)
+                    db.commit()
                     if who != session.get('lf9e_recent_hash'):
                         session.pop('lf9e_skipped', None)
                     session['lf9e_recent_hash'] = who
@@ -995,9 +1015,17 @@ def install_phase9e(app, ns):
                     and request.form.get('confirm_distinct') != '1'):
                     flash('A similar name already exists. Check the spelling or confirm a different person before submitting.')
                     return redirect(url_for('dca_nominations_closed', category=cid, nominate=1), code=303)
+                contact = db.get(DCANominationContact, who)
+                if contact is None:
+                    # Existing pre-migration sessions have hashes but no stored email.
+                    session.pop('lf9e_recent_hash', None)
+                    flash('Please enter your email again to complete your nomination.')
+                    return redirect(url_for('dca_nominations_closed'))
                 try:
                     nominee, created = add_nomination(db, edition_id=edition.id, category_id=cid,
-                                                      name=name, submitter_hash=who, description=reason)
+                                                      name=name, submitter_hash=who,
+                                                      submitter_email=contact.email_address,
+                                                      description=reason)
                     if not created:
                         db.rollback()
                         flash('This category is on cooldown. Other available categories are ready to nominate.')

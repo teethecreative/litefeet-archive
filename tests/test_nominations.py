@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from threading import Barrier
 import pytest
 from sqlalchemy import inspect
-from dca_rebuild.models import DCANominee, DCANominationSubmission, LegacyNominationSubmission, NominationCooldown
+from dca_rebuild.models import DCANominee, DCANominationSubmission, DCANominationContact, LegacyNominationSubmission, NominationCooldown
 from dca_rebuild.nomination_service import add_nomination, remaining_seconds
 from dca_rebuild.nomination_migration import migrate_nomination_history
 from dca_rebuild.phase9e import LegacyNominationDetail9E, NominationDetail9E, get_counts, qualification
@@ -136,7 +136,32 @@ def test_email_first_history_and_return_to_grid(website, database):
     assert client.post(PATH, data=dict(csrf_token=token, category_id=2, name='Dancer Two', reason='Contributed to LiteFeet events in 2026.')).status_code == 302
     assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Other', reason='Participated in LiteFeet this year.')).status_code == 302
     with database[1]() as db:
-        assert db.query(DCANominationSubmission).count() == 2
+        entries = db.query(DCANominationSubmission).order_by(DCANominationSubmission.id).all()
+        assert len(entries) == 2
+        assert [entry.submitter_email for entry in entries] == [
+            'person@example.com', 'person@example.com'
+        ]
+        who = entries[0].submitter_hash
+        contact = db.get(DCANominationContact, who)
+        assert contact.email_address == 'person@example.com'
+    # Admin-only participant email export; never exposed to the public.
+    assert website.test_client().get('/admin/dca/nominations/participant-emails.txt').status_code == 302
+    with client.session_transaction() as sess:
+        sess['ledger_admin_authenticated'] = True
+    response = client.get('/admin/dca/nominations/participant-emails.txt')
+    assert response.status_code == 200
+    assert response.data == b'person@example.com\n'
+    assert response.headers['Cache-Control'] == 'private, no-store'
+    # An existing hash-only submission is reconnected when the same person
+    # identifies with their email on a new browser.
+    with database[1]() as db:
+        db.query(DCANominationSubmission).update({'submitter_email': None})
+        db.commit()
+    other = website.test_client()
+    identify(other, 'PERSON@EXAMPLE.COM')
+    with database[1]() as db:
+        assert all(row.submitter_email == 'person@example.com'
+                   for row in db.query(DCANominationSubmission).all())
     # Returning with the same normalized email retrieves history on a new browser.
     other = website.test_client(); identify(other)
     assert b'Already nominated / cooldown active' in other.get(PATH + '?category=1').data
