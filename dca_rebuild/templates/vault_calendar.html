@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ seo.title }}</title>
+{% include "_seo_head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-calendar-pages.css') }}">
+</head>
+<body>
+{% include "_navigation.html" %}
+<main class="lfv-calendar-full lfv3-wrap" id="vault-calendar">
+  <header class="lfv-calendar-full-header">
+    <p class="lfv3-eyebrow">WHAT'S HAPPENING</p>
+    <h1>LiteFeet Calendar</h1>
+    <p>Upcoming battles, dance labs, classes, workshops and community gatherings. Recurring sessions appear on each scheduled day.</p>
+    <a class="lfv-calendar-submit lfv-primary-cta" href="{{ url_for('vault_submit') }}">Add an Event +</a>
+  </header>
+  <nav class="lfv-calendar-month-navigation" aria-label="Calendar month">
+    {% if previous_month %}<a href="{{ url_for('legacy_calendar', date=previous_month) }}" aria-label="Previous month">← Previous month</a>{% else %}<span></span>{% endif %}
+    <h2>{{ month_heading }}</h2>
+    {% if next_month %}<a href="{{ url_for('legacy_calendar', date=next_month) }}" aria-label="Next month">Next month →</a>{% else %}<span></span>{% endif %}
+  </nav>
+  <div class="lfv-calendar-week-wrap">
+  <table class="lfv-calendar-month-grid" aria-label="{{ month_heading }} event calendar">
+    <thead><tr><th scope="col">Monday</th><th scope="col">Tuesday</th><th scope="col">Wednesday</th><th scope="col">Thursday</th><th scope="col">Friday</th><th scope="col">Saturday</th><th scope="col">Sunday</th></tr></thead>
+    <tbody>
+    {% for week in weeks %}
+    <tr>{% for day in week %}
+      <td{% if day and day.today %} class="is-today"{% endif %}>
+      {% if day %}
+      <a class="lfv-calendar-day-link{% if selected_day and selected_day.isoformat() == day.iso %} is-selected{% endif %}" href="{{ url_for('legacy_calendar', date=day.iso, day=day.iso) }}#calendar-list-heading" {% if selected_day and selected_day.isoformat() == day.iso %}aria-current="date"{% endif %}>
+        <span>{{ day.number }}</span>{% if day.events %}<strong>{{ day.events|length }} event{% if day.events|length != 1 %}s{% endif %}</strong>{% endif %}
+      </a>
+      {% endif %}
+      </td>
+    {% endfor %}</tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <section class="lfv-calendar-full-list" aria-labelledby="calendar-list-heading">
+    <h2 id="calendar-list-heading">{% if selected_day %}Events on {{ selected_day.strftime('%B %d, %Y') }}{% else %}Events in {{ month_heading }}{% endif %}</h2>
+    {% if selected_day %}<a class="lfv-calendar-clear-day" href="{{ url_for('legacy_calendar', date=selected_month.isoformat()) }}#calendar-list-heading">View all dates this month</a>{% endif %}
+    {% for day in visible_days %}
+      {% if day.events %}
+      <section class="lfv-calendar-day-group" id="calendar-day-{{ day.iso }}">
+        <h3><time datetime="{{ day.iso }}">{{ day.events[0].display_date }}</time></h3>
+        {% for event in day.events %}
+        <article class="lfv-calendar-full-event">
+          <div>
+            <h4><a href="{{ event.href }}">{{ event.title }}</a></h4>
+            {% if event.description %}<p>{{ event.description }}</p>{% endif %}
+          </div>
+          <span>{{ event.status }}</span>
+        </article>
+        {% endfor %}
+      </section>
+      {% endif %}
+    {% endfor %}
+    {% if visible_count == 0 %}<p>{% if selected_day %}No events are listed for this day.{% else %}No events are listed for this month.{% endif %} <a href="{{ url_for('vault_submit') }}">Submit an event</a>.</p>{% endif %}
+  </section>
+  <div class="lfv-calendar-full-actions">
+    <a href="{{ url_for('index') }}#whats-new">Back to Home</a>
+    <a href="{{ url_for('vault_submit') }}" class="lfv-calendar-submit lfv-primary-cta">Add an Event +</a>
+  </div>
+</main>
+{% include "_footer.html" %}
+<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>
+</body>
+</html>

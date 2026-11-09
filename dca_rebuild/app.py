@@ -4925,6 +4925,10 @@ install_information_architecture(app, globals())
 from dca_rebuild.gathering_submissions import install_gathering_submissions
 install_gathering_submissions(app, globals())
 
+# Dedicated community calendar replaces the legacy /calendar placeholder.
+from dca_rebuild.calendar_pages import install_calendar_pages
+install_calendar_pages(app, globals())
+
 
 # Public music routes must be registered against the deployed app, not the
 # original app.py legacy template. Keep other legacy routes unchanged.
