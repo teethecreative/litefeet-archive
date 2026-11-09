@@ -63,8 +63,7 @@ def install_information_architecture(app, ns):
         children = {
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
                        dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
-                       dict(label='HypeItUpTV Awards', href='/awards/hypeitup'),
-                       dict(label='DCA 2023 Archive', href='/awards/dancers-choice/2023')],
+                       dict(label='HypeItUpTV Awards', href='/awards/hypeitup')],
             'about': [dict(label="Founder's Letter", href='/about/letter'),
                       dict(label='Our Mission', href='/about/mission'),
                       dict(label='About the Archive', href='/about/archive'),
@@ -117,10 +116,9 @@ def install_information_architecture(app, ns):
                        dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
                        dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
                        dict(label='HypeItUpTV Awards', href='/awards/hypeitup')]
-            if path.startswith('/awards/dancers-choice'):
-                program.extend([dict(label='DCA 2026', href='/awards/dancers-choice/2026'),
-                                dict(label='DCA 2023 Archive', href='/awards/dancers-choice/2023')])
-            elif path.startswith('/awards/litefeet-awards'):
+            # Award program navigation lists only award programs. DCA editions
+            # live inside the Dancer's Choice Awards hub, not at this level.
+            if path.startswith('/awards/litefeet-awards'):
                 program.append(dict(label='Contribute historical records',
                                     href='/awards/litefeet-awards#contribute'))
         calendar = upcoming_calendar(session_factory=ns['SessionLocal'])
