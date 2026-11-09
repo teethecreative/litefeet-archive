@@ -74,7 +74,7 @@ def test_homepage_news_is_real_public_site_releases_not_changelog(website, datab
 
 def test_phase1_keeps_archive_awards_and_community_routes(website):
     client = website.test_client()
-    for route in ('/archive', '/awards', '/awards/dancers-choice/2026',
+    for route in ('/archive/timeline', '/awards', '/awards/dancers-choice/2026',
                   '/awards/dancers-choice/2023', '/community', '/about'):
         assert client.get(route).status_code == 200, route
 

@@ -25,11 +25,12 @@ def test_catalog_has_real_source_rows_and_distinct_editions():
 
 def test_public_archive_and_scroll_api_show_real_entries(website):
     client = website.test_client()
-    page = client.get('/archive')
+    assert client.get('/archive').status_code == 301
+    page = client.get('/archive/timeline')
     assert page.status_code == 200
     html = page.get_data(as_text=True)
-    for text in ('THE ARCHIVE TIMELINE','SEARCH THE TIMELINE','THE CULTURAL RECORD',
-                 'HISTORY &amp; TIMELINE', 'PEOPLE &amp; CREWS'):
+    for text in ('SEARCH THE TIMELINE','THE CULTURAL RECORD',
+                 'HISTORY &amp; TIMELINE', 'PEOPLE &amp; TEAMS'):
         assert text in html
     assert 'More than a directory' not in html
     assert 'This is a ghost profile' not in html  # Never publish fabricated legacy biographies

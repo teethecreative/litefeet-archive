@@ -5,8 +5,10 @@ from dca_rebuild.timeline_catalog import all_timeline_entries, record_metadata
 
 def test_overview_is_timeline_and_uses_timeline_script(website):
     client = website.test_client()
-    html = client.get('/archive').get_data(as_text=True)
-    assert 'THE ARCHIVE TIMELINE' in html
+    assert client.get('/archive').status_code == 301
+    assert client.get('/archive').headers['Location'].endswith('/archive/timeline')
+    html = client.get('/archive/timeline').get_data(as_text=True)
+    assert 'HISTORY &amp; TIMELINE' in html
     assert 'SEARCH THE TIMELINE' in html
     assert 'data-unified-timeline' in html
     assert 'timeline-v2.js' in html
@@ -16,18 +18,21 @@ def test_overview_is_timeline_and_uses_timeline_script(website):
 
 def test_people_browser_keeps_weighted_profile_cloud(website):
     client = website.test_client()
-    html = client.get('/archive?view=people&collection=people').get_data(as_text=True)
+    html = client.get('/archive/people').get_data(as_text=True)
     assert 'lfv-people-wordcloud' in html
     assert 'archive-v1.js' in html
     assert 'timeline-v2.js' not in html
+    assert 'Explore up to 20 featured profiles' not in html
+    assert 'SEARCH TO VIEW PROFILES' in html
     assert 'SEARCH PEOPLE' in html
 
 
 def test_timeline_filter_and_pagination_use_full_catalog(website):
     client = website.test_client()
-    html = client.get('/archive?collection=people').get_data(as_text=True)
+    html = client.get('/archive/people').get_data(as_text=True)
     assert 'lfv-people-wordcloud' in html
     assert 'data-unified-timeline' not in html
+    assert client.get('/archive?collection=people').status_code == 301
     payload = client.get('/archive/api/records?timeline=1&collection=events').get_json()
     assert payload['total'] >= 24
     assert payload['records']

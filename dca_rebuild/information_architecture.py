@@ -18,7 +18,7 @@ from dca_rebuild.archive_catalog import (
 # Stable future catalog; readiness is separate from the intended ordering.
 SECTION_CATALOG = (
     ('home', 'Home', '/', True),
-    ('archive', 'The Archive', '/archive', True),
+    ('archive', 'The Archive', '/archive/timeline', True),
     ('people', 'People', '/people', False),
     ('stories', 'Stories & Media', '/stories', False),
     ('awards', 'Awards', '/awards', True),
@@ -52,11 +52,11 @@ def install_information_architecture(app, ns):
     def vault_site_context():
         content = public_content()
         children = {
-            'archive': [dict(label='People & Teams', href='/archive?view=people&collection=people'),
+            'archive': [dict(label='People & Teams', href='/archive/people'),
                         dict(label='History & Timeline', href='/archive/timeline'),
-                        dict(label='Events', href='/archive?collection=events'),
-                        dict(label='Music & Media', href='/archive?collection=music'),
-                        dict(label='Awards & Recognition', href='/archive?collection=awards'),
+                        dict(label='Events', href='/archive/timeline?collection=events'),
+                        dict(label='Music & Media', href='/archive/timeline?collection=music'),
+                        dict(label='Awards & Recognition', href='/archive/timeline?collection=awards'),
                         dict(label='Lock In · Card Battle Game', href='/archive/lock-in'),
                         dict(label='Submit', href='/submit')],
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
@@ -118,27 +118,27 @@ def install_information_architecture(app, ns):
         return render_template('vault_section.html', section=page,
                                **public_content(), **extra)
 
-    def archive_page(section):
-        # Archive Overview is timeline-first. Keep the dedicated People & Teams
-        # collection browser so its ranked profile cloud remains accessible.
-        overview = (section == 'archive' and request.args.get('view') != 'people'
-                    and request.args.get('collection') != 'people')
-        timeline = section == 'timeline' or overview
-        current_page = max(1, request.args.get('page', 1, type=int) or 1)
-        search = dict(query=request.args.get('q', ''),
-                      collection=request.args.get('collection', 'all'),
-                      page=current_page)
-        filtered = timeline_browse(**search, eras=public_content()['eras']) if timeline else browse(**search)
-        return section_page(section, archive_items=filtered['items'],
-                            archive_pagination=filtered, archive_collections=COLLECTIONS,
-                            archive_timeline=timeline, archive_overview=overview,
-                            people_cloud=(people_crew_cloud() if not timeline and search['collection'] == 'people'
-                                          else []),
-                            archive_start_page=current_page)
-
     @app.get('/archive', endpoint='vault_archive')
     def archive():
-        return archive_page('archive')
+        """Permanent compatibility redirect; the old landing page no longer exists."""
+        if request.args.get('view') == 'people' or request.args.get('collection') == 'people':
+            query = {k: v for k, v in request.args.items() if k not in ('view', 'collection')}
+            return redirect(url_for('vault_archive_people', **query), code=301)
+        query = {k: v for k, v in request.args.items() if k != 'view'}
+        return redirect(url_for('vault_timeline', **query), code=301)
+
+    @app.get('/archive/people', endpoint='vault_archive_people')
+    def archive_people():
+        """Separate People & Teams browser, never the deleted Archive landing page."""
+        current_page = max(1, request.args.get('page', 1, type=int) or 1)
+        query = request.args.get('q', '').strip()
+        filtered = browse(query=query, collection='people', page=current_page) if query else {
+            'items': [], 'count': 0, 'has_more': False, 'next_page': None,
+            'page': current_page, 'collection': 'people'
+        }
+        return section_page('people', archive_items=filtered,
+                            archive_pagination=filtered, people_cloud=people_crew_cloud(),
+                            archive_start_page=current_page)
 
     @app.get('/archive/lock-in', endpoint='vault_lock_in')
     def lock_in():
@@ -146,7 +146,13 @@ def install_information_architecture(app, ns):
 
     @app.get('/archive/timeline', endpoint='vault_timeline')
     def timeline():
-        return archive_page('timeline')
+        current_page = max(1, request.args.get('page', 1, type=int) or 1)
+        search = dict(query=request.args.get('q', ''),
+                      collection=request.args.get('collection', 'all'), page=current_page)
+        filtered = timeline_browse(**search, eras=public_content()['eras'])
+        return section_page('timeline', archive_items=filtered['items'],
+                            archive_pagination=filtered, archive_collections=COLLECTIONS,
+                            archive_start_page=current_page)
 
     @app.get('/archive/history', endpoint='vault_history_guide')
     def history_guide():

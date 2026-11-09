@@ -4,7 +4,7 @@ from dca_rebuild.archive_catalog import all_records, find_record, public_record
 
 def test_compact_archive_rows_and_source_separation(website):
     client = website.test_client()
-    page = client.get('/archive')
+    page = client.get('/archive/timeline')
     assert page.status_code == 200
     html = page.get_data(as_text=True)
     assert 'archive-v2.css' in html
