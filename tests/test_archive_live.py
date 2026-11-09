@@ -125,3 +125,36 @@ def test_person_identity_is_not_subject_to_popularity_vote(website):
     assert client.post('/archive/records/' + person_slug + '/verify', data={
         'choice':'false','csrf_token':'anything',
     }).status_code == 404
+
+
+def test_event_outcome_reports_are_moderated_and_not_official_results(website, database):
+    from dca_rebuild.models import VaultCommunityBattleReport
+    client = website.test_client()
+    slug = 'double-impact-2026'
+    path = '/archive/records/' + slug
+    page = client.get(path)
+    assert page.status_code == 200
+    assert b'Community-reported outcomes' in page.data
+    with client.session_transaction() as sess:
+        token = sess['vault_archive_csrf']
+    reported = client.post(path + '/report-outcome', data={
+        'csrf_token': token, 'winner': 'Participant A',
+        'loser': 'Participant B', 'explanation': 'Community recollection only'
+    })
+    assert reported.status_code == 303
+    with database[1]() as db:
+        assert db.query(VaultCommunityBattleReport).count() == 1
+        report = db.query(VaultCommunityBattleReport).one()
+        assert report.moderation_status == 'pending'
+        assert report.reported_winner == 'Participant A'
+        assert report.reported_loser == 'Participant B'
+    unreviewed = client.get(path).get_data(as_text=True)
+    assert 'Reported winner:</strong> Participant A' not in unreviewed
+    with database[1].begin() as db:
+        db.query(VaultCommunityBattleReport).one().moderation_status = 'approved'
+    reviewed = client.get(path).get_data(as_text=True)
+    assert 'Reported winner:</strong> Participant A' in reviewed
+    assert 'These reports are community contributions, not official results' in reviewed
+    assert client.post(path + '/report-outcome', data={
+        'csrf_token': token, 'winner': 'Participant C'
+    }).status_code == 409
