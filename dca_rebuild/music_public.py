@@ -79,7 +79,9 @@ def install_music_public(app, engine):
                 str(row.get(k) or "") for k in
                 ("title", "artist", "artist_or_creator", "producer", "producer_name", "description")
             ).casefold()]
-        releases = [dict(row, date_label=full_date(row.get("release_date")),\n                         duration_label=music_duration(row)) for row in releases]\n        return render_template("music_timeline.html", releases=releases,
+        releases = [dict(row, date_label=full_date(row.get("release_date")),
+                         duration_label=music_duration(row)) for row in releases]
+        return render_template("music_timeline.html", releases=releases,
                                history=history_rows(), search=search)
 
     @app.get("/litefeet-music/release/<int:item_id>", endpoint="vault_music_release")
