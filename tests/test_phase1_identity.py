@@ -250,4 +250,4 @@ def test_song_dropdown_alphabetical_and_producer_metadata(website):
           "dca_rebuild/static/js/lock-in-game.js").read_text()
     assert 'a.name.localeCompare(b.name' in js
     assert 'Prod. ' in js
-    assert '"Producer"\,' not in js
+    assert 'id="lock-producer"' not in js
