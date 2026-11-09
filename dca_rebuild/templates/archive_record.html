@@ -17,7 +17,7 @@
 <body>
 {% include "_navigation.html" %}
 <main class="vault-section-page lfv-archive-detail" id="archive-record">
-  <div class="lfv-archive-back"><a href="{{ url_for('vault_archive') }}">The Archive</a> <span aria-hidden="true">/</span> {{ record.collection | capitalize }}</div>
+  <div class="lfv-archive-back"><a class="lfv-archive-back-link" href="{{ url_for('vault_archive') }}">The Archive</a> <span aria-hidden="true">/</span> {{ record.collection | capitalize }}</div>
   <header class="lfv-archive-record-hero">
     <p class="vault-kicker">{{ 'Battles & Events' if record.collection == 'events' else record.collection | capitalize }}</p>
     <h1>{{ record.title }}</h1>
@@ -101,7 +101,7 @@
           {% endif %}
         </section>
       {% endif %}
-      {% if record.can_verify %}
+      {% if record.can_verify and not record.source_kind in ('flyers', 'research') %}
       <section class="lfv-archive-verify" id="verification">
         <h2>Community verification</h2>
         {% if record.claim %}
