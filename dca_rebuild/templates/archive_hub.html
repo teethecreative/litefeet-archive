@@ -55,10 +55,10 @@
 {% if not archive_timeline and archive_pagination.collection == 'people' and people_cloud %}
 <section class="lfv-people-cloud-section" aria-labelledby="people-cloud-title">
   <div class="lfv-people-cloud-heading">
-    <h2 id="people-cloud-title">FEATURED PEOPLE &amp; CREWS</h2>
+    <h2 id="people-cloud-title">FEATURED PEOPLE &amp; TEAMS</h2>
     <p>Explore up to 20 featured profiles. Names that appear more often in documented records are larger. Select a name to view its profile.</p>
   </div>
-  <nav class="lfv-people-wordcloud" aria-label="People and crew profiles">
+  <nav class="lfv-people-wordcloud" aria-label="People and team profiles">
     {% for person in people_cloud %}
     <a class="lfv-people-word" href="{{ url_for('vault_archive_record',slug=person.slug) }}"
        style="--word-size:{{ (1.0 + ((person.weight if person.weight < 8 else 8) * 0.22)) | round(2) }}rem"
@@ -72,7 +72,7 @@
 
 <section class="lfv-archive-index" id="records" data-archive-browser data-timeline="{{ '1' if archive_timeline else '0' }}" aria-labelledby="archive-list-title">
   <div class="lfv-archive-list-head">
-    <h2 id="archive-list-title">{% if archive_timeline %}CHRONOLOGICAL TIMELINE{% elif archive_pagination.collection == 'people' %}SEARCH PEOPLE &amp; CREWS{% else %}BROWSE RECORDS{% endif %}</h2>
+    <h2 id="archive-list-title">{% if archive_timeline %}CHRONOLOGICAL TIMELINE{% elif archive_pagination.collection == 'people' %}SEARCH PEOPLE &amp; TEAMS{% else %}BROWSE RECORDS{% endif %}</h2>
     <span data-archive-count>{{ archive_pagination.count }} {% if archive_pagination.count == 1 %}ENTRY{% else %}ENTRIES{% endif %}</span>
   </div>
   <form class="lfv-archive-filter" action="{{ url_for('vault_timeline') if archive_timeline else url_for('vault_archive') }}" method="get" role="search" data-archive-filter>
