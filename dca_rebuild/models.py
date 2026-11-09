@@ -792,8 +792,22 @@ class DCANominationSubmission(Base):
     edition_id = Column(Integer, ForeignKey("ledger_dca_editions.id"), nullable=False, index=True)
     nominee_id = Column(Integer, ForeignKey("ledger_dca_nominees.id"), nullable=False, index=True)
     submitter_hash = Column(String(128), nullable=False, index=True)
+    # Admin-only contact address, optional so historical hash-only entries remain intact.
+    submitter_email = Column(String(320), nullable=True)
     ip_hash = Column(String(128))
     submitted_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
+
+
+class DCANominationContact(Base):
+    """Private email lookup for the email-first nomination flow.
+
+    The Flask browser session continues to hold only the cooldown hash; the
+    email remains in the server-side database, not in public pages or cookies.
+    """
+    __tablename__ = "ledger_dca_nomination_contacts"
+    submitter_hash = Column(String(128), primary_key=True)
+    email_address = Column(String(320), nullable=False)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 
 class NominationCooldown(Base):
