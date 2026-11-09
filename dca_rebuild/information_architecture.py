@@ -288,6 +288,10 @@ def install_information_architecture(app, ns):
         record = find_record(slug)
         if not record or not record['can_verify']:
             abort(404)
+        # Surviving event flyers are documentary sources, not popularity claims.
+        # Preserve all historical votes but stop collecting new event truth polls.
+        if record.get('record_type') == 'event':
+            abort(403, 'Submit a sourced correction instead of voting on an event record')
         token = request.form.get('csrf_token') or ''
         expected = session.get('vault_archive_csrf') or ''
         if not expected or not secrets.compare_digest(token, expected):
@@ -324,6 +328,59 @@ def install_information_architecture(app, ns):
                     created_at=now, updated_at=now))
         flash('Response received for editorial review.', 'archive')
         return redirect(url_for('vault_archive_record', slug=slug) + '#verification', code=303)
+
+    @app.post('/archive/records/<slug>/correction', endpoint='vault_archive_correction')
+    def archive_correction(slug):
+        """Queue a source-backed event correction; never alter an official source record."""
+        record = find_record(slug)
+        if not record or record.get('record_type') != 'event':
+            abort(404)
+        token = request.form.get('csrf_token') or ''
+        expected = session.get('vault_archive_csrf') or ''
+        if not expected or not secrets.compare_digest(token, expected):
+            abort(400, 'Invalid correction token')
+
+        correction = (request.form.get('correction') or '').strip()
+        source_url = (request.form.get('source_url') or '').strip()
+        source_note = (request.form.get('source_note') or '').strip()
+        if len(correction) < 10 or len(correction) > 700 or len(source_note) > 180:
+            abort(400, 'Provide a concise correction with the supporting source')
+        if not source_url and not source_note:
+            abort(400, 'A supporting source link or source description is required')
+        if source_url:
+            parsed = urlsplit(source_url)
+            if len(source_url) > 500 or parsed.scheme not in ('https', 'http') or not parsed.netloc:
+                abort(400, 'Invalid source link')
+        explanation = 'Correction: ' + correction
+        if source_url:
+            explanation += '\\nSource link: ' + source_url
+        if source_note:
+            explanation += '\\nSource context: ' + source_note
+        if len(explanation) > 1400:
+            abort(400, 'Correction exceeds character limit')
+
+        if 'vault_archive_correction_visitor' not in session:
+            session['vault_archive_correction_visitor'] = secrets.token_hex(24)
+        seed = str(current_app.secret_key) + ':correction:' + session['vault_archive_correction_visitor']
+        visitor_hash = hashlib.sha256(seed.encode('utf-8')).hexdigest()
+        now = datetime.utcnow()
+        with ns['SessionLocal'].begin() as db:
+            existing = db.query(VaultArchiveVerification).filter_by(
+                record_slug=slug, visitor_hash=visitor_hash).first()
+            if existing:
+                if existing.updated_at and now - existing.updated_at < timedelta(seconds=30):
+                    abort(429)
+                existing.vote = 'correction'
+                existing.explanation = explanation
+                existing.moderation_status = 'pending'
+                existing.updated_at = now
+            else:
+                db.add(VaultArchiveVerification(
+                    record_slug=slug, visitor_hash=visitor_hash,
+                    vote='correction', explanation=explanation,
+                    moderation_status='pending', created_at=now, updated_at=now))
+        flash('Correction submitted for private editorial review. The published record has not changed.', 'archive')
+        return redirect(url_for('vault_archive_record', slug=slug) + '#correction', code=303)
 
     @app.get('/admin/archive/research-review', endpoint='vault_archive_admin_review')
     @ns['admin_login_required']
