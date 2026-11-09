@@ -110,3 +110,25 @@ def test_lock_in_sample_decks_are_neutral_and_practice_does_not_spotlight_two_su
     assert 'performance' not in ROUNDS and 'spank' not in ROUNDS
     from werkzeug.datastructures import MultiDict
     assert practice_view(MultiDict())['round_key'] == 'greklite'
+
+
+def test_lock_in_sample_decks_follow_rulebook_card_categories(website):
+    from dca_rebuild.lock_in import public_sample_decks
+    decks = public_sample_decks()
+    assert len(decks) == 2
+    needed = {"Dancer", "Arena", "Producer", "Song", "Move", "Trick"}
+    for deck in decks:
+        assert deck["total"] == 25
+        assert sum(group["count"] for group in deck["categories"]) == deck["total"]
+        assert needed.issubset({group["type"] for group in deck["categories"]})
+        assert next(g["count"] for g in deck["categories"] if g["type"] == "Dancer") < deck["total"]
+
+    response = website.test_client().get("/archive/lock-in")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert "25 total cards" in html
+    assert "25 dancer cards" not in html
+    assert "25 different dancers" not in html
+    assert "Move cards (7)" in html
+    assert "Arena cards (2)" in html
+    assert "This is a short move-combination drill" in html
