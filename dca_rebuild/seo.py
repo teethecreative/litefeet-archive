@@ -1,7 +1,7 @@
 """The LiteFeet Vault public search metadata, crawl directives and XML sitemap."""
 import re
 from xml.sax.saxutils import escape
-from flask import Response, request, abort
+from flask import Response, request, abort, current_app
 
 SITE_URL = "https://thelitefeetvault.com"
 PAGES = {
@@ -35,6 +35,10 @@ PAGES = {
     ),
 }
 PAGES.update({
+    "/music": ("LiteFeet Music Release Radar | The LiteFeet Vault",
+                "Explore LiteFeet music releases, tracks, projects and producer credits."),
+    "/awards/2026/standings": ("DCA 2026 Nominee Standings | The LiteFeet Vault",
+                              "View current Dancer's Choice Awards 2026 nominees and nomination totals."),
     "/archive/people": ("People & Teams | The LiteFeet Vault",
                         "Search LiteFeet dancers, teams and community profiles, and discover their connections through sourced cultural records."),
     "/litefeet-music": ("LiteFeet Music Release Radar | The LiteFeet Vault",
@@ -197,6 +201,61 @@ def metadata_for_path(path, view=None):
                 item["title"] + " | The LiteFeet Vault Archive",
                 (label + ": " + summary)[:180],
             )
+    if record is None:
+        # These dynamic public paths resolve only to published, unique records.
+        from dca_rebuild.public_urls import (
+            person_by_slug, music_by_slugs, event_by_slugs, category_by_slug,
+            nominee_by_slug,
+        )
+        from dca_rebuild.archive_catalog import all_records
+        from dca_rebuild.music_batch_catalog import combined_releases
+        from dca_rebuild.music_public import full_date, music_duration
+        from dca_rebuild.upcoming_calendar import upcoming_calendar
+        from dca_rebuild.share_awards import public_categories
+        from datetime import date
+        segments = [part for part in canonical_path.split("/") if part]
+        item = None
+        if len(segments) == 2 and segments[0] == "people":
+            item = person_by_slug(segments[1], all_records())
+            if item:
+                record = (item["title"] + " | The LiteFeet Vault",
+                          (item.get("summary") or "Explore this person's published archive record.")[:180])
+        elif len(segments) == 3 and segments[0] == "music":
+            getter = current_app.extensions.get("vault_published_music_rows")
+            releases = combined_releases(getter() if getter else [], full_date, music_duration)
+            item = music_by_slugs(segments[1], segments[2], releases)
+            if item:
+                creator = (item.get("artist_or_creator") or item.get("artist") or
+                           item.get("producer_name") or "LiteFeet")
+                record = (item["title"] + " — " + creator + " | The LiteFeet Vault",
+                          "Explore this published LiteFeet music release, credits and sources.")
+        elif len(segments) == 3 and segments[0] == "events":
+            try:
+                event_date = date.fromisoformat(segments[2])
+            except ValueError:
+                event_date = None
+            factory = current_app.extensions.get("vault_seo_session_factory")
+            if event_date and factory:
+                events = upcoming_calendar(today=event_date, window_days=1,
+                                           session_factory=factory)["events"]
+                item = event_by_slugs(segments[1], segments[2], events)
+                if item:
+                    record = (item["title"] + " | The LiteFeet Vault",
+                              ("Upcoming LiteFeet event on " + item["display_date"] +
+                               ". " + (item.get("description") or ""))[:180])
+        elif segments[:2] == ["awards", "2026"] and len(segments) in (3, 4):
+            categories = public_categories()
+            category = category_by_slug(segments[2], categories)
+            if category:
+                if len(segments) == 3:
+                    record = (category["name"] + " | DCA 2026 | The LiteFeet Vault",
+                              "Explore nominees and standings for " + category["name"] + ".")
+                else:
+                    nominee = nominee_by_slug(segments[3], category)
+                    if nominee:
+                        record = (nominee["name"] + " | " + category["name"] +
+                                  " | The LiteFeet Vault",
+                                  "Explore this Dancer's Choice Awards 2026 nominee and category.")
     if record is None:
         return None
     results = path == '/awards/dancers-choice/nominations' and view == 'results'
