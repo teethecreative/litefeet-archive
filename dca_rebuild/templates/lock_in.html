@@ -67,6 +67,9 @@
       <label>Card type <select id="lock-filter"></select></label>
       <label>Available card <select id="lock-catalog"></select></label>
       <button type="button" id="lock-add">Add card</button>
+      <button type="button" id="lock-save">Save valid deck on this device</button>
+      <button type="button" id="lock-load">Load saved deck</button>
+      <p id="lock-save-status" role="status"></p>
       <p id="lock-validation" role="status"></p>
       <ul id="lock-deck-list" class="lock-card-list"></ul>
     </div>
@@ -79,6 +82,7 @@
     </div>
   </div>
   <script id="lock-samples" type="application/json">{{ sample_decks|tojson }}</script>
+  <script id="lock-restrictions" type="application/json">{{ card_restrictions|tojson }}</script>
 </section>
 <section id="practice">
   <h2>Practice the move-set phase</h2>
