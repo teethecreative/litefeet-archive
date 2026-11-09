@@ -82,3 +82,31 @@ def test_2026_categories_are_not_survey_rows_and_activity_has_no_private_email(w
     assert "Nominee Example" in standings
     assert "Nominations" in standings
     assert "not final votes" in standings.lower() or "not final" in standings.lower()
+
+
+def test_status_filters_include_rejected_and_preserve_search(website, database):
+    with database[1].begin() as db:
+        edition = db.query(DCAEdition).filter_by(year=2026).first()
+        category = DCACategory(edition_id=edition.id, name="Review Category",
+                               normalized_name="review category", source_type="new", status="rejected")
+        db.add(category)
+        db.flush()
+        db.add(DCANominee(edition_id=edition.id, category_id=category.id,
+                          name="Rejected Nominee", normalized_name="rejected nominee",
+                          moderation_status="rejected"))
+        db.add(DCANominee(edition_id=edition.id, category_id=category.id,
+                          name="Pending Nominee", normalized_name="pending nominee",
+                          moderation_status="pending"))
+    client = _admin_client(website)
+    categories = client.get("/admin/awards/categories?status=rejected")
+    assert categories.status_code == 200
+    assert b"Review Category" in categories.data
+    results = client.get("/admin/awards/results?status=rejected&q=Nominee")
+    assert results.status_code == 200
+    html = results.get_data(as_text=True)
+    assert "Rejected Nominee" in html
+    assert "Pending Nominee" not in html
+    assert 'value="rejected" selected' in html
+    empty = client.get("/admin/awards/results?status=rejected&q=NothingMatches")
+    assert empty.status_code == 200
+    assert 'value="rejected" selected' in empty.get_data(as_text=True)
