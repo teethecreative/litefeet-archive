@@ -24,6 +24,12 @@ DECKS = {
 }
 
 
+# Restriction categories are enforced by card ID. The source rulebook does not
+# assign specific cards to 2/1/0 restrictions yet; admin configuration may do so
+# when an authoritative restriction list is approved. Default: 3 copies.
+CARD_RESTRICTIONS = {}
+
+
 # Demonstration decks follow the card categories in the original rulebook.
 # These are examples of a mixed 25-card build, NOT fixed category quotas.
 # Keep the earlier 25-person research rosters in DECKS for provenance; those
@@ -123,5 +129,5 @@ def practice_view(args):
             result = dict(score=score, base=base, bonus=bonus, reduction=reduction, opponent=opponent,
                           outcome="You win" if score > opponent else "Tie" if score == opponent else "Opponent wins")
     keys = list(ROUNDS)
-    return dict(decks=DECKS, sample_decks=public_sample_decks(), rounds=ROUNDS, round_key=key, battle=round_data,
+    return dict(decks=DECKS, sample_decks=public_sample_decks(), card_restrictions=CARD_RESTRICTIONS, rounds=ROUNDS, round_key=key, battle=round_data,
                 next_key=keys[(keys.index(key) + 1) % len(keys)], selected=moves, result=result, error=error)

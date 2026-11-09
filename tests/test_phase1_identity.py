@@ -132,3 +132,34 @@ def test_lock_in_sample_decks_follow_rulebook_card_categories(website):
     assert "Move cards (7)" in html
     assert "Arena cards (2)" in html
     assert "This is a short move-combination drill" in html
+
+
+
+def test_lock_in_rulebook_and_mixed_deck_builder_present(website):
+    html = website.test_client().get('/archive/lock-in').get_data(as_text=True)
+    assert 'How to battle' in html
+    assert 'Winning a round' in html
+    assert 'Battle conditions' in html.lower() or 'Battle conditions' in html
+    assert 'seven-card hand' in html
+    assert 'Round of Fire' in html
+    assert 'still under development' in html or 'not yet written' in html
+    assert 'id="lock-workbench"' in html
+    assert 'id="lock-count"' in html
+    assert 'id="lock-deck-list"' in html
+    assert 'id="lock-battle"' in html
+    assert 'js/lock-in-game.js' in html
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[1] /
+          'dca_rebuild/static/js/lock-in-game.js').read_text()
+    assert 'deck.length<25||deck.length>50' in js
+    assert 'amount(c.id)<=limit(c.id)' in js
+    assert 'slice(0,7)' in js
+    assert 'selected.filter' in js
+    assert 'Missed Lock In' in js
+    assert 'Incorrect card-validity challenge' in js
+    assert 'Battle victory thresholds are still blank' in js
+    assert 'lock-save' in html and 'lock-load' in html
+    assert 'id="lock-restrictions"' in html
+    assert 'lockin-draft-deck-v1' in js
+    assert 'limit(c.id)' in js
+    assert 'restrictions[id]' in js

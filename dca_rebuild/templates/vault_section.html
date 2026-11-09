@@ -53,4 +53,4 @@
   <a href="{{ url_for('vault_about_contact') }}" id="contact"><span>05 / CONTACT</span><span aria-hidden="true">→</span></a>
 </nav>
 {% endif %}
-</main>{% include "_footer.html" %}<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>{% if section == 'timeline' %}<script defer src="{{ url_for('static', filename='js/timeline-v2.js') }}"></script>{% elif section == 'people' %}<script defer src="{{ url_for('static', filename='js/archive-v1.js') }}"></script>{% endif %}</body></html>
+</main>{% include "_footer.html" %}<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>{% if section == 'timeline' %}<script defer src="{{ url_for('static', filename='js/timeline-v2.js') }}"></script>{% elif section == 'people' %}<script defer src="{{ url_for('static', filename='js/archive-v1.js') }}"></script>{% elif section == 'lock-in' %}<script defer src="{{ url_for('static', filename='js/lock-in-game.js') }}"></script>{% endif %}</body></html>

@@ -6,12 +6,34 @@
 </header>
 <section id="rules">
   <h2>How to play</h2>
+  <p>Adapted directly from the <em>Litefeet Card Planning — Official Rule Book Sample</em>. Blank Battle Point thresholds and unfinished team-battle steps remain under development.</p>
+  <h3>How to battle</h3>
+  <p>A game is called a battle. Battles are 1v1 (dancer versus dancer), 2v2 (tag team), or 3v3 (team battle). The planning draft describes a battle winner by most rounds, a not-yet-specified BP total, or a not-yet-specified number of TKOs.</p>
+  <h3>Winning a round</h3>
+  <p>The rulebook uses an average of 100 Battle Points (BP) for a round. The player with the most points wins. It also lists a TKO, an opponent unable to draw, or an opponent producing a tweak as potential win conditions. A player below 50 BP automatically loses under the draft rule.</p>
+  <h3>Winning a battle</h3>
+  <p>1v1 and 2v2 are drafted as two-round formats; 3v3 as three rounds. Final BP targets and the exact TKO requirement are blank in the rulebook. Running out of playable cards is also listed as a loss condition. The interactive prototype does not invent missing thresholds.</p>
+  <h3>Preparing to battle</h3>
   <ol>
-    <li><strong>Set the battle.</strong> The draft supports 1v1, 2v2 tag teams, and 3v3 teams. A legal main deck contains 25–50 cards across multiple types, not 25 dancers. Spin the adidas counter. The winner picks the arena and decides who goes first.</li>
-    <li><strong>Build your round.</strong> Start with a dancer and song. For a 1v1, the draft gives each player a seven-card hand. Play a setup like Rev Up or Tone Whop, then lay up to three move cards face down. Arena, producer, song, and trick cards can change how your round scores.</li>
-    <li><strong>Lock in.</strong> Say “locked in” before your opponent begins. In the draft, they can call out a missed lock-in for a 10 Battle Point penalty. Compare points to decide the round. Some cards introduce special outcomes, including TKOs.</li>
+    <li>Greet your opponent, shuffle and cut both decks; you may also shuffle and cut your opponent's deck.</li>
+    <li>Place decks face down in their designated, color-coordinated zones.</li>
+    <li>Spin the adidas counter. The winner chooses the arena and whether to act first or second. In the next battle, the previous winner selects who begins; after a tie, spin again.</li>
   </ol>
-  <p>The full battle rules are in development. The practice round below teaches the move-set phase with its own scoring.</p>
+  <h3>Battle conditions</h3>
+  <p>A player may challenge an invalid card play using the manual. The person whose challenge or play is wrong loses 50 BP for that round.</p>
+  <h3>1v1 round structure</h3>
+  <ol>
+    <li>Choose a dancer and song card and put them in their zones. Use an arena card, with producer effects when available.</li>
+    <li>Draw a seven-card hand. The draft includes move, spell/upgrade, and frib cards.</li>
+    <li>Phase 1: setup moves, such as Rev Up, Bad One, or Tone Whop.</li>
+    <li>Phase 2: place up to three move cards face down.</li>
+    <li>Phase 3: announce “locked in” before the other player starts. A called-out missed announcement costs 10 BP.</li>
+    <li>Apply trick, arena, song, spell and frib effects and compare results; use a Round of Fire if tied, pending final tie rules.</li>
+  </ol>
+  <h3>2v2 and 3v3</h3>
+  <p>The draft identifies 2v2 card swaps and 3v3 team play, but their complete sequence is not yet written. These formats are shown as rulebook previews, not falsely playable as finalized battles.</p>
+  <h3>Card types</h3>
+  <p>Use 25–50 total cards from dancers, arenas, producers, songs, moves, tricks, upgrades/spells, fribs and team support. The card builder below enforces total-card and copy limits. The individual card-effect values that are unfinished in the document remain unscored.</p>
 </section>
 <section id="decks">
   <h2>Sample decks</h2>
@@ -30,6 +52,37 @@
       <a href="#practice">Try the move-set practice drill</a>
     </article>
   {% endfor %}</div>
+</section>
+<section id="lock-workbench" aria-labelledby="lock-builder-title">
+  <h2 id="lock-builder-title">Build a deck &amp; play a battle</h2>
+  <p>Use the mixed-card examples to build a 25–50 card deck and try the documented 1v1 round sequence. Card effects without finalized BP values are adjudicated manually. The 2v2 and 3v3 procedures will become playable after their draft rules are completed.</p>
+  <div class="lock-builder">
+    <div>
+      <h3>Deck builder</h3>
+      <label>Starting deck
+        <select id="lock-sample"></select>
+      </label>
+      <p><strong><span id="lock-count">25</span> cards</strong></p>
+      <p id="lock-categories"></p>
+      <label>Card type <select id="lock-filter"></select></label>
+      <label>Available card <select id="lock-catalog"></select></label>
+      <button type="button" id="lock-add">Add card</button>
+      <button type="button" id="lock-save">Save valid deck on this device</button>
+      <button type="button" id="lock-load">Load saved deck</button>
+      <p id="lock-save-status" role="status"></p>
+      <p id="lock-validation" role="status"></p>
+      <ul id="lock-deck-list" class="lock-card-list"></ul>
+    </div>
+    <div>
+      <h3>Battle table</h3>
+      <p>1v1: two rounds in the draft rulebook. Choose arena, dancer and song; draw a seven-card hand, build your move set, announce Lock In, then record adjudicated BP.</p>
+      <button id="lock-start" type="button">Start 1v1 battle</button>
+      <p>2v2 and 3v3 are documented draft formats but not yet interactive.</p>
+      <div id="lock-battle" hidden aria-live="polite"></div>
+    </div>
+  </div>
+  <script id="lock-samples" type="application/json">{{ sample_decks|tojson }}</script>
+  <script id="lock-restrictions" type="application/json">{{ card_restrictions|tojson }}</script>
 </section>
 <section id="practice">
   <h2>Practice the move-set phase</h2>

@@ -12,3 +12,19 @@
 #practice button { border: 0; border-radius: .5rem; background: #edbd52; color: #102444; font: inherit; font-weight: 700; padding: .7rem 1.1rem; cursor: pointer; }
 .lock-result { margin-top: 1rem; }
 #round-picker { max-width: 100%; margin-block: .5rem; font: inherit; }
+
+/* Lock In interactive prototype */
+#lock-workbench .lock-builder{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr));gap:1.25rem;align-items:start}
+#lock-workbench .lock-builder>div{border:1px solid #60728b;border-radius:.65rem;padding:1.25rem;min-width:0}
+#lock-workbench label{display:block;max-width:100%;margin:.8rem 0;line-height:1.4}
+#lock-workbench label select,#lock-workbench label input[type=number]{display:block;width:100%;max-width:100%;padding:.55rem;border:1px solid #8093aa;border-radius:.35rem;color:inherit;background:var(--lfv-panel,#132440)}
+#lock-workbench .lock-hand label{display:flex;gap:.6rem;align-items:center}
+#lock-workbench .lock-hand input{flex-shrink:0}
+#lock-workbench button{background:#c9a52b;color:#0b2342;border:0;border-radius:.45rem;padding:.65rem .85rem;font:inherit;font-weight:700;cursor:pointer;margin:.3rem .35rem .3rem 0}
+#lock-workbench button:disabled{opacity:.5;cursor:not-allowed}
+#lock-workbench .lock-card-list{max-height:22rem;overflow:auto;list-style:none;padding:0}
+#lock-workbench .lock-card-list li{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;border-bottom:1px solid #60728b;gap:.5rem;padding:.4rem 0}
+#lock-workbench .lock-card-list button{padding:.25rem .55rem}
+#lock-workbench #lock-battle{border-top:1px solid #60728b;margin-top:1.25rem;padding-top:1rem}
+#lock-workbench #lock-validation{min-height:1.4em}
+@media(max-width:550px){#lock-workbench .lock-builder>div{padding:.8rem}}
