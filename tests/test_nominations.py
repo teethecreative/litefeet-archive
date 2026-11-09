@@ -152,6 +152,16 @@ def test_email_first_history_and_return_to_grid(website, database):
     assert response.status_code == 200
     assert response.data == b'person@example.com\n'
     assert response.headers['Cache-Control'] == 'private, no-store'
+    # An existing hash-only submission is reconnected when the same person
+    # identifies with their email on a new browser.
+    with database[1]() as db:
+        db.query(DCANominationSubmission).update({'submitter_email': None})
+        db.commit()
+    other = website.test_client()
+    identify(other, 'PERSON@EXAMPLE.COM')
+    with database[1]() as db:
+        assert all(row.submitter_email == 'person@example.com'
+                   for row in db.query(DCANominationSubmission).all())
     # Returning with the same normalized email retrieves history on a new browser.
     other = website.test_client(); identify(other)
     assert b'Already nominated / cooldown active' in other.get(PATH + '?category=1').data
