@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/archive-v3.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
 {% if section == 'lock-in' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/lock-in.css') }}">{% endif %}
+{% if section == 'about' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-about-one-page.css') }}">{% endif %}
 </head><body>{% include "_navigation.html" %}
 <main class="vault-section-page" id="vault-section-{{ section }}">
 {% if section == 'overview' %}
@@ -59,12 +60,6 @@
 {% if updates %}<section id="updates"><h2>Community updates</h2>{% for update in updates %}<article class="vault-update"><h3>{{ update.title }}</h3><time datetime="{{ update.created_at.isoformat() }}">{{ update.created_at.strftime('%B %d, %Y') }}</time><p>{{ update.details }}</p></article>{% endfor %}</section>{% endif %}
 {% elif section == 'about' %}
 <header class="lfv-about-index-header"><p class="vault-kicker">ABOUT THE VAULT</p><h1>OUR HISTORY. OUR STORIES. OUR CULTURE.</h1><p>WHAT THE VAULT IS, WHY IT EXISTS, AND HOW THE COMMUNITY HELPS PRESERVE ITS HISTORY.</p></header>
-<nav class="lfv-about-index" aria-label="ABOUT PAGES">
-  <a href="{{ url_for('vault_about_letter') }}" id="letter"><span>01 / FOUNDER'S LETTER</span><span aria-hidden="true">→</span></a>
-  <a href="{{ url_for('vault_about_mission') }}" id="mission"><span>02 / OUR MISSION</span><span aria-hidden="true">→</span></a>
-  <a href="{{ url_for('vault_about_archive') }}" id="archive"><span>03 / ABOUT THE ARCHIVE</span><span aria-hidden="true">→</span></a>
-  <a href="{{ url_for('vault_about_how_it_works') }}" id="how-it-works"><span>04 / HOW IT WORKS</span><span aria-hidden="true">→</span></a>
-  <a href="{{ url_for('vault_about_contact') }}" id="contact"><span>05 / CONTACT</span><span aria-hidden="true">→</span></a>
-</nav>
+{% include "about_overview_sections.html" %}
 {% endif %}
 </main>{% include "_footer.html" %}<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>{% if section == 'timeline' %}<script defer src="{{ url_for('static', filename='js/timeline-v2.js') }}"></script>{% elif section == 'people' %}<script defer src="{{ url_for('static', filename='js/archive-v1.js') }}"></script>{% elif section == 'lock-in' %}<script defer src="{{ url_for('static', filename='js/lock-in-game.js') }}"></script>{% endif %}</body></html>
