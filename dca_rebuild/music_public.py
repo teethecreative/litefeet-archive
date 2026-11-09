@@ -9,7 +9,12 @@ from dca_rebuild.archive_catalog import all_records, find_record
 
 def install_music_public(app, engine):
     def music_rows():
-        if not inspect(engine).has_table("media_items"):
+        metadata = inspect(engine)
+        if not metadata.has_table("media_items"):
+            return []
+        required = {"id", "title", "media_type", "status", "release_date"}
+        if not required.issubset({column["name"] for column in metadata.get_columns("media_items")}):
+            app.logger.warning("Existing media_items schema is not compatible with music timeline")
             return []
         with engine.connect() as connection:
             return [dict(row) for row in connection.execute(text(
