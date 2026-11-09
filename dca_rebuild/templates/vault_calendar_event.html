@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ event.title }} — {{ event.display_date }} | The LiteFeet Vault</title>
+{% include "_seo_head.html" %}
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-consistency-v5.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-calendar-pages.css') }}">
+</head>
+<body>
+{% include "_navigation.html" %}
+<main class="lfv-calendar-full lfv-calendar-detail lfv3-wrap">
+<nav aria-label="Calendar breadcrumb" class="lfv-calendar-detail-back">
+<a href="{{ url_for('legacy_calendar',date=event.date,day=event.date) }}#calendar-list-heading">← Back to {{ event.display_date }} events</a>
+</nav>
+<header class="lfv-calendar-full-header">
+<p class="lfv3-eyebrow">LITEFEET COMMUNITY CALENDAR · {{ event.status }}</p>
+<h1>{{ event.title }}</h1>
+<p>Scheduled for {{ event.display_date }}</p>
+</header>
+<section class="lfv-calendar-detail-panel" aria-label="Event details">
+<dl class="lfv-calendar-detail-data">
+<div><dt>Date</dt><dd><time datetime="{{ event.date }}">{{ event.display_date }}</time></dd></div>
+{% if event.event_time %}<div><dt>Time</dt><dd>{{ event.event_time }}</dd></div>{% endif %}
+{% if event.venue %}<div><dt>Location</dt><dd>{{ event.venue }}</dd></div>{% endif %}
+{% if event.address %}<div><dt>Address</dt><dd>{{ event.address }}{% if event.city %}, {{ event.city }}{% endif %}</dd></div>
+{% elif event.city %}<div><dt>Area</dt><dd>{{ event.city }}</dd></div>{% endif %}
+{% if event.organizer %}<div><dt>Organizer</dt><dd>{{ event.organizer }}</dd></div>{% endif %}
+{% if event.admission %}<div><dt>Admission</dt><dd>{{ event.admission }}</dd></div>{% endif %}
+</dl>
+{% if event.description %}<div class="lfv-calendar-detail-description"><h2>About this event</h2><p>{{ event.description }}</p></div>{% endif %}
+{% if event.notice %}<p class="lfv-calendar-detail-note">{{ event.notice }}</p>{% endif %}
+<div class="lfv-calendar-detail-actions">
+{% if event.source_href %}<a class="lfv-calendar-submit lfv-primary-cta" href="{{ event.source_href }}" target="_blank" rel="noopener noreferrer">View source / more information ↗</a>{% else %}<p class="lfv-calendar-detail-no-source">No external event source has been provided.</p>{% endif %}
+<a href="{{ url_for('legacy_calendar',date=event.date,day=event.date) }}#calendar-list-heading">Back to calendar</a>
+</div>
+</section>
+</main>
+{% include "_footer.html" %}
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+</body>
+</html>

@@ -161,6 +161,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-identity-phase1.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-home-v4.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-calendar-pages.css') }}">
 </head>
 
 <body>
@@ -203,14 +204,17 @@
     <p class="lfv5-calendar-intro">Upcoming battles, events and community gatherings in the next 30 days.</p>
     <div class="lfv5-calendar-strip" aria-label="NEXT 30 DAYS">
       {% for day in vault_upcoming_calendar.days %}
-      <a class="lfv5-calendar-day{% if day.today %} is-today{% endif %}{% if day.events %} has-events{% endif %}" href="#calendar-events" aria-label="{{ day.month }} {{ day.number }}: {{ day.events|length }} EVENTS">
+      <a class="lfv5-calendar-day{% if day.today %} is-today{% endif %}{% if day.events %} has-events{% endif %}{% if vault_calendar_page.selected_day == day.iso %} is-selected{% endif %}" href="{{ url_for('index', calendar_day=day.iso) }}#calendar-events" aria-label="{{ day.month }} {{ day.number }}: {{ day.events|length }} EVENTS">
         <small>{{ day.weekday }}</small><strong>{{ day.number }}</strong><span>{{ day.month }}</span>
         {% if day.events %}<i aria-hidden="true"></i>{% endif %}
       </a>
       {% endfor %}
     </div>
     <div class="lfv5-calendar-events" id="calendar-events">
-    {% for event in vault_upcoming_calendar.events %}
+    {% if vault_calendar_page.selected_day %}
+    <div class="lfv-calendar-filter-active"><strong>Showing {{ vault_calendar_page.selected_day }} only</strong> <a href="{{ url_for('index') }}#calendar-events">Show all events</a></div>
+    {% endif %}
+    {% for event in vault_calendar_page.events %}
       <article class="lfv5-calendar-event">
         <time datetime="{{ event.date }}">{{ event.display_date }}</time>
         <div><h3><a href="{{ event.href }}">{{ event.title }}</a></h3>
@@ -221,7 +225,21 @@
       <p class="lfv5-calendar-empty">No upcoming gatherings have been listed for the next 30 days. Know about a battle, lab, class or link-up? <a href="{{ url_for('vault_submit') }}">SUBMIT →</a></p>
     {% endfor %}
     </div>
-    <a class="lfv5-minimal-action" href="{{ url_for('vault_timeline') }}">EXPLORE THE FULL TIMELINE <span aria-hidden="true">→</span></a>
+    {% if vault_calendar_page.total > 0 %}
+    <nav class="lfv-calendar-pagination" aria-label="Upcoming event pages">
+      {% if vault_calendar_page.has_previous %}
+      <a class="lfv-calendar-page-link" href="{{ url_for('index', calendar_page=vault_calendar_page.page - 1, calendar_day=vault_calendar_page.selected_day or none) }}#calendar-events">← Previous</a>
+      {% else %}<span class="lfv-calendar-page-disabled" aria-disabled="true">← Previous</span>{% endif %}
+      <span class="lfv-calendar-page-number">Page {{ vault_calendar_page.page }} of {{ vault_calendar_page.pages }}</span>
+      {% if vault_calendar_page.has_next %}
+      <a class="lfv-calendar-page-link" href="{{ url_for('index', calendar_page=vault_calendar_page.page + 1, calendar_day=vault_calendar_page.selected_day or none) }}#calendar-events">Next →</a>
+      {% else %}<span class="lfv-calendar-page-disabled" aria-disabled="true">Next →</span>{% endif %}
+    </nav>
+    {% endif %}
+    <div class="lfv-calendar-actions">
+      <a class="lfv3-button lfv3-button-gold lfv-primary-cta" href="{{ url_for('legacy_calendar') }}">View Full Calendar <span aria-hidden="true">→</span></a>
+      <a class="lfv-calendar-secondary-link" href="{{ url_for('vault_submit') }}">Add an Event <span aria-hidden="true">+</span></a>
+    </div>
   </section>
 </main>
 

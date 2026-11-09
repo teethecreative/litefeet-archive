@@ -56,6 +56,7 @@ def install_information_architecture(app, ns):
         children = {
             'archive': [dict(label='People & Teams', href='/archive/people'),
                         dict(label='History & Timeline', href='/archive/timeline'),
+                        dict(label='Upcoming Calendar', href='/calendar'),
                         dict(label='Events', href='/archive/timeline?collection=events'),
                         dict(label='Awards & Recognition', href='/archive/timeline?collection=awards'),
                         dict(label='Lock In · Card Battle Game', href='/archive/lock-in'),
@@ -85,7 +86,7 @@ def install_information_architecture(app, ns):
             section = next((s for s in navigation if s['key'] == active), None)
             labels = {'vault_music_public': 'Release Radar', 'vault_music_release': 'Music Record',
                       'vault_media_public': 'Media', 'vault_archive': 'The Archive', 'vault_timeline': 'Historical Timeline',
-                      'vault_history_guide': 'Cultural History', 'vault_lock_in': 'Lock In',
+                      'vault_history_guide': 'Cultural History', 'vault_lock_in': 'Lock In', 'legacy_calendar': 'Calendar',
                       'vault_community': 'Contribute & Correct', 'legacy_about': 'About', 'awards_home': 'Awards',
                       'vault_dca_program': 'Dancer’s Choice Awards', 'dca_2026_home': '2026',
                       'dca_2023_home': '2023 archive', 'round1': 'Category survey', 'round2': 'Category results',
@@ -112,9 +113,26 @@ def install_information_architecture(app, ns):
         elif path.startswith('/awards/litefeet-awards'):
             program = [dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
                        dict(label='Contribute historical records', href='/awards/litefeet-awards#contribute')]
+        calendar = upcoming_calendar(session_factory=ns['SessionLocal'])
+        page_size = 5
+        selected_day = request.args.get('calendar_day', '').strip()
+        valid_dates = {day['iso'] for day in calendar['days']}
+        if selected_day not in valid_dates:
+            selected_day = ''
+        shown_events = [event for event in calendar['events']
+                        if event['date'] == selected_day] if selected_day else calendar['events']
+        count = len(shown_events)
+        total_pages = max(1, (count + page_size - 1) // page_size)
+        page = max(1, min(request.args.get('calendar_page', 1, type=int) or 1, total_pages))
+        calendar_page = dict(
+            events=shown_events[(page - 1) * page_size:page * page_size],
+            page=page, pages=total_pages, total=count,
+            selected_day=selected_day,
+            has_previous=page > 1, has_next=page < total_pages,
+        )
         return dict(vault_navigation=navigation, vault_breadcrumbs=breadcrumbs,
                     vault_program_navigation=program, vault_emit_chrome=emit_chrome,
-                    vault_upcoming_calendar=upcoming_calendar(session_factory=ns['SessionLocal']),
+                    vault_upcoming_calendar=calendar, vault_calendar_page=calendar_page,
                     vault_site_updates=PUBLIC_SITE_UPDATES,
                     vault_updates=content['updates'], vault_eras=content['eras'], vault_contact=CONTACT)
 

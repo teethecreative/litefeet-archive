@@ -90,7 +90,8 @@ def test_teen_nite_recurs_tuesday_thursday_with_closure_notice():
     assert all('6:00–9:00 PM' in e['description'] for e in sessions)
     assert all('237 East 104th Street' in e['description'] for e in sessions)
     assert all('Check @teennightnyc on Instagram for closure notifications' in e['description'] for e in sessions)
-    assert all(e['href'] == 'https://www.instagram.com/teennightnyc/' for e in sessions)
+    assert all(e['href'].startswith('/calendar/events/') for e in sessions)
+    assert all(e['source_href'] == 'https://www.instagram.com/teennightnyc/' for e in sessions)
 
 
 def test_lock_in_sample_decks_are_neutral_and_practice_does_not_spotlight_two_submitters(website):
