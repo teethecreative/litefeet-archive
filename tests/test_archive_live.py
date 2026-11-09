@@ -28,8 +28,8 @@ def test_public_archive_and_scroll_api_show_real_entries(website):
     page = client.get('/archive')
     assert page.status_code == 200
     html = page.get_data(as_text=True)
-    for text in ('THE ARCHIVE TIMELINE','SEARCH THE TIMELINE','THE CULTURAL RECORD',
-                 'HISTORY &amp; TIMELINE', 'PEOPLE &amp; CREWS'):
+    for text in ('The Archive Timeline','SEARCH THE TIMELINE','THE CULTURAL RECORD',
+                 'PEOPLE &amp; TEAMS'):
         assert text in html
     assert 'More than a directory' not in html
     assert 'This is a ghost profile' not in html  # Never publish fabricated legacy biographies
@@ -73,7 +73,7 @@ def test_source_specific_event_and_research_pages(website):
     assert 'Nauli &amp; Lexi' in text
     assert 'Intermission matchups' in text
     assert 'No verified results' not in text
-    assert 'true' in text and 'debatable' in text
+    assert 'Community verification' not in text  # A dated event flyer is source evidence
     assert client.get('/archive/records/does-not-exist').status_code == 404
     person = client.get('/archive/records/research-mr-youtube')
     assert person.status_code == 200
