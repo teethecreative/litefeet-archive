@@ -53,6 +53,33 @@
     </article>
   {% endfor %}</div>
 </section>
+<section id="lock-workbench" aria-labelledby="lock-builder-title">
+  <h2 id="lock-builder-title">Build a deck &amp; play a battle</h2>
+  <p>Use the mixed-card examples to build a 25–50 card deck and try the documented 1v1 round sequence. Card effects without finalized BP values are adjudicated manually. The 2v2 and 3v3 procedures will become playable after their draft rules are completed.</p>
+  <div class="lock-builder">
+    <div>
+      <h3>Deck builder</h3>
+      <label>Starting deck
+        <select id="lock-sample"></select>
+      </label>
+      <p><strong><span id="lock-count">25</span> cards</strong></p>
+      <p id="lock-categories"></p>
+      <label>Card type <select id="lock-filter"></select></label>
+      <label>Available card <select id="lock-catalog"></select></label>
+      <button type="button" id="lock-add">Add card</button>
+      <p id="lock-validation" role="status"></p>
+      <ul id="lock-deck-list" class="lock-card-list"></ul>
+    </div>
+    <div>
+      <h3>Battle table</h3>
+      <p>1v1: two rounds in the draft rulebook. Choose arena, dancer and song; draw a seven-card hand, build your move set, announce Lock In, then record adjudicated BP.</p>
+      <button id="lock-start" type="button">Start 1v1 battle</button>
+      <p>2v2 and 3v3 are documented draft formats but not yet interactive.</p>
+      <div id="lock-battle" hidden aria-live="polite"></div>
+    </div>
+  </div>
+  <script id="lock-samples" type="application/json">{{ sample_decks|tojson }}</script>
+</section>
 <section id="practice">
   <h2>Practice the move-set phase</h2>
   <p>This is a short move-combination drill, not a full Lock In battle. It does not yet simulate drawing from a mixed deck, playing arena and song cards, or applying upgrade/frib effects.</p>
