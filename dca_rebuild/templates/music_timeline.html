@@ -22,7 +22,7 @@
 .lfv-music-table td{padding:13px 12px;border-top:1px solid #455a75;vertical-align:middle}
 .lfv-music-table-date{font-weight:650;font-variant-numeric:tabular-nums;white-space:nowrap}
 .lfv-music-table-duration{white-space:nowrap;font-variant-numeric:tabular-nums}
-.lfv-music-title{font-size:1rem;line-height:1.35;font-weight:750;overflow-wrap:anywhere}
+.lfv-music-title{font-size:1rem;line-height:1.35;font-weight:750;overflow-wrap:anywhere}.lfv-music-title-link{color:inherit!important;text-decoration:none}.lfv-music-title-link:hover,.lfv-music-title-link:focus-visible{text-decoration:underline;text-underline-offset:3px}
 .lfv-music-description{color:#c2cddd;font-size:.82rem;margin:6px 0 0;line-height:1.45;overflow-wrap:anywhere}
 .lfv-music-credits{overflow-wrap:anywhere}
 .lfv-music-row-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -37,10 +37,10 @@
 <header class="lfv-music-header"><p class="lfv-music-kicker">The LiteFeet Vault / Music</p><h1>LiteFeet Music</h1><p class="lfv-music-subtitle">New releases, tracks, and projects from LiteFeet producers. Find out what is circulating now.</p></header>
 <form class="lfv-music-filter" method="get" action="{{ url_for('vault_music_public') }}"><label for="music-q" class="sr-only">Search releases</label><input id="music-q" type="search" name="q" value="{{ search }}" placeholder="Search titles, artists, producers"><button type="submit" class="lfv-music-button">Search</button></form>
 <section aria-labelledby="music-releases-title">
-<p class="lfv-music-kicker">Music / Discovery</p><h2 id="music-releases-title">Release Radar</h2>
+<p class="lfv-music-kicker">Music / Discovery</p><h2 id="music-releases-title">Release Radar</h2><p class="lfv-music-description">Includes sourced tracks and projects. Dates and durations are shown only where documented; some source links lead to artist profiles or full projects.</p>
 <div class="lfv-music-table-scroll">
 <table class="lfv-music-table">
-<thead><tr><th scope="col">Release Date</th><th scope="col">Song Name</th><th scope="col">Artist / Producer</th><th scope="col">Duration</th><th scope="col">Record / Listen</th></tr></thead>
+<thead><tr><th scope="col">Release Date</th><th scope="col">Song Name</th><th scope="col">Artist / Producer</th><th scope="col">Duration</th><th scope="col">Listen / Source</th></tr></thead>
 <tbody>
 {% for item in releases %}
 {% set audio = item.playable_url or item.url or '' %}
@@ -48,13 +48,17 @@
 {% set direct_audio = audio_path.endswith('.mp3') or audio_path.endswith('.m4a') or audio_path.endswith('.ogg') or audio_path.endswith('.wav') or audio_path.endswith('.aac') or audio_path.endswith('.flac') %}
 <tr>
 <td class="lfv-music-table-date">{{ item.date_label }}</td>
-<td class="lfv-music-table-name"><span class="lfv-music-title">{{ item.title or 'Untitled release' }}</span>{% if item.description %}<p class="lfv-music-description">{{ item.description }}</p>{% endif %}</td>
-<td class="lfv-music-credits">{{ item.artist_or_creator or item.artist or item.producer_name or 'Not yet documented' }}</td>
+<td class="lfv-music-table-name"><a class="lfv-music-title lfv-music-title-link" href="{{ item.record_href }}">{{ item.title or 'Untitled release' }}</a>{% if item.description %}<p class="lfv-music-description">{{ item.description }}</p>{% endif %}</td>
+<td class="lfv-music-credits">{{ item.artist_or_creator or item.artist or item.producer_name or 'Not yet documented' }}{% if item.project_title %}<p class="lfv-music-description">From {{ item.project_title }}</p>{% elif item.kind == 'project' %}<p class="lfv-music-description">{{ item.record_type or 'Project' }}{% if item.expected_track_count %} · {{ item.expected_track_count }} tracks{% endif %}</p>{% endif %}</td>
 <td class="lfv-music-table-duration">{{ item.duration_label }}</td>
 <td><div class="lfv-music-row-actions">
-{% if direct_audio %}<button type="button" class="lfv-music-play" data-audio="{{ audio }}" data-track="{{ item.title }}" aria-label="Play {{ item.title }}" aria-pressed="false">▶</button>{% endif %}
-<a class="lfv-music-button" href="{{ url_for('vault_music_release', item_id=item.id) }}">View Record</a>
-{% if item.url %}<a class="lfv-music-source" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">Source</a>{% endif %}
+{% if direct_audio %}
+<button type="button" class="lfv-music-play" data-audio="{{ audio }}" data-track="{{ item.title }}" aria-label="Play {{ item.title }}" aria-pressed="false">▶</button>
+{% elif item.url %}
+<a class="lfv-music-source" href="{{ item.url }}" target="_blank" rel="noopener noreferrer" aria-label="Open source for {{ item.title }}">Source</a>
+{% else %}
+<span class="lfv-music-description">Source unavailable</span>
+{% endif %}
 </div></td>
 </tr>
 {% else %}
