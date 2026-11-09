@@ -167,7 +167,7 @@ body.ledger-admin .lfv-gathering-counts span{color:var(--muted)!important}
 
 /* Consolidated admin design, derived from the compact Overview heading.
    Loaded after each page's legacy CSS through the common admin navigation. */
-body.ledger-admin :is(.lfv-admin-workspace-head,.lfv-admin-plain-head,.admin-control-room__header,.lfv-gathering-header),
+body.ledger-admin main :is(.lfv-admin-workspace-head,.lfv-admin-plain-head,.admin-control-room__header,.lfv-gathering-header),
 body .dca-nominations-admin .lfv-admin-plain-head {
   position:relative!important;overflow:visible!important;
   width:100%!important;max-width:none!important;min-height:0!important;
@@ -179,25 +179,25 @@ body .dca-nominations-admin .lfv-admin-plain-head {
 }
 body.ledger-admin :is(.lfv-admin-workspace-head,.admin-control-room__header,.lfv-gathering-header)::after,
 body .dca-nominations-admin .lfv-admin-plain-head::after{display:none!important;content:none!important}
-body.ledger-admin :is(.lfv-admin-workspace-head,.lfv-admin-plain-head,.admin-control-room__header,.lfv-gathering-header) :is(h1,h2),
+body.ledger-admin main :is(.lfv-admin-workspace-head,.lfv-admin-plain-head,.admin-control-room__header,.lfv-gathering-header) :is(h1,h2),
 body .dca-nominations-admin .lfv-admin-plain-head h1{
   color:var(--text)!important;font-size:clamp(2rem,4vw,3.3rem)!important;
   line-height:1.12!important;letter-spacing:-.035em!important;
   margin:9px 0 14px!important;text-transform:none!important
 }
-body.ledger-admin :is(.lfv-admin-workspace-head,.lfv-admin-plain-head,.admin-control-room__header,.lfv-gathering-header) :is(.label,.lead,.lfv-admin-overline,.lfv-gathering-eyebrow),
+body.ledger-admin main :is(.lfv-admin-workspace-head,.lfv-admin-plain-head,.admin-control-room__header,.lfv-gathering-header) :is(.label,.lead,.lfv-admin-overline,.lfv-gathering-eyebrow),
 body .dca-nominations-admin .lfv-admin-plain-head .lfv-admin-overline{
   color:var(--muted)!important;opacity:1!important;line-height:1.5!important
 }
-body.ledger-admin :is(.lfv-admin-workspace-head,.lfv-admin-plain-head,.admin-control-room__header,.lfv-gathering-header) > p:last-child,
-body.ledger-admin .admin-control-room__header .lead,
+body.ledger-admin main :is(.lfv-admin-workspace-head,.lfv-admin-plain-head,.admin-control-room__header,.lfv-gathering-header) > p:last-child,
+body.ledger-admin main .admin-control-room__header .lead,
 body .dca-nominations-admin .lfv-admin-plain-head > p:last-child{
   color:var(--text)!important;opacity:1!important;
   max-width:74ch!important;line-height:1.6!important;
   font-size:clamp(.92rem,1.4vw,1rem)!important
 }
-body.ledger-admin .admin-control-room__header .analytics-header-links{margin-top:19px}
-body.ledger-admin .admin-control-room__header .analytics-header-links :is(a,span){color:var(--text)!important}
+body.ledger-admin main .admin-control-room__header .analytics-header-links{margin-top:19px}
+body.ledger-admin main .admin-control-room__header .analytics-header-links :is(a,span){color:var(--text)!important}
 body.ledger-admin :is(.lfv-admin-workspace,.admin-control-room,.lfv-gathering-admin) :is(.lfv-admin-workspace-count,.lfv-admin-review-table small,.lfv-admin-metrics span,.lfv-admin-state-counts span,.lfv-admin-quick-links span,.lfv-gathering-result-total,.lfv-gathering-counts span,.admin-section-heading p,.beta-admin-feature__copy p){
   color:var(--text)!important;opacity:1!important
 }
