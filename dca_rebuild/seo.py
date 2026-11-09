@@ -277,13 +277,13 @@ def register_seo(app):
     @app.get("/sitemap.xml")
     def litefeet_sitemap():
         from dca_rebuild.archive_catalog import all_records
-        from dca_rebuild.music_batch_catalog import batch_catalog
+        from dca_rebuild.music_batch_catalog import all_music_catalog
         from dca_rebuild.upcoming_calendar import event_slug
         paths = list(SITEMAP_PATHS) + [
             "/archive/records/" + item["slug"] for item in all_records()
         ] + [
             "/litefeet-music/catalog/" + item["kind"] + "/" + item["catalog_id"]
-            for item in batch_catalog()
+            for item in all_music_catalog()
         ] + [
             "/litefeet-music/release/" + str(item["id"])
             for item in _published_music_rows()
