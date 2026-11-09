@@ -3851,7 +3851,7 @@ def legacy_archive_redirect():
     feature = ARCHIVE_PLACEHOLDER_ROUTES.get(request.path)
     if feature:
         return render_template("archive_placeholder.html", definition=ARCHIVE_PLACEHOLDERS[feature])
-    return redirect(url_for("index"), code=302)
+    abort(404)
 
 
 for legacy_route in LEGACY_HOME_ROUTES:
@@ -3889,7 +3889,15 @@ for legacy_route in LEGACY_HOME_ROUTES:
 @app.route("/verify/<path:legacy_path>")
 @app.route("/ask/<path:legacy_path>")
 def legacy_archive_detail_redirect(legacy_path):
-    return redirect(url_for("index"), code=302)
+    # Preserve genuine historical URLs when the public record is known.
+    from dca_rebuild.legacy_profile_routes import legacy_dancer_destination
+    destination = legacy_dancer_destination(request.path)
+    if destination:
+        return redirect(destination, code=301)
+
+    # A missing legacy destination is not the homepage. Let the single
+    # branded not-found page offer visitors useful destinations.
+    abort(404)
 
 
 if __name__ == "__main__":
@@ -5027,3 +5035,11 @@ install_award_sharing(app)
 # Unified admin overview, pending review queue, development workspace and feedback.
 from dca_rebuild.admin_workspace import install_admin_workspace
 install_admin_workspace(app, globals())
+
+
+# Every unknown route, including old URLs without a valid destination, uses
+# the same branded 404 page. Return 404 (not a redirect or a soft 404) so
+# search engines can remove genuinely missing URLs from their index.
+@app.errorhandler(404)
+def vault_missing_url(error):
+    return render_template("error_404.html"), 404, {"X-Robots-Tag": "noindex, follow"}
