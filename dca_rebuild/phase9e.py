@@ -170,6 +170,48 @@ def normalized(value):
     return ' '.join(value.casefold().split())
 
 
+# Owner-confirmed: these write-in labels represent the same category.
+PRODUCER_YEAR_NAMES = frozenset((
+    'producer of the year',
+    'producer of the year award',
+    'producer of the year awards',
+))
+PRODUCER_YEAR_DISPLAY = 'Producer of The Year'
+
+
+def writein_category_key(name):
+    key = normalized(name)
+    return 'producer of the year' if key in PRODUCER_YEAR_NAMES else key
+
+
+def writein_category_label(name):
+    return PRODUCER_YEAR_DISPLAY if normalized(name) in PRODUCER_YEAR_NAMES else name
+
+
+def producer_writein_alias_map(db, edition, *, rows=None):
+    """Resolve duplicate producer write-ins without moving or deleting records.
+
+    Official Top 25 categories are never collapsed into the write-in.
+    Historical nominee IDs, entries and cooldowns retain their original links.
+    """
+    if edition is None or edition.year != 2026:
+        return {}
+    if rows is None:
+        rows = (db.query(CategoryStage9E, DCACategory)
+                .join(DCACategory, DCACategory.id == CategoryStage9E.category_id)
+                .filter(CategoryStage9E.edition_id == edition.id).all())
+    matches = [(stage, cat) for stage, cat in rows
+               if stage.stage in ('write_in', 'qualified')
+               and normalized(cat.name) in PRODUCER_YEAR_NAMES]
+    if len(matches) < 2:
+        return {}
+    primary = min(matches, key=lambda pair: (
+        normalized(pair[1].name) != 'producer of the year',
+        pair[0].stage != 'qualified', pair[0].position, pair[1].id
+    ))[1]
+    return {cat.id: primary.id for stage, cat in matches if cat.id != primary.id}
+
+
 # LITEFEET_PHASE9E_PERCENTAGE_RANKING_HOTFIX
 # A category needs at least five Round 1 Yes/No responses before it is eligible
 # for the automatic Top 25. This does NOT remove it from write-in consideration.
@@ -237,10 +279,12 @@ def ranked_candidates(db, ns, edition):
 
 
 def stages_for(db, edition):
-    return (db.query(CategoryStage9E, DCACategory)
+    rows = (db.query(CategoryStage9E, DCACategory)
             .join(DCACategory, DCACategory.id == CategoryStage9E.category_id)
             .filter(CategoryStage9E.edition_id == edition.id)
             .order_by(CategoryStage9E.position, DCACategory.name).all())
+    aliases = producer_writein_alias_map(db, edition, rows=rows)
+    return [(stage, cat) for stage, cat in rows if cat.id not in aliases]
 
 
 def get_counts(db, edition, *, include_pending=False):
@@ -264,16 +308,25 @@ def get_counts(db, edition, *, include_pending=False):
         for nid, supporter in rows:
             counts[nid] += 1
             supporters[nid].add(supporter)
+    aliases = producer_writein_alias_map(db, edition)
+    categories = {cat.id: cat.name for cat in db.query(DCACategory).filter_by(
+        edition_id=edition.id).all()}
     grouped = defaultdict(list)
     for n in nominees:
-        grouped[(n.category_id, canonical_nominee_key(n.name))].append(n)
+        canonical_id = aliases.get(n.category_id, n.category_id)
+        group_name = categories.get(canonical_id, categories.get(n.category_id, ''))
+        grouped[(canonical_id, canonical_nominee_key(
+            n.name, category_name=group_name))].append(n)
     by_cat = defaultdict(list)
     category_supporters = defaultdict(set)
     for (cid, _), matching in grouped.items():
         # Prefer the canonical ID for new submissions; previous alias IDs
         # remain linked via the ids list for existing justification records.
-        display, canonical_key = canonical_nominee_name(matching[0].name)
-        matching.sort(key=lambda n: (n.normalized_name != canonical_key, n.id))
+        group_name = categories.get(cid, '')
+        display, canonical_key = canonical_nominee_name(
+            matching[0].name, category_name=group_name)
+        matching.sort(key=lambda n: (n.category_id != cid,
+                                     n.normalized_name != canonical_key, n.id))
         primary = matching[0]
         members = [n.id for n in matching]
         total = sum(counts[nid] for nid in members)
@@ -590,10 +643,10 @@ def install_phase9e(app, ns):
             if edition:
                 stages = stages_for(db, edition)
                 top_names = {
-                    normalized(cat.name) for stage, cat in stages if stage.stage == 'top25'
+                    writein_category_key(cat.name) for stage, cat in stages if stage.stage == 'top25'
                 }
                 live_writeins = {
-                    normalized(cat.name): (stage, cat)
+                    writein_category_key(cat.name): (stage, cat)
                     for stage, cat in stages if stage.stage in ('write_in', 'qualified')
                 }
                 qualifying, floor, requirement = qualification(db, edition, stages)
@@ -609,19 +662,19 @@ def install_phase9e(app, ns):
                 candidates = {}
                 if historical:
                     for cat in db.query(DCACategory).filter_by(edition_id=historical.id).all():
-                        key = normalized(cat.name)
+                        key = writein_category_key(cat.name)
                         if key not in top_names:
-                            candidates[key] = dict(name=cat.name,
+                            candidates[key] = dict(name=writein_category_label(cat.name),
                                                    description=cat.description or '')
                 for group in ns['dca_new_category_groups'](db, edition.id):
-                    key = normalized(group['name'])
+                    key = writein_category_key(group['name'])
                     if key not in top_names:
                         candidates[key] = dict(
-                            name=group['name'],
+                            name=writein_category_label(group['name']),
                             description=group.get('description') or '',
                         )
                 for name, (stage, cat) in live_writeins.items():
-                    candidates[name] = dict(name=cat.name,
+                    candidates[name] = dict(name=writein_category_label(cat.name),
                                             description=cat.description or '')
                 for key, item in sorted(candidates.items(),
                                         key=lambda pair: pair[1]['name'].casefold()):
@@ -674,7 +727,7 @@ def install_phase9e(app, ns):
         submitted = request.form.get('csrf_token', '')
         if not expected or not secrets.compare_digest(expected, submitted):
             abort(400, 'Invalid submission token')
-        key = normalized((request.form.get('category') or '').strip()[:250])
+        key = writein_category_key((request.form.get('category') or '').strip()[:250])
         if not key:
             abort(400, 'Choose a category')
         db = SessionLocal()
@@ -688,7 +741,7 @@ def install_phase9e(app, ns):
             if len([stage for stage, _ in stages if stage.stage == 'top25']) != 25:
                 abort(409, 'The official Top 25 must be finalized first')
             existing = next((cat for stage, cat in stages
-                             if normalized(cat.name) == key), None)
+                             if writein_category_key(cat.name) == key), None)
             if existing:
                 return redirect(url_for('dca_nominations_closed', category=existing.id))
             # Only names already provided through the recorded category round.
@@ -697,12 +750,12 @@ def install_phase9e(app, ns):
             possible = {}
             if historical:
                 for cat in db.query(DCACategory).filter_by(edition_id=historical.id).all():
-                    possible[normalized(cat.name)] = dict(
-                        name=cat.name, description=cat.description or '',
+                    possible[writein_category_key(cat.name)] = dict(
+                        name=writein_category_label(cat.name), description=cat.description or '',
                         source_type='returning', source_category_id=cat.id)
             for group in ns['dca_new_category_groups'](db, edition.id):
-                possible[normalized(group['name'])] = dict(
-                    name=group['name'], description=group.get('description') or '',
+                possible[writein_category_key(group['name'])] = dict(
+                    name=writein_category_label(group['name']), description=group.get('description') or '',
                     source_type='new', source_category_id=None)
             item = possible.get(key)
             if not item:
@@ -729,7 +782,7 @@ def install_phase9e(app, ns):
             db.rollback()
             # Another visitor may have already activated this category.
             existing = next((cat for stage, cat in stages_for(db, edition)
-                             if normalized(cat.name) == key), None)
+                             if writein_category_key(cat.name) == key), None)
             if existing:
                 return redirect(url_for('dca_nominations_closed', category=existing.id))
             raise
@@ -837,7 +890,8 @@ def install_phase9e(app, ns):
                 category.id for _, category in stages_for(db, edition)
             }:
                 abort(404)
-            display, key = canonical_nominee_name(name)
+            category = db.get(DCACategory, cid)
+            display, key = canonical_nominee_name(name, category_name=category.name)
             matches = candidate_matches(db, category_id=cid, name=name)
             exact = any(match['type'] == 'existing' for match in matches)
             return jsonify(
@@ -977,7 +1031,8 @@ def install_phase9e(app, ns):
                 for stage, cat in top + other:
                     past = history[cat.id]
                     remaining = remaining_seconds(datetime.fromisoformat(past[0]['at']), now) if past else 0
-                    row = dict(id=cat.id, name=cat.name, description=cat.description or '',
+                    row = dict(id=cat.id, name=writein_category_label(cat.name),
+                               description=cat.description or '',
                                nominees=nominees.get(cat.id, []), history=past,
                                remaining=remaining, available=not remaining and not is_closed(),
                                next_at=(datetime.fromisoformat(past[0]['at']) + timedelta(hours=24)).isoformat() if remaining else '',
@@ -1012,7 +1067,8 @@ def install_phase9e(app, ns):
 
             return render_template('dca_nominations_form.html', categories=categories, writeins=writeins,
                                    intro_categories=[dict(id=c.id, name=c.name) for _, c in top],
-                                   intro_writeins=[dict(id=c.id, name=c.name) for _, c in other],
+                                   intro_writeins=[dict(id=c.id, name=writein_category_label(c.name))
+                                                   for _, c in other],
                                    selected=selected, suggestion=suggestion, suggestion_details=suggestion_details,
                                    show_form=request.args.get('nominate') == '1' or 'draft' in request.args,
                                    requested_category_id=(request.args.get('category', type=int)
