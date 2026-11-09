@@ -41,7 +41,7 @@
         {% if day.events %}
         <div class="lfv-calendar-tile-events">
           {% for event in day.events[:2] %}
-          <a class="lfv-calendar-tile-event" href="{{ event.href }}" title="{{ event.title }}">{{ event.title }}</a>
+          <a class="lfv-calendar-tile-event" href="{{ event.public_href or event.href }}" title="{{ event.title }}">{{ event.title }}</a>
           {% endfor %}
           {% if day.events|length > 2 %}
           <a class="lfv-calendar-tile-more" href="{{ url_for('legacy_calendar', date=day.iso, day=day.iso) }}#calendar-list-heading">
@@ -68,7 +68,7 @@
         {% for event in day.events %}
         <article class="lfv-calendar-full-event">
           <div class="lfv-calendar-event-copy">
-            <h4><a href="{{ event.href }}">{{ event.title }}</a></h4>
+            <h4><a href="{{ event.public_href or event.href }}">{{ event.title }}</a></h4>
             {% if event.description %}<p>{{ event.description }}</p>{% endif %}
           </div>
           <span class="lfv-calendar-event-status">{{ event.status }}</span>

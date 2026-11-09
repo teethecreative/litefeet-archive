@@ -181,7 +181,7 @@ def test_calendar_day_filters_and_detail_stays_on_site(website):
     assert "Let&#39;s Lab at the ARC" in html or "Let's Lab at the ARC" in html
     assert "Teen Nite" in html
     assert "November 11, 2026" not in html.split('class="lfv-calendar-full-list"', 1)[-1]
-    assert 'href="/calendar/events/2026-11-10/let-s-lab-at-the-arc"' in html
+    assert 'href="/events/let-s-lab-at-the-arc/2026-11-10"' in html
     assert 'View all dates this month' in html
     empty = client.get("/calendar?date=2026-11-13&day=2026-11-13")
     assert empty.status_code == 200
@@ -251,7 +251,7 @@ def test_calendar_grid_shows_event_titles_and_day_navigation(website):
     assert "lfv-calendar-tile-event" in grid
     assert "Let&#39;s Lab at the ARC" in grid or "Let's Lab at the ARC" in grid
     assert "Teen Nite" in grid
-    assert '/calendar/events/2026-11-10/let-s-lab-at-the-arc' in grid
+    assert '/events/let-s-lab-at-the-arc/2026-11-10' in grid
     assert "day=2026-11-10" in grid.replace("&amp;", "&")
     assert "lfv-calendar-event-copy" in html
 
@@ -270,7 +270,7 @@ def test_calendar_busy_day_shows_two_events_and_see_more(website, database):
     assert "day=2026-11-10" in grid.replace("&amp;", "&")
     assert grid.count('class="lfv-calendar-tile-event"') >= 2
     assert "Community Dance Class" in html
-    assert '/calendar/events/2026-11-10/community-dance-class' in html
+    assert '/events/community-dance-class/2026-11-10' in html
     day = client.get("/calendar?date=2026-11-10&day=2026-11-10").get_data(as_text=True)
     assert "Community Dance Class" in day
     assert "Teen Nite" in day

@@ -3,7 +3,7 @@
   <div class="lfv-people-cloud-heading"><h2 id="people-cloud-title">FEATURED PEOPLE &amp; TEAMS</h2></div>
   <nav class="lfv-people-wordcloud" aria-label="People and team profiles">
     {% for person in people_cloud %}
-    <a class="lfv-people-word" href="{{ url_for('vault_archive_record',slug=person.slug) }}"
+    <a class="lfv-people-word" href="{{ clean_person_link(person.slug) }}"
       style="--word-size:{{ (1.0 + ((person.weight if person.weight < 8 else 8) * 0.22)) | round(2) }}rem"
       title="{{ person.full_name }} · {{ person.mentions }} related archive mentions">{{ person.title }}</a>
     {% endfor %}
@@ -25,10 +25,10 @@
   {% for entry in archive_items %}
     <article class="lfv-archive-entry" role="listitem">
       <div class="lfv-archive-entry-main">
-        <h3><a href="{{ url_for('vault_archive_record',slug=entry.slug) }}">{{ entry.title }}</a></h3>
+        <h3><a href="{{ clean_person_link(entry.slug) }}">{{ entry.title }}</a></h3>
         {% if entry.summary %}<p>{{ entry.summary }}</p>{% endif %}
       </div>
-      <a class="lfv-archive-open" href="{{ url_for('vault_archive_record',slug=entry.slug) }}">VIEW RECORD →</a>
+      <a class="lfv-archive-open" href="{{ clean_person_link(entry.slug) }}">VIEW RECORD →</a>
     </article>
   {% endfor %}
   </div>

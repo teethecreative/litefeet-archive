@@ -284,6 +284,11 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
         if entry["href"] in hrefs and entry.get("submission_id"):
             entry["href"] += "-" + str(entry["submission_id"])
         hrefs.add(entry["href"])
+    # Public links are concise when title/date identifies exactly one event;
+    # retain the original URL for detail resolution and collision fallbacks.
+    from dca_rebuild.public_urls import event_href
+    for entry in entries:
+        entry['public_href'] = event_href(entry, entries)
     by_day = {}
     for item in entries:
         by_day.setdefault(item["date"], []).append(item)

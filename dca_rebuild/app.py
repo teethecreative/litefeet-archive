@@ -5047,3 +5047,8 @@ install_dca_admin_workspace(app, globals())
 @app.errorhandler(404)
 def vault_missing_url(error):
     return render_template("error_404.html"), 404, {"X-Robots-Tag": "noindex, follow"}
+
+
+# Readable public aliases; existing record, submission and admin routes persist.
+from dca_rebuild.public_urls import install_clean_public_urls
+install_clean_public_urls(app, SessionLocal)

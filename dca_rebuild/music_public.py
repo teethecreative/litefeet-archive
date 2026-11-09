@@ -74,6 +74,9 @@ def install_music_public(app, engine):
     def vault_music_public():
         search = (request.args.get("q") or "").strip().casefold()[:120]
         releases = combined_releases(music_rows(), full_date, music_duration)
+        from dca_rebuild.public_urls import music_href
+        for row in releases:
+            row["public_href"] = music_href(row, releases)
         if search:
             releases = [row for row in releases if search in " ".join(
                 str(row.get(k) or "") for k in

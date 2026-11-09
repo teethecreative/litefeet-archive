@@ -90,7 +90,7 @@ def test_release_radar_track_title_opens_choice_and_preserves_details(website):
     assert 'data-source-url=""' in html  # batch SoundCloud profile is not a track URL
     assert 'data-artist-url="https://soundcloud.com/pretty-smart-261171146"' in html
     assert 'class="lfv-music-source lfv-music-source-choice"' in html
-    assert '/litefeet-music/catalog/track/' in html
+    assert '/music/' in html
 
 
 def test_record_detail_keeps_original_external_links(website):

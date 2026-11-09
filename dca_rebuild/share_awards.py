@@ -109,6 +109,12 @@ def public_categories():
                 "id": category.id, "name": writein_category_label(category.name),
                 "nominees": nominees,
             })
+        # Public share actions prefer readable, collision-safe URLs.
+        from dca_rebuild.public_urls import category_href, nominee_href
+        for category in result:
+            category["href"] = category_href(category, result)
+            for nominee in category["nominees"]:
+                nominee["href"] = nominee_href(category, nominee, result)
         return result
     finally:
         db.close()
@@ -145,11 +151,8 @@ def share_url(selection):
     if selection["scope"] == "awards":
         return SITE_URL + "/awards/dancers-choice/2026"
     category = selection["category"]
-    url = (SITE_URL + "/awards/dancers-choice/nominations?view=results&category="
-           + str(category["id"]))
-    if selection["nominee"]:
-        url += "&suggestion=" + str(selection["nominee"]["id"])
-    return url
+    return SITE_URL + (selection["nominee"]["href"] if selection["nominee"]
+                       else category["href"])
 
 
 def _content(selection):
