@@ -1,5 +1,5 @@
 <div class="lf9e-standings-heading">
-  <h1>NOMINEE STANDINGS</h1>
+  <h1 id="nominee-standings-heading">NOMINEE STANDINGS</h1>
   <div class="lf9e-standings-actions">
     {% if identified %}
     <form method="post" action="{{ url_for('dca_nominations_closed') }}" class="lf9e-done-form">
@@ -16,13 +16,18 @@
   {% set category = selected %}
   {% include "dca_nomination_suggestion_details.html" %}
 {% else %}
-  <div class="lf9e-standings">
+  <section aria-labelledby="standings-official-heading">
+    <h2 class="lf9e-standings-section-title" id="standings-official-heading">Official Top 25</h2>
+    <div class="lf9e-standings lf9e-standings-grid">
     {% for category in categories %}
       {% include "dca_nominee_standings_category.html" %}
     {% endfor %}
-  </div>
+    </div>
+  </section>
   {% if writeins %}
-    <h2>Write-in categories</h2>
-    <div class="lf9e-standings">{% for category in writeins %}{% include "dca_nominee_standings_category.html" %}{% endfor %}</div>
+    <section aria-labelledby="standings-writeins-heading">
+      <h2 class="lf9e-standings-section-title" id="standings-writeins-heading">Write-in categories</h2>
+      <div class="lf9e-standings lf9e-standings-grid">{% for category in writeins %}{% include "dca_nominee_standings_category.html" %}{% endfor %}</div>
+    </section>
   {% endif %}
 {% endif %}
