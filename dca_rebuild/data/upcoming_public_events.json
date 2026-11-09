@@ -5,21 +5,24 @@
       "title": "5th Annual LiteFeet Awards Weekend — Press Conference",
       "venue": "Bronx, New York · press conference (exact venue to verify)",
       "href": "https://www.instagram.com/p/DfSiFkAijqf/",
-      "status": "published"
+      "status": "published",
+      "category": "press_conference"
     },
     {
       "date": "2026-11-21",
       "title": "5th Annual LiteFeet Awards Weekend — Battle Day",
       "venue": "Poe Park Gallery · 2640 Grand Concourse, Bronx, NY 10458 · 6–10 PM",
       "href": "https://www.instagram.com/p/DecJMjIOd2z/",
-      "status": "published"
+      "status": "published",
+      "category": "battle"
     },
     {
       "date": "2026-11-22",
       "title": "5th Annual LiteFeet Awards Weekend — Awards Ceremony",
       "venue": "District 385 · 57-36 Myrtle Avenue, Ridgewood, NY 11385 · 6–11 PM",
       "href": "https://www.instagram.com/p/DfSiFkAijqf/",
-      "status": "published"
+      "status": "published",
+      "category": "awards"
     }
   ],
   "weekly_events": [
@@ -34,7 +37,8 @@
       "host": "Teen Nite / Dr. Richard Reeves",
       "href": "https://www.instagram.com/teennightnyc/",
       "notice": "Check @teennightnyc on Instagram for closure notifications or schedule changes before attending.",
-      "status": "published"
+      "status": "published",
+      "category": "lab"
     },
     {
       "title": "Let's Lab at the ARC",
@@ -48,7 +52,8 @@
       "host": null,
       "href": "/submit",
       "notice": "Recurring Monday–Wednesday. Check with the organizer for closures or schedule changes.",
-      "status": "published"
+      "status": "published",
+      "category": "lab"
     }
   ]
 }
