@@ -6,7 +6,7 @@ from dca_rebuild.timeline_catalog import all_timeline_entries, record_metadata
 def test_overview_is_timeline_and_uses_timeline_script(website):
     client = website.test_client()
     html = client.get('/archive').get_data(as_text=True)
-    assert 'THE ARCHIVE TIMELINE' in html
+    assert 'The Archive Timeline' in html
     assert 'SEARCH THE TIMELINE' in html
     assert 'data-unified-timeline' in html
     assert 'timeline-v2.js' in html
