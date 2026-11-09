@@ -117,8 +117,8 @@ def test_lock_in_sample_decks_follow_rulebook_card_categories(website):
     decks = public_sample_decks()
     assert len(decks) == 2
     needed = {"Dancer", "Arena", "Producer", "Song", "Move", "Trick"}
+    assert [deck["total"] for deck in decks] == [25, 35]
     for deck in decks:
-        assert deck["total"] == 25
         assert sum(group["count"] for group in deck["categories"]) == deck["total"]
         assert needed.issubset({group["type"] for group in deck["categories"]})
         assert next(g["count"] for g in deck["categories"] if g["type"] == "Dancer") < deck["total"]
