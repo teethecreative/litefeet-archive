@@ -13,8 +13,10 @@
 {% if section == 'lock-in' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/lock-in.css') }}">{% endif %}
 </head><body>{% include "_navigation.html" %}
 <main class="vault-section-page" id="vault-section-{{ section }}">
-{% if section == 'archive' or section == 'timeline' %}
-{% include "archive_hub.html" %}
+{% if section == 'timeline' %}
+{% include "archive_unified_timeline.html" %}
+{% elif section == 'people' %}
+{% include "archive_people_browser.html" %}
 {% elif section == 'lock-in' %}
 {% include "lock_in.html" %}
 {% elif section == 'awards' %}
@@ -51,4 +53,4 @@
   <a href="{{ url_for('vault_about_contact') }}" id="contact"><span>05 / CONTACT</span><span aria-hidden="true">→</span></a>
 </nav>
 {% endif %}
-</main>{% include "_footer.html" %}<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>{% if section == 'timeline' or (section == 'archive' and archive_timeline) %}<script defer src="{{ url_for('static', filename='js/timeline-v2.js') }}"></script>{% elif section == 'archive' %}<script defer src="{{ url_for('static', filename='js/archive-v1.js') }}"></script>{% endif %}</body></html>
+</main>{% include "_footer.html" %}<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>{% if section == 'timeline' %}<script defer src="{{ url_for('static', filename='js/timeline-v2.js') }}"></script>{% elif section == 'people' %}<script defer src="{{ url_for('static', filename='js/archive-v1.js') }}"></script>{% endif %}</body></html>
