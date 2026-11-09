@@ -123,7 +123,7 @@ def test_email_first_history_and_return_to_grid(website, database):
     assert b'WRITE-IN CATEGORIES' in grid.data
     assert b'person@example.com' not in grid.data
     assert 'no-store' in grid.headers['Cache-Control']
-    result = client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One', team='Crew'), follow_redirects=True)
+    result = client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One', reason='Attended LiteFeet sessions this season.', team='Crew'), follow_redirects=True)
     assert b'Nomination received.' in result.data
     category_page = client.get(PATH + '?category=1')
     assert b'Already nominated / cooldown active' in category_page.data
@@ -133,8 +133,8 @@ def test_email_first_history_and_return_to_grid(website, database):
     assert b'Return tomorrow' not in result.data
     assert b'Dancer One' in result.data
     assert client.get(PATH).data.count(b'data-category-id=') == 25
-    assert client.post(PATH, data=dict(csrf_token=token, category_id=2, name='Dancer Two')).status_code == 302
-    assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Other')).status_code == 302
+    assert client.post(PATH, data=dict(csrf_token=token, category_id=2, name='Dancer Two', reason='Contributed to LiteFeet events in 2026.')).status_code == 302
+    assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Other', reason='Participated in LiteFeet this year.')).status_code == 302
     with database[1]() as db:
         assert db.query(DCANominationSubmission).count() == 2
     # Returning with the same normalized email retrieves history on a new browser.
@@ -162,7 +162,7 @@ def test_validation_gates_and_skips(website, monkeypatch):
 
 def test_admin_moderation_counts_and_auth(website, database):
     client = website.test_client(); token = identify(client)
-    client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One'))
+    client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One', reason='Active at LiteFeet sessions this season.'))
     assert client.get('/admin/dca/nominations').status_code == 302
     with client.session_transaction() as sess:
         sess['ledger_admin_authenticated'] = True
@@ -277,7 +277,7 @@ def test_category_names_then_suggestions_and_private_details(website, database):
     # A second visitor supports the existing suggestion without a duplicate nominee.
     with visitor.session_transaction() as sess:
         token = sess['lf9e_nomination_csrf']
-    visitor.post(PATH, data=dict(csrf_token=token, category_id=1, name='Suggested Dancer'))
+    visitor.post(PATH, data=dict(csrf_token=token, category_id=1, name='Suggested Dancer', reason='Joined LiteFeet sessions this year.'))
     with database[1]() as db:
         assert db.query(DCANominee).count() == 1
         assert db.query(DCANominationSubmission).count() == 2
@@ -316,9 +316,9 @@ def test_submission_opens_community_standings_not_personal_summary(website, data
     response = first.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer Alpha', reason='Great community work.'))
     assert response.status_code == 302 and 'view=results' in response.headers['Location']
     second = website.test_client(); token = identify(second, 'second@example.com')
-    second.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer Beta'))
+    second.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer Beta', reason='Active in LiteFeet community events.'))
     third = website.test_client(); token = identify(third, 'third@example.com')
-    third.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer Alpha'))
+    third.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer Alpha', reason='Participated in several LiteFeet sessions.'))
     # A visitor without an email sees the same combined totals.
     visitor = website.test_client()
     page = visitor.get(PATH + '?view=results')
@@ -346,7 +346,7 @@ def test_standings_show_all_categories_even_without_nominations(website):
     assert before.count('NO NOMINATIONS YET.') == 27
     assert 'id="standings-25"' in before and 'id="standings-27"' in before
     token = identify(client)
-    client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One'))
+    client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One', reason='Active at LiteFeet sessions this season.'))
     after = client.get(PATH + '?view=results').get_data(as_text=True)
     assert after.count('class="lf9e-standings-category lfv5-category-disclosure"') == 27
     assert after.count('NO NOMINATIONS YET.') == 26
@@ -368,7 +368,7 @@ def test_introduction_lists_process_and_categories_before_email(website):
     assert 'Your previous nominations' not in html
     with client.session_transaction() as sess:
         token = sess['lf9e_nomination_csrf']
-    assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One')).status_code == 400
+    assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One', reason='Active at LiteFeet sessions this season.')).status_code == 400
     identify(client)
     assert b'Nominate for the 2026 Awards' in client.get(PATH).data
 
@@ -392,6 +392,102 @@ def test_category_grid_has_clear_invitation_without_activity_dashboard(website):
     assert 'id="official-title"' in html
     assert html.count('data-category-id=') == 25
     assert 'WRITE-IN CATEGORIES' in html
+
+def test_qualification_reason_required_and_missing_list(website, database):
+    from dca_rebuild.models import DCANominee, DCANominationSubmission
+    from dca_rebuild.phase9e import nominees_missing_reasons
+    client = website.test_client()
+    token = identify(client)
+    assert client.post(PATH, data=dict(csrf_token=token, category_id=1,
+                name='No Explanation')).status_code == 400
+    assert client.post(PATH, data=dict(csrf_token=token, category_id=1,
+                name='Qualified Dancer', reason='Attended community battles in 2026.')).status_code == 302
+    with database[1]() as db:
+        assert db.query(DCANominationSubmission).count() == 1
+        assert nominees_missing_reasons(db, db.get(
+            __import__('dca_rebuild.models', fromlist=['DCAEdition']).DCAEdition,
+            database[2])) == []
+    anonymous = website.test_client()
+    page = anonymous.get('/awards/dancers-choice/nomination-reasons')
+    assert page.status_code == 200
+    assert b'November 2025' in page.data
+    assert b'Nominees needing qualification details' in page.data
+
+
+def test_old_nominee_can_receive_moderated_reason_without_nomination(website, database):
+    from dca_rebuild.models import DCANominee, DCANominationSubmission
+    from dca_rebuild.phase9e import NomineeQualificationReason9E, nominees_missing_reasons
+    _, factory, edition_id = database
+    with factory.begin() as db:
+        nominee = DCANominee(edition_id=edition_id, category_id=1,
+                            name='Historical Nominee', normalized_name='historical nominee',
+                            moderation_status='approved')
+        db.add(nominee); db.flush()
+        nominee_id = nominee.id
+        db.add(DCANominationSubmission(edition_id=edition_id, nominee_id=nominee_id,
+                                       submitter_hash='old-submitter', submitted_at=NOW))
+    client = website.test_client()
+    page = client.get('/awards/dancers-choice/nomination-reasons')
+    assert b'Historical Nominee' in page.data
+    with client.session_transaction() as session:
+        token = session['lf9e_nomination_csrf']
+    result = client.post('/awards/dancers-choice/nomination-reasons', data=dict(
+        csrf_token=token, nominee_id=nominee_id, email='test@example.com',
+        reason='Attended recorded LiteFeet events during 2026.'))
+    assert result.status_code == 303
+    with factory() as db:
+        assert db.query(DCANominationSubmission).count() == 1
+        assert db.query(NomineeQualificationReason9E).one().moderation_status == 'pending'
+        assert len(nominees_missing_reasons(db, db.get(
+            __import__('dca_rebuild.models', fromlist=['DCAEdition']).DCAEdition, edition_id))) == 1
+        db.query(NomineeQualificationReason9E).one().moderation_status = 'verified'
+        db.commit()
+    with factory() as db:
+        assert not nominees_missing_reasons(db, db.get(
+            __import__('dca_rebuild.models', fromlist=['DCAEdition']).DCAEdition, edition_id))
+
+
+def test_all_existing_writein_categories_show_support_actions(website):
+    client = website.test_client()
+    html = client.get('/write-ins').get_data(as_text=True)
+    assert html.count('SUPPORT CATEGORY') >= 2
+    assert 'OPEN FOR SUPPORT' in html
+    assert 'NOMINATIONS CLOSED' not in html
+
+
+def test_unstaged_historical_writein_can_be_supported_after_email(website, database):
+    from dca_rebuild.models import DCAEdition, DCACategory
+    _, factory, _ = database
+    with factory.begin() as db:
+        previous = DCAEdition(year=2023, title='Previous awards', phase='closed')
+        db.add(previous); db.flush()
+        db.add(DCACategory(edition_id=previous.id, name='Best Workshop',
+                           normalized_name='best workshop', source_type='returning',
+                           status='official'))
+    client = website.test_client()
+    page = client.get('/write-ins')
+    html = page.get_data(as_text=True)
+    assert 'Best Workshop' in html
+    assert 'SUPPORT CATEGORY' in html
+    with client.session_transaction() as sess:
+        token = sess['lf9e_writeins_csrf']
+    result = client.post('/awards/dancers-choice/write-ins/activate',
+                         data=dict(csrf_token=token, category='Best Workshop'))
+    assert result.status_code == 302
+    import urllib.parse
+    loc = urllib.parse.urlparse(result.headers['Location'])
+    assert loc.path == PATH and 'category=' in loc.query
+    landing = client.get(result.headers['Location']).get_data(as_text=True)
+    assert 'name="return_category"' in landing
+    token = identify(client)
+    with client.session_transaction() as sess:
+        target = db_id = None
+    from urllib.parse import parse_qs
+    target = parse_qs(loc.query)['category'][0]
+    continuation = client.post(PATH, data=dict(action='identify', email='user2@example.com',
+                                                csrf_token=token, return_category=target))
+    assert continuation.status_code == 302
+    assert 'category=' + target in continuation.headers['Location']
 
 
 def test_category_grid_does_not_prompt_for_email_to_show_cooldown(website):
@@ -430,3 +526,22 @@ def test_event_of_2023_category_renamed_only_for_2026(database):
         assert renamed.name == 'Best Event of the Year'
         assert renamed.normalized_name == 'best event of the year'
         assert renamed.id == original_id
+
+
+
+def test_writein_directory_shows_same_nominee_totals_as_standings(website, database):
+    """Published write-ins expose expandable nominee names and matching totals."""
+    _, factory, edition_id = database
+    assert nominate(factory, edition_id, category=26, who='first-supporter',
+                    name='Write In Dancer')
+    assert nominate(factory, edition_id, category=26, who='second-supporter',
+                    name='Write In Dancer')
+    client = website.test_client()
+    html = client.get('/write-ins').get_data(as_text=True)
+    assert 'View nominees (1)' in html
+    assert 'Write In Dancer' in html
+    assert 'view=results' in html and 'suggestion=' in html
+    assert '<td>2</td>' in html
+    standings = client.get(PATH + '?view=results').get_data(as_text=True)
+    assert 'Write In Dancer' in standings
+    assert '<td>2</td>' in standings

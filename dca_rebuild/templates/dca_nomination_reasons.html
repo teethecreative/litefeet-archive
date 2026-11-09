@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nominees needing reasons | The LiteFeet Vault</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
+</head><body>{% include "_navigation.html" %}
+<main class="lf-nom-2026 lf9e" id="nominee-qualification-reasons">
+<p class="lf-nom-eyebrow">Dancer's Choice Awards 2026</p>
+<h1>Nominees needing qualification details</h1>
+<p>Community members requested reasons for the 2026 nominations. Eligible activity must have taken place between <strong>November 2025 and November 2026</strong> and be relevant to the nominated category. Historical reputation alone is not sufficient.</p>
+<p>The names below have no recorded nomination explanation or verified supplemental reason. They are <strong>at risk of disqualification from the final ballot</strong> unless qualifying reasoning is provided. No one is automatically disqualified for appearing here; all evidence is reviewed.</p>
+{% with messages = get_flashed_messages() %}{% for message in messages %}
+<p role="status" class="lf9e-message">{{ message }}</p>
+{% endfor %}{% endwith %}
+<p><a href="{{ url_for('dca_nominations_closed') }}">Return to nominations</a></p>
+{% if pending %}
+<p>{{ pending|length }} nominees currently need qualification details.</p>
+{% for group in pending|groupby('category') %}
+<section class="lfv-qual-category" aria-labelledby="qual-{{ loop.index }}">
+<h2 id="qual-{{ loop.index }}">{{ group.grouper }}</h2>
+{% for item in group.list %}
+<details class="lfv-qual-item">
+<summary><strong>{{ item.name }}</strong> — Reason needed · {{ item.count }} nomination{{ 's' if item.count != 1 else '' }}</summary>
+<p>Provide specific activity or contributions during the eligibility period. Reasons are reviewed before they are accepted and do not add to nomination totals.</p>
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="nominee_id" value="{{ item.nominee_id }}">
+<label>Email (kept private) <input type="email" name="email" maxlength="254" autocomplete="email" required></label>
+<label>Why does this nominee qualify? <textarea name="reason" minlength="20" maxlength="2000" rows="4" required placeholder="Describe relevant battles, sessions, music, community work, or other activity between November 2025 and November 2026."></textarea></label>
+<label>Source link (optional) <input type="url" name="evidence_url" maxlength="500" placeholder="https://"></label>
+<button class="lf9e-primary" type="submit">Submit reason for review</button>
+</form>
+</details>
+{% endfor %}
+</section>
+{% endfor %}
+{% else %}
+<p>No nominees currently lack recorded explanations. Eligibility reviews may still be ongoing.</p>
+{% endif %}
+</main>{% include "_footer.html" %}
+<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>
+</body></html>
