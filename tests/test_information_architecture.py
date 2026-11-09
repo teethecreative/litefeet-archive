@@ -66,7 +66,7 @@ def test_unpublished_eras_are_not_leaked_into_public_timeline(website):
     client = website.test_client()
     page = client.get('/archive/timeline')
     assert page.status_code == 200
-    assert 'HISTORY &amp; TIMELINE' in page.get_data(as_text=True)
+    assert 'The Archive Timeline' in page.get_data(as_text=True)
     items = navigation(client.get('/').get_data(as_text=True))
     assert any(c['href'] == '/archive/timeline' for n in items for c in n['children'])
     assert 'id="updates"' not in client.get('/community').get_data(as_text=True)
