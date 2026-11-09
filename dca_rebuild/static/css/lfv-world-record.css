@@ -43,3 +43,108 @@
 html[data-theme="dark"] .lfwr,html[data-theme="dark"] .lfwr-admin{--wr-ink:#edf2ff;--wr-muted:#c0cade;--wr-border:#526075}
 html[data-theme="dark"] .lfwr-role-grid article,html[data-theme="dark"] .lfwr-form :is(input:not([type="checkbox"]),select,textarea),html[data-theme="dark"] .lfwr-admin select{background:#142443;color:#edf2ff}
 @media(max-width:760px){.lfwr-role-grid,.lfwr-form-grid,.lfwr-admin-counts{grid-template-columns:1fr}.lfwr-role-wide{grid-column:auto}.lfv-world-home-feature-inner{display:block}.lfv-world-home-feature-inner>a{margin-top:16px}.lfwr-hero{padding:29px 22px}.lfwr-facts{gap:22px}}
+
+
+/* World Record theme alignment, November 2026.
+   Reuse existing Vault tokens rather than introducing another independent
+   version of navy/gold or relying on old generic section styles. */
+.lfwr {
+  --wr-navy:var(--lfv-navy,#0a2c5f);
+  --wr-gold:var(--lfv-gold,#c9a127);
+  --wr-ink:var(--lfv-ink,#07152b);
+  --wr-muted:var(--lfv-muted,#3d4b61);
+  --wr-border:var(--lfv-line,#cbd3e0);
+  --wr-surface:var(--lfv-surface,#fff);
+  --wr-muted-surface:var(--lfv-surface-muted,#f5f7fb);
+  --wr-label:#816412;
+}
+html[data-theme="dark"] .lfwr { --wr-label:#e7cb68; }
+body.ledger-admin .lfwr-admin {
+  --wr-navy:var(--blue,#092b63);
+  --wr-gold:var(--gold,#c9a227);
+  --wr-ink:var(--text,#09152a);
+  --wr-muted:var(--muted,#526174);
+  --wr-border:var(--border,#b7c3d2);
+  --wr-surface:var(--surface,#fff);
+  --wr-muted-surface:var(--surface-2,#edf3fb);
+  --wr-label:#816412;
+  color:var(--wr-ink);
+}
+html[data-theme="dark"] body.ledger-admin .lfwr-admin { --wr-label:#e7cb68; }
+/* Older DCA theme CSS applied white backgrounds to every <section>,
+   including the World Record's navy hero. Override only this feature. */
+html[data-theme="light"] .lfwr>.lfwr-hero,
+html[data-theme="dark"] .lfwr>.lfwr-hero {
+  background:var(--wr-navy)!important;
+  color:#fff!important;
+  border:0!important;
+  border-top:5px solid var(--wr-gold)!important;
+}
+html[data-theme="light"] .lfwr>.lfwr-section,
+html[data-theme="dark"] .lfwr>.lfwr-section {
+  background:transparent!important;
+  color:var(--wr-ink)!important;
+  border:0!important;
+  border-bottom:1px solid var(--wr-border)!important;
+  border-radius:0!important;
+}
+html[data-theme] .lfwr :is(h2,h3){color:var(--wr-ink);}
+html[data-theme] .lfwr .lfwr-kicker,
+html[data-theme] body.ledger-admin .lfwr-admin .lfwr-kicker,
+html[data-theme] .lfwr-num{color:var(--wr-label);}
+html[data-theme] .lfwr .lfwr-hero .lfwr-kicker{color:#e7cb68;}
+html[data-theme] .lfwr .lfwr-role-grid article{
+  background:var(--wr-surface)!important;
+  border:1px solid var(--wr-border)!important;
+  color:var(--wr-ink);
+}
+html[data-theme] .lfwr .lfwr-form :is(input:not([type="checkbox"]),select,textarea){
+  background:var(--wr-surface)!important;
+  color:var(--wr-ink)!important;
+  border:1px solid var(--wr-border)!important;
+}
+html[data-theme] .lfwr .lfwr-consent{
+  border-color:var(--wr-border);
+  background:var(--wr-muted-surface);
+}
+html[data-theme] .lfwr .lfwr-consent label{color:var(--wr-ink);}
+html[data-theme] .lfwr .lfwr-privacy{color:var(--wr-muted);}
+html[data-theme] .lfwr .lfwr-button{
+  background:var(--wr-gold)!important;
+  color:#091b36!important;
+}
+html[data-theme] body.ledger-admin .lfwr-admin :is(h1,h2,p,th,td,label,strong,small){
+  color:var(--wr-ink);
+}
+html[data-theme] body.ledger-admin .lfwr-admin .lfwr-admin-counts>div{
+  background:var(--wr-surface);
+  border-color:var(--wr-border);
+}
+html[data-theme] body.ledger-admin .lfwr-admin .lfwr-admin-table th{
+  background:var(--wr-muted-surface)!important;
+  color:var(--wr-ink)!important;
+}
+html[data-theme] body.ledger-admin .lfwr-admin .lfwr-admin-table td{
+  border-bottom-color:var(--wr-border);
+}
+html[data-theme] body.ledger-admin .lfwr-admin select{
+  background:var(--wr-surface)!important;
+  color:var(--wr-ink)!important;
+  border-color:var(--wr-border)!important;
+}
+html[data-theme] body.ledger-admin .lfwr-admin button{
+  background:var(--wr-navy);
+  color:#fff;
+  border:1px solid var(--wr-navy);
+}
+html[data-theme] body.ledger-admin .lfwr-admin button:is(:focus-visible,:hover){
+  outline:2px solid var(--wr-gold);
+  outline-offset:2px;
+}
+html[data-theme] body.ledger-admin .lfwr-admin a{
+  color:var(--wr-ink);
+  text-underline-offset:3px;
+}
+html[data-theme] body.ledger-admin .lfwr-admin .lfwr-admin-footnote{
+  color:var(--wr-muted);
+}

@@ -13,11 +13,11 @@
   <div class="lfwr-admin-counts"><div><strong>{{ total }}</strong><span>Total expressions of interest</span></div>{% for key, label in roles %}<div><strong>{{ counts.get(key, 0) }}</strong><span>{{ label }}</span></div>{% endfor %}</div>
   <form method="get" class="lfwr-admin-filter"><label for="role-filter">Filter by role</label><select id="role-filter" name="role"><option value="">All roles</option>{% for key, label in roles %}<option value="{{ key }}" {% if selected_role == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button type="submit">Apply</button></form>
   <p class="lfwr-admin-footnote">Showing the 100 most recent results for this filter. Contacts are private to administrators.</p>
-  <div class="lfwr-admin-table-scroll"><table class="lfwr-admin-table"><thead><tr><th>Date</th><th>Adult contact</th><th>Interest</th><th>Details</th><th>Follow-up</th></tr></thead><tbody>
+  <div class="lfwr-admin-table-scroll"><table class="lfwr-admin-table"><thead><tr><th>Date</th><th>Name</th><th>Interest</th><th>Details</th><th>Follow-up</th></tr></thead><tbody>
   {% for r in rows %}
   <tr>
     <td><time>{{ r.created.strftime('%b %d, %Y') if r.created else '—' }}</time></td>
-    <td><strong>{{ r.name }}</strong><br><a href="mailto:{{ r.email }}">{{ r.email }}</a>{% if r.guardian %}<br><small>Guardian submission</small>{% endif %}</td>
+    <td><strong>{{ r.name }}</strong><br><a href="mailto:{{ r.email }}">{{ r.email }}</a>{% if r.guardian %}<br><small>Parent/guardian submission</small>{% endif %}</td>
     <td>{{ r.role|title }}{% if r.dance_name %}<br><small>{{ r.dance_name }}</small>{% endif %}{% if r.team %}<br><small>{{ r.team }}</small>{% endif %}{% if r.borough %}<br><small>{{ r.borough }}</small>{% endif %}</td>
     <td>{% if r.venue %}<strong>{{ r.venue }}</strong><br>{% endif %}{% if r.capacity %}Capacity: {{ r.capacity }}<br>{% endif %}{% if r.availability %}Availability: {{ r.availability }}<br>{% endif %}{% if r.experience %}Experience: {{ r.experience }}<br>{% endif %}{% if r.notes %}Notes: {{ r.notes }}{% endif %}</td>
     <td><form method="post" action="{{ url_for('admin_world_record_status', interest_id=r.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="role_filter" value="{{ selected_role }}"><label class="sr-only" for="status-{{ r.id }}">Follow-up status</label><select id="status-{{ r.id }}" name="status">{% for state in ['interested','contacted','planning','inactive'] %}<option value="{{ state }}" {% if r.status == state %}selected{% endif %}>{{ state|title }}</option>{% endfor %}</select><button type="submit">Save</button></form></td>
