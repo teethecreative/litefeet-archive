@@ -100,3 +100,64 @@ def test_single_nominee_supporter_reasons_are_opt_in_and_not_saved(website, data
     html = client.get("/awards/dancers-choice/2026").get_data(as_text=True)
     assert 'id="lfv-reason-choice"' in html
     assert 'id="lfv-reason-custom"' in html
+
+
+def test_options_are_available_when_nomination_edition_is_not_marked_public(website, database):
+    from dca_rebuild.models import DCAEdition
+    with database[1].begin() as db:
+        edition = db.get(DCAEdition, database[2])
+        edition.is_public = False
+    response = website.test_client().get("/social/awards/options.json")
+    assert response.status_code == 200
+    assert len(response.get_json()["categories"]) == 27
+
+
+def test_only_verified_previously_submitted_reasons_can_be_shared(website, database):
+    from dca_rebuild.models import DCACategory
+    from dca_rebuild.phase9e import NomineeQualificationReason9E
+    with database[1].begin() as db:
+        cat = db.query(DCACategory).filter_by(edition_id=database[2]).first()
+        nominee = DCANominee(edition_id=database[2], category_id=cat.id,
+                            name="Reason Test Dancer", normalized_name="reason test dancer",
+                            moderation_status="approved")
+        db.add(nominee)
+        db.flush()
+        nid = nominee.id
+        cid = cat.id
+        verified = NomineeQualificationReason9E(
+            edition_id=database[2], nominee_id=nid,
+            submitter_hash="verified-supporter",
+            reason="They contributed original footwork and taught community workshops.",
+            moderation_status="verified")
+        pending = NomineeQualificationReason9E(
+            edition_id=database[2], nominee_id=nid,
+            submitter_hash="pending-supporter",
+            reason="This is not approved to show publicly.",
+            moderation_status="pending")
+        db.add_all([verified, pending])
+        db.flush()
+        verified_id = verified.id
+        pending_id = pending.id
+    client = website.test_client()
+    response = client.get("/social/awards/options.json")
+    options = response.get_json()
+    entry = next(n for c in options["categories"] if c["id"] == cid
+                 for n in c["nominees"] if n["id"] == nid)
+    assert len(entry["suggestions"]) == 1
+    assert entry["suggestions"][0]["id"] == verified_id
+    assert "footwork" in entry["suggestions"][0]["text"]
+    url = f"/social/awards/story/light/nominee.png?category={cid}&nominee={nid}"
+    assert _dimensions(client.get(url + f"&reason=verified-{verified_id}")) == (1080, 1920)
+    assert client.get(url + f"&reason=verified-{pending_id}").status_code == 400
+
+
+def test_share_modal_has_visible_controls_and_dynamic_reasons(website):
+    client = website.test_client()
+    html = client.get("/awards/dancers-choice/2026").get_data(as_text=True)
+    assert 'id="lfv-awards-category"' in html
+    assert 'id="lfv-awards-nominee"' in html
+    css = client.get("/static/css/vault-share.css").get_data(as_text=True)
+    js = client.get("/static/js/vault-share.js").get_data(as_text=True)
+    assert "grid-template-areas" in css
+    assert "Previously verified explanations" in js
+    assert "updateSuggestedReasons" in js

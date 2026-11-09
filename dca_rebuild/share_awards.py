@@ -12,7 +12,9 @@ from flask import Response, abort, jsonify, request
 from PIL import Image, ImageDraw
 
 from dca_rebuild.models import DCAEdition
-from dca_rebuild.phase9e import get_counts, stages_for, writein_category_label
+from dca_rebuild.phase9e import (
+    NomineeQualificationReason9E, get_counts, stages_for, writein_category_label,
+)
 from dca_rebuild.seo import SITE_URL
 from dca_rebuild.social_cards import _font, _wrap, render_social_card
 
@@ -51,25 +53,63 @@ def resolve_reason(mode, custom_text="", *, allow_custom=False):
 
 
 def public_categories():
-    """Re-use the nominated categories and existing public pending/approved counts."""
+    """Read the same published 2026 stages as the public nomination page.
+
+    is_public is a legacy edition flag. 2026 nominations use a separate
+    stage/route publication flow and can be visible while that flag is False.
+    Never alter stored categories, nominees or nomination entries here.
+    """
     from dca_rebuild.app import SessionLocal
     db = SessionLocal()
     try:
-        edition = db.query(DCAEdition).filter_by(year=2026, is_public=True).first()
+        edition = db.query(DCAEdition).filter_by(year=2026).first()
         if edition is None:
             return []
+        stages = [(stage, category) for stage, category in stages_for(db, edition)
+                  if stage.stage in ("top25", "write_in", "qualified")]
+        if not stages:
+            return []
         counts, _ = get_counts(db, edition, include_pending=True)
-        return [
-            {
+
+        # Only administrator-verified supporting reasons may be offered as
+        # previously submitted suggestions. Pending/rejected text stays private.
+        approved_reasons = (db.query(NomineeQualificationReason9E)
+                            .filter_by(edition_id=edition.id,
+                                       moderation_status="verified")
+                            .order_by(NomineeQualificationReason9E.submitted_at,
+                                      NomineeQualificationReason9E.id).all())
+        by_nominee = {}
+        for reason in approved_reasons:
+            clean = " ".join(reason.reason.split())
+            if not clean:
+                continue
+            excerpt = clean if len(clean) <= MAX_CUSTOM_REASON else (
+                clean[:MAX_CUSTOM_REASON - 3].rsplit(" ", 1)[0].rstrip() + "..."
+            )
+            by_nominee.setdefault(reason.nominee_id, []).append({
+                "id": reason.id, "text": excerpt,
+            })
+
+        result = []
+        for _, category in stages:
+            nominees = []
+            for item in counts.get(category.id, []):
+                suggested = []
+                seen = set()
+                for nominee_id in item.get("ids", [item["id"]]):
+                    for reason in by_nominee.get(nominee_id, []):
+                        if reason["text"] not in seen:
+                            suggested.append(reason)
+                            seen.add(reason["text"])
+                nominees.append({
+                    "id": item["id"], "name": item["name"], "count": item["count"],
+                    "suggestions": suggested[:5],
+                })
+            result.append({
                 "id": category.id, "name": writein_category_label(category.name),
-                "nominees": [
-                    {"id": n["id"], "name": n["name"], "count": n["count"]}
-                    for n in counts.get(category.id, [])
-                ],
-            }
-            for stage, category in stages_for(db, edition)
-            if stage.stage in ("top25", "write_in", "qualified")
-        ]
+                "nominees": nominees,
+            })
+        return result
     finally:
         db.close()
 
@@ -235,8 +275,20 @@ def graphic(fmt, theme, chosen, page=1, reason_mode=None, reason_text="", *, all
     names = tuple((n["name"], n["count"]) for n in chosen["nominees"])
     reason_label, resolved_text = ("", "")
     if chosen["scope"] == "nominee":
-        reason_label, resolved_text = resolve_reason(reason_mode, reason_text,
-                                                      allow_custom=allow_custom)
+        if isinstance(reason_mode, str) and reason_mode.startswith("verified-"):
+            reason_id = reason_mode.removeprefix("verified-")
+            approved = next(
+                (entry for entry in nominee.get("suggestions", [])
+                 if str(entry["id"]) == reason_id),
+                None,
+            )
+            if approved is None:
+                abort(400, description="Explanation is not approved for this nominee")
+            reason_label, resolved_text = "Previously suggested", approved["text"]
+        else:
+            reason_label, resolved_text = resolve_reason(
+                reason_mode, reason_text, allow_custom=allow_custom
+            )
     return _draw(fmt, theme, chosen["scope"], title, nominee["name"] if nominee else "",
                  nominee["count"] if nominee else 0, names, page, total,
                  reason_label, resolved_text)
