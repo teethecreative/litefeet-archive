@@ -71,3 +71,37 @@
 #lock-workbench #lock-response-moves input{flex-shrink:0;accent-color:#c9a52b}
 #lock-workbench #lock-response-result{border-top:1px solid #647b98;margin-top:1rem;padding-top:.9rem}
 #lock-workbench #lock-generated-situation[hidden],#lock-workbench #lock-response-result[hidden]{display:none!important}
+
+/* Move-set practice: card-based opponent setup and player hand. */
+#lock-workbench .lock-move-set-practice h5{font-size:1rem;margin:1.25rem 0 .7rem;letter-spacing:.02em}
+#lock-workbench .lock-situation-details{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem;background:transparent;border:0;padding:0;margin:1rem 0 1.5rem}
+#lock-workbench .lock-situation-details p+p{border:0;padding:0}
+#lock-workbench .lock-game-card{box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;gap:.85rem;min-width:0;min-height:9.5rem;border:1px solid #7589a5;border-top:3px solid #c9a52b;border-radius:.65rem;background:linear-gradient(155deg,#193250,#0b182c);padding:1rem;color:#f1f5fc;text-align:left}
+#lock-workbench .lock-game-card strong{font-size:clamp(.93rem,1.6vw,1.1rem);overflow-wrap:anywhere;line-height:1.3}
+#lock-workbench .lock-game-card .lock-card-category{font-size:.7rem;font-weight:800;letter-spacing:.1em;color:#e7c65a}
+#lock-workbench .lock-situation-details .lock-game-card[data-card-type="song"]{border-top-color:#6eaee0}
+#lock-workbench .lock-situation-details .lock-game-card[data-card-type="arena"]{border-top-color:#8bbb9f}
+#lock-workbench .lock-response-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem;margin:.85rem 0}
+#lock-workbench button.lock-available-card{margin:0;padding:1rem;background:linear-gradient(155deg,#193250,#0b182c);color:#f1f5fc;border:1px solid #7589a5;border-top:3px solid #c9a52b;cursor:pointer}
+#lock-workbench button.lock-available-card[aria-pressed="true"]{border-color:#e7c65a;box-shadow:0 0 0 2px rgba(231,198,90,.4);background:linear-gradient(155deg,#284060,#112035)}
+#lock-workbench button.lock-available-card:disabled{opacity:.55;cursor:not-allowed}
+#lock-workbench .lock-card-hint{font-size:.76rem;color:#c2d0e0}
+#lock-workbench .lock-selected-moves{display:grid;gap:.5rem;min-height:2.5rem}
+#lock-workbench .lock-sequence-card{display:flex;align-items:center;justify-content:space-between;gap:.75rem;border:1px solid #7589a5;border-radius:.5rem;padding:.5rem .7rem}
+#lock-workbench .lock-sequence-card>span:first-child{overflow-wrap:anywhere}
+#lock-workbench .lock-sequence-actions{display:flex;flex-shrink:0;gap:.15rem}
+#lock-workbench .lock-sequence-actions button{margin:0;padding:.3rem .55rem;min-width:2rem}
+#lock-workbench .lock-empty-sequence{margin:0;color:#b7c7d9;font-size:.88rem}
+#lock-workbench .lock-practice-actions{display:flex;flex-wrap:wrap;gap:.55rem;align-items:center;margin-top:1.1rem}
+#lock-workbench .lock-practice-score{display:flex;align-items:center;flex-wrap:wrap;gap:.7rem;margin:.8rem 0;padding:.9rem;border:1px solid #7589a5;border-radius:.5rem}
+#lock-workbench .lock-practice-score strong{font-size:1.7rem}
+#lock-workbench .lock-practice-score span{font-size:.87rem}
+#lock-workbench .lock-move-set-practice button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+@media(max-width:760px){
+ #lock-workbench .lock-situation-details{grid-template-columns:1fr}
+ #lock-workbench .lock-situation-details .lock-game-card{min-height:6.5rem}
+}
+@media(max-width:520px){
+ #lock-workbench .lock-response-cards{grid-template-columns:1fr}
+ #lock-workbench .lock-practice-actions button{width:100%}
+}
