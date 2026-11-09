@@ -2381,6 +2381,35 @@ def admin_dashboard():
         seven_day_views=seven_day_views,
     )
 
+@app.route("/admin/control-room", endpoint="admin_legacy_control_room")
+@admin_login_required
+def admin_legacy_control_room():
+    """Retain the pre-redesign administrator dashboard alongside the new Overview.
+
+    This is the original admin_dashboard.html with existing tool links and
+    sections. It shares the same authentication and database; nothing is copied.
+    """
+    from dca_rebuild.models import VaultGatheringSubmission
+    with SessionLocal() as db:
+        event_pending = db.query(VaultGatheringSubmission).filter(
+            VaultGatheringSubmission.status == "pending"
+        ).count()
+        entries = db.query(VaultGatheringSubmission).filter(
+            VaultGatheringSubmission.status == "pending"
+        ).order_by(
+            VaultGatheringSubmission.created_at.asc(),
+            VaultGatheringSubmission.id.asc()
+        ).limit(10).all()
+        event_review_queue = [
+            dict(id=x.id, title=x.title, date=x.start_date,
+                 kind=x.gathering_type, received=x.created_at)
+            for x in entries
+        ]
+    return render_template("admin_dashboard.html",
+                           event_pending=event_pending,
+                           event_review_queue=event_review_queue)
+
+
 @app.route("/admin/lfa/submissions")
 @admin_login_required
 def admin_lfa_submissions():
