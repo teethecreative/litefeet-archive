@@ -5,7 +5,7 @@
 <header class="lfv-admin-workspace-head"><p class="lfv-admin-overline">ADMIN / DEVELOPMENT</p><h1>Development</h1><p>Manage website fixes, feature plans, and community feedback separately from published Vault records.</p></header>
 {% with messages=get_flashed_messages() %}{% for message in messages %}<p role="status" class="lfv-admin-workspace-flash">{{ message }}</p>{% endfor %}{% endwith %}
 <div class="lfv-admin-state-counts">{% for s in states %}<a href="{{ url_for('admin_vault_development',status=s) }}"><strong>{{ counts.get(s,0) }}</strong><span>{{ s|replace('_',' ')|title }}</span></a>{% endfor %}</div>
-<section class="lfv-admin-workspace-section"><div class="lfv-admin-workspace-heading"><div><p class="lfv-admin-overline">01 / WORK IN PROGRESS</p><h2>Development tracker</h2></div></div>
+<section class="lfv-admin-workspace-section"><div class="lfv-admin-workspace-heading"><div><p class="lfv-admin-overline">01 / WORK IN PROGRESS</p><h2>Development tracker</h2><p>This table shows only items saved in the admin development database. GitHub issues, pull requests and existing project backlog notes are not automatically imported.</p></div></div>
 <form class="lfv-admin-workspace-filters" method="get">
 <label>Status<select name="status"><option value="all">All statuses</option>{% for s in states %}<option value="{{ s }}" {% if state == s %}selected{% endif %}>{{ s|replace('_',' ')|title }}</option>{% endfor %}</select></label>
 <label>Area<select name="area"><option value="all">All areas</option>{% for a in areas %}<option value="{{ a }}" {% if area == a %}selected{% endif %}>{{ a|title }}</option>{% endfor %}</select></label>
@@ -13,7 +13,7 @@
 <div class="lfv-admin-table-wrap"><table class="lfv-admin-review-table"><thead><tr><th>Updated</th><th>Development item</th><th>Area</th><th>Status / Update</th></tr></thead>
 <tbody>{% for item in items %}<tr><td>{{ item.updated_at.strftime('%b %-d, %Y') }}</td><td><strong>{{ item.title }}</strong>{% if item.description %}<small>{{ item.description }}</small>{% endif %}</td><td>{{ item.area|title }}</td>
 <td><form method="post" class="lfv-admin-inline-form" action="{{ url_for('admin_vault_development_status',item_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><label class="lfv-admin-visually-hidden" for="dev-{{ item.id }}">Status for {{ item.title }}</label><select id="dev-{{ item.id }}" name="status">{% for s in states %}<option value="{{ s }}" {% if s == item.status %}selected{% endif %}>{{ s|replace('_',' ')|title }}</option>{% endfor %}</select><button type="submit">Save</button></form></td></tr>
-{% else %}<tr><td colspan="4">No development items match these filters.</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<tr><td colspan="4">No saved development items match these filters. This does not mean all website work is complete.</td></tr>{% endfor %}</tbody></table></div>
 {% if pages > 1 %}<nav class="lfv-admin-workspace-pagination" aria-label="Development pages">{% if page > 1 %}<a href="{{ url_for('admin_vault_development',status=state,area=area,page=page-1) }}">← Previous</a>{% endif %}<span>Page {{ page }} of {{ pages }}</span>{% if page < pages %}<a href="{{ url_for('admin_vault_development',status=state,area=area,page=page+1) }}">Next →</a>{% endif %}</nav>{% endif %}
 <details class="lfv-admin-add-form"><summary>Add development item</summary>
 <form method="post" action="{{ url_for('admin_vault_development_create') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
