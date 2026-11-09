@@ -164,3 +164,15 @@ def test_original_admin_control_room_is_restored_without_losing_new_overview(web
     new = client.get("/admin")
     assert new.status_code == 200
     assert "Needs Attention" in new.get_data(as_text=True)
+
+
+def test_admin_access_is_in_public_footer_not_main_navigation(website):
+    client = website.test_client()
+    for path in ("/", "/archive", "/awards"):
+        response = client.get(path)
+        assert response.status_code == 200
+        html = response.get_data(as_text=True)
+        assert 'class="lfv-footer-admin-link" href="/admin">Admin</a>' in html
+        assert 'href="/admin"' not in html.split("</nav>", 1)[0]
+    # Footer link does not grant administrative access.
+    assert client.get("/admin").status_code in (302, 303, 401, 403)
