@@ -277,6 +277,13 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
         entry["source_href"] = source if source and source != "/submit" else ""
         entry["href"] = "/calendar/events/" + entry["date"] + "/" + event_slug(entry["title"])
     entries.sort(key=lambda item: (item["date"], item["title"]))
+    # Preserve legacy first-occurrence URLs. Distinguish separate approved
+    # submissions with the same title/date only when a collision occurs.
+    hrefs = set()
+    for entry in entries:
+        if entry["href"] in hrefs and entry.get("submission_id"):
+            entry["href"] += "-" + str(entry["submission_id"])
+        hrefs.add(entry["href"])
     by_day = {}
     for item in entries:
         by_day.setdefault(item["date"], []).append(item)
