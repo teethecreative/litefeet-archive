@@ -53,10 +53,38 @@ def release_display_fields(item):
     }
 
 
+def _safe_external_url(value):
+    """Return only absolute HTTP(S) destinations from stored metadata."""
+    text = str(value or "").strip()
+    parts = urlsplit(text)
+    if parts.scheme.casefold() not in ("http", "https") or not parts.hostname:
+        return ""
+    return text
+
+
+def _same_destination(left, right):
+    """Treat tracking-query variants of one profile URL as the same page."""
+    a, b = urlsplit(left), urlsplit(right)
+    return (a.hostname.casefold(), a.path.rstrip("/").casefold()) == (
+        b.hostname.casefold(), b.path.rstrip("/").casefold())
+
+
+def release_destinations(item):
+    """Distinguish a real source from a stored artist-profile landing page."""
+    source = _safe_external_url(item.get("url") or item.get("source_url"))
+    artist = _safe_external_url(item.get("source_profile_url")
+                                or item.get("artist_profile_url")
+                                or item.get("profile_url"))
+    if source and artist and _same_destination(source, artist):
+        source = ""
+    return {"source_destination": source, "artist_profile_destination": artist}
+
+
 def with_release_display(item):
-    """Copy the record and add presentation fields; raw metadata is untouched."""
+    """Copy the record, add presentation/choice fields, and preserve raw metadata."""
     output = dict(item)
     output.update(release_display_fields(output))
+    output.update(release_destinations(output))
     return output
 
 

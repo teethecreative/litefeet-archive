@@ -31,6 +31,19 @@
 .lfv-music-play{min-width:34px;width:34px;height:34px;border-radius:50%;background:#d9b33e;color:#102a4c;font-weight:900;border:0;cursor:pointer}
 .lfv-music-play[aria-pressed=true]{background:#fff;color:#102a4c}
 .lfv-music-table a:focus-visible,.lfv-music-play:focus-visible{outline:2px solid #e8c356;outline-offset:3px}
+.lfv-music-choice{width:min(470px,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:min(85vh,620px);padding:28px;border:1px solid #7787a2;border-radius:14px;background:#122744;color:#f7f8fb;box-shadow:0 18px 55px #0008}
+.lfv-music-choice::backdrop{background:rgba(3,12,28,.72)}
+.lfv-music-choice-close{position:absolute;right:12px;top:10px;font-size:1.6rem;line-height:1;border:0;background:transparent;color:inherit;cursor:pointer;padding:8px}
+.lfv-music-choice h2{margin:5px 35px 12px 0;font-size:1.5rem}
+.lfv-music-choice p{line-height:1.5}
+.lfv-music-choice-destinations{display:grid;margin:17px 0;gap:0}
+.lfv-music-choice-destinations a{display:block;color:#f3cb5b!important;background:none!important;border:0!important;border-bottom:1px solid #5b6d87!important;border-radius:0!important;text-decoration:none;padding:14px 2px!important;font-weight:700}
+.lfv-music-choice-destinations a:hover,.lfv-music-choice-destinations a:focus-visible{text-decoration:underline}
+.lfv-music-choice a[hidden],.lfv-music-choice [hidden]{display:none!important}
+.lfv-music-choice-record{font-size:.87rem;color:#d9e0ed;text-decoration:underline;text-underline-offset:3px}
+.lfv-music-choice-close:focus-visible,.lfv-music-choice a:focus-visible{outline:2px solid #f3cb5b;outline-offset:3px}
+.lfv-music-choice-note{font-size:.85rem;color:#d9e0ed}
+
 @media(max-width:720px){
 .lfv-music-page{padding-inline:14px}
 .lfv-music-table-scroll{overflow-x:visible}
@@ -61,17 +74,18 @@
 {% set direct_audio = audio_path.endswith('.mp3') or audio_path.endswith('.m4a') or audio_path.endswith('.ogg') or audio_path.endswith('.wav') or audio_path.endswith('.aac') or audio_path.endswith('.flac') %}
 <tr>
 <td data-label="Release Date" class="lfv-music-table-date">{{ item.date_label }}</td>
-<td data-label="Song Name" class="lfv-music-table-name"><a class="lfv-music-title lfv-music-title-link" href="{{ item.record_href }}">{{ item.display_title or 'Untitled release' }}</a></td>
+<td data-label="Song Name" class="lfv-music-table-name"><a class="lfv-music-title lfv-music-title-link" href="{{ item.record_href }}" data-music-track-choice data-source-url="{{ item.source_destination }}" data-artist-url="{{ item.artist_profile_destination }}" data-track-title="{{ item.display_title }}" data-artist-name="{{ item.artist_or_creator or item.artist or item.producer_name or '' }}" aria-label="Choose where to go for {{ item.display_title }}">{{ item.display_title or 'Untitled release' }}</a></td>
 <td data-label="Artist / Producer" class="lfv-music-credits">{{ item.artist_or_creator or item.artist or item.producer_name or 'Not yet documented' }}{% if item.project_title %}<p class="lfv-music-description">From {{ item.project_title }}</p>{% elif item.kind == 'project' %}<p class="lfv-music-description">{{ item.record_type or 'Project' }}{% if item.expected_track_count %} · {{ item.expected_track_count }} tracks{% endif %}</p>{% endif %}</td>
 <td data-label="Description" class="lfv-music-table-description">{% if item.display_description %}{{ item.display_description|striptags|truncate(85, True, '…') }}{% else %}—{% endif %}</td>
 <td data-label="Duration" class="lfv-music-table-duration">{{ item.duration_label }}</td>
 <td data-label="Listen / Source"><div class="lfv-music-row-actions">
 {% if direct_audio %}
 <button type="button" class="lfv-music-play" data-audio="{{ audio }}" data-track="{{ item.display_title }}" aria-label="Play {{ item.display_title }}" aria-pressed="false">▶</button>
-{% elif item.url %}
-<a class="lfv-music-source" href="{{ item.url }}" target="_blank" rel="noopener noreferrer" aria-label="Open source for {{ item.display_title }}">Source</a>
-{% else %}
-<span class="lfv-music-description">Source unavailable</span>
+{% endif %}
+{% if item.source_destination or item.artist_profile_destination %}
+<a class="lfv-music-source lfv-music-source-choice" href="{{ item.record_href }}" aria-label="Choose source or artist profile for {{ item.display_title }}">Links</a>
+{% elif not direct_audio %}
+<span class="lfv-music-description">Links unavailable</span>
 {% endif %}
 </div></td>
 </tr>
@@ -80,9 +94,66 @@
 {% endfor %}
 </tbody></table></div>
 </section>
-
+<dialog class="lfv-music-choice" id="lfv-music-choice" aria-labelledby="lfv-music-choice-heading" aria-describedby="lfv-music-choice-summary">
+  <form method="dialog"><button class="lfv-music-choice-close" aria-label="Close destination choices" value="cancel" type="submit">×</button></form>
+  <p class="lfv-music-kicker">Release Radar / Track links</p>
+  <h2 id="lfv-music-choice-heading">Where would you like to go?</h2>
+  <p id="lfv-music-choice-summary">Choose where to open <strong id="lfv-music-choice-track"></strong>.</p>
+  <nav class="lfv-music-choice-destinations" aria-label="Track destinations">
+    <a id="lfv-music-choice-source" href="#" target="_blank" rel="noopener noreferrer" hidden>Original source</a>
+    <a id="lfv-music-choice-profile" href="#" target="_blank" rel="noopener noreferrer" hidden>Artist profile</a>
+  </nav>
+  <p class="lfv-music-choice-note" id="lfv-music-choice-note" hidden></p>
+  <a class="lfv-music-choice-record" id="lfv-music-choice-details" href="#">View record details on The LiteFeet Vault</a>
+</dialog>
 </main>{% include "_footer.html" %}
 <script>
 (()=>{const audio=new Audio();audio.preload='none';let current=null;function reset(){if(current){current.textContent='▶';current.setAttribute('aria-pressed','false');current.setAttribute('aria-label','Play '+current.dataset.track)}current=null}
 document.querySelectorAll('.lfv-music-play').forEach(btn=>btn.addEventListener('click',async event=>{event.preventDefault();event.stopPropagation();if(current===btn&&!audio.paused){audio.pause();reset();return}if(current!==btn){audio.pause();reset();audio.src=btn.dataset.audio;current=btn}try{await audio.play();btn.textContent='❚❚';btn.setAttribute('aria-pressed','true');btn.setAttribute('aria-label','Pause '+btn.dataset.track)}catch{reset();btn.title='Playback unavailable; open original source'}}));audio.addEventListener('ended',reset);audio.addEventListener('error',reset)})();
-</script><script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script></body></html>
+</script>
+<script>
+(() => {
+  const dialog = document.getElementById('lfv-music-choice');
+  if (!dialog || typeof dialog.showModal !== 'function') return;
+  const trackName = document.getElementById('lfv-music-choice-track');
+  const source = document.getElementById('lfv-music-choice-source');
+  const profile = document.getElementById('lfv-music-choice-profile');
+  const details = document.getElementById('lfv-music-choice-details');
+  const note = document.getElementById('lfv-music-choice-note');
+  let trigger = null;
+
+  function setDestination(link, url) {
+    const available = /^https?:\/\/[^/]+/i.test(url || '');
+    link.hidden = !available;
+    if (available) link.href = url;
+    else link.removeAttribute('href');
+    return available;
+  }
+
+  document.querySelectorAll('[data-music-track-choice], .lfv-music-source-choice').forEach(element => {
+    element.addEventListener('click', event => {
+      if (event.defaultPrevented || event.button !== 0 ||
+          event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      const row = element.closest('tr');
+      const title = row && row.querySelector('[data-music-track-choice]');
+      if (!title) return;
+      event.preventDefault();
+      trigger = element;
+      trackName.textContent = title.dataset.trackTitle || 'this release';
+      const hasSource = setDestination(source, title.dataset.sourceUrl || '');
+      const hasProfile = setDestination(profile, title.dataset.artistUrl || '');
+      details.href = title.href;
+      const missing = !hasSource && !hasProfile;
+      note.hidden = !missing;
+      note.textContent = missing ? 'External links for this release have not been confirmed yet.' : '';
+      dialog.showModal();
+    });
+  });
+  dialog.addEventListener('close', () => { if (trigger) trigger.focus(); trigger = null; });
+  dialog.addEventListener('click', event => {
+    if (event.target === dialog) dialog.close();
+    else if (event.target.closest('a[target="_blank"]')) dialog.close();
+  });
+})();
+</script>
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script></body></html>

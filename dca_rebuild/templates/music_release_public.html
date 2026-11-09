@@ -37,7 +37,7 @@
 {% for track in project_tracks %}<tr><td>{{ track.track_number or '—' }}</td><td><a href="{{ track.record_href }}">{{ track.title }}</a></td><td>{{ track.duration or '—' }}</td></tr>{% endfor %}
 </tbody></table></section>
 {% endif %}
-{% if item.url %}<p><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">View original source / platform</a></p>{% endif %}
-{% if item.source_profile_url and item.source_profile_url != item.url %}<p><a href="{{ item.source_profile_url }}" target="_blank" rel="noopener noreferrer">Artist profile</a></p>{% endif %}
+{% if item.source_destination %}<p><a href="{{ item.source_destination }}" target="_blank" rel="noopener noreferrer">View original source / platform</a></p>{% endif %}
+{% if item.artist_profile_destination %}<p><a href="{{ item.artist_profile_destination }}" target="_blank" rel="noopener noreferrer">Artist profile</a></p>{% endif %}
 {% if item.needs_exact_track_url %}<p>Exact individual-track link has not yet been confirmed. This source may open the artist's profile instead of playing this song.</p>{% endif %}
 </main>{% include "_footer.html" %}</body></html>
