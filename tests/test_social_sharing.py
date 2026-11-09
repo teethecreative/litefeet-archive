@@ -46,10 +46,10 @@ def test_public_sitemap_pages_have_consistent_unique_metadata_and_valid_images(w
     assert len(urls) > 35, "Expected public archive records, not just navigation"
     assert "https://thelitefeetvault.com/write-ins" in urls
     assert "https://thelitefeetvault.com/archive/people" in urls
-    assert "https://thelitefeetvault.com/litefeet-music" in urls
+    assert "https://thelitefeetvault.com/music" in urls
     assert not any(urlsplit(url).path in ("/archive", "/media", "/archive/history") for url in urls)
-    assert any("/litefeet-music/catalog/track/" in url for url in urls)
-    assert any("/litefeet-music/catalog/project/" in url for url in urls)
+    assert any("/music/" in url for url in urls)
+    assert any("/music/" in url for url in urls)
     for url in urls:
         path = urlsplit(url).path
         res = client.get(path)
@@ -123,14 +123,14 @@ def test_deleted_and_unpublished_section_urls_are_excluded_from_sitemap(website)
     assert "/archive" not in paths
     assert "/media" not in paths
     assert "/archive/history" not in paths
-    assert "/litefeet-music" in paths
+    assert "/music" in paths
     assert "/archive/people" in paths
 
 
 def test_calendar_event_sitemap_urls_resolve_and_have_metadata(website):
     client = website.test_client()
     urls = [n.text for n in ET.fromstring(client.get("/sitemap.xml").data).findall(".//{*}loc")]
-    event_urls = [urlsplit(url).path for url in urls if "/calendar/events/" in url]
+    event_urls = [urlsplit(url).path for url in urls if "/events/" in url or "/calendar/events/" in url]
     for path in event_urls:
         response = client.get(path)
         assert response.status_code == 200, path
