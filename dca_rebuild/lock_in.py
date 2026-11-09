@@ -29,7 +29,7 @@ ROUNDS = {
     key: dict(dancer=deck["dancer"], scene=f'{deck["arena"]} · {deck["song"]} by Reel Hectic',
               moves=deck["moves"], combo=(deck["favored"],), bonus=2, reduce=0, opponent=6,
               cue=f'You’ve played {deck["setup"]}. Build a three-move finish.')
-    for key, deck in DECKS.items()
+    for key, deck in DECKS.items() if key not in ("performance", "spank")
 }
 ROUNDS.update({
     "greklite": dict(dancer="Greklite", scene="NYC Subway · Ultra macaco",
@@ -60,9 +60,9 @@ ROUNDS.update({
 
 
 def practice_view(args):
-    key = args.get("round", args.get("deck", "performance"))
+    key = args.get("round", "greklite")
     if key not in ROUNDS:
-        key = "performance"
+        key = "greklite"
     round_data = ROUNDS[key]
     moves = args.getlist("move")
     result = error = None
