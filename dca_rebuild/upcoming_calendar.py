@@ -101,6 +101,9 @@ def upcoming_calendar(today=None, session_factory=None, window_days=30):
                     elif rule == "monthly":
                         # Monthly on the same day number; nonexistent dates are skipped.
                         matches = day.day == first_day.day
+                    elif rule == "yearly":
+                        # Anniversaries on leap day occur only in leap years.
+                        matches = (day.month, day.day) == (first_day.month, first_day.day)
                     else:
                         matches = day == first_day
                     if not matches:
