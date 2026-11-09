@@ -2366,8 +2366,23 @@ def lfa_submit():
 @app.route("/admin")
 @admin_login_required
 def admin_dashboard():
+    from dca_rebuild.models import VaultGatheringSubmission
+    with SessionLocal() as db:
+        event_pending = db.query(VaultGatheringSubmission).filter(
+            VaultGatheringSubmission.status == "pending").count()
+        event_review_queue = db.query(VaultGatheringSubmission).filter(
+            VaultGatheringSubmission.status == "pending").order_by(
+            VaultGatheringSubmission.created_at.asc(),
+            VaultGatheringSubmission.id.asc()
+        ).limit(10).all()
+        event_review_queue = [
+            dict(id=x.id, title=x.title, date=x.start_date,
+                 kind=x.gathering_type, received=x.created_at)
+            for x in event_review_queue
+        ]
     return render_template(
-        "admin_dashboard.html"
+        "admin_dashboard.html",
+        event_pending=event_pending, event_review_queue=event_review_queue,
     )
 
 
