@@ -79,3 +79,12 @@ def test_historical_review_does_not_change_public_cloud():
         {"id": "999", "dance_name": "Review Only", "status": "Active"}
     ])
     assert people_crew_cloud() == before
+
+
+def test_people_collection_query_opens_people_browser_not_timeline(website):
+    response = website.test_client().get('/archive?collection=people')
+    assert response.status_code == 200
+    page = response.get_data(as_text=True)
+    assert 'lfv-people-wordcloud' in page
+    assert 'SEARCH PEOPLE &amp; CREWS' in page
+    assert 'CHRONOLOGICAL TIMELINE' not in page
