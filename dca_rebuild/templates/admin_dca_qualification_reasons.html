@@ -1,16 +1,43 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Review nomination reasons | The LiteFeet Vault</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}"></head><body>
-<main style="max-width:950px;margin:2rem auto;padding:1rem">
-<h1>Nominee qualification reasons — admin review</h1>
-<p>Review supporting statements and evidence. Verifying reasoning removes the nominee from the missing-reason list, but does not itself declare the nominee eligible for the final ballot.</p>
-{% for item in entries %}
-<article style="padding:1rem 0;border-bottom:1px solid #999">
-<h2>{{ item.nominee }}</h2><p>Status: {{ item.status }}</p><p>{{ item.reason }}</p>
-{% if item.evidence_url %}<p><a href="{{ item.evidence_url }}" rel="noopener noreferrer nofollow" target="_blank">Review evidence link</a></p>{% endif %}
-<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="reason_id" value="{{ item.id }}">
-<button name="decision" value="verified">Verify reasoning</button>
-<button name="decision" value="insufficient">Needs more detail</button>
-<button name="decision" value="rejected">Reject reasoning</button></form>
-</article>
-{% else %}<p>No reasons submitted yet.</p>{% endfor %}
-</main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nominee qualification reasons | The LiteFeet Vault Admin</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
+</head>
+<body class="ledger-admin">
+{% include "_admin_navigation.html" %}
+<main class="lfv-admin-workspace">
+<p><a href="{{ url_for('admin_dca_workspace') }}">← Awards management</a></p>
+<header class="lfv-admin-workspace-head">
+<p class="lfv-admin-overline">AWARDS / QUALIFICATION REVIEW</p>
+<h1>Nominee qualification reasons</h1>
+<p>Review supporting statements and evidence. Verifying a reason removes the nominee from the missing-reason list; it does not establish final ballot eligibility.</p>
+</header>
+<section class="lfv-admin-workspace-section">
+<h2>Submitted reasons</h2>
+{% if entries %}
+<div class="lfv-admin-table-wrap">
+<table class="lfv-admin-review-table">
+<thead><tr><th scope="col">Nominee</th><th scope="col">Reason / evidence</th><th scope="col">Status</th><th scope="col">Review</th></tr></thead>
+<tbody>{% for item in entries %}
+<tr><td><strong>{{ item.nominee }}</strong></td>
+<td>{{ item.reason }}{% if item.evidence_url %}<small><a href="{{ item.evidence_url }}" rel="noopener noreferrer nofollow" target="_blank">Review evidence link</a></small>{% endif %}</td>
+<td>{{ item.status|replace('_',' ')|title }}</td>
+<td><form method="post" class="lfv-admin-reason-actions"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="reason_id" value="{{ item.id }}">
+<button name="decision" value="verified" type="submit">Verify</button>
+<button name="decision" value="insufficient" type="submit">Needs detail</button>
+<button name="decision" value="rejected" type="submit">Reject</button>
+</form></td></tr>{% endfor %}</tbody></table></div>
+{% else %}<p class="lfv-admin-workspace-count">No qualification reasons have been submitted yet.</p>{% endif %}
+</section>
+</main>
+<style>
+.lfv-admin-reason-actions{display:flex;flex-wrap:wrap;gap:8px}
+.lfv-admin-reason-actions button{white-space:nowrap;min-height:36px!important;padding:8px 10px!important}
+.lfv-admin-reason-actions button[value="insufficient"],.lfv-admin-reason-actions button[value="rejected"]{background:var(--surface-2)!important;color:var(--text)!important;border:1px solid var(--border)!important}
+</style>
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+</body></html>
