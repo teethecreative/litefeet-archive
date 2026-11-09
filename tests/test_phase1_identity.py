@@ -104,7 +104,7 @@ def test_lock_in_sample_decks_are_neutral_and_practice_does_not_spotlight_two_su
     assert 'DC submitted Performance' not in html
     assert 'K Cosmic chose Spank' not in html
     assert 'DC and K Cosmic' not in html
-    assert 'Moon Lite' in html
+    assert 'Airman' in html
     from dca_rebuild.lock_in import ROUNDS, practice_view
     assert 'performance' not in ROUNDS and 'spank' not in ROUNDS
     assert practice_view({})['round_key'] == 'greklite'
