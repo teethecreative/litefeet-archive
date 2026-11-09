@@ -1194,7 +1194,7 @@ def admin_round1_old():
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if session.get("ledger_admin_authenticated"):
-        return redirect(url_for("admin_round1"))
+        return redirect(url_for("admin_dashboard"))
 
     error = None
 
@@ -1237,7 +1237,7 @@ def admin_login():
             session["ledger_admin_authenticated"] = True
 
             return redirect(
-                url_for("admin_round1")
+                url_for("admin_dashboard")
             )
 
         error = "Invalid username or password."
