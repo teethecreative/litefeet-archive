@@ -327,19 +327,29 @@ def register_seo(app):
     @app.get("/sitemap.xml")
     def litefeet_sitemap():
         from dca_rebuild.archive_catalog import all_records
-        from dca_rebuild.music_batch_catalog import all_music_catalog
-        from dca_rebuild.upcoming_calendar import event_slug
-        paths = list(SITEMAP_PATHS) + [
-            "/archive/records/" + item["slug"] for item in all_records()
+        from dca_rebuild.music_batch_catalog import combined_releases
+        from dca_rebuild.music_public import full_date, music_duration
+        from dca_rebuild.share_awards import public_categories
+        from dca_rebuild.public_urls import (
+            person_href, music_href, event_href, category_href, nominee_href,
+        )
+        people_records = all_records()
+        music_records = combined_releases(_published_music_rows(), full_date, music_duration)
+        calendar_records = _published_calendar_events()
+        award_categories = public_categories()
+        paths = ["/music" if path == "/litefeet-music" else path
+                 for path in SITEMAP_PATHS] + [
+            person_href(item, people_records) for item in people_records
         ] + [
-            "/litefeet-music/catalog/" + item["kind"] + "/" + item["catalog_id"]
-            for item in all_music_catalog()
+            music_href(item, music_records) for item in music_records
         ] + [
-            "/litefeet-music/release/" + str(item["id"])
-            for item in _published_music_rows()
+            event_href(item, calendar_records) for item in calendar_records
         ] + [
-            "/calendar/events/" + item["date"] + "/" + event_slug(item["title"])
-            for item in _published_calendar_events()
+            category_href(category, award_categories)
+            for category in award_categories
+        ] + [
+            nominee_href(category, nominee, award_categories)
+            for category in award_categories for nominee in category["nominees"]
         ]
         entries = "".join(
             "<url><loc>" + escape(SITE_URL + path) + "</loc></url>"
