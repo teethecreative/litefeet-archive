@@ -45,12 +45,18 @@ def test_public_sitemap_pages_have_consistent_unique_metadata_and_valid_images(w
     assert len(urls) == len(set(urls)), "Duplicate sitemap entries"
     assert len(urls) > 35, "Expected public archive records, not just navigation"
     assert "https://thelitefeetvault.com/write-ins" in urls
+    assert "https://thelitefeetvault.com/archive/people" in urls
+    assert "https://thelitefeetvault.com/litefeet-music" in urls
+    assert not any(urlsplit(url).path in ("/archive", "/media", "/archive/history") for url in urls)
+    assert any("/litefeet-music/catalog/track/" in url for url in urls)
+    assert any("/litefeet-music/catalog/project/" in url for url in urls)
     for url in urls:
         path = urlsplit(url).path
         res = client.get(path)
         assert res.status_code == 200, (path, res.status_code)
         head = _head(res)
-        meta = metadata_for_path(path)
+        with website.app_context():
+            meta = metadata_for_path(path)
         assert meta is not None, path
         title = re.search(r'<title[^>]*>(.*?)</title>', head, re.S)
         assert title and unescape(title.group(1)).strip() == meta["title"], path
@@ -93,3 +99,39 @@ def test_private_and_confirmation_urls_are_not_advertised(website):
     robots = client.get("/robots.txt")
     assert robots.status_code == 200
     assert "https://thelitefeetvault.com/sitemap.xml" in robots.get_data(as_text=True)
+
+
+def test_active_public_pages_have_specific_canonical_social_metadata(website):
+    client = website.test_client()
+    for path in ("/archive/people", "/litefeet-music",
+                 "/litefeet-music/catalog/track/music-b1-001"):
+        response = client.get(path)
+        assert response.status_code == 200, path
+        head = _head(response)
+        assert _meta(head, "property", "og:url") == "https://thelitefeetvault.com" + path
+        assert _meta(head, "name", "twitter:url") == "https://thelitefeetvault.com" + path
+        assert head.count('<link rel="canonical"') == 1
+        assert _meta(head, "name", "description")
+        image = _meta(head, "property", "og:image")
+        assert client.get(urlsplit(image).path).status_code == 200
+
+
+def test_deleted_and_unpublished_section_urls_are_excluded_from_sitemap(website):
+    client = website.test_client()
+    root = ET.fromstring(client.get("/sitemap.xml").data)
+    paths = {urlsplit(x.text).path for x in root.findall(".//{*}loc")}
+    assert "/archive" not in paths
+    assert "/media" not in paths
+    assert "/archive/history" not in paths
+    assert "/litefeet-music" in paths
+    assert "/archive/people" in paths
+
+
+def test_calendar_event_sitemap_urls_resolve_and_have_metadata(website):
+    client = website.test_client()
+    urls = [n.text for n in ET.fromstring(client.get("/sitemap.xml").data).findall(".//{*}loc")]
+    event_urls = [urlsplit(url).path for url in urls if "/calendar/events/" in url]
+    for path in event_urls:
+        response = client.get(path)
+        assert response.status_code == 200, path
+        assert _meta(_head(response), "property", "og:url") == "https://thelitefeetvault.com" + path

@@ -67,6 +67,9 @@ def install_music_public(app, engine):
                                  THEN '0000' ELSE release_date END DESC, id DESC"""
             )).mappings()]
 
+    # SEO reads the same published records as Release Radar, without writing to them.
+    app.extensions["vault_published_music_rows"] = music_rows
+
     @app.get("/litefeet-music", endpoint="vault_music_public")
     def vault_music_public():
         search = (request.args.get("q") or "").strip().casefold()[:120]
