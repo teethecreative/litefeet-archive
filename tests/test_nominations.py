@@ -392,3 +392,21 @@ def test_category_grid_has_clear_invitation_without_activity_dashboard(website):
     assert 'id="official-title"' in html
     assert html.count('data-category-id=') == 25
     assert 'WRITE-IN CATEGORIES' in html
+
+
+def test_category_grid_does_not_prompt_for_email_to_show_cooldown(website):
+    """Unauthenticated visitors get email entry, not 25 repeated cooldown prompts."""
+    client = website.test_client()
+    anonymous = client.get(PATH).get_data(as_text=True)
+    assert 'name="email"' in anonymous
+    assert 'IDENTIFY TO SEE COOLDOWN' not in anonymous.upper()
+    assert 'data-category-id=' not in anonymous
+
+    identify(client)
+    grid = client.get(PATH).get_data(as_text=True)
+    assert grid.count('data-category-id=') == 25
+    assert 'IDENTIFY TO SEE COOLDOWN' not in grid.upper()
+    assert 'AVAILABLE NOW' in grid
+
+    standings = website.test_client().get(PATH + '?view=results').get_data(as_text=True)
+    assert 'IDENTIFY TO SEE COOLDOWN' not in standings.upper()
