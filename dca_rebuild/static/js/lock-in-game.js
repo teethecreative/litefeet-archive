@@ -7,7 +7,7 @@
   var types=["Dancer","Arena","Producer","Song","Move","Trick","Upgrade","Frib"];
   var all=samples.map(function(s){return s.categories.reduce(function(a,g){return a.concat(g.cards.map(function(n){return {id:g.type+"::"+n,type:g.type,name:n};}));},[]);});
   var pool={}; all.forEach(function(a){a.forEach(function(c){pool[c.id]=c;});});
-  var deck=all[0].slice(),stage="setup",round=1,hand=[],selected=[],history=[];
+  var deck=all[0].slice(),round=1,hand=[],selected=[],history=[],chosen={};
   function el(s){return root.querySelector(s);}
   function escape(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
   function amount(id){return deck.filter(function(c){return c.id===id;}).length;}
@@ -51,7 +51,7 @@
   }
   function renderHand(){
     var table=el("#lock-battle");
-    table.innerHTML='<h3>Round '+round+' · Move set</h3><p>'+escape(el("#lock-dancer")?el("#lock-dancer").value:"")+'</p>'+
+    table.innerHTML='<h3>Round '+round+' · Move set</h3><p>'+escape(chosen.dancer+' · '+chosen.song+' · '+chosen.arena+(chosen.producer?' · '+chosen.producer:''))+'</p>'+
       '<p>Hand cards: '+hand.length+'. Choose up to three move cards. Special effects not assigned BP in the rulebook must be adjudicated manually.</p>'+
       '<div class="lock-hand">'+hand.map(function(c,i){return '<label><input type="checkbox" data-pick="'+i+'"> '+escape(c.type+" · "+c.name)+'</label>';}).join("")+'</div>'+
       '<p id="lock-selection" aria-live="polite">0 / 3 moves selected</p><button type="button" id="lock-announce">Announce locked in</button>';
@@ -86,6 +86,7 @@
     if(b.id==="lock-start"){if(!problems().length){round=1;history=[];drawBattle();}}
     if(b.id==="lock-draw"){
       var played=[el("#lock-dancer").value,el("#lock-song").value,el("#lock-arena").value,el("#lock-producer").value];
+      chosen={dancer:cardName(played[0]),song:cardName(played[1]),arena:cardName(played[2]),producer:cardName(played[3]),first:el("#lock-order").value};
       var eligible=deck.filter(function(c){return ["Move","Trick","Upgrade","Frib"].indexOf(c.type)>=0&&played.indexOf(c.id)<0;});
       hand=shuffle(eligible).slice(0,7);selected=[];renderHand();
     }
@@ -97,11 +98,12 @@
       if(!Number.isFinite(p)||!Number.isFinite(q))return;
       p-=el("#lock-missed").checked?10:0;
       p-=el("#lock-challenge").checked?50:0;
-      var outcome=p<50?"Automatic loss — your BP below 50":q<50?"Opponent automatic loss":el("#lock-draw-loss").checked||el("#lock-tko").checked?"Win by adjudicated special condition":p>q?"You win":p<q?"Opponent wins":"Tie — Round of Fire draft";
+      var outcome=p<50&&q<50?"Both below 50 BP — manual adjudication needed":p<50?"Automatic loss — your BP below 50":q<50?"Opponent automatic loss":el("#lock-draw-loss").checked||el("#lock-tko").checked?"Win by adjudicated special condition":p>q?"You win":p<q?"Opponent wins":"Tie — Round of Fire draft";
       history.push("Round "+round+": "+p+" to "+q+" BP · "+outcome);
-      el("#lock-battle").innerHTML='<h3>Round result</h3><p>'+escape(outcome)+'</p><p>'+history.map(escape).join("<br>")+'</p><p>Battle victory thresholds are still blank in the rulebook; this does not claim an official battle winner.</p><button type="button" id="lock-next">Next round</button>';
+      el("#lock-battle").innerHTML='<h3>Round result</h3><p>'+escape(outcome)+'</p><p>'+history.map(escape).join("<br>")+'</p><p>Battle victory thresholds are still blank in the rulebook; this does not claim an official battle winner.</p>'+(round<2?'<button type="button" id="lock-next">Next round</button>':'<p>Two-round 1v1 practice complete. Tied rounds and unfinished battle thresholds require the final rulebook.</p><button type="button" id="lock-restart">Start a new battle</button>');
     }
     if(b.id==="lock-next"){round++;drawBattle();}
+    if(b.id==="lock-restart"){round=1;history=[];drawBattle();}
   });
   el("#lock-sample").innerHTML=samples.map(function(s,i){return '<option value="'+i+'">'+escape(s.name)+'</option>';}).join("");
   el("#lock-filter").innerHTML='<option value="all">All types</option>'+types.map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join("");
