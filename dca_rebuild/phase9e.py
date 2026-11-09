@@ -568,6 +568,9 @@ def install_phase9e(app, ns):
                     for stage, cat in stages if stage.stage in ('write_in', 'qualified')
                 }
                 qualifying, floor, requirement = qualification(db, edition, stages)
+                accepting_support = bool(edition.phase == 'nominations' and
+                    os.getenv('DCA_2026_NOMINATIONS_ENABLED') == 'true' and
+                    not is_closed() and len([stage for stage, _ in stages if stage.stage == 'top25']) == 25)
                 # Include ALL submitted category names not in the Top 25,
                 # including pending ones. Merged aliases are grouped, rejected
                 # entries remain excluded to avoid resurfacing spam or abuse.
@@ -605,6 +608,7 @@ def install_phase9e(app, ns):
                             and not is_closed()
                         ),
                         published=bool(stage),
+                        accepting_support=accepting_support,
                         qualified=bool(stage and stage.stage == 'qualified'),
                         meets_threshold=bool(counts.get('met')),
                         supporters=counts.get('supporters', 0),
