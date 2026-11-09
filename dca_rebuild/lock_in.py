@@ -24,6 +24,49 @@ DECKS = {
 }
 
 
+# Demonstration decks follow the card categories in the original rulebook.
+# These are examples of a mixed 25-card build, NOT fixed category quotas.
+# Keep the earlier 25-person research rosters in DECKS for provenance; those
+# source lists are not themselves valid mixed playing decks.
+SAMPLE_DECKS = {
+    "performance": (
+        ("Dancer", ("Airman", "Aquaman", "Baby Doll", "C Boogie", "E Nauti", "J Dot")),
+        ("Arena", ("COL 135th", "The Lite House")),
+        ("Producer", ("Reel Hetic", "Big Wav3")),
+        ("Song", ("Pure Imagination", "Lonely Nights", "Trap So Hard")),
+        ("Move", ("Rev Up", "Tone Whop", "Butterfly", "Stutter Step", "Knee Drop",
+                  "Coin Drop", "Needle & Thread")),
+        ("Trick", ("Shoe Trick", "Hat Trick")),
+        ("Upgrade", ("Fake Out", "Chant")),
+        ("Frib", ("No Hype",)),
+    ),
+    "spank": (
+        ("Dancer", ("Fro Man", "Goya", "Hoodstar", "J Rite", "Kid 50", "Kid Patt")),
+        ("Arena", ("COL Cypress", "Union Square")),
+        ("Producer", ("AyeJaeBeats", "Kid The Wiz")),
+        ("Song", ("Trap So Hard", "Lonely Nights", "Pure Imagination")),
+        ("Move", ("Bad One", "Around The World", "Gangsta Lean", "Swiss Drop",
+                  "Kiss Of Death", "No Gwop", "Slatter Gwop")),
+        ("Trick", ("Shoe Clap", "Shirt Trick")),
+        ("Upgrade", ("Fake Out", "Tag In")),
+        ("Frib", ("Slippery Floors",)),
+    ),
+}
+
+
+def public_sample_decks():
+    result = []
+    for index, (key, categories) in enumerate(SAMPLE_DECKS.items(), start=1):
+        total = sum(len(cards) for _, cards in categories)
+        if not 25 <= total <= 50:
+            raise ValueError("Sample deck must contain 25–50 total cards")
+        result.append(dict(key=key, name=f"Sample deck {index}",
+                           total=total,
+                           categories=[dict(type=kind, count=len(cards), cards=cards)
+                                       for kind, cards in categories]))
+    return result
+
+
 # Conditions and BP values below are practice scenarios, based on submitted card ideas.
 ROUNDS = {
     key: dict(dancer=deck["dancer"], scene=f'{deck["arena"]} · {deck["song"]} by Reel Hectic',
@@ -80,5 +123,5 @@ def practice_view(args):
             result = dict(score=score, base=base, bonus=bonus, reduction=reduction, opponent=opponent,
                           outcome="You win" if score > opponent else "Tie" if score == opponent else "Opponent wins")
     keys = list(ROUNDS)
-    return dict(decks=DECKS, rounds=ROUNDS, round_key=key, battle=round_data,
+    return dict(decks=DECKS, sample_decks=public_sample_decks(), rounds=ROUNDS, round_key=key, battle=round_data,
                 next_key=keys[(keys.index(key) + 1) % len(keys)], selected=moves, result=result, error=error)
