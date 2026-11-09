@@ -701,7 +701,7 @@ def install_phase9e(app, ns):
             db.close()
 
     @app.route('/awards/dancers-choice/nomination-reasons', methods=['GET', 'POST'],
-               endpoint='dca_nomination_reasons')
+               endpoint='phase9e_nomination_reasons')
     def qualification_reasons():
         """Public list and moderated supporting reasons, separate from nominations."""
         with SessionLocal() as db:
@@ -745,12 +745,12 @@ def install_phase9e(app, ns):
                     db.rollback()
                     abort(409, 'Reason already submitted')
                 flash('Reason submitted for eligibility review. Nomination totals have not changed.')
-                return redirect(url_for('dca_nomination_reasons'), code=303)
+                return redirect(url_for('phase9e_nomination_reasons'), code=303)
             return render_template('dca_nomination_reasons.html', pending=pending,
                                    csrf_token=session['lf9e_nomination_csrf'])
 
     @app.route('/admin/dca/nomination-reasons', methods=['GET', 'POST'],
-               endpoint='admin_dca_nomination_reasons')
+               endpoint='admin_phase9e_nomination_reasons')
     @admin_login_required
     def review_qualification_reasons():
         if request.method == 'POST':
@@ -766,7 +766,7 @@ def install_phase9e(app, ns):
                     abort(404)
                 row.moderation_status = decision
                 row.reviewed_at = datetime.utcnow()
-            return redirect(url_for('admin_dca_nomination_reasons'), code=303)
+            return redirect(url_for('admin_phase9e_nomination_reasons'), code=303)
         with SessionLocal() as db:
             reasons = db.query(NomineeQualificationReason9E).order_by(
                 NomineeQualificationReason9E.submitted_at.desc()).limit(500).all()
