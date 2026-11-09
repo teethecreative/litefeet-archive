@@ -8,7 +8,7 @@ from flask import g, request, render_template, redirect, abort, jsonify, session
 from dca_rebuild.models import LedgerEra, BetaChangelog, VaultArchiveVerification, LockInCardRequest
 from dca_rebuild.public_site_updates import PUBLIC_SITE_UPDATES
 from dca_rebuild.archive_history_guide import load_history_guide
-from dca_rebuild.lock_in import practice_view
+from dca_rebuild.lock_in import practice_view, published_music_cards
 from dca_rebuild.timeline_catalog import timeline_browse, timeline_payload
 from dca_rebuild.upcoming_calendar import upcoming_calendar
 from dca_rebuild.archive_recovery import recovery_review
@@ -171,7 +171,7 @@ def install_information_architecture(app, ns):
         if 'lock_card_csrf' not in session:
             session['lock_card_csrf'] = secrets.token_urlsafe(32)
         return section_page('lock-in', lock_card_csrf=session['lock_card_csrf'],
-                            **practice_view(request.args))
+                            **practice_view(request.args, extra_songs=published_music_cards(ns['engine'])))
 
     @app.post('/archive/lock-in/card-requests', endpoint='vault_lock_in_card_request')
     def lock_in_card_request():
