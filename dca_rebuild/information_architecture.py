@@ -2,8 +2,10 @@
 from datetime import datetime, timedelta
 import hashlib
 import secrets
+import json
+from urllib.parse import urlsplit
 from flask import g, request, render_template, redirect, abort, jsonify, session, url_for, flash, current_app
-from dca_rebuild.models import LedgerEra, BetaChangelog, VaultArchiveVerification
+from dca_rebuild.models import LedgerEra, BetaChangelog, VaultArchiveVerification, LockInCardRequest
 from dca_rebuild.public_site_updates import PUBLIC_SITE_UPDATES
 from dca_rebuild.archive_history_guide import load_history_guide
 from dca_rebuild.lock_in import practice_view
@@ -166,7 +168,56 @@ def install_information_architecture(app, ns):
 
     @app.get('/archive/lock-in', endpoint='vault_lock_in')
     def lock_in():
-        return section_page('lock-in', **practice_view(request.args))
+        if 'lock_card_csrf' not in session:
+            session['lock_card_csrf'] = secrets.token_urlsafe(32)
+        return section_page('lock-in', lock_card_csrf=session['lock_card_csrf'],
+                            **practice_view(request.args))
+
+    @app.post('/archive/lock-in/card-requests', endpoint='vault_lock_in_card_request')
+    def lock_in_card_request():
+        token = request.form.get('csrf_token', '')
+        expected = session.get('lock_card_csrf', '')
+        if not expected or not secrets.compare_digest(token, expected):
+            return jsonify(error='Please refresh the page and try again.'), 400
+        now = datetime.utcnow()
+        previous = session.get('lock_card_request_at')
+        if previous:
+            try:
+                if (now - datetime.fromisoformat(previous)).total_seconds() < 30:
+                    return jsonify(error='Please wait before submitting another request.'), 429
+            except ValueError:
+                pass
+        kind = request.form.get('card_type', '').strip()
+        name = request.form.get('card_name', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        if kind not in {'Dancer', 'Song', 'Arena', 'Move', 'Trick', 'Upgrade', 'Frib'}:
+            return jsonify(error='Select a card type.'), 400
+        if not 2 <= len(name) <= 160 or not 3 <= len(email) <= 255 or '@' not in email:
+            return jsonify(error='Enter a card name and contact email.'), 400
+        fields = ('aliases', 'team_location', 'stats', 'signature', 'permission',
+                  'producer', 'release_year', 'era_level', 'arena_location',
+                  'arena_type', 'arena_history', 'gameplay')
+        limits = {'aliases':240,'team_location':240,'stats':500,'signature':500,
+                  'permission':30,'producer':160,'release_year':4,'era_level':160,
+                  'arena_location':200,'arena_type':120,'arena_history':700,'gameplay':1000}
+        payload = {key: request.form.get(key, '').strip() for key in fields}
+        if any(len(value) > limits[key] for key, value in payload.items()):
+            return jsonify(error='A response is too long.'), 400
+        if kind == 'Dancer' and payload['permission'] not in ('yes','request-first','not-confirmed'):
+            return jsonify(error='Select a permission option.'), 400
+        if kind == 'Song' and not payload['producer']:
+            return jsonify(error='Who produced this song?'), 400
+        if kind == 'Arena' and not payload['arena_history']:
+            return jsonify(error='Tell us why this space matters to LiteFeet.'), 400
+        source = request.form.get('source', '').strip()
+        if len(source) > 800 or (source and urlsplit(source).scheme not in ('http','https')):
+            return jsonify(error='Use a valid source link.'), 400
+        with ns['SessionLocal'].begin() as db:
+            db.add(LockInCardRequest(card_type=kind, card_name=name, contact_email=email,
+                                     details_json=json.dumps(payload), source_url=source or None,
+                                     status='pending'))
+        session['lock_card_request_at'] = now.isoformat()
+        return jsonify(ok=True, message='Card request received for review.'), 201
 
     @app.get('/archive/timeline', endpoint='vault_timeline')
     def timeline():
