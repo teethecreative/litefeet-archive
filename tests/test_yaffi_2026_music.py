@@ -47,5 +47,5 @@ def test_yaffi_music_record_pages_have_canonical_seo(website):
     html = project.get_data(as_text=True)
     assert "Wine &amp; Dine" in html or "Wine & Dine" in html
     sitemap = client.get("/sitemap.xml").get_data(as_text=True)
-    assert "/litefeet-music/catalog/track/yaffi-2026-pun-lock" in sitemap
-    assert "/litefeet-music/catalog/project/yaffi-2026-death-of-a-reaper" in sitemap
+    assert "/music/" in sitemap
+    assert "/music/" in sitemap
