@@ -47,3 +47,16 @@
 #lock-workbench #lock-request-panel label{display:block;font-weight:500}
 #lock-workbench #lock-request-panel [type=submit]{margin-top:.6rem}
 @media(max-width:620px){#vault-section-lock-in .lock-decks{grid-template-columns:1fr}}
+
+/* Unified Lock In game-mode picker */
+#lock-workbench #lock-mode-picker{display:flex;flex-wrap:wrap;gap:.65rem;margin:1rem 0 1.3rem;border:0;padding:0;min-width:0}
+#lock-workbench #lock-mode-picker legend{font-weight:700;margin-bottom:.65rem}
+#lock-workbench #lock-mode-picker label{display:flex;align-items:center;gap:.55rem;margin:0;padding:.7rem .85rem;border:1px solid #70849e;border-radius:.5rem;cursor:pointer;font-weight:600;flex:1 1 10rem}
+#lock-workbench #lock-mode-picker input{accent-color:#c9a52b;flex-shrink:0}
+#lock-workbench #lock-mode-picker label:has(input:checked){border-color:#c9a52b;background:rgba(201,165,43,.12)}
+#lock-workbench #lock-battle-mode[hidden],#lock-workbench #lock-moves-mode[hidden]{display:none!important}
+#lock-workbench #lock-moves-mode select,#lock-workbench #lock-moves-mode input:not([type=checkbox]){max-width:100%;width:100%;box-sizing:border-box}
+#lock-workbench #lock-moves-mode form{display:grid;gap:.65rem;margin:1rem 0}
+#lock-workbench #lock-moves-mode fieldset{min-width:0;display:flex;flex-wrap:wrap;gap:.7rem;padding:.9rem}
+#lock-workbench #lock-moves-mode fieldset label{display:flex;gap:.45rem;align-items:center;margin:0}
+#lock-workbench #lock-moves-mode .lock-result{margin-top:1rem}
