@@ -43,12 +43,16 @@
 </section>
 {% elif section in ['categories','activity','results'] %}
 <form method="get" class="lfv-admin-workspace-filters" role="search"><label>Search {{ section|replace('_',' ') }}
-<input name="q" value="{{ search }}" maxlength="100" placeholder="Category or nominee"></label><button type="submit">Search</button>{% if search %}<a href="{{ url_for('admin_dca_workspace_section',section=section) }}">Clear</a>{% endif %}</form>
+<input name="q" value="{{ search }}" maxlength="100" placeholder="Category or nominee"></label>
+{% if section in ['categories','results'] %}
+<label>Moderation status<select name="status"><option value="all">All statuses</option>{% for option in status_options %}<option value="{{ option }}" {% if selected_status == option %}selected{% endif %}>{{ option|replace('_',' ')|title }}</option>{% endfor %}</select></label>
+{% endif %}
+<button type="submit">Filter</button>{% if search or selected_status != 'all' %}<a href="{{ url_for('admin_dca_workspace_section',section=section) }}">Clear</a>{% endif %}</form>
 <p class="lfv-admin-workspace-count">{{ total }} record{% if total != 1 %}s{% endif %} · up to 20 per page</p>
 <div class="lfv-admin-table-wrap"><table class="lfv-admin-review-table">
 {% if section == 'categories' %}
 <thead><tr><th scope="col">2026 Category</th><th scope="col">Status</th><th scope="col">Origin</th><th scope="col">Description</th></tr></thead>
-<tbody>{% for row in rows %}<tr><td><strong>{{ row.name }}</strong></td><td>{{ row.status|replace('_',' ')|title }}</td><td>{{ row.source|replace('_',' ')|title }}</td><td>{{ row.description or 'Description needed' }}</td></tr>{% else %}<tr><td colspan="4">No matching categories.</td></tr>{% endfor %}</tbody>
+<tbody>{% for row in rows %}<tr><td><strong>{{ row.name }}</strong></td><td>{{ row.status|replace('_',' ')|title }}</td><td>{{ row.source|replace('_',' ')|title }}</td><td>{{ row.description or 'Description needed' }}</td></tr>{% else %}<tr><td colspan="4">No 2026 category records match this search and status. Historical rejected suggestions are in the Round 1 Archive.</td></tr>{% endfor %}</tbody>
 {% elif section == 'activity' %}
 <thead><tr><th scope="col">Submitted</th><th scope="col">Category</th><th scope="col">Nominee</th><th scope="col">Record</th></tr></thead>
 <tbody>{% for row in rows %}<tr><td>{{ row.when.strftime('%b %-d, %Y %I:%M %p') if row.when else 'Unknown' }}</td><td>{{ row.category }}</td><td><strong>{{ row.nominee }}</strong></td><td>{{ row.source }} #{{ row.id }}</td></tr>{% else %}<tr><td colspan="4">No matching nominations.</td></tr>{% endfor %}</tbody>
@@ -56,8 +60,8 @@
 <thead><tr><th scope="col">Category</th><th scope="col">Nominee</th><th scope="col">Nominee status</th><th scope="col">Nominations</th></tr></thead>
 <tbody>{% for row in rows %}<tr><td>{{ row.category }}</td><td><strong>{{ row.nominee }}</strong></td><td>{{ row.status|title }}</td><td>{{ row.supports }}</td></tr>{% else %}<tr><td colspan="4">No matching nominee standings.</td></tr>{% endfor %}</tbody>
 {% endif %}</table></div>
-{% if pages > 1 %}<nav class="lfv-admin-workspace-pagination" aria-label="Results pages">{% if page > 1 %}<a href="{{ url_for('admin_dca_workspace_section',section=section,page=page-1,q=search) }}">← Previous</a>{% endif %}<span>Page {{ page }} of {{ pages }}</span>{% if page < pages %}<a href="{{ url_for('admin_dca_workspace_section',section=section,page=page+1,q=search) }}">Next →</a>{% endif %}</nav>{% endif %}
-{% if section == 'categories' %}<p class="lfv-dca-footnote">Categories shown here are saved 2026 records. Historical survey moderation and old draft-selection checkboxes are in the Round 1 Archive.</p>{% endif %}
+{% if pages > 1 %}<nav class="lfv-admin-workspace-pagination" aria-label="Results pages">{% if page > 1 %}<a href="{{ url_for('admin_dca_workspace_section',section=section,page=page-1,q=search,status=selected_status) }}">← Previous</a>{% endif %}<span>Page {{ page }} of {{ pages }}</span>{% if page < pages %}<a href="{{ url_for('admin_dca_workspace_section',section=section,page=page+1,q=search,status=selected_status) }}">Next →</a>{% endif %}</nav>{% endif %}
+{% if section == 'categories' %}<p class="lfv-dca-footnote">Categories shown here are saved 2026 category records. Rejected category suggestions from the earlier survey remain in <a href="{{ url_for('admin_round1') }}">Round 1 Archive</a>; use its Rejected filter to see those submissions.</p>{% endif %}
 {% elif section == 'history' %}
 <section class="lfv-dca-note"><h2>Historical category selection</h2><p>This is the earlier survey used to review returning 2023 categories and new suggestions for the 2026 edition. Its Yes/No votes, selected draft checkboxes and survey email activity are not the current nominee results.</p>
 <p><strong>{{ stats.survey_total }}</strong> Round 1 submissions are recorded.</p>
