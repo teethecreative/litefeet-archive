@@ -31,8 +31,8 @@
     ["Dancer","Song","Arena"].forEach(function(t){if(!deck.some(function(c){return c.type===t;}))p.push("A "+t+" card is required for this 1v1 setup.");});
     if(!deck.some(function(card){return card.type==="Move"&&["Rev Ups","Wops"].includes(pool[card.id]&&pool[card.id].move_family);}))
       p.push("Add a Rev Up or Tone Wop opening card.");
-    if(!deck.some(function(card){var item=pool[card.id]||card;return item.type==="Trick"||(item.type==="Move"&&["Footwork","Combo"].includes(item.move_family));}))
-      p.push("Add at least one Footwork, Combo, or Trick main-move card.");
+    if(!deck.some(function(card){var item=pool[card.id]||card;return item.type==="Trick"||(item.type==="Move"&&["Footwork","Combo","Bad One"].includes(item.move_family));}))
+      p.push("Add at least one Footwork, Combo, Bad One variation, or Trick main-move card.");
     return p;
   }
   function options(t){
@@ -85,7 +85,7 @@
     if(phase==="rev"&&card.type==="Move"&&["Rev Ups","Wops"].includes(card.move_family)){
       practiceScenario.rev=id;
     }
-    if(phase==="main"&&(card.type==="Trick"||(card.type==="Move"&&["Footwork","Combo"].includes(card.move_family)))){
+    if(phase==="main"&&(card.type==="Trick"||(card.type==="Move"&&["Footwork","Combo","Bad One"].includes(card.move_family)))){
       practiceScenario.main=id;
       if(id===practiceScenario.trick)practiceScenario.trick="";
     }
@@ -112,7 +112,7 @@
     var eligible;
     if(stage==="rev") eligible=practiceCandidates("Move").filter(function(card){return ["Rev Ups","Wops"].includes(card.move_family);});
     else if(stage==="main") eligible=sc.moves.filter(function(card){
-      return card.type==="Trick"||["Footwork","Combo"].includes(card.move_family);
+      return card.type==="Trick"||["Footwork","Combo","Bad One"].includes(card.move_family);
     });
     else eligible=sc.fribs.filter(function(card){return card.id!==sc.main;});
     if(stage==="main") {
@@ -153,7 +153,7 @@
       return;
     }
     var opponent=randomOne(moves);
-    var mainMoves=shuffle(moves.filter(function(card){return card.id!==opponent.id&&["Footwork","Combo"].includes(card.move_family);}));
+    var mainMoves=shuffle(moves.filter(function(card){return card.id!==opponent.id&&["Footwork","Combo","Bad One"].includes(card.move_family);}));
     // Include documented footwork and a mix of other moves and tricks.
     var footwork=mainMoves.find(function(card){return card.move_family==="Footwork";});
     var responses=footwork?[footwork]:[];
