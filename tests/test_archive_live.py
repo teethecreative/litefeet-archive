@@ -76,7 +76,9 @@ def test_source_specific_event_and_research_pages(website):
     assert 'Nauli &amp; Lexi' in text
     assert 'Intermission matchups' in text
     assert 'No verified results' not in text
-    assert 'true' in text and 'debatable' in text
+    # A source-backed flyer is not subjected to a truth popularity poll.
+    assert 'Community verification' not in text
+    assert 'Community-reported outcomes' in text
     assert client.get('/archive/records/does-not-exist').status_code == 404
     person = client.get('/archive/records/research-mr-youtube')
     assert person.status_code == 200
