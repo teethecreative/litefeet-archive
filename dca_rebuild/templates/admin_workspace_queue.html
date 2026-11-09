@@ -1,0 +1,16 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Review Queue | The LiteFeet Vault</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}"></head>
+<body class="ledger-admin">{% include "_admin_navigation.html" %}
+<main class="lfv-admin-workspace"><p><a href="{{ url_for('admin_dashboard') }}">← Back to Overview</a></p>
+<header class="lfv-admin-workspace-head"><p class="lfv-admin-overline">ADMIN / MODERATION</p><h1>Needs Attention</h1><p>Review pending submissions from across the site, in one chronological list. Each action opens the original review workflow.</p></header>
+<form method="get" class="lfv-admin-workspace-filters" action="{{ url_for('admin_vault_review_queue') }}">
+<label>Section<select name="section">{% for s in sections %}<option value="{{ s }}" {% if s == section %}selected{% endif %}>{{ s|replace('-',' ')|title }}</option>{% endfor %}</select></label>
+<label>Order<select name="sort"><option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest first</option><option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest first</option></select></label>
+<button type="submit">Apply filters</button></form>
+<p class="lfv-admin-workspace-count">{{ total }} pending item{% if total != 1 %}s{% endif %} · 10 per page</p>
+{% include "admin_workspace_table.html" %}
+{% if pages > 1 %}<nav class="lfv-admin-workspace-pagination" aria-label="Review queue pages">
+{% if page > 1 %}<a href="{{ url_for('admin_vault_review_queue',section=section,sort=sort,page=page-1) }}">← Previous</a>{% endif %}
+<span>Page {{ page }} of {{ pages }}</span>
+{% if page < pages %}<a href="{{ url_for('admin_vault_review_queue',section=section,sort=sort,page=page+1) }}">Next →</a>{% endif %}
+</nav>{% endif %}</main></body></html>
