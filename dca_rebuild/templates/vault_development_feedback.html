@@ -1,0 +1,17 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Website Feedback | The LiteFeet Vault</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}"></head>
+<body>{% include "_navigation.html" %}<main class="lfv-public-feedback">
+<p class="lfv-admin-overline">THE LITEFEET VAULT / COMMUNITY</p>
+{% if submitted %}<h1>Feedback received</h1><p>Thank you. Your suggestion has been submitted privately for review.</p><a href="{{ url_for('index') }}">Back to the Vault</a>
+{% else %}<h1>Website feedback</h1><p>Suggest an improvement or report a problem with the website. Feedback is reviewed before any change is made.</p>
+<form method="post" action="{{ url_for('vault_development_feedback_public') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<div class="lfv-workspace-honeypot" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+<label>What should we improve? <input name="title" maxlength="240" minlength="3" required></label>
+<label>Area <select name="area"><option value="site">Website</option><option value="archive">Archive</option><option value="awards">Awards</option><option value="events">Events</option><option value="music">Music</option><option value="lock-in">Lock In</option><option value="other">Other</option></select></label>
+<label>Details <textarea name="details" maxlength="3000" rows="5" minlength="10" required></textarea></label>
+<label>Email (optional, kept private) <input name="email" type="email" maxlength="255"></label>
+<p class="lfv-feedback-privacy">Your feedback and optional email go only to the administrators, not to public records or listings.</p>
+<button type="submit">Send feedback</button>
+</form>{% endif %}
+</main></body></html>
