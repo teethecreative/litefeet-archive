@@ -5,7 +5,7 @@
 <style>
 .dca-nom-table th a{display:inline-flex;gap:.35rem;align-items:center;color:inherit;text-decoration:none;font-weight:inherit}
 .dca-nom-table th a:hover,.dca-nom-table th a:focus-visible{text-decoration:underline;text-underline-offset:3px}
-.dca-nom-table th[aria-sort="ascending"] a,.dca-nom-table th[aria-sort="descending"] a{color:var(--gold-light,#e7cb68)}
+.dca-nom-table th[aria-sort="ascending"] a,.dca-nom-table th[aria-sort="descending"] a{color:var(--text,#fff)}
 .dca-nominations-admin{max-width:1040px;margin:3rem auto;padding:0 1.25rem}
 .dca-nominations-admin h1{margin-bottom:.5rem}
 .dca-nom-table{width:100%;border-collapse:collapse}
@@ -27,8 +27,10 @@
   <!-- LFV_EDITORIAL_V2_20261102 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
 </head><body>{% include "_admin_navigation.html" %}
-<main class="dca-nominations-admin"><p><a href="{{ url_for('admin_dca_workspace') }}">← DCA 2026 Overview</a></p><p>DCA 2026 · NOMINEES</p><h1>NOMINEE REVIEW</h1>
-<p>Review nominee records and their approval status. Nomination submissions and standings are on separate pages.</p>
+<main class="dca-nominations-admin">
+<a class="lfv-admin-back-link" href="{{ url_for('admin_dca_workspace') }}">← DCA 2026 Overview</a>
+<header class="lfv-admin-plain-head"><p class="lfv-admin-overline">DCA 2026 / NOMINEES</p><h1>Nominee Review</h1>
+<p>Review nominee records and their approval status. Nomination submissions and standings are on separate pages.</p></header>
 <p><a href="{{ url_for('admin_dca_workspace_section',section='categories') }}">2026 Categories</a> · <a href="{{ url_for('admin_dca_workspace_section',section='activity') }}">Nomination Activity</a> · <a href="{{ url_for('admin_dca_workspace_section',section='results') }}">Standings</a></p>
 <p><a href="{{ url_for('admin_dca_nomination_preview') }}">Preview nomination form →</a></p>
 
@@ -44,7 +46,7 @@
 </form>
 <p class="lf-nom-summary">{{ total }} matching nominees · Showing up to 15 per page</p>
 {% if rows %}
-<table class="dca-nom-table"><thead><tr><th scope="col" aria-sort="{% if sort == 'category' %}{{ 'ascending' if direction == 'asc' else 'descending' }}{% else %}none{% endif %}"><a href="{{ url_for('admin_dca_nominations', q=search, status=status, sort='category', direction=('desc' if sort == 'category' and direction == 'asc' else 'asc'), page=1) }}" aria-label="Sort by Category">{% if sort == 'category' %}<span aria-hidden="true">{{ '↑' if direction == 'asc' else '↓' }}</span>{% endif %}Category</a></th><th scope="col" aria-sort="{% if sort == 'nominee' %}{{ 'ascending' if direction == 'asc' else 'descending' }}{% else %}none{% endif %}"><a href="{{ url_for('admin_dca_nominations', q=search, status=status, sort='nominee', direction=('desc' if sort == 'nominee' and direction == 'asc' else 'asc'), page=1) }}" aria-label="Sort by Nominee">{% if sort == 'nominee' %}<span aria-hidden="true">{{ '↑' if direction == 'asc' else '↓' }}</span>{% endif %}Nominee</a></th><th scope="col" aria-sort="{% if sort == 'submissions' %}{{ 'ascending' if direction == 'asc' else 'descending' }}{% else %}none{% endif %}"><a href="{{ url_for('admin_dca_nominations', q=search, status=status, sort='submissions', direction=('desc' if sort == 'submissions' and direction == 'asc' else 'asc'), page=1) }}" aria-label="Sort by Submissions">{% if sort == 'submissions' %}<span aria-hidden="true">{{ '↑' if direction == 'asc' else '↓' }}</span>{% endif %}Submissions</a></th><th scope="col">Review</th></tr></thead><tbody>
+<table class="dca-nom-table"><thead><tr><th scope="col" aria-sort="{% if sort == 'category' %}{{ 'ascending' if direction == 'asc' else 'descending' }}{% else %}none{% endif %}"><a href="{{ url_for('admin_dca_nominations', q=search, status=status, sort='category', direction=('desc' if sort == 'category' and direction == 'asc' else 'asc'), page=1) }}" aria-label="Sort by Category; activate to reverse or select sorting">Category<span class="lfv-sort-glyph" aria-hidden="true">{% if sort == 'category' %}{{ '↑' if direction == 'asc' else '↓' }}{% else %}↕{% endif %}</span></a></th><th scope="col" aria-sort="{% if sort == 'nominee' %}{{ 'ascending' if direction == 'asc' else 'descending' }}{% else %}none{% endif %}"><a href="{{ url_for('admin_dca_nominations', q=search, status=status, sort='nominee', direction=('desc' if sort == 'nominee' and direction == 'asc' else 'asc'), page=1) }}" aria-label="Sort by Nominee; activate to reverse or select sorting">Nominee<span class="lfv-sort-glyph" aria-hidden="true">{% if sort == 'nominee' %}{{ '↑' if direction == 'asc' else '↓' }}{% else %}↕{% endif %}</span></a></th><th scope="col" aria-sort="{% if sort == 'submissions' %}{{ 'ascending' if direction == 'asc' else 'descending' }}{% else %}none{% endif %}"><a href="{{ url_for('admin_dca_nominations', q=search, status=status, sort='submissions', direction=('desc' if sort == 'submissions' and direction == 'asc' else 'asc'), page=1) }}" aria-label="Sort by Submissions; activate to reverse or select sorting">Submissions<span class="lfv-sort-glyph" aria-hidden="true">{% if sort == 'submissions' %}{{ '↑' if direction == 'asc' else '↓' }}{% else %}↕{% endif %}</span></a></th><th scope="col">Review</th></tr></thead><tbody>
 {% for nominee, category_name, total in rows %}
 <tr><td>{{ category_name }}</td><td>{{ nominee.name }}</td><td>{{ total }}</td><td>
 <form method="post" action="{{ url_for('admin_dca_nominations') }}">
