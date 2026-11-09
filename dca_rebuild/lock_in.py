@@ -95,7 +95,7 @@ RULEBOOK_CARDS = {
               "D Cole", "Devoe", "FNL", "L Pac", "Millbank", "Mindlezz Thoughtz",
               "NYC Subway", "Rucker Park / Kingdom", "Slattery Park", "Terror Dome",
               "Times Square", "The Lite House", "Union Square", "Wild Out Saturdays"),
-    "Move": ("Rev Up", "Bad One", "Tone Whop", "Butterfly", "Tweak",
+    "Move": ("Rev Up", "Bad One", "Jo Smooth Bad One", "Good One", "Tone Whop", "Butterfly", "Tweak",
              "Around The World", "Gangsta Lean", "Stutter Step", "Knee Drop",
              "Swiss Drop", "Coin Drop", "Kiss Of Death", "Needle & Thread",
              "Villain Swoop", "Streetfighter Walk", "No Gwop", "Slatter Gwop"),
@@ -110,14 +110,16 @@ RULEBOOK_CARDS = {
 # Source-grounded move taxonomy. The original rulebook (Move Cards, p. 4)
 # distinguishes opening setup from Ankles/Footwork and Combos.
 # Latest game direction: only Rev Up OR Tone Wop may open a standard round.
-# "Bad One" is in the older rulebook's setup list, but its status under the
-# updated opening rule needs review: preserve the catalog entry without making
-# it a legal opening or a main move. Trick and Frib are separate card TYPES.
+# Bad One is a move family with Jo Smooth Bad One and Good One variations
+# confirmed by the user. It is not a Rev Up / Tone Wop opening.
+# Trick and Frib remain separate card TYPES.
 MOVE_FAMILIES = {
     "rev up": "Rev Ups",
     "tone whop": "Wops",
     "tone wop": "Wops",
-    "bad one": "Legacy setup — review",
+    "bad one": "Bad One",
+    "jo smooth bad one": "Bad One",
+    "good one": "Bad One",
     "butterfly": "Footwork",
     "tweak": "Footwork",
     "around the world": "Footwork",
@@ -135,7 +137,7 @@ MOVE_FAMILIES = {
 }
 
 OPENING_FAMILIES = frozenset(("Rev Ups", "Wops"))
-MAIN_MOVE_FAMILIES = frozenset(("Footwork", "Combo"))
+MAIN_MOVE_FAMILIES = frozenset(("Footwork", "Combo", "Bad One"))
 
 
 def sample_deck_readiness(categories):
