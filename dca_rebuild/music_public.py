@@ -8,6 +8,7 @@ from datetime import datetime, date
 import re
 from sqlalchemy import inspect, text
 from dca_rebuild.archive_catalog import all_records, find_record
+from dca_rebuild.music_batch_catalog import combined_releases, batch_record
 
 def full_date(value):
     """Render stored release dates with spelled-out months; never invent precision."""
@@ -68,14 +69,13 @@ def install_music_public(app, engine):
     @app.get("/litefeet-music", endpoint="vault_music_public")
     def vault_music_public():
         search = (request.args.get("q") or "").strip().casefold()[:120]
-        releases = music_rows()
+        releases = combined_releases(music_rows(), full_date, music_duration)
         if search:
             releases = [row for row in releases if search in " ".join(
                 str(row.get(k) or "") for k in
-                ("title", "artist", "artist_or_creator", "producer", "producer_name", "description")
+                ("title", "artist", "artist_or_creator", "producer", "producer_name",
+                 "description", "project_title", "record_type")
             ).casefold()]
-        releases = [dict(row, date_label=full_date(row.get("release_date")),
-                         duration_label=music_duration(row)) for row in releases]
         return render_template("music_timeline.html", releases=releases, search=search)
 
     @app.get("/litefeet-music/release/<int:item_id>", endpoint="vault_music_release")
@@ -83,8 +83,20 @@ def install_music_public(app, engine):
         item = next((row for row in music_rows() if row["id"] == item_id), None)
         if item is None:
             abort(404)
-        return render_template("music_release_public.html", item=item)
+        return render_template("music_release_public.html", item=dict(item, date_label=full_date(item.get("release_date")), duration_label=music_duration(item)))
 
+    @app.get("/litefeet-music/catalog/<kind>/<catalog_id>", endpoint="vault_music_catalog_record")
+    def vault_music_catalog_record(kind, catalog_id):
+        if kind not in ("track", "project"):
+            abort(404)
+        item = batch_record(kind, catalog_id)
+        if item is None:
+            abort(404)
+        return render_template("music_release_public.html", item=dict(
+            item, date_label=(full_date(item.get("release_date"))
+                 if item.get("release_date") else item.get("release_year") or "Date unknown"),
+            duration_label=music_duration(item)))
+    
     @app.get("/media", endpoint="vault_media_public")
     def vault_media_public():
         return render_template("media_home.html")
