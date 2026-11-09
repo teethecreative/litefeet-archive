@@ -200,7 +200,7 @@
   <section class="lfv3-section lfv5-month-calendar" id="whats-new" aria-labelledby="month-title">
     <div class="lfv4-section-topline"><p class="lfv3-eyebrow">WHAT'S HAPPENING</p><span>{{ vault_upcoming_calendar.label }}</span></div>
     <h2 id="month-title">THIS MONTH IN LITEFEET</h2>
-    <p class="lfv5-calendar-intro">UPCOMING BATTLES, EVENTS AND COMMUNITY GATHERINGS IN THE NEXT 30 DAYS.</p>
+    <p class="lfv5-calendar-intro">Upcoming battles, events and community gatherings in the next 30 days.</p>
     <div class="lfv5-calendar-strip" aria-label="NEXT 30 DAYS">
       {% for day in vault_upcoming_calendar.days %}
       <a class="lfv5-calendar-day{% if day.today %} is-today{% endif %}{% if day.events %} has-events{% endif %}" href="#calendar-events" aria-label="{{ day.month }} {{ day.number }}: {{ day.events|length }} EVENTS">
@@ -212,13 +212,13 @@
     <div class="lfv5-calendar-events" id="calendar-events">
     {% for event in vault_upcoming_calendar.events %}
       <article class="lfv5-calendar-event">
-        <time datetime="{{ event.date }}">{{ event.date }}</time>
+        <time datetime="{{ event.date }}">{{ event.display_date }}</time>
         <div><h3><a href="{{ event.href }}">{{ event.title }}</a></h3>
           {% if event.description %}<p>{{ event.description }}</p>{% endif %}</div>
         <span>{{ event.status }}</span>
       </article>
     {% else %}
-      <p class="lfv5-calendar-empty">NO UPCOMING GATHERINGS HAVE BEEN LISTED FOR THE NEXT 30 DAYS. KNOW ABOUT A BATTLE, LAB, CLASS OR LINK-UP? <a href="{{ url_for('vault_submit') }}">SUBMIT →</a></p>
+      <p class="lfv5-calendar-empty">No upcoming gatherings have been listed for the next 30 days. Know about a battle, lab, class or link-up? <a href="{{ url_for('vault_submit') }}">SUBMIT →</a></p>
     {% endfor %}
     </div>
     <a class="lfv5-minimal-action" href="{{ url_for('vault_timeline') }}">EXPLORE THE FULL TIMELINE <span aria-hidden="true">→</span></a>
