@@ -430,7 +430,7 @@ def round1():
 
         categories = (
             db.query(DCACategory)
-            .filter(DCACategory.edition_id == historical.id)
+            .filter(DCACategory.edition_id == (historical.id if historical else -1))
             .order_by(DCACategory.name.asc())
             .all()
         )
