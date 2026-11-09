@@ -17,7 +17,7 @@
   const canonical = document.querySelector('link[rel="canonical"]');
   const cleanLink = canonical?.href || location.origin + location.pathname;
   const currentPath = location.pathname;
-  const awardPage = currentPath.startsWith("/awards/dancers-choice") || currentPath === "/write-ins";
+  const awardPage = currentPath.startsWith("/awards/dancers-choice") || currentPath.startsWith("/awards/2026/") || currentPath === "/write-ins";
   const context = new URLSearchParams(location.search);
   let format = "story";
   let data = null;
@@ -48,6 +48,10 @@
     if (!awardPage || !data) return cleanLink;
     const {s,c,n} = settings();
     if (s === "awards") return location.origin + "/awards/dancers-choice/2026";
+    const selected = data.categories.find(x => String(x.id) === c);
+    const selectedNominee = selected?.nominees?.find(x => String(x.id) === n);
+    if (s === "nominee" && selectedNominee?.href) return location.origin + selectedNominee.href;
+    if (selected?.href) return location.origin + selected.href;
     const params = new URLSearchParams({view:"results",category:c});
     if (s === "nominee") params.set("suggestion",n);
     return location.origin + "/awards/dancers-choice/nominations?" + params;
@@ -148,16 +152,21 @@
     data = payload;
     fill(category, data.categories, "Select category");
     const fromUrl = context.get("category");
-    const preset = data.categories.find(x => String(x.id) === fromUrl);
+    const cleanPreset = data.categories.find(x => x.href === currentPath ||
+      x.nominees?.some(n => n.href === currentPath));
+    const preset = cleanPreset || data.categories.find(x => String(x.id) === fromUrl);
     if (preset) category.value = String(preset.id);
     else if (category.options.length > 1) category.selectedIndex = 1;
     if (preset) {
-      scope.value = context.get("suggestion") ? "nominee" : "category";
+      scope.value = context.get("suggestion") || preset.nominees?.some(n => n.href === currentPath)
+        ? "nominee" : "category";
       if (context.get("share") === "nominees") scope.value = "nominees";
     }
     refresh();
-    if (context.get("suggestion") && scope.value === "nominee") {
-      const found = [...nominee.options].find(x => x.value === context.get("suggestion"));
+    const fromNominee = preset?.nominees?.find(n => n.href === currentPath);
+    const nomineeId = fromNominee ? String(fromNominee.id) : context.get("suggestion");
+    if (nomineeId && scope.value === "nominee") {
+      const found = [...nominee.options].find(x => x.value === nomineeId);
       if (found) nominee.value = found.value;
     }
     updatePreview();
