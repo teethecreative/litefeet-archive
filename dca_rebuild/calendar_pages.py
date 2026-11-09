@@ -47,16 +47,19 @@ def _calendar_actions(event):
     location = (event.get("address") or event.get("venue") or "")
     if event.get("virtual"):
         location = event.get("address") or "Online event"
-    date_text = event["date"].replace("-", "")
+    first_day = event.get("series_start") if event.get("date_range") else event["date"]
+    last_day = event.get("series_end") if event.get("date_range") else event["date"]
+    date_text = first_day.replace("-", "")
+    end_date_text = last_day.replace("-", "")
     start, end = event.get("start_time"), event.get("end_time")
     if start and end:
         start_value = date_text + "T" + start.replace(":", "") + "00"
-        end_value = date_text + "T" + end.replace(":", "") + "00"
+        end_value = end_date_text + "T" + end.replace(":", "") + "00"
         dates = start_value + "/" + end_value
         timezone = event.get("timezone") or "America/New_York"
     else:
         # Legacy events with unstructured times remain all-day rather than inventing hours.
-        following = (date.fromisoformat(event["date"]) + timedelta(days=1)).strftime("%Y%m%d")
+        following = (date.fromisoformat(last_day) + timedelta(days=1)).strftime("%Y%m%d")
         dates = date_text + "/" + following
         timezone = ""
     params = {
@@ -79,18 +82,20 @@ def _escape_ics(value):
 
 
 def _event_ics(event):
-    actions = _calendar_actions(event)
     # Google and downloadable ICS must use the same occurrence and local timezone.
-    day = event["date"].replace("-", "")
+    first_day = event.get("series_start") if event.get("date_range") else event["date"]
+    last_day = event.get("series_end") if event.get("date_range") else event["date"]
+    day = first_day.replace("-", "")
+    last_day_text = last_day.replace("-", "")
     start, end = event.get("start_time"), event.get("end_time")
     timed = bool(start and end)
     if timed:
         zone = event.get("timezone") or "America/New_York"
         begin = "DTSTART;TZID=" + zone + ":" + day + "T" + start.replace(":", "") + "00"
-        finish = "DTEND;TZID=" + zone + ":" + day + "T" + end.replace(":", "") + "00"
+        finish = "DTEND;TZID=" + zone + ":" + last_day_text + "T" + end.replace(":", "") + "00"
     else:
         begin = "DTSTART;VALUE=DATE:" + day
-        finish = "DTEND;VALUE=DATE:" + (date.fromisoformat(event["date"]) + timedelta(days=1)).strftime("%Y%m%d")
+        finish = "DTEND;VALUE=DATE:" + (date.fromisoformat(last_day) + timedelta(days=1)).strftime("%Y%m%d")
     location = event.get("address") or event.get("venue") or ""
     description = event.get("description") or event.get("notice") or ""
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//The LiteFeet Vault//Calendar//EN",
