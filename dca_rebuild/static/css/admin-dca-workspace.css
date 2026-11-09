@@ -1,0 +1,17 @@
+/* DCA 2026 admin: current edition separated from historical survey. */
+.lfv-dca-admin{max-width:1140px}
+.lfv-dca-breadcrumb{margin:0 0 18px;font-size:.8rem;color:var(--lfv-muted,#69758a)}
+.lfv-dca-breadcrumb span{padding:0 8px}
+.lfv-dca-tabs{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;border-bottom:1px solid var(--lfv-line,#96a1b3);margin:0 0 26px;padding:0 0 13px}
+.lfv-dca-tabs a{font-size:.82rem;font-weight:750;text-decoration:none;padding:8px 0;border-bottom:2px solid transparent}
+.lfv-dca-tabs a[aria-current=page]{border-bottom-color:var(--lfv-gold,#c9a52b)}
+.lfv-dca-tabs a:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.lfv-dca-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;border-bottom:1px solid var(--lfv-line,#96a1b3);padding:7px 0 25px;margin-bottom:24px}
+.lfv-dca-stats div{display:grid;gap:5px}
+.lfv-dca-stats strong{font-size:clamp(1.5rem,2.8vw,2.2rem)}
+.lfv-dca-stats span{font-size:.8rem;color:var(--lfv-muted,#69758a)}
+.lfv-dca-note{border-top:1px solid var(--lfv-line,#96a1b3);padding:22px 0;margin-top:25px}
+.lfv-dca-note h2{font-size:1.25rem;margin:4px 0 12px}
+.lfv-dca-note p,.lfv-dca-footnote{font-size:.9rem;line-height:1.65;max-width:78ch;color:var(--lfv-muted,#69758a)}
+.lfv-dca-text-link{display:inline-block;margin:8px 0;font-weight:750;text-underline-offset:4px}
+@media(max-width:700px){.lfv-dca-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.lfv-dca-tabs{gap:8px 15px}}

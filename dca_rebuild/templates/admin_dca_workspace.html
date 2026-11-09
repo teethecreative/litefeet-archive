@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DCA 2026 · {{ section|title }} | The LiteFeet Vault Admin</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/admin-dca-workspace.css') }}">
+</head><body class="ledger-admin">{% include "_admin_navigation.html" %}
+<main class="lfv-admin-workspace lfv-dca-admin">
+<nav class="lfv-dca-breadcrumb" aria-label="Admin location"><a href="{{ url_for('admin_dashboard') }}">Admin Overview</a><span aria-hidden="true"> / </span><a href="{{ url_for('admin_dca_workspace') }}">DCA 2026</a></nav>
+<header class="lfv-admin-workspace-head">
+<p class="lfv-admin-overline">AWARDS / DANCER'S CHOICE / 2026</p>
+<h1>{% if section == 'overview' %}Awards Management{% elif section == 'categories' %}2026 Categories{% elif section == 'activity' %}Nomination Activity{% elif section == 'results' %}Nomination Standings{% else %}Round 1 Survey Archive{% endif %}</h1>
+<p>{% if section == 'overview' %}Current 2026 award administration, separate from the historical category-selection survey.
+{% elif section == 'categories' %}Actual 2026 category records and their official status. This is not the old yes/no category survey.
+{% elif section == 'activity' %}Individual nomination submissions, newest first. Historical imported submissions are identified.
+{% elif section == 'results' %}Nomination support totals only. These are not final votes, winners or certified results.
+{% else %}The earlier 2026 Round 1 category survey, including yes/no preferences, draft selections and email activity. Historical records are preserved.{% endif %}</p>
+</header>
+<nav class="lfv-dca-tabs" aria-label="DCA administrative sections">
+{% for key,label in [('overview','Overview'),('categories','Categories'),('nominees','Nominees'),('activity','Nomination Activity'),('results','Standings'),('history','Round 1 Archive')] %}
+<a href="{% if key == 'overview' %}{{ url_for('admin_dca_workspace') }}{% elif key == 'nominees' %}{{ url_for('admin_dca_nominations') }}{% else %}{{ url_for('admin_dca_workspace_section',section=key) }}{% endif %}" {% if section == key %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
+</nav>
+{% if section == 'overview' %}
+<section class="lfv-dca-stats" aria-label="DCA 2026 administrative totals">
+<div><strong>{{ stats.official_total }}</strong><span>Official categories</span></div>
+<div><strong>{{ stats.nominee_total }}</strong><span>Nominee records</span></div>
+<div><strong>{{ stats.pending_nominees }}</strong><span>Nominees needing review</span></div>
+<div><strong>{{ stats.nomination_total }}</strong><span>Recorded nominations</span></div>
+</section>
+<section class="lfv-admin-workspace-section">
+<h2>Manage 2026</h2>
+<div class="lfv-admin-quick-links">
+<a href="{{ url_for('admin_dca_workspace_section',section='categories') }}"><strong>Categories</strong><span>View current official and other category records</span></a>
+<a href="{{ url_for('admin_dca_nominations') }}"><strong>Nominees</strong><span>Approve, reject or review nominees</span></a>
+<a href="{{ url_for('phase9e_admin_qualification_reasons') }}"><strong>Qualification evidence</strong><span>Review submitted explanations separately from nominations</span></a>
+<a href="{{ url_for('admin_dca_workspace_section',section='activity') }}"><strong>Nomination Activity</strong><span>Review individual submission history without exposing personal identifiers</span></a>
+<a href="{{ url_for('admin_dca_workspace_section',section='results') }}"><strong>Standings</strong><span>Nomination totals; not winners or final vote results</span></a>
+<a href="{{ url_for('admin_dca_workspace_section',section='history') }}"><strong>Round 1 Survey Archive</strong><span>Old category-selection poll and saved draft tools</span></a>
+</div></section>
+<section class="lfv-dca-note"><h2>Current edition</h2>
+<p>Edition phase: <strong>{{ stats.edition_phase|replace('_',' ')|title }}</strong>. The Round 1 category-selection survey received {{ stats.survey_total }} submissions. Those survey figures are archived separately and do not represent 2026 nominations.</p>
+</section>
+{% elif section in ['categories','activity','results'] %}
+<form method="get" class="lfv-admin-workspace-filters" role="search"><label>Search {{ section|replace('_',' ') }}
+<input name="q" value="{{ search }}" maxlength="100" placeholder="Category or nominee"></label><button type="submit">Search</button>{% if search %}<a href="{{ url_for('admin_dca_workspace_section',section=section) }}">Clear</a>{% endif %}</form>
+<p class="lfv-admin-workspace-count">{{ total }} record{% if total != 1 %}s{% endif %} · up to 20 per page</p>
+<div class="lfv-admin-table-wrap"><table class="lfv-admin-review-table">
+{% if section == 'categories' %}
+<thead><tr><th scope="col">2026 Category</th><th scope="col">Status</th><th scope="col">Origin</th><th scope="col">Description</th></tr></thead>
+<tbody>{% for row in rows %}<tr><td><strong>{{ row.name }}</strong></td><td>{{ row.status|replace('_',' ')|title }}</td><td>{{ row.source|replace('_',' ')|title }}</td><td>{{ row.description or 'Description needed' }}</td></tr>{% else %}<tr><td colspan="4">No matching categories.</td></tr>{% endfor %}</tbody>
+{% elif section == 'activity' %}
+<thead><tr><th scope="col">Submitted</th><th scope="col">Category</th><th scope="col">Nominee</th><th scope="col">Record</th></tr></thead>
+<tbody>{% for row in rows %}<tr><td>{{ row.when.strftime('%b %-d, %Y %I:%M %p') if row.when else 'Unknown' }}</td><td>{{ row.category }}</td><td><strong>{{ row.nominee }}</strong></td><td>{{ row.source }} #{{ row.id }}</td></tr>{% else %}<tr><td colspan="4">No matching nominations.</td></tr>{% endfor %}</tbody>
+{% else %}
+<thead><tr><th scope="col">Category</th><th scope="col">Nominee</th><th scope="col">Nominee status</th><th scope="col">Nominations</th></tr></thead>
+<tbody>{% for row in rows %}<tr><td>{{ row.category }}</td><td><strong>{{ row.nominee }}</strong></td><td>{{ row.status|title }}</td><td>{{ row.supports }}</td></tr>{% else %}<tr><td colspan="4">No matching nominee standings.</td></tr>{% endfor %}</tbody>
+{% endif %}</table></div>
+{% if pages > 1 %}<nav class="lfv-admin-workspace-pagination" aria-label="Results pages">{% if page > 1 %}<a href="{{ url_for('admin_dca_workspace_section',section=section,page=page-1,q=search) }}">← Previous</a>{% endif %}<span>Page {{ page }} of {{ pages }}</span>{% if page < pages %}<a href="{{ url_for('admin_dca_workspace_section',section=section,page=page+1,q=search) }}">Next →</a>{% endif %}</nav>{% endif %}
+{% if section == 'categories' %}<p class="lfv-dca-footnote">Categories shown here are saved 2026 records. Historical survey moderation and old draft-selection checkboxes are in the Round 1 Archive.</p>{% endif %}
+{% elif section == 'history' %}
+<section class="lfv-dca-note"><h2>Historical category selection</h2><p>This is the earlier survey used to review returning 2023 categories and new suggestions for the 2026 edition. Its Yes/No votes, selected draft checkboxes and survey email activity are not the current nominee results.</p>
+<p><strong>{{ stats.survey_total }}</strong> Round 1 submissions are recorded.</p>
+<a class="lfv-dca-text-link" href="{{ url_for('admin_round1') }}">Open historical Round 1 survey tools</a></section>
+<section class="lfv-dca-note"><h2>Public archive</h2><p>Historical public results remain separate from current nomination support totals.</p>
+<a href="{{ url_for('round2') }}" target="_blank" rel="noopener noreferrer">View Round 1 category results</a></section>
+{% endif %}
+</main><script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script></body></html>

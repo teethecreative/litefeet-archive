@@ -24,9 +24,9 @@
   <!-- LFV_EDITORIAL_V2_20261102 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
 </head><body>{% include "_admin_navigation.html" %}
-<main class="dca-nominations-admin"><p>DCA 2026 · ADMIN</p><h1>NOMINATION REVIEW</h1>
-<p>Public nominations are closed. This page lets you review nominations once submissions are enabled in a later phase.</p>
-<p><a href="{{ url_for('admin_round1') }}">← Category management</a></p>
+<main class="dca-nominations-admin"><p><a href="{{ url_for('admin_dca_workspace') }}">← DCA 2026 Overview</a></p><p>DCA 2026 · NOMINEES</p><h1>NOMINEE REVIEW</h1>
+<p>Review nominee records and their approval status. Nomination submissions and standings are on separate pages.</p>
+<p><a href="{{ url_for('admin_dca_workspace_section',section='categories') }}">2026 Categories</a> · <a href="{{ url_for('admin_dca_workspace_section',section='activity') }}">Nomination Activity</a> · <a href="{{ url_for('admin_dca_workspace_section',section='results') }}">Standings</a></p>
 <p><a href="{{ url_for('admin_dca_nomination_preview') }}">Preview nomination form →</a></p>
 
 <form method="get" class="lf-nom-filters" role="search">
@@ -51,7 +51,7 @@
 <option value="{{ choice }}" {% if nominee.moderation_status == choice %}selected{% endif %}>{{ choice|capitalize }}</option>
 {% endfor %}</select><button type="submit">Save</button></form>
 </td></tr>{% endfor %}</tbody></table>
-{% else %}<p>No nominations have been submitted yet. This is expected while public nominations are closed.</p>{% endif %}
+{% else %}<p>No nominees match these filters.</p>{% endif %}
 <nav class="lf-nom-pagination" aria-label="Nomination review pages">
 {% if page > 1 %}<a href="{{ url_for('admin_dca_nominations', page=page-1, q=search, status=status) }}">← PREVIOUS</a>{% endif %}
 <span>PAGE {{ page }} OF {{ pages }}</span>

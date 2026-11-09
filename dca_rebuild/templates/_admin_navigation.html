@@ -47,13 +47,15 @@
         </a>
 
         <details class="lf-admin-awards-dropdown">
-          <summary{% if request.endpoint in ['admin_round1', 'admin_dca_nominations'] %} aria-current="page"{% endif %}>AWARDS <span aria-hidden="true">▾</span></summary>
+          <summary{% if request.endpoint in ['admin_dca_workspace','admin_dca_workspace_section','admin_round1','admin_dca_nominations'] %} aria-current="page"{% endif %}>AWARDS <span aria-hidden="true">▾</span></summary>
           <div class="lf-admin-awards-dropdown__menu">
-            <a href="{{ url_for('admin_dashboard') }}#awards">Awards overview</a>
-            <a href="{{ url_for('admin_round1') }}">DCA · Category moderation</a>
-            <a href="{{ url_for('admin_dca_nominations') }}">DCA · Nomination review</a>
-            <a href="{{ url_for('round2') }}" target="_blank" rel="noopener">Round 1 results</a>
-            <a href="{{ url_for('dca_nominations_closed') }}" target="_blank" rel="noopener">Public nominations</a>
+            <a href="{{ url_for('admin_dca_workspace') }}">DCA 2026 · Overview</a>
+            <a href="{{ url_for('admin_dca_workspace_section',section='categories') }}">DCA 2026 · Categories</a>
+            <a href="{{ url_for('admin_dca_nominations') }}">DCA 2026 · Nominees</a>
+            <a href="{{ url_for('admin_dca_workspace_section',section='activity') }}">DCA 2026 · Nomination Activity</a>
+            <a href="{{ url_for('admin_dca_workspace_section',section='results') }}">DCA 2026 · Standings</a>
+            <a href="{{ url_for('admin_dca_workspace_section',section='history') }}">Round 1 · Survey Archive</a>
+            <a href="{{ url_for('admin_lfa_submissions') }}">LiteFeet Awards · Submissions</a>
           </div>
         </details>
 

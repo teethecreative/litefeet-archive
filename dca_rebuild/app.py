@@ -5036,9 +5036,9 @@ install_award_sharing(app)
 from dca_rebuild.admin_workspace import install_admin_workspace
 install_admin_workspace(app, globals())
 
-# Public aliases and canonical paths; existing submission and admin URLs persist.
-from dca_rebuild.public_urls import install_clean_public_urls
-install_clean_public_urls(app, SessionLocal)
+# Separate current DCA 2026 administration from historical category survey.
+from dca_rebuild.dca_admin_workspace import install_dca_admin_workspace
+install_dca_admin_workspace(app, globals())
 
 
 # Every unknown route, including old URLs without a valid destination, uses
@@ -5047,3 +5047,8 @@ install_clean_public_urls(app, SessionLocal)
 @app.errorhandler(404)
 def vault_missing_url(error):
     return render_template("error_404.html"), 404, {"X-Robots-Tag": "noindex, follow"}
+
+
+# Readable public aliases; existing record, submission and admin routes persist.
+from dca_rebuild.public_urls import install_clean_public_urls
+install_clean_public_urls(app, SessionLocal)
