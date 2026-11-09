@@ -86,6 +86,41 @@ def public_sample_decks():
     return result
 
 
+# Search catalog combines the documented card examples and the existing
+# submitted dancer rosters. Unreviewed public requests are never added here.
+RULEBOOK_CARDS = {
+    "Arena": ("80 Grounds", "BC Circle", "COL 135th", "COL Cypress", "COL Teen Night",
+              "D Cole", "Devoe", "FNL", "L Pac", "Millbank", "Mindlezz Thoughtz",
+              "NYC Subway", "Rucker Park / Kingdom", "Slattery Park", "Terror Dome",
+              "Times Square", "The Lite House", "Union Square", "Wild Out Saturdays"),
+    "Move": ("Rev Up", "Bad One", "Tone Whop", "Butterfly", "Tweak",
+             "Around The World", "Gangsta Lean", "Stutter Step", "Knee Drop",
+             "Swiss Drop", "Coin Drop", "Kiss Of Death", "Needle & Thread",
+             "Villain Swoop", "Streetfighter Walk", "No Gwop", "Slatter Gwop"),
+    "Trick": ("Shoe Trick", "Shoe Clap", "Shoe Foot Clap", "Hat Trick",
+              "Shirt Trick", "Animation", "Connects"),
+    "Upgrade": ("Fake Out", "Tag In", "Chant"),
+    "Frib": ("Restart Round", "Slippery Floors", "Team Beef Chant", "No Hype",
+              "Tweak Out", "Talking Shit"),
+}
+
+
+def public_card_catalog():
+    """Existing source-based candidates for the deck-builder autocomplete."""
+    catalog = {}
+    for sample in public_sample_decks():
+        for group in sample["categories"]:
+            catalog.setdefault(group["type"], set()).update(group["cards"])
+    catalog.setdefault("Dancer", set()).update(
+        name for existing in DECKS.values() for name in existing["roster"]
+    )
+    for kind, names in RULEBOOK_CARDS.items():
+        catalog.setdefault(kind, set()).update(names)
+    return [dict(id=f"{kind}::{name}", type=kind, name=name)
+            for kind in sorted(catalog)
+            for name in sorted(catalog[kind], key=str.casefold)]
+
+
 # Conditions and BP values below are practice scenarios, based on submitted card ideas.
 ROUNDS = {
     key: dict(dancer=deck["dancer"], scene=f'{deck["arena"]} · {deck["song"]} by Reel Hectic',
@@ -142,5 +177,5 @@ def practice_view(args):
             result = dict(score=score, base=base, bonus=bonus, reduction=reduction, opponent=opponent,
                           outcome="You win" if score > opponent else "Tie" if score == opponent else "Opponent wins")
     keys = list(ROUNDS)
-    return dict(decks=DECKS, sample_decks=public_sample_decks(), card_restrictions=CARD_RESTRICTIONS, rounds=ROUNDS, round_key=key, battle=round_data,
+    return dict(decks=DECKS, sample_decks=public_sample_decks(), card_catalog=public_card_catalog(), card_restrictions=CARD_RESTRICTIONS, rounds=ROUNDS, round_key=key, battle=round_data,
                 next_key=keys[(keys.index(key) + 1) % len(keys)], selected=moves, result=result, error=error)
