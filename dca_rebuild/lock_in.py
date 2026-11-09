@@ -49,7 +49,7 @@ SAMPLE_DECKS = {
         ("Dancer", ("Fro Man", "Goya", "Hoodstar", "J Rite", "Kid 50", "Kid Patt")),
         ("Arena", ("COL Cypress", "Union Square")),
         ("Song", ("Trap So Hard", "Lonely Nights", "Pure Imagination", "JELLYFISH JAM", "MR MEESEEKS")),
-        ("Move", ("Bad One", "Around The World", "Gangsta Lean", "Swiss Drop",
+        ("Move", ("Tone Whop", "Around The World", "Gangsta Lean", "Swiss Drop",
                   "Kiss Of Death", "No Gwop", "Slatter Gwop")),
         ("Trick", ("Shoe Clap", "Shirt Trick")),
         ("Upgrade", ("Fake Out", "Tag In")),
@@ -77,8 +77,12 @@ def public_sample_decks():
         total = sum(len(cards) for _, cards in categories)
         if not 25 <= total <= 50:
             raise ValueError("Sample deck must contain 25–50 total cards")
+        # Existing demo decks must remain usable under the current opener rule.
+        readiness = sample_deck_readiness(categories)
+        if not readiness["playable"]:
+            raise ValueError(f"Sample deck {index} lacks a required card or opening/main move")
         result.append(dict(key=key, name=f"Sample deck {index}",
-                           total=total,
+                           total=total, readiness=readiness,
                            categories=[dict(type=kind, count=len(cards), cards=cards)
                                        for kind, cards in categories]))
     return result
@@ -103,15 +107,51 @@ RULEBOOK_CARDS = {
 }
 
 
-# Broad move families are not themselves separate playable cards.
-# Only mappings explicitly established in the rulebook/user feedback are used;
-# other moves remain unclassified until community review.
+# Source-grounded move taxonomy. The original rulebook (Move Cards, p. 4)
+# distinguishes opening setup from Ankles/Footwork and Combos.
+# Latest game direction: only Rev Up OR Tone Wop may open a standard round.
+# "Bad One" is in the older rulebook's setup list, but its status under the
+# updated opening rule needs review: preserve the catalog entry without making
+# it a legal opening or a main move. Trick and Frib are separate card TYPES.
 MOVE_FAMILIES = {
     "rev up": "Rev Ups",
     "tone whop": "Wops",
     "tone wop": "Wops",
+    "bad one": "Legacy setup — review",
+    "butterfly": "Footwork",
+    "tweak": "Footwork",
+    "around the world": "Footwork",
+    "gangsta lean": "Footwork",
     "stutter step": "Footwork",
+    "knee drop": "Combo",
+    "swiss drop": "Combo",
+    "coin drop": "Combo",
+    "kiss of death": "Combo",
+    "needle & thread": "Combo",
+    "villain swoop": "Combo",
+    "streetfighter walk": "Combo",
+    "no gwop": "Combo",
+    "slatter gwop": "Combo",
 }
+
+OPENING_FAMILIES = frozenset(("Rev Ups", "Wops"))
+MAIN_MOVE_FAMILIES = frozenset(("Footwork", "Combo"))
+
+
+def sample_deck_readiness(categories):
+    """Validate the sample's opening and main move, without fixed type quotas."""
+    cards = [(kind, name) for kind, names in categories for name in names]
+    openers = [(kind, name) for kind, name in cards
+               if kind == "Move" and MOVE_FAMILIES.get(name.casefold()) in OPENING_FAMILIES]
+    mains = [(kind, name) for kind, name in cards
+             if (kind == "Move" and MOVE_FAMILIES.get(name.casefold()) in MAIN_MOVE_FAMILIES)
+             or kind == "Trick"]
+    required = tuple(kind for kind in ("Dancer", "Arena", "Song")
+                     if not any(card_type == kind for card_type, _ in cards))
+    return dict(
+        playable=not required and bool(openers) and bool(mains),
+        missing_types=required, opening_count=len(openers), main_count=len(mains),
+    )
 
 
 def public_card_catalog(extra_songs=()):
@@ -132,6 +172,7 @@ def public_card_catalog(extra_songs=()):
         if key not in catalog:
             catalog[key] = dict(id=f"{kind}::{name}", type=kind, name=name,
                                 move_family=MOVE_FAMILIES.get(name.casefold(), "") if kind == "Move" else "",
+                                review_status="reference-only" if reference else "source-draft",
                                 producer="", artist="", source="", reference=reference)
         entry = catalog[key]
         if producer and not entry["producer"]:
@@ -141,6 +182,8 @@ def public_card_catalog(extra_songs=()):
         if source and not entry["source"]:
             entry["source"] = source
         entry["reference"] = entry["reference"] and reference
+        if not reference and entry["review_status"] == "reference-only":
+            entry["review_status"] = "source-draft"
 
     for sample in public_sample_decks():
         for group in sample["categories"]:
