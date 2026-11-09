@@ -341,7 +341,7 @@ def test_lock_in_move_families_preserve_individual_moves(website):
 
 def test_lock_in_practice_follows_required_move_phases(website):
     html=website.test_client().get('/archive/lock-in').get_data(as_text=True)
-    assert 'Rev Up or Tone Wop → Footwork / Combo / Trick → Optional Frib Card → Lock In' in html
+    assert 'Rev Up or Tone Wop → Footwork / Combo / Spank / Bad One / Trick → Optional Frib Card → Lock In' in html
     assert 'Choose a Rev Up or Tone Wop first' in html
     from pathlib import Path
     js=(Path(__file__).resolve().parents[1]/'dca_rebuild/static/js/lock-in-game.js').read_text()
@@ -389,7 +389,7 @@ def test_frib_optional_and_community_move_suggestions(website, database):
 
 def test_move_set_accepts_rev_up_or_tone_wop_opening(website):
     html=website.test_client().get('/archive/lock-in').get_data(as_text=True)
-    assert 'Rev Up or Tone Wop → Footwork / Combo / Trick' in html
+    assert 'Rev Up or Tone Wop → Footwork / Combo / Spank / Bad One / Trick' in html
     from pathlib import Path
     js=(Path(__file__).resolve().parents[1]/'dca_rebuild/static/js/lock-in-game.js').read_text()
     assert 'if(phase==="rev"&&card.type==="Move"&&["Rev Ups","Wops"].includes(card.move_family))' in js
@@ -411,7 +411,7 @@ def test_source_grounded_lock_in_move_taxonomy_and_sample_readiness(website):
     assert MOVE_FAMILIES["jo smooth bad one"] == "Bad One"
     assert MOVE_FAMILIES["good one"] == "Bad One"
     assert OPENING_FAMILIES == {"Rev Ups", "Wops"}
-    assert MAIN_MOVE_FAMILIES == {"Footwork", "Combo", "Bad One"}
+    assert MAIN_MOVE_FAMILIES == {"Footwork", "Combo", "Bad One", "Spank"}
     catalog = public_card_catalog()
     by_id = {card["id"]: card for card in catalog}
     assert by_id["Move::Bad One"]["review_status"] == "source-draft"
@@ -441,8 +441,8 @@ def test_source_grounded_lock_in_move_taxonomy_and_sample_readiness(website):
     js = (Path(__file__).resolve().parents[1] /
           "dca_rebuild/static/js/lock-in-game.js").read_text()
     assert "Add a Rev Up or Tone Wop opening card." in js
-    assert "Add at least one Footwork, Combo, Bad One variation, or Trick main-move card." in js
-    assert '["Footwork","Combo","Bad One"].includes(card.move_family)' in js
+    assert "Add at least one Footwork, Combo, Spank, Bad One variation, or Trick main-move card." in js
+    assert '["Footwork","Combo","Bad One","Spank"].includes(card.move_family)' in js
 
 
 def test_bad_one_family_variations_are_main_moves_not_openers(website):
