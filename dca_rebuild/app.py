@@ -2100,7 +2100,15 @@ def admin_dca_nominations():
                 flash("Nominee review updated.")
             else:
                 abort(400, description="Unsupported action")
-            return redirect(url_for("admin_dca_nominations"))
+            # Keep the admin in the same filtered/sorted review context.
+            return redirect(url_for(
+                "admin_dca_nominations",
+                page=request.form.get("page", "1"),
+                q=request.form.get("q", ""),
+                status=request.form.get("status", "all"),
+                sort=request.form.get("sort", "category"),
+                direction=request.form.get("direction", "asc"),
+            ))
 
         # Server-side pagination: do not render the full nomination archive.
         from sqlalchemy import or_
@@ -2112,6 +2120,12 @@ def admin_dca_nominations():
             page = max(1, min(int(request.args.get("page", "1")), 100000))
         except (TypeError, ValueError):
             page = 1
+        sort = request.args.get("sort", "category").strip().lower()
+        if sort not in {"category", "nominee", "submissions"}:
+            sort = "category"
+        direction = request.args.get("direction", "asc").strip().lower()
+        if direction not in {"asc", "desc"}:
+            direction = "asc"
         page_size = 15
         query = (
             db.query(DCANominee, DCACategory.name, func.count(DCANominationSubmission.id))
@@ -2132,14 +2146,22 @@ def admin_dca_nominations():
         total = query.with_entities(func.count(func.distinct(DCANominee.id))).scalar() or 0
         pages = max(1, (total + page_size - 1) // page_size)
         page = min(page, pages)
+        # Ordering happens before LIMIT/OFFSET so all nominees are sortable.
+        sort_column = {
+            "category": DCACategory.name,
+            "nominee": DCANominee.name,
+            "submissions": func.count(DCANominationSubmission.id),
+        }[sort]
+        primary = sort_column.desc() if direction == "desc" else sort_column.asc()
         rows = (
             query.group_by(DCANominee.id, DCACategory.name)
-            .order_by(DCACategory.name.asc(), DCANominee.name.asc(), DCANominee.id.asc())
+            .order_by(primary, DCACategory.name.asc(), DCANominee.name.asc(), DCANominee.id.asc())
             .offset((page - 1) * page_size).limit(page_size).all()
         )
         return render_template(
             "admin_dca_nominations.html", rows=rows, search=search,
             status=status, page=page, pages=pages, total=total,
+            sort=sort, direction=direction,
         )
     finally:
         db.close()
