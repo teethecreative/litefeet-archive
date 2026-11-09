@@ -99,7 +99,7 @@ def _queue(db, section="all", page=1, sort="oldest"):
 
 
 def install_admin_workspace(app, ns):
-    SessionLocal = ns["SessionLocal"]
+    # Read the active session factory at request time for isolated test databases.
     admin_required = ns["admin_login_required"]
 
     @app.get("/admin/review-queue", endpoint="admin_vault_review_queue")
@@ -108,7 +108,7 @@ def install_admin_workspace(app, ns):
         section = request.args.get("section", "all")
         sort = request.args.get("sort", "oldest")
         page = _clamp_page()
-        with SessionLocal() as db:
+        with ns["SessionLocal"]() as db:
             total, rows = _queue(db, section, page, sort)
         return render_template("admin_workspace_queue.html", rows=rows,
                                section=section, sort=sort, page=page,
@@ -121,7 +121,7 @@ def install_admin_workspace(app, ns):
         source = request.args.get("source") or "all"
         if source not in ("all", "archive", "lock-in"):
             abort(400)
-        with SessionLocal() as db:
+        with ns["SessionLocal"]() as db:
             archive = db.query(VaultArchiveVerification).filter_by(
                 moderation_status="pending").order_by(
                 VaultArchiveVerification.created_at.asc()).limit(100).all() if source != "lock-in" else []
@@ -145,7 +145,7 @@ def install_admin_workspace(app, ns):
             abort(400)
         model = VaultArchiveVerification if source == "archive" else LockInCardRequest
         status_field = "moderation_status" if source == "archive" else "status"
-        with SessionLocal.begin() as db:
+        with ns["SessionLocal"].begin() as db:
             entry = db.get(model, record_id)
             if entry is None:
                 abort(404)
@@ -167,7 +167,7 @@ def install_admin_workspace(app, ns):
         if state not in ("all",) + DEVELOPMENT_STATES or area not in ("all",) + AREAS:
             abort(400)
         page = _clamp_page()
-        with SessionLocal() as db:
+        with ns["SessionLocal"]() as db:
             q = db.query(VaultDevelopmentItem)
             if state != "all":
                 q = q.filter(VaultDevelopmentItem.status == state)
@@ -199,7 +199,7 @@ def install_admin_workspace(app, ns):
         area = request.form.get("area") or "site"
         if len(title) < 3 or area not in AREAS:
             abort(400)
-        with SessionLocal.begin() as db:
+        with ns["SessionLocal"].begin() as db:
             db.add(VaultDevelopmentItem(title=title, description=details or None,
                                         area=area, status="needs_review"))
         flash("Development item created.", "admin")
@@ -212,7 +212,7 @@ def install_admin_workspace(app, ns):
         state = request.form.get("status")
         if state not in DEVELOPMENT_STATES:
             abort(400)
-        with SessionLocal.begin() as db:
+        with ns["SessionLocal"].begin() as db:
             item = db.get(VaultDevelopmentItem, item_id)
             if item is None:
                 abort(404)
@@ -229,7 +229,7 @@ def install_admin_workspace(app, ns):
         decision = request.form.get("decision")
         if decision not in ("reviewed", "dismissed", "converted"):
             abort(400)
-        with SessionLocal.begin() as db:
+        with ns["SessionLocal"].begin() as db:
             entry = db.get(VaultDevelopmentFeedback, feedback_id)
             if entry is None:
                 abort(404)
@@ -274,7 +274,7 @@ def install_admin_workspace(app, ns):
             abort(400)
         if email and ("@" not in email or "." not in email.split("@")[-1]):
             abort(400)
-        with SessionLocal.begin() as db:
+        with ns["SessionLocal"].begin() as db:
             db.add(VaultDevelopmentFeedback(title=title, details=details,
                                             area=area, contact_email=email or None))
         session["vault_development_feedback_at"] = now.isoformat()
