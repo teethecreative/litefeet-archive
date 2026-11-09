@@ -166,6 +166,9 @@ def timeline_browse(query="", collection="all", page=1, page_size=PAGE_SIZE, era
     page = max(1, min(int(page), 10000))
     page_size = max(1, min(int(page_size), MAX_PAGE_SIZE))
     available = {"all", "events", "history", "moves", "people", "awards"}
+    if collection == "music":
+        return {"items": [], "count": 0, "page": page, "has_more": False,
+                "next_page": None, "query": query, "collection": collection}
     if collection not in available:
         collection = "all"
     tokens = query.split()
