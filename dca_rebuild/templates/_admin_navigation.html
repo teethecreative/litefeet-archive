@@ -36,11 +36,12 @@
         <a href="{{ url_for('admin_dashboard') }}" {% if request.endpoint == 'admin_dashboard' %}aria-current="page"{% endif %}>
             OVERVIEW
         </a>
+        <a href="{{ url_for('admin_legacy_control_room') }}" {% if request.endpoint == 'admin_legacy_control_room' %}aria-current="page"{% endif %}>CONTROL ROOM</a>
         <a href="{{ url_for('admin_vault_review_queue') }}" {% if request.endpoint in ['admin_vault_review_queue','admin_vault_auxiliary_review'] %}aria-current="page"{% endif %}>REVIEW QUEUE</a>
         <a href="{{ url_for('admin_vault_development') }}" {% if request.endpoint == 'admin_vault_development' %}aria-current="page"{% endif %}>DEVELOPMENT</a>
 
         <a
-            href="{{ url_for('admin_dashboard') }}#archive"
+            href="{{ url_for('admin_legacy_control_room') }}#archive"
             data-admin-section="archive"
         >
             ARCHIVE
@@ -49,7 +50,7 @@
         <details class="lf-admin-awards-dropdown">
           <summary{% if request.endpoint in ['admin_round1', 'admin_dca_nominations'] %} aria-current="page"{% endif %}>AWARDS <span aria-hidden="true">▾</span></summary>
           <div class="lf-admin-awards-dropdown__menu">
-            <a href="{{ url_for('admin_dashboard') }}#awards">Awards overview</a>
+            <a href="{{ url_for('admin_legacy_control_room') }}#awards">Awards overview</a>
             <a href="{{ url_for('admin_round1') }}">DCA · Category moderation</a>
             <a href="{{ url_for('admin_dca_nominations') }}">DCA · Nomination review</a>
             <a href="{{ url_for('round2') }}" target="_blank" rel="noopener">Round 1 results</a>
@@ -58,7 +59,7 @@
         </details>
 
         <a
-            href="{{ url_for('admin_dashboard') }}#community"
+            href="{{ url_for('admin_legacy_control_room') }}#community"
             data-admin-section="community"
         >
             COMMUNITY
@@ -72,7 +73,7 @@
 <a href="{{ url_for('admin_vault_gatherings') }}" {% if request.endpoint in ['admin_vault_gatherings','admin_vault_gathering_edit'] %}aria-current="page"{% endif %}>EVENT SUBMISSIONS</a>
 <a href="{{ url_for('admin_analytics') }}">ANALYTICS</a>
 <a
-            href="{{ url_for('admin_dashboard') }}#system"
+            href="{{ url_for('admin_legacy_control_room') }}#system"
             data-admin-section="system"
         >
             SYSTEM
