@@ -28903,3 +28903,15 @@ try:
 except Exception as exc:
     print(f"MUSIC PROJECT PULL INFO setup failed: {type(exc).__name__}: {exc}")
 
+
+
+# --- Admin overview and development inbox (isolated module) ---
+try:
+    from admin_console_v2 import register_admin_console_v2
+    register_admin_console_v2(
+        app, engine, current_user_is_admin,
+        phase12_site_status, phase12_review_queue_cards,
+    )
+    print('Admin Console v2 routes registered.')
+except Exception as exc:
+    print(f'ADMIN_CONSOLE_V2_SETUP_ERROR: {type(exc).__name__}: {exc}')
