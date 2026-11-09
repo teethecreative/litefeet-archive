@@ -18,3 +18,13 @@
 .lfv-share-hint{font-size:12px;color:#344b62}
 .lfv-share-status{font-size:13px;font-weight:600;color:#143f80}
 @media(max-width:600px){.lfv-share-entry{bottom:12px;right:12px}.lfv-share-entry button{padding:10px 13px}}
+
+
+#lfv-awards-controls{display:grid;grid-template-columns:1fr;gap:7px;margin:10px 0 15px}
+#lfv-awards-controls[hidden],#lfv-awards-controls [hidden]{display:none!important}
+#lfv-awards-controls>label{font:700 13px system-ui,sans-serif;color:#071d3b}
+#lfv-awards-controls select{width:100%;min-width:0;border:1px solid #aab6c2;border-radius:7px;background:#fff;color:#071d3b;padding:10px 12px;font:14px system-ui,sans-serif}
+#lfv-awards-controls .lfv-share-theme{border:0;padding:0;display:flex;align-items:center;gap:20px;font:14px system-ui,sans-serif;margin:9px 0}
+#lfv-awards-controls .lfv-share-theme legend{font-weight:700;margin-bottom:8px}
+#lfv-awards-controls .lfv-share-theme label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+#lfv-awards-controls .lfv-share-theme input{accent-color:#143f80}
