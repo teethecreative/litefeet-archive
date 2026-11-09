@@ -848,6 +848,24 @@ class VaultArchiveVerification(Base):
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class VaultCommunityBattleReport(Base):
+    """Unverified outcome contribution, separate from official historical results."""
+    __tablename__ = "vault_community_battle_reports"
+    id = Column(Integer, primary_key=True)
+    record_slug = Column(String(255), nullable=False, index=True)
+    visitor_hash = Column(String(64), nullable=False)
+    reported_winner = Column(String(250), nullable=True)
+    reported_loser = Column(String(250), nullable=True)
+    explanation = Column(Text, nullable=True)
+    evidence_url = Column(String(500), nullable=True)
+    moderation_status = Column(String(20), nullable=False, default="pending", index=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    reviewed_at = Column(DateTime, nullable=True)
+    __table_args__ = (
+        UniqueConstraint("record_slug", "visitor_hash", name="uq_vault_event_result_visitor"),
+    )
+
+
 # Community-submitted gatherings, sessions and programs. Publication is separate
 # from the submission event so nothing appears publicly without admin approval.
 class VaultGatheringSubmission(Base):
