@@ -143,6 +143,13 @@ def public_card_catalog(extra_songs=()):
 
     for row in all_records():
         if row.get("collection") == "people":
+            # Producer-only, judge-only and team-only historical identities
+            # are not automatically recast as dancer cards.
+            details = dict(row.get("information") or [])
+            role_labels = details.get("Original role labels (unverified)", "")
+            roles = {part.strip().casefold() for part in role_labels.split(",")}
+            if row.get("record_type") == "legacy_identity" and roles and "dancer" not in roles:
+                continue
             for name in row["title"].split("/"):
                 add("Dancer", name, source=row.get("source_label", ""),
                     reference=True)
@@ -221,7 +228,7 @@ ROUNDS.update({
 })
 
 
-def practice_view(args):
+def practice_view(args, extra_songs=()):
     key = args.get("round", "greklite")
     if key not in ROUNDS:
         key = "greklite"
@@ -242,5 +249,5 @@ def practice_view(args):
             result = dict(score=score, base=base, bonus=bonus, reduction=reduction, opponent=opponent,
                           outcome="You win" if score > opponent else "Tie" if score == opponent else "Opponent wins")
     keys = list(ROUNDS)
-    return dict(decks=DECKS, sample_decks=public_sample_decks(), card_catalog=public_card_catalog(), card_restrictions=CARD_RESTRICTIONS, rounds=ROUNDS, round_key=key, battle=round_data,
+    return dict(decks=DECKS, sample_decks=public_sample_decks(), card_catalog=public_card_catalog(extra_songs), card_restrictions=CARD_RESTRICTIONS, rounds=ROUNDS, round_key=key, battle=round_data,
                 next_key=keys[(keys.index(key) + 1) % len(keys)], selected=moves, result=result, error=error)
