@@ -10,6 +10,10 @@
   const category = document.getElementById("lfv-awards-category");
   const nominee = document.getElementById("lfv-awards-nominee");
   const pageHint = document.getElementById("lfv-share-pages");
+  const reasonPanel = document.getElementById("lfv-nominee-reason-controls");
+  const reasonChoice = document.getElementById("lfv-reason-choice");
+  const customReason = document.getElementById("lfv-reason-custom");
+  const customReasonLabel = document.getElementById("lfv-reason-custom-label");
   const canonical = document.querySelector('link[rel="canonical"]');
   const cleanLink = canonical?.href || location.origin + location.pathname;
   const currentPath = new URL(cleanLink).pathname;
@@ -26,7 +30,10 @@
     const n = nominee.value;
     const params = new URLSearchParams();
     if (s !== "awards") params.set("category", c);
-    if (s === "nominee") params.set("nominee", n);
+    if (s === "nominee") {
+      params.set("nominee", n);
+      if (reasonChoice.value !== "none" && reasonChoice.value !== "custom") params.set("reason", reasonChoice.value);
+    }
     return {mode, s, c, n, params};
   };
   const graphicUrl = () => {
@@ -58,7 +65,26 @@
     }
     const ready = !awardPage || !data || scope.value === "awards" || category.value;
     preview.hidden = !ready;
-    if (ready) preview.src = graphicUrl();
+    if (ready) {
+      if (awardPage && data && scope.value === "nominee" && reasonChoice.value === "custom") {
+        if (!customReason.value.trim()) {preview.hidden = true; status.textContent = "Enter a short reason to preview your graphic."; return;}
+        const body = new FormData();
+        body.set("category", category.value);
+        body.set("nominee", nominee.value);
+        body.set("reason_mode", "custom");
+        body.set("reason_text", customReason.value);
+        fetch(graphicUrl(), {method:"POST",body}).then(async response => {
+          if(!response.ok) throw Error("Could not generate the message graphic");
+          return response.blob();
+        }).then(blob => {
+          if (preview.dataset.objectUrl) URL.revokeObjectURL(preview.dataset.objectUrl);
+          const objectUrl = URL.createObjectURL(blob);
+          preview.dataset.objectUrl = objectUrl;
+          preview.src = objectUrl;
+          preview.hidden = false;
+        }).catch(() => {status.textContent = "Could not preview that message.";});
+      } else {preview.src = graphicUrl();}
+    }
     status.textContent = "";
   };
   const fill = (select, items, placeholder) => {
@@ -71,6 +97,7 @@
     const chosen = data?.categories.find(x => String(x.id) === category.value);
     const needsCategory = scope.value !== "awards";
     const needsNominee = scope.value === "nominee";
+    reasonPanel.hidden = !needsNominee;
     category.hidden = document.getElementById("lfv-awards-category-label").hidden = !needsCategory;
     nominee.hidden = document.getElementById("lfv-awards-nominee-label").hidden = !needsNominee;
     if (needsNominee) {
@@ -107,6 +134,13 @@
   scope.addEventListener("change", refresh);
   category.addEventListener("change", refresh);
   nominee.addEventListener("change", updatePreview);
+  const updateReason = () => {
+    const isCustom = reasonChoice.value === "custom";
+    customReason.hidden = customReasonLabel.hidden = !isCustom;
+    updatePreview();
+  };
+  reasonChoice.addEventListener("change", updateReason);
+  customReason.addEventListener("input", updatePreview);
   dialog.querySelectorAll('input[name="lfv-share-theme"]').forEach(x => x.addEventListener("change", updatePreview));
   formats.forEach(x => x.addEventListener("click", () => {
     format = x.dataset.lfvFormat;
@@ -131,7 +165,15 @@
     for (let page = 1; page <= n; page++) {
       const url = new URL(graphicUrl());
       if (n > 1) url.searchParams.set("page", String(page));
-      const response = await fetch(url.href, {credentials:"omit"});
+      const isCustom = awardPage && data && scope.value === "nominee" && reasonChoice.value === "custom";
+      const body = isCustom ? new FormData() : null;
+      if (body) {
+        body.set("category", category.value);
+        body.set("nominee", nominee.value);
+        body.set("reason_mode", "custom");
+        body.set("reason_text", customReason.value);
+      }
+      const response = await fetch(url.href, isCustom ? {method:"POST",body} : {credentials:"omit"});
       if (!response.ok) throw Error("Could not generate this image");
       output.push(new File([await response.blob()], "litefeet-" + scope.value + "-" + format + "-" + page + ".png", {type:"image/png"}));
     }
