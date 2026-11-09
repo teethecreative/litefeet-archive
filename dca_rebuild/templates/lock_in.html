@@ -8,11 +8,11 @@
   <h2>How to play</h2>
   
   <h3>How to battle</h3>
-  <p>A game is called a battle. Battles are 1v1 (dancer versus dancer), 2v2 (tag team), or 3v3 (team battle). The planning draft describes a battle winner by most rounds, a not-yet-specified BP total, or a not-yet-specified number of TKOs.</p>
+  <p>A game is called a battle. Battles are 1v1 (dancer versus dancer), 2v2 (tag team), or 3v3 (team battle). Win by taking the most rounds, reaching the required Battle Points (BP), or landing enough TKOs.</p>
   <h3>Winning a round</h3>
-  <p>The rulebook uses an average of 100 Battle Points (BP) for a round. The player with the most points wins. It also lists a TKO, an opponent unable to draw, or an opponent producing a tweak as potential win conditions. A player below 50 BP automatically loses under the draft rule.</p>
+  <p>A round averages 100 Battle Points (BP). The player with the most points wins. It also lists a TKO, an opponent unable to draw, or an opponent producing a tweak as potential win conditions. Dropping below 50 BP means an automatic loss.</p>
   <h3>Winning a battle</h3>
-  <p>1v1 and 2v2 are drafted as two-round formats; 3v3 as three rounds. Final BP targets and the exact TKO requirement are blank in the rulebook. Running out of playable cards is also listed as a loss condition. The interactive prototype does not invent missing thresholds.</p>
+  <p>1v1 and 2v2 play two rounds; 3v3 plays three. A battle also ends if your opponent has no cards left to play. Final BP and TKO targets will be announced.</p>
   <h3>Preparing to battle</h3>
   <ol>
     <li>Greet your opponent, shuffle and cut both decks; you may also shuffle and cut your opponent's deck.</li>
@@ -24,16 +24,16 @@
   <h3>1v1 round structure</h3>
   <ol>
     <li>Choose a dancer and song card and put them in their zones. Use an arena card, with producer effects when available.</li>
-    <li>Draw a seven-card hand. The draft includes move, spell/upgrade, and frib cards.</li>
+    <li>Draw seven cards. Your hand can contain moves, upgrades and fribs.</li>
     <li>Phase 1: setup moves, such as Rev Up, Bad One, or Tone Whop.</li>
     <li>Phase 2: place up to three move cards face down.</li>
     <li>Phase 3: announce “locked in” before the other player starts. A called-out missed announcement costs 10 BP.</li>
     <li>Apply trick, arena, song, spell and frib effects and compare results; use a Round of Fire if tied, pending final tie rules.</li>
   </ol>
   <h3>2v2 and 3v3</h3>
-  <p>The draft identifies 2v2 card swaps and 3v3 team play, but their complete sequence is not yet written. These formats are shown as rulebook previews, not falsely playable as finalized battles.</p>
+  <p>Tag-team and team-battle modes are coming soon.</p>
   <h3>Card types</h3>
-  <p>Use 25–50 total cards from dancers, arenas, producers, songs, moves, tricks, upgrades/spells, fribs and team support. The card builder below enforces total-card and copy limits. The individual card-effect values that are unfinished in the document remain unscored.</p>
+  <p>Build a 25–50 card deck with dancers, arenas, songs, moves, tricks, upgrades, fribs and other support cards. Card limits apply when you save or play.</p>
 </section>
 <section id="decks" class="lock-deck-examples">
   <h2>Build A Deck &amp; Test The Game</h2>
@@ -132,7 +132,7 @@
 </section>
 <section id="practice">
   <h2>Practice the move-set phase</h2>
-  <p>This is a short move-combination drill, not a full Lock In battle. It does not yet simulate drawing from a mixed deck, playing arena and song cards, or applying upgrade/frib effects.</p>
+  <p>Choose a challenge and put together your three-move set.</p>
   <form action="{{ url_for('vault_lock_in') }}#practice" method="get">
     <label for="round-picker">Choose a move-set challenge</label>
     <select name="round" id="round-picker">
