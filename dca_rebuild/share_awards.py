@@ -21,6 +21,34 @@ THEMES = ("light", "dark")
 SCOPES = ("awards", "category", "nominees", "nominee")
 PER_PAGE = {"story": 10, "post": 5}
 
+# Suggested support messages express the visitor's opinion, not an official finding.
+PRESET_REASONS = {
+    "impact": "I want to recognize the work and impact this nominee brings to LiteFeet culture.",
+    "creativity": "I want to nominate them for the creativity and originality they bring to the culture.",
+    "consistency": "I want to recognize their consistency, dedication, and commitment to LiteFeet.",
+    "community": "I want to show support for the positive impact they have on the LiteFeet community.",
+}
+MAX_CUSTOM_REASON = 180
+
+
+def resolve_reason(mode, custom_text="", *, allow_custom=False):
+    """Create an ephemeral supporter message; never write custom text to the database."""
+    if mode in (None, "", "none"):
+        return "", ""
+    if mode in PRESET_REASONS:
+        return "Suggested reason", PRESET_REASONS[mode]
+    if mode != "custom" or not allow_custom:
+        abort(400, description="Invalid reason selection")
+    if not isinstance(custom_text, str) or len(custom_text) > MAX_CUSTOM_REASON:
+        abort(400, description="Reason must be 180 characters or fewer")
+    clean = " ".join(custom_text.split())
+    if not clean or len(clean) > MAX_CUSTOM_REASON:
+        abort(400, description="Write a short reason for supporting this nominee")
+    if any(ord(char) < 32 for char in clean):
+        abort(400, description="Reason contains unsupported characters")
+    return "Supporter's message", clean
+
+
 
 def public_categories():
     """Re-use the nominated categories and existing public pending/approved counts."""
@@ -97,8 +125,7 @@ def _content(selection):
     return (nominee["name"] + " — " + category["name"], "Explore this nominee and category.")
 
 
-@lru_cache(maxsize=256)
-def _draw(fmt, theme, scope, title, nominee_name, nominee_count, entries, page, total):
+def _draw(fmt, theme, scope, title, nominee_name, nominee_count, entries, page, total, reason_label="", reason_text=""):
     w, h = 1080, 1920 if fmt == "story" else 1350
     dark = theme == "dark"
     bg = "#071d3b" if dark else "#f8f7f2"
@@ -133,15 +160,41 @@ def _draw(fmt, theme, scope, title, nominee_name, nominee_count, entries, page, 
         draw.text((80, y), "AWARD CATEGORY", font=_font(36, True), fill=subdued)
         draw.text((80, y + 76), "Explore this year's nominees.", font=_font(31), fill=fg)
     elif scope == "nominee":
-        draw.text((80, y), "FEATURED NOMINEE", font=_font(30, True), fill=subdued)
-        name_font = _font(72 if len(nominee_name) < 29 else 58, True)
-        cursor = y + 78
+        # Keep the nominee prominent; reserve a legible area for a visitor's reason.
+        draw.text((80, y), "NOMINATE", font=_font(29, True), fill=subdued)
+        name_size = 67 if len(nominee_name) < 28 else 53
+        name_font = _font(name_size, True)
+        cursor = y + 71
         for line in _wrap(draw, nominee_name, name_font, 908, 3):
             draw.text((80, cursor), line, font=name_font, fill=gold if dark else blue)
-            cursor += (79 if len(nominee_name) < 29 else 65)
-        draw.text((80, cursor + 25), f"{nominee_count} nomination" + ("" if nominee_count == 1 else "s"),
-                  font=_font(34), fill=subdued)
-        draw.text((80, cursor + 105), "VIEW THIS NOMINEE ON THE VAULT", font=_font(28, True), fill=fg)
+            cursor += name_size + 14
+        draw.text((80, cursor + 11), f"{nominee_count} nomination" + ("" if nominee_count == 1 else "s"),
+                  font=_font(29), fill=subdued)
+        if reason_text:
+            # Feed images are shorter. Shrink the supporter message instead of
+            # letting long text cover the footer or falsely appear official.
+            footer_limit = h - 260
+            box_top = cursor + 87
+            available = footer_limit - box_top
+            if available > 120:
+                draw.rounded_rectangle((76, box_top, 1002, footer_limit), radius=16,
+                                       fill="#17365e" if dark else "#e8edeb")
+                draw.rectangle((76, box_top, 86, footer_limit), fill=gold)
+                draw.text((116, box_top + 25), reason_label.upper(),
+                          font=_font(25, True), fill=gold if dark else blue)
+                text_lines = []
+                message_font = _font(31 if fmt == "story" else 27)
+                for line in _wrap(draw, reason_text, message_font, 835, 5 if fmt == "story" else 4):
+                    text_lines.append(line)
+                line_height = 45 if fmt == "story" else 39
+                while (text_lines and len(text_lines) * line_height + 92 > available
+                       and message_font.size > 19):
+                    message_font = _font(message_font.size - 2)
+                    text_lines = _wrap(draw, reason_text, message_font, 835, 5 if fmt == "story" else 4)
+                    line_height = message_font.size + 11
+                for i, line in enumerate(text_lines):
+                    draw.text((116, box_top + 65 + i * line_height),
+                              line, font=message_font, fill=fg)
     else:
         draw.text((80, y), "PUBLICLY LISTED NOMINEES", font=_font(29, True), fill=subdued)
         subset = entries[(page - 1) * PER_PAGE[fmt]:page * PER_PAGE[fmt]]
@@ -170,7 +223,7 @@ def _draw(fmt, theme, scope, title, nominee_name, nominee_count, entries, page, 
     return out.getvalue()
 
 
-def graphic(fmt, theme, chosen, page=1):
+def graphic(fmt, theme, chosen, page=1, reason_mode=None, reason_text="", *, allow_custom=False):
     if fmt not in FORMATS or theme not in THEMES:
         abort(404)
     total = page_count(chosen, fmt)
@@ -180,8 +233,13 @@ def graphic(fmt, theme, chosen, page=1):
     nominee = chosen["nominee"]
     title = ("THE CULTURE DECIDES." if not category else category["name"])
     names = tuple((n["name"], n["count"]) for n in chosen["nominees"])
+    reason_label, resolved_text = ("", "")
+    if chosen["scope"] == "nominee":
+        reason_label, resolved_text = resolve_reason(reason_mode, reason_text,
+                                                      allow_custom=allow_custom)
     return _draw(fmt, theme, chosen["scope"], title, nominee["name"] if nominee else "",
-                 nominee["count"] if nominee else 0, names, page, total)
+                 nominee["count"] if nominee else 0, names, page, total,
+                 reason_label, resolved_text)
 
 
 def install_award_sharing(app):
@@ -199,11 +257,16 @@ def install_award_sharing(app):
         data = render_social_card("page", title, description)
         return Response(data, mimetype="image/png", headers={"Cache-Control": "public, max-age=60"})
 
-    @app.get("/social/awards/<fmt>/<theme>/<scope>.png")
+    @app.route("/social/awards/<fmt>/<theme>/<scope>.png", methods=["GET", "POST"])
     def awards_share_png(fmt, theme, scope):
-        chosen = select_public(scope, request.args.get("category", type=int),
-                               request.args.get("nominee", type=int))
-        data = graphic(fmt, theme, chosen, request.args.get("page", default=1, type=int))
+        chosen = select_public(scope, request.values.get("category", type=int),
+                               request.values.get("nominee", type=int))
+        reason_mode = (request.form.get("reason_mode") if request.method == "POST"
+                       else request.args.get("reason"))
+        # Custom copy is accepted only in POST bodies, never in URLs/logged queries.
+        data = graphic(fmt, theme, chosen, request.values.get("page", default=1, type=int),
+                       reason_mode, request.form.get("reason_text", ""),
+                       allow_custom=request.method == "POST")
         return Response(data, mimetype="image/png",
                         headers={"Cache-Control": "public, max-age=60",
                                  "X-Content-Type-Options": "nosniff"})
