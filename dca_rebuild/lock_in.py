@@ -103,6 +103,17 @@ RULEBOOK_CARDS = {
 }
 
 
+# Broad move families are not themselves separate playable cards.
+# Only mappings explicitly established in the rulebook/user feedback are used;
+# other moves remain unclassified until community review.
+MOVE_FAMILIES = {
+    "rev up": "Rev Ups",
+    "tone whop": "Wops",
+    "tone wop": "Wops",
+    "stutter step": "Footwork",
+}
+
+
 def public_card_catalog(extra_songs=()):
     """Combine existing Archive names and song sources, without producer cards.
 
@@ -120,6 +131,7 @@ def public_card_catalog(extra_songs=()):
         key = (kind, name.casefold())
         if key not in catalog:
             catalog[key] = dict(id=f"{kind}::{name}", type=kind, name=name,
+                                move_family=MOVE_FAMILIES.get(name.casefold(), "") if kind == "Move" else "",
                                 producer="", artist="", source="", reference=reference)
         entry = catalog[key]
         if producer and not entry["producer"]:
