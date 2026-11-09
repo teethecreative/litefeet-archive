@@ -16,7 +16,7 @@ def test_people_cloud_uses_real_profiles_and_consistent_weights():
 
 
 def test_people_collection_has_profile_links_and_word_cloud(website):
-    response = website.test_client().get('/archive?collection=people')
+    response = website.test_client().get('/archive/people')
     assert response.status_code == 200
     page = response.get_data(as_text=True)
     assert 'lfv-people-wordcloud' in page
@@ -84,9 +84,31 @@ def test_historical_review_does_not_change_public_cloud():
 
 
 def test_people_collection_query_opens_people_browser_not_timeline(website):
-    response = website.test_client().get('/archive?collection=people')
+    response = website.test_client().get('/archive/people')
     assert response.status_code == 200
     page = response.get_data(as_text=True)
     assert 'lfv-people-wordcloud' in page
     assert 'SEARCH PEOPLE &amp; TEAMS' in page
     assert 'CHRONOLOGICAL TIMELINE' not in page
+
+
+def test_people_search_only_renders_records_when_query_supplied(website):
+    client = website.test_client()
+    landing = client.get('/archive/people').get_data(as_text=True)
+    assert 'SEARCH TO VIEW PROFILES' in landing
+    assert '<article class="lfv-archive-entry"' not in landing
+    assert 'BUILT-IN METHOD' not in landing.upper()
+    searched = client.get('/archive/people?q=Moon').get_data(as_text=True)
+    assert 'lfv-people-wordcloud' in searched
+    assert '<article class="lfv-archive-entry"' in searched
+    assert 'Moon Lite' in searched
+    assert 'BUILT-IN METHOD' not in searched.upper()
+
+
+def test_people_cloud_css_targets_current_page_not_deleted_archive():
+    from pathlib import Path
+    css = (Path(__file__).resolve().parents[1] /
+           'dca_rebuild/static/css/lfv-consistency-v5.css').read_text()
+    assert '#vault-section-people nav.lfv-people-wordcloud' in css
+    assert '#vault-section-people .lfv-people-wordcloud > a.lfv-people-word' in css
+    assert '#vault-section-archive .lfv-people-wordcloud > a.lfv-people-word' not in css
