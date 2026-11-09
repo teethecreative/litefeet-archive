@@ -74,7 +74,7 @@
 {% set direct_audio = audio_path.endswith('.mp3') or audio_path.endswith('.m4a') or audio_path.endswith('.ogg') or audio_path.endswith('.wav') or audio_path.endswith('.aac') or audio_path.endswith('.flac') %}
 <tr>
 <td data-label="Release Date" class="lfv-music-table-date">{{ item.date_label }}</td>
-<td data-label="Song Name" class="lfv-music-table-name"><a class="lfv-music-title lfv-music-title-link" href="{{ item.record_href }}" data-music-track-choice data-source-url="{{ item.source_destination }}" data-artist-url="{{ item.artist_profile_destination }}" data-track-title="{{ item.display_title }}" data-artist-name="{{ item.artist_or_creator or item.artist or item.producer_name or '' }}" aria-label="Choose where to go for {{ item.display_title }}">{{ item.display_title or 'Untitled release' }}</a></td>
+<td data-label="Song Name" class="lfv-music-table-name"><a class="lfv-music-title lfv-music-title-link" href="{{ item.public_href or item.record_href }}" data-music-track-choice data-source-url="{{ item.source_destination }}" data-artist-url="{{ item.artist_profile_destination }}" data-track-title="{{ item.display_title }}" data-artist-name="{{ item.artist_or_creator or item.artist or item.producer_name or '' }}" aria-label="Choose where to go for {{ item.display_title }}">{{ item.display_title or 'Untitled release' }}</a></td>
 <td data-label="Artist / Producer" class="lfv-music-credits">{{ item.artist_or_creator or item.artist or item.producer_name or 'Not yet documented' }}{% if item.project_title %}<p class="lfv-music-description">From {{ item.project_title }}</p>{% elif item.kind == 'project' %}<p class="lfv-music-description">{{ item.record_type or 'Project' }}{% if item.expected_track_count %} · {{ item.expected_track_count }} tracks{% endif %}</p>{% endif %}</td>
 <td data-label="Description" class="lfv-music-table-description">{% if item.display_description %}{{ item.display_description|striptags|truncate(85, True, '…') }}{% else %}—{% endif %}</td>
 <td data-label="Duration" class="lfv-music-table-duration">{{ item.duration_label }}</td>
@@ -83,7 +83,7 @@
 <button type="button" class="lfv-music-play" data-audio="{{ audio }}" data-track="{{ item.display_title }}" aria-label="Play {{ item.display_title }}" aria-pressed="false">▶</button>
 {% endif %}
 {% if item.source_destination or item.artist_profile_destination %}
-<a class="lfv-music-source lfv-music-source-choice" href="{{ item.record_href }}" aria-label="Choose source or artist profile for {{ item.display_title }}">Links</a>
+<a class="lfv-music-source lfv-music-source-choice" href="{{ item.public_href or item.record_href }}" aria-label="Choose source or artist profile for {{ item.display_title }}">Links</a>
 {% elif not direct_audio %}
 <span class="lfv-music-description">Links unavailable</span>
 {% endif %}
