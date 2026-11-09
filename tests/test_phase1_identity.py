@@ -17,7 +17,7 @@ def test_homepage_is_letter_then_current_awards_then_real_site_updates(website):
     assert "But not everything has been documented." in html
     assert "That's part of why I created The LiteFeet Vault." in html
     assert 'Read more' in html
-    assert 'href="/about/letter"' in html
+    assert 'href="/about#letter"' in html
     assert 'Dancer’s Choice Awards 2026' in html
     assert 'href="/awards/dancers-choice/2026"' in html
     assert 'THIS MONTH IN LITEFEET' in html
