@@ -215,8 +215,8 @@ def install_information_architecture(app, ns):
         payload = {key: request.form.get(key, '').strip() for key in fields}
         if any(len(value) > limits[key] for key, value in payload.items()):
             return jsonify(error='A response is too long.'), 400
-        if kind == 'Move' and payload['move_category'] not in ('Footwork', 'Combo', 'Trick'):
-            return jsonify(error='Choose Footwork, Combo, or Trick for this move suggestion.'), 400
+        if kind == 'Move' and payload['move_category'] not in ('Footwork', 'Combo', 'Spank', 'Bad One', 'Trick'):
+            return jsonify(error='Choose Footwork, Combo, Spank, Bad One, or Trick for this move suggestion.'), 400
         if kind == 'Dancer' and payload['permission'] not in ('yes','request-first','not-confirmed'):
             return jsonify(error='Select a permission option.'), 400
         if kind == 'Song' and not payload['producer']:
