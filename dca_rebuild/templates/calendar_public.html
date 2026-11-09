@@ -27,7 +27,7 @@
 <div class="lfv-calendar-list">
 {% for event in calendar.events %}
 <article><time datetime="{{ event.date }}">{{ event.display_date }}</time><div>
-<h2>{{ event.title }}</h2>
+<h2><a href="{{ event.public_href or event.href }}">{{ event.title }}</a></h2>
 <p>{% if event.event_time %}{{ event.event_time }}{% endif %}{% if event.venue %} · {{ event.venue }}{% endif %}{% if event.organizer %} · {{ event.organizer }}{% endif %}</p>
 {% if event.description %}<p>{{ event.description|truncate(180, True, '…') }}</p>{% endif %}
 {% if event.source_href %}<p><a href="{{ event.source_href }}" target="_blank" rel="noopener noreferrer">Event details / source</a></p>{% endif %}
