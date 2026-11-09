@@ -54,6 +54,9 @@ def install_information_architecture(app, ns):
         children = {
             'archive': [dict(label='People & Teams', href='/archive?view=people&collection=people'),
                         dict(label='History & Timeline', href='/archive/timeline'),
+                        dict(label='Events', href='/archive?collection=events'),
+                        dict(label='Music & Media', href='/archive?collection=music'),
+                        dict(label='Awards & Recognition', href='/archive?collection=awards'),
                         dict(label='Lock In · Card Battle Game', href='/archive/lock-in'),
                         dict(label='Submit', href='/submit')],
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
