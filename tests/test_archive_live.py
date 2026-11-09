@@ -76,7 +76,12 @@ def test_source_specific_event_and_research_pages(website):
     assert 'Nauli &amp; Lexi' in text
     assert 'Intermission matchups' in text
     assert 'No verified results' not in text
-    assert 'true' in text and 'debatable' in text
+    assert 'Submit a correction' in text
+    assert 'value="true"' not in text
+    assert 'value="debatable"' not in text
+    assert 'lfv-sitewide-v1' not in text  # Client-side shell initializes after load.
+    assert 'class="awards-global-nav"' in text
+    assert 'class="ledger-footer"' in text
     assert client.get('/archive/records/does-not-exist').status_code == 404
     person = client.get('/archive/records/research-mr-youtube')
     assert person.status_code == 200
@@ -125,3 +130,60 @@ def test_person_identity_is_not_subject_to_popularity_vote(website):
     assert client.post('/archive/records/' + person_slug + '/verify', data={
         'choice':'false','csrf_token':'anything',
     }).status_code == 404
+
+
+def test_documented_event_corrections_are_sourced_moderated_and_not_published(website, database):
+    client = website.test_client()
+    path = '/archive/records/double-impact-2026'
+    response = client.get(path)
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert 'action="' + path + '/correction"' in html
+    assert 'class="ledger-footer"' in html
+    assert 'class="awards-global-nav"' in html
+    with client.session_transaction() as session:
+        token = session['vault_archive_csrf']
+    assert client.post(path + '/verify', data={
+        'csrf_token': token, 'choice': 'true'
+    }).status_code == 403
+    assert client.post(path + '/correction', data={
+        'csrf_token': 'wrong', 'correction': 'Change the event date', 'source_note': 'Flyer'
+    }).status_code == 400
+    assert client.post(path + '/correction', data={
+        'csrf_token': token, 'correction': 'Change the event date'
+    }).status_code == 400
+    report = client.post(path + '/correction', data={
+        'csrf_token': token,
+        'correction': 'The original flyer lists a different event date.',
+        'source_note': 'Original promotional flyer from event host'
+    })
+    assert report.status_code == 303
+    assert report.headers['Location'].endswith('#correction')
+    with database[1]() as db:
+        row = db.query(VaultArchiveVerification).one()
+        assert row.vote == 'correction'
+        assert row.moderation_status == 'pending'
+        assert 'original flyer' in row.explanation.lower()
+        assert row.record_slug == 'double-impact-2026'
+    # Private source comments must never appear in public archive content.
+    assert 'Original promotional flyer from event host' not in client.get(path).get_data(as_text=True)
+    assert client.post(path + '/correction', data={
+        'csrf_token': token, 'correction': 'Yet another change',
+        'source_note': 'Another source'
+    }).status_code == 429
+    assert client.post('/archive/records/research-mr-youtube/correction', data={
+        'csrf_token': token, 'correction': 'Some incorrect information',
+        'source_note': 'Research'
+    }).status_code == 404
+
+
+def test_admin_login_uses_vault_brand_and_shared_footer(website):
+    client = website.test_client()
+    response = client.get('/admin/login')
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    assert 'THE LITEFEET VAULT' in body
+    assert 'Sign in to access The LiteFeet Vault administration.' in body
+    assert 'LiteFeet Ledger' not in body
+    assert 'class="ledger-footer"' in body
+    assert 'href="/admin"' in body

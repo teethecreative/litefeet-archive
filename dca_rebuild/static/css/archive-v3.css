@@ -456,3 +456,29 @@ html.lfv-sitewide .lfv-unified-meta{
     grid-template-columns:minmax(90px,0.4fr) minmax(0,1fr)!important;
   }
 }
+
+/* Documented event records accept evidence-backed corrections, not truth polls. */
+html.lfv-sitewide #archive-record .lfv-archive-correction form{
+ display:grid;gap:10px;max-width:740px;margin-top:18px
+}
+html.lfv-sitewide #archive-record .lfv-archive-correction label{
+ display:block;color:var(--lfv-ink,var(--text));font-weight:750;font-size:.83rem
+}
+html.lfv-sitewide #archive-record .lfv-archive-correction :is(textarea,input[type="url"]){
+ display:block;box-sizing:border-box;width:100%;max-width:100%;padding:12px 14px;
+ background:var(--lfv-surface,var(--surface));color:var(--lfv-ink,var(--text));
+ border:1px solid var(--lfv-line,var(--border));border-radius:5px;
+ font:inherit;line-height:1.5
+}
+html.lfv-sitewide #archive-record .lfv-archive-correction :is(textarea,input):focus-visible{
+ outline:2px solid var(--lfv-gold,var(--gold));outline-offset:2px
+}
+html.lfv-sitewide #archive-record .lfv-archive-correction button{
+ width:max-content;max-width:100%;min-height:42px;
+ padding:10px 16px!important;background:var(--lfv-gold,var(--gold))!important;
+ color:#091b36!important;border:0!important;border-radius:5px!important;font-weight:850!important
+}
+html.lfv-sitewide #archive-record .lfv-archive-back-link{
+ color:var(--lfv-ink,var(--text))!important;text-decoration:none!important;
+ border-bottom:1px solid var(--lfv-gold,var(--gold));padding-bottom:3px
+}
