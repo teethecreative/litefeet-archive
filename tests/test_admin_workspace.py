@@ -144,3 +144,35 @@ def test_archive_and_lock_in_review_controls_do_not_publish_records(website, dat
     with database[1]() as db:
         assert db.get(LockInCardRequest, card_id).status == "approved"
         assert db.get(VaultArchiveVerification, archive_id).moderation_status == "rejected"
+
+
+def test_admin_footer_navigation_and_queue_review_reasons(website, database):
+    client = website.test_client()
+    public = client.get("/").get_data(as_text=True)
+    assert 'href="/admin"' in public
+    assert "Admin" in public
+    with database[1].begin() as db:
+        db.add(VaultGatheringSubmission(
+            title="Needs event approval", gathering_type="lab",
+            start_date="2026-12-05", hosts="Example", address="123 Example",
+            status="pending", created_at=datetime(2026, 11, 8, 12)))
+    admin(client)
+    overview = client.get("/admin").get_data(as_text=True)
+    queue = client.get("/admin/review-queue").get_data(as_text=True)
+    for html in (overview, queue):
+        assert "Why it needs attention" in html
+        assert "Check event details and decide whether to publish." in html
+        assert 'class="ledger-admin-nav"' in html
+        assert 'class="lfv-admin-theme-toggle"' in html
+    assert client.get("/admin/analytics").status_code == 200
+
+def test_admin_login_redirects_to_unified_overview(website, monkeypatch):
+    import os
+    monkeypatch.setenv("ADMIN_USERNAME", "owner-test")
+    monkeypatch.setenv("ADMIN_PASSWORD", "password-test")
+    client = website.test_client()
+    with client.session_transaction() as state:
+        state["ledger_admin_authenticated"] = True
+    response = client.get("/admin/login")
+    assert response.status_code in (302, 303)
+    assert response.headers["Location"].endswith("/admin")

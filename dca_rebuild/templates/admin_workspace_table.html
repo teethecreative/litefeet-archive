@@ -1,7 +1,8 @@
-<div class="lfv-admin-table-wrap"><table class="lfv-admin-review-table"><thead><tr><th scope="col">Received</th><th scope="col">Section</th><th scope="col">Submission</th><th scope="col">Action</th></tr></thead>
+<div class="lfv-admin-table-wrap"><table class="lfv-admin-review-table"><thead><tr><th scope="col">Received</th><th scope="col">Section</th><th scope="col">Submission</th><th scope="col">Why it needs attention</th><th scope="col">Action</th></tr></thead>
 <tbody>{% for item in rows %}<tr>
 <td><time datetime="{{ item.received.isoformat() if item.received else '' }}">{{ item.received.strftime('%b %-d, %Y · %I:%M %p') if item.received else 'Unknown' }}</time></td>
 <td>{{ item.section|replace('-',' ')|title }}</td>
 <td><strong>{{ item.title }}</strong><small>{{ item.label }}</small></td>
+<td class="lfv-admin-review-reason">{{ item.reason }}</td>
 <td>{% if item.endpoint == 'admin_vault_gathering_edit' %}<a href="{{ url_for(item.endpoint,submission_id=item.id) }}">Review</a>{% elif item.endpoint == 'admin_vault_auxiliary_review' %}<a href="{{ url_for(item.endpoint,source=item.section) }}">Review</a>{% elif item.endpoint %}<a href="{{ url_for(item.endpoint) }}">Open review</a>{% else %}—{% endif %}</td>
-</tr>{% else %}<tr><td colspan="4">No pending submissions in this view.</td></tr>{% endfor %}</tbody></table></div>
+</tr>{% else %}<tr><td colspan="5">No pending submissions in this view.</td></tr>{% endfor %}</tbody></table></div>

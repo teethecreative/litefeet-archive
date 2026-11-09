@@ -164,6 +164,127 @@ body.ledger-admin main.lfv-gathering-admin>.lfv-gathering-counts a{
 }
 body.ledger-admin .lfv-gathering-counts span{color:var(--muted)!important}
 @media(max-width:700px){body.ledger-admin main.lfv-gathering-admin>.lfv-gathering-counts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Consolidated admin design, derived from the compact Overview heading.
+   Loaded after each page's legacy CSS through the common admin navigation. */
+body.ledger-admin main :is(.lfv-admin-workspace-head,.lfv-admin-plain-head,.admin-control-room__header,.lfv-gathering-header),
+body .dca-nominations-admin .lfv-admin-plain-head {
+  position:relative!important;overflow:visible!important;
+  width:100%!important;max-width:none!important;min-height:0!important;
+  background:transparent!important;background-image:none!important;
+  color:var(--text)!important;border:0!important;
+  border-bottom:3px solid var(--gold)!important;border-radius:0!important;
+  box-shadow:none!important;padding:22px 0 26px!important;
+  margin:0 0 30px!important;text-align:left!important
+}
+body.ledger-admin :is(.lfv-admin-workspace-head,.admin-control-room__header,.lfv-gathering-header)::after,
+body .dca-nominations-admin .lfv-admin-plain-head::after{display:none!important;content:none!important}
+body.ledger-admin main :is(.lfv-admin-workspace-head,.lfv-admin-plain-head,.admin-control-room__header,.lfv-gathering-header) :is(h1,h2),
+body .dca-nominations-admin .lfv-admin-plain-head h1{
+  color:var(--text)!important;font-size:clamp(2rem,4vw,3.3rem)!important;
+  line-height:1.12!important;letter-spacing:-.035em!important;
+  margin:9px 0 14px!important;text-transform:none!important
+}
+body.ledger-admin main :is(.lfv-admin-workspace-head,.lfv-admin-plain-head,.admin-control-room__header,.lfv-gathering-header) :is(.label,.lead,.lfv-admin-overline,.lfv-gathering-eyebrow),
+body .dca-nominations-admin .lfv-admin-plain-head .lfv-admin-overline{
+  color:var(--muted)!important;opacity:1!important;line-height:1.5!important
+}
+body.ledger-admin main :is(.lfv-admin-workspace-head,.lfv-admin-plain-head,.admin-control-room__header,.lfv-gathering-header) > p:last-child,
+body.ledger-admin main .admin-control-room__header .lead,
+body .dca-nominations-admin .lfv-admin-plain-head > p:last-child{
+  color:var(--text)!important;opacity:1!important;
+  max-width:74ch!important;line-height:1.6!important;
+  font-size:clamp(.92rem,1.4vw,1rem)!important
+}
+body.ledger-admin main .admin-control-room__header .analytics-header-links{margin-top:19px}
+body.ledger-admin main .admin-control-room__header .analytics-header-links :is(a,span){color:var(--text)!important}
+body.ledger-admin :is(.lfv-admin-workspace,.admin-control-room,.lfv-gathering-admin) :is(.lfv-admin-workspace-count,.lfv-admin-review-table small,.lfv-admin-metrics span,.lfv-admin-state-counts span,.lfv-admin-quick-links span,.lfv-gathering-result-total,.lfv-gathering-counts span,.admin-section-heading p,.beta-admin-feature__copy p){
+  color:var(--text)!important;opacity:1!important
+}
+body.ledger-admin .lfv-admin-workspace .lfv-admin-review-table th{color:var(--text)!important}
+body.ledger-admin .lfv-admin-review-reason{
+  color:var(--text)!important;max-width:38ch;
+  font-size:.8rem;line-height:1.5
+}
+body.ledger-admin .lfv-admin-workspace :is(button[type="submit"],a.lfv-admin-primary),
+body.ledger-admin .admin-control-room :is(button[type="submit"],.admin-module-card>a),
+body.ledger-admin .lfv-gathering-admin button[type="submit"]{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--gold)!important;color:#091b36!important;
+  border:1px solid var(--gold)!important;border-radius:5px!important;
+  font-weight:800!important;text-decoration:none!important;box-shadow:none!important;
+  padding:10px 15px!important;min-height:40px!important;line-height:1.25
+}
+body.ledger-admin .lfv-admin-workspace :is(a:hover,button:hover){text-underline-offset:3px}
+body.ledger-admin :is(.lfv-admin-workspace,.admin-control-room,.lfv-gathering-admin) :is(.lfv-admin-workspace-filters,.lfv-gathering-filters) a,
+body.ledger-admin .lfv-admin-back-link{
+  color:var(--text)!important;background:transparent!important;
+  border:0!important;border-bottom:1px solid var(--gold)!important;
+  padding:8px 0!important;box-shadow:none!important;
+  text-decoration:none!important
+}
+body.ledger-admin .dca-nominations-admin .dca-nom-table th a,
+body .dca-nominations-admin .dca-nom-table th a,
+html.lfv-sitewide body .dca-nominations-admin .dca-nom-table th a{
+  display:inline-flex!important;align-items:center!important;gap:7px!important;
+  background:transparent!important;background-image:none!important;
+  color:var(--text)!important;border:0!important;border-radius:0!important;
+  padding:2px 0!important;min-height:0!important;
+  box-shadow:none!important;text-decoration:none!important;
+  font:inherit!important;letter-spacing:inherit!important;text-transform:none!important
+}
+body .dca-nominations-admin .dca-nom-table th .lfv-sort-glyph{
+  font-size:.9em;font-weight:700;opacity:.58;line-height:1
+}
+body .dca-nominations-admin .dca-nom-table th[aria-sort="ascending"] .lfv-sort-glyph,
+body .dca-nominations-admin .dca-nom-table th[aria-sort="descending"] .lfv-sort-glyph{
+  opacity:1;color:var(--gold-light,#e7cb68)
+}
+body .dca-nominations-admin .dca-nom-table th a:is(:focus-visible,:hover){
+  text-decoration:underline!important;text-decoration-color:var(--gold)!important;
+  text-underline-offset:5px!important
+}
+body .dca-nominations-admin .dca-nom-table th[aria-sort="ascending"],
+body .dca-nominations-admin .dca-nom-table th[aria-sort="descending"]{
+  border-bottom:2px solid var(--gold)!important
+}
+body .dca-nominations-admin :is(h1,h2,h3){color:var(--text)!important}
+body .dca-nominations-admin .lf-nom-filters button[type="submit"],
+body .dca-nominations-admin .dca-nom-table button[type="submit"]{
+  background:var(--gold)!important;color:#091b36!important;
+  border:1px solid var(--gold)!important;border-radius:5px!important;
+  min-height:37px!important;padding:8px 13px!important;
+  font-weight:800!important;box-shadow:none!important
+}
+
+body .dca-nominations-admin .lfv-admin-subnav{
+ display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;
+ margin:14px 0 16px;padding:10px 0;border-block:1px solid var(--border)
+}
+body .dca-nominations-admin .lfv-admin-subnav a{
+ background:transparent!important;color:var(--text)!important;
+ border:0!important;border-bottom:1px solid transparent!important;
+ border-radius:0!important;box-shadow:none!important;
+ padding:7px 0!important;min-height:32px!important;text-decoration:none!important;
+ font-size:.78rem!important;font-weight:750!important
+}
+body .dca-nominations-admin .lfv-admin-subnav a:is(:hover,:focus-visible){
+ border-bottom-color:var(--gold)!important
+}
+body .dca-nominations-admin a.lfv-admin-primary{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ background:var(--gold)!important;color:#091b36!important;
+ border:1px solid var(--gold)!important;border-radius:5px!important;
+ font-weight:800!important;padding:10px 15px!important;min-height:40px!important;
+ text-decoration:none!important;box-shadow:none!important
+}
+body.ledger-admin .lfv-admin-workspace .lfv-admin-metrics a{
+  border-radius:5px!important;background:var(--surface)!important;
+}
+@media(max-width:700px){
+  body.ledger-admin :is(.lfv-admin-workspace-head,.admin-control-room__header,.lfv-gathering-header),
+  body .dca-nominations-admin .lfv-admin-plain-head{padding:14px 0 18px!important;margin-bottom:20px!important}
+}
 </style>
 <script>
 (function(){
