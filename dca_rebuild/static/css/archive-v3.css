@@ -456,3 +456,14 @@ html.lfv-sitewide .lfv-unified-meta{
     grid-template-columns:minmax(90px,0.4fr) minmax(0,1fr)!important;
   }
 }
+
+/* Archive breadcrumb: lightweight gold text, never a filled CTA. */
+html.lfv-sitewide .lfv-archive-detail .lfv-archive-back a.lfv-archive-back-link,
+html.lfv-sitewide .lfv-archive-detail .lfv-archive-back a.lfv-archive-back-link:link,
+html.lfv-sitewide .lfv-archive-detail .lfv-archive-back a.lfv-archive-back-link:visited {
+  display:inline!important;background:transparent!important;
+  color:var(--lfv-gold)!important;border:0!important;
+  padding:0!important;margin:0!important;border-radius:0!important;
+  min-height:0!important;box-shadow:none!important;text-decoration:underline!important;
+  text-underline-offset:4px;font-weight:800;
+}
