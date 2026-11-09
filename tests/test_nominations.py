@@ -657,3 +657,19 @@ def test_standings_match_nomination_category_cards_without_changing_nomination_g
     assert 'class="lf9e-category-grid"' in nomination
     assert 'class="lf9e-grid-card lfv5-category-disclosure"' in nomination
     assert 'lf9e-standings-surface' not in nomination
+
+
+def test_admin_nominee_sort_headers_show_affordance_on_every_column(website):
+    client = website.test_client()
+    with client.session_transaction() as state:
+        state["ledger_admin_authenticated"] = True
+        state["dca_moderation_csrf"] = "test-admin-token"
+    response = client.get("/admin/dca/nominations?sort=nominee&direction=desc")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert html.count('class="lfv-sort-glyph"') == 3
+    assert 'aria-sort="descending"' in html
+    assert 'aria-label="Sort by Category' in html
+    assert 'aria-label="Sort by Nominee' in html
+    assert 'aria-label="Sort by Submissions' in html
+    assert "↕" in html
