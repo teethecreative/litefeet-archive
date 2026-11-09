@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{{ item.title }} | LiteFeet Music</title>
+<title>{{ item.display_title or item.title }} | LiteFeet Music</title>
 {% include "_seo_head.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
@@ -20,7 +20,7 @@
 <main class="lfv-music-record">
 <p><a href="{{ url_for('vault_music_public') }}">← Release Radar</a></p>
 <p class="vault-kicker">MUSIC / {{ item.record_type or item.kind or 'RELEASE' }}</p>
-<h1>{{ item.title }}</h1>
+<h1>{{ item.display_title or item.title }}</h1>
 <dl class="lfv-music-facts">
 <div><dt>Artist / Producer</dt><dd>{{ item.artist_or_creator or item.artist or item.producer_name or 'Not documented' }}</dd></div>
 <div><dt>Release Date</dt><dd>{{ item.date_label or 'Date unknown' }}</dd></div>
@@ -29,7 +29,7 @@
 {% if item.project_title %}<div><dt>Project</dt><dd>{{ item.project_title }}</dd></div>{% endif %}
 {% if item.producer_credit %}<div><dt>Producer credit</dt><dd>{{ item.producer_credit }}</dd></div>{% endif %}
 </dl>
-{% if item.description %}<section><h2>Description</h2><p>{{ item.description }}</p></section>{% endif %}
+{% if item.display_description %}<section><h2>Description</h2><p>{{ item.display_description }}</p></section>{% endif %}
 {% if item.date_verification %}<p><strong>Date status:</strong> {{ item.date_verification }}.</p>{% endif %}
 {% if item.metadata_notes %}<section><h2>Source notes</h2><p>{{ item.metadata_notes }}</p></section>{% endif %}
 {% if project_tracks %}
