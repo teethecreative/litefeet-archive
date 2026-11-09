@@ -20,7 +20,7 @@ def test_history_page_redirects_to_one_unified_timeline(website):
     assert response.status_code == 302
     assert response.headers["Location"].endswith("/archive/timeline")
     page = client.get("/archive/timeline").get_data(as_text=True)
-    assert "HISTORY &amp; TIMELINE" in page
+    assert "The Archive Timeline" in page
     assert 'data-unified-timeline' in page
     assert 'data-timeline-search' in page
     assert 'timeline-v2.js' in page
@@ -53,7 +53,7 @@ def test_archive_links_to_unified_timeline_and_keeps_compact_rows(website):
     assert "archive-v3.css" in text
     assert "data-unified-timeline" in text
     assert "SEARCH THE TIMELINE" in text
-    assert "THE ARCHIVE TIMELINE" in text
+    assert "The Archive Timeline" in text
 
 
 def test_guide_seo_redirect_preserves_search_canonical(website):
