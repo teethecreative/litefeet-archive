@@ -69,7 +69,8 @@ def test_form_checks_alias_before_submission_and_adds_to_canonical_person(websit
     assert '10 NOMINATIONS' in category
     assert 'A astro' not in category
     assert client.post(PATH, data={
-        'csrf_token':token,'category_id':1,'name':'A Astro'
+        'csrf_token':token,'category_id':1,'name':'A Astro',
+        'reason':'Joined LiteFeet community events in 2026.'
     }).status_code == 302
     with database[1]() as db:
         assert db.query(DCANominee).count() == 2
@@ -90,13 +91,15 @@ def test_close_names_need_confirmation_and_are_not_auto_merged(website, database
     assert hint['requires_confirmation'] is True
     assert hint['already_listed'] is False
     posted = client.post(PATH, data={
-        'csrf_token':token,'category_id':1,'name':'D Astr0'
+        'csrf_token':token,'category_id':1,'name':'D Astr0',
+        'reason':'Contributed to LiteFeet events in the award period.'
     })
     assert posted.status_code == 303
     with database[1]() as db:
         assert db.query(DCANominationSubmission).count() == 10
     posted = client.post(PATH, data={
-        'csrf_token':token,'category_id':1,'name':'D Astr0','confirm_distinct':'1'
+        'csrf_token':token,'category_id':1,'name':'D Astr0',
+        'reason':'Contributed to LiteFeet events in the award period.','confirm_distinct':'1'
     })
     assert posted.status_code == 302
     with database[1]() as db:
