@@ -2161,6 +2161,18 @@ def admin_dca_nomination_participant_emails():
                 .all()
             )
         ]
+        # Include verified returning participants whose earlier entries
+        # may still have been recorded in the hash-only format.
+        rows.extend(
+            email for email, in (
+                db.query(DCANominationContact.email_address)
+                .join(DCANominationSubmission,
+                      DCANominationContact.submitter_hash ==
+                      DCANominationSubmission.submitter_hash)
+                .filter(DCANominationSubmission.edition_id == edition.id)
+                .all()
+            )
+        )
         rows.extend(
             email for email, in (
                 db.query(DCACategorySuggestionSubmission.email_address)
