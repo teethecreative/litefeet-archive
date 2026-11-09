@@ -23,6 +23,19 @@ DEVELOPMENT_STATES = ("needs_review", "needs_work", "planned", "active", "done",
 FEEDBACK_STATES = ("new", "reviewed", "dismissed", "converted")
 QUEUE_SECTIONS = ("all", "events", "awards", "archive", "community", "lock-in")
 PAGE_SIZE = 10
+# Status-specific work expected from the reviewer; these labels do not claim
+# a submitted record is invalid or that a historical result is incorrect.
+REVIEW_REASONS = {
+    "Event submission": "Check event details and decide whether to publish.",
+    "DCA category suggestion": "Review the proposed category; approve, merge, or reject.",
+    "DCA nominee": "Review the nominee and decide approval or rejection.",
+    "LiteFeet Awards submission": "Verify the historical award information before approval.",
+    "DCA qualification reason": "Review supporting statements or evidence; eligibility is not automatic.",
+    "Beta feedback": "Triage new Beta feedback and decide the next action.",
+    "Archive response": "Review a community statement against available sources.",
+    "Lock In card request": "Review the card suggestion before adding it to the game.",
+    "Website feedback": "Triage the website report and decide whether to create a task.",
+}
 # Every spec is a real, existing source, not a synthetic task.
 SOURCES = (
     ("events", VaultGatheringSubmission, "status", "pending", "created_at",
@@ -90,6 +103,7 @@ def _queue(db, section="all", page=1, sort="oldest"):
                 id=entry.id, section=category, label=label,
                 title=str(getattr(entry, title_attr) or "Untitled")[:180],
                 received=received, endpoint=endpoint,
+                reason=REVIEW_REASONS.get(label, "Pending moderation decision."),
             ))
     candidates.sort(
         key=lambda x: (x["received"] or datetime.min, x["section"], x["id"]),
