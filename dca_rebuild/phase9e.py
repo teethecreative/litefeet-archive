@@ -923,6 +923,31 @@ def install_phase9e(app, ns):
                 return render_template('dca_nominations_closed.html')
             other = [(s, c) for s, c in stages if s.stage in ('write_in', 'qualified')]
             allowed = {c.id: c for _, c in top + other}
+            display_args = request.args.copy()
+            # Clean public award URLs are alternate GET views of the existing
+            # standings, never alternate nomination actions or data records.
+            if request.method == 'GET' and request.endpoint in {
+                'vault_clean_awards_standings', 'vault_clean_awards_category',
+                'vault_clean_awards_nominee',
+            }:
+                from dca_rebuild.public_urls import slugify
+                display_args['view'] = 'results'
+                category_slug = (request.view_args or {}).get('category_slug')
+                nominee_slug = (request.view_args or {}).get('nominee_slug')
+                if category_slug:
+                    matches = [c for _, c in top + other
+                               if slugify(writein_category_label(c.name)) == category_slug]
+                    if len(matches) != 1:
+                        abort(404)
+                    selected_category = matches[0]
+                    display_args['category'] = str(selected_category.id)
+                    if nominee_slug:
+                        public_nominees = get_counts(db, edition, include_pending=True)[0]
+                        matches = [n for n in public_nominees.get(selected_category.id, [])
+                                   if slugify(n['name']) == nominee_slug]
+                        if len(matches) != 1:
+                            abort(404)
+                        display_args['suggestion'] = str(matches[0]['id'])
             session.setdefault('lf9e_nomination_csrf', secrets.token_urlsafe(32))
             if request.method == 'POST':
                 token = request.form.get('csrf_token', '')
@@ -1044,7 +1069,7 @@ def install_phase9e(app, ns):
                 session['lf9e_skipped'] = [x for x in session.get('lf9e_skipped', []) if x != cid]
                 flash('Nomination received.')
                 return redirect(url_for('dca_nominations_closed', view='results'))
-            results_view = request.args.get('view') == 'results'
+            results_view = display_args.get('view') == 'results'
             who = session.get('lf9e_recent_hash')
             categories, writeins = [], []
             summary = dict(submitted=0, available=0, cooldown=0, skipped=0)
@@ -1075,11 +1100,11 @@ def install_phase9e(app, ns):
                     summary['cooldown'] += bool(remaining)
                     summary['available'] += row['available']
                     summary['skipped'] += row['skipped']
-                selected = next((c for c in categories + writeins if str(c['id']) == request.args.get('category')), None)
-                if request.args.get('category') and selected is None:
+                selected = next((c for c in categories + writeins if str(c['id']) == display_args.get('category')), None)
+                if display_args.get('category') and selected is None:
                     abort(404)
-                if request.args.get('suggestion'):
-                    suggestion_id = request.args.get('suggestion', type=int)
+                if display_args.get('suggestion'):
+                    suggestion_id = display_args.get('suggestion', type=int)
                     suggestion = next((n for n in selected['nominees'] if n['id'] == suggestion_id), None) if selected else None
                     if suggestion is None:
                         abort(404)
@@ -1102,9 +1127,9 @@ def install_phase9e(app, ns):
                                    intro_writeins=[dict(id=c.id, name=writein_category_label(c.name))
                                                    for _, c in other],
                                    selected=selected, suggestion=suggestion, suggestion_details=suggestion_details,
-                                   show_form=request.args.get('nominate') == '1' or 'draft' in request.args,
-                                   requested_category_id=(request.args.get('category', type=int)
-                                                          if request.args.get('category', type=int) in allowed else None),
+                                   show_form=display_args.get('nominate') == '1' or 'draft' in display_args,
+                                   requested_category_id=(display_args.get('category', type=int)
+                                                          if display_args.get('category', type=int) in allowed else None),
                                    identified=bool(who), results_view=results_view, summary=summary,
                                    csrf_token=session['lf9e_nomination_csrf'], closed=is_closed())
         finally:
