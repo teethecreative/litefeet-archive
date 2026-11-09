@@ -267,6 +267,9 @@ def find_record(slug):
 
 def browse(query="", collection="all", page=1, page_size=PAGE_SIZE, timeline=False):
     query = re.sub(r"\s+", " ", (query or "").strip()).casefold()[:120]
+    if collection == "music":
+        return {"items": [], "count": 0, "page": page, "has_more": False,
+                "next_page": None, "query": query, "collection": collection}
     if collection not in dict(COLLECTIONS):
         collection = "all"
     page = max(1, min(int(page), 10000))
