@@ -1,1 +1,43 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ item.title }} | LiteFeet Music</title>{% include "_seo_head.html" %}<link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"></head><body>{% include "_navigation.html" %}<main class="vault-section-page" style="max-width:960px;margin:auto;padding:30px 20px 70px"><p><a href="{{ url_for('vault_music_public') }}">← LiteFeet Music</a></p><p class="vault-kicker">Music Release Record</p><h1>{{ item.title }}</h1><dl><dt>Artist / Producer</dt><dd>{{ item.artist_or_creator or item.artist or item.producer_name or 'Not yet documented' }}</dd><dt>Release date</dt><dd>{{ item.release_date or 'Unknown' }}</dd><dt>Platform</dt><dd>{{ item.platform or 'Not documented' }}</dd></dl>{% if item.description %}<section><h2>Release notes</h2><p>{{ item.description }}</p></section>{% endif %}{% if item.url %}<p><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">Open original source</a></p>{% endif %}</main>{% include "_footer.html" %}</body></html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ item.title }} | LiteFeet Music</title>
+{% include "_seo_head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-editorial-v2.css') }}">
+<style>
+.lfv-music-record{max-width:960px;margin:auto;padding:36px 22px 80px}
+.lfv-music-record h1{font-size:clamp(2rem,5vw,3.3rem)}
+.lfv-music-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:16px;margin:26px 0}
+.lfv-music-facts>div{border:1px solid #6c7891;border-radius:10px;padding:14px;background:#122642}
+.lfv-music-facts dt{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:#e3bc53}
+.lfv-music-facts dd{margin:8px 0 0;overflow-wrap:anywhere}
+.lfv-music-record a{color:#e7c15d}
+.lfv-music-track-list{border-collapse:collapse;width:100%}
+.lfv-music-track-list td,.lfv-music-track-list th{text-align:left;border-bottom:1px solid #52647c;padding:12px}
+</style></head>
+<body>{% include "_navigation.html" %}
+<main class="lfv-music-record">
+<p><a href="{{ url_for('vault_music_public') }}">← Release Radar</a></p>
+<p class="vault-kicker">MUSIC / {{ item.record_type or item.kind or 'RELEASE' }}</p>
+<h1>{{ item.title }}</h1>
+<dl class="lfv-music-facts">
+<div><dt>Artist / Producer</dt><dd>{{ item.artist_or_creator or item.artist or item.producer_name or 'Not documented' }}</dd></div>
+<div><dt>Release Date</dt><dd>{{ item.date_label or 'Date unknown' }}</dd></div>
+<div><dt>Duration</dt><dd>{{ item.duration_label or '—' }}</dd></div>
+<div><dt>Platform</dt><dd>{{ item.platform or 'Not documented' }}</dd></div>
+{% if item.project_title %}<div><dt>Project</dt><dd>{{ item.project_title }}</dd></div>{% endif %}
+{% if item.producer_credit %}<div><dt>Producer credit</dt><dd>{{ item.producer_credit }}</dd></div>{% endif %}
+</dl>
+{% if item.description %}<section><h2>Description</h2><p>{{ item.description }}</p></section>{% endif %}
+{% if item.date_verification %}<p><strong>Date status:</strong> {{ item.date_verification }}.</p>{% endif %}
+{% if item.metadata_notes %}<section><h2>Source notes</h2><p>{{ item.metadata_notes }}</p></section>{% endif %}
+{% if project_tracks %}
+<section><h2>Project tracks</h2><table class="lfv-music-track-list"><thead><tr><th>#</th><th>Song</th><th>Duration</th></tr></thead><tbody>
+{% for track in project_tracks %}<tr><td>{{ track.track_number or '—' }}</td><td><a href="{{ track.record_href }}">{{ track.title }}</a></td><td>{{ track.duration or '—' }}</td></tr>{% endfor %}
+</tbody></table></section>
+{% endif %}
+{% if item.url %}<p><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">View original source / platform</a></p>{% endif %}
+{% if item.source_profile_url and item.source_profile_url != item.url %}<p><a href="{{ item.source_profile_url }}" target="_blank" rel="noopener noreferrer">Artist profile</a></p>{% endif %}
+{% if item.needs_exact_track_url %}<p>Exact individual-track link has not yet been confirmed. This source may open the artist's profile instead of playing this song.</p>{% endif %}
+</main>{% include "_footer.html" %}</body></html>
