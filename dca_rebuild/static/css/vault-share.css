@@ -34,3 +34,86 @@
 #lfv-nominee-reason-controls>label{font:700 13px system-ui,sans-serif;color:#071d3b}
 #lfv-nominee-reason-controls select,#lfv-nominee-reason-controls textarea{box-sizing:border-box;width:100%;border:1px solid #aab6c2;border-radius:7px;background:white;color:#071d3b;font:14px/1.5 system-ui,sans-serif;padding:10px}
 #lfv-nominee-reason-controls .lfv-reason-helper{margin:0;font:12px/1.5 system-ui,sans-serif;color:#344b62}
+
+
+/* Sharing modal redesign: scoped overrides protect against global site form styles. */
+.lfv-share-dialog {
+  width:min(920px,calc(100vw - 32px)) !important;
+  max-width:min(920px,calc(100vw - 32px)) !important;
+  max-height:min(88dvh,850px) !important;
+  padding:clamp(18px,2.4vw,30px) !important;
+  background:#faf9f6 !important;
+  color:#071d3b !important;
+  overflow-y:auto !important;
+  border:1px solid #d5dde3 !important;
+  border-radius:16px !important;
+  box-shadow:0 28px 90px #071d3b70 !important;
+}
+.lfv-share-dialog[open] {
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(0,.86fr);
+  grid-template-areas:"heading heading" "copy copy" "controls preview" "formats preview" "actions preview" "hint preview" "status status";
+  align-content:start;
+  align-items:start;
+  column-gap:28px;
+  row-gap:10px;
+}
+.lfv-share-dialog .lfv-share-heading {grid-area:heading}
+.lfv-share-dialog .lfv-share-copy {grid-area:copy;margin:0 0 7px !important;line-height:1.45}
+.lfv-share-dialog #lfv-awards-controls {grid-area:controls;min-width:0;display:grid;gap:9px;margin:0;padding:18px;background:#f0f3f5;border:1px solid #dce3e8;border-radius:12px}
+.lfv-share-dialog #lfv-awards-controls[hidden] {display:none!important}
+.lfv-share-dialog #lfv-awards-controls>label,
+.lfv-share-dialog #lfv-nominee-reason-controls>label,
+.lfv-share-dialog #lfv-awards-controls .lfv-share-theme legend,
+.lfv-share-dialog #lfv-awards-controls .lfv-share-theme label,
+.lfv-share-dialog #lfv-awards-controls .lfv-reason-helper {color:#071d3b !important;opacity:1!important}
+.lfv-share-dialog #lfv-awards-controls select,
+.lfv-share-dialog #lfv-nominee-reason-controls select,
+.lfv-share-dialog #lfv-nominee-reason-controls textarea {
+  width:100%;box-sizing:border-box;background:#fff!important;color:#071d3b!important;
+  border:1px solid #aab9c6!important;border-radius:8px!important;min-height:44px!important;
+  font:500 14px/1.45 system-ui,sans-serif!important;opacity:1!important;
+  box-shadow:none!important;
+}
+.lfv-share-dialog #lfv-awards-controls select:focus-visible,
+.lfv-share-dialog #lfv-nominee-reason-controls select:focus-visible,
+.lfv-share-dialog button:focus-visible {outline:3px solid #d9ac47!important;outline-offset:2px}
+.lfv-share-dialog #lfv-awards-controls .lfv-share-theme {
+  display:flex!important;flex-wrap:wrap;gap:16px;
+  margin:4px 0!important;padding:0!important;border:0!important;background:transparent!important;
+  color:#071d3b!important;
+}
+.lfv-share-dialog #lfv-awards-controls .lfv-share-theme legend {margin-bottom:6px}
+.lfv-share-dialog #lfv-awards-controls .lfv-share-theme label {display:inline-flex!important;gap:7px;align-items:center}
+.lfv-share-dialog #lfv-awards-controls .lfv-share-theme input {accent-color:#143f80;opacity:1!important}
+.lfv-share-dialog #lfv-nominee-reason-controls {margin:3px 0 0!important;display:grid;gap:8px;min-width:0}
+.lfv-share-dialog #lfv-nominee-reason-controls[hidden] {display:none!important}
+.lfv-share-dialog .lfv-share-formats {grid-area:formats;margin:3px 0!important}
+.lfv-share-dialog .lfv-share-preview {
+  grid-area:preview;width:auto!important;max-width:100%!important;
+  max-height:min(60dvh,620px)!important;height:auto!important;
+  min-width:0;justify-self:center;align-self:start;
+  margin:0 auto!important;border:1px solid #dce3e8;border-radius:8px;
+  object-fit:contain!important;
+}
+.lfv-share-dialog .lfv-share-preview[hidden]{display:none!important}
+.lfv-share-dialog .lfv-share-actions {grid-area:actions;margin:0;align-self:start}
+.lfv-share-dialog .lfv-share-hint {grid-area:hint;margin:0}
+.lfv-share-dialog #lfv-share-status {grid-area:status;margin:0;color:#143f80!important}
+.lfv-share-dialog .lfv-share-formats button,
+.lfv-share-dialog .lfv-share-actions button {line-height:1.2!important;min-height:44px!important}
+.lfv-share-dialog .lfv-share-formats button[aria-pressed=true] {background:#071d3b!important;color:#fff!important}
+.lfv-share-dialog .lfv-share-formats button[aria-pressed=false] {background:#fff!important;color:#071d3b!important}
+.lfv-share-dialog #lfv-share-open,
+.lfv-share-dialog .lfv-share-actions button {white-space:normal}
+@media(max-width:680px) {
+  .lfv-share-dialog {width:calc(100vw - 20px)!important;max-width:calc(100vw - 20px)!important;max-height:calc(100dvh - 20px)!important;padding:16px!important}
+  .lfv-share-dialog[open] {
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"heading" "copy" "controls" "formats" "preview" "actions" "hint" "status";
+    row-gap:12px;
+  }
+  .lfv-share-dialog #lfv-awards-controls{padding:14px}
+  .lfv-share-dialog .lfv-share-preview{max-height:42dvh!important}
+  .lfv-share-dialog .lfv-share-actions button{flex:1;min-width:110px}
+}
