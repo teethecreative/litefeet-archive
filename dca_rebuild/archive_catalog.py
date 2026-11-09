@@ -132,7 +132,7 @@ def _event(raw, source_kind):
 def _research(raw, enrichment=None):
     enrichment = enrichment or {}
     typ = raw["record_type"]
-    collection = ("music" if raw["title"] == "Get Lite to LiteFeet Music Evolution"
+    collection = ("history" if raw["title"] == "Get Lite to LiteFeet Music Evolution"
                   else raw["collection"])
     description = raw["summary"]
     original_label = raw.get("research_status") or "Pending Review"
