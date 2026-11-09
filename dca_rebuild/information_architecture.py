@@ -209,16 +209,18 @@ def install_information_architecture(app, ns):
             return jsonify(error='Enter a card name and contact email.'), 400
         fields = ('aliases', 'team_location', 'stats', 'signature', 'permission',
                   'producer', 'release_year', 'era_level', 'arena_location',
-                  'arena_type', 'arena_history', 'move_style', 'move_connection',
+                  'arena_type', 'arena_history', 'move_style', 'move_category', 'move_connection',
                   'trick_style', 'trick_connection', 'gameplay')
         limits = {'aliases':240,'team_location':240,'stats':500,'signature':500,
                   'permission':30,'producer':160,'release_year':4,'era_level':160,
                   'arena_location':200,'arena_type':120,'arena_history':700,
-                  'move_style':160,'move_connection':280,'trick_style':160,
+                  'move_style':160,'move_category':20,'move_connection':280,'trick_style':160,
                   'trick_connection':280,'gameplay':1000}
         payload = {key: request.form.get(key, '').strip() for key in fields}
         if any(len(value) > limits[key] for key, value in payload.items()):
             return jsonify(error='A response is too long.'), 400
+        if kind == 'Move' and payload['move_category'] not in ('Footwork', 'Combo', 'Trick'):
+            return jsonify(error='Choose Footwork, Combo, or Trick for this move suggestion.'), 400
         if kind == 'Dancer' and payload['permission'] not in ('yes','request-first','not-confirmed'):
             return jsonify(error='Select a permission option.'), 400
         if kind == 'Song' and not payload['producer']:
