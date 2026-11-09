@@ -9,6 +9,7 @@ import re
 from sqlalchemy import inspect, text
 from dca_rebuild.archive_catalog import all_records, find_record
 from dca_rebuild.music_batch_catalog import combined_releases, batch_record, batch_catalog
+from dca_rebuild.music_presentation import with_release_display, duplicate_release_candidates
 
 def full_date(value):
     """Render stored release dates with spelled-out months; never invent precision."""
@@ -76,14 +77,18 @@ def install_music_public(app, engine):
                 ("title", "artist", "artist_or_creator", "producer", "producer_name",
                  "description", "project_title", "record_type")
             ).casefold()]
-        return render_template("music_timeline.html", releases=releases, search=search)
+        return render_template("music_timeline.html",
+                               releases=[with_release_display(row) for row in releases],
+                               search=search)
 
     @app.get("/litefeet-music/release/<int:item_id>", endpoint="vault_music_release")
     def vault_music_release(item_id):
         item = next((row for row in music_rows() if row["id"] == item_id), None)
         if item is None:
             abort(404)
-        return render_template("music_release_public.html", item=dict(item, date_label=full_date(item.get("release_date")), duration_label=music_duration(item)))
+        return render_template("music_release_public.html", item=with_release_display(dict(
+            item, date_label=full_date(item.get("release_date")),
+            duration_label=music_duration(item))))
 
     @app.get("/litefeet-music/catalog/<kind>/<catalog_id>", endpoint="vault_music_catalog_record")
     def vault_music_catalog_record(kind, catalog_id):
@@ -97,10 +102,10 @@ def install_music_public(app, engine):
                    if row["kind"] == "track" and row.get("project_id") == catalog_id]
                   if kind == "project" else [])
         tracks.sort(key=lambda row: int(row.get("track_number") or 999))
-        return render_template("music_release_public.html", item=dict(
+        return render_template("music_release_public.html", item=with_release_display(dict(
             item, date_label=(full_date(item.get("release_date"))
                  if item.get("release_date") else item.get("release_year") or "Date unknown"),
-            duration_label=music_duration(item)), project_tracks=tracks)
+            duration_label=music_duration(item))), project_tracks=tracks)
     
     @app.get("/media", endpoint="vault_media_public")
     def vault_media_public():
