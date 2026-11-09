@@ -1,7 +1,7 @@
 <header class="lock-hero">
   <p class="vault-kicker">The LiteFeet Card Battle Game</p>
   <h1>Lock In</h1>
-  <p>Build a round the way you’d build one on the floor. Pick your dancer, find the right track, and put your moves together before you call “locked in.” Tee’s card game brings LiteFeet dancers, producers, teams, and battle spaces to the table.</p>
+  <p>Build a round the way you’d build one on the floor. Pick your dancer, find the right track, and put your moves together before you call “locked in.” Lock In brings LiteFeet dancers, songs, moves, and battle spaces to the table.</p>
   <nav aria-label="Game guide"><a href="#rules">How to play</a> · <a href="#decks">Build a deck</a> · <a href="#lock-workbench">Test the game</a> · <a href="#join">Get involved</a></nav>
 </header>
 <section id="rules">
@@ -23,7 +23,7 @@
   <p>A player may challenge an invalid card play using the manual. The person whose challenge or play is wrong loses 50 BP for that round.</p>
   <h3>1v1 round structure</h3>
   <ol>
-    <li>Choose a dancer and song card and put them in their zones. Use an arena card, with producer effects when available.</li>
+    <li>Choose a dancer and song card and put them in their zones. Use an arena card and the song's documented effects.</li>
     <li>Draw seven cards. Your hand can contain moves, upgrades and fribs.</li>
     <li>Phase 1: setup moves, such as Rev Up, Bad One, or Tone Whop.</li>
     <li>Phase 2: place up to three move cards face down.</li>
@@ -33,7 +33,7 @@
   <h3>2v2 and 3v3</h3>
   <p>Tag-team and team-battle modes are coming soon.</p>
   <h3>Card types</h3>
-  <p>Build a 25–50 card deck with dancers, arenas, songs, moves, tricks, upgrades, fribs and other support cards. Card limits apply when you save or play.</p>
+  <p>Build a 25–50 card deck with dancers, arenas, songs, moves, tricks, upgrades, fribs and other support cards. Producers are credited on Song Cards, not played as separate cards.</p>
 </section>
 <section id="decks" class="lock-deck-examples">
   <h2>Build A Deck &amp; Test The Game</h2>
@@ -156,7 +156,7 @@
   <a href="{{ url_for('vault_lock_in', round=round_key) }}#practice">Replay this round</a> · <a href="{{ url_for('vault_lock_in', round=next_key) }}#practice">Next round · {{ rounds[next_key].dancer }}</a></div>{% endif %}
 </section>
 <section id="join"><h2>Be part of Lock In</h2>
-  <p>Dancers can pitch five stats, their strongest stat, a signature move, and what it should do in a battle. Producers can send tracks grouped as Common, Rare, and Legendary. You can also suggest an arena, explain a team or song connection, or volunteer to playtest.</p>
+  <p>Dancers can pitch five stats, their strongest stat, a signature move, and what it should do in a battle. Song suggestions include producer credit and a proposed Common, Rare, or Legendary level. You can also suggest an arena, explain a team or song connection, or volunteer to playtest.</p>
   <p>Email Tee with your LiteFeet name and what you’d like to contribute. Mention if you want to review your card before it’s finalized.</p>
   <a href="{{ vault_contact.split('?')[0] }}?subject=Lock%20In%20card%20game%20submission">Email Tee about Lock In</a>
 </section>
