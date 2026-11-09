@@ -27,7 +27,7 @@
       {% set artist = item.artist or item.artist_name or item.artist_or_creator %}
       {% set producer = item.producer or item.producer_name %}
       {% set source = item.playable_url or item.url or item.link or item.external_url %}
-      {% set audio_source = item.playable_url or '' %}
+      {% set audio_source = source or '' %}
       {% set audio_path = audio_source.split('?')[0]|lower %}
       {% set direct_audio = audio_path.endswith('.mp3') or audio_path.endswith('.m4a') or audio_path.endswith('.ogg') or audio_path.endswith('.wav') or audio_path.endswith('.aac') or audio_path.endswith('.flac') %}
       <article class="music-release-entry" data-history="{{ 'true' if history_record else 'false' }}" data-date="{{ release_date or '' }}" data-title="{{ item_title|lower }}" data-search="{{ (item_title ~ ' ' ~ (artist or '') ~ ' ' ~ (producer or '') ~ ' ' ~ item_type)|lower }}">
