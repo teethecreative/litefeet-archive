@@ -48,7 +48,7 @@ def test_all_research_chapters_and_milestones_are_in_timeline(website):
 
 def test_archive_links_to_unified_timeline_and_keeps_compact_rows(website):
     client = website.test_client()
-    text = client.get("/archive").get_data(as_text=True)
+    text = client.get("/archive/timeline").get_data(as_text=True)
     assert 'href="/archive/timeline"' in text
     assert "archive-v3.css" in text
     assert "data-unified-timeline" in text
@@ -67,7 +67,7 @@ def test_guide_seo_redirect_preserves_search_canonical(website):
 
 def test_timeline_dates_use_full_month_names_on_page_and_api(website):
     client = website.test_client()
-    html = client.get("/archive?collection=events").get_data(as_text=True)
+    html = client.get("/archive/timeline?collection=events").get_data(as_text=True)
     assert "October" in html
     assert "September" in html
     assert "August" in html
