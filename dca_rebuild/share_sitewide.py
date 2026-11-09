@@ -150,6 +150,20 @@ SHARE_UI = """
       <label><input type="radio" name="lfv-share-theme" value="light" checked> Light</label>
       <label><input type="radio" name="lfv-share-theme" value="dark"> Dark</label>
     </fieldset>
+    <div id="lfv-nominee-reason-controls" hidden>
+      <label for="lfv-reason-choice">Why do you want people to nominate them?</label>
+      <select id="lfv-reason-choice">
+        <option value="none">No explanation</option>
+        <option value="impact">Their impact on LiteFeet</option>
+        <option value="creativity">Their creativity and originality</option>
+        <option value="consistency">Their consistency and dedication</option>
+        <option value="community">Their contributions to the community</option>
+        <option value="custom">Write my own reason</option>
+      </select>
+      <label id="lfv-reason-custom-label" for="lfv-reason-custom" hidden>Your message</label>
+      <textarea id="lfv-reason-custom" maxlength="180" rows="3" placeholder="Why do you support this nominee?" hidden></textarea>
+      <p class="lfv-reason-helper">Your message is added to the graphic only. It does not submit a nomination.</p>
+    </div>
     <p id="lfv-share-pages" class="lfv-share-status" hidden></p>
   </section>
   <div class="lfv-share-formats" aria-label="Instagram graphic format">
