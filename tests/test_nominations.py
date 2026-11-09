@@ -150,7 +150,7 @@ def test_email_first_history_and_return_to_grid(website, database):
         sess['ledger_admin_authenticated'] = True
     response = client.get('/admin/dca/nominations/participant-emails.txt')
     assert response.status_code == 200
-    assert response.data == b'person@example.com\\n'
+    assert response.data == b'person@example.com\n'
     assert response.headers['Cache-Control'] == 'private, no-store'
     # Returning with the same normalized email retrieves history on a new browser.
     other = website.test_client(); identify(other)
