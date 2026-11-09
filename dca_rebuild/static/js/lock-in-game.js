@@ -31,8 +31,8 @@
     ["Dancer","Song","Arena"].forEach(function(t){if(!deck.some(function(c){return c.type===t;}))p.push("A "+t+" card is required for this 1v1 setup.");});
     if(!deck.some(function(card){return card.type==="Move"&&["Rev Ups","Wops"].includes(pool[card.id]&&pool[card.id].move_family);}))
       p.push("Add a Rev Up or Tone Wop opening card.");
-    if(!deck.some(function(card){var item=pool[card.id]||card;return item.type==="Trick"||(item.type==="Move"&&["Footwork","Combo","Bad One"].includes(item.move_family));}))
-      p.push("Add at least one Footwork, Combo, Bad One variation, or Trick main-move card.");
+    if(!deck.some(function(card){var item=pool[card.id]||card;return item.type==="Trick"||(item.type==="Move"&&["Footwork","Combo","Bad One","Spank"].includes(item.move_family));}))
+      p.push("Add at least one Footwork, Combo, Spank, Bad One variation, or Trick main-move card.");
     return p;
   }
   function options(t){
@@ -85,7 +85,7 @@
     if(phase==="rev"&&card.type==="Move"&&["Rev Ups","Wops"].includes(card.move_family)){
       practiceScenario.rev=id;
     }
-    if(phase==="main"&&(card.type==="Trick"||(card.type==="Move"&&["Footwork","Combo","Bad One"].includes(card.move_family)))){
+    if(phase==="main"&&(card.type==="Trick"||(card.type==="Move"&&["Footwork","Combo","Bad One","Spank"].includes(card.move_family)))){
       practiceScenario.main=id;
       if(id===practiceScenario.trick)practiceScenario.trick="";
     }
@@ -101,18 +101,18 @@
     var stage=!sc.rev?"rev":!sc.main?"main":"frib";
     el("#lock-response-count").textContent=!sc.rev?
       "1. Choose a Rev Up or Tone Wop":!sc.main?
-      "2. Choose Footwork, Combo, or Trick":
+      "2. Choose Footwork, Combo, Spank, Bad One, or Trick":
       "3. Add a Frib Card (optional), then Lock In";
     function describe(id, fallback){return id?escape(pool[id].name):fallback;}
     el("#lock-selected-moves").innerHTML=
       '<div class="lock-sequence-card"><span>1. Rev Up / Tone Wop · '+describe(sc.rev,"Choose a Rev Up or Tone Wop")+'</span></div>'+
-      '<div class="lock-sequence-card"><span>2. Footwork / Combo / Trick · '+describe(sc.main,"Choose your main move")+'</span></div>'+
+      '<div class="lock-sequence-card"><span>2. Footwork / Combo / Spank / Bad One / Trick · '+describe(sc.main,"Choose your main move")+'</span></div>'+
       '<div class="lock-sequence-card"><span>3. Optional Frib Card · '+describe(sc.trick,"None")+'</span></div>'+
       '<div class="lock-sequence-card"><span>4. Lock In</span></div>';
     var eligible;
     if(stage==="rev") eligible=practiceCandidates("Move").filter(function(card){return ["Rev Ups","Wops"].includes(card.move_family);});
     else if(stage==="main") eligible=sc.moves.filter(function(card){
-      return card.type==="Trick"||["Footwork","Combo","Bad One"].includes(card.move_family);
+      return card.type==="Trick"||["Footwork","Combo","Bad One","Spank"].includes(card.move_family);
     });
     else eligible=sc.fribs.filter(function(card){return card.id!==sc.main;});
     if(stage==="main") {
@@ -153,7 +153,7 @@
       return;
     }
     var opponent=randomOne(moves);
-    var mainMoves=shuffle(moves.filter(function(card){return card.id!==opponent.id&&["Footwork","Combo","Bad One"].includes(card.move_family);}));
+    var mainMoves=shuffle(moves.filter(function(card){return card.id!==opponent.id&&["Footwork","Combo","Bad One","Spank"].includes(card.move_family);}));
     // Include documented footwork and a mix of other moves and tricks.
     var footwork=mainMoves.find(function(card){return card.move_family==="Footwork";});
     var responses=footwork?[footwork]:[];
@@ -185,15 +185,41 @@
   }
   function shuffle(cards){var a=cards.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x;}return a;}
   function cardName(id){return pool[id]?pool[id].name:"";}
+  // Source rosters are historical references, not proof of current affiliation.
+  function documentedTeams(id){
+    var card=pool[id];
+    return card&&Array.isArray(card.documented_teams)?card.documented_teams:[];
+  }
+  function renderTeamContext(){
+    var selectedDancer=el("#lock-dancer"),info=el("#lock-dancer-teams");
+    if(!selectedDancer||!info)return;
+    var teams=documentedTeams(selectedDancer.value);
+    info.textContent=teams.length?"Historical roster: "+teams.join(", ")+
+      ". Used to check proposed team-conditional card effects.":
+      "No matching historical team roster entry recorded for this dancer.";
+  }
+  function proposedShoeTrickEffect(name,dancer){
+    var trick=name.toLocaleLowerCase(),special=trick==="Shoe Clap"?"Ben 10":
+      trick==="Shoe Foot Clap"?"J Man":null;
+    if(!special)return "";
+    var teams=documentedTeams("Dancer::"+dancer);
+    var bonus=dancer.toLocaleLowerCase()===special.toLocaleLowerCase()?10:
+      teams.includes("Public Enemies")?5:0;
+    return name+" (rulebook proposal): "+(3+bonus)+" BP = 3 base"+
+      (bonus?" + "+bonus+" conditional bonus":"")+
+      ". Bonuses are not automatically awarded.";
+  }
   function drawBattle(){
     var table=el("#lock-battle");table.hidden=false;
     table.innerHTML='<h3>Round '+round+' · Arena and card setup</h3><p>Shuffle and cut the decks, then spin the adidas counter. Record the first turn below; a physical spin is not simulated.</p>'+
       '<label>Dancer <select id="lock-dancer">'+options("Dancer")+'</select></label>'+
+      '<p id="lock-dancer-teams" role="status" aria-live="polite"></p>'+
       '<label>Song <select id="lock-song">'+options("Song")+'</select></label>'+
       '<label>Arena <select id="lock-arena">'+options("Arena")+'</select></label>'+
       
       '<label>Who goes first? <select id="lock-order"><option>You</option><option>Opponent</option></select></label>'+
       '<button id="lock-draw" type="button">Set cards and draw hand</button>';
+    renderTeamContext();
   }
   function renderHand(){
     var table=el("#lock-battle");
@@ -206,6 +232,9 @@
     el("#lock-battle").innerHTML='<h3>Round '+round+' · Resolve</h3>'+
       '<p>Moves and effects played: '+escape(selected.map(function(i){return hand[i].name;}).join(" · ")||"none")+'</p>'+
       '<p>Enter adjudicated points from your card rules. The full card BP table is not final; this prototype does not award arbitrary bonuses.</p>'+
+      '<p class="lock-rulebook-reference">'+escape(selected.map(function(i){
+        return proposedShoeTrickEffect(hand[i].name,chosen.dancer);
+      }).filter(Boolean).join(" · "))+'</p>'+
       '<label>Your BP <input type="number" id="lock-my-bp" value="100"></label>'+
       '<label>Opponent BP <input type="number" id="lock-their-bp" value="100"></label>'+
       '<label><input type="checkbox" id="lock-missed"> Missed Lock In called out (−10 BP)</label>'+
@@ -221,6 +250,7 @@
     }
     if(e.target.id==="lock-sample"){deck=e.target.value==="create"?[]:(all[Number(e.target.value)]||[]).slice();el("#lock-battle").hidden=true;renderDeck();}
     if(e.target.id==="lock-filter")renderCatalog();
+    if(e.target.id==="lock-dancer")renderTeamContext();
     if(e.target.id==="lock-request-type"){
       var kind=e.target.value;
       root.querySelectorAll(".lock-request-fields").forEach(function(group){group.hidden=group.dataset.requestType!==kind;});
