@@ -64,52 +64,76 @@
     el("#lock-search-feedback").textContent=candidates.length?candidates.length+" matching cards":"No matching cards. You can request a new one.";
     el("#lock-add").disabled=candidates.length===0;
   }
-  // Move-set training draws a new opponent move, song and arena from the
-  // existing card catalog. No unapproved effect or BP adjustment is invented.
+
+  // Practice uses documented card names but never invents card effects.
+  // A training total of 2 BP per selected move is not the official battle score.
   var practiceScenario=null;
   function practiceCandidates(type){
     return Object.keys(pool).map(function(id){return pool[id];})
       .filter(function(card){return card.type===type;});
   }
-  function randomOne(cards){
-    return cards[Math.floor(Math.random()*cards.length)];
+  function randomOne(cards){return cards[Math.floor(Math.random()*cards.length)];}
+  function renderPracticeSelection(){
+    if(!practiceScenario)return;
+    var picked=practiceScenario.selected;
+    el("#lock-response-count").textContent=picked.length+" of 3 moves selected";
+    el("#lock-selected-moves").innerHTML=picked.length?picked.map(function(id,i){
+      var card=pool[id];
+      return '<div class="lock-sequence-card"><span>'+(i+1)+'. '+escape(card.name)+
+        '</span><span class="lock-sequence-actions">'+
+        '<button type="button" data-move-up="'+escape(id)+'" '+(i===0?'disabled':'')+
+        ' aria-label="Move '+escape(card.name)+' earlier">↑</button>'+
+        '<button type="button" data-move-down="'+escape(id)+'" '+(i===picked.length-1?'disabled':'')+
+        ' aria-label="Move '+escape(card.name)+' later">↓</button>'+
+        '<button type="button" data-move-remove="'+escape(id)+'" aria-label="Remove '+escape(card.name)+'">×</button>'+
+        '</span></div>';
+    }).join(""):'<p class="lock-empty-sequence">Select a move card to begin.</p>';
+    el("#lock-response-moves").innerHTML=practiceScenario.moves.map(function(card){
+      var chosen=picked.includes(card.id);
+      return '<button type="button" class="lock-game-card lock-available-card" data-response-id="'+escape(card.id)+
+        '" aria-pressed="'+String(chosen)+'" '+(!chosen&&picked.length>=3?'disabled':'')+'>'+
+        '<span class="lock-card-category">MOVE</span><strong>'+escape(card.name)+
+        '</strong><span class="lock-card-hint">'+(chosen?'Selected · tap to remove':'Select move')+'</span></button>';
+    }).join("");
+    el("#lock-score-response").disabled=picked.length===0;
+    el("#lock-response-result").hidden=true;
   }
   function generateSituation(){
-    var moveCards=practiceCandidates("Move");
+    var moves=practiceCandidates("Move");
     var songs=practiceCandidates("Song");
     var arenas=practiceCandidates("Arena");
-    if(moveCards.length<4||!songs.length||!arenas.length){
+    if(moves.length<4||!songs.length||!arenas.length){
       el("#lock-generated-situation").hidden=false;
-      el("#lock-response-moves").textContent="Not enough card data to generate a situation.";
+      el("#lock-response-moves").textContent="There aren't enough cards to create a practice round.";
+      el("#lock-score-response").disabled=true;
       return;
     }
-    var opponent=randomOne(moveCards);
-    var otherMoves=shuffle(moveCards.filter(function(card){return card.id!==opponent.id;}));
-    practiceScenario={opponent:opponent, song:randomOne(songs),
-      arena:randomOne(arenas), moves:otherMoves, selected:[]};
+    var opponent=randomOne(moves);
+    var responses=shuffle(moves.filter(function(card){return card.id!==opponent.id;})).slice(0,8);
+    practiceScenario={opponent:opponent,song:randomOne(songs),
+      arena:randomOne(arenas),moves:responses,selected:[]};
+    el("#lock-first-situation").hidden=true;
     el("#lock-generated-situation").hidden=false;
     el("#lock-opponent-move").textContent=practiceScenario.opponent.name;
     el("#lock-opponent-song").textContent=practiceScenario.song.name+
       (practiceScenario.song.producer?" · Prod. "+practiceScenario.song.producer:"");
     el("#lock-opponent-arena").textContent=practiceScenario.arena.name;
-    el("#lock-response-moves").innerHTML=otherMoves.map(function(card){
-      return '<label class="lock-response-option"><input type="checkbox" data-response-id="'+
-        escape(card.id)+'"> '+escape(card.name)+'</label>';
-    }).join("");
-    el("#lock-score-response").disabled=true;
-    el("#lock-response-result").hidden=true;
-    el("#lock-response-result").textContent="";
+    renderPracticeSelection();
   }
   function scoreSituation(){
-    if(!practiceScenario||practiceScenario.selected.length<1)return;
+    if(!practiceScenario||!practiceScenario.selected.length)return;
     var picks=practiceScenario.selected.map(function(id){return pool[id].name;});
     var result=el("#lock-response-result");
+    var bp=picks.length*2;
     result.hidden=false;
-    result.innerHTML='<h5>Your move set</h5><p>'+picks.map(escape).join(' · ')+
-      '</p><p>Practice score: '+(picks.length*2)+
-      ' BP ('+picks.length+' move'+(picks.length===1?'':'s')+
-      ' × 2 BP).</p><p>Now try another situation or change your moves. '+
-      'Special card effects and counters are not automatically scored.</p>';
+    result.innerHTML='<h5>Move-set results</h5>'+
+      '<p><strong>Your sequence:</strong> '+picks.map(escape).join(' → ')+'</p>'+
+      '<div class="lock-practice-score"><strong>'+bp+' BP</strong><span>Practice total · '+
+      picks.length+' move'+(picks.length===1?'':'s')+' × 2 BP</span></div>'+
+      '<p><strong>Opponent:</strong> '+escape(practiceScenario.opponent.name)+
+      ' to '+escape(practiceScenario.song.name)+' at '+escape(practiceScenario.arena.name)+'.</p>'+
+      '<p>This shows your move-set practice points, not an official win or loss. '+
+      'Card counters and battle outcomes are not calculated until their rules are finalized.</p>';
   }
   function shuffle(cards){var a=cards.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),x=a[i];a[i]=a[j];a[j]=x;}return a;}
   function cardName(id){return pool[id]?pool[id].name:"";}
@@ -145,19 +169,6 @@
   root.addEventListener("change",function(e){
     if(e.target.name==="lock-game-mode"){
       setGameMode(e.target.value);
-      if(e.target.value==="moves"&&!practiceScenario)generateSituation();
-      return;
-    }
-    if(e.target.hasAttribute("data-response-id")&&practiceScenario){
-      var id=e.target.getAttribute("data-response-id");
-      if(e.target.checked){
-        if(practiceScenario.selected.length>=3){e.target.checked=false;return;}
-        practiceScenario.selected.push(id);
-      }else{
-        practiceScenario.selected=practiceScenario.selected.filter(function(x){return x!==id;});
-      }
-      el("#lock-score-response").disabled=practiceScenario.selected.length===0;
-      el("#lock-response-result").hidden=true;
       return;
     }
     if(e.target.id==="lock-sample"){deck=all[Number(e.target.value)].slice();el("#lock-battle").hidden=true;renderDeck();}
@@ -175,8 +186,34 @@
   });
   root.addEventListener("click",function(e){
     var b=e.target.closest("button");if(!b)return;
-    if(b.id==="lock-generate-situation"){generateSituation();return;}
+    if(b.id==="lock-first-situation"||b.id==="lock-generate-situation"){
+      generateSituation();return;
+    }
     if(b.id==="lock-score-response"){scoreSituation();return;}
+    if(b.hasAttribute("data-response-id")&&practiceScenario){
+      var id=b.getAttribute("data-response-id"),selectedMoves=practiceScenario.selected;
+      if(selectedMoves.includes(id)){
+        practiceScenario.selected=selectedMoves.filter(function(x){return x!==id;});
+      }else if(selectedMoves.length<3){selectedMoves.push(id);}
+      renderPracticeSelection();return;
+    }
+    if(b.hasAttribute("data-move-remove")&&practiceScenario){
+      var id=b.getAttribute("data-move-remove");
+      practiceScenario.selected=practiceScenario.selected.filter(function(x){return x!==id;});
+      renderPracticeSelection();return;
+    }
+    if((b.hasAttribute("data-move-up")||b.hasAttribute("data-move-down"))&&practiceScenario){
+      var id=b.getAttribute("data-move-up")||b.getAttribute("data-move-down");
+      var n=practiceScenario.selected.indexOf(id);
+      var other=n+(b.hasAttribute("data-move-up")?-1:1);
+      if(n>=0&&other>=0&&other<practiceScenario.selected.length){
+        var temp=practiceScenario.selected[n];
+        practiceScenario.selected[n]=practiceScenario.selected[other];
+        practiceScenario.selected[other]=temp;
+        renderPracticeSelection();
+      }
+      return;
+    }
     if(b.hasAttribute("data-remove")){var id=b.getAttribute("data-remove"),i=deck.findIndex(function(c){return c.id===id;});if(i>=0)deck.splice(i,1);renderDeck();return;}
     if(b.hasAttribute("data-add")){var id=b.getAttribute("data-add");if(amount(id)<limit(id))deck.push(pool[id]);renderDeck();return;}
     if(b.id==="lock-add"){
