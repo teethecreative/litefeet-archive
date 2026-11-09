@@ -77,8 +77,57 @@ class DraftCategoryDescription9E(Base):
     __table_args__ = (UniqueConstraint('edition_id', 'category_key', name='uq_dca9e_draft_desc'),)
 
 
+class NomineeQualificationReason9E(Base):
+    """Additional community evidence: does not count as a nomination."""
+    __tablename__ = 'ledger_dca_nominee_qualification_reasons'
+    id = Column(Integer, primary_key=True)
+    edition_id = Column(Integer, nullable=False, index=True)
+    nominee_id = Column(Integer, ForeignKey('ledger_dca_nominees.id'), nullable=False, index=True)
+    submitter_hash = Column(String(128), nullable=False)
+    reason = Column(Text, nullable=False)
+    evidence_url = Column(String(500))
+    moderation_status = Column(String(24), nullable=False, default='pending')
+    submitted_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    reviewed_at = Column(DateTime)
+    __table_args__ = (UniqueConstraint('edition_id', 'nominee_id', 'submitter_hash',
+                                       name='uq_dca_qualification_one_per_supporter'),)
+
+
 TABLES = [DailyNominationClaim9E.__table__, LegacyNominationDetail9E.__table__, NominationDetail9E.__table__,
-          CategoryStage9E.__table__, DraftCategoryDescription9E.__table__]
+          CategoryStage9E.__table__, DraftCategoryDescription9E.__table__,
+          NomineeQualificationReason9E.__table__]
+
+
+def nominees_missing_reasons(db, edition):
+    """Public-facing unique nominee/category pairs needing an explanation.
+
+    Historical nomination entries and nominee descriptions are retained.
+    Unverified new explanations remain pending and don't establish eligibility.
+    """
+    nominations, _ = get_counts(db, edition, include_pending=True)
+    original = (db.query(DCANominationSubmission.nominee_id, NominationDetail9E.justification)
+                .outerjoin(NominationDetail9E,
+                           NominationDetail9E.submission_id == DCANominationSubmission.id)
+                .filter(DCANominationSubmission.edition_id == edition.id).all())
+    justified = {nid for nid, explanation in original if explanation and explanation.strip()}
+    justified.update(n.id for n in db.query(DCANominee).filter(
+        DCANominee.edition_id == edition.id).all()
+        if n.description and n.description.strip())
+    reviewed = (db.query(NomineeQualificationReason9E.nominee_id)
+                .filter_by(edition_id=edition.id, moderation_status='verified').all())
+    justified.update(nid for nid, in reviewed)
+    results = []
+    for cid, nominees in nominations.items():
+        cat = db.get(DCACategory, cid)
+        if not cat:
+            continue
+        for item in nominees:
+            if not any(nid in justified for nid in item['ids']):
+                results.append(dict(category_id=cid, category=cat.name,
+                                    nominee_id=item['id'], name=item['name'],
+                                    count=item['count']))
+    return sorted(results, key=lambda item: (item['category'].casefold(), item['name'].casefold()))
+
 
 
 def today_ny():
@@ -651,6 +700,84 @@ def install_phase9e(app, ns):
         finally:
             db.close()
 
+    @app.route('/awards/dancers-choice/nomination-reasons', methods=['GET', 'POST'],
+               endpoint='dca_nomination_reasons')
+    def qualification_reasons():
+        """Public list and moderated supporting reasons, separate from nominations."""
+        with SessionLocal() as db:
+            edition = db.query(DCAEdition).filter_by(year=2026).first()
+            if not edition:
+                abort(404)
+            session.setdefault('lf9e_nomination_csrf', secrets.token_urlsafe(32))
+            pending = nominees_missing_reasons(db, edition)
+            if request.method == 'POST':
+                token = request.form.get('csrf_token', '')
+                if not token or not secrets.compare_digest(
+                    token, session['lf9e_nomination_csrf']):
+                    abort(400, 'Invalid form token')
+                email = (request.form.get('email') or '').strip().casefold()
+                if len(email) > 254 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
+                    abort(400, 'Enter a valid email address')
+                who = private_hash('dca-nomination:' + email)
+                nominee_id = request.form.get('nominee_id', type=int)
+                item = next((n for n in pending if n['nominee_id'] == nominee_id), None)
+                if not item:
+                    abort(400, 'Nominee is no longer awaiting qualification reasons')
+                reason = (request.form.get('reason') or '').strip()
+                evidence_url = (request.form.get('evidence_url') or '').strip()
+                if len(reason) < 20 or len(reason) > 2000:
+                    abort(400, 'Explain qualifying activity in 20–2000 characters')
+                if evidence_url and (len(evidence_url) > 500 or
+                                    not re.fullmatch(r'https?://[^\s]+', evidence_url)):
+                    abort(400, 'Use a valid http(s) evidence link')
+                existing = db.query(NomineeQualificationReason9E).filter_by(
+                    edition_id=edition.id, nominee_id=nominee_id,
+                    submitter_hash=who).first()
+                if existing:
+                    abort(409, 'You have already submitted a reason for this nominee')
+                db.add(NomineeQualificationReason9E(
+                    edition_id=edition.id, nominee_id=nominee_id,
+                    submitter_hash=who, reason=reason,
+                    evidence_url=evidence_url or None))
+                try:
+                    db.commit()
+                except IntegrityError:
+                    db.rollback()
+                    abort(409, 'Reason already submitted')
+                flash('Reason submitted for eligibility review. Nomination totals have not changed.')
+                return redirect(url_for('dca_nomination_reasons'), code=303)
+            return render_template('dca_nomination_reasons.html', pending=pending,
+                                   csrf_token=session['lf9e_nomination_csrf'])
+
+    @app.route('/admin/dca/nomination-reasons', methods=['GET', 'POST'],
+               endpoint='admin_dca_nomination_reasons')
+    @admin_login_required
+    def review_qualification_reasons():
+        if request.method == 'POST':
+            if not csrf_ok():
+                abort(400, 'Invalid administrator token')
+            reason_id = request.form.get('reason_id', type=int)
+            decision = request.form.get('decision')
+            if decision not in ('verified', 'insufficient', 'rejected'):
+                abort(400, 'Invalid decision')
+            with SessionLocal.begin() as db:
+                row = db.get(NomineeQualificationReason9E, reason_id)
+                if not row:
+                    abort(404)
+                row.moderation_status = decision
+                row.reviewed_at = datetime.utcnow()
+            return redirect(url_for('admin_dca_nomination_reasons'), code=303)
+        with SessionLocal() as db:
+            reasons = db.query(NomineeQualificationReason9E).order_by(
+                NomineeQualificationReason9E.submitted_at.desc()).limit(500).all()
+            entries = [dict(id=r.id, nominee=db.get(DCANominee, r.nominee_id).name,
+                            reason=r.reason, evidence_url=r.evidence_url,
+                            status=r.moderation_status, submitted=r.submitted_at)
+                       for r in reasons if db.get(DCANominee, r.nominee_id)]
+            return render_template('admin_dca_qualification_reasons.html',
+                                   entries=entries,
+                                   csrf_token=session.get('dca_moderation_csrf', ''))
+
     @app.after_request
     def private_nomination_response(response):
         if request.endpoint == 'dca_nominations_closed':
@@ -758,6 +885,8 @@ def install_phase9e(app, ns):
                 instagram = request.form.get('instagram', '').strip().lstrip('@')
                 instagram = re.sub(r'^https?://(?:www\.)?instagram\.com/', '', instagram, flags=re.I).split('?')[0].strip('/')
                 reason = request.form.get('reason', '').strip()
+                if len(reason) < 20:
+                    abort(400, 'Explain the nominee\'s activity during November 2025–November 2026 (at least 20 characters)')
                 if len(team) > 250 or len(location) > 250 or len(instagram) > 100 or len(reason) > 2000:
                     abort(400, 'One or more fields are too long')
                 if instagram and not re.fullmatch(r'[A-Za-z0-9._]{1,30}', instagram):
