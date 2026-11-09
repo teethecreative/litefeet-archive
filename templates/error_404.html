@@ -1,26 +1,75 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Page Not Found | The LiteFeet Ledger</title>
-<style>
-body{margin:0;background:#030303;color:#f4f1e8;font-family:Arial,sans-serif;}
-.wrap{max-width:980px;margin:0 auto;padding:42px 22px;}
-.eyebrow{color:#d8b84c;text-transform:uppercase;letter-spacing:.18em;font-size:12px;font-weight:800;}
-h1{font-size:clamp(42px,8vw,82px);line-height:.94;margin:16px 0;}
-p{color:#d7d1c4;font-size:18px;line-height:1.5;}
-a{color:#f0d56b;text-decoration:none;font-weight:800;}
-.button{display:inline-block;border:1px solid rgba(240,213,107,.45);border-radius:999px;padding:12px 16px;margin-right:10px;margin-top:16px;}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, follow">
+  <title>Page Not Found | The LiteFeet Vault</title>
+  <style>
+    :root { color-scheme: light dark; font-family: Inter, Arial, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #f7f9fc; color: #142949; }
+    a { color: inherit; }
+    .site-header { border-bottom: 1px solid #dbe2ec; background: #fff; }
+    .header-inner { max-width: 1080px; margin: auto; padding: 21px 24px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .brand { font-size: 14px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; text-decoration: none; }
+    .home-link { font-size: 14px; font-weight: 700; text-decoration: none; }
+    main { max-width: 780px; margin: clamp(42px, 9vw, 112px) auto 72px; padding: 0 24px; }
+    .eyebrow { margin: 0 0 14px; color: #8b6914; font-size: 13px; font-weight: 800; letter-spacing: .17em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(38px, 7vw, 68px); line-height: 1.05; letter-spacing: -.045em; }
+    .explain { margin: 20px 0 0; color: #4b5d78; line-height: 1.6; font-size: 17px; }
+    .missing-path { margin: 18px 0 36px; font-size: 13px; color: #596c82; overflow-wrap: anywhere; }
+    .missing-path code { font-size: 13px; background: #eaf0f6; border-radius: 7px; padding: 5px 8px; }
+    h2 { margin: 0 0 19px; font-size: clamp(21px, 3vw, 27px); }
+    .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .choice { min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 15px 18px; border: 1px solid #cbd6e4; border-radius: 11px; background: #fff; text-decoration: none; font-size: 15px; font-weight: 750; transition: border-color .15s, background .15s; }
+    .choice::after { content: "→"; font-size: 18px; }
+    .choice:hover, .choice:focus-visible { background: #eef4fb; border-color: #456fa8; }
+    .choice:focus-visible, .home-link:focus-visible, .brand:focus-visible { outline: 3px solid #cba129; outline-offset: 3px; }
+    .choice-primary { background: #f0cb60; color: #142949; border-color: #d8af3b; }
+    .choice-primary:hover, .choice-primary:focus-visible { background: #ffe092; }
+    .footer-note { margin: 27px 0 0; color: #61718b; font-size: 14px; line-height: 1.5; }
+    .footer-note a { text-underline-offset: 3px; font-weight: 700; }
+    @media(max-width: 540px) { .header-inner { padding: 17px 18px; } main { padding: 0 18px; } .choices { grid-template-columns: 1fr; } }
+    @media(prefers-color-scheme: dark) {
+      body { background: #0e1a2c; color: #f6f7fc; }
+      .site-header { background: #14233a; border-color: #33445f; }
+      .explain, .missing-path, .footer-note { color: #c4d0df; }
+      .missing-path code { background: #243753; }
+      .choice { background: #182b45; color: #f6f7fc; border-color: #405471; }
+      .choice:hover, .choice:focus-visible { background: #233e62; border-color: #90b6ed; }
+      .choice-primary { background: #f0cb60; color: #142949; border-color: #d8af3b; }
+      .choice-primary:hover, .choice-primary:focus-visible { background: #ffe092; }
+      .eyebrow { color: #f0cb60; }
+    }
+  </style>
 </head>
 <body>
-<main class="wrap">
-<p class="eyebrow">404 Not Found</p>
-<h1>This page is not in the Ledger yet.</h1>
-<p>The link may have moved, the page may still be under rebuild, or the record may not exist yet.</p>
-<a class="button" href="/">Back Home</a>
-<a class="button" href="/submit/start">Add to the Ledger</a>
-</main>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="/">The LiteFeet Vault</a>
+      <a class="home-link" href="/">Home</a>
+    </div>
+  </header>
+  <main>
+    <p class="eyebrow">404 / Page not found</p>
+    <h1>This URL doesn't exist.</h1>
+    <p class="explain">The link may be outdated, or the page may have moved. Here's where you can look instead.</p>
+    <p class="missing-path">Requested URL: <code>{{ request.path|truncate(120, True, '…') }}</code></p>
+    <nav aria-label="Find what you were looking for">
+      <h2>What were you looking for?</h2>
+      <div class="choices">
+        <a class="choice" href="/archive/people">People &amp; Teams</a>
+        <a class="choice" href="/archive/timeline?collection=events">Battles &amp; Events</a>
+        <a class="choice" href="/litefeet-music">Music</a>
+        <a class="choice" href="/calendar">Upcoming Calendar</a>
+        <a class="choice" href="/awards">Awards &amp; Recognition</a>
+        <a class="choice" href="/archive">The Archive</a>
+        <a class="choice" href="/archive/lock-in">Lock In Card Game</a>
+        <a class="choice choice-primary" href="/">Back to Home</a>
+      </div>
+    </nav>
+    <p class="footer-note">Still can't find it? <a href="/about#contact">Contact The LiteFeet Vault</a>.</p>
+  </main>
 </body>
 </html>
