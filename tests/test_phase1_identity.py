@@ -131,7 +131,7 @@ def test_lock_in_sample_decks_follow_rulebook_card_categories(website):
     assert "25 different dancers" not in html
     assert "Move (7)" in html
     assert "Arena (2)" in html
-    assert "Choose a challenge and put together your three-move set." in html
+    assert "See what your opponent throws, then put together your response." in html
 
 
 
