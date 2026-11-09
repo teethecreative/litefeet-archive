@@ -60,3 +60,14 @@
 #lock-workbench #lock-moves-mode fieldset{min-width:0;display:flex;flex-wrap:wrap;gap:.7rem;padding:.9rem}
 #lock-workbench #lock-moves-mode fieldset label{display:flex;gap:.45rem;align-items:center;margin:0}
 #lock-workbench #lock-moves-mode .lock-result{margin-top:1rem}
+
+/* Generated move-set situation */
+#lock-workbench .lock-situation-details{display:grid;gap:.45rem;margin:1rem 0;padding:1rem;border:1px solid #647b98;border-radius:.6rem}
+#lock-workbench .lock-situation-details p{display:grid;gap:.15rem;margin:0}
+#lock-workbench .lock-situation-details p+p{border-top:1px solid rgba(155,176,205,.25);padding-top:.55rem}
+#lock-workbench .lock-situation-details strong{color:#b8c9e2;font-size:.82rem;letter-spacing:.025em}
+#lock-workbench #lock-response-moves{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr));gap:.5rem;margin:.75rem 0}
+#lock-workbench #lock-response-moves .lock-response-option{display:flex;align-items:center;gap:.55rem;border:1px solid #647b98;border-radius:.45rem;padding:.6rem;margin:0}
+#lock-workbench #lock-response-moves input{flex-shrink:0;accent-color:#c9a52b}
+#lock-workbench #lock-response-result{border-top:1px solid #647b98;margin-top:1rem;padding-top:.9rem}
+#lock-workbench #lock-generated-situation[hidden],#lock-workbench #lock-response-result[hidden]{display:none!important}

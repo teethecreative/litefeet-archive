@@ -54,7 +54,7 @@
 </section>
 <section id="lock-workbench" aria-labelledby="lock-builder-title">
   <h2 id="lock-builder-title">Your Deck</h2>
-  <p>Start with a sample deck or build your own, then choose a game mode.</p>
+  <p>Build a deck, then try a 1v1 battle or practice your moves.</p>
   <div class="lock-builder">
     <div>
       <h3>Build your deck</h3>
@@ -135,28 +135,21 @@
       <div id="lock-moves-mode" hidden>
         <section id="practice" class="lock-move-set-practice">
           <h4>Move-Set Practice</h4>
-          <p>Choose a challenge and put together your three-move set.</p>
-          <form action="{{ url_for('vault_lock_in') }}#practice" method="get">
-            <label for="round-picker">Choose a move-set challenge</label>
-            <select name="round" id="round-picker">
-              {% for key, option in rounds.items() %}<option value="{{ key }}" {% if key == round_key %}selected{% endif %}>{{ option.dancer }} · {{ option.scene }}</option>{% endfor %}
-            </select>
-            <button type="submit">Start drill</button>
-          </form>
-          <h3>{{ battle.dancer }} · {{ battle.scene }}</h3>
-          <p>{{ battle.cue }}</p>
-          <p>Your opponent starts at {{ battle.opponent }} BP. Choose up to three moves for 2 BP each.
-             Include {{ battle.combo|join(' + ') }} to {% if battle.reduce %}remove {{ battle.reduce }} BP from your opponent’s score{% else %}earn {{ battle.bonus }} extra BP{% endif %}.</p>
-          <form action="{{ url_for('vault_lock_in') }}#practice" method="get">
-            <input type="hidden" name="round" value="{{ round_key }}"><input type="hidden" name="play" value="1">
-            <fieldset><legend>Your move set</legend>
-            {% for move in battle.moves %}<label><input type="checkbox" name="move" value="{{ move }}" {% if move in selected %}checked{% endif %}> {{ move }}</label>{% endfor %}
-            </fieldset><button type="submit">Score this move set</button>
-          </form>
-          {% if error %}<p role="alert">{{ error }}</p>{% endif %}
-          {% if result %}<div class="lock-result"><h3>{{ result.outcome }} · {{ result.score }} to {{ result.opponent }} BP</h3>
-          <p>{{ selected|join(' + ') }} earned {{ result.base }} BP, plus {{ result.bonus }} BP in bonuses.{% if result.reduction %} Your counter removed {{ result.reduction }} opponent BP.{% endif %}</p>
-          <a href="{{ url_for('vault_lock_in', round=round_key) }}#practice">Replay this round</a> · <a href="{{ url_for('vault_lock_in', round=next_key) }}#practice">Next round · {{ rounds[next_key].dancer }}</a></div>{% endif %}
+          <p>See what your opponent throws, then put together your response.</p>
+          <button type="button" id="lock-generate-situation">Generate a situation</button>
+          <div id="lock-generated-situation" hidden aria-live="polite">
+            <div class="lock-situation-details">
+              <p><strong>Opponent's move</strong><span id="lock-opponent-move"></span></p>
+              <p><strong>Song</strong><span id="lock-opponent-song"></span></p>
+              <p><strong>Arena</strong><span id="lock-opponent-arena"></span></p>
+            </div>
+            <fieldset id="lock-response-fieldset">
+              <legend>Choose up to 3 moves to respond</legend>
+              <div id="lock-response-moves"></div>
+            </fieldset>
+            <button type="button" id="lock-score-response" disabled>Test my moves</button>
+            <div id="lock-response-result" hidden aria-live="polite"></div>
+          </div>
         </section>
       </div>
     </div>
