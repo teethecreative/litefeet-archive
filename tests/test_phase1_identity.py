@@ -116,7 +116,7 @@ def test_lock_in_sample_decks_follow_rulebook_card_categories(website):
     from dca_rebuild.lock_in import public_sample_decks
     decks = public_sample_decks()
     assert len(decks) == 2
-    needed = {"Dancer", "Arena", "Producer", "Song", "Move", "Trick"}
+    needed = {"Dancer", "Arena", "Song", "Move", "Trick"}
     assert [deck["total"] for deck in decks] == [25, 35]
     for deck in decks:
         assert sum(group["count"] for group in deck["categories"]) == deck["total"]
@@ -214,3 +214,40 @@ def test_lock_in_card_request_is_csrf_protected_and_moderated(website, database)
                          data=dict(csrf_token=token,card_type='Song',card_name='Another Song',
                                    email='x@example.org',producer='Example Producer'))
     assert repeat.status_code == 429
+
+
+def test_lock_in_catalog_contains_archive_dancers_and_music_tracks_without_producer_cards(website):
+    from dca_rebuild.lock_in import public_card_catalog, public_sample_decks
+    from dca_rebuild.archive_catalog import all_records
+    from dca_rebuild.music_batch_catalog import batch_catalog
+    catalog = public_card_catalog()
+    dancers = {card["name"] for card in catalog if card["type"] == "Dancer"}
+    songs = [card for card in catalog if card["type"] == "Song"]
+    assert len(dancers) > 100
+    assert len(songs) > 30
+    assert "Producer" not in {card["type"] for card in catalog}
+    assert all("Producer" not in {g["type"] for g in d["categories"]} for d in public_sample_decks())
+    assert [d["total"] for d in public_sample_decks()] == [25, 35]
+    assert {x["name"] for x in songs} >= {x["title"] for x in batch_catalog() if x["kind"] == "track"}
+    html = website.test_client().get("/archive/lock-in").get_data(as_text=True)
+    assert "Producer cards" not in html
+    assert "id=\"lock-producer\"" not in html
+    assert "Producers are credited on Song Cards" in html
+
+
+def test_song_dropdown_alphabetical_and_producer_metadata(website):
+    from dca_rebuild.lock_in import public_card_catalog
+    catalog = public_card_catalog(extra_songs=(
+        dict(title="Zebra Beat", producer_credit="Producer One"),
+        dict(title="Alpha Beat", producer_credit="Producer Two"),
+    ))
+    songs = [card for card in catalog if card["type"] == "Song"]
+    assert [card["name"] for card in songs] == sorted(
+        (card["name"] for card in songs), key=str.casefold)
+    assert next(card for card in songs if card["name"] == "Alpha Beat")["producer"] == "Producer Two"
+    from pathlib import Path
+    js = (Path(__file__).resolve().parents[1] /
+          "dca_rebuild/static/js/lock-in-game.js").read_text()
+    assert 'a.name.localeCompare(b.name' in js
+    assert 'Prod. ' in js
+    assert 'id="lock-producer"' not in js

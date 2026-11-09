@@ -38,8 +38,7 @@ SAMPLE_DECKS = {
     "performance": (
         ("Dancer", ("Airman", "Aquaman", "Baby Doll", "C Boogie", "E Nauti", "J Dot")),
         ("Arena", ("COL 135th", "The Lite House")),
-        ("Producer", ("Reel Hetic", "Big Wav3")),
-        ("Song", ("Pure Imagination", "Lonely Nights", "Trap So Hard")),
+        ("Song", ("Pure Imagination", "Lonely Nights", "Trap So Hard", "Dirty Martini", "Trap Bump'N")),
         ("Move", ("Rev Up", "Tone Whop", "Butterfly", "Stutter Step", "Knee Drop",
                   "Coin Drop", "Needle & Thread")),
         ("Trick", ("Shoe Trick", "Hat Trick")),
@@ -49,8 +48,7 @@ SAMPLE_DECKS = {
     "spank": (
         ("Dancer", ("Fro Man", "Goya", "Hoodstar", "J Rite", "Kid 50", "Kid Patt")),
         ("Arena", ("COL Cypress", "Union Square")),
-        ("Producer", ("AyeJaeBeats", "Kid The Wiz")),
-        ("Song", ("Trap So Hard", "Lonely Nights", "Pure Imagination")),
+        ("Song", ("Trap So Hard", "Lonely Nights", "Pure Imagination", "JELLYFISH JAM", "MR MEESEEKS")),
         ("Move", ("Bad One", "Around The World", "Gangsta Lean", "Swiss Drop",
                   "Kiss Of Death", "No Gwop", "Slatter Gwop")),
         ("Trick", ("Shoe Clap", "Shirt Trick")),
@@ -105,20 +103,94 @@ RULEBOOK_CARDS = {
 }
 
 
-def public_card_catalog():
-    """Existing source-based candidates for the deck-builder autocomplete."""
+def public_card_catalog(extra_songs=()):
+    """Combine existing Archive names and song sources, without producer cards.
+
+    Archive name-only entries remain historical references, not evidence of
+    permission or approved dancer abilities. Unreviewed requests stay private.
+    """
+    from dca_rebuild.archive_catalog import all_records
+    from dca_rebuild.music_batch_catalog import batch_catalog
+
     catalog = {}
+    def add(kind, name, *, producer="", artist="", source="", reference=False):
+        name = str(name or "").strip()
+        if not name or kind == "Producer":
+            return
+        key = (kind, name.casefold())
+        if key not in catalog:
+            catalog[key] = dict(id=f"{kind}::{name}", type=kind, name=name,
+                                producer="", artist="", source="", reference=reference)
+        entry = catalog[key]
+        if producer and not entry["producer"]:
+            entry["producer"] = producer
+        if artist and not entry["artist"]:
+            entry["artist"] = artist
+        if source and not entry["source"]:
+            entry["source"] = source
+        entry["reference"] = entry["reference"] and reference
+
     for sample in public_sample_decks():
         for group in sample["categories"]:
-            catalog.setdefault(group["type"], set()).update(group["cards"])
-    catalog.setdefault("Dancer", set()).update(
-        name for existing in DECKS.values() for name in existing["roster"]
-    )
+            for name in group["cards"]:
+                add(group["type"], name)
+    for existing in DECKS.values():
+        for name in existing["roster"]:
+            add("Dancer", name)
     for kind, names in RULEBOOK_CARDS.items():
-        catalog.setdefault(kind, set()).update(names)
-    return [dict(id=f"{kind}::{name}", type=kind, name=name)
-            for kind in sorted(catalog)
-            for name in sorted(catalog[kind], key=str.casefold)]
+        for name in names:
+            add(kind, name)
+
+    for row in all_records():
+        if row.get("collection") == "people":
+            # Producer-only, judge-only and team-only historical identities
+            # are not automatically recast as dancer cards.
+            details = dict(row.get("information") or [])
+            role_labels = details.get("Original role labels (unverified)", "")
+            roles = {part.strip().casefold() for part in role_labels.split(",")}
+            if row.get("record_type") == "legacy_identity" and roles and "dancer" not in roles:
+                continue
+            for name in row["title"].split("/"):
+                add("Dancer", name, source=row.get("source_label", ""),
+                    reference=True)
+
+    for row in batch_catalog():
+        if row.get("kind") != "track":
+            continue
+        add("Song", row["title"], producer=row.get("producer_credit") or "",
+            artist=row.get("artist_or_creator") or "", source=row.get("url") or "")
+
+    for row in extra_songs:
+        add("Song", row.get("title"), producer=row.get("producer_credit") or "",
+            artist=row.get("artist") or "", source=row.get("source") or "")
+
+    return sorted(catalog.values(), key=lambda row: (
+        row["type"].casefold(), row["name"].casefold(), row["id"].casefold()))
+
+
+def published_music_cards(engine):
+    """Read existing published music releases without rewriting any database."""
+    if engine is None:
+        return ()
+    from sqlalchemy import inspect, text
+    schema = inspect(engine)
+    if not schema.has_table("media_items"):
+        return ()
+    cols = {item["name"] for item in schema.get_columns("media_items")}
+    if not {"title", "media_type", "status"}.issubset(cols):
+        return ()
+    artist_col = next((col for col in ("artist", "artist_name", "artist_credit")
+                       if col in cols), None)
+    producer_col = next((col for col in ("producer_name", "producer", "producer_credit")
+                         if col in cols), None)
+    selected = ["title"] + [col for col in (artist_col, producer_col) if col]
+    sql = "SELECT " + ", ".join(selected) + (
+        " FROM media_items WHERE media_type = 'music_release' AND status = 'Published'")
+    with engine.connect() as connection:
+        return tuple(dict(title=row["title"],
+                          artist=row.get(artist_col) if artist_col else "",
+                          producer_credit=row.get(producer_col) if producer_col else "")
+                     for row in connection.execute(text(sql)).mappings())
 
 
 # Conditions and BP values below are practice scenarios, based on submitted card ideas.
@@ -156,7 +228,7 @@ ROUNDS.update({
 })
 
 
-def practice_view(args):
+def practice_view(args, extra_songs=()):
     key = args.get("round", "greklite")
     if key not in ROUNDS:
         key = "greklite"
@@ -177,5 +249,5 @@ def practice_view(args):
             result = dict(score=score, base=base, bonus=bonus, reduction=reduction, opponent=opponent,
                           outcome="You win" if score > opponent else "Tie" if score == opponent else "Opponent wins")
     keys = list(ROUNDS)
-    return dict(decks=DECKS, sample_decks=public_sample_decks(), card_catalog=public_card_catalog(), card_restrictions=CARD_RESTRICTIONS, rounds=ROUNDS, round_key=key, battle=round_data,
+    return dict(decks=DECKS, sample_decks=public_sample_decks(), card_catalog=public_card_catalog(extra_songs), card_restrictions=CARD_RESTRICTIONS, rounds=ROUNDS, round_key=key, battle=round_data,
                 next_key=keys[(keys.index(key) + 1) % len(keys)], selected=moves, result=result, error=error)
