@@ -257,6 +257,29 @@ def qualification(db, edition, stages=None):
     return results, floor, required
 
 
+def correct_2026_event_category_title(session_factory):
+    """Correct the current award label, without rewriting historical editions.
+
+    Existing nominations reference category IDs, so the rename preserves all
+    nomination relationships, totals and moderation records.
+    """
+    with session_factory.begin() as db:
+        edition = db.query(DCAEdition).filter_by(year=2026).first()
+        if edition is None:
+            return False
+        previous = (db.query(DCACategory).filter_by(
+            edition_id=edition.id, normalized_name='best event of 2023').first())
+        if previous is None:
+            return False
+        collision = (db.query(DCACategory).filter_by(
+            edition_id=edition.id, normalized_name='best event of the year').first())
+        if collision is not None:
+            return False  # Preserve distinct category records for editorial review.
+        previous.name = 'Best Event of the Year'
+        previous.normalized_name = 'best event of the year'
+        return True
+
+
 def install_phase9e(app, ns):
     """Run after the original routes are registered; never changes existing route URL."""
     engine = ns['engine']
@@ -264,6 +287,7 @@ def install_phase9e(app, ns):
     from dca_rebuild.nomination_migration import migrate_nomination_history
     migrate_nomination_history(engine)
     SessionLocal = ns['SessionLocal']
+    correct_2026_event_category_title(SessionLocal)
     admin_login_required = ns['admin_login_required']
     private_hash = ns['private_hash']
 
