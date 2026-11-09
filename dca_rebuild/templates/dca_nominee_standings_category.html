@@ -16,7 +16,7 @@
       <caption class="lf9e-visually-hidden">{{ category.name }} NOMINATION TOTALS</caption>
       <thead class="lf9e-visually-hidden"><tr><th scope="col">NOMINEE</th><th scope="col">TOTAL NOMINATIONS</th></tr></thead>
       <tbody>{% for nominee in category.nominees %}
-        <tr><th scope="row"><a href="{{ url_for('dca_nominations_closed', view='results', category=category.id, suggestion=nominee.id) }}">{{ nominee.name }}</a></th><td>{{ nominee.count }}</td></tr>
+        <tr><th scope="row"><a href="{{ clean_nominee_url(category, nominee) }}">{{ nominee.name }}</a></th><td>{{ nominee.count }}</td></tr>
       {% endfor %}</tbody>
     </table>
     {% else %}<p class="lf9e-standings-empty">NO NOMINATIONS YET.</p>{% endif %}
