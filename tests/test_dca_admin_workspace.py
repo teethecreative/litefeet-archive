@@ -82,3 +82,34 @@ def test_2026_categories_are_not_survey_rows_and_activity_has_no_private_email(w
     assert "Nominee Example" in standings
     assert "Nominations" in standings
     assert "not final votes" in standings.lower() or "not final" in standings.lower()
+
+
+def test_2026_categories_limit_to_ten_per_page_and_keep_search(website, database):
+    with database[1].begin() as db:
+        edition = db.query(DCAEdition).filter_by(year=2026).first()
+        for index in range(23):
+            db.add(DCACategory(
+                edition_id=edition.id,
+                name=f"Pagination Sample {index:02d}",
+                normalized_name=f"pagination sample {index:02d}",
+                source_type="new", status="official",
+                description="Pagination test category",
+            ))
+    client = _admin_client(website)
+    first = client.get("/admin/awards/categories?q=Pagination+Sample")
+    assert first.status_code == 200
+    html = first.get_data(as_text=True)
+    assert "23 records" in html
+    assert "up to 10 per page" in html
+    assert "Page 1 of 3" in html
+    assert html.count("Pagination test category") == 10
+    assert 'page=2' in html and ('Pagination%20Sample' in html or 'Pagination+Sample' in html)
+    second = client.get("/admin/awards/categories?q=Pagination+Sample&page=2").get_data(as_text=True)
+    assert "Pagination Sample 10" in second and "Pagination Sample 19" in second
+    assert "Pagination Sample 00" not in second
+    assert second.count("Pagination test category") == 10
+    third = client.get("/admin/awards/categories?q=Pagination+Sample&page=3").get_data(as_text=True)
+    assert third.count("Pagination test category") == 3
+    # Other awards administration remains at its existing limit.
+    activity = client.get("/admin/awards/activity").get_data(as_text=True)
+    assert "up to 20 per page" in activity
