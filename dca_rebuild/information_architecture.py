@@ -190,6 +190,9 @@ def install_information_architecture(app, ns):
         record = find_record(slug)
         if not record or not record['can_verify']:
             abort(404)
+        # A documented event announcement is not decided by a popularity poll.
+        if record.get('record_type') == 'event' and record.get('source_kind') == 'flyers':
+            abort(403, 'Submit a documented correction instead of an event truth poll')
         token = request.form.get('csrf_token') or ''
         expected = session.get('vault_archive_csrf') or ''
         if not expected or not secrets.compare_digest(token, expected):
