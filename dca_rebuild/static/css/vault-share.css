@@ -28,3 +28,9 @@
 #lfv-awards-controls .lfv-share-theme legend{font-weight:700;margin-bottom:8px}
 #lfv-awards-controls .lfv-share-theme label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
 #lfv-awards-controls .lfv-share-theme input{accent-color:#143f80}
+
+#lfv-nominee-reason-controls{display:grid;gap:8px;margin:10px 0}
+#lfv-nominee-reason-controls[hidden],#lfv-nominee-reason-controls [hidden]{display:none!important}
+#lfv-nominee-reason-controls>label{font:700 13px system-ui,sans-serif;color:#071d3b}
+#lfv-nominee-reason-controls select,#lfv-nominee-reason-controls textarea{box-sizing:border-box;width:100%;border:1px solid #aab6c2;border-radius:7px;background:white;color:#071d3b;font:14px/1.5 system-ui,sans-serif;padding:10px}
+#lfv-nominee-reason-controls .lfv-reason-helper{margin:0;font:12px/1.5 system-ui,sans-serif;color:#344b62}
