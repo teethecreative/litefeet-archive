@@ -25,7 +25,7 @@ def test_catalog_has_real_source_rows_and_distinct_editions():
 
 def test_public_archive_and_scroll_api_show_real_entries(website):
     client = website.test_client()
-    assert client.get('/archive').status_code == 301
+    assert client.get('/archive').status_code == 200
     page = client.get('/archive/timeline')
     assert page.status_code == 200
     html = page.get_data(as_text=True)
