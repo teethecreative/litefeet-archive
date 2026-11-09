@@ -158,7 +158,8 @@ def test_nested_right_drawer_keyboard_and_program_links(website,width):
             assert page.get_by_role('navigation',name='Award program navigation').is_visible()
             page.get_by_role('button',name='Open site navigation').click()
             panel.locator('[data-section="awards"]').click()
-            assert panel.locator('a[aria-current="page"]').get_attribute('href') == '/awards/dancers-choice/2023'
+            assert panel.get_by_role('link', name='Dancer’s Choice Awards', exact=True).is_visible()
+            assert panel.get_by_role('link', name='DCA 2023 Archive').count() == 0
             page.locator('.lfv-menu-backdrop').click(position={'x':1,'y':1},force=True)
             assert not panel.is_visible()
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
@@ -213,17 +214,26 @@ def test_awards_overview_and_hypeitup_are_integrated_and_vault_branded(website):
     nav = next(item for item in navigation(text) if item['key'] == 'awards')
     assert [child['href'] for child in nav['children']] == [
         '/awards/dancers-choice', '/awards/litefeet-awards',
-        '/awards/hypeitup', '/awards/dancers-choice/2023',
+        '/awards/hypeitup',
     ]
-    assert nav['children'][-1]['label'] == 'DCA 2023 Archive'
+    assert nav['children'][0]['label'] == 'Dancer’s Choice Awards'
 
-    for path in ('/awards/dancers-choice/2026', '/awards/litefeet-awards',
-                 '/awards/hypeitup'):
+    for path in ('/awards/dancers-choice/2026', '/awards/dancers-choice/2023',
+                 '/awards/dancers-choice/nominations?view=results',
+                 '/awards/litefeet-awards', '/awards/hypeitup'):
         page = client.get(path).get_data(as_text=True)
         assert 'aria-label="Award program navigation"' in page
         assert 'href="/awards/hypeitup"' in page
         assert 'href="/awards/litefeet-awards"' in page
         assert 'href="/awards/dancers-choice"' in page
+        program_nav = page.split('aria-label="Award program navigation"', 1)[1].split('</nav>', 1)[0]
+        assert 'DCA 2026' not in program_nav
+        assert 'DCA 2023' not in program_nav
+
+    # Year-specific pages are discoverable inside the Dancer's Choice Awards hub.
+    dca_hub = client.get('/awards/dancers-choice').get_data(as_text=True)
+    assert 'href="/awards/dancers-choice/2026"' in dca_hub
+    assert 'href="/awards/dancers-choice/2023"' in dca_hub
 
     archive = client.get('/archive/timeline').get_data(as_text=True)
     nav_content = archive.split('aria-label="ARCHIVE NAVIGATION"', 1)[1].split('</nav>', 1)[0]
