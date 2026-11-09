@@ -1,330 +1,401 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Command Center | The LiteFeet Ledger{% endblock %}
-{% block meta_description %}Backend command center for The LiteFeet Ledger.{% endblock %}
+{% block title %}Admin Console | The LiteFeet Vault{% endblock %}
+{% block meta_description %}Private management console for The LiteFeet Vault.{% endblock %}
 
 {% block content %}
-
-<section class="admin-profile-user-access-panel">
-    <div class="admin-access-card">
-        <div>
-            <p class="eyebrow">Accounts + Profiles</p>
-            <h2>User/Profile Access</h2>
-            <p>Jump directly to account users, profile records, profile links, claim requests, and correction queues.</p>
-        </div>
-
-        <div class="admin-access-actions">
-            <a class="button primary" href="/admin/users">User Accounts</a>
-            <a class="button secondary" href="/admin/dancer-profiles">Dancer/Profile Records</a>
-            <a class="button secondary" href="/admin/profile-links">Profile Links</a>
-            <a class="button secondary" href="/admin/phase2/profile-claims">Profile Claims</a>
-            <a class="button secondary" href="/admin/profile-corrections">Profile Corrections</a>
-            <a class="button secondary" href="/admin/duplicate-reports">Duplicate Reports</a>
-            <a class="button secondary" href="/admin/home-prompts">Homepage Questions</a>
-            <a class="button secondary" href="/admin/imports/dancers-choice-2023">Dancer’s Choice Import</a>
-
-
-
-            <a class="button secondary" href="/admin/profile-visibility-requests">Visibility Requests</a>
-        </div>
-    </div>
-</section>
-
-<style>
-    .admin-profile-user-access-panel {
-        margin: 18px 0 24px;
-    }
-
-    .admin-access-card {
-        border: 1px solid rgba(232, 198, 90, 0.22);
-        border-radius: 18px;
-        padding: 18px;
-        background: rgba(255, 255, 255, 0.035);
-        display: grid;
-        gap: 14px;
-    }
-
-    .admin-access-card h2 {
-        margin: 4px 0 6px;
-        color: var(--accent-color, #e8c65a);
-    }
-
-    .admin-access-card p {
-        margin: 0;
-        opacity: 0.82;
-    }
-
-    .admin-access-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .admin-access-actions .button {
-        justify-content: center;
-    }
-</style>
-
 {% set site = phase12_site_status() %}
 {% set review_cards = phase12_review_queue_cards() %}
-{% set public_links = phase12_public_quick_links() %}
-{% set admin_links = phase12_admin_quick_links() %}
 {% set recent_activity = phase12_recent_activity() %}
+{% set admin_links = phase12_admin_quick_links() %}
+{% set public_links = phase12_public_quick_links() %}
+{% set pending_total = review_cards | sum(attribute='count') %}
+{% set errors = admin_error_log_summary if admin_error_log_summary is defined else {} %}
 
-<section class="content-section admin-command-center-page">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Backend</p>
-            <h1>Command Center</h1>
-            <p>
-                Main control screen for review queues, site status, quick links, and recent Ledger activity.
-            </p>
+<div class="lfv-admin-workspace" id="admin-top">
+    <aside class="lfv-admin-sidebar" aria-label="Admin console navigation">
+        <div class="lfv-admin-sidebar-top">
+            <span class="lfv-admin-brand">THE LITEFEET VAULT</span>
+            <span class="lfv-admin-brand-sub">Admin Console</span>
         </div>
 
-        <div class="hero-actions">
-            <a class="button primary" href="{{ phase12_url_for('admin_deploy_status_phase2i', '/admin/deploy-status') }}">Deploy Status</a>
-            <a class="button secondary" href="{{ phase12_url_for('admin_maintenance', '/admin/maintenance') }}">Maintenance</a>
-            <a class="button secondary" href="{{ url_for('home') }}">View Site</a>
+        <nav class="lfv-admin-nav" aria-label="Admin sections">
+            <span class="lfv-admin-nav-group">Workspace</span>
+            <a class="is-active" href="/admin" aria-current="page">Overview</a>
+            <a href="#review-queue">Review Queue <span class="lfv-admin-nav-count">{{ pending_total }}</span></a>
+            <a href="#recent-activity">Recent Activity</a>
+
+            <span class="lfv-admin-nav-group">Manage</span>
+            <a href="/admin/dancer-profiles">People &amp; Teams</a>
+            <a href="/admin/calendar-review">Battles &amp; Events</a>
+            <a href="#awards-management">Awards</a>
+            <a href="/admin/media">Music &amp; Media</a>
+            <a href="/admin/phase2">Community</a>
+            <a href="/admin/submissions">Submissions</a>
+            <a href="/admin/users">Users &amp; Accounts</a>
+
+            <span class="lfv-admin-nav-group">System</span>
+            <a href="/admin/error-logs">Error Logs</a>
+            <a href="/admin/deploy-status">Deploy Status</a>
+            <a href="/admin/maintenance">Maintenance</a>
+        </nav>
+
+        <div class="lfv-admin-sidebar-bottom">
+            <a href="/">View Public Site</a>
+            <a href="/admin/logout">Sign Out</a>
         </div>
-    </div>
-</section>
+    </aside>
 
-<section class="admin-status-grid">
-    <article>
-        <p class="eyebrow">Maintenance</p>
-        <h2>{{ site.maintenance_mode }}</h2>
-        <p>Current public site status.</p>
-    </article>
+    <main class="lfv-admin-main" id="admin-content">
+        <header class="lfv-admin-header">
+            <div>
+                <p class="lfv-admin-kicker">Administration / Overview</p>
+                <h1>Overview</h1>
+                <p class="lfv-admin-muted">Review what needs attention and manage the Vault from one place.</p>
+            </div>
+            <div class="lfv-admin-header-actions">
+                <a class="lfv-admin-action-secondary" href="/admin/submissions/new">Add Record</a>
+                <a class="lfv-admin-action-primary" href="/">View Site</a>
+            </div>
+        </header>
 
-    <article>
-        <p class="eyebrow">Database</p>
-        <h2>{{ site.database }}</h2>
-        <p>Current database environment.</p>
-    </article>
-
-    <article>
-        <p class="eyebrow">Users</p>
-        <h2>{{ site.users }}</h2>
-        <p>Ledger accounts.</p>
-    </article>
-
-    <article>
-        <p class="eyebrow">Profiles</p>
-        <h2>{{ site.profiles }}</h2>
-        <p>Dancer/profile records.</p>
-    </article>
-
-    <article>
-        <p class="eyebrow">Submissions</p>
-        <h2>{{ site.submissions }}</h2>
-        <p>Total submitted records.</p>
-    </article>
-
-    <article>
-        <p class="eyebrow">Ask</p>
-        <h2>{{ site.ask_conversations }}</h2>
-        <p>Ask conversations.</p>
-    </article>
-
-    <article>
-        <p class="eyebrow">Music</p>
-        <h2>{{ site.music_items }}</h2>
-        <p>Music/media records.</p>
-    </article>
-
-    <article>
-        <p class="eyebrow">Records</p>
-        <h2>{{ site.battle_records + site.award_records + site.team_records }}</h2>
-        <p>Battles, awards, and team records.</p>
-    </article>
-</section>
-
-<section class="homepage-section">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Review</p>
-            <h2>Review Queues</h2>
-            <p>Grouped by what needs checking, correction, verification, or follow-up.</p>
+        <div class="lfv-admin-mobile-links" aria-label="Jump to admin section">
+            <a href="#review-queue">Review Queue</a>
+            <a href="#management-links">Management</a>
+            <a href="#recent-activity">Activity</a>
+            <a href="/admin/error-logs">Site Health</a>
         </div>
-    </div>
 
-    <div class="admin-review-grid">
+        <section class="lfv-admin-metrics" aria-label="Vault summary">
+            <div class="lfv-admin-metric">
+                <span>Pending Reviews</span>
+                <strong>{{ pending_total }}</strong>
+                <a href="#review-queue">View queues</a>
+            </div>
+            <div class="lfv-admin-metric">
+                <span>User Accounts</span>
+                <strong>{{ site.users }}</strong>
+                <a href="/admin/users">Manage accounts</a>
+            </div>
+            <div class="lfv-admin-metric">
+                <span>People Profiles</span>
+                <strong>{{ site.profiles }}</strong>
+                <a href="/admin/dancer-profiles">Manage profiles</a>
+            </div>
+            <div class="lfv-admin-metric">
+                <span>Music &amp; Media</span>
+                <strong>{{ site.music_items }}</strong>
+                <a href="/admin/media">Manage content</a>
+            </div>
+        </section>
 
-<!-- Error Logs Dashboard Card -->
-<a class="admin-card error-log-card" href="/admin/error-logs">
-    <p class="eyebrow">Site Health</p>
-    <h2>Error Inbox</h2>
-    <p>
-        {{ admin_error_log_summary.active_count or 0 }} active errors.
-        {{ admin_error_log_summary.active_500_count or 0 }} active internal errors /
-        {{ admin_error_log_summary.active_404_count or 0 }} active missing pages.
-    </p>
-    {% if admin_error_log_summary.latest_path %}
-        <small>Latest active: {{ admin_error_log_summary.latest_path }}</small>
-    {% else %}
-        <small>No active errors logged.</small>
-    {% endif %}
-    <br>
-    <small>{{ admin_error_log_summary.historical_count or 0 }} total historical errors / {{ admin_error_log_summary.dismissed_count or 0 }} dismissed.</small>
-</a>
+        <section class="lfv-admin-system-strip" aria-label="Site health summary">
+            <div><span class="lfv-admin-system-label">Maintenance</span><strong>{{ site.maintenance_mode }}</strong></div>
+            <div><span class="lfv-admin-system-label">Database</span><strong>{{ site.database }}</strong></div>
+            <div><span class="lfv-admin-system-label">Active Errors</span><strong>{{ errors.active_count or 0 }}</strong></div>
+            <a href="/admin/error-logs">Review errors</a>
+            <a href="/admin/deploy-status">Deployment status</a>
+        </section>
 
-        {% for card in review_cards %}
-            <article class="admin-review-card {% if card.count > 0 %}needs-attention{% endif %}">
-                <div class="review-card-topline">
-                    <p class="eyebrow">{{ card.label }}</p>
-                    <span>{{ card.count }} open</span>
+        <section class="lfv-admin-section" id="review-queue" aria-labelledby="review-heading">
+            <div class="lfv-admin-section-heading">
+                <div>
+                    <p class="lfv-admin-kicker">Moderation</p>
+                    <h2 id="review-heading">Review Queue</h2>
+                    <p class="lfv-admin-muted">Existing review categories, with their current open and total counts.</p>
                 </div>
-
-                <h3>{{ card.total }} total</h3>
-                <p>{{ card.description }}</p>
-
-                <a class="button small-button secondary" href="{{ phase12_url_for(card.endpoint, card.fallback) }}">Open</a>
-            </article>
-        {% endfor %}
-    </div>
-</section>
-
-<section class="admin-command-grid">
-    <article class="admin-command-card">
-        <div class="section-heading-row">
-            <div>
-                <p class="eyebrow">Backend</p>
-                <h2>Admin Quick Links</h2>
+                <a href="/admin/submissions" class="lfv-admin-text-link">All submissions</a>
             </div>
-        </div>
 
-        <div class="quick-link-grid">
-            {% for item in admin_links %}
-                <a href="{{ phase12_url_for(item.endpoint, item.fallback) }}">{{ item.label }}</a>
-            {% endfor %}
-        </div>
-    </article>
-
-    <article class="admin-command-card">
-        <div class="section-heading-row">
-            <div>
-                <p class="eyebrow">Public</p>
-                <h2>Public Quick Links</h2>
+            <div class="lfv-admin-table-shell">
+                <table class="lfv-admin-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Queue</th>
+                            <th scope="col" class="lfv-admin-number">Pending</th>
+                            <th scope="col" class="lfv-admin-number lfv-admin-col-total">Total</th>
+                            <th scope="col" class="lfv-admin-cell-action">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for card in review_cards %}
+                        <tr>
+                            <th scope="row">
+                                <span class="lfv-admin-row-title">{{ card.label | replace('Ledger', 'Vault') }}</span>
+                                <span class="lfv-admin-row-description">{{ card.description | replace('Ledger', 'Vault') }}</span>
+                            </th>
+                            <td class="lfv-admin-number">
+                                {% if card.count > 0 %}
+                                <strong class="lfv-admin-pending">{{ card.count }}</strong>
+                                {% else %}
+                                <span class="lfv-admin-zero">0</span>
+                                {% endif %}
+                            </td>
+                            <td class="lfv-admin-number lfv-admin-col-total">{{ card.total }}</td>
+                            <td class="lfv-admin-cell-action">
+                                <a href="{{ phase12_url_for(card.endpoint, card.fallback) }}">
+                                    {% if card.label in ['Battle Records', 'Awards', 'Teams'] %}View{% else %}Review{% endif %}
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4">No queues available.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
-        </div>
+            <p class="lfv-admin-help">Battle, awards, and team record links currently open their existing public views. Their dedicated admin review screens are part of a later phase.</p>
+        </section>
 
-        <div class="quick-link-grid">
-            {% for item in public_links %}
-                <a href="{{ phase12_url_for(item.endpoint, item.fallback) }}">{{ item.label }}</a>
-            {% endfor %}
-        </div>
-    </article>
-</section>
+        <section class="lfv-admin-section" id="recent-activity" aria-labelledby="activity-heading">
+            <div class="lfv-admin-section-heading">
+                <div>
+                    <p class="lfv-admin-kicker">Updates</p>
+                    <h2 id="activity-heading">Recent Activity</h2>
+                </div>
+            </div>
+            <div class="lfv-admin-table-shell">
+                <table class="lfv-admin-table lfv-admin-activity-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Type</th>
+                            <th scope="col">Record</th>
+                            <th scope="col" class="lfv-admin-col-date">Date</th>
+                            <th scope="col" class="lfv-admin-cell-action">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in recent_activity[:10] %}
+                        <tr>
+                            <td>{{ item.label | replace('Ledger', 'Vault') }}</td>
+                            <th scope="row">{{ item.title }}</th>
+                            <td class="lfv-admin-col-date">{{ item.created_at or '—' }}</td>
+                            <td class="lfv-admin-cell-action"><a href="{{ item.url }}">Open</a></td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4">No recent activity found.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-<section class="homepage-section">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Recent</p>
-            <h2>Recent Ledger Activity</h2>
-        </div>
-    </div>
+        <section class="lfv-admin-section" id="management-links" aria-labelledby="manage-heading">
+            <div class="lfv-admin-section-heading">
+                <div>
+                    <p class="lfv-admin-kicker">Navigation</p>
+                    <h2 id="manage-heading">More Management Tools</h2>
+                    <p class="lfv-admin-muted">Additional existing tools stay available while their sections are consolidated.</p>
+                </div>
+            </div>
 
-    {% if recent_activity %}
-        <div class="recent-admin-activity">
-            {% for item in recent_activity %}
-                <article>
-                    <p class="eyebrow">{{ item.label }}</p>
-                    <h3>{{ item.title }}</h3>
-                    {% if item.created_at %}
-                        <p class="small-note">{{ item.created_at }}</p>
-                    {% endif %}
-                    <a class="button small-button secondary" href="{{ item.url }}">Open Queue</a>
-                </article>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="empty-state compact-empty">
-            <h3>No recent activity found.</h3>
-            <p>New submissions, feedback, claims, and review items will appear here.</p>
-        </div>
-    {% endif %}
-</section>
+            <div class="lfv-admin-tools">
+                <details>
+                    <summary>Profiles &amp; Accounts</summary>
+                    <div class="lfv-admin-tool-list">
+                        <a href="/admin/users">User Accounts</a>
+                        <a href="/admin/dancer-profiles">Profile Records</a>
+                        <a href="/admin/profile-links">Profile Links</a>
+                        <a href="/admin/phase2">Profile Claims</a>
+                        <a href="/admin/profile-corrections">Profile Corrections</a>
+                        <a href="/admin/duplicate-reports">Duplicate Reports</a>
+                        <a href="/admin/profile-visibility-requests">Visibility Requests</a>
+                        <a href="/admin/role-requests">Role Requests</a>
+                    </div>
+                </details>
+                <details id="awards-management">
+                    <summary>Awards &amp; Historical Records</summary>
+                    <div class="lfv-admin-tool-list">
+                        <a href="/awards">Awards Overview (public)</a>
+                        <a href="/admin/imports/dancers-choice-2023">Dancer’s Choice 2023 Import</a>
+                    </div>
+                    <p class="lfv-admin-help">Category moderation, qualifications, write-ins, nominations and voting will be added to this workspace in a later phase.</p>
+                </details>
+                <details>
+                    <summary>Content &amp; Moderation</summary>
+                    <div class="lfv-admin-tool-list">
+                        <a href="/admin/submissions">Submission Review</a>
+                        <a href="/admin/submissions/new">New Submission</a>
+                        <a href="/admin/calendar-review">Calendar Review</a>
+                        <a href="/admin/music-feedback">Music Feedback</a>
+                        <a href="/admin/ask-feedback">Community Feedback</a>
+                        <a href="/admin/home-prompts">Homepage Questions</a>
+                        <a href="/admin/media">Music &amp; Media</a>
+                    </div>
+                </details>
+                <details>
+                    <summary>Other Existing Admin Links</summary>
+                    <div class="lfv-admin-tool-list">
+                        {% for item in admin_links %}
+                        <a href="{{ phase12_url_for(item.endpoint, item.fallback) }}">{{ item.label }}</a>
+                        {% endfor %}
+                    </div>
+                </details>
+                <details>
+                    <summary>Public Pages</summary>
+                    <div class="lfv-admin-tool-list">
+                        {% for item in public_links %}
+                        <a href="{{ phase12_url_for(item.endpoint, item.fallback) }}">{{ item.label | replace('Ledger', 'Vault') }}</a>
+                        {% endfor %}
+                    </div>
+                </details>
+            </div>
+        </section>
+    </main>
+</div>
 
 <style>
-    .admin-status-grid,
-    .admin-review-grid,
-    .admin-command-grid,
-    .recent-admin-activity {
+    body:has(.lfv-admin-workspace) .site-shell > .site-header,
+    body:has(.lfv-admin-workspace) .site-shell > .site-footer,
+    body:has(.lfv-admin-workspace) .phase13-mobile-bar {
+        display: none;
+    }
+
+    body:has(.lfv-admin-workspace) .site-shell,
+    body:has(.lfv-admin-workspace) .site-shell > main {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .lfv-admin-workspace {
+        --admin-text: #172747;
+        --admin-muted: #58667b;
+        --admin-line: #dce2eb;
+        --admin-bg: #f5f7fa;
+        --admin-surface: #fff;
+        --admin-blue: #102a54;
+        --admin-gold: #d6af42;
         display: grid;
-        gap: 14px;
-        margin-top: 18px;
+        grid-template-columns: 236px minmax(0, 1fr);
+        min-height: 100vh;
+        background: var(--admin-bg);
+        color: var(--admin-text);
+        font-family: inherit;
+        font-size: 14px;
+        line-height: 1.5;
     }
-
-    .admin-status-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+    html[data-theme="dark"] .lfv-admin-workspace {
+        --admin-text: #edf2fb;
+        --admin-muted: #afbed2;
+        --admin-line: #344965;
+        --admin-bg: #0e1c32;
+        --admin-surface: #152640;
+        --admin-blue: #0b1730;
+        --admin-gold: #e1bd59;
     }
-
-    .admin-review-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .admin-command-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .recent-admin-activity {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .admin-status-grid article,
-    .admin-review-card,
-    .admin-command-card,
-    .recent-admin-activity article {
-        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
-        border-radius: 16px;
-        padding: 16px;
-        background: var(--card-bg, rgba(255,255,255,0.04));
-        display: grid;
-        gap: 10px;
-    }
-
-    .admin-review-card.needs-attention {
-        border-color: rgba(255,255,255,0.28);
-    }
-
-    .review-card-topline {
+    .lfv-admin-workspace * { box-sizing: border-box; }
+    .lfv-admin-workspace a { text-decoration: none; }
+    .lfv-admin-workspace a:focus-visible,
+    .lfv-admin-workspace summary:focus-visible { outline: 3px solid var(--admin-gold); outline-offset: 2px; }
+    .lfv-admin-sidebar {
+        background: var(--admin-blue);
+        color: #fff;
+        min-width: 0;
+        padding: 26px 16px 18px;
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
+        flex-direction: column;
+        gap: 28px;
+        position: sticky;
+        top: 0;
+        align-self: start;
+        height: 100vh;
+        overflow-y: auto;
     }
-
-    .review-card-topline span {
-        border: 1px solid var(--border-color, rgba(255,255,255,0.16));
-        border-radius: 999px;
-        padding: 3px 8px;
-        font-size: 0.78rem;
+    .lfv-admin-sidebar-top { display: flex; flex-direction: column; padding: 0 12px; gap: 3px; }
+    .lfv-admin-brand { font-size: 13px; font-weight: 800; letter-spacing: .07em; }
+    .lfv-admin-brand-sub { font-size: 12px; color: #cad7ed; }
+    .lfv-admin-nav { display: grid; gap: 2px; }
+    .lfv-admin-nav-group { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #9db1d0; padding: 18px 12px 7px; }
+    .lfv-admin-nav-group:first-child { padding-top: 0; }
+    .lfv-admin-nav a,
+    .lfv-admin-sidebar-bottom a { color: #e7eefc; padding: 9px 12px; display: flex; justify-content: space-between; gap: 8px; align-items: center; border-radius: 7px; font-weight: 500; }
+    .lfv-admin-nav a:hover,
+    .lfv-admin-sidebar-bottom a:hover { background: rgba(255,255,255,.12); }
+    .lfv-admin-nav a.is-active { background: rgba(225,189,89,.18); color: #ffdf79; border-left: 3px solid var(--admin-gold); }
+    .lfv-admin-nav-count { font-size: 11px; background: rgba(255,255,255,.16); border-radius: 15px; padding: 1px 7px; }
+    .lfv-admin-sidebar-bottom { margin-top: auto; display: grid; gap: 2px; border-top: 1px solid rgba(255,255,255,.15); padding-top: 14px; }
+    .lfv-admin-main { min-width: 0; padding: 32px clamp(18px,3.5vw,54px) 64px; }
+    .lfv-admin-header, .lfv-admin-section-heading { display: flex; gap: 16px; justify-content: space-between; align-items: flex-start; }
+    .lfv-admin-header { margin-bottom: 28px; }
+    .lfv-admin-kicker { color: var(--admin-muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 7px; }
+    .lfv-admin-header h1 { color: var(--admin-text); font-size: clamp(27px,3vw,35px); line-height: 1.1; margin: 0 0 8px; }
+    .lfv-admin-section h2 { color: var(--admin-text); font-size: 21px; line-height: 1.2; margin: 0 0 4px; }
+    .lfv-admin-muted { color: var(--admin-muted); margin: 0; font-size: 13px; }
+    .lfv-admin-header-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .lfv-admin-header-actions a { display: inline-flex; justify-content: center; align-items: center; min-height: 39px; border-radius: 7px; font-size: 13px; font-weight: 700; padding: 8px 15px; }
+    .lfv-admin-action-primary { background: var(--admin-gold); color: #142b4a !important; }
+    .lfv-admin-action-secondary { background: var(--admin-surface); border: 1px solid var(--admin-line); color: var(--admin-text) !important; }
+    .lfv-admin-mobile-links { display: none; }
+    .lfv-admin-metrics { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
+    .lfv-admin-metric { min-width: 0; padding: 18px; border: 1px solid var(--admin-line); border-radius: 10px; background: var(--admin-surface); display: grid; gap: 4px; }
+    .lfv-admin-metric span { color: var(--admin-muted); font-size: 12px; font-weight: 600; }
+    .lfv-admin-metric strong { color: var(--admin-text); font-size: 28px; line-height: 1.3; font-variant-numeric: tabular-nums; }
+    .lfv-admin-metric a { width: fit-content; font-size: 12px; font-weight: 700; color: var(--admin-text); text-decoration: underline; text-underline-offset: 3px; }
+    .lfv-admin-system-strip { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; background: var(--admin-surface); border: 1px solid var(--admin-line); border-radius: 9px; padding: 13px 16px; margin: 12px 0 36px; }
+    .lfv-admin-system-strip div { display: flex; gap: 8px; align-items: baseline; }
+    .lfv-admin-system-label { color: var(--admin-muted); font-size: 12px; }
+    .lfv-admin-system-strip strong { color: var(--admin-text); font-weight: 700; font-size: 12px; }
+    .lfv-admin-system-strip a { font-size: 12px; color: var(--admin-text); text-decoration: underline; text-underline-offset: 3px; font-weight: 700; }
+    .lfv-admin-section { margin-top: 34px; }
+    .lfv-admin-section-heading { margin-bottom: 15px; }
+    .lfv-admin-text-link { color: var(--admin-text); font-size: 12px; font-weight: 700; text-decoration: underline !important; text-underline-offset: 3px; padding-top: 10px; }
+    .lfv-admin-table-shell { background: var(--admin-surface); border: 1px solid var(--admin-line); border-radius: 10px; overflow: hidden; }
+    .lfv-admin-table { width: 100%; table-layout: fixed; border-collapse: collapse; color: var(--admin-text); font-size: 13px; }
+    .lfv-admin-table th, .lfv-admin-table td { border-bottom: 1px solid var(--admin-line); padding: 12px 16px; vertical-align: middle; text-align: left; overflow-wrap: anywhere; }
+    .lfv-admin-table tbody tr:last-child > * { border-bottom: none; }
+    .lfv-admin-table thead th { text-transform: uppercase; font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--admin-muted); background: var(--admin-bg); }
+    .lfv-admin-table tbody th { font-weight: 500; }
+    .lfv-admin-row-title { display: block; font-weight: 700; color: var(--admin-text); }
+    .lfv-admin-row-description { display: block; font-weight: 400; font-size: 11px; color: var(--admin-muted); margin-top: 2px; }
+    .lfv-admin-table .lfv-admin-number { width: 78px; text-align: center; font-variant-numeric: tabular-nums; }
+    .lfv-admin-table .lfv-admin-cell-action { width: 100px; text-align: right; }
+    .lfv-admin-cell-action a { color: var(--admin-text); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+    .lfv-admin-pending { color: var(--admin-text); font-weight: 800; }
+    .lfv-admin-zero { color: var(--admin-muted); }
+    .lfv-admin-help { font-size: 11px; color: var(--admin-muted); margin: 10px 0 0; }
+    .lfv-admin-activity-table th:first-child { width: 125px; }
+    .lfv-admin-activity-table .lfv-admin-col-date { width: 165px; font-size: 11px; }
+    .lfv-admin-tools { display: grid; gap: 8px; }
+    .lfv-admin-tools details { background: var(--admin-surface); border: 1px solid var(--admin-line); border-radius: 9px; padding: 0 16px; }
+    .lfv-admin-tools summary { padding: 13px 0; color: var(--admin-text); font-size: 13px; font-weight: 700; cursor: pointer; }
+    .lfv-admin-tools details[open] summary { border-bottom: 1px solid var(--admin-line); }
+    .lfv-admin-tool-list { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px 14px; padding: 14px 0; }
+    .lfv-admin-tool-list a { color: var(--admin-text); text-decoration: underline; text-underline-offset: 3px; font-size: 12px; }
+    .lfv-admin-tools .lfv-admin-help { padding-bottom: 12px; }
+    @media (max-width: 1050px) {
+        .lfv-admin-workspace { grid-template-columns: 205px minmax(0,1fr); }
+        .lfv-admin-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
+        .lfv-admin-tool-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
     }
-
-    .quick-link-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+    @media (max-width: 760px) {
+        .lfv-admin-workspace { display: block; }
+        .lfv-admin-sidebar { position: relative; top: auto; height: auto; padding: 14px 16px; gap: 8px; }
+        .lfv-admin-sidebar-top { padding: 0; }
+        .lfv-admin-nav { display: none; }
+        .lfv-admin-sidebar-bottom { display: none; }
+        .lfv-admin-main { padding: 22px 14px 44px; }
+        .lfv-admin-header { display: block; }
+        .lfv-admin-header-actions { margin-top: 16px; }
+        .lfv-admin-mobile-links { display: flex; gap: 7px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 3px; }
+        .lfv-admin-mobile-links a { color: var(--admin-text); background: var(--admin-surface); border: 1px solid var(--admin-line); border-radius: 7px; padding: 7px 10px; white-space: nowrap; font-size: 12px; }
+        .lfv-admin-metrics { gap: 8px; }
+        .lfv-admin-metric { padding: 12px; }
+        .lfv-admin-metric strong { font-size: 24px; }
+        .lfv-admin-system-strip { gap: 10px 16px; }
+        .lfv-admin-table th, .lfv-admin-table td { padding: 10px 7px; font-size: 12px; }
+        .lfv-admin-table .lfv-admin-number { width: 55px; }
+        .lfv-admin-table .lfv-admin-cell-action { width: 58px; }
+        .lfv-admin-table .lfv-admin-col-total, .lfv-admin-table .lfv-admin-col-date { display: none; }
+        .lfv-admin-activity-table th:first-child { width: 85px; }
+        .lfv-admin-row-description { font-size: 10px; }
+        .lfv-admin-tool-list { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
     }
-
-    .quick-link-grid a {
-        border: 1px solid var(--border-color, rgba(255,255,255,0.12));
-        border-radius: 12px;
-        padding: 10px;
-        text-decoration: none;
-    }
-
-    @media (max-width: 1100px) {
-        .admin-status-grid,
-        .admin-review-grid,
-        .admin-command-grid,
-        .recent-admin-activity {
-            grid-template-columns: 1fr;
-        }
-
-        .quick-link-grid {
-            grid-template-columns: 1fr;
-        }
+    @media (max-width: 390px) {
+        .lfv-admin-tool-list { grid-template-columns: 1fr; }
+        .lfv-admin-metric span { font-size: 11px; }
+        .lfv-admin-table .lfv-admin-number { width: 46px; }
     }
 </style>
 {% endblock %}
