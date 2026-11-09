@@ -5,7 +5,7 @@
     <form method="post" action="{{ url_for('dca_nominations_closed') }}" class="lf9e-done-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <input type="hidden" name="action" value="done">
-      <button class="lf9e-secondary lf9e-done-button" type="submit" aria-label="Done and enter a different nomination email">Done / Reset email</button>
+      <button class="lf9e-secondary lf9e-done-button" type="submit" aria-label="Done">Done</button>
     </form>
     {% endif %}
     <a class="lf9e-secondary lf9e-standings-action" href="{{ url_for('dca_nominations_closed') }}">Nominate</a>
