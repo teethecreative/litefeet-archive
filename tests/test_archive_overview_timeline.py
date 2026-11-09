@@ -26,7 +26,8 @@ def test_people_browser_keeps_weighted_profile_cloud(website):
 def test_timeline_filter_and_pagination_use_full_catalog(website):
     client = website.test_client()
     html = client.get('/archive?collection=people').get_data(as_text=True)
-    assert 'data-unified-timeline' in html
+    assert 'lfv-people-wordcloud' in html
+    assert 'data-unified-timeline' not in html
     payload = client.get('/archive/api/records?timeline=1&collection=events').get_json()
     assert payload['total'] >= 24
     assert payload['records']
