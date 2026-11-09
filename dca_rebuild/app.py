@@ -3808,6 +3808,16 @@ for legacy_route in LEGACY_HOME_ROUTES:
 @app.route("/verify/<path:legacy_path>")
 @app.route("/ask/<path:legacy_path>")
 def legacy_archive_detail_redirect(legacy_path):
+    # Preserve indexed dancer URLs by sending them to the corresponding
+    # published historical identity, never an unrelated homepage.
+    from dca_rebuild.legacy_profile_routes import legacy_dancer_destination
+    target = legacy_dancer_destination(request.path)
+    if target:
+        return redirect(target, code=301)
+    # Unknown dancer links must remain genuine not-found pages. This also
+    # avoids Google treating unrelated homepage redirects as soft 404s.
+    if request.path.startswith(("/people/dancers/", "/dancers/")):
+        abort(404)
     return redirect(url_for("index"), code=302)
 
 
