@@ -931,3 +931,29 @@ class LockInCardRequest(Base):
     status = Column(String(20), nullable=False, default="pending", index=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     reviewed_at = Column(DateTime, nullable=True)
+
+
+class VaultDevelopmentItem(Base):
+    """Private development tracker; never alters a public or moderation record."""
+    __tablename__ = "vault_development_items"
+    id = Column(Integer, primary_key=True)
+    title = Column(String(240), nullable=False)
+    description = Column(Text, nullable=True)
+    area = Column(String(40), nullable=False, default="site")
+    status = Column(String(24), nullable=False, default="needs_review", index=True)
+    source_feedback_id = Column(Integer, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class VaultDevelopmentFeedback(Base):
+    """Private suggestions sent through a moderated, optional public form."""
+    __tablename__ = "vault_development_feedback"
+    id = Column(Integer, primary_key=True)
+    title = Column(String(240), nullable=False)
+    details = Column(Text, nullable=False)
+    area = Column(String(40), nullable=False, default="site")
+    contact_email = Column(String(255), nullable=True)
+    status = Column(String(24), nullable=False, default="new", index=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    reviewed_at = Column(DateTime, nullable=True)
