@@ -1,61 +1,179 @@
-
 (() => {
   const dialog = document.getElementById("lfv-share-dialog");
   const open = document.getElementById("lfv-share-open");
   if (!dialog || !open || typeof dialog.showModal !== "function") return;
-  const close = document.getElementById("lfv-share-close");
-  const preview = document.getElementById("lfv-share-preview");
   const status = document.getElementById("lfv-share-status");
+  const preview = document.getElementById("lfv-share-preview");
   const formats = Array.from(dialog.querySelectorAll("[data-lfv-format]"));
-  let format = "story";
+  const awardPanel = document.getElementById("lfv-awards-controls");
+  const scope = document.getElementById("lfv-awards-scope");
+  const category = document.getElementById("lfv-awards-category");
+  const nominee = document.getElementById("lfv-awards-nominee");
+  const pageHint = document.getElementById("lfv-share-pages");
   const canonical = document.querySelector('link[rel="canonical"]');
-  const link = canonical?.href || location.origin + location.pathname;
-  // The page already embeds a safe, query-free canonical. Never share email or admin tokens.
-  const path = new URL(link).pathname;
-  const card = path === "/" ? "home" : path.replace(/^\/+|\/+$/g, "").replaceAll("/", "--");
-  const imageUrl = () => location.origin + "/social/instagram/" + format + "/" + encodeURIComponent(card) + ".png";
-  const setFormat = next => {
-    format = next;
-    formats.forEach(button => button.setAttribute("aria-pressed", String(button.dataset.lfvFormat === next)));
-    preview.src = imageUrl();
+  const cleanLink = canonical?.href || location.origin + location.pathname;
+  const currentPath = new URL(cleanLink).pathname;
+  const awardPage = currentPath.startsWith("/awards/dancers-choice") || currentPath === "/write-ins";
+  const context = new URLSearchParams(location.search);
+  let format = "story";
+  let data = null;
+  const regularCard = currentPath === "/" ? "home" : currentPath.replace(/^\/+|\/+$/g, "").replaceAll("/", "--");
+
+  const settings = () => {
+    const mode = dialog.querySelector('input[name="lfv-share-theme"]:checked')?.value || "light";
+    const s = scope.value;
+    const c = category.value;
+    const n = nominee.value;
+    const params = new URLSearchParams();
+    if (s !== "awards") params.set("category", c);
+    if (s === "nominee") params.set("nominee", n);
+    return {mode, s, c, n, params};
+  };
+  const graphicUrl = () => {
+    if (awardPage && data) {
+      const {mode,s,params} = settings();
+      return location.origin + "/social/awards/" + format + "/" + mode + "/" + s + ".png" + (params.size ? "?" + params : "");
+    }
+    return location.origin + "/social/instagram/" + format + "/" + encodeURIComponent(regularCard) + ".png";
+  };
+  const publicLink = () => {
+    if (!awardPage || !data) return cleanLink;
+    const {s,c,n} = settings();
+    if (s === "awards") return location.origin + "/awards/dancers-choice/2026";
+    const params = new URLSearchParams({view:"results",category:c});
+    if (s === "nominee") params.set("suggestion",n);
+    return location.origin + "/awards/dancers-choice/nominations?" + params;
+  };
+  const count = () => {
+    if (!data || scope.value !== "nominees") return 1;
+    const selected = data.categories.find(x => String(x.id) === category.value);
+    const capacity = format === "story" ? 10 : 5;
+    return Math.max(1, Math.ceil((selected?.nominees?.length || 0) / capacity));
+  };
+  const updatePreview = () => {
+    const pages = count();
+    if (awardPage && data) {
+      pageHint.hidden = pages <= 1;
+      pageHint.textContent = pages > 1 ? pages + " graphics will be generated to include all nominees." : "";
+    }
+    const ready = !awardPage || !data || scope.value === "awards" || category.value;
+    preview.hidden = !ready;
+    if (ready) preview.src = graphicUrl();
     status.textContent = "";
   };
-  open.addEventListener("click", () => { setFormat("story"); dialog.showModal(); });
-  close.addEventListener("click", () => dialog.close());
-  dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
-  formats.forEach(button => button.addEventListener("click", () => setFormat(button.dataset.lfvFormat)));
-  const imageFile = async () => {
-    const response = await fetch(imageUrl(), {credentials:"omit"});
-    if (!response.ok) throw Error("Could not generate the graphic");
-    return new File([await response.blob()], "litefeet-vault-" + format + ".png", {type:"image/png"});
+  const fill = (select, items, placeholder) => {
+    select.replaceChildren();
+    const empty = new Option(placeholder, "");
+    select.add(empty);
+    items.forEach(x => select.add(new Option(x.name, String(x.id))));
+  };
+  const refresh = () => {
+    const chosen = data?.categories.find(x => String(x.id) === category.value);
+    const needsCategory = scope.value !== "awards";
+    const needsNominee = scope.value === "nominee";
+    category.hidden = document.getElementById("lfv-awards-category-label").hidden = !needsCategory;
+    nominee.hidden = document.getElementById("lfv-awards-nominee-label").hidden = !needsNominee;
+    if (needsNominee) {
+      const previous = nominee.value;
+      fill(nominee, chosen?.nominees || [], "Select nominee");
+      if ([...nominee.options].some(o => o.value === previous)) nominee.value = previous;
+      else if (nominee.options.length > 1) nominee.selectedIndex = 1;
+    }
+    updatePreview();
+  };
+  const getAwardOptions = async () => {
+    if (!awardPage) return;
+    awardPanel.hidden = false;
+    const response = await fetch("/social/awards/options.json");
+    if (!response.ok) throw Error("Couldn't retrieve public award categories");
+    data = await response.json();
+    fill(category, data.categories || [], "Select category");
+    const fromUrl = context.get("category");
+    const preset = data.categories.find(x => String(x.id) === fromUrl);
+    if (preset) category.value = String(preset.id);
+    else if (category.options.length > 1) category.selectedIndex = 1;
+    if (preset) {
+      scope.value = context.get("suggestion") ? "nominee" : "category";
+      if (context.get("share") === "nominees") scope.value = "nominees";
+    }
+    refresh();
+    if (context.get("suggestion") && scope.value === "nominee") {
+      const found = [...nominee.options].find(x => x.value === context.get("suggestion"));
+      if (found) nominee.value = found.value;
+    }
+    updatePreview();
+  };
+
+  scope.addEventListener("change", refresh);
+  category.addEventListener("change", refresh);
+  nominee.addEventListener("change", updatePreview);
+  dialog.querySelectorAll('input[name="lfv-share-theme"]').forEach(x => x.addEventListener("change", updatePreview));
+  formats.forEach(x => x.addEventListener("click", () => {
+    format = x.dataset.lfvFormat;
+    formats.forEach(b => b.setAttribute("aria-pressed", String(b === x)));
+    updatePreview();
+  }));
+  open.addEventListener("click", async () => {
+    dialog.showModal();
+    try { if (awardPage && !data) await getAwardOptions(); }
+    catch { status.textContent = "Award options could not load. Please try again."; }
+    if (!awardPage) updatePreview();
+  });
+  document.getElementById("lfv-share-close").addEventListener("click", () => dialog.close());
+  dialog.addEventListener("click", e => { if (e.target === dialog) dialog.close(); });
+
+  const files = async () => {
+    if (awardPage && !data) throw Error("Award options are not loaded");
+    if (awardPage && scope.value !== "awards" && !category.value) throw Error("Choose a category");
+    if (awardPage && scope.value === "nominee" && !nominee.value) throw Error("Choose a nominee");
+    const n = count();
+    const output = [];
+    for (let page = 1; page <= n; page++) {
+      const url = new URL(graphicUrl());
+      if (n > 1) url.searchParams.set("page", String(page));
+      const response = await fetch(url.href, {credentials:"omit"});
+      if (!response.ok) throw Error("Could not generate this image");
+      output.push(new File([await response.blob()], "litefeet-" + scope.value + "-" + format + "-" + page + ".png", {type:"image/png"}));
+    }
+    return output;
   };
   document.getElementById("lfv-share-image").addEventListener("click", async () => {
-    status.textContent = "";
     try {
-      const file = await imageFile();
-      if (navigator.share && navigator.canShare?.({files:[file]})) {
-        await navigator.share({files:[file]});
+      const result = await files();
+      if (navigator.share && navigator.canShare?.({files: result})) {
+        await navigator.share({files:result});
       } else {
-        status.textContent = "Direct image sharing isn't available in this browser. Use Save image, then upload to Instagram.";
+        status.textContent = "Direct image sharing isn't available here. Save the graphic and upload it to Instagram.";
       }
-    } catch (error) {
-      if (error.name !== "AbortError") status.textContent = "Sharing wasn't available. You can save the graphic instead.";
-    }
+    } catch(e) { if (e.name !== "AbortError") status.textContent = e.message || "Unable to share this graphic."; }
   });
   document.getElementById("lfv-save-image").addEventListener("click", async () => {
     try {
-      const file = await imageFile();
-      const objectUrl = URL.createObjectURL(file);
-      const a = document.createElement("a");
-      a.href = objectUrl;
-      a.download = file.name;
-      document.body.append(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
-      status.textContent = "Graphic ready. Open Instagram to post it.";
-    } catch { status.textContent = "Couldn't save the graphic. Please try again."; }
+      if (awardPage && data && count() > 1) {
+        const {mode,s,params} = settings();
+        const query = new URLSearchParams({format,theme:mode,scope:s,category:settings().c});
+        const bundle = await fetch("/social/awards/bundle.zip?" + query);
+        if (!bundle.ok) throw Error("Couldn't prepare all nominee graphics");
+        const url = URL.createObjectURL(await bundle.blob());
+        const anchor = document.createElement("a");
+        anchor.href = url; anchor.download = "litefeet-awards-nominees.zip";
+        document.body.append(anchor); anchor.click(); anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        status.textContent = "All nominee graphics are ready as a ZIP.";
+        return;
+      }
+      const [file] = await files();
+      const url = URL.createObjectURL(file);
+      const anchor = document.createElement("a");
+      anchor.href = url; anchor.download = file.name;
+      document.body.append(anchor); anchor.click(); anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      status.textContent = "Graphic ready to post on Instagram.";
+    } catch (e) { status.textContent = e.message || "Could not save graphic."; }
   });
   document.getElementById("lfv-copy-link").addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText(link); status.textContent = "Page link copied."; }
-    catch { status.textContent = "Copy this page link: " + link; }
+    const url = publicLink();
+    try { await navigator.clipboard.writeText(url); status.textContent = "Link copied."; }
+    catch { status.textContent = "Copy this link: " + url; }
   });
 })();
