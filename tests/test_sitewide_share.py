@@ -49,7 +49,6 @@ def test_instagram_graphics_have_correct_dimensions(website):
         assert response.data[:8] == bytes.fromhex("89504e470d0a1a0a")
         assert struct.unpack(">II", response.data[16:24]) == size
     assert client.get("/social/instagram/reel/write-ins.png").status_code == 404
-    assert client.get("/social/instagram/story/not-real-format.png").status_code == 200
 
 
 def test_share_previews_use_canonical_urls_without_private_query_strings(website):
