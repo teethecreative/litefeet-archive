@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review Event #{{ item.id }} | The LiteFeet Vault Admin</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/admin-gatherings.css') }}">
+</head><body class="ledger-admin">
+{% include "_admin_navigation.html" %}
+<main class="lfv-gathering-admin">
+  <nav class="lfv-gathering-back"><a href="{{ url_for('admin_vault_gatherings') }}">← Event review queue</a></nav>
+  <header class="lfv-gathering-header"><p class="lfv-gathering-eyebrow">EVENT SUBMISSION #{{ item.id }} · {{ item.status|upper }}</p>
+    <h1>{{ item.title }}</h1>
+    <p>Received {{ item.created_at.strftime('%B %-d, %Y') if item.created_at else '—' }}. Changes are saved to the existing submission record.</p>
+  </header>
+  {% with messages=get_flashed_messages() %}{% for message in messages %}<p role="status" class="lfv-admin-flash">{{ message }}</p>{% endfor %}{% endwith %}
+  {% if duplicate_ids %}<p class="lfv-gathering-duplicate">Possible matching submissions: #{{ duplicate_ids|join(', #') }}. Verify before approving. No automatic merging or deletion.</p>{% endif %}
+  <section class="lfv-gathering-review-actions" aria-label="Publication controls">
+    {% for action,label in [('approve','Approve'),('reject','Reject'),('unpublish','Unpublish'),('restore','Restore'),('reconsider','Return to pending')] %}
+      {% if (action == 'approve' and item.status in ['pending','rejected','unpublished'])
+        or (action == 'reject' and item.status in ['pending','approved','unpublished'])
+        or (action == 'unpublish' and item.status == 'approved')
+        or (action == 'restore' and item.status == 'unpublished')
+        or (action == 'reconsider' and item.status in ['rejected','unpublished']) %}
+      <form method="post" action="{{ url_for('admin_vault_gathering_decision',submission_id=item.id,decision=action) }}">
+        <input type="hidden" name="csrf_token" value="{{ moderation_csrf }}">
+        <button type="submit" class="{% if action == 'approve' or action == 'restore' %}lfv-gathering-primary{% endif %}">{{ label }}</button>
+      </form>
+      {% endif %}
+    {% endfor %}
+  </section>
+  <section class="lfv-gathering-panel" aria-labelledby="edit-heading">
+    <h2 id="edit-heading">Event details</h2>
+    <form class="lfv-gathering-edit-form" method="post" action="{{ url_for('admin_vault_gathering_edit',submission_id=item.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ moderation_csrf }}">
+      <label class="full">Event title <input name="title" maxlength="240" value="{{ item.title }}" required></label>
+      <label>Category <select name="gathering_type">{% for key,label in submission_types %}<option value="{{ key }}" {% if item.gathering_type == key %}selected{% endif %}>{{ label|title }}</option>{% endfor %}</select></label>
+      <label>Host / organizer <input name="hosts" maxlength="400" value="{{ item.hosts or '' }}" required></label>
+      <label>Start date <input type="date" name="start_date" value="{{ item.start_date }}" required></label>
+      <label>End date <input type="date" name="end_date" value="{{ item.end_date or '' }}"></label>
+      <label>Start time <input type="time" name="start_time" value="{{ item.start_time or '' }}" required></label>
+      <label>End time <input type="time" name="end_time" value="{{ item.end_time or '' }}" required></label>
+      <label>Repeat <select name="recurrence_rule">{% for key,label in recurrence_choices %}<option value="{{ key }}" {% if item.recurrence_rule == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <label>Repeat until <input type="date" name="recurrence_until" value="{{ item.recurrence_until or '' }}"></label>
+      <fieldset class="full"><legend>Weekly repeat days</legend>
+      {% for key,label in [('0','Mon'),('1','Tue'),('2','Wed'),('3','Thu'),('4','Fri'),('5','Sat'),('6','Sun')] %}
+        <label class="lfv-gathering-check"><input type="checkbox" name="recurrence_weekdays" value="{{ key }}" {% if key in (item.recurrence_weekdays or '').split(',') %}checked{% endif %}> {{ label }}</label>
+      {% endfor %}
+      </fieldset>
+      <label class="lfv-gathering-check full"><input type="checkbox" name="virtual" value="1" {% if item.virtual %}checked{% endif %}> Virtual event</label>
+      <label>Venue <input name="venue" maxlength="240" value="{{ item.venue or '' }}"></label>
+      <label>City / borough <input name="city" maxlength="120" value="{{ item.city or '' }}"></label>
+      <label class="full">Street address or virtual joining instructions <input name="address" maxlength="350" value="{{ item.address or '' }}" required></label>
+      <label>Admission <input name="admission" maxlength="160" value="{{ item.admission or '' }}"></label>
+      <label>Event / registration URL <input name="link" type="url" maxlength="1200" value="{{ item.link or '' }}"></label>
+      <label class="full">Event description <textarea name="description" rows="4" maxlength="3000">{{ item.description or '' }}</textarea></label>
+      <details class="lfv-gathering-private full"><summary>Private contact and moderation notes</summary>
+        <div class="lfv-gathering-private-grid">
+          <label>Contact name <input name="contact_name" maxlength="160" value="{{ item.contact_name or '' }}"></label>
+          <label>Contact email <input type="email" name="contact_email" maxlength="255" value="{{ item.contact_email or '' }}"></label>
+          <label class="full">Additional internal notes <textarea name="additional_notes" rows="3" maxlength="2000">{{ item.additional_notes or '' }}</textarea></label>
+        </div>
+      </details>
+      <div class="full"><button class="lfv-gathering-primary" type="submit">Save event changes</button></div>
+    </form>
+  </section>
+  {% if item.recurrence_rule and item.recurrence_rule != 'none' %}
+  <section class="lfv-gathering-panel"><h2>Recurring-session cancellations</h2>
+    <p>Cancel a single scheduled date without unpublishing the rest of this series.</p>
+    <form class="lfv-gathering-occurrence-form" method="post" action="{{ url_for('admin_vault_gathering_occurrence',submission_id=item.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ moderation_csrf }}"><input type="hidden" name="action" value="cancel">
+      <label>Date to cancel <input type="date" name="date" required></label>
+      <label>Reason (internal) <input name="reason" maxlength="500" placeholder="Optional reason"></label>
+      <button type="submit">Cancel this date</button>
+    </form>
+    {% if overrides %}
+    <h3>Cancelled dates</h3><ul>
+    {% for override in overrides %}<li><time datetime="{{ override.date }}">{{ override.date }}</time>{% if override.reason %} — {{ override.reason }}{% endif %}
+      <form method="post" action="{{ url_for('admin_vault_gathering_occurrence',submission_id=item.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ moderation_csrf }}"><input type="hidden" name="action" value="restore"><input type="hidden" name="date" value="{{ override.date }}">
+        <button type="submit">Restore this date</button>
+      </form></li>{% endfor %}
+    </ul>{% endif %}
+  </section>{% endif %}
+  <section class="lfv-gathering-panel"><h2>Review history</h2>
+    {% if history %}<ol class="lfv-gathering-history">{% for entry in history %}
+      <li><strong>{{ entry.action|replace('_',' ')|title }}</strong> · {{ entry.at.strftime('%b %-d, %Y %I:%M %p') if entry.at else '' }}
+        {% if entry.summary %}<p>{{ entry.summary }}</p>{% endif %}</li>
+    {% endfor %}</ol>{% else %}<p>No review actions have been recorded yet.</p>{% endif %}
+  </section>
+</main>
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+</body></html>
