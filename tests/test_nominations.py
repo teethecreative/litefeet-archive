@@ -367,13 +367,13 @@ def test_submission_opens_community_standings_not_personal_summary(website, data
 def test_standings_show_all_categories_even_without_nominations(website):
     client = website.test_client()
     before = client.get(PATH + '?view=results').get_data(as_text=True)
-    assert before.count('class="lf9e-standings-category lfv5-category-disclosure"') == 27
+    assert before.count('class="lf9e-standings-category lf9e-grid-card lfv5-category-disclosure"') == 27
     assert before.count('NO NOMINATIONS YET.') == 27
     assert 'id="standings-25"' in before and 'id="standings-27"' in before
     token = identify(client)
     client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One', reason='Active at LiteFeet sessions this season.'))
     after = client.get(PATH + '?view=results').get_data(as_text=True)
-    assert after.count('class="lf9e-standings-category lfv5-category-disclosure"') == 27
+    assert after.count('class="lf9e-standings-category lf9e-grid-card lfv5-category-disclosure"') == 27
     assert after.count('NO NOMINATIONS YET.') == 26
     assert 'Dancer One' in after and '</a></th><td>1</td>' in after
 
@@ -635,3 +635,25 @@ def test_done_on_standings_returns_to_email_entry(website):
     assert b'data-category-id=' not in response.data
     with client.session_transaction() as sess:
         assert 'lf9e_recent_hash' not in sess
+
+
+def test_standings_match_nomination_category_cards_without_changing_nomination_grid(website):
+    client = website.test_client()
+    response = client.get("/awards/2026/standings")
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    assert 'class="lfv-standings-body"' in body
+    assert 'css/dca-standings-grid.css' in body
+    assert 'lf9e-standings-surface' in body
+    assert 'id="standings-official-heading">Official Top 25' in body
+    assert 'lf9e-standings lf9e-standings-grid' in body
+    assert body.count('class="lf9e-standings-category lf9e-grid-card lfv5-category-disclosure"') == 27
+    assert 'id="standings-writeins-heading">Write-in categories' in body
+    assert 'NOMINEE STANDINGS' in body and '>Nominate</a>' in body
+
+    # The original nomination flow and its three-column card presentation remain intact.
+    identify(client)
+    nomination = client.get("/awards/dancers-choice/nominations").get_data(as_text=True)
+    assert 'class="lf9e-category-grid"' in nomination
+    assert 'class="lf9e-grid-card lfv5-category-disclosure"' in nomination
+    assert 'lf9e-standings-surface' not in nomination
