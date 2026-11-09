@@ -199,8 +199,8 @@
       "No matching historical team roster entry recorded for this dancer.";
   }
   function proposedShoeTrickEffect(name,dancer){
-    var trick=name.toLocaleLowerCase(),special=trick==="Shoe Clap"?"Ben 10":
-      trick==="Shoe Foot Clap"?"J Man":null;
+    var trick=name.toLocaleLowerCase(),special=trick==="shoe clap"?"Ben 10":
+      trick==="shoe foot clap"?"J Man":null;
     if(!special)return "";
     var teams=documentedTeams("Dancer::"+dancer);
     var bonus=dancer.toLocaleLowerCase()===special.toLocaleLowerCase()?10:
