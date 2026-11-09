@@ -2,8 +2,9 @@
 from datetime import datetime, timedelta
 import hashlib
 import secrets
+import re
 from flask import g, request, render_template, redirect, abort, jsonify, session, url_for, flash, current_app
-from dca_rebuild.models import LedgerEra, BetaChangelog, VaultArchiveVerification
+from dca_rebuild.models import LedgerEra, BetaChangelog, VaultArchiveVerification, VaultCommunityBattleReport
 from dca_rebuild.public_site_updates import PUBLIC_SITE_UPDATES
 from dca_rebuild.archive_history_guide import load_history_guide
 from dca_rebuild.lock_in import practice_view
@@ -180,8 +181,17 @@ def install_information_architecture(app, ns):
             if item['slug'] != slug and record.get('series')
             and item.get('series') == record['series']
         ][:8]
+        reports = []
+        if record.get('record_type') == 'event':
+            with ns['SessionLocal']() as db:
+                reports = [dict(winner=r.reported_winner, loser=r.reported_loser,
+                                explanation=r.explanation, evidence_url=r.evidence_url)
+                           for r in db.query(VaultCommunityBattleReport).filter_by(
+                               record_slug=slug, moderation_status='approved')
+                           .order_by(VaultCommunityBattleReport.id).all()]
         return render_template('archive_record.html', record=public_record(record),
                                related_records=[public_record(item) for item in related_records],
+                               community_outcome_reports=reports,
                                archive_csrf=session['vault_archive_csrf'],
                                **public_content())
 
@@ -229,6 +239,71 @@ def install_information_architecture(app, ns):
                     created_at=now, updated_at=now))
         flash('Response received for editorial review.', 'archive')
         return redirect(url_for('vault_archive_record', slug=slug) + '#verification', code=303)
+
+    @app.post('/archive/records/<slug>/report-outcome', endpoint='vault_archive_report_outcome')
+    def archive_report_outcome(slug):
+        record = find_record(slug)
+        if not record or record.get('record_type') != 'event':
+            abort(404)
+        token = request.form.get('csrf_token') or ''
+        expected = session.get('vault_archive_csrf') or ''
+        if not expected or not secrets.compare_digest(token, expected):
+            abort(400, 'Invalid token')
+        winner = (request.form.get('winner') or '').strip()
+        loser = (request.form.get('loser') or '').strip()
+        explanation = (request.form.get('explanation') or '').strip()
+        source = (request.form.get('evidence_url') or '').strip()
+        if not (winner or loser):
+            abort(400, 'Provide a reported winner or loser')
+        if len(winner) > 250 or len(loser) > 250 or len(explanation) > 1500:
+            abort(400, 'Report exceeds character limit')
+        if source and (len(source) > 500 or not re.fullmatch(r'https?://[^\s]+', source)):
+            abort(400, 'Invalid source link')
+        if 'vault_outcome_visitor' not in session:
+            session['vault_outcome_visitor'] = secrets.token_hex(24)
+        seed = str(current_app.secret_key) + ':outcome:' + session['vault_outcome_visitor']
+        visitor_hash = hashlib.sha256(seed.encode('utf-8')).hexdigest()
+        with ns['SessionLocal'].begin() as db:
+            prior = db.query(VaultCommunityBattleReport).filter_by(
+                record_slug=slug, visitor_hash=visitor_hash).first()
+            if prior:
+                abort(409, 'You already submitted an outcome report for this event')
+            db.add(VaultCommunityBattleReport(
+                record_slug=slug, visitor_hash=visitor_hash,
+                reported_winner=winner or None, reported_loser=loser or None,
+                explanation=explanation or None, evidence_url=source or None))
+        flash('Community report submitted for review. Official results are unchanged.', 'archive')
+        return redirect(url_for('vault_archive_record', slug=slug) + '#community-outcomes', code=303)
+
+    @app.route('/admin/archive/outcome-reports', methods=['GET', 'POST'],
+               endpoint='vault_archive_admin_outcome_reports')
+    @ns['admin_login_required']
+    def archive_admin_outcome_reports():
+        if request.method == 'POST':
+            token = request.form.get('csrf_token') or ''
+            expected = session.get('dca_moderation_csrf') or ''
+            if not expected or not secrets.compare_digest(token, expected):
+                abort(400)
+            rid = request.form.get('report_id', type=int)
+            status = request.form.get('status')
+            if status not in ('approved', 'rejected', 'pending'):
+                abort(400)
+            with ns['SessionLocal'].begin() as db:
+                report = db.get(VaultCommunityBattleReport, rid)
+                if not report:
+                    abort(404)
+                report.moderation_status = status
+                report.reviewed_at = datetime.utcnow()
+            return redirect(url_for('vault_archive_admin_outcome_reports'), code=303)
+        with ns['SessionLocal']() as db:
+            rows = db.query(VaultCommunityBattleReport).order_by(
+                VaultCommunityBattleReport.created_at.desc()).limit(500).all()
+            reports = [dict(id=r.id, slug=r.record_slug, winner=r.reported_winner,
+                            loser=r.reported_loser, explanation=r.explanation,
+                            evidence_url=r.evidence_url, status=r.moderation_status)
+                       for r in rows]
+        return render_template('admin_archive_outcome_reports.html', reports=reports,
+                               csrf_token=session.get('dca_moderation_csrf', ''))
 
     @app.get('/admin/archive/research-review', endpoint='vault_archive_admin_review')
     @ns['admin_login_required']
