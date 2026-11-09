@@ -79,8 +79,36 @@ def batch_catalog():
     return tuple(items)
 
 
+def yaffi_catalog():
+    """Sourced 2026 Yaffi Tune releases; separate from the immutable upload batch."""
+    rows = _read("music_yaffi_2026.csv")
+    records = []
+    for row in rows:
+        kind = row["kind"]
+        records.append(dict(
+            catalog_id=row["id"], kind=kind,
+            title=row["title"], artist_or_creator=row["artist"],
+            producer_credit="", release_date=row["release_date"],
+            release_year=row["release_date"][:4], duration=row["duration"],
+            description="", project_title=row["project_title"],
+            project_id=row["project_id"], track_number=row["track_number"].strip(),
+            record_type="Project" if kind == "project" else "Track",
+            platform=row["platform"], url=row["source_url"],
+            source_profile_url="", playable_url="",
+            date_verification=row["date_verification"],
+            metadata_notes=row["metadata_notes"],
+            needs_exact_track_url=row["needs_exact_track_url"] == "True",
+            source_screenshot="Research verified November 9, 2026",
+        ))
+    return tuple(records)
+
+
+def all_music_catalog():
+    return batch_catalog() + yaffi_catalog()
+
+
 def batch_record(kind, catalog_id):
-    return next((row for row in batch_catalog()
+    return next((row for row in all_music_catalog()
                  if row["kind"] == kind and row["catalog_id"] == catalog_id), None)
 
 
@@ -97,7 +125,7 @@ def combined_releases(existing, format_date, format_duration):
         row["record_href"] = "/litefeet-music/release/" + str(row["id"])
         row["row_type"] = "Existing"
         output.append(row)
-    for record in batch_catalog():
+    for record in all_music_catalog():
         artist = record.get("artist_or_creator") or ""
         if (_key(record["title"]), _key(artist)) in existing_keys:
             continue

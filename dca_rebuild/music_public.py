@@ -8,7 +8,7 @@ from datetime import datetime, date
 import re
 from sqlalchemy import inspect, text
 from dca_rebuild.archive_catalog import all_records, find_record
-from dca_rebuild.music_batch_catalog import combined_releases, batch_record, batch_catalog
+from dca_rebuild.music_batch_catalog import combined_releases, batch_record, all_music_catalog
 from dca_rebuild.music_presentation import with_release_display, duplicate_release_candidates
 
 def full_date(value):
@@ -101,7 +101,7 @@ def install_music_public(app, engine):
         if item is None:
             abort(404)
         tracks = ([dict(row, record_href="/litefeet-music/catalog/track/" + row["catalog_id"])
-                   for row in batch_catalog()
+                   for row in all_music_catalog()
                    if row["kind"] == "track" and row.get("project_id") == catalog_id]
                   if kind == "project" else [])
         tracks.sort(key=lambda row: int(row.get("track_number") or 999))
