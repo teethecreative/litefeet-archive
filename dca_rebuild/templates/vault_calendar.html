@@ -33,7 +33,10 @@
       <td{% if day and day.today %} class="is-today"{% endif %}>
       {% if day %}
       <a class="lfv-calendar-day-link{% if selected_day and selected_day.isoformat() == day.iso %} is-selected{% endif %}" href="{{ url_for('legacy_calendar', date=day.iso, day=day.iso) }}#calendar-list-heading" {% if selected_day and selected_day.isoformat() == day.iso %}aria-current="date"{% endif %}>
-        <span>{{ day.number }}</span>{% if day.events %}<strong>{{ day.events|length }} event{% if day.events|length != 1 %}s{% endif %}</strong>{% endif %}
+        <span class="lfv-calendar-date-number">{{ day.number }}</span>
+        {% if day.category_counts %}<span class="lfv-calendar-category-counts">
+          {% for count in day.category_counts %}<span class="lfv-calendar-category-count">{{ count.count }} {{ count.label }}</span>{% endfor %}
+        </span>{% endif %}
       </a>
       {% endif %}
       </td>
@@ -51,11 +54,11 @@
         <h3><time datetime="{{ day.iso }}">{{ day.events[0].display_date }}</time></h3>
         {% for event in day.events %}
         <article class="lfv-calendar-full-event">
-          <div>
+          <div class="lfv-calendar-event-copy">
             <h4><a href="{{ event.href }}">{{ event.title }}</a></h4>
             {% if event.description %}<p>{{ event.description }}</p>{% endif %}
           </div>
-          <span>{{ event.status }}</span>
+          <span class="lfv-calendar-event-status">{{ event.status }}</span>
         </article>
         {% endfor %}
       </section>
