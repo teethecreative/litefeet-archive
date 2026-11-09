@@ -39,17 +39,22 @@ def test_founders_letter_is_public_and_preserves_mission(website):
     response = client.get('/about')
     assert response.status_code == 200
     html = response.get_data(as_text=True)
-    assert 'id="letter"' in html
-    assert 'id="letter"' in html
-    assert 'href="/about/letter"' in html
-    letter = client.get('/about/letter').get_data(as_text=True)
-    assert 'DEAR LITEFEET,' in letter
-    assert 'LiteFeet is more than dance.' in letter
-    assert "Because LiteFeet's history belongs to the people who made it." in letter
-    assert 'Founder, The LiteFeet Vault' in letter
-    assert 'id="mission"' in html
-    assert 'id="how-it-works"' in html
-    assert 'lfv-identity-phase1.css' in html
+    section_ids = ['letter', 'mission', 'about', 'how-it-works', 'contact']
+    positions = [html.index(f'id="{key}"') for key in section_ids]
+    assert positions == sorted(positions)
+    for title in ["Founder's Letter", 'Our Mission', 'About', 'How It Works', 'Contact']:
+        assert title in html
+    assert 'LiteFeet is more than dance.' in html
+    assert "Because LiteFeet's history belongs to the people who made it." in html
+    assert 'Founder, The LiteFeet Vault' in html
+    assert 'lfv-about-one-page.css' in html
+    for old, anchor in [('letter','letter'), ('mission','mission'), ('archive','about'),
+                        ('how-it-works','how-it-works'), ('contact','contact')]:
+        redirect_response = client.get('/about/' + old)
+        assert redirect_response.status_code == 301
+        assert redirect_response.headers['Location'] == '/about#' + anchor
+    assert 'href="/about/letter"' not in html
+
 
 
 def test_homepage_news_is_real_public_site_releases_not_changelog(website, database):

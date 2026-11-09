@@ -1,0 +1,38 @@
+/* Unified About Overview: an editorial scroll page, not five separate pages. */
+html.lfv-sitewide #vault-section-about { width:min(100% - 36px, 1120px); margin-inline:auto; }
+html.lfv-sitewide #vault-section-about .lfv-about-index-header { padding-bottom:clamp(24px,4vw,48px)!important; }
+html.lfv-sitewide #vault-section-about .lfv-about-unified { max-width:920px; }
+html.lfv-sitewide #vault-section-about .lfv-about-block {
+  scroll-margin-top:100px;
+  border-top:1px solid var(--lfv-line,#d9dfe6);
+  padding:clamp(32px,5vw,62px) 0;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-block:first-child { border-top:2px solid var(--lfv-gold,#c9a52b); }
+html.lfv-sitewide #vault-section-about .lfv-about-block .vault-kicker { margin-bottom:10px!important; }
+html.lfv-sitewide #vault-section-about .lfv-about-block h2 {
+  font-size:clamp(1.6rem,3vw,2.55rem)!important;
+  line-height:1.15;margin:0 0 12px!important;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-block h3 {
+  font-size:clamp(1.03rem,1.8vw,1.35rem)!important;
+  line-height:1.35;margin:0 0 18px!important;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-copy { max-width:760px; }
+html.lfv-sitewide #vault-section-about .lfv-about-copy p,
+html.lfv-sitewide #vault-section-about .lfv-about-copy li {
+  font-size:clamp(.95rem,1.25vw,1.075rem)!important;
+  line-height:1.72!important;
+  margin:0 0 1.05em!important;
+  text-transform:none!important;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-copy ol { padding-left:24px;margin:0 0 20px; }
+html.lfv-sitewide #vault-section-about .lfv-about-copy a {
+  color:var(--lfv-ink,#091b36)!important;
+  text-decoration:underline!important;
+  text-decoration-color:var(--lfv-gold,#c9a52b)!important;
+  text-underline-offset:4px;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-copy a:hover { text-decoration-thickness:2px!important; }
+@media(max-width:640px) {
+ html.lfv-sitewide #vault-section-about .lfv-about-block { scroll-margin-top:78px; }
+}

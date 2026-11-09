@@ -64,11 +64,7 @@ def install_information_architecture(app, ns):
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
                        dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
                        dict(label='HypeItUpTV Awards', href='/awards/hypeitup')],
-            'about': [dict(label="Founder's Letter", href='/about/letter'),
-                      dict(label='Our Mission', href='/about/mission'),
-                      dict(label='About the Archive', href='/about/archive'),
-                      dict(label='How It Works', href='/about/how-it-works'),
-                      dict(label='Contact', href='/about/contact')],
+            'about': [],
         }
         path = request.path
         active = 'home' if path == '/' else (
@@ -361,16 +357,16 @@ def install_information_architecture(app, ns):
 
     app.view_functions['awards_home'] = lambda: section_page('awards')
     app.view_functions['legacy_about'] = lambda: section_page('about')
-    for about_path, page, label in (
-        ('letter', 'letter', "FOUNDER'S LETTER"),
-        ('mission', 'mission', 'OUR MISSION'),
-        ('archive', 'archive', 'ABOUT THE ARCHIVE'),
-        ('how-it-works', 'how_it_works', 'HOW IT WORKS'),
-        ('contact', 'contact', 'CONTACT'),
+    # Old About deep links remain usable, but the content now lives on /about.
+    for about_path, page, anchor in (
+        ('letter', 'letter', 'letter'),
+        ('mission', 'mission', 'mission'),
+        ('archive', 'archive', 'about'),
+        ('how-it-works', 'how_it_works', 'how-it-works'),
+        ('contact', 'contact', 'contact'),
     ):
-        def about_view(page=page, label=label):
-            return render_template('about_' + page.replace('_', '-') + '.html',
-                                   page_title=label, **public_content())
+        def about_view(anchor=anchor):
+            return redirect('/about#' + anchor, code=301)
         app.add_url_rule('/about/' + about_path, endpoint='vault_about_' + page,
                          view_func=about_view, methods=['GET'])
 
