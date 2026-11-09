@@ -1,13 +1,13 @@
 <header class="lfv-unified-hero">
   <p class="vault-kicker">THE ARCHIVE / CULTURAL HISTORY</p>
   <h1>{% if archive_overview | default(false) %}THE ARCHIVE TIMELINE{% else %}HISTORY &amp; TIMELINE{% endif %}</h1>
-  <p>ONE CHRONOLOGICAL RECORD OF LITEFEET, GET LITE, THE HARLEM SHAKE, DANCERS, CREWS, MOVES, MUSIC AND EVENTS. EXPAND RESEARCH TO SEE THE EVIDENCE.</p>
+  <p>ONE CHRONOLOGICAL RECORD OF LITEFEET, GET LITE, THE HARLEM SHAKE, DANCERS, TEAMS, MOVES AND EVENTS. EXPAND RESEARCH TO SEE THE EVIDENCE.</p>
 </header>
 <nav class="lfv-archive-subnav" aria-label="ARCHIVE NAVIGATION">
   <a href="{{ url_for('vault_archive') }}" {% if archive_overview | default(false) %}aria-current="page"{% endif %}>THE ARCHIVE</a>
   <a href="{{ url_for('vault_archive', view='people', collection='people') }}">PEOPLE &amp; CREWS</a>
   <a href="{{ url_for('vault_timeline') }}" {% if not archive_overview | default(false) %}aria-current="page"{% endif %}>HISTORY &amp; TIMELINE</a>
-  <a href="{{ url_for('dca_2023_home') }}">2023 AWARDS</a>
+  <a href="{{ url_for('dca_2023_home') }}">AWARDS</a>
 </nav>
 <section class="lfv-unified-timeline" id="timeline" data-unified-timeline>
   <div class="lfv-archive-list-head"><h2>THE CULTURAL RECORD</h2><span data-timeline-count>{{ archive_pagination.count }} ENTRIES</span></div>
@@ -16,7 +16,7 @@
     <div>
       <input id="timeline-search" type="search" name="q" maxlength="120" placeholder="SEARCH PEOPLE, HISTORY, EVENTS, MOVES…" value="{{ request.args.get('q','') }}">
       <select name="collection" aria-label="FILTER THE TIMELINE">
-        {% for key,label in [('all','ALL RECORDS'),('history','HISTORY & RESEARCH'),('events','EVENTS & BATTLES'),('people','PEOPLE & CREWS'),('moves','MOVES'),('music','MUSIC'),('awards','AWARDS')] %}
+        {% for key,label in [('all','ALL RECORDS'),('history','HISTORY & RESEARCH'),('events','EVENTS & BATTLES'),('people','PEOPLE & CREWS'),('moves','MOVES'),('awards','AWARDS')] %}
         <option value="{{ key }}" {% if archive_pagination.collection == key %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
