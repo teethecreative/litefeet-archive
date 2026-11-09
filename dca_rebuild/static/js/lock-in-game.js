@@ -88,11 +88,14 @@
         '<button type="button" data-move-remove="'+escape(id)+'" aria-label="Remove '+escape(card.name)+'">×</button>'+
         '</span></div>';
     }).join(""):'<p class="lock-empty-sequence">Select a move card to begin.</p>';
+    // Display each move with its documented family, while preserving distinct
+    // move cards and allowing combinations across families.
     el("#lock-response-moves").innerHTML=practiceScenario.moves.map(function(card){
       var chosen=picked.includes(card.id);
+      var family=card.move_family||"Other moves";
       return '<button type="button" class="lock-game-card lock-available-card" data-response-id="'+escape(card.id)+
         '" aria-pressed="'+String(chosen)+'" '+(!chosen&&picked.length>=3?'disabled':'')+'>'+
-        '<span class="lock-card-category">MOVE</span><strong>'+escape(card.name)+
+        '<span class="lock-card-category">'+escape(family)+'</span><strong>'+escape(card.name)+
         '</strong><span class="lock-card-hint">'+(chosen?'Selected · tap to remove':'Select move')+'</span></button>';
     }).join("");
     el("#lock-score-response").disabled=picked.length===0;
@@ -109,7 +112,19 @@
       return;
     }
     var opponent=randomOne(moves);
-    var responses=shuffle(moves.filter(function(card){return card.id!==opponent.id;})).slice(0,8);
+    var available=shuffle(moves.filter(function(card){return card.id!==opponent.id;}));
+    // Mix documented families into the hand rather than selecting eight
+    // unrelated names that might omit footwork, wops and rev ups entirely.
+    var families=["Rev Ups","Wops","Footwork"];
+    var responses=[];
+    families.forEach(function(family){
+      var card=available.find(function(item){return item.move_family===family;});
+      if(card)responses.push(card);
+    });
+    available.forEach(function(card){
+      if(responses.length<8&&!responses.some(function(item){return item.id===card.id;}))responses.push(card);
+    });
+    responses=shuffle(responses);
     practiceScenario={opponent:opponent,song:randomOne(songs),
       arena:randomOne(arenas),moves:responses,selected:[]};
     el("#lock-first-situation").hidden=true;
