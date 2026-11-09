@@ -28,3 +28,22 @@
 #lock-workbench #lock-battle{border-top:1px solid #60728b;margin-top:1.25rem;padding-top:1rem}
 #lock-workbench #lock-validation{min-height:1.4em}
 @media(max-width:550px){#lock-workbench .lock-builder>div{padding:.8rem}}
+
+/* Smaller sample decks and searchable card builder */
+#vault-section-lock-in .lock-deck-examples{padding-block:1.35rem}
+#vault-section-lock-in .lock-decks{grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem}
+#vault-section-lock-in .lock-sample-card{padding:1rem;border-top-width:.2rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem}
+#vault-section-lock-in .lock-sample-card h3{margin:0 0 .2rem;font-size:1.05rem}
+#vault-section-lock-in .lock-sample-card p{margin:0;color:inherit}
+#vault-section-lock-in .lock-sample-card details{margin:0;width:100%;order:3}
+#vault-section-lock-in .lock-use-sample{background:#c9a52b;color:#0b2342;font-weight:700;border:0;padding:.55rem .85rem;border-radius:.4rem;cursor:pointer}
+#lock-workbench #lock-search{width:100%;min-width:0;margin:.25rem 0 .5rem;padding:.72rem;border:1px solid #8399b5;border-radius:.4rem;background:#172944;color:#fff;font:inherit}
+#lock-workbench #lock-catalog{display:block;width:100%;min-height:9rem;margin:.25rem 0 .5rem;padding:.4rem;background:#172944;color:#fff}
+#lock-workbench #lock-catalog option{padding:.4rem .55rem;white-space:normal}
+#lock-workbench #lock-search-feedback{font-size:.9rem;min-height:1.2em}
+#lock-workbench #lock-request-panel{border:1px solid #60728b;border-radius:.5rem;margin:1rem 0;padding:1rem}
+#lock-workbench #lock-request-panel[hidden],#lock-workbench .lock-request-fields[hidden]{display:none}
+#lock-workbench #lock-request-panel input,#lock-workbench #lock-request-panel textarea{box-sizing:border-box;width:100%;background:#172944;color:#fff;border:1px solid #8399b5;border-radius:.35rem;padding:.65rem;font:inherit}
+#lock-workbench #lock-request-panel label{display:block;font-weight:500}
+#lock-workbench #lock-request-panel [type=submit]{margin-top:.6rem}
+@media(max-width:620px){#vault-section-lock-in .lock-decks{grid-template-columns:1fr}}

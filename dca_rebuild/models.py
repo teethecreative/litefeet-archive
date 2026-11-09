@@ -878,3 +878,17 @@ class VaultGatheringSubmission(Base):
     status = Column(String(20), nullable=False, default="pending", index=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     reviewed_at = Column(DateTime, nullable=True)
+
+
+class LockInCardRequest(Base):
+    """Unpublished suggestions; not part of the playable card catalog until reviewed."""
+    __tablename__ = "vault_lock_in_card_requests"
+    id = Column(Integer, primary_key=True)
+    card_type = Column(String(32), nullable=False, index=True)
+    card_name = Column(String(160), nullable=False)
+    contact_email = Column(String(255), nullable=False)
+    details_json = Column(Text, nullable=False)
+    source_url = Column(String(800), nullable=True)
+    status = Column(String(20), nullable=False, default="pending", index=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    reviewed_at = Column(DateTime, nullable=True)

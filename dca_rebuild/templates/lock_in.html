@@ -2,17 +2,17 @@
   <p class="vault-kicker">The LiteFeet Card Battle Game</p>
   <h1>Lock In</h1>
   <p>Build a round the way you’d build one on the floor. Pick your dancer, find the right track, and put your moves together before you call “locked in.” Tee’s card game brings LiteFeet dancers, producers, teams, and battle spaces to the table.</p>
-  <nav aria-label="Game guide"><a href="#rules">How to play</a> · <a href="#decks">Sample decks</a> · <a href="#practice">Play a round</a> · <a href="#join">Get involved</a></nav>
+  <nav aria-label="Game guide"><a href="#rules">How to play</a> · <a href="#decks">Build a deck</a> · <a href="#lock-workbench">Test the game</a> · <a href="#join">Get involved</a></nav>
 </header>
 <section id="rules">
   <h2>How to play</h2>
-  <p>Adapted directly from the <em>Litefeet Card Planning — Official Rule Book Sample</em>. Blank Battle Point thresholds and unfinished team-battle steps remain under development.</p>
+  
   <h3>How to battle</h3>
-  <p>A game is called a battle. Battles are 1v1 (dancer versus dancer), 2v2 (tag team), or 3v3 (team battle). The planning draft describes a battle winner by most rounds, a not-yet-specified BP total, or a not-yet-specified number of TKOs.</p>
+  <p>A game is called a battle. Battles are 1v1 (dancer versus dancer), 2v2 (tag team), or 3v3 (team battle). Win by taking the most rounds, reaching the required Battle Points (BP), or landing enough TKOs.</p>
   <h3>Winning a round</h3>
-  <p>The rulebook uses an average of 100 Battle Points (BP) for a round. The player with the most points wins. It also lists a TKO, an opponent unable to draw, or an opponent producing a tweak as potential win conditions. A player below 50 BP automatically loses under the draft rule.</p>
+  <p>A round averages 100 Battle Points (BP). The player with the most points wins. It also lists a TKO, an opponent unable to draw, or an opponent producing a tweak as potential win conditions. Dropping below 50 BP means an automatic loss.</p>
   <h3>Winning a battle</h3>
-  <p>1v1 and 2v2 are drafted as two-round formats; 3v3 as three rounds. Final BP targets and the exact TKO requirement are blank in the rulebook. Running out of playable cards is also listed as a loss condition. The interactive prototype does not invent missing thresholds.</p>
+  <p>1v1 and 2v2 play two rounds; 3v3 plays three. A battle also ends if your opponent has no cards left to play. Final BP and TKO targets will be announced.</p>
   <h3>Preparing to battle</h3>
   <ol>
     <li>Greet your opponent, shuffle and cut both decks; you may also shuffle and cut your opponent's deck.</li>
@@ -24,69 +24,115 @@
   <h3>1v1 round structure</h3>
   <ol>
     <li>Choose a dancer and song card and put them in their zones. Use an arena card, with producer effects when available.</li>
-    <li>Draw a seven-card hand. The draft includes move, spell/upgrade, and frib cards.</li>
+    <li>Draw seven cards. Your hand can contain moves, upgrades and fribs.</li>
     <li>Phase 1: setup moves, such as Rev Up, Bad One, or Tone Whop.</li>
     <li>Phase 2: place up to three move cards face down.</li>
     <li>Phase 3: announce “locked in” before the other player starts. A called-out missed announcement costs 10 BP.</li>
     <li>Apply trick, arena, song, spell and frib effects and compare results; use a Round of Fire if tied, pending final tie rules.</li>
   </ol>
   <h3>2v2 and 3v3</h3>
-  <p>The draft identifies 2v2 card swaps and 3v3 team play, but their complete sequence is not yet written. These formats are shown as rulebook previews, not falsely playable as finalized battles.</p>
+  <p>Tag-team and team-battle modes are coming soon.</p>
   <h3>Card types</h3>
-  <p>Use 25–50 total cards from dancers, arenas, producers, songs, moves, tricks, upgrades/spells, fribs and team support. The card builder below enforces total-card and copy limits. The individual card-effect values that are unfinished in the document remain unscored.</p>
+  <p>Build a 25–50 card deck with dancers, arenas, songs, moves, tricks, upgrades, fribs and other support cards. Card limits apply when you save or play.</p>
 </section>
-<section id="decks">
-  <h2>Sample decks</h2>
-  <p>Each demonstration deck contains 25 total cards across the rulebook's card types. The combinations below are illustrative, not final deck-building requirements.</p>
+<section id="decks" class="lock-deck-examples">
+  <h2>Build A Deck &amp; Test The Game</h2>
   <div class="lock-decks">
-  {% for sample in sample_decks %}
-    <article>
-      <h3>{{ sample.name }}</h3>
-      <p>{{ sample.total }} total cards · mixed card types</p>
-      <details><summary>View all {{ sample.total }} cards</summary>
+    {% for sample in sample_decks %}
+    <article class="lock-sample-card">
+      <div><h3>{{ sample.name }}</h3><p>{{ sample.total }} cards</p></div>
+      <details><summary>View cards</summary>
         {% for group in sample.categories %}
-        <h4>{{ group.type }} cards ({{ group.count }})</h4>
+        <h4>{{ group.type }} ({{ group.count }})</h4>
         <ul>{% for card in group.cards %}<li>{{ card }}</li>{% endfor %}</ul>
         {% endfor %}
       </details>
-      <a href="#practice">Try the move-set practice drill</a>
+      <button type="button" data-deck-sample="{{ loop.index0 }}" class="lock-use-sample">Use this deck</button>
     </article>
-  {% endfor %}</div>
+    {% endfor %}
+  </div>
 </section>
 <section id="lock-workbench" aria-labelledby="lock-builder-title">
-  <h2 id="lock-builder-title">Build a deck &amp; play a battle</h2>
-  <p>Use the mixed-card examples to build a 25–50 card deck and try the documented 1v1 round sequence. Card effects without finalized BP values are adjudicated manually. The 2v2 and 3v3 procedures will become playable after their draft rules are completed.</p>
+  <h2 id="lock-builder-title">Your Deck</h2>
+  <p>Choose your cards, build a 25–50 card deck, then try a 1v1 battle.</p>
   <div class="lock-builder">
     <div>
-      <h3>Deck builder</h3>
-      <label>Starting deck
-        <select id="lock-sample"></select>
-      </label>
-      <p><strong><span id="lock-count">25</span> cards</strong></p>
+      <h3>Build your deck</h3>
+      <label for="lock-sample">Start with</label>
+      <select id="lock-sample"></select>
+      <p><strong><span id="lock-count">25</span> / 50 cards</strong></p>
       <p id="lock-categories"></p>
-      <label>Card type <select id="lock-filter"></select></label>
-      <label>Available card <select id="lock-catalog"></select></label>
-      <button type="button" id="lock-add">Add card</button>
-      <button type="button" id="lock-save">Save valid deck on this device</button>
-      <button type="button" id="lock-load">Load saved deck</button>
+      <label for="lock-filter">Card type</label><select id="lock-filter"></select>
+      <label for="lock-search">Find a card</label>
+      <input id="lock-search" type="search" autocomplete="off" placeholder="Search dancers, moves, songs, arenas…" aria-controls="lock-catalog" />
+      <label for="lock-catalog">Matching cards</label><select id="lock-catalog" size="5" aria-label="Matching cards"></select>
+      <button type="button" id="lock-add">Add to deck</button>
+      <button type="button" id="lock-request-open" aria-expanded="false" aria-controls="lock-request-panel">Request a card</button>
+      <p id="lock-search-feedback" role="status" aria-live="polite"></p>
+      <div id="lock-request-panel" hidden>
+        <h3>Request a card</h3>
+        <p>Can't find what you're looking for? Suggest a card for review.</p>
+        <form id="lock-request-form" method="post" action="{{ url_for('vault_lock_in_card_request') }}">
+          <input type="hidden" name="csrf_token" value="{{ lock_card_csrf }}">
+          <label for="lock-request-type">Card type</label>
+          <select name="card_type" id="lock-request-type" required>
+            {% for type in ['Dancer','Song','Arena','Move','Trick','Upgrade','Frib'] %}<option value="{{ type }}">{{ type }}</option>{% endfor %}
+          </select>
+          <label for="lock-request-name">Card name</label>
+          <input name="card_name" id="lock-request-name" required maxlength="160" placeholder="Name of the card">
+          <div class="lock-request-fields" data-request-type="Dancer">
+            <label>LiteFeet name / aliases <input name="aliases" maxlength="240"></label>
+            <label>Team and borough <input name="team_location" maxlength="240"></label>
+            <label>Five main stats <textarea name="stats" maxlength="500" rows="2" placeholder="Ankles, combos, musicality…"></textarea></label>
+            <label>Signature move or ability <textarea name="signature" maxlength="500" rows="2"></textarea></label>
+            <label>Permission to use name, likeness and dancer details <select name="permission"><option value="not-confirmed">Not confirmed</option><option value="yes">Yes, I am the dancer and agree</option><option value="request-first">Ask me before using</option></select></label>
+          </div>
+          <div class="lock-request-fields" data-request-type="Song" hidden>
+            <label>Producer <input name="producer" maxlength="160"></label>
+            <label>Release year (if known) <input name="release_year" type="number" min="1970" max="2100"></label>
+            <label>Song era or level <input name="era_level" maxlength="160" placeholder="Era · Common, Rare, Legendary"></label>
+          </div>
+          <div class="lock-request-fields" data-request-type="Arena" hidden>
+            <label>Location / borough <input name="arena_location" maxlength="200"></label>
+            <label>Arena type <input name="arena_type" maxlength="120" placeholder="Park, community center, venue…"></label>
+            <label>History of this space <textarea name="arena_history" maxlength="700" rows="2"></textarea></label>
+          </div>
+          <div class="lock-request-fields" data-request-type="Move" hidden>
+            <label>Move style or setup <input name="move_style" maxlength="160" placeholder="Footwork, combo, setup…"></label>
+            <label>Who or what can use this move? <input name="move_connection" maxlength="280"></label>
+          </div>
+          <div class="lock-request-fields" data-request-type="Trick" hidden>
+            <label>Trick style or variation <input name="trick_style" maxlength="160" placeholder="Shoe, hat, shirt…"></label>
+            <label>Special conditions <input name="trick_connection" maxlength="280"></label>
+          </div>
+          <label for="lock-request-connection">Gameplay idea / connections</label>
+          <textarea name="gameplay" id="lock-request-connection" maxlength="1000" rows="3" placeholder="How should the card work? Who or what does it connect with?"></textarea>
+          <label for="lock-request-source">Source or reference (optional)</label><input name="source" id="lock-request-source" type="url" maxlength="800" placeholder="https://…">
+          <label for="lock-request-contact">Email for follow-up</label><input name="email" id="lock-request-contact" type="email" maxlength="255" required>
+          <p>Requests are reviewed before cards appear in the game.</p>
+          <button type="submit">Submit card request</button>
+          <p id="lock-request-feedback" role="status"></p>
+        </form>
+      </div>
+      <button type="button" id="lock-save">Save deck</button><button type="button" id="lock-load">Load deck</button>
       <p id="lock-save-status" role="status"></p>
       <p id="lock-validation" role="status"></p>
       <ul id="lock-deck-list" class="lock-card-list"></ul>
     </div>
     <div>
-      <h3>Battle table</h3>
-      <p>1v1: two rounds in the draft rulebook. Choose arena, dancer and song; draw a seven-card hand, build your move set, announce Lock In, then record adjudicated BP.</p>
-      <button id="lock-start" type="button">Start 1v1 battle</button>
-      <p>2v2 and 3v3 are documented draft formats but not yet interactive.</p>
+      <h3>Test the game</h3>
+      <p>Pick your dancer, song and arena. Draw your hand, choose your moves, and lock in.</p>
+      <button id="lock-start" type="button">Start 1v1</button>
       <div id="lock-battle" hidden aria-live="polite"></div>
     </div>
   </div>
   <script id="lock-samples" type="application/json">{{ sample_decks|tojson }}</script>
+  <script id="lock-card-catalog" type="application/json">{{ card_catalog|tojson }}</script>
   <script id="lock-restrictions" type="application/json">{{ card_restrictions|tojson }}</script>
 </section>
 <section id="practice">
   <h2>Practice the move-set phase</h2>
-  <p>This is a short move-combination drill, not a full Lock In battle. It does not yet simulate drawing from a mixed deck, playing arena and song cards, or applying upgrade/frib effects.</p>
+  <p>Choose a challenge and put together your three-move set.</p>
   <form action="{{ url_for('vault_lock_in') }}#practice" method="get">
     <label for="round-picker">Choose a move-set challenge</label>
     <select name="round" id="round-picker">
