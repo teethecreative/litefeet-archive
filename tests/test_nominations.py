@@ -445,3 +445,46 @@ def test_old_nominee_can_receive_moderated_reason_without_nomination(website, da
     with factory() as db:
         assert not nominees_missing_reasons(db, db.get(
             __import__('dca_rebuild.models', fromlist=['DCAEdition']).DCAEdition, edition_id))
+
+
+def test_all_existing_writein_categories_show_support_actions(website):
+    client = website.test_client()
+    html = client.get('/awards/dancers-choice/write-ins').get_data(as_text=True)
+    assert html.count('SUPPORT CATEGORY') >= 2
+    assert 'OPEN FOR SUPPORT' in html
+    assert 'NOMINATIONS CLOSED' not in html
+
+
+def test_unstaged_historical_writein_can_be_supported_after_email(website, database):
+    from dca_rebuild.models import DCAEdition, DCACategory
+    _, factory, _ = database
+    with factory.begin() as db:
+        previous = DCAEdition(year=2023, title='Previous awards', phase='closed')
+        db.add(previous); db.flush()
+        db.add(DCACategory(edition_id=previous.id, name='Best Workshop',
+                           normalized_name='best workshop', source_type='returning',
+                           status='official'))
+    client = website.test_client()
+    page = client.get('/awards/dancers-choice/write-ins')
+    html = page.get_data(as_text=True)
+    assert 'Best Workshop' in html
+    assert 'SUPPORT CATEGORY' in html
+    with client.session_transaction() as sess:
+        token = sess['lf9e_writeins_csrf']
+    result = client.post('/awards/dancers-choice/write-ins/activate',
+                         data=dict(csrf_token=token, category='Best Workshop'))
+    assert result.status_code == 302
+    import urllib.parse
+    loc = urllib.parse.urlparse(result.headers['Location'])
+    assert loc.path == PATH and 'category=' in loc.query
+    landing = client.get(result.headers['Location']).get_data(as_text=True)
+    assert 'name="return_category"' in landing
+    token = identify(client)
+    with client.session_transaction() as sess:
+        target = db_id = None
+    from urllib.parse import parse_qs
+    target = parse_qs(loc.query)['category'][0]
+    continuation = client.post(PATH, data=dict(action='identify', email='user2@example.com',
+                                                csrf_token=token, return_category=target))
+    assert continuation.status_code == 302
+    assert 'category=' + target in continuation.headers['Location']
