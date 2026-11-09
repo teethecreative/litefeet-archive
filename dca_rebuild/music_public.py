@@ -22,12 +22,12 @@ def full_date(value):
             return f"{value.strftime('%B')} {value.day}, {value.year}"
         except ValueError:
             pass
-    if re.fullmatch(r"\\d{4}-\\d{2}", raw):
+    if re.fullmatch(r"\d{4}-\d{2}", raw):
         try:
             return datetime.strptime(raw, "%Y-%m").strftime("%B %Y")
         except ValueError:
             pass
-    if re.fullmatch(r"\\d{4}", raw):
+    if re.fullmatch(r"\d{4}", raw):
         return raw
     return "Date unknown"
 
@@ -43,7 +43,7 @@ def music_duration(item):
             return "—"
         return f"{total // 60}:{total % 60:02d}"
     raw = str(value).strip()
-    if re.fullmatch(r"\\d{1,2}:\\d{2}(?::\\d{2})?", raw):
+    if re.fullmatch(r"\d{1,2}:\d{2}(?::\d{2})?", raw):
         return raw
     return "—"
 
