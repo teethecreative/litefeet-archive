@@ -31,7 +31,7 @@ def test_existing_published_rows_are_kept_and_batch_is_not_duplicated():
          "artist_or_creator": "Older artist", "release_date": "2020-05-13", "url": "https://example.org/b"},
     ]
     output = combined_releases(existing, full_date, music_duration)
-    assert len(output) == 88
+    assert len(output) == 95  # 87 original catalog rows + seven new Yaffi records, one duplicate suppressed
     assert sum(row["title"] == "CRAZY CEE x BIG SHOW" for row in output) == 1
     assert any(row.get("id") == 124 and row["record_href"].endswith("/124") for row in output)
     assert any(row["catalog_id"] == "music-b1-001" for row in batch_catalog())
