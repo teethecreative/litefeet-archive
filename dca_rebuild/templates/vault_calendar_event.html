@@ -29,13 +29,12 @@
 <dl class="lfv-calendar-detail-data">
 <div><dt>Date</dt><dd>{{ event.date_range or event.display_date }}</dd></div>
 {% if event.event_time %}<div><dt>Time</dt><dd>{{ event.event_time }}{% if event.start_time %} <small>({{ event.timezone or 'America/New_York' }})</small>{% endif %}</dd></div>{% endif %}
-{% if event.recurrence %}<div><dt>Schedule</dt><dd>{{ event.recurrence }}</dd></div>{% endif %}
 {% if event.virtual %}
 <div><dt>Access</dt><dd>Virtual event</dd></div>
 {% if event.address %}<div class="lfv-event-detail-wide"><dt>How to join</dt><dd>{{ event.address }}</dd></div>{% endif %}
 {% else %}
 {% if event.venue %}<div><dt>Venue</dt><dd>{{ event.venue }}</dd></div>{% endif %}
-{% if event.address %}<div class="lfv-event-detail-wide"><dt>Address</dt><dd>{{ event.address }}{% if event.city and event.city|lower not in event.address|lower %}, {{ event.city }}{% endif %}</dd></div>
+{% if event.address %}<div class="lfv-event-detail-wide"><dt>Address</dt><dd>{{ event.address }}{% if event.city and (event.city|lower) not in (event.address|lower) %}, {{ event.city }}{% endif %}</dd></div>
 {% elif event.city %}<div><dt>Area</dt><dd>{{ event.city }}</dd></div>{% endif %}
 {% endif %}
 {% if event.location_note %}<div class="lfv-event-detail-wide"><dt>Location note</dt><dd>{{ event.location_note }}</dd></div>{% endif %}
@@ -45,10 +44,10 @@
 {% if event.description %}<div class="lfv-calendar-detail-description"><h2>About this event</h2><p>{{ event.description }}</p></div>{% endif %}
 {% if event.notice %}<p class="lfv-calendar-detail-note">{{ event.notice }}</p>{% endif %}
 <div class="lfv-calendar-detail-actions">
-<a class="lfv-calendar-submit lfv-primary-cta" href="{{ calendar_actions.google }}" target="_blank" rel="noopener noreferrer">Add to Google Calendar</a>
-<a class="lfv-event-secondary-action" href="{{ url_for('vault_calendar_event_ics',event_date=event.date,slug=event.href.rsplit('/',1)[-1]) }}">Apple / Outlook calendar</a>
+{% if event.start_time and event.end_time %}<a class="lfv-calendar-submit lfv-primary-cta" href="{{ calendar_actions.google }}" target="_blank" rel="noopener noreferrer">Add to Google Calendar</a>
+<a class="lfv-event-secondary-action" href="{{ url_for('vault_calendar_event_ics',event_date=event.date,slug=event.href.rsplit('/',1)[-1]) }}">Apple / Outlook calendar</a>{% endif %}
 {% if calendar_actions.directions %}<a class="lfv-event-secondary-action" href="{{ calendar_actions.directions }}" target="_blank" rel="noopener noreferrer">Directions</a>{% endif %}
-{% if event.source_href %}<a class="lfv-event-secondary-action" href="{{ event.source_href }}" target="_blank" rel="noopener noreferrer">View source / registration ↗</a>{% endif %}
+{% if event.source_href %}<a class="lfv-event-secondary-action" href="{{ event.source_href }}" target="_blank" rel="noopener noreferrer">View source / more information ↗</a>{% endif %}
 </div>
 </section>
 </main>
