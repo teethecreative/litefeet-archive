@@ -2,10 +2,10 @@
   <p class="vault-kicker">The LiteFeet Card Battle Game</p>
   <h1>Lock In</h1>
   <p>Build a round the way you’d build one on the floor. Pick your dancer, find the right track, and put your moves together before you call “locked in.” Lock In brings LiteFeet dancers, songs, moves, and battle spaces to the table.</p>
-  <nav aria-label="Game guide"><a href="#rules">How to play</a> · <a href="#decks">Build a Sample Deck</a> · <a href="#lock-workbench">Test the Game</a> · <a href="#join">Get involved</a></nav>
 </header>
-<section id="rules">
-  <h2>How to play</h2>
+<details id="rules" class="lock-rules-dropdown">
+  <summary>How to Play</summary>
+  <div class="lock-rules-body">
   
   <h3>How to battle</h3>
   <p>A game is called a battle. Battles are 1v1 (dancer versus dancer), 2v2 (tag team), or 3v3 (team battle). Win by taking the most rounds, reaching the required Battle Points (BP), or landing enough TKOs.</p>
@@ -34,7 +34,8 @@
   <p>Tag-team and team-battle modes are coming soon.</p>
   <h3>Card types</h3>
   <p>Build a 25–50 card deck with dancers, arenas, songs, moves, tricks, upgrades, and fribs. Producers are credited on Song Cards during dancer battles. Producer Cards are reserved for a separate future producer-battle format.</p>
-</section>
+  </div>
+</details>
 <section id="decks" class="lock-deck-examples">
   <h2>Build a Sample Deck</h2>
   <div class="lock-decks">
@@ -64,9 +65,9 @@
       <p class="lock-catalog-caveat">This is a draft card library. Historical names and planning entries are not all approved playable cards. Community suggestions stay pending review.</p>
       <p id="lock-categories"></p>
       <label for="lock-filter">Card type</label><select id="lock-filter"></select>
-      <label for="lock-search">Find a card</label>
+      <label for="lock-search">Search cards</label>
       <input id="lock-search" type="search" autocomplete="off" placeholder="Search dancers, moves, songs, arenas…" aria-controls="lock-catalog" />
-      <label for="lock-catalog">Matching cards</label><select id="lock-catalog" size="5" aria-label="Matching cards"></select>
+      <label for="lock-catalog">Suggested Cards</label><select id="lock-catalog" size="8" aria-label="Suggested Cards"></select>
       <button type="button" id="lock-add">Add to deck</button>
       <button type="button" id="lock-request-open" aria-expanded="false" aria-controls="lock-request-panel">Request a card</button>
       <p id="lock-search-feedback" role="status" aria-live="polite"></p>

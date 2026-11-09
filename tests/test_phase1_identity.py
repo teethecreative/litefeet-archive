@@ -462,3 +462,27 @@ def test_bad_one_family_variations_are_main_moves_not_openers(website):
     from pathlib import Path
     js = (Path(__file__).resolve().parents[1]/"dca_rebuild/static/js/lock-in-game.js").read_text()
     assert '["Footwork","Combo","Bad One"].includes(card.move_family)' in js
+
+
+def test_lock_in_compact_rules_blank_deck_and_full_suggested_dancer_list(website):
+    from dca_rebuild.lock_in import public_card_catalog
+    from dca_rebuild.archive_catalog import all_records
+    html = website.test_client().get('/archive/lock-in').get_data(as_text=True)
+    assert '<details id="rules" class="lock-rules-dropdown">' in html
+    assert '<summary>How to Play</summary>' in html
+    assert '<nav aria-label="Game guide">' not in html
+    assert '<label for="lock-catalog">Suggested Cards</label>' in html
+    assert 'aria-label="Suggested Cards"' in html
+    assert 'id="lock-search"' in html
+    js = (__import__('pathlib').Path(__file__).resolve().parents[1] /
+          'dca_rebuild/static/js/lock-in-game.js').read_text()
+    assert 'var deck=[],round=1' in js
+    assert '<option value="create">Create a deck</option>' in js
+    assert 'el("#lock-filter").value="Dancer";' in js
+    assert '}).slice(0,30)' not in js
+    assert 'suggested cards' in js
+    dancers = {card['name'] for card in public_card_catalog() if card['type'] == 'Dancer'}
+    assert len(dancers) > 100
+    # All historical public people tagged as dancers remain in the card source,
+    # rather than only the featured 20-person word cloud.
+    assert len(dancers) > 30

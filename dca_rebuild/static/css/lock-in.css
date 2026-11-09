@@ -105,3 +105,12 @@
  #lock-workbench .lock-response-cards{grid-template-columns:1fr}
  #lock-workbench .lock-practice-actions button{width:100%}
 }
+
+/* Compact guide and full suggested-card list */
+#vault-section-lock-in .lock-rules-dropdown{display:block;border:1px solid #60728b;border-radius:.65rem;padding:0;margin-block:1rem}
+#vault-section-lock-in .lock-rules-dropdown summary{display:list-item;cursor:pointer;padding:1rem 1.25rem;font-size:clamp(1.15rem,2.8vw,1.5rem);font-weight:800;list-style-position:inside}
+#vault-section-lock-in .lock-rules-dropdown summary::marker{color:#c9a52b}
+#vault-section-lock-in .lock-rules-dropdown .lock-rules-body{padding:0 1.25rem 1.25rem}
+#vault-section-lock-in .lock-rules-dropdown[open] summary{border-bottom:1px solid #60728b;margin-bottom:.8rem}
+#vault-section-lock-in #lock-catalog{height:16rem;max-height:18rem;overflow-y:auto}
+#vault-section-lock-in .lock-rules-dropdown summary:focus-visible{outline:3px solid #f1f5fc;outline-offset:3px}
