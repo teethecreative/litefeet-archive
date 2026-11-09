@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Upcoming Calendar | The LiteFeet Vault</title>
+{% include "_seo_head.html" %}
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-editorial-v2.css') }}">
+<style>
+.lfv-calendar-public{max-width:1120px;margin:auto;padding:32px 22px 80px}
+.lfv-calendar-public h1{font-size:clamp(2.2rem,5vw,3.8rem);margin:8px 0}
+.lfv-calendar-kicker{font-size:.8rem;color:#d8b14a;text-transform:uppercase;font-weight:800;letter-spacing:.1em}
+.lfv-calendar-list{display:grid;gap:0;border-top:1px solid #67778e;margin:25px 0}
+.lfv-calendar-list article{display:grid;grid-template-columns:minmax(130px,22%) minmax(0,1fr);gap:22px;padding:18px 5px;border-bottom:1px solid #67778e}
+.lfv-calendar-list time{font-weight:750;font-size:.9rem}
+.lfv-calendar-list h2{font-size:1.15rem;margin:0 0 8px}
+.lfv-calendar-list p{margin:4px 0;line-height:1.5}
+.lfv-calendar-list a{color:#e6be51}
+@media(max-width:600px){.lfv-calendar-list article{grid-template-columns:1fr;gap:6px}}
+</style></head><body>{% include "_navigation.html" %}
+<main class="lfv-calendar-public">
+<header><p class="lfv-calendar-kicker">THE LITEFEET VAULT / CALENDAR</p><h1>Upcoming Calendar &amp; Events</h1>
+<p>Upcoming battles, labs, classes and community gatherings. Recurring sessions appear on their scheduled days.</p>
+<p><a href="{{ url_for('vault_submit') }}">Submit an Event</a></p></header>
+<section aria-labelledby="lfv-calendar-heading">
+<h2 id="lfv-calendar-heading">What's Coming Up</h2>
+<p>{{ calendar.label }}</p>
+<div class="lfv-calendar-list">
+{% for event in calendar.events %}
+<article><time datetime="{{ event.date }}">{{ event.display_date }}</time><div>
+<h2>{{ event.title }}</h2>
+<p>{% if event.event_time %}{{ event.event_time }}{% endif %}{% if event.venue %} · {{ event.venue }}{% endif %}{% if event.organizer %} · {{ event.organizer }}{% endif %}</p>
+{% if event.description %}<p>{{ event.description|truncate(180, True, '…') }}</p>{% endif %}
+{% if event.source_href %}<p><a href="{{ event.source_href }}" target="_blank" rel="noopener noreferrer">Event details / source</a></p>{% endif %}
+</div></article>
+{% else %}<p>No upcoming events have been published for this period.</p>{% endfor %}
+</div></section></main>{% include "_footer.html" %}
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script></body></html>

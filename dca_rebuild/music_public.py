@@ -104,7 +104,8 @@ def install_music_public(app, engine):
     
     @app.get("/media", endpoint="vault_media_public")
     def vault_media_public():
-        return render_template("media_home.html")
+        # This section is intentionally unpublished until editorial launch.
+        abort(404)
 
     @app.get("/litefeet-music/history/<slug>", endpoint="vault_music_history")
     def vault_music_history(slug):
