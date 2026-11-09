@@ -16,11 +16,12 @@
   const customReasonLabel = document.getElementById("lfv-reason-custom-label");
   const canonical = document.querySelector('link[rel="canonical"]');
   const cleanLink = canonical?.href || location.origin + location.pathname;
-  const currentPath = new URL(cleanLink).pathname;
+  const currentPath = location.pathname;
   const awardPage = currentPath.startsWith("/awards/dancers-choice") || currentPath === "/write-ins";
   const context = new URLSearchParams(location.search);
   let format = "story";
   let data = null;
+  let previewRequest = 0;
   const regularCard = currentPath === "/" ? "home" : currentPath.replace(/^\/+|\/+$/g, "").replaceAll("/", "--");
 
   const settings = () => {
@@ -63,7 +64,7 @@
       pageHint.hidden = pages <= 1;
       pageHint.textContent = pages > 1 ? pages + " graphics will be generated to include all nominees." : "";
     }
-    const ready = !awardPage || !data || scope.value === "awards" || category.value;
+    const ready = !awardPage || (data && (scope.value === "awards" || (category.value && (scope.value !== "nominee" || nominee.value))));
     preview.hidden = !ready;
     if (ready) {
       if (awardPage && data && scope.value === "nominee" && reasonChoice.value === "custom") {
@@ -73,17 +74,22 @@
         body.set("nominee", nominee.value);
         body.set("reason_mode", "custom");
         body.set("reason_text", customReason.value);
+        const requestId = ++previewRequest;
         fetch(graphicUrl(), {method:"POST",body}).then(async response => {
           if(!response.ok) throw Error("Could not generate the message graphic");
           return response.blob();
         }).then(blob => {
+          if (requestId !== previewRequest) return;
           if (preview.dataset.objectUrl) URL.revokeObjectURL(preview.dataset.objectUrl);
           const objectUrl = URL.createObjectURL(blob);
           preview.dataset.objectUrl = objectUrl;
           preview.src = objectUrl;
           preview.hidden = false;
         }).catch(() => {status.textContent = "Could not preview that message.";});
-      } else {preview.src = graphicUrl();}
+      } else {previewRequest += 1;preview.src = graphicUrl();}
+    } else {
+      previewRequest += 1;
+      preview.removeAttribute("src");
     }
     status.textContent = "";
   };
@@ -93,8 +99,31 @@
     select.add(empty);
     items.forEach(x => select.add(new Option(x.name, String(x.id))));
   };
+  const updateSuggestedReasons = () => {
+    const cat = data?.categories.find(x => String(x.id) === category.value);
+    const selected = cat?.nominees?.find(x => String(x.id) === nominee.value);
+    const previous = reasonChoice.value;
+    reasonChoice.replaceChildren(new Option("No explanation", "none"));
+    const suggestions = selected?.suggestions || [];
+    if (suggestions.length) {
+      const group = document.createElement("optgroup");
+      group.label = "Previously verified explanations";
+      suggestions.forEach(reason => group.append(new Option(reason.text, "verified-" + reason.id)));
+      reasonChoice.append(group);
+    }
+    reasonChoice.add(new Option("Write my own explanation", "custom"));
+    if ([...reasonChoice.options].some(x => x.value === previous)) reasonChoice.value = previous;
+    else if (suggestions.length) reasonChoice.value = "verified-" + suggestions[0].id;
+    else reasonChoice.value = "none";
+    const showCustom = reasonChoice.value === "custom";
+    customReason.hidden = customReasonLabel.hidden = !showCustom;
+    const helper = reasonPanel.querySelector(".lfv-reason-helper");
+    if (helper) helper.textContent = suggestions.length
+      ? "Only previously verified explanations are listed. Your choice appears on the graphic, not as a new nomination."
+      : "No verified explanation is available for this nominee yet. You can write your own for the graphic.";
+  };
   const refresh = () => {
-    const chosen = data?.categories.find(x => String(x.id) === category.value);
+    const chosen = data?.categories?.find(x => String(x.id) === category.value);
     const needsCategory = scope.value !== "awards";
     const needsNominee = scope.value === "nominee";
     reasonPanel.hidden = !needsNominee;
@@ -102,9 +131,10 @@
     nominee.hidden = document.getElementById("lfv-awards-nominee-label").hidden = !needsNominee;
     if (needsNominee) {
       const previous = nominee.value;
-      fill(nominee, chosen?.nominees || [], "Select nominee");
+      fill(nominee, chosen?.nominees || [], chosen ? "Select nominee" : "Choose a category first");
       if ([...nominee.options].some(o => o.value === previous)) nominee.value = previous;
       else if (nominee.options.length > 1) nominee.selectedIndex = 1;
+      updateSuggestedReasons();
     }
     updatePreview();
   };
@@ -113,8 +143,10 @@
     awardPanel.hidden = false;
     const response = await fetch("/social/awards/options.json");
     if (!response.ok) throw Error("Couldn't retrieve public award categories");
-    data = await response.json();
-    fill(category, data.categories || [], "Select category");
+    const payload = await response.json();
+    if (!Array.isArray(payload.categories) || !payload.categories.length) throw Error("No published award categories are available yet.");
+    data = payload;
+    fill(category, data.categories, "Select category");
     const fromUrl = context.get("category");
     const preset = data.categories.find(x => String(x.id) === fromUrl);
     if (preset) category.value = String(preset.id);
@@ -133,7 +165,7 @@
 
   scope.addEventListener("change", refresh);
   category.addEventListener("change", refresh);
-  nominee.addEventListener("change", updatePreview);
+  nominee.addEventListener("change", () => { updateSuggestedReasons(); updatePreview(); });
   const updateReason = () => {
     const isCustom = reasonChoice.value === "custom";
     customReason.hidden = customReasonLabel.hidden = !isCustom;
@@ -150,7 +182,7 @@
   open.addEventListener("click", async () => {
     dialog.showModal();
     try { if (awardPage && !data) await getAwardOptions(); }
-    catch { status.textContent = "Award options could not load. Please try again."; }
+    catch (error) { status.textContent = error.message || "Award options could not load. Please try again."; }
     if (!awardPage) updatePreview();
   });
   document.getElementById("lfv-share-close").addEventListener("click", () => dialog.close());
