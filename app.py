@@ -24255,9 +24255,15 @@ def hp_ensure_tables():
 
 
 def hp_seed_prompts_from_file():
+    """Sync the curated question bank without losing historical responses.
+
+    Explicitly retired questions become inactive, never deleted. Any admin
+    deactivations of other questions are preserved, as are archived records.
+    """
     hp_ensure_tables()
 
     questions_file = _hp_Path("data/homepage_prompt_questions.txt")
+    retired_file = _hp_Path("data/homepage_prompt_retired_questions.txt")
     if not questions_file.exists():
         return 0
 
@@ -24266,41 +24272,43 @@ def hp_seed_prompts_from_file():
         for line in questions_file.read_text(errors="replace").splitlines()
         if line.strip()
     ]
+    retired_questions = [
+        line.strip()
+        for line in retired_file.read_text(errors="replace").splitlines()
+        if line.strip()
+    ] if retired_file.exists() else []
+
+    # Deactivate only the explicitly retired questions. Their saved answers,
+    # IDs, and history remain intact for admin review.
+    for question in retired_questions:
+        hp_execute(
+            """
+            UPDATE homepage_prompts
+               SET is_active = 0
+             WHERE lower(question) = lower(:question)
+               AND is_active = 1
+            """,
+            {"question": question},
+        )
 
     inserted = 0
-
     for index, question in enumerate(raw_questions, start=1):
         existing = hp_fetch_one(
             "SELECT id FROM homepage_prompts WHERE lower(question) = lower(:question) LIMIT 1",
             {"question": question},
         )
-
         if existing:
             continue
-
         hp_execute(
             """
             INSERT INTO homepage_prompts (
-                question,
-                prompt_type,
-                is_active,
-                display_order,
-                created_at
-            )
-            VALUES (
-                :question,
-                'question',
-                1,
-                :display_order,
-                CURRENT_TIMESTAMP
+                question, prompt_type, is_active, display_order, created_at
+            ) VALUES (
+                :question, 'question', 1, :display_order, CURRENT_TIMESTAMP
             )
             """,
-            {
-                "question": question,
-                "display_order": index,
-            },
+            {"question": question, "display_order": index},
         )
-
         inserted += 1
 
     return inserted
