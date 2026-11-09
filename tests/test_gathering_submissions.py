@@ -181,7 +181,7 @@ def test_calendar_day_filters_and_detail_stays_on_site(website):
     assert "Let&#39;s Lab at the ARC" in html or "Let's Lab at the ARC" in html
     assert "Teen Nite" in html
     assert "November 11, 2026" not in html.split('class="lfv-calendar-full-list"', 1)[-1]
-    assert 'href="/calendar/events/2026-11-10/let-s-lab-at-the-arc"' in html
+    assert 'href="/events/let-s-lab-at-the-arc/2026-11-10"' in html
     assert 'View all dates this month' in html
     empty = client.get("/calendar?date=2026-11-13&day=2026-11-13")
     assert empty.status_code == 200
