@@ -29,7 +29,7 @@
 </head><body>{% include "_admin_navigation.html" %}
 <main class="dca-nominations-admin">
 <a class="lfv-admin-back-link" href="{{ url_for('admin_dca_workspace') }}">← DCA 2026 Overview</a>
-<header class="lfv-admin-plain-head"><p class="lfv-admin-overline">DCA 2026 / NOMINEES</p><h1>Nominee Review</h1>
+<header class="lfv-admin-plain-head"><p class="lfv-admin-overline">DCA 2026 / NOMINEES</p><h1>NOMINEE REVIEW</h1>
 <p>Review nominee records and their approval status. Nomination submissions and standings are on separate pages.</p></header>
 <nav class="lfv-admin-subnav" aria-label="DCA administration pages">
 <a href="{{ url_for('admin_dca_workspace_section',section='categories') }}">2026 Categories</a>
@@ -49,7 +49,6 @@
 <button type="submit">FILTER</button>
 </form>
 <p class="lf-nom-summary">{{ total }} matching nominees · Showing up to 15 per page</p>
-{% if rows %}
 <table class="dca-nom-table"><thead><tr><th scope="col" aria-sort="{% if sort == 'category' %}{{ 'ascending' if direction == 'asc' else 'descending' }}{% else %}none{% endif %}"><a href="{{ url_for('admin_dca_nominations', q=search, status=status, sort='category', direction=('desc' if sort == 'category' and direction == 'asc' else 'asc'), page=1) }}" aria-label="Sort by Category; activate to reverse or select sorting">Category<span class="lfv-sort-glyph" aria-hidden="true">{% if sort == 'category' %}{{ '↑' if direction == 'asc' else '↓' }}{% else %}↕{% endif %}</span></a></th><th scope="col" aria-sort="{% if sort == 'nominee' %}{{ 'ascending' if direction == 'asc' else 'descending' }}{% else %}none{% endif %}"><a href="{{ url_for('admin_dca_nominations', q=search, status=status, sort='nominee', direction=('desc' if sort == 'nominee' and direction == 'asc' else 'asc'), page=1) }}" aria-label="Sort by Nominee; activate to reverse or select sorting">Nominee<span class="lfv-sort-glyph" aria-hidden="true">{% if sort == 'nominee' %}{{ '↑' if direction == 'asc' else '↓' }}{% else %}↕{% endif %}</span></a></th><th scope="col" aria-sort="{% if sort == 'submissions' %}{{ 'ascending' if direction == 'asc' else 'descending' }}{% else %}none{% endif %}"><a href="{{ url_for('admin_dca_nominations', q=search, status=status, sort='submissions', direction=('desc' if sort == 'submissions' and direction == 'asc' else 'asc'), page=1) }}" aria-label="Sort by Submissions; activate to reverse or select sorting">Submissions<span class="lfv-sort-glyph" aria-hidden="true">{% if sort == 'submissions' %}{{ '↑' if direction == 'asc' else '↓' }}{% else %}↕{% endif %}</span></a></th><th scope="col">Review</th></tr></thead><tbody>
 {% for nominee, category_name, total in rows %}
 <tr><td>{{ category_name }}</td><td>{{ nominee.name }}</td><td>{{ total }}</td><td>
@@ -66,8 +65,7 @@
 {% for choice in ['pending','approved','rejected'] %}
 <option value="{{ choice }}" {% if nominee.moderation_status == choice %}selected{% endif %}>{{ choice|capitalize }}</option>
 {% endfor %}</select><button type="submit">Save</button></form>
-</td></tr>{% endfor %}</tbody></table>
-{% else %}<p>No nominees match these filters.</p>{% endif %}
+</td></tr>{% else %}<tr><td colspan="4">No nominees match these filters.</td></tr>{% endfor %}</tbody></table>
 <nav class="lf-nom-pagination" aria-label="Nomination review pages">
 {% if page > 1 %}<a href="{{ url_for('admin_dca_nominations', page=page-1, q=search, status=status, sort=sort, direction=direction) }}">← PREVIOUS</a>{% endif %}
 <span>PAGE {{ page }} OF {{ pages }}</span>
