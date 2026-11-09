@@ -10,10 +10,10 @@ def test_homepage_question_bank_covers_all_move_families_and_history():
     questions = [line.strip() for line in
                  (ROOT / "data/homepage_prompt_questions.txt").read_text().splitlines()
                  if line.strip()]
-    assert len(questions) >= 300
+    assert len(questions) == 260
     assert len(questions) == len({q.casefold() for q in questions})
     for subject in (
-        "LiteFeet chants", "team chants", "combos", "Bad One",
+        "chant", "combos", "Bad One",
         "Good One", "Jo Smooth Bad One", "hat tricks", "footwork",
         "ankle moves", "Baby O Step", "Spank moves", "Public Enemies",
         "songs", "producer", "battle", "event", "archive", "Lock In",
@@ -53,3 +53,35 @@ def test_homepage_prompt_keeps_question_active_after_submission():
     assert "LiteFeet Vault / Community Question" in part
     assert "return \"\"\"\n            <section class=\"homepage-prompt-widget homepage-prompt-thanks\"" not in part
     assert "Your answer was saved" in part
+
+
+def test_homepage_question_curation_deactivates_only_retired_questions():
+    questions = [line.strip() for line in
+                 (ROOT / "data/homepage_prompt_questions.txt").read_text().splitlines()
+                 if line.strip()]
+    retired = [line.strip() for line in
+               (ROOT / "data/homepage_prompt_retired_questions.txt").read_text().splitlines()
+               if line.strip()]
+    chants = [line for line in questions if "chant" in line.lower()]
+    assert chants == [
+        "What's your favorite chant?",
+        "What chant don't you hear anymore?",
+        "Which team has the best chant, and what is it?",
+    ]
+    assert len(retired) == 83
+    assert not set(questions).intersection(retired)
+    assert "What combo did your team use?" in retired
+    assert "Who hosted the battle?" in retired
+    assert "Do you remember the date or year of a battle?" in retired
+    assert "What LiteFeet chants do you know?" in retired
+    import ast
+    app_ast = ast.parse((ROOT / "app.py").read_text())
+    seed = next(node for node in app_ast.body
+                if isinstance(node, ast.FunctionDef) and
+                node.name == "hp_seed_prompts_from_file")
+    import inspect
+    body = ast.get_source_segment((ROOT / "app.py").read_text(), seed)
+    assert "UPDATE homepage_prompts" in body
+    assert "SET is_active = 0" in body
+    assert "homepage_prompt_answers" not in body
+    assert "DELETE FROM" not in body
