@@ -110,6 +110,48 @@ html[data-theme="dark"] .ledger-admin-nav{background:var(--surface,#09111e);colo
 html[data-theme="dark"] .ledger-admin-nav__links a{color:var(--text,#fff)}
 html[data-theme="dark"] .ledger-admin-nav__links a:hover{color:var(--gold-light,#e7cb68)}
 @media(max-width:540px){.lfv-admin-nav-actions{gap:6px}.lfv-admin-theme-text{display:none}.lfv-admin-theme-toggle{min-width:38px;padding:8px}}
+
+/* Consistent readable admin headings in legacy and newer review pages. */
+body.ledger-admin main .lfv-gathering-header,
+body.ledger-admin main .lf-ws-head,
+body.ledger-admin main .admin-control-room__header{
+ background:var(--blue,#092b63)!important;color:#fff!important;
+ border:0!important;border-top:5px solid var(--gold,#c9a227)!important;
+ padding:clamp(22px,3vw,38px)!important;margin:0 0 24px!important;
+ box-shadow:none!important;border-radius:5px!important;overflow:visible!important
+}
+body.ledger-admin main .lfv-gathering-header::after,
+body.ledger-admin main .lf-ws-head::after,
+body.ledger-admin main .admin-control-room__header::after{content:none!important}
+body.ledger-admin main .lfv-gathering-header h1,
+body.ledger-admin main .lf-ws-head h1,
+body.ledger-admin main .admin-control-room__header h1{
+ color:#fff!important;font-size:clamp(2rem,4vw,3.3rem)!important;
+ margin:12px 0!important;line-height:1.1!important;letter-spacing:-.03em!important
+}
+body.ledger-admin main .lfv-gathering-header p:last-child,
+body.ledger-admin main .lf-ws-head .lead,
+body.ledger-admin main .admin-control-room__header .lead{
+ color:#e2eaf7!important;opacity:1!important;line-height:1.55!important;
+ max-width:72ch!important;margin:10px 0 0!important;font-size:1rem!important
+}
+body.ledger-admin main .lfv-gathering-header .lfv-gathering-eyebrow,
+body.ledger-admin main .lf-ws-head .label,
+body.ledger-admin main .admin-control-room__header .label{
+ color:#e7cb68!important;opacity:1!important;line-height:1.4!important
+}
+body.ledger-admin main .lf-ws-head .round{color:#e7cb68!important}
+body.ledger-admin main.lfv-gathering-admin>.lfv-gathering-counts{
+ display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;
+ padding:0!important;border:0!important;margin:20px 0!important;background:transparent!important
+}
+body.ledger-admin main.lfv-gathering-admin>.lfv-gathering-counts a{
+ display:flex!important;flex-direction:column!important;align-items:start!important;gap:4px!important;
+ padding:15px!important;border:1px solid var(--border)!important;border-top:3px solid var(--gold)!important;
+ border-radius:5px!important;background:var(--surface)!important;color:var(--text)!important
+}
+body.ledger-admin .lfv-gathering-counts span{color:var(--muted)!important}
+@media(max-width:700px){body.ledger-admin main.lfv-gathering-admin>.lfv-gathering-counts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 <script>
 (function(){
