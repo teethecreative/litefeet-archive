@@ -158,3 +158,8 @@ def test_lock_in_rulebook_and_mixed_deck_builder_present(website):
     assert 'Missed Lock In' in js
     assert 'Incorrect card-validity challenge' in js
     assert 'Battle victory thresholds are still blank' in js
+    assert 'lock-save' in html and 'lock-load' in html
+    assert 'id="lock-restrictions"' in html
+    assert 'lockin-draft-deck-v1' in js
+    assert 'limit(c.id)' in js
+    assert 'restrictions[id]' in js
