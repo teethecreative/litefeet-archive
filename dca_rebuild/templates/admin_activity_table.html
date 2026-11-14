@@ -1,0 +1,19 @@
+<div class="lfv-admin-table-wrap">
+<table class="lfv-admin-review-table lfv-admin-activity-table">
+<thead><tr><th scope="col">When (ET)</th><th scope="col">Area</th><th scope="col">Record</th><th scope="col">Activity</th><th scope="col">Status now</th><th scope="col">Action</th></tr></thead>
+<tbody>
+{% for activity in recent_activity_rows %}
+<tr>
+<td><time datetime="{{ activity.iso_at }}">{{ activity.at }}</time></td>
+<td>{{ activity.label }}</td>
+<td><strong>{{ activity.title }}</strong></td>
+<td>{{ activity.action }}</td>
+<td>{{ activity.status or '—' }}</td>
+<td><a href="{{ activity.url }}">Open</a></td>
+</tr>
+{% else %}
+<tr><td colspan="6">No recorded activity found for these filters.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>

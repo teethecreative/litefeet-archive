@@ -15,8 +15,12 @@
 <div class="lfv-admin-workspace-heading"><div><p class="lfv-admin-overline">01 / MODERATION</p><h2>Needs Attention</h2><p>{{ pending_total }} pending across existing submission systems. Oldest first.</p></div><a href="{{ url_for('admin_vault_review_queue') }}">View entire queue</a></div>
 {% include "admin_workspace_table.html" %}
 </section>
+<section class="lfv-admin-workspace-section" id="recent-activity">
+<div class="lfv-admin-workspace-heading"><div><p class="lfv-admin-overline">02 / UPDATES</p><h2>Recent Activity</h2><p>Recent submissions, reviews and development updates, newest first.</p></div><a href="{{ url_for('admin_vault_activity') }}">View all activity</a></div>
+{% include "admin_activity_table.html" %}
+</section>
 <section class="lfv-admin-workspace-section" id="workspace-links">
-<div class="lfv-admin-workspace-heading"><div><p class="lfv-admin-overline">02 / MANAGE</p><h2>Workspace</h2><p>Direct links to the administrative tools that already exist.</p></div></div>
+<div class="lfv-admin-workspace-heading"><div><p class="lfv-admin-overline">03 / MANAGE</p><h2>Workspace</h2><p>Direct links to the administrative tools that already exist.</p></div></div>
 <div class="lfv-admin-quick-links">
 <a href="{{ url_for('admin_world_record') }}"><strong>World Record Attempt</strong><span>Private interest roster, collaborators, captains and spaces</span></a>
 <a href="{{ url_for('admin_vault_gatherings') }}"><strong>Events</strong><span>Submissions, editing and recurring dates</span></a>
@@ -30,6 +34,6 @@
 <a href="{{ url_for('admin_analytics') }}"><strong>Analytics</strong><span>Visitor trends, pages, sessions and activity</span></a>
 </div></section>
 <section class="lfv-admin-workspace-section" id="operations">
-<div class="lfv-admin-workspace-heading"><div><p class="lfv-admin-overline">03 / WEBSITE</p><h2>Operations</h2><p>Existing analytics are retained; site development is tracked separately from published content.</p></div></div>
+<div class="lfv-admin-workspace-heading"><div><p class="lfv-admin-overline">04 / WEBSITE</p><h2>Operations</h2><p>Existing analytics are retained; site development is tracked separately from published content.</p></div></div>
 <div class="lfv-admin-workspace-toolbar"><a href="{{ url_for('admin_analytics') }}">Open visitor analytics</a><a href="{{ url_for('admin_vault_development') }}">Open development tracker</a><a href="{{ url_for('admin_dashboard') }}#review-queue">Back to review queue</a></div>
 </section></main></body></html>

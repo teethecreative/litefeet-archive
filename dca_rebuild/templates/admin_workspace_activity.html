@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Recent Activity | The LiteFeet Vault</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-workspace.css') }}">
+</head>
+<body class="ledger-admin">
+{% include "_admin_navigation.html" %}
+<main class="lfv-admin-workspace">
+<header class="lfv-admin-workspace-head"><p class="lfv-admin-overline">THE LITEFEET VAULT / ADMINISTRATION</p><h1>Recent Activity</h1><p>Follow new submissions, reviews and updates across the Vault. This feed shows recorded events, not a complete history of every admin edit.</p></header>
+<section class="lfv-admin-workspace-section">
+<div class="lfv-admin-workspace-heading"><div><p class="lfv-admin-overline">ACTIVITY / HISTORY</p><h2>Activity Feed</h2></div><a href="{{ url_for('admin_dashboard') }}">Back to overview</a></div>
+<form method="get" action="{{ url_for('admin_vault_activity') }}" class="lfv-admin-workspace-filters">
+<label>Area<select name="area">
+{% for item in areas %}<option value="{{ item }}" {% if area == item %}selected{% endif %}>{{ item | replace('_', ' ') | title }}</option>{% endfor %}
+</select></label>
+<label>Period<select name="period">
+<option value="7" {% if period == '7' %}selected{% endif %}>Last 7 days</option>
+<option value="30" {% if period == '30' %}selected{% endif %}>Last 30 days</option>
+<option value="90" {% if period == '90' %}selected{% endif %}>Last 90 days</option>
+<option value="all" {% if period == 'all' %}selected{% endif %}>All available</option>
+</select></label>
+<button type="submit">Apply filters</button>
+</form>
+{% include "admin_activity_table.html" %}
+<nav class="lfv-admin-workspace-pagination" aria-label="Activity pages">
+{% if page > 1 %}<a href="{{ url_for('admin_vault_activity', area=area, period=period, page=page - 1) }}">Previous</a>{% endif %}
+<span>Page {{ page }}</span>
+{% if has_more %}<a href="{{ url_for('admin_vault_activity', area=area, period=period, page=page + 1) }}">Next</a>{% endif %}
+</nav>
+</section>
+</main>
+</body>
+</html>
