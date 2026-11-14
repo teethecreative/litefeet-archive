@@ -827,6 +827,32 @@ class DCACategoryDraftSelection(Base):
     selected = Column(Boolean, nullable=False, default=False)
 
 
+
+class DCAReturningCategoryReview(Base):
+    """An editorial decision about a 2023 category for the 2026 survey.
+
+    Keep the historical category and community votes untouched. Overrides and
+    decisions are scoped to the new edition and are not publication actions.
+    """
+    __tablename__ = "ledger_dca_returning_category_reviews"
+    __table_args__ = (
+        UniqueConstraint("edition_id", "category_id",
+                         name="uq_dca_returning_review_edition_category"),
+    )
+
+    id = Column(Integer, primary_key=True)
+    edition_id = Column(Integer, ForeignKey("ledger_dca_editions.id"),
+                        nullable=False)
+    category_id = Column(Integer, ForeignKey("ledger_dca_categories.id"),
+                         nullable=False)
+    name_override = Column(String(250))
+    description_override = Column(Text)
+    status = Column(String(30), nullable=False, default="pending")
+    merged_into_key = Column(String(100))
+    updated_at = Column(DateTime, nullable=False,
+                        default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 # Anonymous, session-scoped public website analytics.
 class LedgerPageView(Base):
     __tablename__ = "ledger_page_views"

@@ -1281,9 +1281,9 @@ def update_dca_returning_category_description(category_id):
         db.close()
 
 
-@app.route("/admin/round1")
+@app.route("/admin/round1/archive", endpoint="admin_round1_archive")
 @admin_login_required
-def admin_round1():
+def admin_round1_archive():
 
     db = SessionLocal()
 
@@ -5063,6 +5063,10 @@ install_admin_activity(app, globals())
 # Separate current DCA 2026 administration from historical category survey.
 from dca_rebuild.dca_admin_workspace import install_dca_admin_workspace
 install_dca_admin_workspace(app, globals())
+
+# Streamlined 2026 category moderation; old ballot tools live in the archive.
+from dca_rebuild.category_review_queue import install_category_review_queue
+install_category_review_queue(app, globals())
 
 
 # Proposed LiteFeet World Record community initiative and private interest roster.

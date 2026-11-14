@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Category Moderation | The LiteFeet Vault</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-workspace.css') }}">
+  <style>
+    .lfv-category-review{max-width:1240px;margin:0 auto;padding:28px 24px 72px;color:var(--review-ink)}
+    .lfv-category-review{--review-ink:#11233d;--review-muted:#4c5c70;--review-panel:#fff;--review-border:#cbd3df;--review-soft:#f1f4f8;--review-accent:#cba329}
+    html[data-theme="dark"] .lfv-category-review{--review-ink:#f3f5f9;--review-muted:#bfcede;--review-panel:#172538;--review-border:#546278;--review-soft:#26364c;--review-accent:#e6c152}
+    .lfv-category-review *{box-sizing:border-box}
+    .lfv-category-review h1{font-size:clamp(1.6rem,3vw,2.1rem);margin:4px 0 6px;color:var(--review-ink)}
+    .lfv-category-review h2{font-size:1.15rem;color:var(--review-ink);margin:0}
+    .lfv-category-review p{margin:4px 0 0;line-height:1.5;color:var(--review-muted)}
+    .lfv-review-heading{margin-bottom:18px}
+    .lfv-review-heading .eyebrow{font-size:.72rem;letter-spacing:.11em;font-weight:800;color:var(--review-muted)}
+    .lfv-review-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
+    .lfv-review-stat{border:1px solid var(--review-border);border-radius:8px;padding:13px;background:var(--review-panel)}
+    .lfv-review-stat strong{display:block;font-size:1.65rem;color:var(--review-ink)}
+    .lfv-review-stat span{display:block;font-size:.8rem;color:var(--review-muted)}
+    .lfv-review-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 16px}
+    .lfv-review-tabs a{display:inline-block;padding:9px 13px;text-decoration:none;color:var(--review-ink);background:var(--review-panel);border:1px solid var(--review-border);border-radius:6px;font-size:.84rem;font-weight:700}
+    .lfv-review-tabs a[aria-current="page"]{background:var(--review-accent);border-color:var(--review-accent);color:#10213a}
+    .lfv-review-panel{border:1px solid var(--review-border);border-radius:10px;padding:18px;background:var(--review-panel)}
+    .lfv-review-controls{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin:14px 0}
+    .lfv-review-controls label{display:grid;gap:6px;flex:1 1 270px;font-size:.8rem;font-weight:700;color:var(--review-ink)}
+    .lfv-review-controls input[type="search"]{padding:10px 12px;min-height:42px;width:100%;border:1px solid var(--review-border);border-radius:6px;background:var(--review-panel);color:var(--review-ink)}
+    .lfv-review-controls button,.lfv-review-actions button{cursor:pointer;border:1px solid var(--review-border);border-radius:5px;padding:9px 13px;background:var(--review-soft);color:var(--review-ink);font-weight:700;font-size:.82rem}
+    .lfv-review-controls a{color:var(--review-ink);font-weight:700;font-size:.85rem}
+    .lfv-review-filter{display:inline-flex;gap:6px;align-items:center;font-size:.83rem;color:var(--review-ink)}
+    .lfv-review-list{display:grid;gap:9px;margin-top:12px}
+    .lfv-review-item{border:1px solid var(--review-border);border-radius:8px;background:var(--review-panel);padding:15px}
+    .lfv-review-titleline{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .lfv-review-name{font-size:1rem;font-weight:800;color:var(--review-ink)}
+    .lfv-review-tag{border:1px solid var(--review-border);border-radius:5px;padding:4px 7px;font-size:.7rem;font-weight:700;color:var(--review-muted)}
+    .lfv-review-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--review-muted);margin-top:7px}
+    .lfv-review-description{margin:10px 0!important;color:var(--review-ink)!important;font-size:.88rem}
+    .lfv-review-missing{font-weight:700;color:var(--review-muted)}
+    .lfv-review-edit{border-top:1px solid var(--review-border);margin-top:12px;padding-top:10px}
+    .lfv-review-edit summary{cursor:pointer;font-weight:800;color:var(--review-ink);font-size:.85rem}
+    .lfv-review-form{display:grid;gap:11px;padding-top:14px}
+    .lfv-review-form label{display:grid;gap:5px;font-size:.78rem;font-weight:800;color:var(--review-ink)}
+    .lfv-review-form input,.lfv-review-form textarea,.lfv-review-form select{width:100%;padding:10px;border:1px solid var(--review-border);border-radius:6px;background:var(--review-panel);color:var(--review-ink);font:inherit}
+    .lfv-review-form textarea{min-height:88px;resize:vertical}
+    .lfv-review-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .lfv-review-actions button[data-decision="approved"]{background:var(--review-accent);color:#11233d;border-color:var(--review-accent)}
+    .lfv-review-actions button[data-decision="rejected"]{border-color:#a65b5b}
+    .lfv-review-pager{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:18px;flex-wrap:wrap;font-size:.85rem;color:var(--review-muted)}
+    .lfv-review-pager a{border:1px solid var(--review-border);border-radius:5px;padding:8px 12px;color:var(--review-ink);text-decoration:none}
+    .lfv-review-archive{margin-top:20px;font-size:.82rem}
+    .lfv-review-archive a{color:var(--review-ink);text-decoration:underline}
+    .lfv-review-flash{padding:12px;margin-bottom:12px;border-left:3px solid var(--review-accent);background:var(--review-soft);color:var(--review-ink)}
+    @media(max-width:650px){.lfv-category-review{padding:18px 12px 48px}.lfv-review-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.lfv-review-panel{padding:12px}}
+  </style>
+</head>
+<body class="ledger-admin">
+  {% include "_admin_navigation.html" %}
+  <main class="lfv-category-review" id="category-list">
+    <header class="lfv-review-heading">
+      <div class="eyebrow">DANCER'S CHOICE AWARDS · ADMIN</div>
+      <h1>Category Moderation</h1>
+      <p>Clarify category names and descriptions, then approve, reject, or merge them. Decisions leave the review queue but remain in their status tabs.</p>
+    </header>
+    {% with messages = get_flashed_messages() %}
+      {% for message in messages %}<div class="lfv-review-flash" role="status">{{ message }}</div>{% endfor %}
+    {% endwith %}
+    <section class="lfv-review-stats" aria-label="Moderation progress">
+      <div class="lfv-review-stat"><strong>{{ total_categories }}</strong><span>Total categories</span></div>
+      <div class="lfv-review-stat"><strong>{{ counts.pending }}</strong><span>Needs review</span></div>
+      <div class="lfv-review-stat"><strong>{{ counts.approved }}</strong><span>Approved</span></div>
+      <div class="lfv-review-stat"><strong>{{ missing_count }}</strong><span>Pending without descriptions</span></div>
+    </section>
+    <nav class="lfv-review-tabs" aria-label="Moderation statuses">
+      {% for value,label in [('pending','Needs Review'),('approved','Approved'),('rejected','Rejected'),('merged','Merged'),('all','All Categories')] %}
+        <a href="{{ url_for('admin_round1',status=value) }}" {% if status == value %}aria-current="page"{% endif %}>{{ label }}{% if value in counts %} ({{ counts[value] }}){% endif %}</a>
+      {% endfor %}
+    </nav>
+    <section class="lfv-review-panel" aria-labelledby="review-list-heading">
+      <h2 id="review-list-heading">{% if status == 'pending' %}Needs Review{% elif status == 'all' %}All Categories{% else %}{{ status|title }} Categories{% endif %}</h2>
+      <form class="lfv-review-controls" method="get">
+        <input type="hidden" name="status" value="{{ status }}">
+        <label>Search categories
+          <input name="q" type="search" value="{{ query }}" maxlength="100" placeholder="Name, description, or ID">
+        </label>
+        <label class="lfv-review-filter" style="display:grid;flex:0 0 auto;align-items:center">Description filter
+          <select name="missing" style="padding:10px;border:1px solid var(--review-border);border-radius:6px;background:var(--review-panel);color:var(--review-ink)">
+            <option value="">All descriptions</option>
+            <option value="1" {% if missing_only %}selected{% endif %}>Needs description</option>
+          </select>
+        </label>
+        <button type="submit">Filter</button>
+        {% if query or missing_only %}<a href="{{ url_for('admin_round1',status=status) }}">Clear</a>{% endif %}
+      </form>
+      <p>{{ total }} matching categor{{ 'y' if total == 1 else 'ies' }} · 10 per page</p>
+      <div class="lfv-review-list">
+      {% for row in rows %}
+        <article class="lfv-review-item">
+          <div class="lfv-review-titleline">
+            <span class="lfv-review-name">{{ row.name }}</span>
+            <span class="lfv-review-tag">{{ row.status|title }}</span>
+          </div>
+          <div class="lfv-review-meta">
+            <span>{{ 'Returning category' if row.source == 'returning' else 'Community suggestion' }}</span>
+            {% if row.yes is not none %}<span>{{ row.yes }} Yes · {{ row.no }} No</span>{% endif %}
+            {% if row.merged_into_key %}<span>Merged into {{ row.merged_into_key }}</span>{% endif %}
+          </div>
+          {% if row.description %}
+            <p class="lfv-review-description">{{ row.description }}</p>
+          {% else %}
+            <p class="lfv-review-description lfv-review-missing">Description needed — clarify what this category recognizes.</p>
+          {% endif %}
+          <details class="lfv-review-edit">
+            <summary>Edit details &amp; make a decision</summary>
+            <form method="post" class="lfv-review-form" action="{{ url_for('admin_category_review_decision', source=row.source, category_id=row.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ dca_moderation_csrf }}">
+              <label>Category name
+                <input name="category_name" maxlength="250" required value="{{ row.name }}">
+              </label>
+              <label>Description
+                <textarea name="category_description" maxlength="500" rows="3" placeholder="What does this award recognize?">{{ row.description }}</textarea>
+              </label>
+              <label>Merge into another category (only for Merge)
+                <select name="merge_target_key">
+                  <option value="">Choose a category</option>
+                  {% for option in all_rows if option.key != row.key and option.status not in ['rejected','merged'] and (row.source == 'returning' or option.source == 'new') %}
+                    <option value="{{ option.key }}">{{ option.name }} ({{ option.source }})</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <div class="lfv-review-actions">
+                <button type="submit" name="decision" value="save">Save edits</button>
+                <button type="submit" name="decision" value="approved" data-decision="approved">Approve</button>
+                <button type="submit" name="decision" value="rejected" data-decision="rejected" onclick="return confirm('Reject this category? You can reopen it later.')">Don't approve</button>
+                <button type="submit" name="decision" value="merged" data-decision="merged" onclick="return confirm('Merge this category into the selected category?')">Merge</button>
+                {% if row.status != 'pending' %}<button type="submit" name="decision" value="pending">Reopen review</button>{% endif %}
+              </div>
+            </form>
+          </details>
+        </article>
+      {% else %}
+        <p>No categories in this view. Try another status or clear the search.</p>
+      {% endfor %}
+      </div>
+      {% if pages > 1 %}
+        <nav class="lfv-review-pager" aria-label="Category pages">
+          <span>{{ total }} results · Page {{ page }} of {{ pages }}</span>
+          <div style="display:flex;gap:9px">
+            {% if page > 1 %}<a href="{{ url_for('admin_round1',status=status,q=query,missing='1' if missing_only else '',page=page-1) }}">Previous</a>{% endif %}
+            {% if page < pages %}<a href="{{ url_for('admin_round1',status=status,q=query,missing='1' if missing_only else '',page=page+1) }}">Next</a>{% endif %}
+          </div>
+        </nav>
+      {% endif %}
+    </section>
+    <p class="lfv-review-archive">These are editorial review decisions, not publication actions. The original votes and draft tools are preserved in the <a href="{{ url_for('admin_round1_archive') }}">historical survey archive</a>. For official 2026 award records, see <a href="{{ url_for('admin_dca_workspace_section',section='categories') }}">2026 Categories</a>.</p>
+  </main>
+  <script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+</body>
+</html>

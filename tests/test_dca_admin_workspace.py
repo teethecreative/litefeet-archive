@@ -41,7 +41,7 @@ def test_dca_admin_sections_are_private_and_separate(website, database):
     with database[1].begin() as db:
         if not db.query(DCAEdition).filter_by(year=2023).first():
             db.add(DCAEdition(year=2023, title="DCA 2023", phase="archived"))
-    archive = client.get("/admin/round1").get_data(as_text=True)
+    archive = client.get("/admin/round1/archive").get_data(as_text=True)
     assert "Historical Round 1 category survey" in archive
     assert 'href="/admin/awards"' in archive
     nominee = client.get("/admin/dca/nominations").get_data(as_text=True)
