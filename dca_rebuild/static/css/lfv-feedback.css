@@ -1,0 +1,33 @@
+/* Sitewide visitor feedback: quiet, accessible, and theme-aware. */
+.lfv-feedback-page{width:min(760px,calc(100% - 36px));margin:44px auto 90px;color:var(--text,#182238)}
+.lfv-feedback-overline{font-size:.76rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted,#596273)}
+.lfv-feedback-page h1{font-size:clamp(2rem,5vw,3.2rem);line-height:1.12;letter-spacing:-.035em;margin:14px 0}
+.lfv-feedback-page p{line-height:1.65}
+.lfv-feedback-page form{display:grid;gap:22px;margin-top:30px}
+.lfv-feedback-page label{display:grid;gap:8px;font-weight:650}
+.lfv-feedback-page label span,.lfv-feedback-options legend span{font-weight:400;font-size:.88rem}
+.lfv-feedback-page input:not([type=radio]),.lfv-feedback-page select,.lfv-feedback-page textarea{
+ width:100%;box-sizing:border-box;min-height:44px;padding:12px;border:1px solid var(--border,#9ca5b2);
+ border-radius:6px;background:var(--surface,#fff);color:var(--text,#172034);font:inherit
+}
+.lfv-feedback-page textarea{resize:vertical}
+.lfv-feedback-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;border:1px solid var(--border,#b8c0cb);border-radius:7px;padding:17px}
+.lfv-feedback-options legend{font-weight:750;padding:0 8px}
+.lfv-feedback-options label{display:flex;align-items:center;gap:9px;font-weight:500}
+.lfv-feedback-options input{accent-color:#ba9025}
+.lfv-feedback-page button[type=submit]{min-height:46px;padding:12px 20px;border:0;border-radius:6px;background:var(--gold,#c9a227);color:#081b39;font:800 1rem Arial,Helvetica,sans-serif;cursor:pointer}
+.lfv-feedback-page button:hover{filter:brightness(.96)}
+.lfv-feedback-honeypot{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+.lfv-feedback-privacy,.lfv-feedback-page-context{font-size:.89rem;color:var(--muted,#596273)}
+.lfv-feedback-inbox .lfv-feedback-counts{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}
+.lfv-feedback-counts a{display:grid;gap:2px;padding:12px 15px;min-width:105px;border:1px solid var(--border,#c9cdd5);border-radius:6px;text-decoration:none;color:var(--text,#11223a)}
+.lfv-feedback-counts strong{font-size:1.35rem}.lfv-feedback-counts span{font-size:.83rem}
+.lfv-feedback-counts a[aria-current=page]{border-bottom:3px solid var(--gold,#c9a227)}
+.lfv-feedback-cards{display:grid;gap:15px;margin:25px 0}
+.lfv-feedback-card{padding:21px;border:1px solid var(--border,#cbd3de);border-radius:6px;background:var(--surface,#fff);color:var(--text,#172034)}
+.lfv-feedback-card h2{font-size:1.25rem;margin:14px 0}.lfv-feedback-card p{line-height:1.55;overflow-wrap:anywhere}
+.lfv-feedback-card-meta{display:flex;flex-wrap:wrap;gap:12px;color:var(--muted,#596273);font-size:.8rem}
+.lfv-feedback-card form{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.lfv-feedback-card form select{padding:9px;border:1px solid var(--border,#a9b3c1);background:var(--surface,#fff);color:var(--text,#15243c)}
+.lfv-feedback-card form button{background:var(--gold,#c9a227);color:#081b39;border:0;padding:10px 16px;border-radius:5px;font-weight:800;cursor:pointer}
+@media(max-width:580px){.lfv-feedback-options{grid-template-columns:1fr}.lfv-feedback-page{margin:24px auto 60px}}
