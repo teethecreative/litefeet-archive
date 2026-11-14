@@ -48,6 +48,14 @@
     .lfv-review-actions{display:flex;gap:8px;flex-wrap:wrap}
     .lfv-review-actions button[data-decision="approved"]{background:var(--review-accent);color:#11233d;border-color:var(--review-accent)}
     .lfv-review-actions button[data-decision="rejected"]{border-color:#a65b5b}
+    .lfv-merge-suggestions{margin:12px 0;padding:12px 14px;border:1px solid var(--review-border);border-left:3px solid var(--review-accent);border-radius:6px;background:var(--review-soft)}
+    .lfv-merge-suggestions .lfv-merge-heading{font-size:.82rem;font-weight:800;color:var(--review-ink);margin:0 0 6px}
+    .lfv-merge-suggestions ul{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+    .lfv-merge-suggestions li{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-top:1px solid var(--review-border);padding-top:8px}
+    .lfv-merge-suggestions strong{display:block;font-size:.82rem;color:var(--review-ink)}
+    .lfv-merge-suggestions small{font-size:.76rem;color:var(--review-muted);line-height:1.4}
+    .lfv-suggestion-select{cursor:pointer;background:var(--review-panel);color:var(--review-ink);border:1px solid var(--review-border);border-radius:5px;padding:7px 10px;font-weight:700;font-size:.78rem}
+    .lfv-merge-filter{display:inline-block;margin:4px 0 10px;color:var(--review-ink);font-size:.85rem;font-weight:700}
     .lfv-review-pager{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:18px;flex-wrap:wrap;font-size:.85rem;color:var(--review-muted)}
     .lfv-review-pager a{border:1px solid var(--review-border);border-radius:5px;padding:8px 12px;color:var(--review-ink);text-decoration:none}
     .lfv-review-archive{margin-top:20px;font-size:.82rem}
@@ -94,6 +102,7 @@
         <button type="submit">Filter</button>
         {% if query or missing_only %}<a href="{{ url_for('admin_round1',status=status) }}">Clear</a>{% endif %}
       </form>
+      <a class="lfv-merge-filter" href="{{ url_for('admin_round1',status='pending',merges='0' if merge_only else '1') }}">{% if merge_only %}Show all pending categories{% else %}Show suggested merges ({{ merge_suggestion_count }}){% endif %}</a>
       <p>{{ total }} matching categor{{ 'y' if total == 1 else 'ies' }} · 10 per page</p>
       <div class="lfv-review-list">
       {% for row in rows %}
@@ -111,6 +120,22 @@
             <p class="lfv-review-description">{{ row.description }}</p>
           {% else %}
             <p class="lfv-review-description lfv-review-missing">Description needed — clarify what this category recognizes.</p>
+          {% endif %}
+          {% if row.suggested_merges %}
+          <section class="lfv-merge-suggestions" aria-label="Potential category merges">
+            <p class="lfv-merge-heading">Suggested merges · review before deciding</p>
+            <ul>
+              {% for suggestion in row.suggested_merges %}
+              <li>
+                <div>
+                  <strong>{{ suggestion.name }}{% if suggestion.status == 'approved' %} · approved{% endif %}</strong>
+                  <small>{{ suggestion.reason }}</small>
+                </div>
+                <button type="button" class="lfv-suggestion-select" data-merge-target="{{ suggestion.key }}">Review merge</button>
+              </li>
+              {% endfor %}
+            </ul>
+          </section>
           {% endif %}
           <details class="lfv-review-edit">
             <summary>Edit details &amp; make a decision</summary>
@@ -148,14 +173,29 @@
         <nav class="lfv-review-pager" aria-label="Category pages">
           <span>{{ total }} results · Page {{ page }} of {{ pages }}</span>
           <div style="display:flex;gap:9px">
-            {% if page > 1 %}<a href="{{ url_for('admin_round1',status=status,q=query,missing='1' if missing_only else '',page=page-1) }}">Previous</a>{% endif %}
-            {% if page < pages %}<a href="{{ url_for('admin_round1',status=status,q=query,missing='1' if missing_only else '',page=page+1) }}">Next</a>{% endif %}
+            {% if page > 1 %}<a href="{{ url_for('admin_round1',status=status,q=query,missing='1' if missing_only else '',merges='1' if merge_only else '',page=page-1) }}">Previous</a>{% endif %}
+            {% if page < pages %}<a href="{{ url_for('admin_round1',status=status,q=query,missing='1' if missing_only else '',merges='1' if merge_only else '',page=page+1) }}">Next</a>{% endif %}
           </div>
         </nav>
       {% endif %}
     </section>
     <p class="lfv-review-archive">These are editorial review decisions, not publication actions. The original votes and draft tools are preserved in the <a href="{{ url_for('admin_round1_archive') }}">historical survey archive</a>. For official 2026 award records, see <a href="{{ url_for('admin_dca_workspace_section',section='categories') }}">2026 Categories</a>.</p>
   </main>
+  <script>
+  document.querySelectorAll('.lfv-suggestion-select').forEach(function(button) {
+    button.addEventListener('click', function() {
+      var card = button.closest('.lfv-review-item');
+      var edit = card && card.querySelector('.lfv-review-edit');
+      var select = edit && edit.querySelector('select[name="merge_target_key"]');
+      if (!edit || !select) return;
+      var target = button.getAttribute('data-merge-target');
+      if (!Array.from(select.options).some(function(option) { return option.value === target; })) return;
+      edit.open = true;
+      select.value = target;
+      select.focus();
+    });
+  });
+  </script>
   <script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
 </body>
 </html>
