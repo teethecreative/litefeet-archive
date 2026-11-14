@@ -117,3 +117,34 @@
   .lfv-share-dialog .lfv-share-preview{max-height:42dvh!important}
   .lfv-share-dialog .lfv-share-actions button{flex:1;min-width:110px}
 }
+
+
+/* Page-scoped sharing: controls occupy the same responsive grid position as award controls. */
+.lfv-share-dialog .lfv-page-controls {
+  grid-area:controls;min-width:0;display:grid;gap:12px;margin:0;
+  padding:18px;background:#f0f3f5;border:1px solid #dce3e8;border-radius:12px;
+}
+.lfv-share-dialog .lfv-page-options-heading{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.lfv-share-dialog .lfv-page-options-heading h3{font:750 16px/1.35 system-ui,sans-serif;color:#071d3b;margin:0}
+.lfv-share-dialog #lfv-page-count{color:#40566e;font:600 12px system-ui,sans-serif;white-space:nowrap}
+.lfv-share-dialog .lfv-page-options{display:grid;gap:8px;max-height:250px;overflow-y:auto;overscroll-behavior:contain;padding:2px}
+.lfv-share-dialog .lfv-page-option{
+  display:flex;gap:11px;align-items:start;min-width:0;padding:11px;
+  border:1px solid #c9d4de;border-radius:8px;background:#fff;color:#071d3b;
+  cursor:pointer;font:14px/1.4 system-ui,sans-serif;
+}
+.lfv-share-dialog .lfv-page-option input{accent-color:#143f80;width:17px;height:17px;flex-shrink:0;margin:2px 0 0}
+.lfv-share-dialog .lfv-page-option span{min-width:0;display:grid;gap:3px}
+.lfv-share-dialog .lfv-page-option strong{font-weight:700;overflow-wrap:anywhere}
+.lfv-share-dialog .lfv-page-option small{font:12px/1.4 system-ui,sans-serif;color:#40566e;overflow-wrap:anywhere}
+.lfv-share-dialog .lfv-page-options-hint{margin:0;color:#40566e;font:12px/1.45 system-ui,sans-serif}
+.lfv-share-dialog .lfv-page-controls .lfv-share-theme{
+  display:flex;flex-wrap:wrap;gap:16px;margin:0;padding:0;border:0;
+  color:#071d3b;background:transparent;font:14px system-ui,sans-serif;
+}
+.lfv-share-dialog .lfv-page-controls .lfv-share-theme legend{font-weight:700;margin-bottom:7px}
+.lfv-share-dialog .lfv-page-controls .lfv-share-theme label{display:inline-flex;align-items:center;gap:7px}
+.lfv-share-dialog .lfv-page-controls .lfv-share-theme input{accent-color:#143f80}
+.lfv-share-dialog .lfv-page-option:focus-within{outline:3px solid #d9ac47;outline-offset:1px}
+.lfv-share-dialog .lfv-share-actions button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:680px){.lfv-share-dialog .lfv-page-controls{padding:14px}.lfv-share-dialog .lfv-page-options{max-height:225px}}

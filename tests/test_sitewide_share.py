@@ -33,6 +33,9 @@ def test_share_dialog_on_public_pages_and_no_private_leaks(website):
     for path in ("/", "/write-ins", "/awards"):
         html = client.get(path).get_data(as_text=True)
         assert 'id="lfv-share-dialog"' in html
+        assert 'id="lfv-page-controls"' in html
+        assert 'id="lfv-page-options"' in html
+        assert 'id="lfv-awards-controls"' not in html
         assert 'data-lfv-format="story"' in html
         assert 'data-lfv-format="post"' in html
         assert 'id="lfv-copy-link"' in html
@@ -60,3 +63,30 @@ def test_share_previews_use_canonical_urls_without_private_query_strings(website
     assert markup.count('property="og:title"') == 1
     assert markup.count('name="twitter:card"') == 1
     assert 'social/cards/write-ins.png' in markup
+
+def test_share_builder_only_reads_the_current_page_source(website):
+    client = website.test_client()
+    script = client.get("/static/js/vault-share.js").get_data(as_text=True)
+    assert 'document.querySelector("main")' in script
+    assert 'page.querySelectorAll("dl")' not in script  # Facts are read from the scoped root.
+    assert 'root.querySelectorAll("dl")' in script
+    assert 'root.querySelectorAll(lists.join(","))' in script
+    assert 'MAX_ITEMS = 6' in script
+    assert 'URL.createObjectURL(blob)' in script
+    assert '/social/awards/options.json' not in script
+    assert '/social/instagram/' not in script
+    assert 'getComputedStyle(element)' in script
+    assert 'node.closest(".lfv-archive-battles")' in script
+
+
+def test_page_share_ui_excludes_off_page_content_chooser(website):
+    client = website.test_client()
+    for path in ("/", "/about", "/calendar", "/archive/timeline", "/awards/dancers-choice/2026"):
+        response = client.get(path)
+        assert response.status_code == 200
+        html = response.get_data(as_text=True)
+        assert 'id="lfv-page-options"' in html
+        assert 'this page only' in html
+        assert 'id="lfv-awards-category"' not in html
+        assert 'id="lfv-share-image"' in html
+        assert 'id="lfv-save-image"' in html

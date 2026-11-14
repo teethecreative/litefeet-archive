@@ -50,16 +50,15 @@ def test_category_and_nominee_graphics_are_from_published_edition(website, datab
     assert client.get(f"/social/awards/story/light/nominee.png?category={cid}&nominee=999999").status_code == 404
 
 
-def test_awards_share_interface_has_four_scopes_and_user_theme_switch(website):
+def test_awards_page_uses_page_scoped_share_controls(website):
     html = website.test_client().get("/awards/dancers-choice/2026").get_data(as_text=True)
-    assert 'id="lfv-awards-controls"' in html
-    for scope in ("awards", "category", "nominees", "nominee"):
-        assert f'value="{scope}"' in html
+    assert 'id="lfv-page-controls"' in html
+    assert 'id="lfv-page-options"' in html
+    assert 'id="lfv-awards-controls"' not in html
     assert 'value="dark"' in html
     assert 'value="light"' in html
     assert 'data-lfv-format="story"' in html
     assert 'data-lfv-format="post"' in html
-
 
 def test_bundle_is_a_zip_of_generated_nominee_images(website, database):
     from dca_rebuild.models import DCACategory
@@ -98,8 +97,8 @@ def test_single_nominee_supporter_reasons_are_opt_in_and_not_saved(website, data
     assert client.post(base, data={"category":str(cid), "nominee":str(nid),
         "reason_mode":"custom","reason_text":"x"*181}).status_code == 400
     html = client.get("/awards/dancers-choice/2026").get_data(as_text=True)
-    assert 'id="lfv-reason-choice"' in html
-    assert 'id="lfv-reason-custom"' in html
+    assert 'id="lfv-page-options"' in html
+    assert 'id="lfv-awards-controls"' not in html
 
 
 def test_options_are_available_when_nomination_edition_is_not_marked_public(website, database):
@@ -151,13 +150,15 @@ def test_only_verified_previously_submitted_reasons_can_be_shared(website, datab
     assert client.get(url + f"&reason=verified-{pending_id}").status_code == 400
 
 
-def test_share_modal_has_visible_controls_and_dynamic_reasons(website):
+def test_share_modal_has_visible_page_only_controls(website):
     client = website.test_client()
     html = client.get("/awards/dancers-choice/2026").get_data(as_text=True)
-    assert 'id="lfv-awards-category"' in html
-    assert 'id="lfv-awards-nominee"' in html
+    assert 'id="lfv-page-options"' in html
+    assert 'id="lfv-page-controls"' in html
     css = client.get("/static/css/vault-share.css").get_data(as_text=True)
     js = client.get("/static/js/vault-share.js").get_data(as_text=True)
     assert "grid-template-areas" in css
-    assert "Previously verified explanations" in js
-    assert "updateSuggestedReasons" in js
+    assert ".lfv-page-option" in css
+    assert "MAX_ITEMS = 6" in js
+    assert "Advertised battle (result unconfirmed)" in js
+    assert "document.querySelector(\"main\")" in js
