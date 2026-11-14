@@ -102,6 +102,32 @@ def ensure_vault_gathering_recurrence_columns():
 
 
 ensure_vault_gathering_recurrence_columns()
+
+# Backfill optional private feedback context without recreating historical rows.
+def ensure_vault_feedback_columns():
+    from sqlalchemy import inspect, text as sql_text
+    table = "vault_development_feedback"
+    if table not in inspect(engine).get_table_names():
+        return
+    existing = {col["name"] for col in inspect(engine).get_columns(table)}
+    additions = (
+        ("feedback_type", "VARCHAR(32)"),
+        ("page_path", "VARCHAR(500)"),
+        ("helpful", "BOOLEAN"),
+        ("device_type", "VARCHAR(24)"),
+        ("browser_name", "VARCHAR(40)"),
+        ("screenshot_data", "BLOB" if engine.dialect.name == "sqlite" else "BYTEA"),
+        ("screenshot_mime", "VARCHAR(40)"),
+    )
+    with engine.begin() as connection:
+        for column, declaration in additions:
+            if column not in existing:
+                connection.execute(sql_text(
+                    f'ALTER TABLE "{table}" ADD COLUMN "{column}" {declaration}'
+                ))
+
+
+ensure_vault_feedback_columns()
 SessionLocal = sessionmaker(bind=engine)
 
 
