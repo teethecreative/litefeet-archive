@@ -339,7 +339,7 @@ def install_admin_workspace(app, ns):
             session["vault_development_feedback_csrf"] = token
             source = (request.args.get("page") or "").strip()
             # Only a local path may be supplied; never trust an external URL.
-            if not source.startswith("/") or source.startswith("//") or "\\\\" in source:
+            if not source.startswith("/") or source.startswith("//") or chr(92) in source:
                 source = ""
             if source and (urlsplit(source).scheme or urlsplit(source).netloc):
                 source = ""
@@ -371,7 +371,7 @@ def install_admin_workspace(app, ns):
         path = (request.form.get("page_path") or "").strip()
         if path and (not path.startswith("/") or path.startswith("//")
                      or urlsplit(path).scheme or urlsplit(path).netloc
-                     or "\\\\" in path):
+                     or chr(92) in path):
             abort(400)
         if len(path) > 500 or kind not in FEEDBACK_TYPES or helpful_raw not in ("", "yes", "no"):
             abort(400)
