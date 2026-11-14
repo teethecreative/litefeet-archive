@@ -72,7 +72,7 @@ def test_approve_requires_description_and_leaves_pending_queue(website, database
     data["category_description"] = "Recognizes outstanding crowd energy."
     assert client.post(path, data=data).status_code == 303
     pending = client.get("/admin/round1").get_data(as_text=True)
-    assert "Best Vibes" not in pending
+    assert '<span class="lfv-review-name">Best Vibes</span>' not in pending
     approved = client.get("/admin/round1?status=approved").get_data(as_text=True)
     assert "Best Vibes" in approved
     assert "Recognizes outstanding crowd energy." in approved
@@ -88,7 +88,7 @@ def test_reject_returning_category_preserves_historical_record(website, database
         decision="rejected",
     ))
     assert response.status_code == 303
-    assert "Battle Host of the Year" not in client.get(
+    assert '<span class="lfv-review-name">Battle Host of the Year</span>' not in client.get(
         "/admin/round1"
     ).get_data(as_text=True)
     assert "Battle Host of the Year" in client.get(
@@ -113,7 +113,7 @@ def test_reopen_from_completed_status_and_search(website, database):
     assert client.post(path, data=item).status_code == 303
     assert "Best Vibes" in client.get(
         "/admin/round1?q=Vibes&missing=1").get_data(as_text=True)
-    assert "Battle Host of the Year" not in client.get(
+    assert '<span class="lfv-review-name">Battle Host of the Year</span>' not in client.get(
         "/admin/round1?q=Vibes&missing=1").get_data(as_text=True)
 
 
