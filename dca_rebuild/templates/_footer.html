@@ -56,6 +56,7 @@
 
         <div class="ledger-footer-links">{% for item in vault_navigation %}<a href="{{ item.href }}">{{ item.label }}</a>{% endfor %}
         <a href="{{ url_for('vault_world_record') }}">World Record Attempt</a>
+        <a id="lfv-give-feedback" href="{{ url_for('vault_development_feedback_public') }}">Give Feedback</a>
         <a class="lfv-footer-admin-link" href="{{ url_for('admin_dashboard') }}">Admin{% if session.get('ledger_admin_authenticated') %} console{% endif %}</a>
         </div>
 
@@ -84,6 +85,14 @@
 
 <script>
 (function () {
+    const feedbackLink = document.getElementById("lfv-give-feedback");
+    if (feedbackLink && !location.pathname.startsWith("/admin")) {
+        // Attach the local page path only; do not send full URLs or query data.
+        const reportedPage = location.pathname;
+        if (reportedPage && reportedPage.startsWith("/") && !reportedPage.startsWith("//")) {
+            feedbackLink.href = feedbackLink.href + "?page=" + encodeURIComponent(reportedPage);
+        }
+    }
     const form = document.getElementById(
         "ledger-newsletter-form"
     );
