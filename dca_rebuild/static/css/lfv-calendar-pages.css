@@ -392,3 +392,63 @@ html.lfv-sitewide #vault-event-detail .lfv-event-secondary-action{
     width:fit-content;
   }
 }
+
+
+/* 2026 editorial calendar refinement: concise header, legible content in both themes. */
+html.lfv-sitewide #vault-calendar.lfv-calendar-full.lfv3-wrap{
+  max-width:1120px!important;
+  padding:clamp(24px,3vw,40px) 0 72px!important;
+}
+html.lfv-sitewide #vault-calendar .lfv-calendar-full-header.lfv-calendar-intro{
+  display:flex!important;align-items:center;justify-content:space-between;gap:20px 36px;
+  margin:0 0 28px!important;padding:25px 0 26px!important;
+  border:0!important;border-top:3px solid var(--lfv-gold)!important;
+  border-bottom:1px solid var(--lfv-line)!important;
+  border-radius:0!important;box-shadow:none!important;
+  background:transparent!important;color:var(--lfv-ink)!important;
+  min-height:0!important;
+}
+html.lfv-sitewide #vault-calendar .lfv-calendar-intro-copy{min-width:0;max-width:760px}
+html.lfv-sitewide #vault-calendar .lfv-calendar-intro .lfv3-eyebrow{
+  margin:0 0 8px!important;color:var(--lfv-muted)!important;
+  font-size:.7rem!important;letter-spacing:.09em;
+}
+html.lfv-sitewide #vault-calendar .lfv-calendar-intro h1{
+  color:var(--lfv-ink)!important;font-size:clamp(1.9rem,3.2vw,2.8rem)!important;
+  line-height:1.12!important;letter-spacing:-.035em!important;margin:0 0 10px!important;
+  text-transform:none!important;
+}
+html.lfv-sitewide #vault-calendar .lfv-calendar-intro p:not(.lfv3-eyebrow){
+  color:var(--lfv-muted)!important;font-size:.96rem!important;
+  line-height:1.55!important;margin:0!important;max-width:70ch!important;
+}
+html.lfv-sitewide #vault-calendar .lfv-calendar-intro .lfv-calendar-submit{
+  flex-shrink:0;align-self:center;margin:0!important;white-space:nowrap;
+}
+html.lfv-sitewide #vault-calendar .lfv-calendar-month-navigation{
+  border:0!important;padding:0 0 12px!important;margin:0 0 8px!important;
+}
+html.lfv-sitewide #vault-calendar .lfv-calendar-month-navigation h2{
+  font-size:clamp(1.35rem,2vw,1.7rem)!important;line-height:1.3!important;
+}
+html.lfv-sitewide #vault-calendar .lfv-calendar-month-grid th{
+  font-size:.76rem;padding:9px 5px 10px;
+}
+html.lfv-sitewide #vault-calendar .lfv-calendar-month-grid td.lfv-calendar-date-cell{height:112px}
+html.lfv-sitewide #vault-calendar .lfv-calendar-day-tile{min-height:112px;gap:6px;padding:9px}
+html.lfv-sitewide #vault-calendar .lfv-calendar-tile-event,
+html.lfv-sitewide #vault-calendar .lfv-calendar-tile-more{
+  font-size:.73rem!important;line-height:1.34!important;
+}
+html.lfv-sitewide #vault-calendar .lfv-calendar-full-list{margin-top:30px!important}
+html.lfv-sitewide #vault-calendar .lfv-calendar-day-group{padding:14px 0 16px!important}
+html.lfv-sitewide #vault-calendar .lfv-calendar-full-event{padding:8px 0!important}
+@media(max-width:720px){
+  html.lfv-sitewide #vault-calendar .lfv-calendar-full-header.lfv-calendar-intro{
+    flex-direction:column;align-items:stretch;gap:16px;
+    padding:20px 0 22px!important;margin-bottom:22px!important;
+  }
+  html.lfv-sitewide #vault-calendar .lfv-calendar-intro .lfv-calendar-submit{align-self:flex-start}
+  html.lfv-sitewide #vault-calendar .lfv-calendar-month-grid td.lfv-calendar-date-cell{height:105px}
+  html.lfv-sitewide #vault-calendar .lfv-calendar-day-tile{min-height:105px;padding:7px}
+}

@@ -13,10 +13,12 @@
 <body>
 {% include "_navigation.html" %}
 <main class="lfv-calendar-full lfv3-wrap" id="vault-calendar">
-  <header class="lfv-calendar-full-header">
-    <p class="lfv3-eyebrow">WHAT'S HAPPENING</p>
-    <h1>LiteFeet Calendar</h1>
-    <p>Upcoming battles, dance labs, classes, workshops and community gatherings. Recurring sessions appear on each scheduled day.</p>
+  <header class="lfv-calendar-full-header lfv-calendar-intro">
+    <div class="lfv-calendar-intro-copy">
+      <p class="lfv3-eyebrow">WHAT'S HAPPENING</p>
+      <h1>LiteFeet Calendar</h1>
+      <p>Upcoming battles, dance labs, classes, workshops and community gatherings. Recurring sessions appear on each scheduled day.</p>
+    </div>
     <a class="lfv-calendar-submit lfv-primary-cta" href="{{ url_for('vault_submit') }}">Add an Event +</a>
   </header>
   <nav class="lfv-calendar-month-navigation" aria-label="Calendar month">
