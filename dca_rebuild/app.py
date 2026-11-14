@@ -5057,6 +5057,8 @@ install_award_sharing(app)
 # Unified admin overview, pending review queue, development workspace and feedback.
 from dca_rebuild.admin_workspace import install_admin_workspace
 install_admin_workspace(app, globals())
+from dca_rebuild.admin_activity import install_admin_activity
+install_admin_activity(app, globals())
 
 # Separate current DCA 2026 administration from historical category survey.
 from dca_rebuild.dca_admin_workspace import install_dca_admin_workspace
