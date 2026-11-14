@@ -1,17 +1,79 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Website Feedback | The LiteFeet Vault</title>
-<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}"></head>
-<body>{% include "_navigation.html" %}<main class="lfv-public-feedback">
-<p class="lfv-admin-overline">THE LITEFEET VAULT / COMMUNITY</p>
-{% if submitted %}<h1>Feedback received</h1><p>Thank you. Your suggestion has been submitted privately for review.</p><a href="{{ url_for('index') }}">Back to the Vault</a>
-{% else %}<h1>Website feedback</h1><p>Suggest an improvement or report a problem with the website. Feedback is reviewed before any change is made.</p>
-<form method="post" action="{{ url_for('vault_development_feedback_public') }}">
-<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-<div class="lfv-workspace-honeypot" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
-<label>What should we improve? <input name="title" maxlength="240" minlength="3" required></label>
-<label>Area <select name="area"><option value="site">Website</option><option value="archive">Archive</option><option value="awards">Awards</option><option value="events">Events</option><option value="music">Music</option><option value="lock-in">Lock In</option><option value="other">Other</option></select></label>
-<label>Details <textarea name="details" maxlength="3000" rows="5" minlength="10" required></textarea></label>
-<label>Email (optional, kept private) <input name="email" type="email" maxlength="255"></label>
-<p class="lfv-feedback-privacy">Your feedback and optional email go only to the administrators, not to public records or listings.</p>
-<button type="submit">Send feedback</button>
-</form>{% endif %}
-</main></body></html>
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Website Feedback | The LiteFeet Vault</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-feedback.css') }}">
+</head><body>
+{% include "_navigation.html" %}
+<main class="lfv-feedback-page">
+  <p class="lfv-feedback-overline">THE LITEFEET VAULT / COMMUNITY</p>
+  {% if submitted %}
+    <h1>Feedback received.</h1>
+    <p>Thank you for helping improve The Vault. Your message is private and will be reviewed by the team.</p>
+    <a href="{{ url_for('index') }}">Return to The Vault</a>
+  {% else %}
+    <h1>Help improve The Vault.</h1>
+    <p>Tell us what works, what doesn't, or what you would like to see changed. This form is for the website experience, not historical corrections.</p>
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('vault_development_feedback_public') }}" id="lfv-feedback-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="page_path" value="{{ source_page or '' }}">
+      <div class="lfv-feedback-honeypot" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <fieldset class="lfv-feedback-options">
+        <legend>What is your feedback about?</legend>
+        <label><input type="radio" name="feedback_type" value="layout" required> Design or layout</label>
+        <label><input type="radio" name="feedback_type" value="bug"> Something isn't working</label>
+        <label><input type="radio" name="feedback_type" value="navigation"> Navigation or accessibility</label>
+        <label><input type="radio" name="feedback_type" value="feature"> Suggest a feature</label>
+        <label><input type="radio" name="feedback_type" value="helpfulness"> Page helpfulness</label>
+        <label><input type="radio" name="feedback_type" value="other" checked> Other feedback</label>
+      </fieldset>
+      <label>What should we improve? <input name="title" maxlength="240" minlength="3" placeholder="A short summary" required></label>
+      <label>Which part of the site? <select name="area">
+        <option value="site">Website</option><option value="archive">Archive</option>
+        <option value="awards">Awards</option><option value="events">Events</option>
+        <option value="music">Music</option><option value="lock-in">Lock In</option>
+        <option value="other">Other</option>
+      </select></label>
+      <label>Tell us more <textarea name="details" maxlength="3000" rows="5" minlength="10" placeholder="What happened, or what would you change?" required></textarea></label>
+      <fieldset class="lfv-feedback-options">
+        <legend>Was this page helpful? <span>(optional)</span></legend>
+        <label><input type="radio" name="helpful" value="yes"> Yes</label>
+        <label><input type="radio" name="helpful" value="no"> No</label>
+        <label><input type="radio" name="helpful" value="" checked> Not applicable</label>
+      </fieldset>
+      <label>Screenshot <span>(optional, JPG/PNG/WebP up to 1 MB)</span>
+        <input name="screenshot" type="file" accept="image/png,image/jpeg,image/webp">
+      </label>
+      <label>Email <span>(optional, private)</span> <input name="email" type="email" maxlength="255" autocomplete="email"></label>
+      <div class="lfv-feedback-page-context" id="lfv-feedback-page-context" aria-live="polite"></div>
+      <p class="lfv-feedback-privacy">Only administrators see submissions, screenshots, and optional contact information. The page you report and basic device/browser type are saved to help us investigate. Please avoid personal or sensitive information in screenshots.</p>
+      <button type="submit">Send feedback</button>
+    </form>
+  {% endif %}
+</main>
+{% include "_footer.html" %}
+<script>
+(function () {
+  const form = document.getElementById("lfv-feedback-form");
+  if (!form) return;
+  const input = form.elements.namedItem("page_path");
+  const value = input.value;
+  const context = document.getElementById("lfv-feedback-page-context");
+  if (value && value[0] === "/" && !value.startsWith("//")) {
+    context.textContent = "Reporting page: " + value;
+  } else {
+    context.textContent = "General website feedback";
+  }
+  const file = form.elements.namedItem("screenshot");
+  file.addEventListener("change", () => {
+    if (file.files.length && file.files[0].size > 1000000) {
+      file.setCustomValidity("Please choose a screenshot smaller than 1 MB.");
+      file.reportValidity();
+    } else file.setCustomValidity("");
+  });
+})();
+</script>
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+</body></html>
