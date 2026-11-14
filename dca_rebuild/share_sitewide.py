@@ -13,7 +13,7 @@ from PIL import Image, ImageDraw
 from dca_rebuild.seo import SITE_URL, card_key_for_path, metadata_for_path, path_for_card_key
 from dca_rebuild.social_cards import _font, _wrap, render_social_card
 
-VERSION = "20261109-sharefix2"
+VERSION = "20261114-page-share1"
 ICON_LINK = re.compile(
     r'<link\b(?=[^>]*\brel\s*=\s*(["\'])(?:icon|shortcut\s+icon|apple-touch-icon)\1)[^>]*>',
     re.I,
@@ -126,57 +126,37 @@ def _social_markup(meta):
 
 
 SHARE_UI = """
-<div class="lfv-share-entry"><button type="button" id="lfv-share-open" aria-haspopup="dialog">Share this page</button></div>
+<div class="lfv-share-entry"><button type="button" id="lfv-share-open" aria-haspopup="dialog" aria-controls="lfv-share-dialog">Share this page</button></div>
 <dialog class="lfv-share-dialog" id="lfv-share-dialog" aria-labelledby="lfv-share-title">
   <div class="lfv-share-heading">
     <div><p class="lfv-share-eyebrow">THE LITEFEET VAULT</p><h2 id="lfv-share-title">Share this page</h2></div>
     <button class="lfv-share-close" type="button" id="lfv-share-close" aria-label="Close sharing">×</button>
   </div>
-  <p class="lfv-share-copy">Choose what to share, preview your graphic, and save or share it.</p>
-  <section id="lfv-awards-controls" hidden aria-label="Award graphic options">
-    <label for="lfv-awards-scope">Share</label>
-    <select id="lfv-awards-scope">
-      <option value="awards">The whole awards</option>
-      <option value="category">A category</option>
-      <option value="nominees">Category + nominees</option>
-      <option value="nominee">Category + one nominee</option>
-    </select>
-    <label for="lfv-awards-category" id="lfv-awards-category-label" hidden>Category</label>
-    <select id="lfv-awards-category" hidden></select>
-    <label for="lfv-awards-nominee" id="lfv-awards-nominee-label" hidden>Nominee</label>
-    <select id="lfv-awards-nominee" hidden></select>
+  <p class="lfv-share-copy">Choose what to include from <strong>this page only</strong>. Your graphic updates as you select details.</p>
+  <section class="lfv-page-controls" id="lfv-page-controls" aria-label="Details from this page">
+    <div class="lfv-page-options-heading"><h3>Include in your graphic</h3><span id="lfv-page-count" aria-live="polite"></span></div>
+    <div id="lfv-page-options" class="lfv-page-options" role="group" aria-label="Available details on this page"></div>
+    <p class="lfv-page-options-hint">Only published details visible on this page are offered. Select up to six. Long passages are shown as excerpts.</p>
     <fieldset class="lfv-share-theme">
       <legend>Graphic theme</legend>
       <label><input type="radio" name="lfv-share-theme" value="light" checked> Light</label>
       <label><input type="radio" name="lfv-share-theme" value="dark"> Dark</label>
     </fieldset>
-    <div id="lfv-nominee-reason-controls" hidden>
-      <label for="lfv-reason-choice">Explanation for this nominee</label>
-      <select id="lfv-reason-choice">
-        <option value="none">No explanation</option>
-        <option value="custom">Write my own explanation</option>
-      </select>
-      <label id="lfv-reason-custom-label" for="lfv-reason-custom" hidden>Your message</label>
-      <textarea id="lfv-reason-custom" maxlength="180" rows="3" placeholder="Why do you support this nominee?" hidden></textarea>
-      <p class="lfv-reason-helper">Your message is added to the graphic only. It does not submit a nomination.</p>
-    </div>
-    <p id="lfv-share-pages" class="lfv-share-status" hidden></p>
   </section>
-  <div class="lfv-share-formats" aria-label="Instagram graphic format">
+  <div class="lfv-share-formats" aria-label="Graphic format">
     <button type="button" data-lfv-format="story" aria-pressed="true">Story</button>
     <button type="button" data-lfv-format="post" aria-pressed="false">Post</button>
   </div>
-  <img class="lfv-share-preview" id="lfv-share-preview" alt="Preview of the Instagram sharing graphic" loading="lazy">
+  <img class="lfv-share-preview" id="lfv-share-preview" alt="Preview of the selected details from this page" loading="lazy">
   <div class="lfv-share-actions">
     <button type="button" id="lfv-share-image">Share image</button>
     <button type="button" id="lfv-save-image">Save image</button>
-    <button type="button" id="lfv-copy-link">Copy link</button>
+    <button type="button" id="lfv-copy-link">Copy page link</button>
   </div>
-  <p class="lfv-share-hint">On your phone, select Instagram from the share sheet if available. You can also save the image and upload it to Instagram.</p>
+  <p class="lfv-share-hint">On your phone, use the share sheet if supported. Otherwise save the image and upload it to your preferred app.</p>
   <p class="lfv-share-status" id="lfv-share-status" role="status" aria-live="polite"></p>
 </dialog>
 """
-
 
 @lru_cache(maxsize=32)
 def _instagram_card(format_name, title, description):
