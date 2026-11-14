@@ -10,6 +10,8 @@ import secrets
 from flask import abort, flash, redirect, render_template, request, session, url_for
 from sqlalchemy import func
 
+from dca_rebuild.category_merge_suggestions import suggest_merge_targets
+
 from dca_rebuild.models import (
     DCAEdition, DCACategory, DCACategorySuggestionSubmission,
     DCANewCategorySuggestion, DCAReturnCategoryVote,
@@ -113,6 +115,7 @@ def install_category_review_queue(app, ns):
         if status not in ("all",) + STATUSES:
             abort(400)
         missing_only = request.args.get("missing") == "1"
+        merge_only = request.args.get("merges") == "1"
         term = (request.args.get("q") or "").strip().casefold()[:100]
         try:
             page = int(request.args.get("page", "1"))
@@ -124,6 +127,8 @@ def install_category_review_queue(app, ns):
         with ns["SessionLocal"]() as db:
             current, historical = _edition_pair(db)
             all_rows = _rows(db, current, historical)
+        for row in all_rows:
+            row["suggested_merges"] = suggest_merge_targets(row, all_rows)
         counts = {
             key: sum(row["status"] == key for row in all_rows)
             for key in STATUSES
@@ -132,6 +137,7 @@ def install_category_review_queue(app, ns):
             row for row in all_rows
             if (status == "all" or row["status"] == status)
             and (not missing_only or not row["description"].strip())
+            and (not merge_only or row["suggested_merges"])
             and (not term or term in (
                 row["name"] + " " + row["description"] + " " + row["key"]
             ).casefold())
@@ -144,6 +150,9 @@ def install_category_review_queue(app, ns):
             "admin_category_review.html", rows=selected_rows[start:start+PAGE_SIZE],
             all_rows=all_rows, counts=counts, total=total,
             page=page, pages=pages, status=status, missing_only=missing_only,
+            merge_only=merge_only,
+            merge_suggestion_count=sum(bool(x["suggested_merges"]) for x in all_rows
+                                       if x["status"] in ("pending", "approved")),
             query=request.args.get("q", "")[:100], total_categories=len(all_rows),
             missing_count=sum(not x["description"].strip() for x in all_rows
                               if x["status"] == "pending"),
