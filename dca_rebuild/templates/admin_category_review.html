@@ -85,9 +85,11 @@
         <label>Search categories
           <input name="q" type="search" value="{{ query }}" maxlength="100" placeholder="Name, description, or ID">
         </label>
-        <label class="lfv-review-filter" style="display:flex;flex:0 0 auto;align-items:center">
-          <input type="checkbox" name="missing" value="1" {% if missing_only %}checked{% endif %}>
-          Needs description
+        <label class="lfv-review-filter" style="display:grid;flex:0 0 auto;align-items:center">Description filter
+          <select name="missing" style="padding:10px;border:1px solid var(--review-border);border-radius:6px;background:var(--review-panel);color:var(--review-ink)">
+            <option value="">All descriptions</option>
+            <option value="1" {% if missing_only %}selected{% endif %}>Needs description</option>
+          </select>
         </label>
         <button type="submit">Filter</button>
         {% if query or missing_only %}<a href="{{ url_for('admin_round1',status=status) }}">Clear</a>{% endif %}
