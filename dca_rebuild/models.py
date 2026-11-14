@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
     Text,
     UniqueConstraint,
@@ -980,6 +981,14 @@ class VaultDevelopmentFeedback(Base):
     details = Column(Text, nullable=False)
     area = Column(String(40), nullable=False, default="site")
     contact_email = Column(String(255), nullable=True)
+    # Context is stored privately and is never injected into public pages.
+    feedback_type = Column(String(32), nullable=True, index=True)
+    page_path = Column(String(500), nullable=True)
+    helpful = Column(Boolean, nullable=True)
+    device_type = Column(String(24), nullable=True)
+    browser_name = Column(String(40), nullable=True)
+    screenshot_data = Column(LargeBinary, nullable=True)
+    screenshot_mime = Column(String(40), nullable=True)
     status = Column(String(24), nullable=False, default="new", index=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     reviewed_at = Column(DateTime, nullable=True)
