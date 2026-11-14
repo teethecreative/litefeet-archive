@@ -1,0 +1,55 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Website Feedback | The LiteFeet Vault Admin</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-feedback.css') }}">
+</head><body class="ledger-admin">{% include "_admin_navigation.html" %}
+<main class="lfv-admin-workspace lfv-feedback-inbox">
+<header class="lfv-admin-workspace-head">
+<p class="lfv-admin-overline">ADMIN / COMMUNITY INPUT</p><h1>Website Feedback</h1>
+<p>Private reports on the site's design, navigation and functionality. Nothing here is automatically published.</p>
+<a href="{{ url_for('vault_development_feedback_public') }}" target="_blank" rel="noopener">View public form</a>
+</header>
+{% with messages=get_flashed_messages() %}{% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}{% endwith %}
+<div class="lfv-feedback-counts">
+{% for value in statuses %}<a href="{{ url_for('admin_website_feedback',status=value) }}" {% if status == value %}aria-current="page"{% endif %}><strong>{{ counts[value] }}</strong><span>{{ value|replace('_',' ')|title }}</span></a>{% endfor %}
+</div>
+<form method="get" class="lfv-admin-workspace-filters">
+<label>Status<select name="status"><option value="all">All statuses</option>{% for value in statuses %}<option value="{{ value }}" {% if value == status %}selected{% endif %}>{{ value|title }}</option>{% endfor %}</select></label>
+<label>Type<select name="type"><option value="all">All categories</option>{% for value in kinds %}<option value="{{ value }}" {% if kind == value %}selected{% endif %}>{{ value|title }}</option>{% endfor %}</select></label>
+<button type="submit">Filter</button>
+</form>
+<section class="lfv-feedback-cards" aria-label="Website feedback submissions">
+{% for entry in rows %}
+<article class="lfv-feedback-card">
+<div class="lfv-feedback-card-meta">
+<span>{{ (entry.feedback_type or 'Other')|replace('_',' ')|title }}</span>
+<span>{{ entry.status|replace('_',' ')|title }}</span>
+<time datetime="{{ entry.created_at.isoformat() }}">{{ entry.created_at.strftime('%b %-d, %Y') }}</time>
+</div>
+<h2>{{ entry.title }}</h2><p class="lfv-feedback-message">{{ entry.details }}</p>
+{% if entry.page_path %}<p><strong>Page:</strong> <a href="{{ entry.page_path }}" target="_blank" rel="noopener">{{ entry.page_path }}</a></p>{% endif %}
+{% if entry.helpful is not none %}<p><strong>Was this page helpful?</strong> {{ 'Yes' if entry.helpful else 'No' }}</p>{% endif %}
+{% if entry.contact_email %}<p><strong>Private email:</strong> {{ entry.contact_email }}</p>{% endif %}
+{% if entry.device_type or entry.browser_name %}<p><strong>Environment:</strong> {{ entry.device_type or 'Unspecified' }} · {{ entry.browser_name or 'Unspecified' }}</p>{% endif %}
+{% if entry.screenshot_data %}<p><a href="{{ url_for('admin_website_feedback_screenshot',feedback_id=entry.id) }}" target="_blank" rel="noopener">View private screenshot</a></p>{% endif %}
+<form method="post" action="{{ url_for('admin_website_feedback_status',feedback_id=entry.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label for="lfv-feedback-status-{{ entry.id }}">Review status</label>
+<select id="lfv-feedback-status-{{ entry.id }}" name="status">
+{% for value in statuses %}<option value="{{ value }}" {% if value == entry.status %}selected{% endif %}>{{ value|replace('_',' ')|title }}</option>{% endfor %}
+</select><button type="submit">Save</button>
+</form>
+</article>
+{% else %}
+<p>No feedback matches these filters.</p>
+{% endfor %}
+</section>
+{% if pages > 1 %}<nav class="lfv-admin-workspace-pagination" aria-label="Feedback pages">
+{% if page > 1 %}<a href="{{ url_for('admin_website_feedback',status=status,type=kind,page=page-1) }}">Previous</a>{% endif %}
+<span>Page {{ page }} of {{ pages }}</span>
+{% if page < pages %}<a href="{{ url_for('admin_website_feedback',status=status,type=kind,page=page+1) }}">Next</a>{% endif %}
+</nav>{% endif %}
+</main></body></html>
