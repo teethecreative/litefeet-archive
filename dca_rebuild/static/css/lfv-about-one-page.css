@@ -36,3 +36,51 @@ html.lfv-sitewide #vault-section-about .lfv-about-copy a:hover { text-decoration
 @media(max-width:640px) {
  html.lfv-sitewide #vault-section-about .lfv-about-block { scroll-margin-top:78px; }
 }
+
+
+/* Unified About reading rhythm: aligned content, deliberate spacing, no oversized cards. */
+html.lfv-sitewide #vault-section-about .lfv-about-unified{
+  max-width:920px;margin:0 auto;padding:0;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-block{
+  box-sizing:border-box;min-height:0!important;
+  margin:0!important;padding:clamp(28px,4vw,46px) 0!important;
+  border:0!important;border-top:1px solid var(--lfv-line)!important;
+  border-radius:0!important;box-shadow:none!important;
+  background:transparent!important;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-block:first-child{
+  border-top:3px solid var(--lfv-gold)!important;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-block .vault-kicker{
+  margin:0 0 9px!important;color:var(--lfv-muted)!important;
+  font-size:.72rem!important;letter-spacing:.07em!important;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-block h2{
+  font-size:clamp(1.65rem,2.7vw,2.25rem)!important;
+  line-height:1.18!important;margin:0 0 11px!important;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-block h3{
+  font-size:clamp(1.04rem,1.55vw,1.25rem)!important;
+  line-height:1.35!important;margin:0 0 20px!important;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-copy{
+  width:100%;max-width:760px;margin:0!important;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-copy p,
+html.lfv-sitewide #vault-section-about .lfv-about-copy li{
+  font-size:clamp(.95rem,1.2vw,1.04rem)!important;
+  line-height:1.65!important;margin:0 0 15px!important;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-copy p:last-child,
+html.lfv-sitewide #vault-section-about .lfv-about-copy li:last-child{margin-bottom:0!important}
+html.lfv-sitewide #vault-section-about .lfv-about-founder .lfv-about-copy p:nth-last-child(2){
+  margin-top:24px!important;margin-bottom:8px!important;
+}
+html.lfv-sitewide #vault-section-about .lfv-about-founder .lfv-about-copy p:last-child{
+  line-height:1.5!important;
+}
+@media(max-width:640px){
+  html.lfv-sitewide #vault-section-about .lfv-about-unified{padding:0 4px}
+  html.lfv-sitewide #vault-section-about .lfv-about-block{padding:26px 0!important}
+}
