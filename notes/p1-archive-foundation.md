@@ -5,6 +5,11 @@ November 15, 2026. Source baseline: `main` at `9f9628d`.
 This is the first P1 implementation milestone, not completion of the full P1 program.
 The live database is not migrated and Archive AI is not deployed.
 
+The subsequent [connected-records milestone](p1-connected-records.md) adds a
+backed-up version 2 staging upgrade, typed graph records, explicit export import,
+an opt-in admin decision UI and reversible connections. The details below record
+the initial foundation baseline; consult that note for current behavior.
+
 ## Inventory and reconciliation findings
 
 The preview reads actual repository snapshots, not the production database. The

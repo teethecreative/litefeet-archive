@@ -37,6 +37,8 @@ CONTACT = 'mailto:teethecreative@gmail.com?subject=LiteFeet%20Vault%20Enquiry'
 
 
 def install_information_architecture(app, ns):
+    from dca_rebuild.archive_graph_admin import install_archive_graph_admin
+    install_archive_graph_admin(app, ns)
     # Read-only access for SEO on current approved calendar occurrences.
     app.extensions["vault_seo_session_factory"] = ns["SessionLocal"]
     def public_content():

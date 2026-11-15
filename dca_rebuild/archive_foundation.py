@@ -15,16 +15,22 @@ import uuid
 
 from dca_rebuild.archive_catalog import all_records, public_record
 from dca_rebuild.archive_recovery import identity_key, recovery_candidates
+from dca_rebuild.archive_graph_schema import GRAPH_SCHEMA, GRAPH_TABLES, KIND_MAP, seed_graph_record
 
 
 def source_records():
     """Only allowlisted catalog fields and sanitized recovery identity fields."""
     records = []
+    identities = json.loads((Path(__file__).parent / "data" / "archive_recovered_identities.json").read_text(encoding="utf-8"))
+    recorded_aliases = {item["slug"]: item.get("aliases", []) for item in identities["records"]}
     for item in all_records():
+        payload = public_record(item)
+        if item["slug"] in recorded_aliases:
+            payload["aliases"] = recorded_aliases[item["slug"]]
         records.append({
             "system": "editorial_catalog", "key": item["slug"],
             "title": item["title"], "kind": item["record_type"],
-            "visibility": "existing_public", "payload": public_record(item),
+            "visibility": "existing_public", "payload": payload,
         })
     for item in recovery_candidates():
         records.append({
@@ -47,6 +53,17 @@ def reference(item):
 def consolidation_preview(records=None):
     """Deterministic research suggestions; sentiment and name matches prove nothing."""
     records = source_records() if records is None else list(records)
+    required = {"system", "key", "title", "kind", "visibility", "payload"}
+    for item in records:
+        if not isinstance(item, dict) or set(item) != required:
+            raise ValueError("Each source record must specify system, key, title, kind, visibility and payload")
+        if any(not isinstance(item[key], str) or not item[key].strip()
+               for key in required - {"payload"}):
+            raise ValueError("Source identifiers and labels must be nonempty strings")
+        if not isinstance(item["payload"], dict) or item["visibility"] not in {"existing_public", "private_review"}:
+            raise ValueError("Invalid source payload or visibility")
+        if item["kind"] not in KIND_MAP:
+            raise ValueError("Unsupported archive record kind")
     locators = [(r["system"], r["key"]) for r in records]
     if len(set(locators)) != len(locators):
         raise ValueError("Duplicate source locator; review before staging")
@@ -62,7 +79,7 @@ def consolidation_preview(records=None):
     for item in records:
         payload = item["payload"]
         # Restrict identity comparisons to people, never event titles or team names.
-        if payload.get("collection") == "people" or item["kind"] == "person_candidate":
+        if item["kind"] in {"person", "person_candidate", "dancer_profile", "legacy_identity"}:
             for name in set(item["title"].split("/")):
                 key = identity_key(name)
                 if key and item not in names[key]:
@@ -141,6 +158,28 @@ CREATE TABLE IF NOT EXISTS import_run_records (
 );
 """
 
+BASE_TABLES = {"staging_metadata", "entities", "source_crosswalk", "source_revisions",
+               "review_suggestions", "suggestion_subjects", "import_runs", "import_run_records"}
+
+
+def staging_path(destination):
+    path = Path(destination).absolute()
+    if path.is_symlink() or not path.name.endswith(".staging.sqlite"):
+        raise ValueError("Use a regular local filename ending in .staging.sqlite")
+    return path
+
+
+def validate_staging(db, require_graph=False):
+    tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if "staging_metadata" not in tables:
+        raise ValueError("Not an archive staging database")
+    versions = db.execute("SELECT version FROM staging_metadata").fetchall()
+    if versions == [(1,)] and tables == BASE_TABLES and not require_graph:
+        return 1
+    if versions == [(2,)] and tables == BASE_TABLES | GRAPH_TABLES:
+        return 2
+    raise ValueError("Unrecognized archive staging schema; run the explicit staging importer")
+
 
 def stage_snapshot(destination, records=None):
     """Create/update an explicitly named local .staging.sqlite snapshot atomically.
@@ -148,28 +187,29 @@ def stage_snapshot(destination, records=None):
     Existing snapshots are backed up before writes. No delete/update of historical
     revisions, public tables, approvals, or source files is performed.
     """
-    destination = Path(destination).absolute()
-    if destination.is_symlink() or not destination.name.endswith(".staging.sqlite"):
-        raise ValueError("Use a regular local filename ending in .staging.sqlite")
+    destination = staging_path(destination)
     records = source_records() if records is None else list(records)
     preview = consolidation_preview(records)
     now = datetime.now(timezone.utc).isoformat()
     backup = None
     if destination.exists():
         with sqlite3.connect(f"{destination.as_uri()}?mode=ro", uri=True) as source:
-            tables = {r[0] for r in source.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-            expected = {"staging_metadata", "entities", "source_crosswalk", "source_revisions",
-                        "review_suggestions", "suggestion_subjects", "import_runs", "import_run_records"}
-            if tables != expected or source.execute("SELECT version FROM staging_metadata").fetchall() != [(1,)]:
-                raise ValueError("Refusing a database that is not a version 1 archive staging snapshot")
+            validate_staging(source)
             backup = destination.with_name(destination.name + "." + uuid.uuid4().hex + ".bak")
             with sqlite3.connect(backup) as target:
                 source.backup(target)
     with sqlite3.connect(destination) as db:
         db.execute("PRAGMA foreign_keys=ON")
-        db.executescript("BEGIN IMMEDIATE;\n" + SCHEMA)
+        db.executescript("BEGIN IMMEDIATE;\n" + SCHEMA + GRAPH_SCHEMA)
         if not db.execute("SELECT 1 FROM staging_metadata").fetchone():
-            db.execute("INSERT INTO staging_metadata VALUES (1)")
+            db.execute("INSERT INTO staging_metadata VALUES (2)")
+        else:
+            db.execute("UPDATE staging_metadata SET version=2")
+        # Upgrade all preserved v1 source entities, including sources absent from
+        # the current import. Nothing is removed or silently joined by name.
+        for entity_id, revision_id, payload_json in db.execute(
+                "SELECT entity_id,id,payload_json FROM source_revisions ORDER BY id"):
+            seed_graph_record(db, json.loads(payload_json), entity_id, revision_id)
         ids = {}
         revisions = {}
         for item in records:
@@ -184,6 +224,7 @@ def stage_snapshot(destination, records=None):
                        (entity_id, fingerprint(item), json.dumps(item, ensure_ascii=False, sort_keys=True), now))
             revisions[entity_id] = db.execute("SELECT id FROM source_revisions WHERE entity_id=? AND digest=?",
                                               (entity_id, fingerprint(item))).fetchone()[0]
+            seed_graph_record(db, item, entity_id, revisions[entity_id])
         for suggestion in preview["suggestions"]:
             db.execute("INSERT OR IGNORE INTO review_suggestions(id,category,body_json,created_at) VALUES (?,?,?,?)",
                        (suggestion["id"], suggestion["category"], json.dumps(suggestion, ensure_ascii=False, sort_keys=True), now))
@@ -203,8 +244,14 @@ def stage_snapshot(destination, records=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stage", type=Path, help="Explicit local .staging.sqlite file; default is read-only preview")
+    parser.add_argument("--input", type=Path, help="Explicit JSON array of source records; replaces the input snapshot, not preserved history")
     args = parser.parse_args()
-    print(json.dumps(stage_snapshot(args.stage) if args.stage else consolidation_preview(),
+    records = None
+    if args.input:
+        records = json.loads(args.input.read_text(encoding="utf-8"))
+        if not isinstance(records, list):
+            parser.error("--input must contain an array of source records")
+    print(json.dumps(stage_snapshot(args.stage, records) if args.stage else consolidation_preview(records),
                      ensure_ascii=False, indent=2))
 
 
