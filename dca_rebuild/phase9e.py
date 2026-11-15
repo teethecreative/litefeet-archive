@@ -104,7 +104,7 @@ def nominees_missing_reasons(db, edition):
     Historical nomination entries and nominee descriptions are retained.
     Unverified new explanations remain pending and don't establish eligibility.
     """
-    nominations, _ = get_counts(db, edition, include_pending=True)
+    nominations, _ = get_counts(db, edition)
     original = (db.query(DCANominationSubmission.nominee_id, NominationDetail9E.justification)
                 .outerjoin(NominationDetail9E,
                            NominationDetail9E.submission_id == DCANominationSubmission.id)
@@ -650,7 +650,7 @@ def install_phase9e(app, ns):
                     for stage, cat in stages if stage.stage in ('write_in', 'qualified')
                 }
                 qualifying, floor, requirement = qualification(db, edition, stages)
-                public_nominees, public_support = get_counts(db, edition, include_pending=True)
+                public_nominees, public_support = get_counts(db, edition)
                 accepting_support = bool(edition.phase == 'nominations' and
                     os.getenv('DCA_2026_NOMINATIONS_ENABLED') == 'true' and
                     not is_closed() and len([stage for stage, _ in stages if stage.stage == 'top25']) == 25)
@@ -942,7 +942,7 @@ def install_phase9e(app, ns):
                     selected_category = matches[0]
                     display_args['category'] = str(selected_category.id)
                     if nominee_slug:
-                        public_nominees = get_counts(db, edition, include_pending=True)[0]
+                        public_nominees = get_counts(db, edition)[0]
                         matches = [n for n in public_nominees.get(selected_category.id, [])
                                    if slugify(n['name']) == nominee_slug]
                         if len(matches) != 1:
@@ -1077,7 +1077,7 @@ def install_phase9e(app, ns):
             suggestion = None
             suggestion_details = []
             if who or results_view:
-                nominees, support = get_counts(db, edition, include_pending=True)
+                nominees, support = get_counts(db, edition)
                 history = defaultdict(list)
                 for entry, nominee in (category_history(db, edition.id, who) if who else []):
                     history[nominee.category_id].append(dict(name=nominee.name,
@@ -1108,19 +1108,16 @@ def install_phase9e(app, ns):
                     suggestion = next((n for n in selected['nominees'] if n['id'] == suggestion_id), None) if selected else None
                     if suggestion is None:
                         abort(404)
-                    rows = (db.query(NominationDetail9E)
-                            .join(DCANominationSubmission, DCANominationSubmission.id == NominationDetail9E.submission_id)
-                            .filter(DCANominationSubmission.nominee_id.in_(suggestion.get('ids', [suggestion_id])),
-                                    DCANominationSubmission.edition_id == edition.id)
-                            .order_by(DCANominationSubmission.submitted_at, DCANominationSubmission.id).all())
-                    # Only submitted nominee details; never supporter identity.
-                    suggestion_details = [dict(team=r.team, location=r.location,
-                        instagram=r.instagram, reason=r.justification) for r in rows
-                        if any((r.team, r.location, r.instagram, r.justification))]
-                    if not suggestion_details:
-                        nominee = db.get(DCANominee, suggestion_id)
+                    nominee = db.get(DCANominee, suggestion_id)
+                    if nominee and nominee.moderation_status == 'approved':
                         if nominee.description:
-                            suggestion_details = [dict(reason=nominee.description)]
+                            suggestion_details.append(dict(reason=nominee.description))
+                        verified = (db.query(NomineeQualificationReason9E)
+                                    .filter_by(edition_id=edition.id, nominee_id=suggestion_id,
+                                               moderation_status='verified')
+                                    .order_by(NomineeQualificationReason9E.submitted_at,
+                                              NomineeQualificationReason9E.id).all())
+                        suggestion_details.extend(dict(reason=item.reason) for item in verified)
 
             return render_template('dca_nominations_form.html', categories=categories, writeins=writeins,
                                    intro_categories=[dict(id=c.id, name=c.name) for _, c in top],
