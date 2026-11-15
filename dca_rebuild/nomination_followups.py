@@ -19,6 +19,9 @@ from dca_rebuild.phase9e import NominationDetail9E, NomineeQualificationReason9E
 def _recognized_nominator():
     # The signed Flask session contains only a server-derived identity hash.
     # Never place a submitter's email or nomination detail in browser scripts.
+    from dca_rebuild.email_verification import verification_enabled, verified_nominator_hash
+    if verification_enabled():
+        return verified_nominator_hash()
     return session.get("lf9e_reminder_hash") or session.get("lf9e_recent_hash")
 
 
