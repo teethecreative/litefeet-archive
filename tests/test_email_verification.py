@@ -58,6 +58,14 @@ def test_entering_email_sends_code_without_granting_access(website, database, mo
     assert client.get("/awards/dancers-choice/followup-status").get_json()["needs_details"] == 0
     assert client.get(FOLLOW).status_code == 302
     with client.session_transaction() as sess:
+        csrf = sess["lf9e_nomination_csrf"]
+    unverified_nomination = client.post(PATH, data={
+        "csrf_token": csrf, "category_id": 1,
+        "name": "Unverified Nominee",
+        "reason": "This should not be accepted without a code.",
+    })
+    assert unverified_nomination.status_code == 400
+    with client.session_transaction() as sess:
         assert "lf9e_recent_hash" not in sess
         assert "lf9e_verified_hash" not in sess
         assert "person@example.com" not in str(dict(sess))
@@ -66,6 +74,8 @@ def test_entering_email_sends_code_without_granting_access(website, database, mo
         assert sent[0][1] not in challenge.code_hash
         assert challenge.attempts == 0
         assert db.query(DCANominationSubmission).count() == 0
+        from dca_rebuild.models import DCANominationContact
+        assert db.query(DCANominationContact).count() == 0
 
 
 def test_verification_unlocks_existing_history_without_new_submission(website, database, monkeypatch):
