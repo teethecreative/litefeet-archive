@@ -12,11 +12,11 @@ def seed_astro_history(database):
     with factory.begin() as db:
         canonical = DCANominee(
             edition_id=edition_id, category_id=1,
-            name='D Astro', normalized_name='d astro', moderation_status='pending'
+            name='D Astro', normalized_name='d astro', moderation_status='approved'
         )
         alternate = DCANominee(
             edition_id=edition_id, category_id=1,
-            name='A astro', normalized_name='a astro', moderation_status='pending'
+            name='A astro', normalized_name='a astro', moderation_status='approved'
         )
         db.add_all([canonical, alternate])
         db.flush()
