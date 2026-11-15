@@ -141,8 +141,12 @@ def install_nomination_followups(app, session_factory):
         if "</body>" not in html.lower() or "nomination-followups.js" in html:
             return response
         html = re.sub(
+            r"</head\s*>",
+            '<link rel="stylesheet" href="/static/css/nomination-followups.css"></head>',
+            html, count=1, flags=re.I,
+        )
+        html = re.sub(
             r"</body\s*>",
-            '<link rel="stylesheet" href="/static/css/nomination-followups.css">'
             '<script defer src="/static/js/nomination-followups.js"></script></body>',
             html, count=1, flags=re.I,
         )
