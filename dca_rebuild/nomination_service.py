@@ -83,7 +83,7 @@ def candidate_matches(db, *, category_id, name):
     display, name_key = canonical_nominee_name(name, category_name=canonical_category.name)
     choices = db.query(DCANominee).filter(
         DCANominee.category_id.in_(related_ids),
-        DCANominee.moderation_status.in_(('pending', 'approved')),
+        DCANominee.moderation_status == 'approved',
     ).all()
     found = []
     for nominee in choices:
