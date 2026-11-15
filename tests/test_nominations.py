@@ -278,20 +278,22 @@ def test_category_names_then_suggestions_and_private_details(website, database):
     client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Suggested Dancer',
                 team='Original Crew', location='Harlem', instagram='dancer.one',
                 reason='A thoughtful nomination.'))
-    # Pending is immediately public; classification and qualification stay separate.
     visitor = website.test_client(); identify(visitor, 'another@example.com')
     category = visitor.get(PATH + '?category=1').get_data(as_text=True)
-    assert 'Suggested Dancer' in category
-    assert 'approved' not in category.lower()
-    assert 'name="name"' not in category  # form comes after the Nominate action
-    with database[1]() as db:
+    assert 'Suggested Dancer' not in category
+    with database[1].begin() as db:
         nominee = db.query(DCANominee).one()
         nominee_id = nominee.id
         assert nominee.moderation_status == 'pending'
         private_hash = db.query(DCANominationSubmission).one().submitter_hash
+        nominee.moderation_status = 'approved'
+    category = visitor.get(PATH + '?category=1').get_data(as_text=True)
+    assert 'Suggested Dancer' in category
+    assert 'name="name"' not in category
     details = visitor.get(PATH + f'?category=1&suggestion={nominee_id}').get_data(as_text=True)
-    for value in ['Original Crew', 'Harlem', '@dancer.one', 'A thoughtful nomination.']:
-        assert value in details
+    assert 'A thoughtful nomination.' in details
+    for value in ['Original Crew', 'Harlem', '@dancer.one']:
+        assert value not in details
     assert 'person@example.com' not in details and 'another@example.com' not in details
     assert private_hash not in details
     form = visitor.get(PATH + f'?category=1&suggestion={nominee_id}&nominate=1').get_data(as_text=True)
@@ -329,7 +331,7 @@ def test_public_suggestions_preserve_moderation_and_qualification(website, datab
         assert rules[26]['eligible_nominees'] == 1
     client = website.test_client(); identify(client)
     response = client.get(PATH + '?category=26').get_data(as_text=True)
-    assert 'Pending Dancer' in response and 'Approved Dancer' in response
+    assert 'Pending Dancer' not in response and 'Approved Dancer' in response
     assert 'Rejected Dancer' not in response
     assert client.get(PATH + f'?category=26&suggestion={rejected_id}').status_code == 404
     with factory() as db:
@@ -401,6 +403,11 @@ def test_standings_show_all_categories_even_without_nominations(website):
     assert 'id="standings-25"' in before and 'id="standings-27"' in before
     token = identify(client)
     client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer One', reason='Active at LiteFeet sessions this season.'))
+    pending = client.get(PATH + '?view=results').get_data(as_text=True)
+    assert pending.count('NO NOMINATIONS YET.') == 27
+    assert 'Dancer One' not in pending
+    with database[1].begin() as db:
+        db.query(DCANominee).filter_by(name='Dancer One').one().moderation_status = 'approved'
     after = client.get(PATH + '?view=results').get_data(as_text=True)
     assert after.count('class="lf9e-standings-category lf9e-grid-card lfv5-category-disclosure"') == 27
     assert after.count('NO NOMINATIONS YET.') == 26
@@ -590,6 +597,8 @@ def test_writein_directory_shows_same_nominee_totals_as_standings(website, datab
                     name='Write In Dancer')
     assert nominate(factory, edition_id, category=26, who='second-supporter',
                     name='Write In Dancer')
+    with factory.begin() as db:
+        db.query(DCANominee).filter_by(name='Write In Dancer').one().moderation_status = 'approved'
     client = website.test_client()
     html = client.get('/write-ins').get_data(as_text=True)
     assert 'View nominees (1)' in html
