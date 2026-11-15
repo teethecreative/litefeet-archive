@@ -69,7 +69,7 @@ def public_categories():
                   if stage.stage in ("top25", "write_in", "qualified")]
         if not stages:
             return []
-        counts, _ = get_counts(db, edition, include_pending=True)
+        counts, _ = get_counts(db, edition)
 
         # Only administrator-verified supporting reasons may be offered as
         # previously submitted suggestions. Pending/rejected text stays private.
