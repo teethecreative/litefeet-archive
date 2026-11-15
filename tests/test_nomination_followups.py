@@ -28,7 +28,8 @@ def old_nomination(database, client, name="Historic Nominee", category=1, reason
             db.add(NominationDetail9E(
                 submission_id=submission.id, justification=reason
             ))
-    return nominee.id
+        nominee_id = nominee.id
+    return nominee_id
 
 
 def test_anonymous_cannot_see_personal_followups(website):
