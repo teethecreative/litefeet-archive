@@ -54,7 +54,7 @@ def website(database, monkeypatch, tmp_path):
     # globals leaking database state between tests.
     for rule in module.app.url_map.iter_rules():
         if (rule.endpoint == 'static' or rule.endpoint.startswith('phase9e_')
-            or rule.endpoint in {'dca_followup_status', 'dca_my_nomination_followups'}):
+            or rule.endpoint in {'dca_followup_status', 'dca_my_nomination_followups', 'dca_verify_email'}):
             continue
         app.add_url_rule(rule.rule, rule.endpoint, module.app.view_functions[rule.endpoint], methods=list(rule.methods))
     for processor in module.app.template_context_processors[None]:
