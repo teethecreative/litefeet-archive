@@ -15,7 +15,7 @@ import time
 
 import requests
 from flask import abort, flash, make_response, redirect, render_template, request, session, url_for
-from sqlalchemy import Column, DateTime, Integer, String, Text, func
+from sqlalchemy import Column, DateTime, Integer, String
 
 from dca_rebuild.models import (
     Base, DCANominationContact, DCANominationSubmission,
@@ -76,7 +76,7 @@ def _digest(secret, *values):
 
 def _normalize(email):
     email = (email or "").strip().casefold()
-    if len(email) > 254 or not re.fullmatch(r"[^\\s@]+@[^\\s@]+\\.[^\\s@]+", email):
+    if len(email) > 254 or not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
         abort(400, "Enter a valid email address.")
     return email
 
@@ -172,8 +172,8 @@ def begin_verification(app, session_factory, email, network=""):
 
 
 def install_email_verification(app, session_factory, private_hash):
-    Base.metadata.create_all(bind=session_factory.kw["bind"] if hasattr(session_factory, "kw") else app.config["DCA_DB_ENGINE"],
-                             tables=[EmailVerificationCode.__table__], checkfirst=True)
+    bind = session_factory.kw["bind"]
+    EmailVerificationCode.__table__.create(bind=bind, checkfirst=True)
 
     @app.route("/awards/dancers-choice/verify-email", methods=["GET", "POST"])
     def dca_verify_email():
