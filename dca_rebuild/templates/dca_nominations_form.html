@@ -61,6 +61,7 @@
   </section>
   {% else %}
     <div class="lf9e-buttons">
+      <a class="lf9e-secondary" href="{{ url_for('dca_my_nomination_followups') }}">CHECK MY NOMINATIONS</a>
       <form method="post" action="{{ url_for('dca_nominations_closed') }}" class="lf9e-done-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="action" value="done">
