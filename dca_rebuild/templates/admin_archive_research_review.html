@@ -29,6 +29,37 @@
   <h1>RESEARCH &amp; SOURCE REVIEW</h1>
   <p>Private editorial workspace. Source discrepancies, tentative dates, research questions and import notes belong here—not in the visitor-facing archive. Public records are unchanged by opening these notes.</p>
   {% include "_admin_archive_nav.html" %}
+  <section id="consolidation-review" aria-labelledby="consolidation-heading">
+    <h2 id="consolidation-heading">CONNECTED ARCHIVE — CONSOLIDATION PREVIEW</h2>
+    <p>{{ foundation.record_count }} source records inspected. These checks suggest research for human review. They do not merge identities, approve relationships, create assigned tasks, or change public records.</p>
+    <p>Repository snapshots only. Production databases, music records, backups and deployment status still require separate verification. Archive AI and footage analysis are not enabled by this preview.</p>
+    <form method="get" action="{{ url_for('vault_archive_admin_review') }}#consolidation-review">
+      <label for="foundation-category">Review category</label>
+      <select id="foundation-category" name="category">
+        {% for key, label in [('all', 'All suggestions'), ('basics', 'Missing basics / date certainty'), ('sources', 'Source links'), ('duplicates', 'Possible duplicate identities'), ('relationships', 'Possible relationships')] %}
+        <option value="{{ key }}"{% if foundation_category == key %} selected{% endif %}>{{ label }}{% if key != 'all' %} ({{ foundation.suggestion_counts.get(key, 0) }}){% endif %}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Filter suggestions</button>
+    </form>
+    <p>{{ foundation_total }} suggestions · Page {{ foundation_page }} · Up to 20 per page</p>
+    {% for suggestion in foundation.suggestions %}
+    <details>
+      <summary><strong>{{ suggestion.subjects[0].title }}</strong><small>{{ suggestion.category | upper }} · AWAITING HUMAN REVIEW</small></summary>
+      <div class="lfv-admin-review-inner">
+        <p>{{ suggestion.reason }}</p>
+        <ul>{% for subject in suggestion.subjects %}
+          <li>{% if subject.system == 'editorial_catalog' %}<a href="{{ url_for('vault_archive_record', slug=subject.key) }}">{{ subject.title }}</a>{% else %}{{ subject.title }}{% endif %} · {{ subject.system }} / {{ subject.key }}</li>
+        {% endfor %}</ul>
+        <p><strong>Evidence:</strong> {{ suggestion.evidence | tojson }}</p>
+      </div>
+    </details>
+    {% else %}<p>No suggestions in this category.</p>{% endfor %}
+    <nav aria-label="Consolidation suggestion pages">
+      {% if foundation_page > 1 %}<a href="{{ url_for('vault_archive_admin_review', category=foundation_category, page=foundation_page-1) }}#consolidation-review">Previous suggestions</a>{% endif %}
+      {% if foundation_has_more %}<a href="{{ url_for('vault_archive_admin_review', category=foundation_category, page=foundation_page+1) }}#consolidation-review">Next suggestions</a>{% endif %}
+    </nav>
+  </section>
   <section id="historical-profile-recovery" aria-labelledby="recovery-review-heading">
     <h2 id="recovery-review-heading">HISTORICAL PEOPLE &amp; CREWS — RECOVERY REVIEW</h2>
     <p>{{ recovery_profiles | length }} preserved source IDs · August 29, 2026 legacy export · Manual identity review required before any publication.</p>
