@@ -959,6 +959,8 @@ def install_phase9e(app, ns):
                     # Persistent per-email nomination cooldowns and submissions stay intact.
                     session.pop('lf9e_recent_hash', None)
                     session.pop('lf9e_skipped', None)
+                    if action == 'change-email':
+                        session.pop('lf9e_reminder_hash', None)
                     if action == 'done' and request.form.get('next') == 'standings':
                         return redirect(url_for('dca_nominations_closed', view='results'), code=303)
                     return redirect(url_for('dca_nominations_closed'), code=303)
