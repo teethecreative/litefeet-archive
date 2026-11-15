@@ -131,7 +131,7 @@ def test_email_first_history_and_return_to_grid(website, database):
     assert b'NOMINEE STANDINGS' in result.data
     assert b'Your nomination summary' not in result.data
     assert b'Return tomorrow' not in result.data
-    assert b'Dancer One' in result.data
+    assert b'Dancer One' not in result.data  # Pending names stay off public standings.
     assert client.get(PATH).data.count(b'data-category-id=') == 25
     assert client.post(PATH, data=dict(csrf_token=token, category_id=2, name='Dancer Two', reason='Contributed to LiteFeet events in 2026.')).status_code == 302
     assert client.post(PATH, data=dict(csrf_token=token, category_id=1, name='Other', reason='Participated in LiteFeet this year.')).status_code == 302
@@ -344,6 +344,9 @@ def test_submission_opens_community_standings_not_personal_summary(website, data
     second.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer Beta', reason='Active in LiteFeet community events.'))
     third = website.test_client(); token = identify(third, 'third@example.com')
     third.post(PATH, data=dict(csrf_token=token, category_id=1, name='Dancer Alpha', reason='Participated in several LiteFeet sessions.'))
+    with database[1].begin() as db:
+        for nominee in db.query(DCANominee).filter_by(edition_id=database[2]).all():
+            nominee.moderation_status = 'approved'
     # A visitor without an email sees the same combined totals.
     visitor = website.test_client()
     page = visitor.get(PATH + '?view=results')
@@ -362,6 +365,32 @@ def test_submission_opens_community_standings_not_personal_summary(website, data
     assert 'Great community work.' in detail
     assert 'Back to standings' in detail
     assert 'cooldown active' not in detail
+
+
+def test_unreviewed_nominee_is_not_published_until_approval(website, database):
+    from dca_rebuild.models import DCANominee
+    client = website.test_client()
+    token = identify(client, 'pending-review@example.com')
+    response = client.post(PATH, data=dict(
+        csrf_token=token, category_id=1, name='Private Pending Nominee',
+        reason='They contributed to documented LiteFeet sessions in 2026.'
+    ))
+    assert response.status_code == 302
+    anonymous = website.test_client()
+    assert 'Private Pending Nominee' not in anonymous.get(
+        PATH + '?view=results').get_data(as_text=True)
+    assert 'Private Pending Nominee' not in anonymous.get(
+        '/social/awards/options.json').get_data(as_text=True)
+    candidate = client.get('/awards/dancers-choice/nominee-name-check',
+        query_string={'category_id': 1, 'name': 'Private Pending Nominee'})
+    assert candidate.status_code == 200
+    assert not candidate.get_json()['already_listed']
+    with database[1].begin() as db:
+        nominee = db.query(DCANominee).filter_by(name='Private Pending Nominee').one()
+        assert nominee.moderation_status == 'pending'
+        nominee.moderation_status = 'approved'
+    assert 'Private Pending Nominee' in anonymous.get(
+        PATH + '?view=results').get_data(as_text=True)
 
 
 def test_standings_show_all_categories_even_without_nominations(website):
