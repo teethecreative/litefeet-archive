@@ -1067,6 +1067,8 @@ def install_phase9e(app, ns):
                     flash('Your nomination could not be recorded. Check your category status and try again.')
                     return redirect(url_for('dca_nominations_closed'))
                 session['lf9e_skipped'] = [x for x in session.get('lf9e_skipped', []) if x != cid]
+                # Keep a signed browser-session reminder after Done clears the entry email.
+                session['lf9e_reminder_hash'] = who
                 flash('Nomination received.')
                 return redirect(url_for('dca_nominations_closed', view='results'))
             results_view = display_args.get('view') == 'results'
