@@ -38,6 +38,7 @@ def database(tmp_path):
 def website(database, monkeypatch, tmp_path):
     monkeypatch.setenv('DATABASE_URL', f'sqlite:///{tmp_path}/bootstrap.db')
     monkeypatch.setenv('DCA_2026_NOMINATIONS_ENABLED', 'true')
+    monkeypatch.setenv('DCA_2026_FOLLOWUPS_ENABLED', 'true')
     module = importlib.import_module('dca_rebuild.app')
     monkeypatch.setattr(module, 'SessionLocal', database[1])
     # install_phase9e captures its session factory when registering routes.
