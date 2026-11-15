@@ -113,6 +113,10 @@ def _send_email(email, code):
 def begin_verification(app, session_factory, email, network=""):
     """Send a code and return a redirect. Never authenticate from typed email."""
     email = _normalize(email)
+    # Optional staging-only guard: never email anyone outside the intended test.
+    allowed_test_email = os.getenv("DCA_VERIFICATION_TEST_RECIPIENT", "").strip().casefold()
+    if allowed_test_email and email != allowed_test_email:
+        abort(403, "This verification test is restricted.")
     secret = _secret(app)
     now = datetime.utcnow()
     email_hash = _digest(secret, "mail", email)
