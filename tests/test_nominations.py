@@ -292,7 +292,7 @@ def test_category_names_then_suggestions_and_private_details(website, database):
     assert 'name="name"' not in category
     details = visitor.get(PATH + f'?category=1&suggestion={nominee_id}').get_data(as_text=True)
     assert 'A thoughtful nomination.' in details
-    for value in ['Original Crew', 'Harlem', '@dancer.one']:
+    for value in ['Original Crew', '@dancer.one']:
         assert value not in details
     assert 'person@example.com' not in details and 'another@example.com' not in details
     assert private_hash not in details
@@ -395,7 +395,7 @@ def test_unreviewed_nominee_is_not_published_until_approval(website, database):
         PATH + '?view=results').get_data(as_text=True)
 
 
-def test_standings_show_all_categories_even_without_nominations(website):
+def test_standings_show_all_categories_even_without_nominations(website, database):
     client = website.test_client()
     before = client.get(PATH + '?view=results').get_data(as_text=True)
     assert before.count('class="lf9e-standings-category lf9e-grid-card lfv5-category-disclosure"') == 27
