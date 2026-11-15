@@ -23,7 +23,7 @@ def test_sitewide_icons_and_manifest(website):
         assert markup.count('rel="icon"') == 3
         assert markup.count('rel="canonical"') == 1
     assert client.get("/favicon.ico").status_code == 200
-    assert client.get("/favicon.ico").data[:4] == b"\\x00\\x00\\x01\\x00"
+    assert client.get("/favicon.ico").data[:4] == bytes.fromhex("00000100")
     manifest = client.get("/site.webmanifest")
     assert manifest.status_code == 200
     assert manifest.get_json()["name"] == "The LiteFeet Vault"
