@@ -5028,9 +5028,10 @@ register_seo(app)
 from dca_rebuild.phase9e import install_phase9e
 install_phase9e(app, globals())
 
-# Private, opt-in nomination follow-ups for recognized returning visitors.
-from dca_rebuild.nomination_followups import install_nomination_followups
-install_nomination_followups(app, SessionLocal)
+# Deliberate release gate: personalized nomination access needs identity review.
+if os.environ.get("DCA_2026_FOLLOWUPS_ENABLED") == "true":
+    from dca_rebuild.nomination_followups import install_nomination_followups
+    install_nomination_followups(app, SessionLocal)
 
 # Read-only public section navigation; existing business handlers are unchanged.
 from dca_rebuild.information_architecture import install_information_architecture
