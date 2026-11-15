@@ -60,9 +60,9 @@ def website(database, monkeypatch, tmp_path):
             app.context_processor(processor)
     ns = dict(module.__dict__, engine=database[0], SessionLocal=database[1])
     install_phase9e(app, ns)
-    # Preserve SEO noindex response headers in the isolated website fixture.
+    # Preserve public sharing and private-page behavior in the test app.
     for callback in module.app.after_request_funcs.get(None, []):
-        if callback.__name__ == "litefeet_noindex_private_pages":
+        if callback.__name__ in {"litefeet_noindex_private_pages", "vault_share_branding"}:
             app.after_request(callback)
     return app
 
