@@ -5028,8 +5028,12 @@ register_seo(app)
 from dca_rebuild.phase9e import install_phase9e
 install_phase9e(app, globals())
 
-# Deliberate release gate: personalized nomination access needs identity review.
-if os.environ.get("DCA_2026_FOLLOWUPS_ENABLED") == "true":
+# Deliberate release gate: verify mailbox access before opening private history.
+if os.environ.get("DCA_2026_VERIFIED_EMAIL_ENABLED") == "true":
+    from dca_rebuild.email_verification import install_email_verification
+    install_email_verification(app, SessionLocal, private_hash)
+if (os.environ.get("DCA_2026_FOLLOWUPS_ENABLED") == "true"
+    and os.environ.get("DCA_2026_VERIFIED_EMAIL_ENABLED") == "true"):
     from dca_rebuild.nomination_followups import install_nomination_followups
     install_nomination_followups(app, SessionLocal)
 
