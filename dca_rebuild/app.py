@@ -371,7 +371,7 @@ def dca_categories_closed():
 
 
 
-def dca_new_category_groups(db, edition_id):
+def dca_new_category_groups(db, edition_id, *, approved_only=False):
     """Visible suggestions grouped by normalized name and admin merges.
 
     Votes follow merged aliases, including votes cast before the merge.
@@ -399,6 +399,8 @@ def dca_new_category_groups(db, edition_id):
     for s in suggestions:
         target = canonical(s)
         if s.moderation_status == "rejected" or target.moderation_status == "rejected":
+            continue
+        if approved_only and target.moderation_status != "approved":
             continue
         key = " ".join(target.category_name.casefold().split())
         if not key:
@@ -563,7 +565,7 @@ def round1():
                     )
                 )
 
-            for group in dca_new_category_groups(db, current.id):
+            for group in dca_new_category_groups(db, current.id, approved_only=True):
                 answer = request.form.get(f"new_category_vote_{group['id']}")
                 if answer in {"yes", "no"}:
                     db.add(DCANewCategoryVote(
@@ -641,7 +643,7 @@ def round1():
             returning_seconds=returning_seconds,
             verified_email=verified_email,
             categories_closed=dca_categories_closed(),
-            new_category_groups=dca_new_category_groups(db, current.id),
+            new_category_groups=dca_new_category_groups(db, current.id, approved_only=True),
         )
 
     finally:
@@ -809,7 +811,7 @@ def round2():
         # APPROVED / MODERATED NEW CATEGORY SUGGESTIONS
         # ----------------------------------------------------
 
-        approved_suggestions = dca_new_category_groups(db, current.id)
+        approved_suggestions = dca_new_category_groups(db, current.id, approved_only=True)
 
         # ----------------------------------------------------
         # ROUND 1 CATEGORY-COUNT PREFERENCE
