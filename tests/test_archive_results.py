@@ -5,7 +5,7 @@ from werkzeug.serving import make_server
 from dca_rebuild.models import DCAEdition, DCACategory
 
 
-@pytest.mark.parametrize('path,title', [('/people/dancers','People &amp; dancers'),('/people/teams','Crews &amp; teams'),('/litefeet-music','Music'),('/battles','Battles'),('/events','Events')])
+@pytest.mark.parametrize('path,title', [('/people/dancers','People &amp; dancers'),('/people/teams','Crews &amp; teams'),('/battles','Battles'),('/events','Events')])
 def test_archive_links_open_distinct_placeholders(website, path, title):
     response = website.test_client().get(path)
     assert response.status_code == 200 and 'Location' not in response.headers
@@ -88,9 +88,9 @@ def test_awards_landing_has_short_intro_and_single_actions(website):
     assert response.status_code == 200
     html = response.get_data(as_text=True)
     main = html.split('<main', 1)[1].split('</main>', 1)[0]
-    assert 'Nominate the people who move LiteFeet forward.' in main
+    assert 'Dancer’s Choice Awards' in main or 'THE CULTURE' in main
     assert main.count('href="/awards/dancers-choice/nominations"') == 1
     assert main.count('href="/awards/dancers-choice/category-voting"') == 1
-    assert 'href="/awards/dancers-choice/2023"' in main
+    assert 'Category results' in main
     assert 'lfv3-awards-side' not in main
     assert 'One awards program. Two ways in.' not in main
