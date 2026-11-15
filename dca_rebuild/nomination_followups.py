@@ -102,7 +102,7 @@ def install_nomination_followups(app, session_factory):
                 if not 20 <= len(reason) <= 2000:
                     abort(400, "Please describe the nomination in 20–2000 characters.")
                 if evidence and (len(evidence) > 500 or
-                                 not re.fullmatch(r"https?://[^\\s]+", evidence)):
+                                 not re.fullmatch(r"https?://[^\s]+", evidence)):
                     abort(400, "Enter a valid link beginning with https:// or http://.")
                 db.add(NomineeQualificationReason9E(
                     edition_id=edition.id, nominee_id=nominee_id,
@@ -133,7 +133,7 @@ def install_nomination_followups(app, session_factory):
         """Load a small reminder only in recognized, public HTML sessions."""
         if (request.method != "GET" or response.status_code != 200
             or not _recognized_nominator()
-            or request.path.startswith(("/admin", "/static", "/account", "/health"))
+            or request.path.startswith(("/admin", "/static", "/account", "/health", "/awards/dancers-choice/my-nomination-followups"))
             or "text/html" not in response.content_type.lower()
             or response.direct_passthrough):
             return response
@@ -141,7 +141,8 @@ def install_nomination_followups(app, session_factory):
         if "</body>" not in html.lower() or "nomination-followups.js" in html:
             return response
         html = re.sub(
-            r"</body\\s*>",
+            r"</body\s*>",
+            '<link rel="stylesheet" href="/static/css/nomination-followups.css">'
             '<script defer src="/static/js/nomination-followups.js"></script></body>',
             html, count=1, flags=re.I,
         )
