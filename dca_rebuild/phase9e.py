@@ -255,7 +255,7 @@ def ranked_candidates(db, ns, edition):
         entries.append(dict(key=f'returning:{item.id}', name=item.name, description=item.description or '',
                             source_type='returning', source_category_id=item.id,
                             yes=v['yes'], no=v['no']))
-    for group in ns['dca_new_category_groups'](db, edition.id):
+    for group in ns['dca_new_category_groups'](db, edition.id, approved_only=True):
         if group['status'] != 'approved':
             continue
         entries.append(dict(key=f'new:{group["id"]}', name=group['name'],
@@ -666,7 +666,7 @@ def install_phase9e(app, ns):
                         if key not in top_names:
                             candidates[key] = dict(name=writein_category_label(cat.name),
                                                    description=cat.description or '')
-                for group in ns['dca_new_category_groups'](db, edition.id):
+                for group in ns['dca_new_category_groups'](db, edition.id, approved_only=True):
                     key = writein_category_key(group['name'])
                     if key not in top_names:
                         candidates[key] = dict(
@@ -753,7 +753,7 @@ def install_phase9e(app, ns):
                     possible[writein_category_key(cat.name)] = dict(
                         name=writein_category_label(cat.name), description=cat.description or '',
                         source_type='returning', source_category_id=cat.id)
-            for group in ns['dca_new_category_groups'](db, edition.id):
+            for group in ns['dca_new_category_groups'](db, edition.id, approved_only=True):
                 possible[writein_category_key(group['name'])] = dict(
                     name=writein_category_label(group['name']), description=group.get('description') or '',
                     source_type='new', source_category_id=None)
