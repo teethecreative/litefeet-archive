@@ -61,6 +61,8 @@ def website(database, monkeypatch, tmp_path):
             app.context_processor(processor)
     ns = dict(module.__dict__, engine=database[0], SessionLocal=database[1])
     install_phase9e(app, ns)
+    from dca_rebuild.nomination_followups import install_nomination_followups
+    install_nomination_followups(app, database[1])
     # Preserve SEO noindex response headers in the isolated website fixture.
     for callback in module.app.after_request_funcs.get(None, []):
         if callback.__name__ == "litefeet_noindex_private_pages":
