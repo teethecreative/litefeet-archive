@@ -62,6 +62,8 @@ def website(database, monkeypatch, tmp_path):
             app.context_processor(processor)
     ns = dict(module.__dict__, engine=database[0], SessionLocal=database[1])
     install_phase9e(app, ns)
+    from dca_rebuild.email_verification import install_email_verification
+    install_email_verification(app, database[1], module.private_hash)
     from dca_rebuild.nomination_followups import install_nomination_followups
     install_nomination_followups(app, database[1])
     # Preserve SEO noindex response headers in the isolated website fixture.
