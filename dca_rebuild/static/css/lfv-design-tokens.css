@@ -2,6 +2,7 @@
    Single source of truth for the public site's palette, type and spacing.
    Legacy --lfv-* aliases are retained while page styles migrate. */
 :root {
+  color-scheme: light;
   --vault-color-navy: #0a2c5f;
   --vault-color-gold: #c9a127;
   --vault-color-white: #ffffff;
@@ -53,6 +54,7 @@
 html[data-theme="dark"],
 html.dark,
 body.dark {
+  color-scheme: dark;
   --vault-color-background: #0b1422;
   --vault-color-surface: #15233a;
   --vault-color-surface-muted: #1b2a43;
