@@ -98,12 +98,16 @@ def delivery_config_status():
     """Nonsecret configuration health summary for startup and support logs."""
     key = os.getenv("RESEND_API_KEY", "").strip()
     sender = os.getenv("RESEND_FROM_EMAIL", "").strip()
+    mailbox = r"[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+"
+    sender_is_bare = bool(re.fullmatch(mailbox, sender))
+    sender_is_named = bool(re.fullmatch(
+        r"[^<>\r\n]{1,100}\s+<" + mailbox + r">", sender
+    ))
     return {
         "api_key_present": bool(key),
         "sender_present": bool(sender),
-        "sender_format_valid": bool(re.fullmatch(r"[^\\s@]+@[^\\s@]+\\.[^\\s@]+", sender)),
+        "sender_format_valid": sender_is_bare or sender_is_named,
     }
-
 
 def _send_email(email, code):
     status = delivery_config_status()
