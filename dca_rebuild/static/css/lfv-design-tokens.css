@@ -1,0 +1,71 @@
+/* The LiteFeet Vault design tokens.
+   Single source of truth for the public site's palette, type and spacing.
+   Legacy --lfv-* aliases are retained while page styles migrate. */
+:root {
+  --vault-color-navy: #0a2c5f;
+  --vault-color-gold: #c9a127;
+  --vault-color-white: #ffffff;
+  --vault-color-background: #e9edf4;
+  --vault-color-surface: #ffffff;
+  --vault-color-surface-muted: #f5f7fb;
+  --vault-color-text: #07152b;
+  --vault-color-muted: #3d4b61;
+  --vault-color-border: #cbd3e0;
+  --vault-color-accent-text: #0a2c5f;
+
+  --vault-font-sans: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  --vault-type-h1: clamp(2.35rem, 5.4vw, 5rem);
+  --vault-type-h2: clamp(1.55rem, 2.7vw, 2.65rem);
+  --vault-type-h3: clamp(1.16rem, 1.65vw, 1.6rem);
+  --vault-type-body: 1rem;
+  --vault-type-small: .8125rem;
+
+  --vault-space-1: 4px;
+  --vault-space-2: 8px;
+  --vault-space-3: 12px;
+  --vault-space-4: 16px;
+  --vault-space-5: 24px;
+  --vault-space-6: 32px;
+  --vault-space-7: 48px;
+  --vault-space-8: 64px;
+
+  --vault-container-max: 1440px;
+  --vault-container-gutter: clamp(18px, 4.3vw, 64px);
+  --vault-radius: 8px;
+  --vault-control-min-height: 44px;
+
+  /* Backwards-compatible aliases. Do not redeclare these in page CSS. */
+  --lfv-navy: var(--vault-color-navy);
+  --lfv-gold: var(--vault-color-gold);
+  --lfv-white: var(--vault-color-white);
+  --lfv-bg: var(--vault-color-background);
+  --lfv-surface: var(--vault-color-surface);
+  --lfv-surface-muted: var(--vault-color-surface-muted);
+  --lfv-ink: var(--vault-color-text);
+  --lfv-muted: var(--vault-color-muted);
+  --lfv-line: var(--vault-color-border);
+  --lfv-max: var(--vault-container-max);
+  --lfv-gutter: var(--vault-container-gutter);
+  --lfv-radius: var(--vault-radius);
+  --lfv-font: var(--vault-font-sans);
+}
+
+html[data-theme="dark"],
+html.dark,
+body.dark {
+  --vault-color-background: #0b1422;
+  --vault-color-surface: #15233a;
+  --vault-color-surface-muted: #1b2a43;
+  --vault-color-text: #f4f7fc;
+  --vault-color-muted: #c0cbdb;
+  --vault-color-border: #3a4b65;
+  --vault-color-accent-text: #c9a127;
+
+  /* Redeclare semantic aliases for the legacy body.dark theme pathway. */
+  --lfv-bg: var(--vault-color-background);
+  --lfv-surface: var(--vault-color-surface);
+  --lfv-surface-muted: var(--vault-color-surface-muted);
+  --lfv-ink: var(--vault-color-text);
+  --lfv-muted: var(--vault-color-muted);
+  --lfv-line: var(--vault-color-border);
+}
