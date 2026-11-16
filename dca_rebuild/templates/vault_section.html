@@ -12,10 +12,10 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
 {% if section == 'lock-in' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/lock-in.css') }}">{% endif %}
 {% if section == 'about' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-about-one-page.css') }}">{% endif %}
-</head><body>{% include "_navigation.html" %}
+</head><body>{% include "_navigation.html" %}{% from "_ui_components.html" import page_header %}
 <main class="vault-section-page" id="vault-section-{{ section }}">
 {% if section == 'overview' %}
-<header><p class="vault-kicker">THE LITEFEET VAULT / ARCHIVE</p><h1>The Archive</h1><p>Explore LiteFeet's people, events, awards, and cultural history.</p></header>
+{{ page_header("THE LITEFEET VAULT / ARCHIVE", "The Archive", "Explore LiteFeet's people, events, awards, and cultural history.") }}
 <section aria-labelledby="archive-overview-title"><h2 id="archive-overview-title">Explore the Vault</h2>
 <div class="vault-section-grid">
 <a class="vault-collection" href="{{ url_for('vault_archive_people') }}"><strong>People &amp; Teams</strong><span>Discover dancers, teams and community profiles.</span></a>
@@ -34,7 +34,7 @@
 {% elif section == 'lock-in' %}
 {% include "lock_in.html" %}
 {% elif section == 'awards' %}
-<header><p class="vault-kicker">AWARDS</p><h1>Recognition from the culture.</h1><p>Explore three distinct awards programs recognizing the people and contributions that shape LiteFeet.</p></header>
+{{ page_header("AWARDS", "Recognition from the culture.", "Explore three distinct awards programs recognizing the people and contributions that shape LiteFeet.") }}
 <div class="vault-section-grid">
   <a class="vault-collection" href="{{ url_for('vault_dca_program') }}"><strong>Dancer’s Choice Awards</strong><span>Community-led categories, nominations, and voting. Explore the 2026 round and earlier editions.</span></a>
   <a class="vault-collection" href="{{ url_for('lfa_home') }}"><strong>LiteFeet Awards</strong><span>Explore the annual awards program, preserved results, and community contributions.</span></a>
