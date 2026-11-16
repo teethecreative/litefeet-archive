@@ -2,19 +2,9 @@
    Existing approved navy, gold, white, cool gray.
    Structural public-page update without invented photography or records.
    Load after legacy CSS. Route/DB/award logic intentionally untouched. */
-html.lfv-root,html.lfv-sitewide{
-  --lfv-navy:#0a2c5f;--lfv-gold:#c9a127;--lfv-white:#fff;
-  --lfv-bg:#e9edf4;--lfv-surface:#fff;--lfv-surface-muted:#f4f6f9;
-  --lfv-ink:#07152b;--lfv-muted:#46536a;--lfv-line:#c9d2e0;
-  --lfv-max:1440px;--lfv-gutter:clamp(20px,4.5vw,70px);
-  --lfv-radius:7px;--lfv-font:Arial,"Helvetica Neue",Helvetica,sans-serif;
-  color-scheme:light;
-}
-html[data-theme="dark"].lfv-root,html[data-theme="dark"].lfv-sitewide{
-  --lfv-bg:#0b1422;--lfv-surface:#142239;--lfv-surface-muted:#1b2b43;
-  --lfv-ink:#f3f6fc;--lfv-muted:#b6c3d8;--lfv-line:#364864;
-  color-scheme:dark;
-}
+/* The design token stylesheet owns all --lfv-* declarations. */
+html.lfv-root, html.lfv-sitewide { color-scheme: light; }
+html[data-theme="dark"].lfv-root, html[data-theme="dark"].lfv-sitewide { color-scheme: dark; }
 html.lfv-root,html.lfv-root body,html.lfv-sitewide body{
   background:var(--lfv-bg)!important;color:var(--lfv-ink)!important;
   font-family:var(--lfv-font)!important;
@@ -234,7 +224,7 @@ html.lfv-sitewide :is(.admin-module-card,.admin-stat,.dca-nominations-admin,.lf9
  html.lfv-sitewide .lfv-ledger-actions{grid-column:2;justify-content:start}
 }
 @media(max-width:690px){
- html.lfv-root,html.lfv-sitewide{--lfv-gutter:18px}
+ /* Responsive gutters inherit the canonical design token. */
  html.lfv-root .lfv-home-lead{padding:24px!important}
  html.lfv-root .lfv-home-intro h1{font-size:clamp(2.7rem,12vw,4.4rem)!important}
  html.lfv-root .lfv-editorial-media-grid{grid-template-columns:1fr}
