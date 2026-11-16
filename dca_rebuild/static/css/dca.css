@@ -1,7 +1,7 @@
 :root {
-    --blue: #092b63;
+    --blue: var(--vault-color-navy, #0a2c5f);
     --blue-2: #0d3f86;
-    --gold: #c9a227;
+    --gold: var(--vault-color-gold, #c9a127);
     --gold-light: #e7cb68;
     --page: #f5f7fb;
     --surface: #ffffff;
