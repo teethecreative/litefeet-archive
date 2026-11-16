@@ -14,7 +14,7 @@ import secrets
 import time
 
 import requests
-from flask import abort, flash, make_response, redirect, render_template, request, session, url_for
+from flask import abort, current_app, flash, make_response, redirect, render_template, request, session, url_for
 from sqlalchemy import Column, DateTime, Integer, String
 
 from dca_rebuild.models import (
@@ -86,28 +86,59 @@ def _mask(email):
     return (local[:1] + "•••@" + domain) if local else "•••@" + domain
 
 
-def _send_email(email, code):
+class EmailDeliveryError(Exception):
+    """Safe classification only: never include provider responses or secrets."""
+
+    def __init__(self, category):
+        super().__init__(category)
+        self.category = category
+
+
+def delivery_config_status():
+    """Nonsecret configuration health summary for startup and support logs."""
     key = os.getenv("RESEND_API_KEY", "").strip()
     sender = os.getenv("RESEND_FROM_EMAIL", "").strip()
-    if not key or not sender:
-        raise RuntimeError("Verification email delivery is not configured")
+    return {
+        "api_key_present": bool(key),
+        "sender_present": bool(sender),
+        "sender_format_valid": bool(re.fullmatch(r"[^\\s@]+@[^\\s@]+\\.[^\\s@]+", sender)),
+    }
+
+
+def _send_email(email, code):
+    status = delivery_config_status()
+    if not status["api_key_present"]:
+        raise EmailDeliveryError("missing_api_key")
+    if not status["sender_present"]:
+        raise EmailDeliveryError("missing_sender")
+    if not status["sender_format_valid"]:
+        raise EmailDeliveryError("invalid_sender_format")
+    key = os.getenv("RESEND_API_KEY", "").strip()
+    sender = os.getenv("RESEND_FROM_EMAIL", "").strip()
     # This message is sent only after the visitor explicitly requests a code.
-    response = requests.post(
-        "https://api.resend.com/emails",
-        json={
-            "from": sender,
-            "to": [email],
-            "subject": "Your LiteFeet Vault verification code",
-            "text": (
-                f"Your LiteFeet Vault verification code is {code}. "
-                "It expires in 10 minutes. If you didn't request it, "
-                "you can ignore this email."
-            ),
-        },
-        headers={"Authorization": "Bearer " + key},
-        timeout=10,
-    )
-    response.raise_for_status()
+    try:
+        response = requests.post(
+            "https://api.resend.com/emails",
+            json={
+                "from": sender,
+                "to": [email],
+                "subject": "Your LiteFeet Vault verification code",
+                "text": (
+                    f"Your LiteFeet Vault verification code is {code}. "
+                    "It expires in 10 minutes. If you didn't request it, "
+                    "you can ignore this email."
+                ),
+            },
+            headers={"Authorization": "Bearer " + key},
+            timeout=10,
+        )
+    except requests.exceptions.Timeout as exc:
+        raise EmailDeliveryError("provider_timeout") from exc
+    except requests.exceptions.RequestException as exc:
+        raise EmailDeliveryError("provider_connection_error") from exc
+    if response.status_code >= 400:
+        # HTTP status only, not the provider's response body, mailbox, or API key.
+        raise EmailDeliveryError(f"provider_http_{int(response.status_code)}")
 
 
 def begin_verification(app, session_factory, email, network=""):
@@ -161,7 +192,11 @@ def begin_verification(app, session_factory, email, network=""):
 
     try:
         _send_email(email, code)
-    except Exception:
+    except Exception as exc:
+        # Only emit a preapproved error category, never the exception message.
+        category = (exc.category if isinstance(exc, EmailDeliveryError)
+                    else "unexpected_delivery_error")
+        current_app.logger.error("dca_verification_delivery_failed category=%s", category)
         # A failed send cannot authorize or leave behind a usable challenge.
         with session_factory.begin() as db:
             challenge = db.query(EmailVerificationCode).filter_by(request_id=request_id).first()
@@ -176,6 +211,11 @@ def begin_verification(app, session_factory, email, network=""):
 
 
 def install_email_verification(app, session_factory, private_hash):
+    status = delivery_config_status()
+    app.logger.info(
+        "dca_verification_email_config api_key_present=%s sender_present=%s sender_format_valid=%s",
+        status["api_key_present"], status["sender_present"], status["sender_format_valid"],
+    )
     bind = session_factory.kw["bind"]
     EmailVerificationCode.__table__.create(bind=bind, checkfirst=True)
 
