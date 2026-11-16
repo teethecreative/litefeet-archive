@@ -52,6 +52,9 @@ def test_archive_and_awards_use_reusable_header_markup(website):
         assert heading in html, path
         assert "lfv-design-tokens.css" not in html  # Imported by shared sitewide CSS.
         assert 'css/litefeet-sitewide.css' in html, path
+        if path == "/archive":
+            assert 'class="lfv-ui-action lfv-ui-action--primary"' in html
+            assert "Submit to the Archive" in html
 
 
 def test_component_actions_have_primary_secondary_and_keyboard_styles():
