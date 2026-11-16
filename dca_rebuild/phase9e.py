@@ -877,7 +877,8 @@ def install_phase9e(app, ns):
     @app.get('/awards/dancers-choice/nominee-name-check')
     def phase9e_nominee_name_check():
         """Fast pre-submit duplicate hint, scoped to the verified-email session."""
-        if not session.get('lf9e_recent_hash'):
+        from dca_rebuild.email_verification import verification_enabled, verified_nominator_hash
+        if not (verified_nominator_hash() if verification_enabled() else session.get('lf9e_recent_hash')):
             abort(401)
         name = (request.args.get('name') or '').strip()[:250]
         cid = request.args.get('category_id', type=int)
@@ -959,6 +960,11 @@ def install_phase9e(app, ns):
                     # Persistent per-email nomination cooldowns and submissions stay intact.
                     session.pop('lf9e_recent_hash', None)
                     session.pop('lf9e_skipped', None)
+                    if action == 'change-email':
+                        session.pop('lf9e_reminder_hash', None)
+                        from dca_rebuild.email_verification import SESSION_VERIFIED, SESSION_VERIFIED_AT
+                        session.pop(SESSION_VERIFIED, None)
+                        session.pop(SESSION_VERIFIED_AT, None)
                     if action == 'done' and request.form.get('next') == 'standings':
                         return redirect(url_for('dca_nominations_closed', view='results'), code=303)
                     return redirect(url_for('dca_nominations_closed'), code=303)
@@ -966,6 +972,11 @@ def install_phase9e(app, ns):
                     email = request.form.get('email', '').strip().casefold()
                     if len(email) > 254 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
                         abort(400, 'Enter a valid email')
+                    from dca_rebuild.email_verification import verification_enabled, verified_nominator_hash, begin_verification
+                    if verification_enabled():
+                        return begin_verification(
+                            app, SessionLocal, email, request.remote_addr or ''
+                        )
                     who = private_hash('dca-nomination:' + email)
                     # Store the normalized email on the server, never in the
                     # signed (readable) browser session.
@@ -1000,9 +1011,11 @@ def install_phase9e(app, ns):
                             abort(404)
                         return redirect(url_for('dca_nominations_closed', category=requested_id))
                     return redirect(url_for('dca_nominations_closed'))
-                who = session.get('lf9e_recent_hash')
+                from dca_rebuild.email_verification import verification_enabled, verified_nominator_hash
+                who = (verified_nominator_hash() if verification_enabled()
+                       else session.get('lf9e_recent_hash'))
                 if not who:
-                    abort(400, 'Enter your email before selecting a category')
+                    abort(400, 'Verify your email before selecting a category')
                 if is_closed():
                     abort(403, 'Nominations are closed')
                 try:
@@ -1067,10 +1080,16 @@ def install_phase9e(app, ns):
                     flash('Your nomination could not be recorded. Check your category status and try again.')
                     return redirect(url_for('dca_nominations_closed'))
                 session['lf9e_skipped'] = [x for x in session.get('lf9e_skipped', []) if x != cid]
+                # Retain the reminder only while the reviewed feature is enabled.
+                if (os.environ.get('DCA_2026_FOLLOWUPS_ENABLED') == 'true'
+                    and (not verification_enabled() or verified_nominator_hash() == who)):
+                    session['lf9e_reminder_hash'] = who
                 flash('Nomination received.')
                 return redirect(url_for('dca_nominations_closed', view='results'))
             results_view = display_args.get('view') == 'results'
-            who = session.get('lf9e_recent_hash')
+            from dca_rebuild.email_verification import verification_enabled, verified_nominator_hash
+            who = (verified_nominator_hash() if verification_enabled()
+                   else session.get('lf9e_recent_hash'))
             categories, writeins = [], []
             summary = dict(submitted=0, available=0, cooldown=0, skipped=0)
             selected = None

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Complete your nominations | The LiteFeet Vault</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nomination-followups.css') }}">
+</head>
+<body>
+{% include "_navigation.html" %}
+<main class="lfv-nom-followup-page">
+  <p class="lfv-nom-followup-kicker">Dancer's Choice Awards 2026</p>
+  <h1>Complete your nominations</h1>
+  <p>Some nominations may need more information before they can be reviewed. Your original nominations are saved. Adding details will not create another nomination or change the nomination count.</p>
+  {% with messages = get_flashed_messages() %}{% for message in messages %}
+  <p class="lf9e-message" role="status">{{ message }}</p>
+  {% endfor %}{% endwith %}
+  {% if pending %}
+  <p class="lfv-nom-followup-count">{{ pending|length }} nomination{{ 's' if pending|length != 1 else '' }} need{{ '' if pending|length != 1 else 's' }} more information.</p>
+  {% for item in pending %}
+  <section class="lfv-nom-followup-card" aria-labelledby="lfv-followup-{{ item.nominee_id }}">
+    <p class="lfv-nom-followup-category">{{ item.category }}</p>
+    <h2 id="lfv-followup-{{ item.nominee_id }}">{{ item.nominee }}</h2>
+    <p>Tell us about their LiteFeet activity or contributions between November 2025 and November 2026.</p>
+    <form method="post" action="{{ url_for('dca_my_nomination_followups') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="nominee_id" value="{{ item.nominee_id }}">
+      <label for="lfv-followup-reason-{{ item.nominee_id }}">Why should this person be recognized?</label>
+      <textarea id="lfv-followup-reason-{{ item.nominee_id }}" name="reason" minlength="20" maxlength="2000" rows="5" required placeholder="Mention battles, sessions, music, teaching, community work, or another relevant contribution."></textarea>
+      <label for="lfv-followup-source-{{ item.nominee_id }}">Supporting link (optional)</label>
+      <input id="lfv-followup-source-{{ item.nominee_id }}" type="url" name="evidence_url" maxlength="500" placeholder="https://">
+      <button type="submit" class="lfv-nom-followup-submit">Submit details for review</button>
+    </form>
+  </section>
+  {% endfor %}
+  {% else %}
+  <section class="lfv-nom-followup-card">
+    <h2>You're all caught up</h2>
+    <p>There are no additional details to submit right now. Any information you've already sent is still subject to review.</p>
+  </section>
+  {% endif %}
+  <p><a href="{{ url_for('dca_nominations_closed') }}">Return to the 2026 nominations</a></p>
+</main>
+{% include "_footer.html" %}
+<script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>
+</body>
+</html>

@@ -38,6 +38,7 @@ def database(tmp_path):
 def website(database, monkeypatch, tmp_path):
     monkeypatch.setenv('DATABASE_URL', f'sqlite:///{tmp_path}/bootstrap.db')
     monkeypatch.setenv('DCA_2026_NOMINATIONS_ENABLED', 'true')
+    monkeypatch.setenv('DCA_2026_FOLLOWUPS_ENABLED', 'true')
     module = importlib.import_module('dca_rebuild.app')
     monkeypatch.setattr(module, 'SessionLocal', database[1])
     # install_phase9e captures its session factory when registering routes.
@@ -52,7 +53,8 @@ def website(database, monkeypatch, tmp_path):
     # Reuse real routing, context processors and admin workflows without module
     # globals leaking database state between tests.
     for rule in module.app.url_map.iter_rules():
-        if rule.endpoint == 'static' or rule.endpoint.startswith('phase9e_'):
+        if (rule.endpoint == 'static' or rule.endpoint.startswith('phase9e_')
+            or rule.endpoint in {'dca_followup_status', 'dca_my_nomination_followups', 'dca_verify_email'}):
             continue
         app.add_url_rule(rule.rule, rule.endpoint, module.app.view_functions[rule.endpoint], methods=list(rule.methods))
     for processor in module.app.template_context_processors[None]:
@@ -60,6 +62,10 @@ def website(database, monkeypatch, tmp_path):
             app.context_processor(processor)
     ns = dict(module.__dict__, engine=database[0], SessionLocal=database[1])
     install_phase9e(app, ns)
+    from dca_rebuild.email_verification import install_email_verification
+    install_email_verification(app, database[1], module.private_hash)
+    from dca_rebuild.nomination_followups import install_nomination_followups
+    install_nomination_followups(app, database[1])
     # Preserve SEO noindex response headers in the isolated website fixture.
     for callback in module.app.after_request_funcs.get(None, []):
         if callback.__name__ == "litefeet_noindex_private_pages":

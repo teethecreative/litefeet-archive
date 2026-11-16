@@ -1,0 +1,35 @@
+.lfv-nom-followup-dialog {
+  width: min(92vw, 470px);
+  max-height: min(85vh, 680px);
+  padding: 0;
+  border: 1px solid var(--border, #d8dce3);
+  border-radius: 16px;
+  color: var(--text, #0b2348);
+  background: var(--surface, #fff);
+  box-shadow: 0 24px 80px rgba(3, 20, 47, .32);
+}
+.lfv-nom-followup-dialog::backdrop { background: rgba(3, 17, 42, .62); }
+.lfv-nom-followup-dialog-inner { padding: 32px 28px; position: relative; }
+.lfv-nom-followup-dialog h2 { margin: 10px 0 14px; font-size: clamp(1.5rem, 4vw, 2rem); line-height: 1.2; }
+.lfv-nom-followup-dialog p { line-height: 1.65; }
+.lfv-nom-followup-close { position: absolute; top: 12px; right: 12px; border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 1.7rem; width: 40px; height: 40px; }
+.lfv-nom-followup-kicker { margin: 0; color: var(--gold, #b18a22); font-size: .75rem; letter-spacing: .13em; font-weight: 800; text-transform: uppercase; }
+.lfv-nom-followup-action, .lfv-nom-followup-submit {
+  display: block; width: 100%; box-sizing: border-box; margin-top: 22px; padding: 14px 18px;
+  border: 1px solid #b99232; border-radius: 8px; background: #d9ac47; color: #071d3b;
+  font: inherit; font-weight: 800; text-align: center; text-decoration: none; cursor: pointer;
+}
+.lfv-nom-followup-later { display: block; margin: 10px auto 0; padding: 12px 18px; border: 0; background: transparent; color: inherit; cursor: pointer; }
+.lfv-nom-followup-dialog :is(a, button):focus-visible,
+.lfv-nom-followup-page :is(a, button, input, textarea):focus-visible { outline: 3px solid #487ccf; outline-offset: 3px; }
+.lfv-nom-followup-page { width: min(100% - 36px, 780px); margin: 54px auto 90px; color: var(--text, inherit); }
+.lfv-nom-followup-page > p { line-height: 1.6; }
+.lfv-nom-followup-page h1 { font-size: clamp(2rem, 5vw, 3rem); margin: 10px 0 22px; }
+.lfv-nom-followup-count { font-weight: 700; }
+.lfv-nom-followup-card { border: 1px solid var(--border, #d8dce3); border-radius: 12px; padding: 24px; margin: 24px 0; background: var(--surface, transparent); }
+.lfv-nom-followup-card h2 { margin: 8px 0 12px; font-size: 1.45rem; }
+.lfv-nom-followup-card form { display: grid; gap: 10px; margin-top: 20px; }
+.lfv-nom-followup-card label { font-weight: 700; }
+.lfv-nom-followup-card :is(textarea, input) { color: inherit; background: var(--surface, transparent); border: 1px solid var(--border, #9ca3af); border-radius: 8px; padding: 12px; width: 100%; box-sizing: border-box; font: inherit; }
+.lfv-nom-followup-category { margin: 0; font-size: .8rem; font-weight: 800; letter-spacing: .05em; color: var(--gold, #b18a22); text-transform: uppercase; }
+@media(max-width: 540px) { .lfv-nom-followup-dialog-inner { padding: 30px 20px; } .lfv-nom-followup-card { padding: 18px; } }
