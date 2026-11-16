@@ -1,22 +1,13 @@
 /* THE LITEFEET VAULT — approved shared editorial system (v1)
    Presentation only: does not alter route names, forms, database, awards, or SEO. */
-:root{
-  --lfv-navy:#0a2c5f; --lfv-gold:#c9a127; --lfv-white:#fff;
-  --lfv-bg:#e9edf4; --lfv-surface:#fff; --lfv-surface-muted:#f5f7fb;
-  --lfv-ink:#07152b; --lfv-muted:#3d4b61; --lfv-line:#cbd3e0;
-  --lfv-gutter:clamp(18px,4.3vw,64px); --lfv-max:1440px;
-  --lfv-radius:8px; --lfv-font:Arial,"Helvetica Neue",Helvetica,sans-serif;
-}
-html[data-theme="dark"],html.dark,body.dark{
-  --lfv-bg:#0b1422; --lfv-surface:#15233a; --lfv-surface-muted:#1b2a43;
-  --lfv-ink:#f4f7fc; --lfv-muted:#c0cbdb; --lfv-line:#3a4b65;
-}
+@import url("./lfv-design-tokens.css");
+@import url("./lfv-ui-components.css");
 html.lfv-sitewide{scroll-padding-top:90px;scroll-behavior:smooth}
 html.lfv-sitewide body{background:var(--lfv-bg);color:var(--lfv-ink);font-family:var(--lfv-font);min-width:320px}
 html.lfv-sitewide :is(h1,h2,h3,h4){font-family:var(--lfv-font);font-style:normal;font-weight:800;letter-spacing:-.025em;line-height:1.08;overflow-wrap:break-word}
-html.lfv-sitewide h1{font-size:clamp(2.35rem,5.4vw,5rem)}
-html.lfv-sitewide h2{font-size:clamp(1.55rem,2.7vw,2.65rem)}
-html.lfv-sitewide h3{font-size:clamp(1.16rem,1.65vw,1.6rem)}
+html.lfv-sitewide h1{font-size:var(--vault-type-h1)}
+html.lfv-sitewide h2{font-size:var(--vault-type-h2)}
+html.lfv-sitewide h3{font-size:var(--vault-type-h3)}
 html.lfv-sitewide :is(p,li,dd){line-height:1.55}
 html.lfv-sitewide :is(button,input,select,textarea){font-family:var(--lfv-font)}
 html.lfv-sitewide :is(button,input:not([type="checkbox"]):not([type="radio"]),select,textarea,.button,.btn){border-radius:var(--lfv-radius)}
@@ -51,7 +42,7 @@ html.lfv-sitewide :is(table,.admin-results){max-width:100%}
 html[data-theme="dark"] .lfv-menu-list a:hover,html[data-theme="dark"] .lfv-menu-list a[aria-current="page"]{color:var(--lfv-gold)}
 /* Never replace content with decorative imagery. */
 @media(max-width:640px){
- :root{--lfv-gutter:18px}
+ /* Mobile spacing is provided by --vault-container-gutter. */
  .lfv-shell-bar{height:59px}
  .lfv-shell-brand{font-size:.92rem}
  .lfv-theme-label{display:none}
