@@ -1,0 +1,13 @@
+{# Shared Jinja components for public pages. The class contract is documented
+   in docs/design-system.md; avoid page-specific duplicates. #}
+{% macro page_header(eyebrow, title, description) -%}
+<header class="lfv-ui-page-header">
+  <p class="vault-kicker lfv-ui-kicker">{{ eyebrow }}</p>
+  <h1>{{ title }}</h1>
+  {% if description %}<p class="lfv-ui-lead">{{ description }}</p>{% endif %}
+</header>
+{%- endmacro %}
+
+{% macro action_link(href, label, variant='primary') -%}
+<a class="lfv-ui-action lfv-ui-action--{{ variant }}" href="{{ href }}">{{ label }}</a>
+{%- endmacro %}
