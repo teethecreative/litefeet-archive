@@ -69,3 +69,10 @@ body.dark {
   --lfv-muted: var(--vault-color-muted);
   --lfv-line: var(--vault-color-border);
 }
+
+@media (max-width: 690px) {
+  :root {
+    /* Preserve the approved mobile gutter while retiring v2 overrides. */
+    --vault-container-gutter: 18px;
+  }
+}
