@@ -216,7 +216,7 @@ def begin_verification(app, session_factory, email, network=""):
 
 def install_email_verification(app, session_factory, private_hash):
     status = delivery_config_status()
-    app.logger.info(
+    app.logger.warning(
         "dca_verification_email_config api_key_present=%s sender_present=%s sender_format_valid=%s",
         status["api_key_present"], status["sender_present"], status["sender_format_valid"],
     )
