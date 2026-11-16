@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
 {% if section == 'lock-in' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/lock-in.css') }}">{% endif %}
 {% if section == 'about' %}<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-about-one-page.css') }}">{% endif %}
-</head><body>{% include "_navigation.html" %}{% from "_ui_components.html" import page_header %}
+</head><body>{% include "_navigation.html" %}{% from "_ui_components.html" import page_header, action_link %}
 <main class="vault-section-page" id="vault-section-{{ section }}">
 {% if section == 'overview' %}
 {{ page_header("THE LITEFEET VAULT / ARCHIVE", "The Archive", "Explore LiteFeet's people, events, awards, and cultural history.") }}
@@ -26,7 +26,7 @@
 </div></section>
 <section aria-labelledby="archive-contribute-title"><h2 id="archive-contribute-title">Contribute to the Vault</h2>
 <p>Share a flyer, event, correction, profile update, or historical source.</p>
-<a class="lfv-primary-cta" href="{{ url_for('vault_submit') }}">Submit to the Archive</a></section>
+{{ action_link(url_for('vault_submit'), "Submit to the Archive") }}</section>
 {% elif section == 'timeline' %}
 {% include "archive_unified_timeline.html" %}
 {% elif section == 'people' %}
