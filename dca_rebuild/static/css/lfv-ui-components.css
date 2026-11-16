@@ -1,0 +1,98 @@
+/* Opt-in shared components. No broad element selectors; specialized game and
+   admin interfaces can adopt these incrementally without a forced redesign. */
+.lfv-ui-page-header {
+  box-sizing: border-box;
+  margin: 0 0 var(--vault-space-6);
+  padding: clamp(24px, 4vw, 56px);
+  background: var(--lfv-surface);
+  color: var(--lfv-ink);
+  border: 1px solid var(--lfv-line);
+  border-top: 3px solid var(--lfv-gold);
+  border-radius: var(--lfv-radius);
+}
+.lfv-ui-page-header h1 {
+  margin: var(--vault-space-2) 0 var(--vault-space-4);
+  font-size: var(--vault-type-h1);
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+.lfv-ui-kicker {
+  margin: 0 0 var(--vault-space-2);
+  color: var(--vault-color-accent-text);
+  font-size: var(--vault-type-small);
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.lfv-ui-lead {
+  max-width: 760px;
+  margin: 0;
+  color: var(--lfv-muted);
+  font-size: clamp(1rem, 1.3vw, 1.125rem);
+  line-height: 1.65;
+}
+.lfv-ui-section {
+  margin-bottom: var(--vault-space-7);
+}
+.lfv-ui-card {
+  padding: var(--vault-space-5);
+  background: var(--lfv-surface);
+  color: var(--lfv-ink);
+  border: 1px solid var(--lfv-line);
+  border-radius: var(--lfv-radius);
+  box-shadow: none;
+}
+.lfv-ui-action {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vault-space-2);
+  min-height: var(--vault-control-min-height);
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: var(--lfv-radius);
+  font-family: var(--lfv-font);
+  font-size: var(--vault-type-small);
+  font-weight: 800;
+  line-height: 1.3;
+  text-decoration: none;
+  cursor: pointer;
+}
+.lfv-ui-action--primary {
+  background: var(--lfv-gold);
+  color: var(--vault-color-navy);
+}
+.lfv-ui-action--secondary {
+  background: transparent;
+  color: var(--lfv-ink);
+  border-color: var(--lfv-line);
+}
+.lfv-ui-action:hover { filter: brightness(.97); }
+.lfv-ui-action:focus-visible,
+.lfv-ui-link:focus-visible,
+.lfv-ui-field:focus-visible {
+  outline: 3px solid var(--lfv-gold);
+  outline-offset: 3px;
+}
+.lfv-ui-link {
+  color: var(--lfv-ink);
+  font-weight: 750;
+  text-decoration-color: var(--lfv-gold);
+  text-underline-offset: 4px;
+}
+.lfv-ui-field {
+  box-sizing: border-box;
+  min-height: var(--vault-control-min-height);
+  max-width: 100%;
+  padding: 10px 12px;
+  background: var(--lfv-surface);
+  color: var(--lfv-ink);
+  border: 1px solid var(--lfv-line);
+  border-radius: var(--lfv-radius);
+  font-family: var(--lfv-font);
+}
+@media (max-width: 600px) {
+  .lfv-ui-page-header { padding: var(--vault-space-5); }
+  .lfv-ui-card { padding: var(--vault-space-4); }
+}
