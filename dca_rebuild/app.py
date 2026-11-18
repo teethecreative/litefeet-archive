@@ -81,6 +81,10 @@ def ensure_ledger_traffic_columns():
             connection.execute(sql_text(
                 "ALTER TABLE ledger_page_views ADD COLUMN traffic_source VARCHAR(100)"
             ))
+        connection.execute(sql_text(
+            "CREATE INDEX IF NOT EXISTS ix_lpv_traffic_type_viewed_at "
+            "ON ledger_page_views (traffic_type, viewed_at)"
+        ))
 
 
 ensure_ledger_traffic_columns()
@@ -4604,27 +4608,39 @@ def admin_analytics():
 
     db = SessionLocal()
     try:
-        raw_rows = (
-            db.query(LedgerPageView)
-            .filter(
-                LedgerPageView.viewed_at >= start_utc,
-                LedgerPageView.viewed_at < end_utc,
+        time_filters = (
+            LedgerPageView.viewed_at >= start_utc,
+            LedgerPageView.viewed_at < end_utc,
+        )
+        # Aggregate all classified traffic without materializing bot floods in
+        # memory when the default likely-human analytics view is selected.
+        traffic_counts = Counter({
+            (kind or "unclassified"): count
+            for kind, count in (
+                db.query(LedgerPageView.traffic_type, func.count(LedgerPageView.id))
+                .filter(*time_filters)
+                .group_by(LedgerPageView.traffic_type)
+                .all()
             )
-            .order_by(LedgerPageView.viewed_at.desc())
-            .all()
-        )
-        # Preserve every recorded HTML view. Chart totals default to likely
-        # humans; historical unclassified rows are never silently reassigned.
-        traffic_counts = Counter(
-            (row.traffic_type or "unclassified") for row in raw_rows
-        )
-        bot_sources = Counter(
-            (row.traffic_source or "Other automated") for row in raw_rows
-            if row.traffic_type == "bot"
-        ).most_common(20)
-        rows = raw_rows if traffic == "all" else [
-            row for row in raw_rows if row.traffic_type == traffic
+        })
+        source_count = func.count(LedgerPageView.id)
+        bot_sources = [
+            (source or "Other automated", count)
+            for source, count in (
+                db.query(LedgerPageView.traffic_source, source_count)
+                .filter(*time_filters, LedgerPageView.traffic_type == "bot")
+                .group_by(LedgerPageView.traffic_source)
+                .order_by(source_count.desc())
+                .limit(20)
+                .all()
+            )
         ]
+        selected_views = db.query(LedgerPageView).filter(*time_filters)
+        if traffic != "all":
+            selected_views = selected_views.filter(
+                LedgerPageView.traffic_type == traffic
+            )
+        rows = selected_views.order_by(LedgerPageView.viewed_at.desc()).all()
 
         page_counts = Counter(row.path for row in rows)
         visitor_data = {}
@@ -4809,7 +4825,7 @@ def admin_analytics():
             traffic_labels=traffic_labels,
             traffic_counts=traffic_counts,
             bot_sources=bot_sources,
-            raw_total_views=len(raw_rows),
+            raw_total_views=sum(traffic_counts.values()),
             start_day=start_day,
             end_day=end_day,
             total_views=len(rows),
