@@ -38,8 +38,8 @@ href="{{ url_for('static', filename='css/dca.css') }}">
             'admin_analytics',
             period='custom',
             start=date_scope.start_day.isoformat(),
-            end=date_scope.end_day.isoformat()
-        ) if date_scope else url_for('admin_analytics') }}">
+            end=date_scope.end_day.isoformat(), traffic=traffic
+        ) if date_scope else url_for('admin_analytics', traffic=traffic) }}">
             ← ANALYTICS OVERVIEW
         </a>
     </p>
@@ -81,6 +81,20 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                    placeholder="Session ID or page path">
         </label>
         <label>
+            TRAFFIC TYPE
+            <select name="traffic">
+                {% for kind, label in [
+                    ('human', 'Likely human'),
+                    ('bot', 'Automated / crawlers'),
+                    ('internal', 'Internal / admin'),
+                    ('unclassified', 'Historical / unknown'),
+                    ('all', 'All recorded')
+                ] %}
+                <option value="{{ kind }}" {% if traffic == kind %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
             SORT BY
             <select name="sort">
                 <option value="recent"
@@ -110,6 +124,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
             <thead>
                 <tr>
                     <th>SESSION</th>
+                    <th>TYPE</th>
                     <th>VIEWS</th>
                     <th>VISITS</th>
                     <th>FIRST SEEN · NY</th>
@@ -121,6 +136,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
             {% for visitor in visitors %}
                 <tr>
                     <td><code>{{ visitor.visitor_id[:12] }}…</code></td>
+                    <td>{{ visitor.traffic_type|upper }}</td>
                     <td>{{ visitor.views }}</td>
                     <td>{{ visitor.visits }}</td>
                     <td>
@@ -140,13 +156,13 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                     <td>
                         <a href="{{ url_for(
                             'admin_analytics_visitor',
-                            visitor_id=visitor.visitor_id
+                            visitor_id=visitor.visitor_id, traffic=visitor.traffic_type
                         , start=date_scope.start_day.isoformat() if date_scope else None, end=date_scope.end_day.isoformat() if date_scope else None) }}">VIEW ACTIVITY →</a>
                     </td>
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="6">NO MATCHING SESSIONS</td>
+                    <td colspan="7">NO MATCHING SESSIONS</td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -158,7 +174,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
         <a href="{{ url_for(
             'admin_analytics_visitors',
             page=page-1, sort=sort, q=search,
-            min_views=minimum
+            min_views=minimum, traffic=traffic
         , start=date_scope.start_day.isoformat() if date_scope else None, end=date_scope.end_day.isoformat() if date_scope else None) }}">← PREVIOUS</a>
         {% endif %}
         <span>PAGE {{ page }} OF {{ total_pages }}</span>
@@ -166,7 +182,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
         <a href="{{ url_for(
             'admin_analytics_visitors',
             page=page+1, sort=sort, q=search,
-            min_views=minimum
+            min_views=minimum, traffic=traffic
         , start=date_scope.start_day.isoformat() if date_scope else None, end=date_scope.end_day.isoformat() if date_scope else None) }}">NEXT →</a>
         {% endif %}
     </div>
