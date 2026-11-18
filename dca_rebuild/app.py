@@ -4853,10 +4853,15 @@ def admin_analytics_visitors():
     )
     per_page = 15
     date_scope = ledger_analytics_date_scope()
+    traffic = request.args.get("traffic", "human")
+    if traffic not in ("human", "bot", "internal", "unclassified", "all"):
+        abort(400)
 
     db = SessionLocal()
     try:
         scoped_views = db.query(LedgerPageView)
+        if traffic != "all":
+            scoped_views = scoped_views.filter(LedgerPageView.traffic_type == traffic)
 
         if date_scope:
             scoped_views = scoped_views.filter(
@@ -4867,6 +4872,7 @@ def admin_analytics_visitors():
         grouped = (
             scoped_views.with_entities(
                 LedgerPageView.visitor_id.label("visitor_id"),
+                LedgerPageView.traffic_type.label("traffic_type"),
                 func.count(LedgerPageView.id).label("views"),
                 func.sum(
                     case(
@@ -4877,7 +4883,7 @@ def admin_analytics_visitors():
                 func.min(LedgerPageView.viewed_at).label("first_seen"),
                 func.max(LedgerPageView.viewed_at).label("last_seen"),
             )
-            .group_by(LedgerPageView.visitor_id)
+            .group_by(LedgerPageView.visitor_id, LedgerPageView.traffic_type)
             .having(func.count(LedgerPageView.id) >= minimum)
         )
 
@@ -4930,6 +4936,7 @@ def admin_analytics_visitors():
 
         return render_template(
             "admin_analytics_visitors.html",
+            traffic=traffic,
             visitors=visitors,
             total=total,
             page=page,
@@ -4957,12 +4964,17 @@ def admin_analytics_visitor(visitor_id):
     page = max(1, min(request.args.get("page", 1, type=int) or 1, 100000))
     per_page = 50
     date_scope = ledger_analytics_date_scope()
+    traffic = request.args.get("traffic", "all")
+    if traffic not in ("human", "bot", "internal", "unclassified", "all"):
+        abort(400)
 
     db = SessionLocal()
     try:
         base = db.query(LedgerPageView).filter(
             LedgerPageView.visitor_id == visitor_id
         )
+        if traffic != "all":
+            base = base.filter(LedgerPageView.traffic_type == traffic)
         if date_scope:
             base = base.filter(
                 LedgerPageView.viewed_at >= date_scope["start_utc"],
@@ -5012,6 +5024,9 @@ def admin_analytics_visitor(visitor_id):
         return render_template(
             "admin_analytics_visitor.html",
             visitor_id=visitor_id,
+            traffic=traffic,
+            traffic_type=(activity[0].traffic_type if activity else "unclassified"),
+            traffic_source=(activity[0].traffic_source if activity else None),
             total=total,
             visits=visits,
             first_seen=first_seen,
