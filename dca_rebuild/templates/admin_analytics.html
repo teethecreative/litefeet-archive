@@ -72,6 +72,21 @@ href="{{ url_for('static', filename='css/dca.css') }}">
             </select>
         </label>
 
+        <label>
+            TRAFFIC TYPE
+            <select name="traffic" id="analytics-traffic">
+                {% for kind, label in [
+                    ('human', 'Likely human'),
+                    ('bot', 'Automated / crawlers'),
+                    ('internal', 'Internal / admin'),
+                    ('unclassified', 'Historical / unknown'),
+                    ('all', 'All recorded views')
+                ] %}
+                <option value="{{ kind }}" {% if traffic == kind %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
         <div id="analytics-custom-dates"
              class="analytics-date-fields"
              {% if period != 'custom' %}hidden{% endif %}>
@@ -91,26 +106,26 @@ href="{{ url_for('static', filename='css/dca.css') }}">
     </form>
 
     <p class="analytics-period-label">
-        {{ start_day }} — {{ end_day }} · NEW YORK TIME
+        {{ start_day }} — {{ end_day }} · NEW YORK TIME · {{ traffic_label|upper }}
     </p>
 
     <div class="analytics-metrics">
         <article class="analytics-metric">
-            <div class="label">PAGE VIEWS</div>
+            <div class="label">{{ traffic_label|upper }} PAGE VIEWS</div>
             <strong>{{ total_views }}</strong>
-            <span>Public pages loaded</span>
+            <span>Selected public HTML page loads</span>
         </article>
 
         <article class="analytics-metric">
-            <div class="label">VISITS</div>
+            <div class="label">VISITS · SELECTED TRAFFIC</div>
             <strong>{{ total_visits }}</strong>
-            <span>Recorded visit starts</span>
+            <span>Recorded visit starts (30-minute rule)</span>
         </article>
 
         <article class="analytics-metric">
-            <div class="label">UNIQUE BROWSERS</div>
+            <div class="label">TRACKED IDENTIFIERS</div>
             <strong>{{ unique_visitors }}</strong>
-            <span>Distinct browser identifiers · not verified people</span>
+            <span>Browser IDs or crawler-agent groups · not verified people</span>
         </article>
 
         <article class="analytics-metric">
@@ -124,6 +139,50 @@ href="{{ url_for('static', filename='css/dca.css') }}">
             </strong>
             <span>Views divided by recorded visits</span>
         </article>
+    </div>
+
+    <div class="admin-section-heading" style="margin-top:1.5rem">
+        <h3>ALL RECORDED TRAFFIC</h3>
+        <p>Every recorded public HTML page view is retained, including automated and internal activity.</p>
+    </div>
+    <div class="analytics-table-wrap">
+        <table class="analytics-table">
+            <thead><tr><th>CLASSIFICATION</th><th>PAGE VIEWS</th></tr></thead>
+            <tbody>
+            {% for kind, label in [
+                ('human', 'Likely human'),
+                ('bot', 'Automated / crawlers'),
+                ('internal', 'Internal / admin'),
+                ('unclassified', 'Historical / unknown')
+            ] %}
+            <tr>
+                <td><a href="{{ url_for('admin_analytics', period=period,
+                    traffic=kind,
+                    start=start_day.isoformat() if period == 'custom' else None,
+                    end=end_day.isoformat() if period == 'custom' else None) }}">{{ label }}</a></td>
+                <td>{{ traffic_counts.get(kind, 0) }}</td>
+            </tr>
+            {% endfor %}
+            <tr><th>ALL RECORDED</th><th>{{ raw_total_views }}</th></tr>
+            </tbody>
+        </table>
+    </div>
+    <p class="analytics-footnote">Likely human traffic is a best-effort estimate, not verified people. Old records have no user-agent information and remain unclassified rather than being counted as human. Admin-page, static-asset and unsuccessful requests were never part of this page-view dataset.</p>
+    <div class="admin-section-heading" style="margin-top:1.5rem">
+        <h3>AUTOMATED SOURCES</h3>
+        <p>Known crawler sources and their recorded requests to public HTML pages for this period.</p>
+    </div>
+    <div class="analytics-table-wrap">
+        <table class="analytics-table">
+            <thead><tr><th>CRAWLER / BOT</th><th>PAGE VIEWS</th></tr></thead>
+            <tbody>
+            {% for source, count in bot_sources %}
+            <tr><td>{{ source }}</td><td>{{ count }}</td></tr>
+            {% else %}
+            <tr><td colspan="2">NO CLASSIFIED AUTOMATED VIEWS</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
 </section>
 
@@ -385,7 +444,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
         <div class="label">07 · VISITOR ACTIVITY</div>
         <h2>VISITOR DIRECTORY</h2>
         <p>
-            <a href="{{ url_for('admin_analytics_visitors', start=start_day.isoformat(), end=end_day.isoformat()) }}">
+            <a href="{{ url_for('admin_analytics_visitors', start=start_day.isoformat(), end=end_day.isoformat(), traffic=traffic) }}">
                 OPEN FILTERED VISITOR DIRECTORY →
             </a>
         </p>
@@ -397,6 +456,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
 
     <form method="get" class="analytics-search">
         <input type="hidden" name="period" value="{{ period }}">
+        <input type="hidden" name="traffic" value="{{ traffic }}">
         <input type="hidden" name="start" value="{{ start_day }}">
         <input type="hidden" name="end" value="{{ end_day }}">
         <label>
@@ -412,6 +472,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
             <thead>
                 <tr>
                     <th>SESSION</th>
+                    <th>TYPE</th>
                     <th>VIEWS</th>
                     <th>VISITS</th>
                     <th>TOP PAGE</th>
@@ -424,11 +485,12 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                     <td>
                         <a href="{{ url_for(
                             'admin_analytics_visitor',
-                            visitor_id=visitor.id
+                            visitor_id=visitor.id, traffic=visitor.traffic_type
                         , start=start_day.isoformat(), end=end_day.isoformat()) }}">
                             <code>{{ visitor.id[:12] }}…</code>
                         </a>
                     </td>
+                    <td>{{ visitor.traffic_type|upper }}</td>
                     <td>{{ visitor.views }}</td>
                     <td>{{ visitor.visits }}</td>
                     <td>{{ visitor.top_page }}</td>
@@ -442,7 +504,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="5">NO MATCHING SESSIONS</td>
+                    <td colspan="6">NO MATCHING SESSIONS</td>
                 </tr>
                 {% endfor %}
             </tbody>
