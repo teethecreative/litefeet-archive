@@ -40,6 +40,22 @@
       const checkStatus = form.querySelector('[data-name-check]');
       const distinctRow = form.querySelector('[data-name-distinct]');
       const distinctCheckbox = form.elements.namedItem('confirm_distinct');
+      const reasonInput = form.elements.namedItem('reason');
+      const reasonRequirement = form.querySelector('[data-reason-requirement]');
+      const reasonHelp = form.querySelector('[data-reason-help]');
+      function setReasonRequired(isRequired) {
+        if (!reasonInput) return;
+        reasonInput.required = isRequired;
+        if (reasonRequirement) {
+          reasonRequirement.textContent = isRequired ?
+            '(required for new nominees)' : '(optional — reason already on file)';
+        }
+        if (reasonHelp) {
+          reasonHelp.textContent = isRequired ?
+            'An explanation is required unless this nominee already has one on file.' :
+            'A reason is already on file for this nominee. Add more supporting information only if you want to.';
+        }
+      }
       let checkTimer = null;
       let checkNonce = 0;
       let approvedSubmit = false;
@@ -63,6 +79,7 @@
           if (!response.ok) throw new Error('NAME CHECK FAILED');
           const data = await response.json();
           if (nonce !== checkNonce || nomineeInput.value.trim() !== targetName) return null;
+          setReasonRequired(data.reason_required !== false);
           if (data.already_listed) {
             checkStatus.textContent = 'ALREADY LISTED AS ' + data.canonical_name.toUpperCase() +
               '. YOUR NOMINATION WILL SUPPORT THE EXISTING PERSON.';
@@ -93,6 +110,8 @@
         }
       }
       nomineeInput.addEventListener('input', function () {
+        // Never carry another nominee's optional-reason status to a new name.
+        setReasonRequired(true);
         ++checkNonce;
         checkStatus.hidden = true;
         distinctRow.hidden = true;
@@ -124,6 +143,9 @@
       const idea = index !== null ? drafts()[Number(index)] : null;
       if (idea && String(idea.category_id) === form.elements.category_id.value) {
         fields.forEach(field => { form.elements.namedItem(field).value = idea[field] || ''; });
+      }
+      if (nomineeInput && nomineeInput.value.trim().length >= 2) {
+        checkNominee();
       }
       root.querySelectorAll('[data-add-later]').forEach(function (button) {
         button.addEventListener('click', function () {

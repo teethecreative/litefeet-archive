@@ -13,7 +13,7 @@ from flask import abort, flash, jsonify, redirect, render_template, request, ses
 from sqlalchemy.exc import IntegrityError
 
 from dca_rebuild.models import DCACategory, DCAEdition, DCANominee, DCANominationSubmission
-from dca_rebuild.phase9e import NominationDetail9E, NomineeQualificationReason9E
+from dca_rebuild.phase9e import NominationDetail9E, NomineeQualificationReason9E, nominee_has_reason
 
 
 def _recognized_nominator():
@@ -33,6 +33,7 @@ def _followups(db, edition_id, submitter_hash):
         db.query(
             DCANominationSubmission.id, DCANominee.id, DCANominee.name,
             DCACategory.name, NominationDetail9E.justification,
+            DCACategory.id,
         )
         .join(DCANominee, DCANominee.id == DCANominationSubmission.nominee_id)
         .join(DCACategory, DCACategory.id == DCANominee.category_id)
@@ -50,8 +51,18 @@ def _followups(db, edition_id, submitter_hash):
             edition_id=edition_id, submitter_hash=submitter_hash).all()
     }
     pending = {}
-    for submission_id, nominee_id, nominee, category, explanation in rows:
+    reason_status = {}
+    for submission_id, nominee_id, nominee, category, explanation, category_id in rows:
         if nominee_id in covered or len((explanation or "").strip()) >= 20:
+            continue
+        # Explanations belong to the nominee, not to each supporter.
+        # Do not prompt an earlier nominator when someone else already supplied one.
+        key = (category_id, nominee.casefold())
+        if key not in reason_status:
+            reason_status[key] = nominee_has_reason(
+                db, edition_id, category_id, nominee
+            )
+        if reason_status[key]:
             continue
         # An old nominee may have several nominations. Ask only once per nominee.
         pending.setdefault(nominee_id, {
