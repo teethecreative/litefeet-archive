@@ -130,6 +130,55 @@ def nominees_missing_reasons(db, edition):
 
 
 
+
+def nominee_has_reason(db, edition_id, category_id, name):
+    """Whether this nominee/category already has a submitted qualification reason.
+
+    Additional supporters are not asked to repeat an existing explanation.
+    A submitted reason is not automatically verified or approved; moderation
+    and the nominee's eligibility remain independent.
+    """
+    from dca_rebuild.nomination_service import _related_category_ids
+    category = db.get(DCACategory, category_id)
+    if not category or category.edition_id != edition_id:
+        return False
+    canonical_id, related_ids = _related_category_ids(db, category)
+    canonical = db.get(DCACategory, canonical_id)
+    key = canonical_nominee_key(name, category_name=canonical.name)
+    matching = [
+        n for n in db.query(DCANominee).filter(
+            DCANominee.edition_id == edition_id,
+            DCANominee.category_id.in_(related_ids),
+            DCANominee.moderation_status.in_(('pending', 'approved')),
+        ).all()
+        if canonical_nominee_key(n.name, category_name=canonical.name) == key
+    ]
+    if not matching:
+        return False
+    if any((nominee.description or '').strip() for nominee in matching):
+        return True
+    nominee_ids = [nominee.id for nominee in matching]
+    detail_rows = (
+        db.query(NominationDetail9E.justification)
+        .join(DCANominationSubmission,
+              DCANominationSubmission.id == NominationDetail9E.submission_id)
+        .filter(DCANominationSubmission.edition_id == edition_id,
+                DCANominationSubmission.nominee_id.in_(nominee_ids))
+        .all()
+    )
+    if any((reason or '').strip() for reason, in detail_rows):
+        return True
+    supplements = (
+        db.query(NomineeQualificationReason9E.reason)
+        .filter(
+            NomineeQualificationReason9E.edition_id == edition_id,
+            NomineeQualificationReason9E.nominee_id.in_(nominee_ids),
+            NomineeQualificationReason9E.moderation_status.in_(('pending', 'verified')),
+        )
+        .all()
+    )
+    return any((reason or '').strip() for reason, in supplements)
+
 def today_ny():
     return datetime.now(NY).date()
 
@@ -899,6 +948,9 @@ def install_phase9e(app, ns):
                 matches=matches,
                 canonical_name=display,
                 already_listed=exact,
+                reason_required=not nominee_has_reason(
+                    db, edition.id, cid, name
+                ),
                 requires_confirmation=not exact and any(
                     match['type'] == 'similar' for match in matches
                 ),
@@ -1037,8 +1089,8 @@ def install_phase9e(app, ns):
                 instagram = request.form.get('instagram', '').strip().lstrip('@')
                 instagram = re.sub(r'^https?://(?:www\.)?instagram\.com/', '', instagram, flags=re.I).split('?')[0].strip('/')
                 reason = request.form.get('reason', '').strip()
-                if len(reason) < 20:
-                    abort(400, 'Explain the nominee\'s activity during November 2025–November 2026 (at least 20 characters)')
+                if reason and len(reason) < 20:
+                    abort(400, 'If adding a reason, describe their relevant activity in at least 20 characters')
                 if len(team) > 250 or len(location) > 250 or len(instagram) > 100 or len(reason) > 2000:
                     abort(400, 'One or more fields are too long')
                 if instagram and not re.fullmatch(r'[A-Za-z0-9._]{1,30}', instagram):
@@ -1048,6 +1100,10 @@ def install_phase9e(app, ns):
                 except ValueError as exc:
                     abort(400, str(exc))
                 matches = candidate_matches(db, category_id=cid, name=name)
+                if not reason and not nominee_has_reason(
+                    db, edition.id, cid, name
+                ):
+                    abort(400, 'Add a reason for this nominee before submitting')
                 if (not any(match['type'] == 'existing' for match in matches)
                     and any(match['type'] == 'similar' for match in matches)
                     and request.form.get('confirm_distinct') != '1'):
@@ -1150,6 +1206,11 @@ def install_phase9e(app, ns):
                                    requested_category_id=(display_args.get('category', type=int)
                                                           if display_args.get('category', type=int) in allowed else None),
                                    identified=bool(who), results_view=results_view, summary=summary,
+                                   initial_reason_required=not (
+                                       selected and suggestion and nominee_has_reason(
+                                           db, edition.id, selected['id'], suggestion['name']
+                                       )
+                                   ),
                                    csrf_token=session['lf9e_nomination_csrf'], closed=is_closed())
         finally:
             db.close()
