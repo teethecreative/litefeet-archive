@@ -35,6 +35,7 @@ from dca_rebuild.models import (
     LedgerPageView,
 )
 from dca_rebuild.models import LedgerEra
+from dca_rebuild.traffic_classification import classify_traffic
 
 app = Flask(__name__)
 app.secret_key = (
@@ -59,6 +60,34 @@ def ledger_template_globals():
     }
 
 Base.metadata.create_all(engine)
+
+
+def ensure_ledger_traffic_columns():
+    """Preserve all existing analytics rows, marking historical source unknown."""
+    from sqlalchemy import inspect, text as sql_text
+
+    table = "ledger_page_views"
+    inspector = inspect(engine)
+    if table not in inspector.get_table_names():
+        return
+    existing = {column["name"] for column in inspector.get_columns(table)}
+    with engine.begin() as connection:
+        if "traffic_type" not in existing:
+            connection.execute(sql_text(
+                "ALTER TABLE ledger_page_views ADD COLUMN traffic_type "
+                "VARCHAR(24) NOT NULL DEFAULT 'unclassified'"
+            ))
+        if "traffic_source" not in existing:
+            connection.execute(sql_text(
+                "ALTER TABLE ledger_page_views ADD COLUMN traffic_source VARCHAR(100)"
+            ))
+        connection.execute(sql_text(
+            "CREATE INDEX IF NOT EXISTS ix_lpv_traffic_type_viewed_at "
+            "ON ledger_page_views (traffic_type, viewed_at)"
+        ))
+
+
+ensure_ledger_traffic_columns()
 
 # Existing production databases predate the private nomination-email field.
 # Add only the nullable column; never recreate, drop, or rewrite entries.
@@ -125,29 +154,39 @@ def record_ledger_page_view(response):
     if request.headers.get("Sec-Purpose") == "prefetch":
         return response
 
-    # First-party browser identity survives a new Flask session. Retain the
-    # existing session ID when upgrading so earlier views stay connected.
-    visitor_id = request.cookies.get("lf_ledger_visitor", "")
-    valid = len(visitor_id) == 32 and all(c in "0123456789abcdef" for c in visitor_id)
-    if not valid:
-        visitor_id = session.get(LEDGER_ANALYTICS_SESSION_KEY, "")
+    traffic_type, traffic_source = classify_traffic(
+        request.headers.get("User-Agent"),
+        is_admin=bool(session.get("ledger_admin_authenticated")),
+    )
+
+    if traffic_type == "bot":
+        # Most crawlers reject cookies. Stable agent-group identifiers prevent
+        # treating every robot request as a new unique human browser.
+        agent = request.headers.get("User-Agent", "")
+        visitor_id = hashlib.sha256(("bot:" + agent).encode()).hexdigest()[:32]
+    else:
+        # First-party browser identity survives new Flask sessions.
+        visitor_id = request.cookies.get("lf_ledger_visitor", "")
         valid = len(visitor_id) == 32 and all(c in "0123456789abcdef" for c in visitor_id)
-    if not valid:
-        visitor_id = secrets.token_hex(16)
-    if session.get(LEDGER_ANALYTICS_SESSION_KEY) != visitor_id:
-        session[LEDGER_ANALYTICS_SESSION_KEY] = visitor_id
-    if request.cookies.get("lf_ledger_visitor") != visitor_id:
-        response.set_cookie(
-            "lf_ledger_visitor", visitor_id, max_age=365 * 24 * 60 * 60,
-            secure=request.is_secure, httponly=True, samesite="Lax", path="/",
-        )
+        if not valid:
+            visitor_id = session.get(LEDGER_ANALYTICS_SESSION_KEY, "")
+            valid = len(visitor_id) == 32 and all(c in "0123456789abcdef" for c in visitor_id)
+        if not valid:
+            visitor_id = secrets.token_hex(16)
+        if session.get(LEDGER_ANALYTICS_SESSION_KEY) != visitor_id:
+            session[LEDGER_ANALYTICS_SESSION_KEY] = visitor_id
+        if request.cookies.get("lf_ledger_visitor") != visitor_id:
+            response.set_cookie(
+                "lf_ledger_visitor", visitor_id, max_age=365 * 24 * 60 * 60,
+                secure=request.is_secure, httponly=True, samesite="Lax", path="/",
+            )
 
     db = SessionLocal()
     try:
         now = datetime.utcnow()
         previous = (
             db.query(LedgerPageView)
-            .filter_by(visitor_id=visitor_id)
+            .filter_by(visitor_id=visitor_id, traffic_type=traffic_type)
             .order_by(LedgerPageView.viewed_at.desc())
             .first()
         )
@@ -162,6 +201,8 @@ def record_ledger_page_view(response):
             path=request.path[:500],
             viewed_at=now,
             is_new_visit=new_visit,
+            traffic_type=traffic_type,
+            traffic_source=traffic_source,
         ))
         db.commit()
     except Exception:
@@ -2395,12 +2436,17 @@ def admin_dashboard():
         pending_total, rows = _queue(db, "all", 1, "oldest")
         event_pending = db.query(VaultGatheringSubmission).filter_by(status="pending").count()
         development_pending = db.query(VaultDevelopmentItem).filter_by(status="needs_review").count()
-        seven_day_views = db.query(LedgerPageView).filter(
-            LedgerPageView.viewed_at >= recent).count()
+        recent_views = db.query(LedgerPageView).filter(
+            LedgerPageView.viewed_at >= recent)
+        seven_day_views = recent_views.filter(
+            LedgerPageView.traffic_type == "human").count()
+        seven_day_bot_views = recent_views.filter(
+            LedgerPageView.traffic_type == "bot").count()
     return render_template(
         "admin_workspace_overview.html", pending_total=pending_total, rows=rows,
         event_pending=event_pending, development_pending=development_pending,
         seven_day_views=seven_day_views,
+        seven_day_bot_views=seven_day_bot_views,
     )
 
 @app.route("/admin/lfa/submissions")
@@ -4497,6 +4543,16 @@ def admin_analytics():
     from datetime import date
 
     period = request.args.get("period", "week")
+    traffic = request.args.get("traffic", "human")
+    if traffic not in ("human", "bot", "internal", "unclassified", "all"):
+        abort(400)
+    traffic_labels = {
+        "human": "Likely Human",
+        "bot": "Automated",
+        "internal": "Internal / Admin",
+        "unclassified": "Historical / Unknown",
+        "all": "All Recorded",
+    }
     today = datetime.now(ZoneInfo("America/New_York")).date()
 
     if period == "day":
@@ -4552,24 +4608,49 @@ def admin_analytics():
 
     db = SessionLocal()
     try:
-        rows = (
-            db.query(LedgerPageView)
-            .filter(
-                LedgerPageView.viewed_at >= start_utc,
-                LedgerPageView.viewed_at < end_utc,
-            )
-            .order_by(LedgerPageView.viewed_at.desc())
-            .all()
+        time_filters = (
+            LedgerPageView.viewed_at >= start_utc,
+            LedgerPageView.viewed_at < end_utc,
         )
+        # Aggregate all classified traffic without materializing bot floods in
+        # memory when the default likely-human analytics view is selected.
+        traffic_counts = Counter({
+            (kind or "unclassified"): count
+            for kind, count in (
+                db.query(LedgerPageView.traffic_type, func.count(LedgerPageView.id))
+                .filter(*time_filters)
+                .group_by(LedgerPageView.traffic_type)
+                .all()
+            )
+        })
+        source_count = func.count(LedgerPageView.id)
+        bot_sources = [
+            (source or "Other automated", count)
+            for source, count in (
+                db.query(LedgerPageView.traffic_source, source_count)
+                .filter(*time_filters, LedgerPageView.traffic_type == "bot")
+                .group_by(LedgerPageView.traffic_source)
+                .order_by(source_count.desc())
+                .limit(20)
+                .all()
+            )
+        ]
+        selected_views = db.query(LedgerPageView).filter(*time_filters)
+        if traffic != "all":
+            selected_views = selected_views.filter(
+                LedgerPageView.traffic_type == traffic
+            )
+        rows = selected_views.order_by(LedgerPageView.viewed_at.desc()).all()
 
         page_counts = Counter(row.path for row in rows)
         visitor_data = {}
 
         for row in rows:
             record = visitor_data.setdefault(
-                row.visitor_id,
+                (row.visitor_id, row.traffic_type),
                 {
                     "id": row.visitor_id,
+                    "traffic_type": row.traffic_type,
                     "views": 0,
                     "visits": 0,
                     "paths": Counter(),
@@ -4659,23 +4740,22 @@ def admin_analytics():
 
         if all_session_ids:
             previous_session_ids = {
-                visitor_id
-                for (visitor_id,) in (
-                    db.query(LedgerPageView.visitor_id)
+                (visitor_id, kind)
+                for (visitor_id, kind) in (
+                    db.query(LedgerPageView.visitor_id, LedgerPageView.traffic_type)
                     .filter(
                         LedgerPageView.viewed_at < start_utc,
-                        LedgerPageView.visitor_id.in_(
-                            all_session_ids
-                        ),
+                        LedgerPageView.visitor_id.in_({
+                            visitor_id for visitor_id, _ in all_session_ids
+                        }),
                     )
                     .distinct()
                     .all()
                 )
+                if (visitor_id, kind) in all_session_ids
             }
 
-        first_session_ids = (
-            all_session_ids - previous_session_ids
-        )
+        first_session_ids = all_session_ids - previous_session_ids
         repeat_session_ids = previous_session_ids
 
         analytics_hours = [
@@ -4740,6 +4820,12 @@ def admin_analytics():
         return render_template(
             "admin_analytics.html",
             period=period,
+            traffic=traffic,
+            traffic_label=traffic_labels[traffic],
+            traffic_labels=traffic_labels,
+            traffic_counts=traffic_counts,
+            bot_sources=bot_sources,
+            raw_total_views=sum(traffic_counts.values()),
             start_day=start_day,
             end_day=end_day,
             total_views=len(rows),
@@ -4783,10 +4869,15 @@ def admin_analytics_visitors():
     )
     per_page = 15
     date_scope = ledger_analytics_date_scope()
+    traffic = request.args.get("traffic", "human")
+    if traffic not in ("human", "bot", "internal", "unclassified", "all"):
+        abort(400)
 
     db = SessionLocal()
     try:
         scoped_views = db.query(LedgerPageView)
+        if traffic != "all":
+            scoped_views = scoped_views.filter(LedgerPageView.traffic_type == traffic)
 
         if date_scope:
             scoped_views = scoped_views.filter(
@@ -4797,6 +4888,7 @@ def admin_analytics_visitors():
         grouped = (
             scoped_views.with_entities(
                 LedgerPageView.visitor_id.label("visitor_id"),
+                LedgerPageView.traffic_type.label("traffic_type"),
                 func.count(LedgerPageView.id).label("views"),
                 func.sum(
                     case(
@@ -4807,7 +4899,7 @@ def admin_analytics_visitors():
                 func.min(LedgerPageView.viewed_at).label("first_seen"),
                 func.max(LedgerPageView.viewed_at).label("last_seen"),
             )
-            .group_by(LedgerPageView.visitor_id)
+            .group_by(LedgerPageView.visitor_id, LedgerPageView.traffic_type)
             .having(func.count(LedgerPageView.id) >= minimum)
         )
 
@@ -4860,6 +4952,7 @@ def admin_analytics_visitors():
 
         return render_template(
             "admin_analytics_visitors.html",
+            traffic=traffic,
             visitors=visitors,
             total=total,
             page=page,
@@ -4887,12 +4980,17 @@ def admin_analytics_visitor(visitor_id):
     page = max(1, min(request.args.get("page", 1, type=int) or 1, 100000))
     per_page = 50
     date_scope = ledger_analytics_date_scope()
+    traffic = request.args.get("traffic", "all")
+    if traffic not in ("human", "bot", "internal", "unclassified", "all"):
+        abort(400)
 
     db = SessionLocal()
     try:
         base = db.query(LedgerPageView).filter(
             LedgerPageView.visitor_id == visitor_id
         )
+        if traffic != "all":
+            base = base.filter(LedgerPageView.traffic_type == traffic)
         if date_scope:
             base = base.filter(
                 LedgerPageView.viewed_at >= date_scope["start_utc"],
@@ -4942,6 +5040,9 @@ def admin_analytics_visitor(visitor_id):
         return render_template(
             "admin_analytics_visitor.html",
             visitor_id=visitor_id,
+            traffic=traffic,
+            traffic_type=(activity[0].traffic_type if activity else "unclassified"),
+            traffic_source=(activity[0].traffic_source if activity else None),
             total=total,
             visits=visits,
             first_seen=first_seen,

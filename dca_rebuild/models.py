@@ -864,6 +864,9 @@ class LedgerPageView(Base):
         DateTime, nullable=False, default=datetime.utcnow, index=True
     )
     is_new_visit = Column(Boolean, nullable=False, default=False)
+    # Legacy rows remain unclassified; never silently count them as human.
+    traffic_type = Column(String(24), nullable=False, default="unclassified", index=True)
+    traffic_source = Column(String(100), nullable=True)
 
 
 # ============================================================

@@ -9,7 +9,8 @@
 <a href="{{ url_for('admin_vault_review_queue') }}"><strong>{{ pending_total }}</strong><span>Pending reviews</span></a>
 <a href="{{ url_for('admin_vault_gatherings') }}"><strong>{{ event_pending }}</strong><span>Event submissions</span></a>
 <a href="{{ url_for('admin_vault_development') }}"><strong>{{ development_pending }}</strong><span>Development needs review</span></a>
-<a href="{{ url_for('admin_analytics') }}"><strong>{{ seven_day_views }}</strong><span>Page views · 7 days</span></a>
+<a href="{{ url_for('admin_analytics', traffic='human') }}"><strong>{{ seven_day_views }}</strong><span>Likely human views · 7 days</span></a>
+<a href="{{ url_for('admin_analytics', traffic='bot') }}"><strong>{{ seven_day_bot_views }}</strong><span>Crawler views · 7 days</span></a>
 </div>
 <section class="lfv-admin-workspace-section" id="review-queue">
 <div class="lfv-admin-workspace-heading"><div><p class="lfv-admin-overline">01 / MODERATION</p><h2>Needs Attention</h2><p>{{ pending_total }} pending across existing submission systems. Oldest first.</p></div><a href="{{ url_for('admin_vault_review_queue') }}">View entire queue</a></div>
