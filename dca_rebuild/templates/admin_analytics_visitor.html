@@ -33,7 +33,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
     <p class="lead">
         Page-by-page activity for an anonymous browser session.
     </p>
-    <p><a href="{{ url_for('admin_analytics_visitors', start=date_scope.start_day.isoformat() if date_scope else None, end=date_scope.end_day.isoformat() if date_scope else None) }}">
+    <p><a href="{{ url_for('admin_analytics_visitors', traffic=traffic, start=date_scope.start_day.isoformat() if date_scope else None, end=date_scope.end_day.isoformat() if date_scope else None) }}">
         ← VISITOR DIRECTORY
     </a></p>
 </header>
@@ -52,7 +52,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
     <p>
         <a href="{{ url_for(
             'admin_analytics_visitor',
-            visitor_id=visitor_id
+            visitor_id=visitor_id, traffic=traffic
         ) }}">VIEW ALL-TIME ACTIVITY →</a>
     </p>
     {% else %}
@@ -62,7 +62,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
     {% endif %}
 
     <p class="analytics-session-id">
-        SESSION ID: <code>{{ visitor_id }}</code>
+        SESSION ID: <code>{{ visitor_id }}</code> · {{ traffic_type|upper }}{% if traffic_source %} · {{ traffic_source }}{% endif %}
     </p>
 
     <div class="analytics-metrics">
@@ -131,6 +131,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                     <th>DATE & TIME</th>
                     <th>PAGE</th>
                     <th>ACTIVITY</th>
+                    <th>SOURCE</th>
                 </tr>
             </thead>
             <tbody>
@@ -151,9 +152,10 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                             PAGE VIEW
                         {% endif %}
                     </td>
+                    <td>{{ item.traffic_source or item.traffic_type|upper }}</td>
                 </tr>
             {% else %}
-                <tr><td colspan="3">NO ACTIVITY</td></tr>
+                <tr><td colspan="4">NO ACTIVITY</td></tr>
             {% endfor %}
             </tbody>
         </table>
@@ -163,14 +165,14 @@ href="{{ url_for('static', filename='css/dca.css') }}">
         {% if page > 1 %}
         <a href="{{ url_for(
             'admin_analytics_visitor',
-            visitor_id=visitor_id, page=page-1
+            visitor_id=visitor_id, traffic=traffic, page=page-1
         , start=date_scope.start_day.isoformat() if date_scope else None, end=date_scope.end_day.isoformat() if date_scope else None) }}">← PREVIOUS</a>
         {% endif %}
         <span>PAGE {{ page }} OF {{ total_pages }}</span>
         {% if page < total_pages %}
         <a href="{{ url_for(
             'admin_analytics_visitor',
-            visitor_id=visitor_id, page=page+1
+            visitor_id=visitor_id, traffic=traffic, page=page+1
         , start=date_scope.start_day.isoformat() if date_scope else None, end=date_scope.end_day.isoformat() if date_scope else None) }}">NEXT →</a>
         {% endif %}
     </div>
