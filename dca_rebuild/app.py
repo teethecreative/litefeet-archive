@@ -35,6 +35,7 @@ from dca_rebuild.models import (
     LedgerPageView,
 )
 from dca_rebuild.models import LedgerEra
+from dca_rebuild.traffic_classification import classify_traffic
 
 app = Flask(__name__)
 app.secret_key = (
@@ -59,6 +60,30 @@ def ledger_template_globals():
     }
 
 Base.metadata.create_all(engine)
+
+
+def ensure_ledger_traffic_columns():
+    """Preserve all existing analytics rows, marking historical source unknown."""
+    from sqlalchemy import inspect, text as sql_text
+
+    table = "ledger_page_views"
+    inspector = inspect(engine)
+    if table not in inspector.get_table_names():
+        return
+    existing = {column["name"] for column in inspector.get_columns(table)}
+    with engine.begin() as connection:
+        if "traffic_type" not in existing:
+            connection.execute(sql_text(
+                "ALTER TABLE ledger_page_views ADD COLUMN traffic_type "
+                "VARCHAR(24) NOT NULL DEFAULT 'unclassified'"
+            ))
+        if "traffic_source" not in existing:
+            connection.execute(sql_text(
+                "ALTER TABLE ledger_page_views ADD COLUMN traffic_source VARCHAR(100)"
+            ))
+
+
+ensure_ledger_traffic_columns()
 
 # Existing production databases predate the private nomination-email field.
 # Add only the nullable column; never recreate, drop, or rewrite entries.
@@ -125,29 +150,39 @@ def record_ledger_page_view(response):
     if request.headers.get("Sec-Purpose") == "prefetch":
         return response
 
-    # First-party browser identity survives a new Flask session. Retain the
-    # existing session ID when upgrading so earlier views stay connected.
-    visitor_id = request.cookies.get("lf_ledger_visitor", "")
-    valid = len(visitor_id) == 32 and all(c in "0123456789abcdef" for c in visitor_id)
-    if not valid:
-        visitor_id = session.get(LEDGER_ANALYTICS_SESSION_KEY, "")
+    traffic_type, traffic_source = classify_traffic(
+        request.headers.get("User-Agent"),
+        is_admin=bool(session.get("ledger_admin_authenticated")),
+    )
+
+    if traffic_type == "bot":
+        # Most crawlers reject cookies. Stable agent-group identifiers prevent
+        # treating every robot request as a new unique human browser.
+        agent = request.headers.get("User-Agent", "")
+        visitor_id = hashlib.sha256(("bot:" + agent).encode()).hexdigest()[:32]
+    else:
+        # First-party browser identity survives new Flask sessions.
+        visitor_id = request.cookies.get("lf_ledger_visitor", "")
         valid = len(visitor_id) == 32 and all(c in "0123456789abcdef" for c in visitor_id)
-    if not valid:
-        visitor_id = secrets.token_hex(16)
-    if session.get(LEDGER_ANALYTICS_SESSION_KEY) != visitor_id:
-        session[LEDGER_ANALYTICS_SESSION_KEY] = visitor_id
-    if request.cookies.get("lf_ledger_visitor") != visitor_id:
-        response.set_cookie(
-            "lf_ledger_visitor", visitor_id, max_age=365 * 24 * 60 * 60,
-            secure=request.is_secure, httponly=True, samesite="Lax", path="/",
-        )
+        if not valid:
+            visitor_id = session.get(LEDGER_ANALYTICS_SESSION_KEY, "")
+            valid = len(visitor_id) == 32 and all(c in "0123456789abcdef" for c in visitor_id)
+        if not valid:
+            visitor_id = secrets.token_hex(16)
+        if session.get(LEDGER_ANALYTICS_SESSION_KEY) != visitor_id:
+            session[LEDGER_ANALYTICS_SESSION_KEY] = visitor_id
+        if request.cookies.get("lf_ledger_visitor") != visitor_id:
+            response.set_cookie(
+                "lf_ledger_visitor", visitor_id, max_age=365 * 24 * 60 * 60,
+                secure=request.is_secure, httponly=True, samesite="Lax", path="/",
+            )
 
     db = SessionLocal()
     try:
         now = datetime.utcnow()
         previous = (
             db.query(LedgerPageView)
-            .filter_by(visitor_id=visitor_id)
+            .filter_by(visitor_id=visitor_id, traffic_type=traffic_type)
             .order_by(LedgerPageView.viewed_at.desc())
             .first()
         )
@@ -162,6 +197,8 @@ def record_ledger_page_view(response):
             path=request.path[:500],
             viewed_at=now,
             is_new_visit=new_visit,
+            traffic_type=traffic_type,
+            traffic_source=traffic_source,
         ))
         db.commit()
     except Exception:
