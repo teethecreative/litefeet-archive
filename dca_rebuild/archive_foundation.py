@@ -245,14 +245,27 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--stage", type=Path, help="Explicit local .staging.sqlite file; default is read-only preview")
     parser.add_argument("--input", type=Path, help="Explicit JSON array of source records; replaces the input snapshot, not preserved history")
+    parser.add_argument("--legacy-input", type=Path, help="Read-only, allowlisted legacy table export JSON; private-review staging only")
     args = parser.parse_args()
+    if args.input and args.legacy_input:
+        parser.error("--input and --legacy-input are mutually exclusive")
     records = None
+    excluded = None
+    if args.legacy_input:
+        from dca_rebuild.archive_legacy_sources import prepare_legacy_records, inventory_summary
+        export = json.loads(args.legacy_input.read_text(encoding="utf-8"))
+        records, excluded = prepare_legacy_records(export)
+        if not records:
+            parser.error("Legacy export produced no stageable records; inspect exclusions first")
     if args.input:
         records = json.loads(args.input.read_text(encoding="utf-8"))
         if not isinstance(records, list):
             parser.error("--input must contain an array of source records")
-    print(json.dumps(stage_snapshot(args.stage, records) if args.stage else consolidation_preview(records),
-                     ensure_ascii=False, indent=2))
+    result = stage_snapshot(args.stage, records) if args.stage else consolidation_preview(records)
+    if excluded is not None:
+        result["legacy_inventory"] = inventory_summary(records, excluded)
+        result["legacy_exclusions"] = excluded
+    print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
