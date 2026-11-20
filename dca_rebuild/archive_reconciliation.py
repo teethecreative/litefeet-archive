@@ -4,6 +4,7 @@ Reviews reconcile source locators, not mutable display names. The report is
 intentionally aggregate by default so recovered identities stay private.
 """
 from collections import Counter, defaultdict
+import hashlib
 import re
 
 from dca_rebuild.archive_foundation import source_records
@@ -63,12 +64,14 @@ def reconcile_identity_sources(records=None, include_candidates=False):
             continue
         ordered = [unique[locator] for locator in sorted(unique)]
         groups.append({
-            "key": key, "sources": len(ordered),
+            "group_id": hashlib.sha256(key.encode("utf-8")).hexdigest()[:16],
+            "sources": len(ordered),
             "systems": sorted({item["system"] for item in ordered}),
             "requires_review": True,
             # Raw names are intentionally absent unless an editor explicitly asks
             # to inspect this output inside a private, access-controlled process.
-            **({"candidates": [_record_ref(item) for item in ordered]} if include_candidates else {}),
+            **({"normalized_label": key, "candidates": [_record_ref(item) for item in ordered]}
+               if include_candidates else {}),
         })
     return {
         "source_rows": len(records),
