@@ -10,7 +10,7 @@ No identifying row values, contacts, private notes, account IDs, or raw profiles
 ## Development-only implementation
 - archive_reconciliation.py derives deterministic matching hints among separate person source rows using normalized names and explicit aliases. Catalog-only slash-separated names can be review hints, not confirmed aliases.
 - Every original (system, key) source locator stays independent; duplicate locators fail closed.
-- By default results contain aggregate counts, normalized collision keys and review-required labels. Detailed candidate lists require explicit include_candidates=True in an access-controlled editorial setting.
+- By default results contain aggregate counts, opaque group identifiers and review-required labels. Detailed candidate lists require explicit include_candidates=True in an access-controlled editorial setting.
 - An aggregate-only legacy-export function avoids returning individual names or identifying records.
 - Test coverage includes read-only behavior, source separation, private-field exclusion, duplicate-name hints, and invalid input.
 
