@@ -191,10 +191,8 @@ def day_bounds_utc(day):
 
 
 def nomination_deadline():
-    """Optional explicit cutoff, e.g. 2026-12-31T23:59:00-05:00. No implicit closing date."""
-    value = os.getenv('DCA_2026_NOMINATIONS_CLOSE_AT', '').strip()
-    if not value:
-        return None
+    """Exclusive cutoff: accept throughout November 30 in New York by default."""
+    value = os.getenv('DCA_2026_NOMINATIONS_CLOSE_AT', '').strip() or '2026-12-01T00:00:00-05:00'
     try:
         parsed = datetime.fromisoformat(value)
         if parsed.tzinfo is None:
@@ -441,6 +439,15 @@ def install_phase9e(app, ns):
     correct_2026_event_category_title(SessionLocal)
     admin_login_required = ns['admin_login_required']
     private_hash = ns['private_hash']
+
+    @app.context_processor
+    def nomination_schedule_context():
+        end = nomination_deadline().astimezone(NY)
+        last_minute = end - timedelta(microseconds=1)
+        return {'nomination_schedule': (
+            f'Nominations close {last_minute.strftime("%B %-d, %Y at %-I:%M %p")} '
+            f'New York time. Review begins {end.strftime("%B %-d, %Y")}. '
+            'Standings remain provisional until review is complete.')}
 
     @app.context_processor
     def phase9e_admin_template_context():

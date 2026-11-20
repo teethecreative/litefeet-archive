@@ -27,8 +27,11 @@ def test_people_collection_has_profile_links_and_word_cloud(website):
     assert 'SEARCH PEOPLE &amp; TEAMS' in page
     assert 'SEARCH TO VIEW PROFILES' in page
     assert 'lfv-archive-entry-main' not in page
+    from dca_rebuild.archive_catalog import find_record
+    from dca_rebuild.public_urls import person_href
+    catalog = all_records()
     for entry in people_crew_cloud():
-        assert '/archive/records/' + entry['slug'] in page
+        assert person_href(find_record(entry['slug']), catalog) in page
 
 
 def test_other_collections_do_not_include_people_cloud(website):

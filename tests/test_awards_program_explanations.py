@@ -24,7 +24,7 @@ def test_dca_program_explains_origins_and_four_stages(website):
 def test_dca_2026_has_two_main_actions_and_round_explanation(website):
     html = website.test_client().get("/awards/dancers-choice/2026").get_data(as_text=True)
     assert "NOMINATIONS ARE NOT VOTING" in html
-    assert "the top five" in html.lower()
+    assert "TOP FIVE" in html
     assert 'href="/awards/dancers-choice/nominations"' in html
     assert "Category results" in html
     assert "Past editions" not in html
