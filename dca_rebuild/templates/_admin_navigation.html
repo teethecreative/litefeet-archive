@@ -41,6 +41,7 @@
         </a>
         <a href="{{ url_for('admin_vault_review_queue') }}" {% if request.endpoint in ['admin_vault_review_queue','admin_vault_auxiliary_review'] %}aria-current="page"{% endif %}>REVIEW QUEUE</a>
         <a href="{{ url_for('admin_vault_development') }}" {% if request.endpoint == 'admin_vault_development' %}aria-current="page"{% endif %}>DEVELOPMENT</a>
+        <a href="{{ url_for('admin_website_feedback') }}" {% if request.endpoint in ('admin_website_feedback','admin_website_feedback_status') %}aria-current="page"{% endif %}>WEBSITE FEEDBACK</a>
 
         <a
             href="{{ url_for('admin_dashboard') }}#archive"

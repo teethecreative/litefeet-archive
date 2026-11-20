@@ -5,10 +5,12 @@ All queue views are authenticated; new feedback stays private until reviewed.
 """
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit
+from io import BytesIO
+from PIL import Image, UnidentifiedImageError
 from zoneinfo import ZoneInfo
 import secrets
 
-from flask import abort, flash, redirect, render_template, request, session, url_for
+from flask import abort, flash, redirect, render_template, request, session, url_for, Response
 from sqlalchemy import or_
 
 from dca_rebuild.models import (
@@ -20,7 +22,8 @@ from dca_rebuild.phase9e import NomineeQualificationReason9E
 
 AREAS = ("site", "archive", "awards", "events", "music", "lock-in", "other")
 DEVELOPMENT_STATES = ("needs_review", "needs_work", "planned", "active", "done", "not_planned")
-FEEDBACK_STATES = ("new", "reviewed", "dismissed", "converted")
+FEEDBACK_STATES = ("new", "reviewing", "resolved", "reviewed", "dismissed", "converted")
+FEEDBACK_TYPES = ("layout", "bug", "navigation", "feature", "other", "helpfulness")
 QUEUE_SECTIONS = ("all", "events", "awards", "archive", "community", "lock-in")
 PAGE_SIZE = 10
 # Status-specific work expected from the reviewer; these labels do not claim
@@ -258,17 +261,95 @@ def install_admin_workspace(app, ns):
         flash("Feedback reviewed.", "admin")
         return redirect(url_for("admin_vault_development"), code=303)
 
+    @app.get("/admin/website-feedback", endpoint="admin_website_feedback")
+    @admin_required
+    def website_feedback_inbox():
+        status = request.args.get("status", "all")
+        kind = request.args.get("type", "all")
+        if status not in ("all",) + FEEDBACK_STATES or kind not in ("all",) + FEEDBACK_TYPES:
+            abort(400)
+        page = _clamp_page()
+        with ns["SessionLocal"]() as db:
+            query = db.query(VaultDevelopmentFeedback)
+            if status != "all":
+                query = query.filter_by(status=status)
+            if kind != "all":
+                query = query.filter_by(feedback_type=kind)
+            total = query.count()
+            rows = query.order_by(VaultDevelopmentFeedback.created_at.desc(),
+                                  VaultDevelopmentFeedback.id.desc()).offset(
+                                      (page - 1) * PAGE_SIZE).limit(PAGE_SIZE).all()
+            counts = {value: db.query(VaultDevelopmentFeedback).filter_by(status=value).count()
+                      for value in FEEDBACK_STATES}
+        return render_template("admin_website_feedback.html", rows=rows,
+                               status=status, kind=kind, kinds=FEEDBACK_TYPES,
+                               statuses=FEEDBACK_STATES, counts=counts,
+                               page=page, pages=(total + PAGE_SIZE - 1) // PAGE_SIZE,
+                               csrf_token=_admin_token())
+
+    @app.post("/admin/website-feedback/<int:feedback_id>/status",
+              endpoint="admin_website_feedback_status")
+    @admin_required
+    def website_feedback_status(feedback_id):
+        _require_admin_token()
+        target = (request.form.get("status") or "").strip()
+        if target not in FEEDBACK_STATES:
+            abort(400)
+        with ns["SessionLocal"].begin() as db:
+            entry = db.get(VaultDevelopmentFeedback, feedback_id)
+            if entry is None:
+                abort(404)
+            if target == "converted" and entry.status != "converted":
+                existing = db.query(VaultDevelopmentItem).filter_by(
+                    source_feedback_id=entry.id).first()
+                if existing is None:
+                    db.add(VaultDevelopmentItem(
+                        title=entry.title, description=entry.details,
+                        area=entry.area, status="needs_review",
+                        source_feedback_id=entry.id))
+            entry.status = target
+            entry.reviewed_at = datetime.utcnow() if target != "new" else None
+        flash("Website feedback updated.", "admin")
+        return redirect(url_for("admin_website_feedback"), code=303)
+
+    @app.get("/admin/website-feedback/<int:feedback_id>/screenshot",
+             endpoint="admin_website_feedback_screenshot")
+    @admin_required
+    def website_feedback_screenshot(feedback_id):
+        with ns["SessionLocal"]() as db:
+            entry = db.get(VaultDevelopmentFeedback, feedback_id)
+            if entry is None or not entry.screenshot_data:
+                abort(404)
+            content = bytes(entry.screenshot_data)
+            mime = entry.screenshot_mime
+        if mime not in ("image/jpeg", "image/png", "image/webp"):
+            abort(404)
+        return Response(content, mimetype=mime, headers={
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "sandbox",
+            "Content-Disposition": 'inline; filename="feedback-screenshot"',
+        })
+
     @app.route("/feedback/development", methods=["GET", "POST"],
                endpoint="vault_development_feedback_public")
     def public_feedback():
         if request.method == "GET":
             token = secrets.token_urlsafe(32)
             session["vault_development_feedback_csrf"] = token
-            return render_template("vault_development_feedback.html", csrf_token=token)
-        if request.content_length and request.content_length > 12000:
+            source = (request.args.get("page") or "").strip()
+            # Only a local path may be supplied; never trust an external URL.
+            if not source.startswith("/") or source.startswith("//") or chr(92) in source:
+                source = ""
+            if source and (urlsplit(source).scheme or urlsplit(source).netloc):
+                source = ""
+            return render_template("vault_development_feedback.html",
+                                   csrf_token=token, source_page=source[:500])
+        if request.content_length and request.content_length > 2_000_000:
             abort(413)
         token = session.get("vault_development_feedback_csrf")
-        if not token or not secrets.compare_digest(str(token), str(request.form.get("csrf_token") or "")):
+        if not token or not secrets.compare_digest(
+                str(token), str(request.form.get("csrf_token") or "")):
             abort(400)
         if request.form.get("website"):
             abort(400)
@@ -283,14 +364,60 @@ def install_admin_workspace(app, ns):
         title = (request.form.get("title") or "").strip()[:240]
         details = (request.form.get("details") or "").strip()[:3000]
         area = request.form.get("area") or "site"
+        kind = (request.form.get("feedback_type") or "other").strip()
         email = (request.form.get("email") or "").strip().lower()[:255]
-        if len(title) < 3 or len(details) < 10 or area not in AREAS:
+        helpful_raw = request.form.get("helpful", "")
+        helpful = {"yes": True, "no": False, "": None}.get(helpful_raw)
+        path = (request.form.get("page_path") or "").strip()
+        if path and (not path.startswith("/") or path.startswith("//")
+                     or urlsplit(path).scheme or urlsplit(path).netloc
+                     or chr(92) in path):
+            abort(400)
+        if len(path) > 500 or kind not in FEEDBACK_TYPES or helpful_raw not in ("", "yes", "no"):
+            abort(400)
+        if not title and kind == "helpfulness":
+            title = "Page helpfulness feedback"
+        if len(title) < 3 or (len(details) < 10 and not (kind == "helpfulness" and helpful is not None)):
+            abort(400)
+        if area not in AREAS:
             abort(400)
         if email and ("@" not in email or "." not in email.split("@")[-1]):
             abort(400)
+        screenshot_data = None
+        screenshot_mime = None
+        upload = request.files.get("screenshot")
+        if upload and upload.filename:
+            original = upload.stream.read(1_000_001)
+            if len(original) > 1_000_000:
+                abort(413)
+            try:
+                with Image.open(BytesIO(original)) as image:
+                    if image.format not in ("PNG", "JPEG", "WEBP"):
+                        abort(400)
+                    if image.width * image.height > 12_000_000:
+                        abort(413)
+                    image.thumbnail((1800, 1800))
+                    output = BytesIO()
+                    image.convert("RGB").save(output, format="JPEG", quality=75, optimize=True)
+                    screenshot_data = output.getvalue()
+                    screenshot_mime = "image/jpeg"
+                    if len(screenshot_data) > 800_000:
+                        abort(413)
+            except (UnidentifiedImageError, OSError, ValueError):
+                abort(400)
+        user_agent = request.user_agent.string.lower()
+        browser = ("Firefox" if "firefox" in user_agent else
+                   "Edge" if "edg/" in user_agent else
+                   "Chrome" if "chrome" in user_agent else
+                   "Safari" if "safari" in user_agent else "Other")
+        device = ("mobile" if "mobile" in user_agent or "iphone" in user_agent else
+                  "tablet" if "ipad" in user_agent or "tablet" in user_agent else "desktop")
         with ns["SessionLocal"].begin() as db:
-            db.add(VaultDevelopmentFeedback(title=title, details=details,
-                                            area=area, contact_email=email or None))
+            db.add(VaultDevelopmentFeedback(
+                title=title, details=details, area=area, contact_email=email or None,
+                feedback_type=kind, page_path=path or None, helpful=helpful,
+                device_type=device, browser_name=browser,
+                screenshot_data=screenshot_data, screenshot_mime=screenshot_mime))
         session["vault_development_feedback_at"] = now.isoformat()
         session.pop("vault_development_feedback_csrf", None)
         return render_template("vault_development_feedback.html", submitted=True), 200
