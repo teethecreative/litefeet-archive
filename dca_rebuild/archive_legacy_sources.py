@@ -62,7 +62,7 @@ FOOTAGE_TYPES = {"video", "footage", "battle_video", "battle_footage"}
 
 def _safe_value(value):
     """Retain source text and numeric/date-like values without nested objects."""
-    if value is None or type(value) is bool and value is False:
+    if value is None:
         return None
     if type(value) is str:
         return value.strip() or None
