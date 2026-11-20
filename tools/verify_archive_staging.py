@@ -112,6 +112,7 @@ def rehearse():
         # Rehearse a recognized v1 -> v2 upgrade against a separate scratch copy.
         upgrade = scratch / "upgrade.staging.sqlite"
         stage_snapshot(upgrade, editorial)
+        upgrade_baseline = snapshot_state(upgrade)
         with sqlite3.connect(upgrade) as db:
             for table in ("graph_decisions", "graph_links", "graph_aliases", "graph_records"):
                 db.execute("DROP TABLE " + table)
@@ -124,7 +125,7 @@ def rehearse():
             assert backup.execute("PRAGMA foreign_key_check").fetchall() == []
         upgraded = snapshot_state(upgrade)
         assert upgraded["crosswalks"] == len(combined)
-        for locator, original_id in baseline["ids"].items():
+        for locator, original_id in upgrade_baseline["ids"].items():
             assert upgraded["ids"][locator] == original_id, "Upgrade changed permanent source IDs"
         assert upgraded["links"] == upgraded["approved_links"] == 0
 
