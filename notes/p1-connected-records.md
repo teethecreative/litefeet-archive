@@ -144,3 +144,55 @@ permissions, full provenance/claim policies, PostgreSQL migration design, a
 verified production backup and restore rehearsal, resolution of existing release
 test failures, browser QA, and explicit cutover/deployment approval. Archive AI
 does not crawl, analyze footage, create tasks or mutate records in this milestone.
+
+## November 20: inspected production source inventory and safe adapter (development only)
+
+Read-only inspection of the Render PostgreSQL source schemas (not a data export)
+found **138 dancer_profiles**, **19 media_items**, **1 music_projects**,
+**0 music_project_tracks**, **0 team_records**, **0 battle_records**, and
+**0 vault_gathering_submissions**. The 19 current media rows describe music
+releases/projects, not confirmed footage. A zero in the dedicated battle table
+does **not** prove there are no historical battles in other editorial sources.
+No production content was copied or modified by this inspection.
+
+An explicit, privacy-minimizing \`archive_legacy_sources\` adapter now accepts
+a separately authorized, inspected **JSON object of table-name → row arrays**,
+using *only* the allowlisted tables and fields in that module. Original positive
+integer IDs become stable, namespaced source keys; all imported rows are
+\`private_review\`. Email addresses, account IDs, real/legal names, private
+notes, submitter contacts and other non-allowlisted fields are excluded.
+Recorded competitor/winner strings remain unverified source claims—never graph
+edges, confirmed outcomes or approved people. Free-text team aliases are
+retained only as \`alias_source_text\`, not asserted as canonical aliases.
+
+Music projects/releases require a future dedicated release model and are
+reported as exclusions, not mislabeled as tracks. Media becomes footage only
+when its explicit \`media_type\` is an allowed footage type. Missing titles are
+also excluded and reported, rather than silently invented.
+
+To inspect a separately prepared export **without writing staging**:
+
+\`\`\`sh
+python -m dca_rebuild.archive_foundation --legacy-input /private/inspected-export.json
+\`\`\`
+
+Review \`legacy_inventory\` and \`legacy_exclusions\`, then—only for an approved
+development snapshot—run:
+
+\`\`\`sh
+python -m dca_rebuild.archive_foundation --legacy-input /private/inspected-export.json --stage /tmp/vault.staging.sqlite
+\`\`\`
+
+The CLI does not connect to Render, download source rows, or modify production.
+Keep private export files outside Git, public directories, and production
+deployments. **Do not mix this input with \`--input\`**; both are complete snapshots,
+not deltas. Imported source identities may overlap existing editorial recovery
+rows; reconciliation must be reviewed before anyone treats them as one person.
+Tested safety expectations include no automatic graph connections, preserved
+source IDs and history, private-field exclusion, explicit omissions, and
+rejected malformed inputs. This work is **not** permission to migrate production.
+
+Next prerequisites remain: an authorized field-minimized export and source
+reconciliation, a verified restorable production backup, individual admin
+permissions, PostgreSQL migration design, browser QA, and separate release
+approval.
