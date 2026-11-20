@@ -130,6 +130,55 @@ def nominees_missing_reasons(db, edition):
 
 
 
+
+def nominee_has_reason(db, edition_id, category_id, name):
+    """Whether this nominee/category already has a submitted qualification reason.
+
+    Additional supporters are not asked to repeat an existing explanation.
+    A submitted reason is not automatically verified or approved; moderation
+    and the nominee's eligibility remain independent.
+    """
+    from dca_rebuild.nomination_service import _related_category_ids
+    category = db.get(DCACategory, category_id)
+    if not category or category.edition_id != edition_id:
+        return False
+    canonical_id, related_ids = _related_category_ids(db, category)
+    canonical = db.get(DCACategory, canonical_id)
+    key = canonical_nominee_key(name, category_name=canonical.name)
+    matching = [
+        n for n in db.query(DCANominee).filter(
+            DCANominee.edition_id == edition_id,
+            DCANominee.category_id.in_(related_ids),
+            DCANominee.moderation_status.in_(('pending', 'approved')),
+        ).all()
+        if canonical_nominee_key(n.name, category_name=canonical.name) == key
+    ]
+    if not matching:
+        return False
+    if any((nominee.description or '').strip() for nominee in matching):
+        return True
+    nominee_ids = [nominee.id for nominee in matching]
+    detail_rows = (
+        db.query(NominationDetail9E.justification)
+        .join(DCANominationSubmission,
+              DCANominationSubmission.id == NominationDetail9E.submission_id)
+        .filter(DCANominationSubmission.edition_id == edition_id,
+                DCANominationSubmission.nominee_id.in_(nominee_ids))
+        .all()
+    )
+    if any((reason or '').strip() for reason, in detail_rows):
+        return True
+    supplements = (
+        db.query(NomineeQualificationReason9E.reason)
+        .filter(
+            NomineeQualificationReason9E.edition_id == edition_id,
+            NomineeQualificationReason9E.nominee_id.in_(nominee_ids),
+            NomineeQualificationReason9E.moderation_status.in_(('pending', 'verified')),
+        )
+        .all()
+    )
+    return any((reason or '').strip() for reason, in supplements)
+
 def today_ny():
     return datetime.now(NY).date()
 
@@ -142,10 +191,8 @@ def day_bounds_utc(day):
 
 
 def nomination_deadline():
-    """Optional explicit cutoff, e.g. 2026-12-31T23:59:00-05:00. No implicit closing date."""
-    value = os.getenv('DCA_2026_NOMINATIONS_CLOSE_AT', '').strip()
-    if not value:
-        return None
+    """Exclusive cutoff: accept throughout November 30 in New York by default."""
+    value = os.getenv('DCA_2026_NOMINATIONS_CLOSE_AT', '').strip() or '2026-12-01T00:00:00-05:00'
     try:
         parsed = datetime.fromisoformat(value)
         if parsed.tzinfo is None:
@@ -392,6 +439,15 @@ def install_phase9e(app, ns):
     correct_2026_event_category_title(SessionLocal)
     admin_login_required = ns['admin_login_required']
     private_hash = ns['private_hash']
+
+    @app.context_processor
+    def nomination_schedule_context():
+        end = nomination_deadline().astimezone(NY)
+        last_minute = end - timedelta(microseconds=1)
+        return {'nomination_schedule': (
+            f'Nominations close {last_minute.strftime("%B %-d, %Y at %-I:%M %p")} '
+            f'New York time. Review begins {end.strftime("%B %-d, %Y")}. '
+            'Standings remain provisional until review is complete.')}
 
     @app.context_processor
     def phase9e_admin_template_context():
@@ -877,7 +933,8 @@ def install_phase9e(app, ns):
     @app.get('/awards/dancers-choice/nominee-name-check')
     def phase9e_nominee_name_check():
         """Fast pre-submit duplicate hint, scoped to the verified-email session."""
-        if not session.get('lf9e_recent_hash'):
+        from dca_rebuild.email_verification import verification_enabled, verified_nominator_hash
+        if not (verified_nominator_hash() if verification_enabled() else session.get('lf9e_recent_hash')):
             abort(401)
         name = (request.args.get('name') or '').strip()[:250]
         cid = request.args.get('category_id', type=int)
@@ -898,6 +955,9 @@ def install_phase9e(app, ns):
                 matches=matches,
                 canonical_name=display,
                 already_listed=exact,
+                reason_required=not nominee_has_reason(
+                    db, edition.id, cid, name
+                ),
                 requires_confirmation=not exact and any(
                     match['type'] == 'similar' for match in matches
                 ),
@@ -959,6 +1019,11 @@ def install_phase9e(app, ns):
                     # Persistent per-email nomination cooldowns and submissions stay intact.
                     session.pop('lf9e_recent_hash', None)
                     session.pop('lf9e_skipped', None)
+                    if action == 'change-email':
+                        session.pop('lf9e_reminder_hash', None)
+                        from dca_rebuild.email_verification import SESSION_VERIFIED, SESSION_VERIFIED_AT
+                        session.pop(SESSION_VERIFIED, None)
+                        session.pop(SESSION_VERIFIED_AT, None)
                     if action == 'done' and request.form.get('next') == 'standings':
                         return redirect(url_for('dca_nominations_closed', view='results'), code=303)
                     return redirect(url_for('dca_nominations_closed'), code=303)
@@ -966,6 +1031,11 @@ def install_phase9e(app, ns):
                     email = request.form.get('email', '').strip().casefold()
                     if len(email) > 254 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
                         abort(400, 'Enter a valid email')
+                    from dca_rebuild.email_verification import verification_enabled, verified_nominator_hash, begin_verification
+                    if verification_enabled():
+                        return begin_verification(
+                            app, SessionLocal, email, request.remote_addr or ''
+                        )
                     who = private_hash('dca-nomination:' + email)
                     # Store the normalized email on the server, never in the
                     # signed (readable) browser session.
@@ -1000,9 +1070,11 @@ def install_phase9e(app, ns):
                             abort(404)
                         return redirect(url_for('dca_nominations_closed', category=requested_id))
                     return redirect(url_for('dca_nominations_closed'))
-                who = session.get('lf9e_recent_hash')
+                from dca_rebuild.email_verification import verification_enabled, verified_nominator_hash
+                who = (verified_nominator_hash() if verification_enabled()
+                       else session.get('lf9e_recent_hash'))
                 if not who:
-                    abort(400, 'Enter your email before selecting a category')
+                    abort(400, 'Verify your email before selecting a category')
                 if is_closed():
                     abort(403, 'Nominations are closed')
                 try:
@@ -1024,8 +1096,8 @@ def install_phase9e(app, ns):
                 instagram = request.form.get('instagram', '').strip().lstrip('@')
                 instagram = re.sub(r'^https?://(?:www\.)?instagram\.com/', '', instagram, flags=re.I).split('?')[0].strip('/')
                 reason = request.form.get('reason', '').strip()
-                if len(reason) < 20:
-                    abort(400, 'Explain the nominee\'s activity during November 2025–November 2026 (at least 20 characters)')
+                if reason and len(reason) < 20:
+                    abort(400, 'If adding a reason, describe their relevant activity in at least 20 characters')
                 if len(team) > 250 or len(location) > 250 or len(instagram) > 100 or len(reason) > 2000:
                     abort(400, 'One or more fields are too long')
                 if instagram and not re.fullmatch(r'[A-Za-z0-9._]{1,30}', instagram):
@@ -1035,6 +1107,10 @@ def install_phase9e(app, ns):
                 except ValueError as exc:
                     abort(400, str(exc))
                 matches = candidate_matches(db, category_id=cid, name=name)
+                if not reason and not nominee_has_reason(
+                    db, edition.id, cid, name
+                ):
+                    abort(400, 'Add a reason for this nominee before submitting')
                 if (not any(match['type'] == 'existing' for match in matches)
                     and any(match['type'] == 'similar' for match in matches)
                     and request.form.get('confirm_distinct') != '1'):
@@ -1067,10 +1143,16 @@ def install_phase9e(app, ns):
                     flash('Your nomination could not be recorded. Check your category status and try again.')
                     return redirect(url_for('dca_nominations_closed'))
                 session['lf9e_skipped'] = [x for x in session.get('lf9e_skipped', []) if x != cid]
+                # Retain the reminder only while the reviewed feature is enabled.
+                if (os.environ.get('DCA_2026_FOLLOWUPS_ENABLED') == 'true'
+                    and (not verification_enabled() or verified_nominator_hash() == who)):
+                    session['lf9e_reminder_hash'] = who
                 flash('Nomination received.')
                 return redirect(url_for('dca_nominations_closed', view='results'))
             results_view = display_args.get('view') == 'results'
-            who = session.get('lf9e_recent_hash')
+            from dca_rebuild.email_verification import verification_enabled, verified_nominator_hash
+            who = (verified_nominator_hash() if verification_enabled()
+                   else session.get('lf9e_recent_hash'))
             categories, writeins = [], []
             summary = dict(submitted=0, available=0, cooldown=0, skipped=0)
             selected = None
@@ -1131,6 +1213,11 @@ def install_phase9e(app, ns):
                                    requested_category_id=(display_args.get('category', type=int)
                                                           if display_args.get('category', type=int) in allowed else None),
                                    identified=bool(who), results_view=results_view, summary=summary,
+                                   initial_reason_required=not (
+                                       selected and suggestion and nominee_has_reason(
+                                           db, edition.id, selected['id'], suggestion['name']
+                                       )
+                                   ),
                                    csrf_token=session['lf9e_nomination_csrf'], closed=is_closed())
         finally:
             db.close()

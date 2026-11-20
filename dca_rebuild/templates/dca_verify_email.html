@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify your email | The LiteFeet Vault</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/nomination-followups.css') }}">
+</head>
+<body>
+{% include "_navigation.html" %}
+<main class="lfv-nom-followup-page">
+<p class="lfv-nom-followup-kicker">Dancer's Choice Awards 2026</p>
+<h1>Verify your email</h1>
+{% with messages = get_flashed_messages() %}{% for message in messages %}
+<p class="lf9e-message" role="status">{{ message }}</p>
+{% endfor %}{% endwith %}
+{% if masked_email %}
+<p>Enter the six-digit code sent to <strong>{{ masked_email }}</strong>. The code expires in 10 minutes.</p>
+<section class="lfv-nom-followup-card">
+<form method="post" autocomplete="off">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="action" value="verify">
+<label for="verify-code">Verification code</label>
+<input id="verify-code" name="code" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required autofocus>
+<button class="lfv-nom-followup-submit" type="submit">Verify email</button>
+</form>
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="action" value="resend">
+<button class="lfv-nom-followup-later" type="submit">Send another code</button>
+</form>
+</section>
+{% else %}
+<p>Enter your email to get a one-time code. This checks access to the email address, not your legal identity.</p>
+<section class="lfv-nom-followup-card">
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="action" value="send">
+<label for="verify-email-address">Email address</label>
+<input id="verify-email-address" name="email" type="email" maxlength="254" autocomplete="email" required autofocus>
+<button class="lfv-nom-followup-submit" type="submit">Send verification code</button>
+</form>
+</section>
+{% endif %}
+<p><a href="{{ url_for('dca_nominations_closed') }}">Return to nominations</a></p>
+</main>
+{% include "_footer.html" %}
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+</body>
+</html>

@@ -149,7 +149,18 @@ def test_repeating_event_rejects_end_date_conflict(website, database):
         assert db.query(VaultGatheringSubmission).filter_by(title="Bad Repeat").count() == 0
 
 
-def test_homepage_preview_is_paginated_and_links_to_calendar(website):
+def test_homepage_preview_is_paginated_and_links_to_calendar(website, monkeypatch):
+    # Keep the dated event fixture within the expected upcoming-events window.
+    from datetime import date
+    from dca_rebuild import information_architecture
+
+    original_calendar = information_architecture.upcoming_calendar
+
+    def calendar_with_fixture_date(*args, **kwargs):
+        kwargs.setdefault("today", date(2026, 11, 10))
+        return original_calendar(*args, **kwargs)
+
+    monkeypatch.setattr(information_architecture, "upcoming_calendar", calendar_with_fixture_date)
     client = website.test_client()
     home = client.get("/")
     assert home.status_code == 200
