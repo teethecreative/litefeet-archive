@@ -2,6 +2,7 @@
 from html import unescape
 import re
 import struct
+from dca_rebuild.share_sitewide import VERSION
 
 
 def head(response):
@@ -14,15 +15,15 @@ def test_sitewide_icons_and_manifest(website):
         response = client.get(path)
         assert response.status_code == 200
         markup = head(response)
-        assert '/favicon.ico?v=20261109' in markup
-        assert '/static/favicon-32x32.png?v=20261109' in markup
-        assert '/static/favicon-16x16.png?v=20261109' in markup
-        assert '/static/apple-touch-icon.png?v=20261109' in markup
-        assert '/site.webmanifest?v=20261109' in markup
+        assert f'/favicon.ico?v={VERSION}' in markup
+        assert f'/static/favicon-32x32.png?v={VERSION}' in markup
+        assert f'/static/favicon-16x16.png?v={VERSION}' in markup
+        assert f'/static/apple-touch-icon.png?v={VERSION}' in markup
+        assert f'/site.webmanifest?v={VERSION}' in markup
         assert markup.count('rel="icon"') == 3
         assert markup.count('rel="canonical"') == 1
     assert client.get("/favicon.ico").status_code == 200
-    assert client.get("/favicon.ico").data[:4] == b"\\x00\\x00\\x01\\x00"
+    assert client.get("/favicon.ico").data[:4] == bytes.fromhex("00000100")
     manifest = client.get("/site.webmanifest")
     assert manifest.status_code == 200
     assert manifest.get_json()["name"] == "The LiteFeet Vault"

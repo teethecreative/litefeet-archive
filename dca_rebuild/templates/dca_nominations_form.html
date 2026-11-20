@@ -27,6 +27,8 @@
   {% with messages = get_flashed_messages() %}{% for message in messages %}
     <p class="lf9e-message" role="status">{{ message }}</p>
   {% endfor %}{% endwith %}
+  <p class="lf9e-note">{{ nomination_schedule }}</p>
+  {% if closed %}<p role="status">Nominations are closed. Provisional standings remain available during review.</p>{% endif %}
   {% if results_view %}
     {% include "dca_nominee_standings.html" %}
     </section>
@@ -41,7 +43,6 @@
       <li>Submit one nomination per category every rolling 24 hours. You can nominate in other available categories while waiting.</li>
       <li>The top five eligible nominees in each category become the finalists. Only then does the community vote for the winner.</li>
     </ol>
-    <p class="lf9e-note">This process gives the community a chance to recognize people who may have been overlooked. The nomination period is intended to continue beyond LiteFeet Awards weekend; the final closing date will be announced separately.</p>
     <h2 id="intro-categories-title">Official Top 25</h2>
     <div class="lf9e-intro-category-scroll" role="region" aria-labelledby="intro-categories-title" tabindex="0">
       <ol class="lf9e-intro-categories" id="lf9e-intro-categories">
@@ -49,6 +50,7 @@
       </ol>
     </div>
     <p class="lf9e-writein-link"><a href="{{ url_for('phase9e_writeins') }}">WRITE-IN CATEGORIES →</a> <span>View every community-suggested category and learn how write-ins qualify.</span></p>
+    {% if not closed %}
     <form method="post" class="lf9e-entry-form lf9e-email-form" id="lf9e-email-start" aria-labelledby="email-title">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <input type="hidden" name="action" value="identify">
@@ -57,6 +59,7 @@
       <button type="submit" class="lf9e-primary">CONTINUE</button>
     </form>
     <p class="lf9e-note">Your email stays private. We'll send a one-time code to confirm you can access it.</p>
+    {% endif %}
     <a class="lf9e-intro-results" href="{{ url_for('dca_nominations_closed', view='results') }}">View nominee standings</a>
   </section>
   {% else %}

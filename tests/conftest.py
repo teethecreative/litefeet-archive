@@ -38,6 +38,8 @@ def database(tmp_path):
 def website(database, monkeypatch, tmp_path):
     monkeypatch.setenv('DATABASE_URL', f'sqlite:///{tmp_path}/bootstrap.db')
     monkeypatch.setenv('DCA_2026_NOMINATIONS_ENABLED', 'true')
+    # General feature tests remain independent of the real nomination calendar.
+    monkeypatch.setenv('DCA_2026_NOMINATIONS_CLOSE_AT', '2099-12-01T00:00:00-05:00')
     monkeypatch.setenv('DCA_2026_FOLLOWUPS_ENABLED', 'true')
     module = importlib.import_module('dca_rebuild.app')
     monkeypatch.setattr(module, 'SessionLocal', database[1])
@@ -68,7 +70,7 @@ def website(database, monkeypatch, tmp_path):
     install_nomination_followups(app, database[1])
     # Preserve SEO noindex response headers in the isolated website fixture.
     for callback in module.app.after_request_funcs.get(None, []):
-        if callback.__name__ == "litefeet_noindex_private_pages":
+        if callback.__name__ in {"litefeet_noindex_private_pages", "vault_share_branding"}:
             app.after_request(callback)
     return app
 
