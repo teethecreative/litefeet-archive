@@ -7,3 +7,5 @@ venv/
 instance/
 *.db
 backups/
+*.staging.sqlite
+*.staging.sqlite.*

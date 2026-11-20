@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Archive connections — The LiteFeet Vault</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
+  <style>
+    .graph-workspace{max-width:1100px;margin:32px auto;padding:0 20px;overflow-wrap:anywhere}
+    .graph-workspace section,.graph-workspace article{border-top:1px solid currentColor;margin-top:24px;padding-top:16px}
+    .graph-workspace label{display:block;margin-top:12px}.graph-workspace input,.graph-workspace select,.graph-workspace textarea{display:block;width:100%;max-width:100%;box-sizing:border-box;padding:10px}
+    .graph-workspace button{margin:12px 8px 12px 0;padding:10px 16px}.graph-workspace pre{white-space:pre-wrap;overflow-wrap:anywhere}
+    .graph-workspace nav{display:flex;flex-wrap:wrap;gap:14px}.graph-workspace p,.graph-workspace li{line-height:1.5}
+  </style>
+</head><body class="ledger-admin">
+{% include '_admin_navigation.html' %}
+<main class="graph-workspace">
+  <h1>Archive connections</h1>
+  <p>Development staging only. Decisions here do not publish or change the live archive.</p>
+  {% include '_admin_archive_nav.html' %}
+  {% for message in get_flashed_messages() %}<p role="status">{{ message }}</p>{% endfor %}
+  {% if not workspace %}
+  <p>No staging snapshot is configured. Create a local staging snapshot and explicitly configure this development instance before reviewing connections.</p>
+  {% else %}
+  <p>Evidence, original source IDs and aliases remain preserved. Identity matches do not merge records. Reviewer attribution identifies an authenticated admin session; the current shared login does not establish an individual administrator's identity.</p>
+  {% if not review_enabled %}<p>Review controls are disabled. This workspace is read-only.</p>{% endif %}
+  <section aria-labelledby="records-heading">
+    <h2 id="records-heading">Find records</h2>
+    <form method="get"><label for="record-query">Name or alias</label><input id="record-query" name="q" value="{{ workspace.query }}" maxlength="120"><button>Search records</button></form>
+    <details><summary>{{ workspace.records | length }} matching staged records</summary><ul>
+      {% for record in workspace.records %}<li><strong>{{ record.label }}</strong> · {{ record.kind }} · ID {{ record.id }} · Evidence revision {{ record.source_revision_id }}
+        {% if record.aliases %}<br>Recorded labels: {{ record.aliases | join(', ') }}{% endif %}
+        {% if record.details %}<pre>{{ record.details | tojson(indent=2) }}</pre>{% endif %}
+      </li>{% endfor %}
+    </ul></details>
+  </section>
+  {% if review_enabled %}
+  <section aria-labelledby="propose-heading"><h2 id="propose-heading">Propose a connection</h2>
+    <p>Choose the supporting source revision and explain what it establishes. A matching name alone is not proof. Dates and timestamps are optional; leave unknown values out.</p>
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="propose">
+      <label for="subject">From record</label><select id="subject" name="subject_id" required>{% for record in workspace.records %}<option value="{{ record.id }}">{{ record.label }} · {{ record.kind }}</option>{% endfor %}</select>
+      <label for="relation">Relationship</label><select id="relation" name="relation" required>{% for relation in relations %}<option value="{{ relation }}">{{ relation | replace('_', ' ') | capitalize }}</option>{% endfor %}</select>
+      <label for="object">To record</label><select id="object" name="object_id" required>{% for record in workspace.records %}<option value="{{ record.id }}">{{ record.label }} · {{ record.kind }}</option>{% endfor %}</select>
+      <label for="evidence">Supporting evidence revision</label><select id="evidence" name="evidence_revision_id" required>{% for source in workspace.evidence %}<option value="{{ source.id }}">{{ source.id }} · {{ source.system }} / {{ source.source_key }}</option>{% endfor %}</select>
+      <details><summary>Optional membership dates</summary>
+        <label for="member-from">From (year, YYYY-MM or YYYY-MM-DD)</label><input id="member-from" name="from">
+        <label for="member-until">Until (year, YYYY-MM or YYYY-MM-DD)</label><input id="member-until" name="until">
+        <label for="date-certainty">Date certainty</label><select id="date-certainty" name="date_certainty"><option value="">Not recorded</option>{% for value in ['reported','approximate','unknown','documented'] %}<option>{{ value }}</option>{% endfor %}</select>
+      </details>
+      <label for="participation-role">Participation role (for participated_in)</label><select id="participation-role" name="role"><option value="">Not recorded</option>{% for value in ['dancer','judge','host','photographer','producer','organizer','team'] %}<option>{{ value }}</option>{% endfor %}</select>
+      <details><summary>Optional footage segment</summary><label for="segment-start">Start in seconds</label><input type="number" min="0" id="segment-start" name="start_seconds"><label for="segment-end">End in seconds</label><input type="number" min="1" id="segment-end" name="end_seconds"></details>
+      <label for="proposal-reason">Evidence explanation</label><textarea id="proposal-reason" name="reason" maxlength="2000" required></textarea><button>Submit for review</button>
+    </form>
+  </section>
+  {% endif %}
+  <section aria-labelledby="review-heading"><h2 id="review-heading">Review connections</h2>
+    <nav aria-label="Connection status">{% for status in ['pending','approved','rejected','reversed'] %}<a href="{{ url_for('vault_archive_connections', status=status) }}"{% if workspace.status == status %} aria-current="page"{% endif %}>{{ status | capitalize }}</a>{% endfor %}</nav>
+    <p>{{ workspace.total }} {{ workspace.status }} connections · Page {{ workspace.page }}</p>
+    {% for link in workspace.links %}
+    <article><h3>{{ link.subject_label }} → {{ link.relation }} → {{ link.object_label }}</h3>
+      <p>Status: {{ link.status }} · Version {{ link.version }} · Evidence revision {{ link.evidence_revision_id }}</p>
+      {% if not link.evidence_current %}<p><strong>Evidence changed or is absent from the latest snapshot.</strong> Approval requires a new proposal using current evidence. Existing decisions remain in the history.</p>{% endif %}
+      <details><summary>Supporting source and connection details</summary><pre>{{ link.evidence | tojson(indent=2) }}</pre><pre>{{ link.details | tojson(indent=2) }}</pre></details>
+      <details><summary>Decision history</summary><ol>{% for decision in link.history %}<li>{{ decision.created_at }} · {{ decision.reviewer_id }} · {{ decision.previous_status }} → {{ decision.status }}: {{ decision.reason }}</li>{% endfor %}</ol></details>
+      {% if review_enabled %}
+      <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="link_id" value="{{ link.id }}"><input type="hidden" name="expected_version" value="{{ link.version }}">
+        <label for="reason-{{ link.id }}">Decision reason</label><textarea id="reason-{{ link.id }}" name="reason" required maxlength="2000"></textarea>
+        {% if link.status == 'pending' %}{% if link.evidence_current %}<button name="action" value="approve">Approve connection</button>{% endif %}<button name="action" value="reject">Reject connection</button>
+        {% elif link.status == 'approved' %}<button name="action" value="reverse">Reverse approval</button>{% else %}<button name="action" value="reopen">Reopen for review</button>{% endif %}
+      </form>{% endif %}
+    </article>{% else %}<p>No connections in this state.</p>{% endfor %}
+    <nav aria-label="Connection pages">{% if workspace.page > 1 %}<a href="{{ url_for('vault_archive_connections', status=workspace.status, page=workspace.page-1) }}">Previous</a>{% endif %}{% if workspace.has_more %}<a href="{{ url_for('vault_archive_connections', status=workspace.status, page=workspace.page+1) }}">Next</a>{% endif %}</nav>
+  </section>
+  <section aria-labelledby="path-heading"><h2 id="path-heading">Test a connected path</h2>
+    <p>Uses approved connections supported by the latest snapshot. Rejected, reversed, pending and stale connections are excluded. A path shows documented associations, not proof of attendance at every connected event; check the membership dates.</p>
+    <form method="get"><label for="path-start">Start record</label><select id="path-start" name="start_id" required>{% for record in workspace.records %}<option value="{{ record.id }}">{{ record.label }} · {{ record.kind }}</option>{% endfor %}</select><label for="path-end">End record</label><select id="path-end" name="end_id" required>{% for record in workspace.records %}<option value="{{ record.id }}">{{ record.label }} · {{ record.kind }}</option>{% endfor %}</select><button>Find path</button></form>
+    {% if path_requested %}{% if path_result is none %}<p>No approved, current-evidence path found within five connections.</p>{% elif not path_result %}<p>The start and end are the same record.</p>{% else %}<ol>{% for edge in path_result %}<li>{{ edge.subject_label }} → {{ edge.relation }} → {{ edge.object_label }} · Evidence revision {{ edge.evidence_revision_id }}<pre>{{ edge.details_json }}</pre></li>{% endfor %}</ol>{% endif %}{% endif %}
+  </section>
+  {% endif %}
+</main><script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>
+</body></html>

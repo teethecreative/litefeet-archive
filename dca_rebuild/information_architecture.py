@@ -12,6 +12,7 @@ from dca_rebuild.lock_in import practice_view, published_music_cards
 from dca_rebuild.timeline_catalog import timeline_browse, timeline_payload
 from dca_rebuild.upcoming_calendar import upcoming_calendar
 from dca_rebuild.archive_recovery import recovery_review
+from dca_rebuild.archive_foundation import consolidation_preview
 from dca_rebuild.archive_catalog import (
     COLLECTIONS, PAGE_SIZE, all_records, browse, find_record,
     listing_payload, public_record, people_crew_cloud,
@@ -36,6 +37,8 @@ CONTACT = 'mailto:teethecreative@gmail.com?subject=LiteFeet%20Vault%20Enquiry'
 
 
 def install_information_architecture(app, ns):
+    from dca_rebuild.archive_graph_admin import install_archive_graph_admin
+    install_archive_graph_admin(app, ns)
     # Read-only access for SEO on current approved calendar occurrences.
     app.extensions["vault_seo_session_factory"] = ns["SessionLocal"]
     def public_content():
@@ -386,6 +389,20 @@ def install_information_architecture(app, ns):
     @ns['admin_login_required']
     def archive_admin_review():
         """Private editorial notes and source conflicts, never a public endpoint."""
+        foundation = consolidation_preview()
+        category = request.args.get('category', 'all')
+        if category not in ('all', 'basics', 'sources', 'duplicates', 'relationships'):
+            abort(400)
+        try:
+            page = int(request.args.get('page', '1'))
+        except ValueError:
+            abort(400)
+        if page < 1 or page > 10000:
+            abort(400)
+        suggestions = [s for s in foundation['suggestions']
+                       if category == 'all' or s['category'] == category]
+        total = len(suggestions)
+        foundation['suggestions'] = suggestions[(page - 1) * 20:page * 20]
         review = [
             {
                 'slug': item['slug'],
@@ -402,6 +419,9 @@ def install_information_architecture(app, ns):
         ]
         return render_template('admin_archive_research_review.html',
                                review_records=review,
+                               foundation=foundation, foundation_category=category,
+                               foundation_page=page, foundation_total=total,
+                               foundation_has_more=page * 20 < total,
                                recovery_profiles=recovery_review(all_records()))
 
     @app.get('/community', endpoint='vault_community')
