@@ -52,4 +52,6 @@ jobs:
           TEST_BROWSER: '0'
           DCA_SECRET_KEY: github-actions-archive-testing-secret
           DATABASE_URL: sqlite:///vault-archive-checks.db
-        run: python -m pytest -q tests
+        run: |
+          python -m pytest -q tests
+          python -m tools.verify_archive_staging
