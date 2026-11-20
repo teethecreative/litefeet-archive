@@ -196,3 +196,11 @@ Next prerequisites remain: an authorized field-minimized export and source
 reconciliation, a verified restorable production backup, individual admin
 permissions, PostgreSQL migration design, browser QA, and separate release
 approval.
+
+## November 20 isolated migration rehearsal — verified in CI
+
+Development commit `6a96a934898f20d8394e2e4f56401e656e0069e7`; GitHub Actions run [44792165538](https://github.com/teethecreative/litefeet-archive/actions/runs/44792165538) **passed**: 281 Python tests passed, 10 skipped (legacy deprecation warnings remain).
+
+The required CI step `python -m tools.verify_archive_staging` ran on disposable local SQLite files. It staged and preserved **314 repository source rows**, combined these with **six explicitly synthetic private-review legacy rows**, and reported **two synthetic source exclusions**. A total of **320** source rows remained after the test version 1 → version 2 migration. Source IDs stayed stable within each staging file over reimports and migrations; repeated input did not duplicate source revisions; backups retained the previous schema; an invalid subsequent import left the graph unchanged; foreign-key integrity passed; and there were **zero approved historical links**. The test cleaned up its temporary files.
+
+This does **not** establish that the production database was exported, copied, backed up, restored, or migrated. The test deliberately never connects to Render or accesses live data. A successful **production backup restoration on a safely isolated copy**, reviewed source mapping, admin permissions, and separate approval remain prerequisites to any production schema or public cutover. Browser QA is also not covered by the skipped opt-in browser tests.
