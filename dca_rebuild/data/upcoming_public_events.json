@@ -1,6 +1,21 @@
 {
   "events": [
     {
+      "date": "2026-11-18",
+      "title": "LiteFeet / Harlem Shake Dance Class — Back to Back Wednesdays",
+      "status": "published",
+      "category": "class",
+      "venue_name": "Poe Park Gallery",
+      "venue": "Poe Park Gallery",
+      "address": "2640 Grand Concourse, Bronx, NY 10468",
+      "start_time": "18:00",
+      "end_time": "21:00",
+      "description": "Free LiteFeet and Harlem Shake dance class. First of two advertised Back to Back Wednesdays sessions. Flyer shared by @moeblack_ on Instagram.",
+      "notice": "Original flyer lists November 18 and 25, 2026. Check @moeblack_ for changes.",
+      "host": "Not stated on flyer",
+      "href": ""
+    },
+    {
       "date": "2026-11-20",
       "title": "5th Annual LiteFeet Awards Weekend — Press Conference",
       "venue": "Bronx, New York · press conference (exact venue to verify)",
@@ -33,6 +48,36 @@
       "address": "57-36 Myrtle Avenue, Ridgewood, NY 11385",
       "start_time": "18:00",
       "end_time": "23:00"
+    },
+    {
+      "date": "2026-11-25",
+      "title": "LiteFeet / Harlem Shake Dance Class — Back to Back Wednesdays",
+      "status": "published",
+      "category": "class",
+      "venue_name": "Poe Park Gallery",
+      "venue": "Poe Park Gallery",
+      "address": "2640 Grand Concourse, Bronx, NY 10468",
+      "start_time": "18:00",
+      "end_time": "21:00",
+      "description": "Free LiteFeet and Harlem Shake dance class. Second of two advertised Back to Back Wednesdays sessions. Flyer shared by @moeblack_ on Instagram.",
+      "notice": "Check @moeblack_ for any schedule changes.",
+      "host": "Not stated on flyer",
+      "href": ""
+    },
+    {
+      "date": "2026-12-19",
+      "title": "Arte Gera Lite — Le Arte 'N' Feet NYC",
+      "status": "published",
+      "category": "battle",
+      "venue_name": "Location TBA",
+      "venue": "Location TBA — New York City",
+      "start_time": "18:00",
+      "end_time": "22:00",
+      "admission": "$15",
+      "description": "Presented by Legendary Linkups & Vommy Boyz. Hosted by Ty Shots. Advertised battles: KJD Star vs Kid Smoove; D Billz vs Tyke Star; Dre Sparkz vs Noahlot (name partly obscured on flyer); Diggy vs XO Wavey; Big H vs Loco. Merch advertised. Flyer shared on @thejordannaheesi Instagram story.",
+      "notice": "Exact venue not yet announced; confirm location with organizers before attending.",
+      "host": "Legendary Linkups & Vommy Boyz",
+      "href": ""
     }
   ],
   "weekly_events": [
@@ -72,6 +117,27 @@
       "address": "501 Carlton Avenue, Brooklyn, NYC",
       "start_time": "18:00",
       "end_time": "21:30"
+    },
+    {
+      "title": "Sound Sessions — King Towers Community Center",
+      "weekdays": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "time": "6:30–9:00 PM",
+      "venue": "King Towers Community Center",
+      "venue_name": "King Towers Community Center",
+      "address": "2 West 115th Street, New York, NY",
+      "start_time": "18:30",
+      "end_time": "21:00",
+      "host": "@yowav3 / @soundsessionsnyc",
+      "category": "lab",
+      "status": "published",
+      "description": "Sound Sessions: Learn, Innovate, Build — 'In the Mix.' Free to attend; DM @yowav3 to sign up. Flyer posted October 14, 2026.",
+      "notice": "Recurring Monday–Thursday per flyer; no end date supplied. Confirm current sessions and registration with @yowav3 before attending.",
+      "href": ""
     }
   ]
 }
