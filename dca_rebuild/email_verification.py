@@ -267,7 +267,7 @@ def install_email_verification(app, session_factory, private_hash):
                 if (not challenge or challenge.used_at
                     or challenge.expires_at <= now
                     or challenge.attempts >= MAX_ATTEMPTS):
-                    flash("This code expired. Request a new code.")
+                    flash("Your code expired. Request another one.")
                     return redirect(url_for("dca_verify_email"), code=303)
                 challenge.attempts += 1
                 valid = hmac.compare_digest(
@@ -276,7 +276,7 @@ def install_email_verification(app, session_factory, private_hash):
                 if not valid:
                     if challenge.attempts >= MAX_ATTEMPTS:
                         challenge.used_at = now
-                    flash("That code didn't match. Check the email and try again.")
+                    flash("Incorrect code. Please try again.")
                     return redirect(url_for("dca_verify_email"), code=303)
                 challenge.used_at = now
                 email = challenge.email_address
@@ -299,7 +299,7 @@ def install_email_verification(app, session_factory, private_hash):
             session[SESSION_VERIFIED_AT] = int(time.time())
             session["lf9e_recent_hash"] = who
             session["lf9e_reminder_hash"] = who
-            flash("Email verified. You can now review your nominations.")
+            flash("Email verified. You're ready to nominate.")
             return redirect(url_for("dca_nominations_closed"), code=303)
 
         request_id = session.get(SESSION_CHALLENGE)
