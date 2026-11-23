@@ -70,3 +70,15 @@ def test_ambiguous_published_identities_are_never_automatically_merged():
     assert index.href("Same Name") is None
     assert index.for_archive_record("first")["nominations"] == []
     assert index.for_archive_record("second")["nominations"] == []
+
+
+def test_event_and_song_awards_do_not_create_fake_people():
+    historical = [
+        ArchiveCategory(id="best-event-2023", name="Best Event 2023",
+                        nominees=(ArchiveNominee("Body Bag 2", True),)),
+        ArchiveCategory(id="battle-song", name="Battle Song of the Year",
+                        nominees=(ArchiveNominee("Track Title", True),)),
+    ]
+    index = PublicProfileIndex([], historical, [], [])
+    assert index.href("Body Bag 2") is None
+    assert index.href("Track Title") is None
