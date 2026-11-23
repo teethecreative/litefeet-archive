@@ -193,3 +193,80 @@ html:is(.lfv-root,.lfv-sitewide) .lfa-directory .lfa-category--grammys .lfa-cate
   .lfa-directory .lfa-category--grammys .lfa-category__preview span {display:inline;margin-right:8px}
   .lfa-directory .lfa-category--grammys .lfa-category__arrow {grid-column:2;grid-row:1/span 2}
 }
+
+
+/* LFA year page: neutral readable heading, not the inherited dark DCA banner. */
+html.lfv-sitewide body main.lfa-directory--year > header.lfa-hero {
+  background:transparent!important;
+  color:var(--lfa-ink)!important;
+  border:0!important;
+  border-bottom:1px solid var(--lfa-line)!important;
+  padding:8px 0 18px!important;
+  margin:0 0 12px!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  min-height:0!important;
+}
+html.lfv-sitewide body main.lfa-directory--year > header.lfa-hero::before,
+html.lfv-sitewide body main.lfa-directory--year > header.lfa-hero::after {
+  content:none!important;
+  display:none!important;
+}
+html.lfv-sitewide body main.lfa-directory--year > header.lfa-hero h1 {
+  color:var(--lfa-ink)!important;
+  font-size:clamp(1.65rem,3.5vw,2.65rem)!important;
+  line-height:1.15!important;
+  margin:5px 0 8px!important;
+  letter-spacing:-.03em!important;
+}
+html.lfv-sitewide body main.lfa-directory--year > header.lfa-hero .lfa-lead {
+  color:var(--lfa-muted)!important;
+  font-size:.95rem!important;
+  line-height:1.45!important;
+}
+html.lfv-sitewide body main.lfa-directory--year > header.lfa-hero .lfa-crumb {
+  margin:0 0 9px!important;
+}
+
+/* Award nominees are ordinary text hyperlinks, not inherited gold CTA buttons.
+   DCA's global 'main a' rule adds a gold background, tall min-height and padding;
+   reset those properties only within the nominee list. */
+html.lfv-sitewide body main.lfa-directory .lfa-category--grammys .lfa-category__nominees ul {
+  display:block!important;
+  list-style:none!important;
+  padding:0!important;
+  margin:0!important;
+}
+html.lfv-sitewide body main.lfa-directory .lfa-category--grammys .lfa-category__nominees li {
+  display:list-item!important;
+  padding:0!important;
+  margin:0 0 5px!important;
+  line-height:1.5!important;
+}
+html.lfv-sitewide body main.lfa-directory .lfa-category--grammys .lfa-category__nominees li > a {
+  display:inline!important;
+  width:auto!important;
+  height:auto!important;
+  min-height:0!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--lfa-ink)!important;
+  font-size:inherit!important;
+  font-weight:500!important;
+  line-height:inherit!important;
+  letter-spacing:normal!important;
+  text-align:left!important;
+  text-transform:none!important;
+  text-decoration:underline!important;
+  text-decoration-thickness:1px!important;
+  text-underline-offset:3px!important;
+}
+html.lfv-sitewide body main.lfa-directory .lfa-category--grammys .lfa-category__nominees li > a:is(:hover,:focus-visible) {
+  background:transparent!important;
+  color:var(--lfa-gold)!important;
+  text-decoration:underline!important;
+}
