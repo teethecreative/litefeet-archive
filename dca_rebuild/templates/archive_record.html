@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/archive-v2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/archive-v3.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-public-profiles.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfa-results.css') }}">
 </head>
 <body>
 {% include "_navigation.html" %}
@@ -106,6 +107,7 @@
             {% endfor %}
           </section>
         {% endif %}
+        {% include "lfa_battle_section.html" %}
         {% if record.notes %}
         <section>
           <h2>Event highlights</h2>
