@@ -452,12 +452,14 @@ def test_old_nominee_can_receive_moderated_reason_without_nomination(website, da
         db.add(DCANominationSubmission(edition_id=edition_id, nominee_id=nominee_id,
                                        submitter_hash='old-submitter', submitted_at=NOW))
     client = website.test_client()
+    identify(client, 'test@example.com')
     page = client.get('/awards/dancers-choice/nomination-reasons')
     assert b'Historical Nominee' in page.data
+    assert b'name="email"' not in page.data
     with client.session_transaction() as session:
         token = session['lf9e_nomination_csrf']
     result = client.post('/awards/dancers-choice/nomination-reasons', data=dict(
-        csrf_token=token, nominee_id=nominee_id, email='test@example.com',
+        csrf_token=token, nominee_id=nominee_id,
         reason='Attended recorded LiteFeet events during 2026.'))
     assert result.status_code == 303
     with factory() as db:
@@ -673,3 +675,59 @@ def test_admin_nominee_sort_headers_show_affordance_on_every_column(website):
     assert 'aria-label="Sort by Nominee' in html
     assert 'aria-label="Sort by Submissions' in html
     assert "↕" in html
+
+
+def test_qualification_reasons_share_verified_nominator_session(website, database, monkeypatch):
+    """Typed email must never override the verified identity; no per-card email fields."""
+    import time
+    from dca_rebuild.models import DCANominee, DCANominationSubmission
+    from dca_rebuild.phase9e import NomineeQualificationReason9E
+    from dca_rebuild.email_verification import SESSION_VERIFIED, SESSION_VERIFIED_AT
+
+    _, factory, edition_id = database
+    with factory.begin() as db:
+        nominee = DCANominee(edition_id=edition_id, category_id=1,
+                            name='Mobile Layout Nominee', normalized_name='mobile layout nominee',
+                            moderation_status='approved')
+        db.add(nominee)
+        db.flush()
+        nominee_id = nominee.id
+        db.add(DCANominationSubmission(edition_id=edition_id, nominee_id=nominee_id,
+                                       submitter_hash='historic-user', submitted_at=NOW))
+
+    anonymous = website.test_client()
+    anonymous.get('/awards/dancers-choice/nomination-reasons')
+    with anonymous.session_transaction() as sess:
+        csrf = sess['lf9e_nomination_csrf']
+    assert anonymous.post('/awards/dancers-choice/nomination-reasons', data={
+        'csrf_token': csrf, 'nominee_id': nominee_id,
+        'reason': 'Attended documented LiteFeet sessions in 2026.',
+        'email': 'spoof@example.com',
+    }).status_code == 403
+
+    user = website.test_client()
+    identify(user, 'verified@example.com')
+    with user.session_transaction() as sess:
+        who = sess['lf9e_recent_hash']
+        sess[SESSION_VERIFIED] = who
+        sess[SESSION_VERIFIED_AT] = int(time.time())
+        csrf = sess['lf9e_nomination_csrf']
+    monkeypatch.setenv('DCA_2026_VERIFIED_EMAIL_ENABLED', 'true')
+    html = user.get('/awards/dancers-choice/nomination-reasons').get_data(as_text=True)
+    assert 'dca-nomination-reasons.css' in html
+    assert 'name="email"' not in html
+    assert 'Your email is verified for this session.' in html
+    response = user.post('/awards/dancers-choice/nomination-reasons', data={
+        'csrf_token': csrf, 'nominee_id': nominee_id,
+        'reason': 'Attended documented LiteFeet sessions in 2026.',
+        'email': 'spoof@example.com',
+    })
+    assert response.status_code == 303
+    with factory() as db:
+        reason = db.query(NomineeQualificationReason9E).one()
+        assert reason.submitter_hash == who
+        assert reason.moderation_status == 'pending'
+        assert db.query(DCANominationSubmission).count() == 1
+    after = user.get('/awards/dancers-choice/nomination-reasons').get_data(as_text=True)
+    assert 'You already submitted a reason for this nominee.' in after
+    assert 'name="email"' not in after
