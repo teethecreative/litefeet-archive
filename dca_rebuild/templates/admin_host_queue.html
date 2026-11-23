@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
-<link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css',v='20261123inline') }}">
 </head><body class="ledger-admin">{% include "_admin_navigation.html" %}
 <main class="lfv-host-wrap"><p><a href="{{ url_for('vault_admin_hosts') }}">Event hosts</a> / {{ queue.name }}</p>
 <header><p class="lfv-host-eyebrow">BATTLE RESULT TRACKING / ADMIN</p><h1>{{ queue.name }}</h1>
@@ -15,18 +15,18 @@
 {% for event in queue.events %}
 {% set shown = event.pending if view=='pending' else event.pending + event.complete %}
 {% if shown or (view=='all' and event.roster_count) %}
-<section class="lfv-host-event"><div class="lfv-host-event-head"><h2>{{ event.title }}</h2>
-<p>{{ event.date_label }} · {{ event.pending }} pending · {{ event.complete }} resolved</p>
+<section class="lfv-host-event lfv-host-event--compact"><div class="lfv-host-event-head"><h2>{{ event.title }}</h2>
+<p>{{ event.date_label }} · {{ event.pending }} pending · {{ event.complete }} recorded</p>
 <a href="{{ url_for('vault_archive_record',slug=event.slug) }}">View archive event</a></div>
 {% if event.roster_count %}<p class="lfv-host-muted">{{ event.roster_count }} initial team-roster entries excluded from result assignment.</p>{% endif %}
 {% for section in event.sections %}
 {% for battle in section.rows %}
 {% if view=='all' or not battle.resolved %}
-<div class="lfv-host-battle" id="battle-{{ battle.key[:12] }}">
-<div class="lfv-host-battle-name"><strong>{{ battle.label }}</strong><small>{{ 'Recorded' if battle.resolved else 'Result needed' }}</small></div>
+<div class="lfv-host-battle lfv-host-battle--inline" id="battle-{{ battle.key[:12] }}">
+<div class="lfv-host-battle-name"><strong>{{ battle.label }}</strong>{% if battle.resolved %}<small>Recorded</small>{% endif %}</div>
 <form method="post" action="{{ url_for('vault_admin_host_result',host_key=queue.key,slug=event.slug,battle_key=battle.key) }}" class="lfv-host-result-form">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-<label><span>Official outcome</span><select name="outcome" required>
+<label class="lfv-host-outcome"><span class="lfv-host-sr-only">Outcome for {{ battle.label }}</span><select name="outcome" aria-label="Outcome for {{ battle.label }}" required>
 <option value="" disabled selected>Choose result</option>
 {% if battle.contestants|length == 2 %}
 <option value="a">{{ battle.contestants[0] }} won</option>
@@ -39,7 +39,7 @@
 <option value="postponed">Postponed</option>
 <option value="unconfirmed">Outcome unconfirmed</option>
 </select></label>
-<label><span>Source / context</span><input name="source_note" maxlength="300" placeholder="Footage, host confirmation, etc." value=""></label>
+<label class="lfv-host-note"><span class="lfv-host-sr-only">Source for {{ battle.label }}</span><input name="source_note" aria-label="Source for {{ battle.label }}" maxlength="300" placeholder="Source / explanation (required)" value="" required minlength="5"></label>
 <button type="submit">Save</button>
 </form></div>
 {% endif %}{% endfor %}{% endfor %}</section>

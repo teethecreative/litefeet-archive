@@ -18,3 +18,47 @@
 .lfv-host-filter{display:flex;gap:16px}.lfv-host-filter [aria-current]{font-weight:bold}
 .lfv-host-logout{margin-top:10px}.lfv-host-wrap .lfv-host-logout button{background:transparent;color:inherit}
 @media(max-width:720px){.lfv-host-result-form{justify-content:flex-start}.lfv-host-battle{align-items:stretch;flex-direction:column}.lfv-host-result-form label{flex:1}}
+
+/* Host result entry: compact chronology rather than one card per matchup. */
+.lfv-host-event--compact{padding:0;border-radius:6px;margin:12px 0 16px;overflow:hidden}
+.lfv-host-event--compact .lfv-host-event-head{
+  display:flex;align-items:baseline;gap:8px 14px;
+  border-bottom:1px solid var(--border,#d5d9de);padding:10px 13px;
+}
+.lfv-host-event--compact .lfv-host-event-head h2{font-size:1rem;line-height:1.4;margin:0}
+.lfv-host-event--compact .lfv-host-event-head p{font-size:.78rem;opacity:.74;margin:0}
+.lfv-host-event--compact .lfv-host-event-head a{font-size:.77rem;margin-left:auto}
+.lfv-host-event--compact .lfv-host-battle--inline{
+  display:grid;grid-template-columns:minmax(170px,1fr) minmax(0,1.45fr);
+  align-items:center;gap:10px;min-height:42px;padding:6px 13px;
+  margin:0;border-top:0;border-bottom:1px solid var(--border,#d5d9de);
+}
+.lfv-host-event--compact .lfv-host-battle--inline:last-child{border-bottom:0}
+.lfv-host-event--compact .lfv-host-battle-name{font-size:.82rem;line-height:1.3;min-width:0}
+.lfv-host-event--compact .lfv-host-battle-name strong{font-weight:600}
+.lfv-host-event--compact .lfv-host-battle-name small{font-size:.71rem;opacity:.72}
+.lfv-host-event--compact .lfv-host-result-form{
+  display:flex;justify-content:flex-end;align-items:center;
+  flex-wrap:nowrap;gap:6px;min-width:0
+}
+.lfv-host-event--compact .lfv-host-result-form label{display:block;min-width:0;flex:1}
+.lfv-host-event--compact .lfv-host-result-form .lfv-host-outcome{flex:1.1}
+.lfv-host-event--compact .lfv-host-result-form .lfv-host-note{flex:1}
+.lfv-host-event--compact .lfv-host-result-form select,
+.lfv-host-event--compact .lfv-host-result-form input{
+  width:100%;min-width:0;height:32px;font-size:.76rem;padding:4px 7px
+}
+.lfv-host-event--compact .lfv-host-result-form button{
+  min-width:46px;min-height:32px;font-size:.75rem;padding:5px 9px
+}
+.lfv-host-sr-only{
+  position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0
+}
+@media(max-width:650px){
+ .lfv-host-event--compact .lfv-host-event-head{align-items:start;flex-direction:column;gap:3px}
+ .lfv-host-event--compact .lfv-host-event-head a{margin-left:0}
+ .lfv-host-event--compact .lfv-host-battle--inline{display:block;padding:8px 11px}
+ .lfv-host-event--compact .lfv-host-result-form{margin-top:6px}
+ .lfv-host-event--compact .lfv-host-result-form .lfv-host-note{flex:0.9}
+}

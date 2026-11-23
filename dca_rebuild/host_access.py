@@ -44,8 +44,13 @@ def events_for_host(host):
     if host not in HOST_LABELS:
         abort(404)
     name = HOST_LABELS[host].casefold()
-    return [row for row in all_records() if row.get("record_type") == "event"
-            and (row.get("presenter") or "").casefold() == name]
+    records = [row for row in all_records() if row.get("record_type") == "event"
+               and (row.get("presenter") or "").casefold() == name]
+    # Earliest first. Unconfirmed dates come last without inventing a date.
+    return sorted(records, key=lambda row: (
+        not bool(row.get("date")), row.get("date") or "",
+        row["title"].casefold(),
+    ))
 
 
 def roster_only(section):

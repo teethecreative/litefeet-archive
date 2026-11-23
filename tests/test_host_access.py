@@ -180,3 +180,32 @@ def test_verified_email_claim_creates_scoped_password_account(website, database,
         assert account.email == "ty@example.com"
         assert account.password_hash != "long-passphrase-for-host-access"
         assert db.query(VaultHostInvitation).one().status == "claimed"
+
+
+def test_host_events_are_oldest_first_with_undated_events_last(database):
+    for host in ("body-bag", "hypeituptv"):
+        queue = host_queue(database[1], host)
+        dates = [find_record(event["slug"])["date"] for event in queue["events"]]
+        assert dates == sorted(dates, key=lambda value: (not bool(value), value or ""))
+    body = host_queue(database[1], "body-bag")
+    assert body["events"][0]["slug"] == "bodybag-body-bag-vol-2"
+    assert body["events"][-1]["slug"] in ("bodybag-body-bag-vol-1", "bodybag-bodybag-5-outside-edition")
+
+
+def test_host_workspaces_use_compact_inline_battle_rows(website, database):
+    from dca_rebuild.models import VaultHostAccount
+    from werkzeug.security import generate_password_hash
+    with database[1].begin() as db:
+        db.add(VaultHostAccount(
+            host_key="hypeituptv", person_key="ty-shotz",
+            display_name="Ty Shotz", email="ty-example@example.com",
+            password_hash=generate_password_hash("test-secure-passphrase")))
+    client = website.test_client()
+    with client.session_transaction() as current:
+        current["vault_host_account_id"] = 1
+    response = client.get("/hosts/workspace")
+    assert response.status_code == 200
+    content = response.get_data(as_text=True)
+    assert 'lfv-host-battle--inline' in content
+    assert 'lfv-host-event--compact' in content
+    assert content.index("Who&#39;s World Is This?!") < content.index("Class Is in Session")
