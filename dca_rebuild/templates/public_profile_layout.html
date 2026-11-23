@@ -5,7 +5,7 @@
   <header class="lfv-profile-header">
     <h1>{{ profile.name }}</h1>
     <div class="lfv-profile-header-meta">
-      <span class="lfv-profile-type">LiteFeet profile</span>
+      <span class="lfv-profile-type">{{ 'LiteFeet team' if profile.is_team else 'LiteFeet profile' }}</span>
       <span aria-hidden="true">·</span>
       <span>{{ 'Archive-listed' if archived else 'Award / nomination-linked' }}</span>
       {% if archived and archived.editorial_status %}
@@ -28,7 +28,11 @@
         <h2 id="profile-facts-title" class="lfv-profile-card-title">Profile Details</h2>
         <dl class="lfv-profile-facts">
           <div><dt>Name</dt><dd>{{ profile.name }}</dd></div>
-          <div><dt>Listed as</dt><dd>{{ 'Archive subject' if archived else 'Award / nomination entry' }}</dd></div>
+          <div><dt>Listed as</dt><dd>{{ 'Team / crew' if profile.is_team else ('Archive subject' if archived else 'Award / nomination entry') }}</dd></div>
+          {% if profile.is_team %}
+          <div><dt>Founded</dt><dd>{{ profile.team_details.founded or 'Not yet documented' }}</dd></div>
+          <div><dt>Founder(s)</dt><dd>{% if profile.team_details.founders %}{% for founder in profile.team_details.founders %}{% if founder.href %}<a href="{{ founder.href }}">{{ founder.name }}</a>{% else %}{{ founder.name }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}Not yet documented{% endif %}</dd></div>
+          {% endif %}
           {% if archived and archived.date_label and archived.date_label != 'Historical research' %}
           <div><dt>Record period</dt><dd>{{ archived.date_label }}</dd></div>
           {% endif %}
@@ -36,7 +40,7 @@
       </section>
 
       <section class="lfv-profile-card" aria-labelledby="profile-connections-title">
-        <h2 id="profile-connections-title" class="lfv-profile-card-title">Dance Circle</h2>
+        <h2 id="profile-connections-title" class="lfv-profile-card-title">{{ 'Team Connections' if profile.is_team else 'Dance Circle' }}</h2>
         <div class="lfv-profile-card-content">
           <p class="lfv-profile-note">Documented teams and connected dancers will appear here as the archive grows.</p>
         </div>
@@ -53,14 +57,36 @@
 
     <div class="lfv-profile-main">
       <section class="lfv-profile-card" aria-labelledby="profile-about-title">
-        <h2 id="profile-about-title" class="lfv-profile-card-title">About Me</h2>
+        <h2 id="profile-about-title" class="lfv-profile-card-title">{{ 'About the Team' if profile.is_team else 'About Me' }}</h2>
         <div class="lfv-profile-card-content">
-          <p>{% if archived and archived.record_type != 'legacy_identity' and archived.description %}{{ archived.description }}{% else %}A personal biography has not been documented for this profile yet.{% endif %}</p>
+          <p>{% if archived and archived.record_type != 'legacy_identity' and archived.description %}{{ archived.description }}{% else %}{{ 'A team history has not been documented for this profile yet.' if profile.is_team else 'A personal biography has not been documented for this profile yet.' }}{% endif %}</p>
           {% if archived and archived.record_type != 'legacy_identity' and archived.description %}
           <p class="lfv-profile-note">This description comes from the archive and should not be treated as an owner-written biography.</p>
           {% endif %}
         </div>
       </section>
+
+      {% if profile.is_team %}
+      <section class="lfv-profile-card" aria-labelledby="profile-roster-title">
+        <div class="lfv-profile-card-title lfv-profile-card-title-row">
+          <h2 id="profile-roster-title">Team Roster</h2>
+          <span class="lfv-profile-count">{{ profile.team_details.current_roster|length + profile.team_details.former_roster|length }} documented</span>
+        </div>
+        <div class="lfv-profile-card-content">
+          {% for heading, members in [('Current members', profile.team_details.current_roster), ('Former members', profile.team_details.former_roster)] %}
+          <h3 class="lfv-profile-subheading">{{ heading }}</h3>
+          {% if members %}
+          <ul class="lfv-profile-roster-list">
+            {% for member in members %}
+            <li>{% if member.href %}<a href="{{ member.href }}">{{ member.name }}</a>{% else %}{{ member.name }}{% endif %}{% if member.role %}<span class="lfv-profile-meta"> · {{ member.role }}</span>{% endif %}</li>
+            {% endfor %}
+          </ul>
+          {% else %}<p class="lfv-profile-note">No {{ heading|lower }} documented yet.</p>{% endif %}
+          {% endfor %}
+          <p class="lfv-profile-note">Roster entries are published only when documented. No membership is inferred from nominations or battle listings.</p>
+        </div>
+      </section>
+      {% endif %}
 
       <section class="lfv-profile-card" aria-labelledby="profile-awards-title">
         <div class="lfv-profile-card-title lfv-profile-card-title-row">
