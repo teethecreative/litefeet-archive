@@ -5111,6 +5111,15 @@ def admin_analytics_visitor(visitor_id):
             round(sum(item.active_seconds for item in recorded)/engagement_count)
             if engagement_count else None
         )
+        engagement_pages = {}
+        for item in recorded:
+            entry = engagement_pages.setdefault(
+                item.path, {"path":item.path, "total":0, "samples":0})
+            entry["total"] += item.active_seconds
+            entry["samples"] += 1
+        engagement_pages = sorted(
+            engagement_pages.values(), key=lambda item: (-item["total"],item["path"])
+        )
         identity = db.get(VaultAnalyticsIdentityLink, visitor_id)
         verified_profile_email = None
         if identity and traffic in ("all","human"):
@@ -5139,6 +5148,7 @@ def admin_analytics_visitor(visitor_id):
             total=total,
             visits=visits,
             engagement_count=engagement_count,
+            engagement_pages=engagement_pages,
             average_active_seconds=average_active_seconds,
             verified_profile_email=verified_profile_email,
             first_seen=first_seen,

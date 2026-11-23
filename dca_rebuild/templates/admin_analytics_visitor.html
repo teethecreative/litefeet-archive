@@ -125,6 +125,25 @@ href="{{ url_for('static', filename='css/dca.css') }}">
     </div>
 </section>
 
+<section class="admin-module-section" aria-labelledby="session-time-by-page">
+  <div class="admin-section-heading">
+    <div class="label">OPTED-IN ENGAGEMENT</div>
+    <h2 id="session-time-by-page">ACTIVE TIME BY PAGE</h2>
+    <p>Only visible, focused time from this browser's voluntary measurements. Older page views have no duration measurement.</p>
+  </div>
+  <div class="analytics-table-wrap"><table class="analytics-table">
+    <thead><tr><th>PAGE</th><th>MEASURED VISITS</th><th>AVG. ACTIVE TIME</th></tr></thead>
+    <tbody>
+    {% for item in engagement_pages %}
+      <tr><td>{{ item.path }}</td><td>{{ item.samples }}</td>
+          <td>{{ (item.total / item.samples)|round|int }} seconds</td></tr>
+    {% else %}
+      <tr><td colspan="3">No opted-in active time recorded for these filters.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+
 <section class="admin-module-section">
     <div class="admin-section-heading">
         <div class="label">03 · ENGAGEMENT HISTORY</div>
