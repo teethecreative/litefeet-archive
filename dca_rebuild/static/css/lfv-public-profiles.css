@@ -124,6 +124,10 @@ html[data-theme="dark"] .lfv-profile-page{
 .lfv-profile-page .lfv-profile-roster-list{margin:8px 0 18px;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px 18px}
 .lfv-profile-page .lfv-profile-roster-list li{padding:9px 0;border-bottom:1px solid var(--profile-line);font-size:.87rem;overflow-wrap:anywhere}
 
+.lfv-profile-page .lfv-profile-claim-line{font-size:.84rem;margin:11px 0 0;color:var(--profile-muted)}
+.lfv-profile-page .lfv-profile-claim-line a{font-weight:700!important;color:var(--profile-ink)!important;text-decoration:underline!important}
+.lfv-profile-page .lfv-profile-claim-state{font-weight:650;color:var(--profile-muted)}
+
 /* Role badges switch activity panels while retaining the main profile identity. */
 .lfv-profile-page .lfv-profile-role-nav{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:17px 0 7px}
 .lfv-profile-page .lfv-profile-role-nav .lfv-profile-role-badge{background:var(--profile-soft)!important;border:1px solid var(--profile-line)!important;border-radius:999px!important;padding:7px 12px!important;font:inherit!important;font-size:.82rem!important;font-weight:700!important;color:var(--profile-ink)!important;cursor:pointer!important;line-height:1.2!important;min-height:34px!important}
