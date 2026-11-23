@@ -8,7 +8,8 @@ def test_about_page_is_story_and_preserves_letter(website):
     assert 'id="vault-story"' in html
     assert "<h1>Why The Vault Exists</h1>" in html
     assert "Dear LiteFeet," in html
-    assert "Because LiteFeet's history belongs to the people who made it." in html
+    assert "How much of our history do we actually have documented" in html
+    assert "We can't change what was never documented" in html
     assert "With love for the culture," in html
     assert "lfv-story-page.css" in html
     assert "lfv-story-page.js" in html
