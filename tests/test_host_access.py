@@ -132,3 +132,50 @@ def test_same_host_result_is_recorded_with_audit_and_source(website, database):
         assert entry.actor_account_id == account_id
         assert entry.event_slug == record["slug"]
     assert host_queue(database[1], "body-bag")["complete"] == 1
+
+
+def test_verified_email_claim_creates_scoped_password_account(website, database, monkeypatch):
+    from dca_rebuild import host_access
+    token = "X" * 48
+    with database[1].begin() as db:
+        db.add(VaultHostInvitation(
+            host_key="hypeituptv", person_key="ty-shotz",
+            token_hash=hashlib.sha256(token.encode()).hexdigest(),
+            expires_at=datetime.utcnow() + timedelta(days=2),
+        ))
+    captured = []
+    monkeypatch.setattr(host_access.secrets, "randbelow", lambda upper: 123456)
+    monkeypatch.setattr(host_access, "_send_email", lambda email, code: captured.append((email, code)))
+    client = website.test_client()
+    path = "/hosts/claim/" + token
+    assert client.get(path).status_code == 200
+    with client.session_transaction() as sess:
+        csrf = sess["vault_host_claim_csrf"]
+    result = client.post(path, data={
+        "csrf_token": csrf, "action": "send", "host_key": "hypeituptv",
+        "person_key": "ty-shotz", "email": "ty@example.com",
+    })
+    assert result.status_code == 200
+    assert captured == [("ty@example.com", "123456")]
+    result = client.post(path, data={
+        "csrf_token": csrf, "action": "verify", "code": "123456",
+    })
+    assert result.status_code == 200
+    assert "Display name" in result.get_data(as_text=True)
+    result = client.post(path, data={
+        "csrf_token": csrf, "action": "create",
+        "display_name": "Ty Shotz", "password": "long-passphrase-for-host-access",
+        "timezone": "America/New_York",
+    })
+    assert result.status_code == 303
+    assert client.get(path).status_code == 410
+    workspace = client.get("/hosts/workspace")
+    assert workspace.status_code == 200
+    assert "HypeItUpTV" in workspace.get_data(as_text=True)
+    with database[1]() as db:
+        account = db.query(VaultHostAccount).one()
+        assert account.host_key == "hypeituptv"
+        assert account.person_key == "ty-shotz"
+        assert account.email == "ty@example.com"
+        assert account.password_hash != "long-passphrase-for-host-access"
+        assert db.query(VaultHostInvitation).one().status == "claimed"
