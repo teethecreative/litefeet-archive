@@ -23,7 +23,7 @@
 </head>
 <body{% if results_view %} class="lfv-standings-body"{% endif %}>
 {% include "_navigation.html" %}
-<main class="lf-nom-2026 lf9e{% if results_view %} lf9e-standings-page{% elif not identified %} lf9e-intro-page{% endif %}" id="nominations" data-dca-grid-url="{{ url_for('dca_nominations_closed') }}">
+<main class="lf-nom-2026 lf9e{% if results_view %} lf9e-standings-page{% elif not identified %} lf9e-intro-page{% endif %}" id="nominations" data-dca-grid-url="{{ url_for('dca_nominations_closed', category=selected.id) if selected else url_for('dca_nominations_closed') }}">
   {% if results_view %}<section class="lf9e-standings-surface" aria-label="Nominee standings">{% endif %}
   <p class="lf-nom-eyebrow">{% if results_view or not identified %}DCA 2026{% else %}DANCER'S CHOICE AWARDS · 2026{% endif %}</p>
   {% with messages = get_flashed_messages() %}{% for message in messages %}
@@ -83,7 +83,9 @@
           <p>No nominations yet.</p>
         {% endif %}
         {% if category.available %}
-          <a class="lfv-dca-compact-link" href="{{ url_for('dca_nominations_closed') }}">Nominate from the categories page</a>
+          <button type="button" class="lfv-dca-add-new" data-dca-open-category="{{ category.id }}" aria-haspopup="dialog">Nominate in this category</button>
+        {% elif category.remaining %}
+          <p class="lfv-dca-modal-status">You can nominate again after this category's 24-hour cooldown.</p>
         {% endif %}
       </section>
     {% else %}
@@ -113,7 +115,7 @@
     {% endif %}
   {% endif %}
 </main>
-{% if identified and not results_view and not selected %}
+{% if identified and not results_view %}
 {% include "dca_category_modal.html" %}
 {% endif %}
 {% include "_footer.html" %}
