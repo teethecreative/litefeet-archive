@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-workspace.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-analytics-simple.css', v='20261123') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-analytics-simple.css', v='20261123b') }}">
 </head>
 <body class="ledger-admin">
   {% include "_admin_navigation.html" %}
@@ -82,13 +82,21 @@
 
     <section class="lfv-analytics-section lfv-analytics-explore" aria-labelledby="analytics-explore">
       <div class="lfv-analytics-heading"><div><h2 id="analytics-explore">Explore further</h2><p>Detailed views stay on their own pages.</p></div></div>
-      <div class="lfv-analytics-links">
-        <a href="{{ url_for('admin_analytics_visitors',start=start_day.isoformat(),end=end_day.isoformat(),traffic=traffic) }}">
-          <strong>Visitor activity</strong><span>Visit counts, page history and browser-level profiles</span>
+      <nav class="lfv-analytics-links" aria-label="Detailed analytics and admin workspaces">
+        <a class="lfv-analytics-link-card lfv-analytics-link-card--visitor" href="{{ url_for('admin_analytics_visitors',start=start_day.isoformat(),end=end_day.isoformat(),traffic=traffic) }}">
+          <strong>Visitor activity</strong>
+          <span>Visits, return frequency, page history and visitor profiles</span>
+          <span class="lfv-analytics-card-arrow" aria-hidden="true">→</span>
         </a>
-        <a href="{{ url_for('admin_vault_activity') }}"><strong>Site activity</strong><span>Submissions, reviews and updates</span></a>
-        <a href="{{ url_for('admin_dashboard') }}"><strong>Admin overview</strong><span>Return to the management workspace</span></a>
-      </div>
+        <a class="lfv-analytics-link-card" href="{{ url_for('admin_vault_activity') }}">
+          <strong>Site activity</strong><span>Submissions, reviews and updates</span>
+          <span class="lfv-analytics-card-arrow" aria-hidden="true">→</span>
+        </a>
+        <a class="lfv-analytics-link-card" href="{{ url_for('admin_dashboard') }}">
+          <strong>Admin overview</strong><span>Return to the management workspace</span>
+          <span class="lfv-analytics-card-arrow" aria-hidden="true">→</span>
+        </a>
+      </nav>
       <p class="lfv-analytics-note">Browser sessions can include multiple people or multiple devices for one person. Email addresses collected for nominations or newsletters are not proof that a browser belongs to that individual. Active time is now tracked only for visitors who opt in. It measures visible, focused time, not how long a page was left open. Verified-email associations require separate, explicit consent.</p>
     </section>
 

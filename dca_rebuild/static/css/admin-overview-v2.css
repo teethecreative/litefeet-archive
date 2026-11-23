@@ -104,3 +104,88 @@ body.ledger-admin .lfv-admin-overview__tools a:is(:hover,:focus-visible) {
   .lfv-admin-overview__tools {grid-template-columns:1fr;}
   .lfv-admin-overview__pages{gap:5px;}
 }
+
+/*
+ * Admin overview regression: the older DCA-wide "main a:not(...)" rule
+ * turns each activity anchor into an inline-flex gold button. Explicitly
+ * restore ONE FULL-WIDTH GRID ROW per record, including hover/focus states.
+ */
+body.ledger-admin main#admin-overview .lfv-admin-overview__list {
+  display:block!important;width:100%!important;min-width:0!important;
+  border-top:1px solid var(--border)!important;
+}
+body.ledger-admin main#admin-overview .lfv-admin-overview__list > a.lfv-admin-overview__entry,
+body.ledger-admin main#admin-overview .lfv-admin-overview__list > a.lfv-admin-overview__entry:link,
+body.ledger-admin main#admin-overview .lfv-admin-overview__list > a.lfv-admin-overview__entry:visited {
+  display:grid!important;
+  grid-template-columns:140px minmax(0,1.5fr) minmax(0,.85fr) 90px 25px!important;
+  align-items:center!important;gap:15px!important;
+  box-sizing:border-box!important;width:100%!important;max-width:100%!important;
+  min-width:0!important;min-height:0!important;
+  margin:0!important;padding:14px 6px!important;
+  background:transparent!important;background-image:none!important;
+  border:0!important;border-bottom:1px solid var(--border)!important;
+  border-radius:0!important;box-shadow:none!important;
+  color:var(--text)!important;text-decoration:none!important;
+  line-height:1.35!important;font-size:inherit!important;font-weight:400!important;
+  text-transform:none!important;white-space:normal!important;
+}
+body.ledger-admin main#admin-overview .lfv-admin-overview__list > a.lfv-admin-overview__entry:is(:hover,:focus-visible) {
+  background:var(--surface-2)!important;
+  border:0!important;border-bottom:1px solid var(--border)!important;
+  padding:14px 6px!important;
+}
+body.ledger-admin main#admin-overview .lfv-admin-overview__list > a.lfv-admin-overview__entry:focus-visible {
+  outline:2px solid var(--text)!important;outline-offset:-2px!important;
+}
+body.ledger-admin main#admin-overview .lfv-admin-overview__entry > * {
+  min-width:0!important;
+}
+body.ledger-admin main#admin-overview .lfv-admin-overview__entry time {
+  display:block!important;overflow-wrap:normal;white-space:normal;
+}
+body.ledger-admin main#admin-overview .lfv-admin-overview__entry .lfv-admin-overview__item strong {
+  display:block!important;font-weight:780!important;
+}
+body.ledger-admin main#admin-overview .lfv-admin-overview__entry .lfv-admin-overview__item small {
+  display:block!important;
+}
+/* Navigation controls: not giant gold buttons. */
+body.ledger-admin main#admin-overview .lfv-admin-overview__pages > a,
+body.ledger-admin main#admin-overview .lfv-admin-overview__queue-note > a,
+body.ledger-admin main#admin-overview .lfv-admin-overview__activity .lfv-admin-workspace-heading > a {
+  display:inline-flex!important;width:auto!important;min-height:0!important;
+  padding:4px 0!important;margin:0!important;
+  background:transparent!important;background-image:none!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  color:var(--text)!important;text-decoration:underline!important;
+  text-decoration-color:var(--gold)!important;text-underline-offset:4px!important;
+  font-size:.82rem!important;font-weight:750!important;line-height:1.4!important;
+}
+body.ledger-admin main#admin-overview .lfv-admin-overview__tools > a {
+  display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+  justify-content:flex-start!important;gap:6px!important;
+  box-sizing:border-box!important;width:100%!important;min-height:90px!important;
+  margin:0!important;padding:16px 31px 16px 16px!important;
+  background:var(--surface-2)!important;background-image:none!important;
+  border:1px solid var(--border)!important;border-radius:7px!important;
+  color:var(--text)!important;text-decoration:none!important;
+  box-shadow:none!important;line-height:1.35!important;
+}
+body.ledger-admin main#admin-overview .lfv-admin-overview__tools > a:is(:hover,:focus-visible) {
+  border-color:var(--text)!important;background:var(--surface)!important;
+}
+@media(max-width:800px) {
+ body.ledger-admin main#admin-overview .lfv-admin-overview__list > a.lfv-admin-overview__entry,
+ body.ledger-admin main#admin-overview .lfv-admin-overview__list > a.lfv-admin-overview__entry:link,
+ body.ledger-admin main#admin-overview .lfv-admin-overview__list > a.lfv-admin-overview__entry:visited {
+  grid-template-columns:105px minmax(0,1fr) 92px 20px!important;gap:12px!important;
+ }
+}
+@media(max-width:550px) {
+ body.ledger-admin main#admin-overview .lfv-admin-overview__list > a.lfv-admin-overview__entry,
+ body.ledger-admin main#admin-overview .lfv-admin-overview__list > a.lfv-admin-overview__entry:link,
+ body.ledger-admin main#admin-overview .lfv-admin-overview__list > a.lfv-admin-overview__entry:visited {
+  grid-template-columns:minmax(0,1fr) 24px!important;gap:5px 12px!important;
+ }
+}
