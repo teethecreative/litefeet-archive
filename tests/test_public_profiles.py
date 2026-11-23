@@ -82,3 +82,37 @@ def test_event_and_song_awards_do_not_create_fake_people():
     index = PublicProfileIndex([], historical, [], [])
     assert index.href("Body Bag 2") is None
     assert index.href("Track Title") is None
+
+
+def test_team_profile_has_dedicated_undocumented_fields():
+    current = [{"name": "Best Team", "href": "/awards/dancers-choice/2026",
+                "nominees": [{"name": "Team Demon"}]}]
+    index = PublicProfileIndex([], [], current, [])
+    team = index.by_name("Team Demon")
+    assert team["is_team"] is True
+    assert team["team_details"] == {
+        "founded": "", "founders": [], "current_roster": [], "former_roster": [],
+    }
+    assert index.by_name("Nobody") is None
+
+
+def test_team_founders_and_roster_only_link_exact_profiles():
+    records = [
+        dict(slug="team-demon", title="Team Demon", collection="people",
+             record_type="team", team_details={
+                 "founded": "2012",
+                 "founders": ["Kid Smoove"],
+                 "current_roster": [{"name": "Flii Boogie", "role": "Member"}],
+                 "former_roster": ["Unlisted Person"],
+             }),
+        dict(slug="kid-smoove", title="Kid Smoove", collection="people"),
+        dict(slug="flii-boogie", title="Flii Boogie", collection="people"),
+    ]
+    index = PublicProfileIndex(records, [], [], [])
+    team = index.for_archive_record("team-demon")
+    assert team["is_team"] is True
+    assert team["team_details"]["founded"] == "2012"
+    assert team["team_details"]["founders"][0]["href"] == "/people/kid-smoove"
+    assert team["team_details"]["current_roster"][0]["href"] == "/people/flii-boogie"
+    assert "href" not in team["team_details"]["former_roster"][0]
+    assert index.by_name("Kid Smoove")["is_team"] is False
