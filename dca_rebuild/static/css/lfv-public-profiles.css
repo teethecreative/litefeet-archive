@@ -123,3 +123,11 @@ html[data-theme="dark"] .lfv-profile-page{
 /* Team-specific roster; plain hyperlinked names, not action buttons. */
 .lfv-profile-page .lfv-profile-roster-list{margin:8px 0 18px;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px 18px}
 .lfv-profile-page .lfv-profile-roster-list li{padding:9px 0;border-bottom:1px solid var(--profile-line);font-size:.87rem;overflow-wrap:anywhere}
+
+/* Role badges switch activity panels while retaining the main profile identity. */
+.lfv-profile-page .lfv-profile-role-nav{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:17px 0 7px}
+.lfv-profile-page .lfv-profile-role-nav .lfv-profile-role-badge{background:var(--profile-soft)!important;border:1px solid var(--profile-line)!important;border-radius:999px!important;padding:7px 12px!important;font:inherit!important;font-size:.82rem!important;font-weight:700!important;color:var(--profile-ink)!important;cursor:pointer!important;line-height:1.2!important;min-height:34px!important}
+.lfv-profile-page .lfv-profile-role-nav .lfv-profile-role-badge.is-active{background:var(--profile-ink)!important;color:var(--profile-bg)!important;border-color:var(--profile-ink)!important}
+.lfv-profile-page .lfv-profile-role-nav .lfv-profile-role-badge:focus-visible{outline:3px solid var(--profile-ink);outline-offset:2px}
+.lfv-profile-page .lfv-profile-role-help{font-size:.75rem;color:var(--profile-muted);margin:0}
+.lfv-profile-page [data-lfv-role-panel][hidden]{display:none!important}
