@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dca-phase9e.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dca-2026-minimal.css', v='20261123b') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dca-writeins.css', v='20261123-shared-popup') }}">
 <script defer src="{{ url_for('static', filename='js/dca-2026-modal.js', v='20261123-shared-popup') }}"></script>
@@ -62,6 +63,7 @@
     </aside>
   </div>
 </main>
+<input type="hidden" name="writeins_csrf" value="{{ writeins_csrf }}">
 {% include "dca_category_modal.html" %}
 {% include "_footer.html" %}
 <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>
