@@ -17,7 +17,11 @@ from dca_rebuild.archive_catalog import (
     COLLECTIONS, PAGE_SIZE, all_records, browse, find_record,
     listing_payload, public_record, people_crew_cloud,
 )
-from dca_rebuild.people_discovery import find_profiles, nominee_people_cloud
+from dca_rebuild.people_discovery import find_profiles
+from dca_rebuild.people_activity import (
+    VaultPeopleSearchHit, active_people_cloud, record_people_search,
+)
+from dca_rebuild.models import Base
 
 # Stable future catalog; readiness is separate from the intended ordering.
 SECTION_CATALOG = (
@@ -40,6 +44,8 @@ CONTACT = 'mailto:teethecreative@gmail.com?subject=LiteFeet%20Vault%20Enquiry'
 def install_information_architecture(app, ns):
     from dca_rebuild.archive_graph_admin import install_archive_graph_admin
     install_archive_graph_admin(app, ns)
+    # Persist only timestamp + resolved public profile path for a search.
+    Base.metadata.create_all(bind=ns["engine"], tables=[VaultPeopleSearchHit.__table__])
     # Read-only access for SEO on current approved calendar occurrences.
     app.extensions["vault_seo_session_factory"] = ns["SessionLocal"]
     def public_content():
@@ -170,6 +176,8 @@ def install_information_architecture(app, ns):
         current_page = max(1, request.args.get('page', 1, type=int) or 1)
         query = request.args.get('q', '').strip()[:120]
         profiles = profile_index(ns['SessionLocal'])
+        if query:
+            record_people_search(profiles, query, ns['SessionLocal'])
         filtered = (find_profiles(profiles, query=query, page=1, page_size=500)
                     if query else {
                         'items': [], 'count': 0, 'page': 1,
@@ -178,7 +186,7 @@ def install_information_architecture(app, ns):
                     })
         return section_page('people', archive_items=filtered['items'],
                             archive_pagination=filtered, archive_query=query,
-                            people_cloud=nominee_people_cloud(profiles, people_crew_cloud()),
+                            people_cloud=active_people_cloud(profiles, ns['SessionLocal']),
                             archive_start_page=current_page)
 
     @app.get('/archive/api/people', endpoint='vault_archive_people_api')
@@ -186,8 +194,11 @@ def install_information_architecture(app, ns):
         """Pagination and live search share the exact same public profile index."""
         from dca_rebuild.public_profiles import profile_index
         query = request.args.get('q', '').strip()[:120]
+        profiles = profile_index(ns['SessionLocal'])
+        if query:
+            record_people_search(profiles, query, ns['SessionLocal'])
         filtered = (find_profiles(
-            profile_index(ns['SessionLocal']), query=query, page=1, page_size=500,
+            profiles, query=query, page=1, page_size=500,
         ) if query else {
             'items': [], 'count': 0, 'page': 1,
             'has_more': False, 'next_page': None,
