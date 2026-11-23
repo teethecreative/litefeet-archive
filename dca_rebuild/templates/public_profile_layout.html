@@ -1,6 +1,7 @@
 {# Shared MySpace-inspired presentation for award-linked and published archive profiles.
    Content remains sourced from the public profile index and optional archival record. #}
 {% set archived = record if record is defined and record else none %}
+{% set presentation = vault_profile_presentation(profile) %}
 {% set has_multiple_roles = profile.badges|length > 1 %}
 {% set has_single_role_activity = profile.badges|length == 1 and not profile.is_team and profile.badges[0].key != 'dancer' and profile.badges[0].rows %}
 <main class="lfv-profile-page" id="profile">
@@ -18,7 +19,7 @@
     {% set claim_status = vault_profile_claim_status(profile) %}
     <div class="lfv-profile-claim-line">
       {% if claim_status == 'owned_by_you' %}
-      <span class="lfv-profile-claim-state">You manage this profile</span>
+      <span class="lfv-profile-claim-state">You manage this profile</span> · <a href="{{ url_for('vault_owner_profile_editor',profile=profile.href) }}">Edit Profile</a>
       {% elif claim_status == 'claimed' %}
       <span class="lfv-profile-claim-state">Claimed profile</span>
       {% elif claim_status == 'pending' %}
@@ -27,6 +28,7 @@
       <a href="{{ url_for('vault_profile_claim', profile=profile.href) }}">Claim This Profile</a>
       {% endif %}
     </div>
+    {% if presentation.status_line %}<p class="lfv-profile-status-line">{{ presentation.status_line }}</p>{% endif %}
     {% if has_multiple_roles %}
     <div class="lfv-profile-role-nav" role="group" aria-label="Profile role views" data-lfv-role-nav>
       <button type="button" class="lfv-profile-role-badge is-active" data-lfv-role="overview" aria-pressed="true">Overview</button>
@@ -41,10 +43,14 @@
   <div class="lfv-profile-columns">
     <aside class="lfv-profile-sidebar" aria-label="Profile details">
       <section class="lfv-profile-photo-card" aria-label="Profile photo">
+        {% if presentation.photo_url %}
+        <img class="lfv-profile-owner-photo" src="{{ presentation.photo_url }}" alt="{{ profile.name }} profile photo" loading="lazy" referrerpolicy="no-referrer">
+        {% else %}
         <div class="lfv-profile-photo-placeholder" role="img" aria-label="No profile photo is currently documented">
           <span class="lfv-profile-avatar" aria-hidden="true"></span>
           <span class="lfv-profile-photo-label">No photo on file</span>
         </div>
+        {% endif %}
       </section>
 
       <section class="lfv-profile-card" aria-labelledby="profile-facts-title">
@@ -65,7 +71,12 @@
       <section class="lfv-profile-card" aria-labelledby="profile-connections-title">
         <h2 id="profile-connections-title" class="lfv-profile-card-title">{{ 'Team Connections' if profile.is_team else 'Dance Circle' }}</h2>
         <div class="lfv-profile-card-content">
-          <p class="lfv-profile-note">Documented teams and connected dancers will appear here as the archive grows.</p>
+          {% if presentation.connections %}
+          <ul class="lfv-profile-featured-links">{% for related in presentation.connections %}
+            <li><a href="{{ related.href }}">{{ related.name }}</a></li>
+          {% endfor %}</ul>
+          <p class="lfv-profile-note">Featured by the profile owner; not a verified team affiliation.</p>
+          {% else %}          <p class="lfv-profile-note">Documented teams and connected dancers will appear here as the archive grows.</p>{% endif %}
         </div>
       </section>
 
@@ -82,9 +93,18 @@
       <section class="lfv-profile-card" aria-labelledby="profile-about-title">
         <h2 id="profile-about-title" class="lfv-profile-card-title">{{ 'About the Team' if profile.is_team else 'About Me' }}</h2>
         <div class="lfv-profile-card-content">
+          {% if presentation.about_me %}
+          <p class="lfv-profile-owner-intro">{{ presentation.about_me }}</p>
+          <p class="lfv-profile-note">Profile owner's introduction</p>
+          {% endif %}
+          {% for label, value in [('Style / Specialties', presentation.dance_style),('Influences', presentation.influences),('Interests', presentation.interests)] %}
+          {% if value %}<p class="lfv-profile-owner-field"><strong>{{ label }}:</strong> {{ value }}</p>{% endif %}
+          {% endfor %}
+          {% if not presentation.about_me %}
           <p>{% if archived and archived.record_type != 'legacy_identity' and archived.description %}{{ archived.description }}{% else %}{{ 'A team history has not been documented for this profile yet.' if profile.is_team else 'A personal biography has not been documented for this profile yet.' }}{% endif %}</p>
           {% if archived and archived.record_type != 'legacy_identity' and archived.description %}
           <p class="lfv-profile-note">This description comes from the archive and should not be treated as an owner-written biography.</p>
+          {% endif %}
           {% endif %}
         </div>
       </section>
