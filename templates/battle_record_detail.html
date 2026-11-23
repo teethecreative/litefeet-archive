@@ -1,6 +1,89 @@
 {% extends "base.html" %}
 
-{% block title %}{{ phase7_battle_title(battle) }} | Battle Record{% endblock %}
+{% block title %}{{ phase7_battle_title(battle) }} | Battle Record
+<section class="homepage-section" id="cultures-call">
+    {% set poll = get_battle_poll(battle) %}
+    <div class="section-heading-row">
+        <div>
+            <p class="eyebrow">Community opinion · Not an official result</p>
+            <h2>Culture's Call</h2>
+            <p>For battles without a judged winner, an official tie, or a “YouTube Decide” decision. The culture can weigh in without rewriting what happened.</p>
+        </div>
+    </div>
+
+    {% if poll.is_open %}
+    <div class="battle-culture-layout">
+        <article class="battle-culture-card">
+            <p class="eyebrow">{{ poll.label }}</p>
+            <h3>Who do you think won?</h3>
+            {% if poll.can_vote %}
+            <form method="POST" action="{{ url_for('battle_poll_vote', battle_id=battle['id']) }}" class="battle-culture-vote-form">
+                <input type="hidden" name="csrf_token" value="{{ poll.csrf }}">
+                <label><input type="radio" name="choice" value="one" {% if poll.own_choice == 'one' %}checked{% endif %} required> {{ phase7_value(battle, 'competitor_one', default='Competitor 1') }}</label>
+                <label><input type="radio" name="choice" value="two" {% if poll.own_choice == 'two' %}checked{% endif %}> {{ phase7_value(battle, 'competitor_two', default='Competitor 2') }}</label>
+                <label><input type="radio" name="choice" value="tie" {% if poll.own_choice == 'tie' %}checked{% endif %}> It was a tie</label>
+                <button class="button primary" type="submit">{{ 'Update My Vote' if poll.own_choice else 'Cast My Vote' }}</button>
+            </form>
+            {% else %}
+            <p><a href="{{ url_for('account_login', next=request.path) }}">Sign in</a> to vote. Results are public.</p>
+            {% endif %}
+            <p class="small-note">One current vote per signed-in account. Changing your opinion updates your existing vote; votes do not establish an official winner.</p>
+        </article>
+        <article class="battle-culture-card">
+            <p class="eyebrow">The culture's current opinion</p>
+            <h3>{{ poll.total }} vote{{ '' if poll.total == 1 else 's' }}</h3>
+            {% for option, label in [('one',phase7_value(battle,'competitor_one',default='Competitor 1')),('two',phase7_value(battle,'competitor_two',default='Competitor 2')),('tie','Tie')] %}
+            <div class="battle-culture-result">
+                <div class="battle-culture-result-label"><span>{{ label }}</span><span>{{ poll.counts[option] }} · {{ poll.percent[option] }}%</span></div>
+                <div class="battle-culture-bar"><div style="width: {{ poll.percent[option] }}%"></div></div>
+            </div>
+            {% endfor %}
+            <p class="small-note">Live community opinion, not an official award or judged decision. This poll does not automatically close.</p>
+        </article>
+    </div>
+    {% if poll.comments %}
+    <div class="battle-culture-card">
+        <h3>Community Perspectives</h3>
+        {% for comment in poll.comments %}
+            <p>{{ comment.perspective_text }}</p>
+            {% if not loop.last %}<hr>{% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% else %}
+      <p class="small-note">No community poll is open for this battle. A recorded historical result is separate from community voting.</p>
+    {% endif %}
+
+    {% if poll.can_manage %}
+      <details class="battle-culture-card">
+          <summary>Admin · Community poll settings</summary>
+          <form method="POST" action="{{ url_for('battle_poll_settings_update', battle_id=battle['id']) }}">
+              <input type="hidden" name="csrf_token" value="{{ poll.csrf }}">
+              <label for="poll-status">Community voting</label>
+              <select id="poll-status" name="poll_status">
+                  <option value="closed" {% if poll.status == 'closed' %}selected{% endif %}>Closed / not enabled</option>
+                  <option value="unjudged" {% if poll.status == 'unjudged' %}selected{% endif %}>Unjudged battle</option>
+                  <option value="tie" {% if poll.status == 'tie' %}selected{% endif %}>Official tie</option>
+                  <option value="youtube_decide" {% if poll.status == 'youtube_decide' %}selected{% endif %}>YouTube Decide</option>
+              </select>
+              <button type="submit" class="button secondary">Save Poll Setting</button>
+          </form>
+      </details>
+    {% endif %}
+</section>
+<style>
+.battle-culture-layout {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 0}
+.battle-culture-card {border:1px solid var(--border-color,rgba(127,127,127,.25));border-radius:14px;padding:18px;background:var(--card-bg,rgba(127,127,127,.05));margin:12px 0}
+.battle-culture-vote-form {display:grid;gap:12px;margin:14px 0}
+.battle-culture-vote-form label {display:flex;align-items:center;gap:10px}
+.battle-culture-result {margin:16px 0}
+.battle-culture-result-label {display:flex;justify-content:space-between;gap:12px;font-size:.9rem}
+.battle-culture-bar {height:7px;background:var(--border-color,rgba(127,127,127,.22));border-radius:10px;overflow:hidden;margin-top:7px}
+.battle-culture-bar>div {height:100%;background:var(--text-color,currentColor);border-radius:10px}
+@media(max-width:760px){.battle-culture-layout{grid-template-columns:1fr}}
+</style>
+
+{% endblock %}
 {% block meta_description %}LiteFeet battle record with winner, event context, video/source links, and community review status.{% endblock %}
 
 {% block content %}
