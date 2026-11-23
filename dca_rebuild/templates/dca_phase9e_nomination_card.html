@@ -6,19 +6,19 @@
     <form method="post" action="{{ url_for('dca_nominations_closed') }}" class="lf9e-entry-form" data-lf9e-entry>
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <input type="hidden" name="category_id" value="{{ category.id }}">
-      <label>Nominee name <span aria-hidden="true">*</span><input name="name" maxlength="250" minlength="2" required placeholder="Dancer, team, or nominee" autocomplete="off" value="{{ suggestion.name if suggestion else '' }}"></label>
+      <label>{{ category.nomination_ui.label }} <span aria-hidden="true">*</span><input name="name" maxlength="250" minlength="2" required placeholder="{{ category.nomination_ui.placeholder }}" autocomplete="off" value="{{ suggestion.name if suggestion else '' }}"></label>
       <p class="lf9e-name-check" data-name-check role="status" aria-live="polite" hidden></p>
-      <label class="lf9e-distinct-confirm" data-name-distinct hidden><input type="checkbox" name="confirm_distinct" value="1"> THIS IS A DIFFERENT PERSON FROM THE SIMILAR NOMINEE ABOVE.</label>
-      <label>Team <span class="lf9e-optional">(optional)</span><input name="team" maxlength="250" placeholder="Team or crew"></label>
+      <label class="lf9e-distinct-confirm" data-name-distinct hidden><input type="checkbox" name="confirm_distinct" value="1"> THIS IS A DIFFERENT NOMINEE.</label>
+      <label>{{ category.nomination_ui.support_label }} <span class="lf9e-optional">(optional)</span><input name="team" maxlength="250" placeholder="{{ category.nomination_ui.support_placeholder }}"></label>
       <label>Location <span class="lf9e-optional">(optional)</span><input name="location" maxlength="250" placeholder="City / state"></label>
       <label>Instagram <span class="lf9e-optional">(optional)</span><input name="instagram" maxlength="100" placeholder="@username"></label>
-      <label>Why does this nominee qualify? <span class="lf9e-optional" data-reason-requirement>{{ '(required for new nominees)' if initial_reason_required else '(optional — reason already on file)' }}</span><textarea name="reason" minlength="20" maxlength="2000" rows="4" {% if initial_reason_required %}required{% endif %} placeholder="Describe their relevant LiteFeet activity or contributions during November 2025–November 2026."></textarea></label>
-      <p class="lf9e-note" data-reason-help>{{ 'An explanation is required unless this nominee already has one on file.' if initial_reason_required else 'A reason is already on file for this nominee. Add more supporting information only if you want to.' }}</p>
-      <p class="lf9e-note">Qualifications are based on activity between November 2025 and November 2026, not past reputation alone.</p>
-      <button type="button" class="lf9e-add" data-add-later>+ SAVE ANOTHER IDEA FOR LATER</button>
-      <p class="lf9e-note">The + saves a future nomination idea in this browser only. It is not submitted, and the category cooldown still applies.</p>
+      <label>Why does this nomination deserve recognition? <span class="lf9e-optional" data-reason-requirement>{{ '(required for new nominees)' if initial_reason_required else '(optional — reason already on file)' }}</span><textarea name="reason" minlength="20" maxlength="2000" rows="4" {% if initial_reason_required %}required{% endif %} placeholder="Describe their relevant LiteFeet activity or contributions during November 2025–November 2026."></textarea></label>
+      <p class="lf9e-note" data-reason-help>{{ 'Tell us what the nominee did during the eligibility period.' if initial_reason_required else 'A reason is already on file. Adding more is optional.' }}</p>
+      <p class="lf9e-note">Qualifying LiteFeet activity must be from November 2025 to November 2026.</p>
+      <button type="button" class="lf9e-add" data-add-later>+ SAVE IDEA FOR LATER</button>
+      <p class="lf9e-note">Saved to this browser only. Not submitted yet.</p>
       <button type="submit" class="lf9e-primary" {% if not category.available %}disabled{% endif %}>{% if closed %}NOMINATIONS CLOSED{% elif category.remaining %}CATEGORY ON COOLDOWN{% else %}SUBMIT NOMINATION{% endif %}</button>
     </form>
-    <form method="post" class="lf9e-buttons"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="category_id" value="{{ category.id }}"><button name="action" value="skip" class="lf9e-secondary" {% if closed %}disabled{% endif %}>SKIP / RETURN TO CATEGORIES</button></form>
+    <form method="post" class="lf9e-buttons"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="category_id" value="{{ category.id }}"><button name="action" value="skip" class="lf9e-secondary" {% if closed %}disabled{% endif %}>SKIP THIS CATEGORY</button></form>
   </div>
 </div>
