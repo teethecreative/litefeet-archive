@@ -2,7 +2,8 @@
 from types import SimpleNamespace
 
 from dca_rebuild.archive_2023 import ArchiveCategory, ArchiveNominee
-from dca_rebuild.public_profiles import PublicProfileIndex, matchup_participants
+from dca_rebuild.public_profiles import (PublicProfileIndex, matchup_participants,
+                                        eligible_historian_contributor)
 
 
 def test_announced_matchup_parser_requires_explicit_sides():
@@ -180,3 +181,14 @@ def test_award_category_does_not_create_unearned_judging_or_historian_badges():
     index = PublicProfileIndex([], [], categories, [])
     assert [b["key"] for b in index.by_name("Team Demon")["badges"]] == ["team"]
     assert [b["key"] for b in index.by_name("Sound Wave")["badges"]] == ["producer"]
+
+
+def test_historian_requires_verified_account_approved_contribution_and_no_archive_identity():
+    assert eligible_historian_contributor(
+        approved_contributions=1, account_verified=True, has_archival_mention=False)
+    assert not eligible_historian_contributor(
+        approved_contributions=0, account_verified=True, has_archival_mention=False)
+    assert not eligible_historian_contributor(
+        approved_contributions=3, account_verified=False, has_archival_mention=False)
+    assert not eligible_historian_contributor(
+        approved_contributions=3, account_verified=True, has_archival_mention=True)
