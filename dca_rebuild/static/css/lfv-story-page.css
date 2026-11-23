@@ -1,0 +1,203 @@
+/* The Vault's story: compact 3 x 2 disclosures below the founder letter. */
+html.lfv-sitewide body main#vault-story.vault-section-page {
+  box-sizing:border-box; max-width:1080px!important;
+  width:calc(100% - 2 * var(--lfv-gutter,24px))!important;
+  margin:0 auto!important; padding:clamp(22px,3vw,38px) 0 70px!important;
+  color:var(--lfv-ink);
+}
+html.lfv-sitewide #vault-story * { box-sizing:border-box; }
+html.lfv-sitewide #vault-story [hidden] { display:none!important; }
+html.lfv-sitewide #vault-story .lfv-story-breadcrumb {
+  display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  margin:0 0 24px; font-size:.77rem; line-height:1.4; color:var(--lfv-muted);
+}
+html.lfv-sitewide #vault-story .lfv-story-breadcrumb a {
+  color:var(--lfv-ink)!important; text-decoration:underline!important;
+  text-decoration-color:var(--lfv-line)!important; text-underline-offset:4px;
+}
+html.lfv-sitewide #vault-story .lfv-story-eyebrow {
+  margin:0 0 12px!important; color:var(--lfv-muted)!important;
+  font-size:.69rem!important; line-height:1.4!important;
+  font-weight:800!important; letter-spacing:.075em!important;
+  text-transform:uppercase!important;
+}
+html.lfv-sitewide body main#vault-story > header.lfv-story-header {
+  background:transparent!important; border:0!important;
+  border-top:2px solid var(--lfv-line)!important;
+  padding:24px 0 28px!important; margin:0 0 18px!important;
+  border-radius:0!important; box-shadow:none!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-header h1 {
+  margin:0 0 12px!important; padding:0!important;
+  font-size:clamp(2rem,4.1vw,3.1rem)!important;
+  line-height:1.1!important; letter-spacing:-.03em!important;
+  color:var(--lfv-ink)!important; text-transform:none!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-header>p:last-child {
+  max-width:70ch; margin:0!important;
+  color:var(--lfv-muted)!important; font-size:clamp(.99rem,1.25vw,1.1rem)!important;
+  line-height:1.58!important; text-transform:none!important;
+}
+html.lfv-sitewide body main#vault-story article.lfv-story-letter {
+  display:block; margin:0 0 clamp(35px,4vw,48px)!important;
+  padding:clamp(22px,3.3vw,40px)!important;
+  background:var(--lfv-surface)!important;
+  border:1px solid var(--lfv-line)!important;
+  border-radius:8px!important; box-shadow:none!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-letter h2 {
+  margin:0 0 22px!important;
+  color:var(--lfv-ink)!important;
+  font-size:clamp(1.55rem,2.7vw,2.3rem)!important;
+  line-height:1.15!important; letter-spacing:-.018em!important;
+  text-transform:none!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-letter-body { max-width:73ch; }
+html.lfv-sitewide #vault-story .lfv-story-letter-body p {
+  max-width:100%; margin:0 0 16px!important; padding:0!important;
+  color:var(--lfv-ink)!important; font-size:clamp(.96rem,1.08vw,1.04rem)!important;
+  font-weight:400!important; line-height:1.68!important;
+  letter-spacing:normal!important; text-transform:none!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-letter-body p:last-child { margin-bottom:0!important; }
+html.lfv-sitewide #vault-story .lfv-story-signature {
+  margin:27px 0 0; padding:20px 0 0;
+  border-top:1px solid var(--lfv-line);
+  display:flex; flex-direction:column; gap:4px; align-items:start;
+}
+html.lfv-sitewide #vault-story .lfv-story-signature p {
+  margin:0 0 7px!important; font-size:.93rem!important;
+  color:var(--lfv-ink)!important; text-transform:none!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-signature strong {
+  font-size:1.22rem; line-height:1.3; color:var(--lfv-ink);
+}
+html.lfv-sitewide #vault-story .lfv-story-signature span {
+  font-size:.78rem; line-height:1.45; color:var(--lfv-muted);
+}
+html.lfv-sitewide body main#vault-story>section.lfv-story-explore {
+  padding:0!important; margin:0 0 34px!important;
+  background:transparent!important; border:0!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-section-head {
+  margin:0 0 19px; max-width:74ch;
+}
+html.lfv-sitewide #vault-story .lfv-story-section-head h2 {
+  margin:0 0 6px!important; font-size:clamp(1.55rem,2.65vw,2rem)!important;
+  line-height:1.18!important; color:var(--lfv-ink)!important;
+  text-transform:none!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-section-head p:last-child {
+  max-width:70ch; margin:0!important; color:var(--lfv-muted)!important;
+  font-size:.91rem!important; line-height:1.6!important;
+  text-transform:none!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-nav {
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:11px; margin:0 0 14px;
+}
+html.lfv-sitewide #vault-story .lfv-story-topic {
+  appearance:none; display:flex!important; flex-direction:column;
+  align-items:stretch; justify-content:flex-start; text-align:left;
+  min-height:140px; padding:18px 17px!important;
+  background:var(--lfv-surface)!important; color:var(--lfv-ink)!important;
+  border:1px solid var(--lfv-line)!important;
+  border-radius:8px!important; box-shadow:none!important;
+  cursor:pointer; transition:background .16s ease,border-color .16s ease;
+  width:100%; max-width:100%; font-family:var(--lfv-font,Arial,sans-serif);
+}
+html.lfv-sitewide #vault-story .lfv-story-topic:hover {
+  background:var(--lfv-surface-muted)!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-topic[aria-expanded="true"] {
+  border-color:var(--lfv-ink)!important;
+  background:var(--lfv-surface-muted)!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-topic:focus-visible {
+  outline:3px solid var(--lfv-gold)!important; outline-offset:3px;
+}
+html.lfv-sitewide #vault-story .lfv-story-topic-top {
+  display:flex; justify-content:space-between; gap:10px; align-items:center;
+  margin:0 0 14px; font-size:.65rem; font-weight:800;
+  letter-spacing:.065em; line-height:1.3; color:var(--lfv-muted);
+}
+html.lfv-sitewide #vault-story .lfv-story-topic-symbol {
+  display:inline-grid; place-items:center; width:23px; height:23px;
+  flex:none; font-size:1.2rem; font-weight:500;
+  border:1px solid var(--lfv-line); border-radius:50%;
+  color:var(--lfv-ink); line-height:1;
+}
+html.lfv-sitewide #vault-story .lfv-story-topic strong {
+  font-size:clamp(.99rem,1.42vw,1.13rem); font-weight:800;
+  letter-spacing:-.01em; line-height:1.25; color:var(--lfv-ink);
+  text-transform:none;
+}
+html.lfv-sitewide #vault-story .lfv-story-topic small {
+  margin-top:7px; font-size:.77rem; font-weight:500;
+  line-height:1.4; color:var(--lfv-muted); text-transform:none;
+}
+html.lfv-sitewide #vault-story .lfv-story-panel {
+  padding:clamp(20px,2.8vw,31px)!important;
+  border:1px solid var(--lfv-line)!important;
+  border-radius:8px!important;
+  background:var(--lfv-surface-muted)!important; color:var(--lfv-ink)!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-panel h3 {
+  margin:0 0 12px!important; color:var(--lfv-ink)!important;
+  font-size:clamp(1.15rem,2vw,1.5rem)!important;
+  line-height:1.24!important; text-transform:none!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-panel>p:not(.lfv-story-eyebrow) {
+  max-width:76ch; margin:0!important;
+  color:var(--lfv-ink)!important; font-size:clamp(.93rem,1.1vw,1.04rem)!important;
+  line-height:1.67!important; text-transform:none!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-inline-link {
+  display:inline-flex; gap:13px; margin-top:16px; padding-bottom:4px;
+  color:var(--lfv-ink)!important; font-weight:750; font-size:.87rem;
+  text-decoration:none!important; border-bottom:1px solid var(--lfv-ink);
+}
+html.lfv-sitewide body main#vault-story > footer.lfv-story-next {
+  display:flex; gap:20px 35px; align-items:center; justify-content:space-between;
+  padding:22px 0 0; border-top:1px solid var(--lfv-line);
+  background:transparent!important; box-shadow:none!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-next h2 {
+  margin:0 0 6px!important; color:var(--lfv-ink)!important;
+  font-size:clamp(1.2rem,1.9vw,1.45rem)!important;
+  line-height:1.28!important; text-transform:none!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-next p {
+  margin:0!important; font-size:.87rem!important; line-height:1.5!important;
+  color:var(--lfv-muted)!important; text-transform:none!important;
+}
+html.lfv-sitewide #vault-story .lfv-story-next-links {
+  display:flex; flex-wrap:wrap; justify-content:flex-end; gap:12px 22px;
+}
+html.lfv-sitewide #vault-story .lfv-story-next-links a {
+  white-space:nowrap; font-size:.84rem; font-weight:800;
+  color:var(--lfv-ink)!important; text-decoration:none!important;
+  border-bottom:1px solid var(--lfv-line); padding:8px 0;
+}
+html.lfv-sitewide #vault-story .lfv-story-next-links a:hover,
+html.lfv-sitewide #vault-story .lfv-story-next-links a:focus-visible {
+  text-decoration:underline!important; text-underline-offset:4px;
+}
+@media(max-width:760px) {
+  html.lfv-sitewide #vault-story .lfv-story-nav { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  html.lfv-sitewide body main#vault-story > footer.lfv-story-next { align-items:flex-start; flex-direction:column; }
+  html.lfv-sitewide #vault-story .lfv-story-next-links { justify-content:flex-start; }
+}
+@media(max-width:430px) {
+  html.lfv-sitewide #vault-story .lfv-story-topic { padding:14px 12px!important; min-height:144px; }
+  html.lfv-sitewide #vault-story .lfv-story-topic-top { font-size:.59rem; margin-bottom:12px; }
+  html.lfv-sitewide #vault-story .lfv-story-topic small { font-size:.72rem; }
+  html.lfv-sitewide body main#vault-story article.lfv-story-letter { padding:22px 18px!important; }
+}
+@media(max-width:350px) {
+  html.lfv-sitewide #vault-story .lfv-story-nav { grid-template-columns:1fr; }
+  html.lfv-sitewide #vault-story .lfv-story-topic { min-height:110px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  html.lfv-sitewide #vault-story .lfv-story-topic { transition:none; }
+}
