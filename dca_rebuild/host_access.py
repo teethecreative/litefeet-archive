@@ -297,7 +297,8 @@ def save_battle_video(db, record, key, url, actor_type, actor_id=None, expected_
     added = db.get(VaultAddedBattle, key)
     find_matchup(record, key, [added] if added and added.event_slug == record["slug"] else [])
     current = db.get(VaultBattleVideo, key)
-    prior = current.youtube_url if current else ""
+    prior = current.youtube_url if current else legacy_youtube_url(
+        (db.get(VaultBattleOutcome, key).source_note if db.get(VaultBattleOutcome, key) else ""))
     if expected_url is not None and expected_url != prior:
         abort(409, "Video was updated by someone else. Refresh before saving again")
     normalized = normalize_youtube_url(url)
@@ -701,7 +702,6 @@ def install_host_access(app, ns):
         record = find_record(slug)
         if not record or (record.get("presenter") or "").casefold() != HOST_LABELS[account["host_key"]].casefold():
             abort(403, "The battle belongs to another host")
-        matchup = find_matchup(record, battle_key)
         if any(row["key"] == battle_key for group in matchups(record)
                if roster_only(group["section"]) for row in group["items"]):
             abort(403, "Team roster is not a matchup")
