@@ -1,0 +1,33 @@
+<div class="lfv-profile-sections" aria-label="Recorded activity">
+  <section class="lfv-profile-section" aria-labelledby="lfv-profile-wins">
+    <div class="lfv-profile-heading"><h2 id="lfv-profile-wins">Awards won</h2><span>{{ profile.wins|length }}</span></div>
+    {% if profile.wins %}
+    <ul class="lfv-profile-rows">
+      {% for win in profile.wins %}
+      <li><div><strong>{{ win.category }}</strong><p>{{ win.program }} · {{ win.year }}</p></div><a href="{{ win.href }}">View award record <span aria-hidden="true">→</span></a></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="lfv-profile-empty">No award wins linked in the Vault yet.</p>{% endif %}
+  </section>
+  <section class="lfv-profile-section" aria-labelledby="lfv-profile-nominations">
+    <div class="lfv-profile-heading"><h2 id="lfv-profile-nominations">Nominations</h2><span>{{ profile.nominations|length }}</span></div>
+    {% if profile.nominations %}
+    <ul class="lfv-profile-rows">
+      {% for nominee in profile.nominations %}
+      <li><div><strong>{{ nominee.category }}</strong><p>{{ nominee.program }} · {{ nominee.year }}{% if nominee.provisional %} · Provisional nomination{% endif %}</p></div><a href="{{ nominee.href }}">View nomination <span aria-hidden="true">→</span></a></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="lfv-profile-empty">No nominations linked in the Vault yet.</p>{% endif %}
+  </section>
+  <section class="lfv-profile-section" aria-labelledby="lfv-profile-battles">
+    <div class="lfv-profile-heading"><h2 id="lfv-profile-battles">Battle listings</h2><span>{{ profile.battles|length }}</span></div>
+    <p class="lfv-profile-disclaimer">These are announced matchups or participant listings from archived events, not confirmation a battle took place or who won.</p>
+    {% if profile.battles %}
+    <ul class="lfv-profile-rows">
+      {% for battle in profile.battles %}
+      <li><div><strong>{{ battle.matchup }}</strong><p>{{ battle.event }} · {{ battle.date_label }}</p><small>{{ battle.status }}</small></div><a href="{{ battle.href }}">View event record <span aria-hidden="true">→</span></a></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="lfv-profile-empty">No exact-name battle listings linked in the Vault yet.</p>{% endif %}
+  </section>
+</div>
