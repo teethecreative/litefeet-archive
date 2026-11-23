@@ -31,7 +31,6 @@ SESSION_TIMEZONE = "lf9e_local_timezone"
 SESSION_LOCAL_DAY = "lf9e_local_verification_day"
 SESSION_CSRF = "lfv_verify_csrf"
 VALIDITY = timedelta(minutes=10)
-VERIFIED_SECONDS = 7 * 24 * 3600
 MAX_ATTEMPTS = 5
 MAX_EMAILS_PER_HOUR = 5
 MAX_IP_EMAILS_PER_HOUR = 100
@@ -72,39 +71,52 @@ def _local_day(timezone_name, *, now=None):
     return instant.astimezone(ZoneInfo(_safe_timezone(timezone_name))).date().isoformat()
 
 
-def start_nomination_day(timezone_name):
-    """Bind browser verification to the current date in its local timezone."""
-    zone = _safe_timezone(timezone_name)
+def start_site_session(timezone_name=None):
+    """Attach an authenticated browser session to its local calendar day.
+
+    This is a login lifetime, *not* a nomination voting or cooldown window.
+    A browser-provided timezone is bound at login rather than being adjusted
+    on every request, and unsupported zones fall back safely to UTC.
+    """
+    zone = _safe_timezone(
+        timezone_name or request.cookies.get("lfv_user_timezone")
+    )
     session[SESSION_TIMEZONE] = zone
     session[SESSION_LOCAL_DAY] = _local_day(zone)
 
 
-def expire_nomination_at_midnight():
-    """Expire nomination identity on the first request after local midnight.
+def logout_site_session_at_midnight():
+    """Log out the entire authenticated site session at local midnight.
 
-    The verification state is distinct from nomination submissions and their
-    server-side rolling 24-hour cooldowns, which must remain intact.
+    Clear all Flask session credentials (admin and DCA included), not just a
+    verified email marker. Database nomination entries and the independent
+    rolling 24-hour cooldown are untouched.
     """
-    keys = (SESSION_VERIFIED, SESSION_VERIFIED_AT, SESSION_CHALLENGE,
-            "lf9e_recent_hash", "lf9e_reminder_hash")
-    if not any(session.get(key) for key in keys):
+    identity_keys = (
+        SESSION_VERIFIED, SESSION_CHALLENGE,
+        "lf9e_recent_hash", "lf9e_reminder_hash",
+        "ledger_admin_authenticated",
+    )
+    if not any(session.get(key) for key in identity_keys):
         return False
-    zone = session.get(SESSION_TIMEZONE)
     day = session.get(SESSION_LOCAL_DAY)
-    if day and day == _local_day(zone):
+    if not day:
+        # Existing authenticated sessions created before this rollout.
+        # Bind them for the remainder of their current local day.
+        start_site_session()
         return False
-    for key in (*keys, "lf9e_skipped", SESSION_TIMEZONE, SESSION_LOCAL_DAY):
-        session.pop(key, None)
+    if day == _local_day(session.get(SESSION_TIMEZONE)):
+        return False
+    session.clear()
     return True
 
 
 def verified_nominator_hash():
-    expire_nomination_at_midnight()
+    logout_site_session_at_midnight()
     who = session.get(SESSION_VERIFIED)
     verified_at = session.get(SESSION_VERIFIED_AT)
     if (not isinstance(who, str) or len(who) != 64
-        or not isinstance(verified_at, int)
-        or not 0 <= time.time() - verified_at < VERIFIED_SECONDS):
+        or not isinstance(verified_at, int)):
         return None
     return who
 
@@ -209,7 +221,7 @@ def begin_verification(app, session_factory, email, network="", timezone_name=No
     session.pop(SESSION_TIMEZONE, None)
     session.pop(SESSION_LOCAL_DAY, None)
     session.pop(SESSION_CHALLENGE, None)
-    start_nomination_day(timezone_name)
+    start_site_session(timezone_name)
     session.pop("lf9e_skipped", None)
 
     with session_factory.begin() as db:
@@ -265,8 +277,8 @@ def begin_verification(app, session_factory, email, network="", timezone_name=No
 
 def install_email_verification(app, session_factory, private_hash):
     @app.before_request
-    def dca_local_midnight_expiry():
-        expire_nomination_at_midnight()
+    def sitewide_automatic_midnight_logout():
+        logout_site_session_at_midnight()
 
     status = delivery_config_status()
     app.logger.warning(
@@ -354,7 +366,7 @@ def install_email_verification(app, session_factory, private_hash):
             session.pop(SESSION_CHALLENGE, None)
             session[SESSION_VERIFIED] = who
             session[SESSION_VERIFIED_AT] = int(time.time())
-            start_nomination_day(request.form.get("timezone") or session.get(SESSION_TIMEZONE))
+            start_site_session(request.form.get("timezone") or session.get(SESSION_TIMEZONE))
             session["lf9e_recent_hash"] = who
             session["lf9e_reminder_hash"] = who
             flash("Email verified. You're ready to nominate.")
