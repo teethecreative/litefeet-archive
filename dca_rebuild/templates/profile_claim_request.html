@@ -12,7 +12,7 @@
 <p>Request verified ownership of <strong>{{ profile.name }}</strong>{{ ' (team / crew)' if profile.is_team else '' }}. All requests are reviewed by a Vault administrator before anyone receives editing or Wall moderation privileges.</p>
 {% for notice in get_flashed_messages(category_filter=['claim']) %}<p role="status" class="lfv-claim-panel">{{ notice }}</p>{% endfor %}
 {% if owner_status == 'owned_by_you' %}
-<section class="lfv-claim-panel"><h2>You're the verified profile owner</h2><p>You already have access to moderate posts on this profile.</p><p><a href="{{ url_for('vault_wall_owner_queue') }}">Review Wall posts</a></p></section>
+<section class="lfv-claim-panel"><h2>You're the verified profile owner</h2><p>You already have access to moderate posts on this profile.</p><p><a href="{{ url_for('vault_owner_profile_editor',profile=profile.href) }}">Manage your profile</a> · <a href="{{ url_for('vault_wall_owner_queue') }}">Review Wall posts</a></p></section>
 {% elif owner_status == 'claimed' %}
 <section class="lfv-claim-panel"><h2>Profile already claimed</h2><p>This profile already has an approved owner. If you believe this is incorrect, contact the Vault administrator to request a review.</p></section>
 {% elif own_claim and own_claim.status == 'pending' %}
