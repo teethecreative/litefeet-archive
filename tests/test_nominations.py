@@ -475,7 +475,7 @@ def test_old_nominee_can_receive_moderated_reason_without_nomination(website, da
 def test_all_existing_writein_categories_show_support_actions(website):
     client = website.test_client()
     html = client.get('/write-ins').get_data(as_text=True)
-    assert html.count('View category / Nominate') >= 2
+    assert html.count('View nominees &amp; nominate') >= 2
     assert 'OPEN FOR NOMINATIONS' in html
     assert 'lfv-writeins-grid' in html
 
@@ -493,7 +493,7 @@ def test_unstaged_historical_writein_can_be_supported_after_email(website, datab
     page = client.get('/write-ins')
     html = page.get_data(as_text=True)
     assert 'Best Workshop' in html
-    assert 'View category / Nominate' in html
+    assert 'View nominees &amp; nominate' in html
     with client.session_transaction() as sess:
         token = sess['lf9e_writeins_csrf']
     result = client.post('/awards/dancers-choice/write-ins/activate',
@@ -563,10 +563,10 @@ def test_writein_directory_shows_same_nominee_totals_as_standings(website, datab
                     name='Write In Dancer')
     client = website.test_client()
     html = client.get('/write-ins').get_data(as_text=True)
-    assert 'class="lfv-writeins-card"' in html
+    assert 'class="lfv-dca-grid-card"' in html
     assert 'Write In Dancer' in html
-    assert 'class="lfv-writeins-preview-total"' in html
-    assert '<span class="lfv-writeins-preview-total" aria-label="2 nominations">2</span>' in html
+    assert 'class="lfv-dca-grid-preview"' in html
+    assert '<span>2</span>' in html
     assert 'View nominees &amp; nominate' in html
     standings = client.get(PATH + '?view=results').get_data(as_text=True)
     assert 'Write In Dancer' in standings
