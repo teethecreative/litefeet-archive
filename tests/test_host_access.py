@@ -82,7 +82,8 @@ def test_host_login_is_scoped_and_cannot_edit_other_hosts_battles(website, datab
     page = client.get("/hosts/workspace")
     assert page.status_code == 200
     assert "Body Bag" in page.get_data(as_text=True)
-    assert "HypeItUpTV" not in page.get_data(as_text=True)
+    assert "Who&#39;s World Is This?!" not in page.get_data(as_text=True)
+    assert "Anna Luv vs Chris Stylez" not in page.get_data(as_text=True)
     with client.session_transaction() as saved:
         csrf = saved["vault_host_claim_csrf"]
     record = find_record("whos-world-is-this-2025")
