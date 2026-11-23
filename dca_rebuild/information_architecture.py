@@ -278,9 +278,14 @@ def install_information_architecture(app, ns):
             if item['slug'] != slug and record.get('series')
             and item.get('series') == record['series']
         ][:8]
+        profile = None
+        if record.get("collection") == "people":
+            from dca_rebuild.public_profiles import profile_index
+            profile = profile_index(ns["SessionLocal"]).for_archive_record(slug)
         return render_template('archive_record.html', record=public_record(record),
                                related_records=[public_record(item) for item in related_records],
                                archive_csrf=session['vault_archive_csrf'],
+                               profile=profile,
                                **public_content())
 
     @app.post('/archive/records/<slug>/verify', endpoint='vault_archive_verify')
