@@ -1,0 +1,138 @@
+/* Founder page: quiet editorial presentation, consistent in both themes. */
+html.lfv-sitewide body main#vault-founder.vault-section-page {
+  box-sizing: border-box;
+  max-width: 1120px !important;
+  width: calc(100% - 2 * var(--lfv-gutter, 24px)) !important;
+  margin: 0 auto !important;
+  padding: clamp(22px, 3vw, 38px) 0 72px !important;
+  color: var(--lfv-ink);
+}
+html.lfv-sitewide #vault-founder * { box-sizing: border-box; }
+html.lfv-sitewide #vault-founder .lfv-founder-breadcrumb {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  margin: 0 0 clamp(22px, 3vw, 35px);
+  color: var(--lfv-muted); font-size: .78rem; line-height: 1.4;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-breadcrumb a {
+  color: var(--lfv-ink); text-decoration: underline;
+  text-decoration-color: var(--lfv-line); text-underline-offset: 4px;
+}
+html.lfv-sitewide body main#vault-founder > header.lfv-founder-header {
+  padding: 0 0 clamp(25px, 3vw, 36px) !important;
+  margin: 0 0 clamp(18px, 2.6vw, 28px) !important;
+  border: 0 !important; border-bottom: 1px solid var(--lfv-line) !important;
+  border-radius: 0 !important; background: transparent !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-kicker,
+html.lfv-sitewide #vault-founder .lfv-founder-section-label {
+  margin: 0 0 15px !important; color: var(--lfv-muted) !important;
+  font-size: .7rem !important; font-weight: 800 !important;
+  letter-spacing: .085em !important; line-height: 1.4 !important;
+  text-transform: uppercase !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-intro {
+  display: grid; grid-template-columns: minmax(190px, .8fr) minmax(0, 1.2fr);
+  align-items: end; gap: clamp(20px, 4vw, 66px);
+}
+html.lfv-sitewide #vault-founder h1 {
+  margin: 0 0 6px !important; padding: 0 !important;
+  color: var(--lfv-ink) !important; text-transform: none !important;
+  font-size: clamp(2.6rem, 6vw, 4.5rem) !important;
+  font-weight: 850 !important; letter-spacing: -.045em !important;
+  line-height: 1.02 !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-role {
+  margin: 0 !important; color: var(--lfv-muted) !important;
+  font-size: .85rem !important; font-weight: 650 !important;
+  text-transform: none !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-lead {
+  max-width: 53ch; margin: 0 !important;
+  font-size: clamp(1.02rem, 1.5vw, 1.19rem) !important;
+  line-height: 1.6 !important; font-weight: 550 !important;
+  color: var(--lfv-ink) !important; text-transform: none !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-layout {
+  display: grid; grid-template-columns: minmax(0, 1.72fr) minmax(235px, .84fr);
+  gap: clamp(16px, 2.5vw, 28px); align-items: start;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-letter,
+html.lfv-sitewide #vault-founder .lfv-founder-card {
+  border: 1px solid var(--lfv-line) !important;
+  border-radius: 8px !important; box-shadow: none !important;
+  background: var(--lfv-surface) !important; color: var(--lfv-ink) !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-letter {
+  padding: clamp(23px, 3.7vw, 46px) !important;
+  margin: 0 !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-letter h2 {
+  margin: 0 0 clamp(22px, 2.5vw, 32px) !important;
+  color: var(--lfv-ink) !important;
+  font-size: clamp(1.7rem, 3vw, 2.35rem) !important;
+  line-height: 1.12 !important; font-weight: 800 !important;
+  letter-spacing: -.02em !important; text-transform: none !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-letter-copy { max-width: 68ch; }
+html.lfv-sitewide #vault-founder .lfv-founder-letter-copy p {
+  margin: 0 0 17px !important; max-width: 100% !important;
+  color: var(--lfv-ink) !important; font-weight: 400 !important;
+  font-size: clamp(.96rem, 1.12vw, 1.05rem) !important;
+  line-height: 1.7 !important; letter-spacing: normal !important;
+  text-transform: none !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-letter-copy p:last-child { margin-bottom: 0 !important; }
+html.lfv-sitewide #vault-founder .lfv-founder-signature {
+  border-top: 1px solid var(--lfv-line); margin-top: 30px; padding-top: 22px;
+  display: flex; flex-direction: column; align-items: start; gap: 4px;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-signature p {
+  margin: 0 0 8px !important; color: var(--lfv-ink) !important;
+  font-size: .94rem !important; text-transform: none !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-signature strong {
+  color: var(--lfv-ink); font-size: 1.35rem; line-height: 1.3;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-signature span {
+  color: var(--lfv-muted); font-size: .8rem; line-height: 1.5;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-sidebar { display: grid; gap: 16px; }
+html.lfv-sitewide #vault-founder .lfv-founder-card {
+  margin: 0 !important; padding: clamp(19px, 2.25vw, 27px) !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-card h3 {
+  margin: 0 0 14px !important; font-size: clamp(1.12rem, 1.45vw, 1.32rem) !important;
+  line-height: 1.3 !important; letter-spacing: -.012em !important;
+  text-transform: none !important; color: var(--lfv-ink) !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-card p:not(.lfv-founder-section-label) {
+  margin: 0 0 12px !important; font-size: .87rem !important;
+  line-height: 1.6 !important; color: var(--lfv-muted) !important;
+  text-transform: none !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-card p:last-child { margin-bottom: 0 !important; }
+html.lfv-sitewide #vault-founder .lfv-founder-links a {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; min-height: 44px; border-top: 1px solid var(--lfv-line);
+  padding: 12px 0; color: var(--lfv-ink) !important;
+  font-size: .86rem; font-weight: 750; text-decoration: none !important;
+}
+html.lfv-sitewide #vault-founder .lfv-founder-links a span { color: var(--lfv-muted); }
+html.lfv-sitewide #vault-founder .lfv-founder-links a:hover,
+html.lfv-sitewide #vault-founder .lfv-founder-links a:focus-visible {
+  text-decoration: underline !important; text-underline-offset: 3px;
+}
+@media (max-width: 790px) {
+  html.lfv-sitewide #vault-founder .lfv-founder-layout { grid-template-columns: minmax(0, 1fr); }
+  html.lfv-sitewide #vault-founder .lfv-founder-sidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 580px) {
+  html.lfv-sitewide body main#vault-founder.vault-section-page { padding-bottom: 50px !important; }
+  html.lfv-sitewide #vault-founder .lfv-founder-intro { grid-template-columns: 1fr; gap: 16px; }
+  html.lfv-sitewide #vault-founder .lfv-founder-sidebar { grid-template-columns: 1fr; }
+  html.lfv-sitewide #vault-founder .lfv-founder-letter { padding: 22px 19px !important; }
+  html.lfv-sitewide #vault-founder .lfv-founder-kicker { margin-bottom: 12px !important; }
+  html.lfv-sitewide #vault-founder .lfv-founder-letter-copy p { margin-bottom: 15px !important; }
+}
