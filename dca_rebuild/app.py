@@ -33,6 +33,7 @@ from dca_rebuild.models import (
     DCANominationSubmission,
     DCANominationContact,
     LedgerPageView,
+    VaultBattleOutcome, VaultBattleOutcomeHistory, VaultBattleVote,
 )
 from dca_rebuild.models import LedgerEra
 from dca_rebuild.lfa_2026_data import LFA_2026_WINNERS
@@ -5290,6 +5291,9 @@ if (os.environ.get("DCA_2026_FOLLOWUPS_ENABLED") == "true"
     install_nomination_followups(app, SessionLocal)
 
 # Read-only public section navigation; existing business handlers are unchanged.
+from dca_rebuild.battle_polls import install_battle_polls
+install_battle_polls(app, globals())
+
 from dca_rebuild.information_architecture import install_information_architecture
 install_information_architecture(app, globals())
 
