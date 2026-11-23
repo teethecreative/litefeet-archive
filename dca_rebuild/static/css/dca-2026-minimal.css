@@ -79,6 +79,31 @@ html.lfv-sitewide main#nominations.lf9e .lfv-dca-grid-preview li {
 html.lfv-sitewide main#nominations.lf9e .lfv-dca-grid-preview li span:last-child {
   font-variant-numeric: tabular-nums; font-size: .73rem; color: var(--dca-muted); white-space: nowrap;
 }
+/* Nominee profile names are text links, not gold call-to-action buttons.
+   Override the legacy broad `main a` rule from dca.css. */
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-grid-preview a {
+  display: inline !important;
+  width: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--dca-card-ink) !important;
+  font: inherit;
+  font-weight: 700 !important;
+  line-height: inherit !important;
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-grid-preview a:hover {
+  color: var(--dca-card-ink) !important;
+  background: transparent !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+}
 html.lfv-sitewide main#nominations.lf9e .lfv-dca-grid-cta {
   color: var(--dca-card-ink); font-size: .77rem; font-weight: 800;
   margin-top: auto; padding-top: 2px;
