@@ -34,10 +34,9 @@
 {% elif section == 'lock-in' %}
 {% include "lock_in.html" %}
 {% elif section == 'awards' %}
-<header><p class="vault-kicker">AWARDS</p><h1>Recognition from the culture.</h1><p>Explore three distinct awards programs recognizing the people and contributions that shape LiteFeet.</p></header>
+<header><p class="vault-kicker">AWARDS</p><h1>Recognition from the culture.</h1><p>Explore the Vault's awards programs recognizing the people and contributions that shape LiteFeet.</p></header>
 <div class="vault-section-grid">
   <a class="vault-collection" href="{{ url_for('vault_dca_program') }}"><strong>Dancer’s Choice Awards</strong><span>Community-led categories, nominations, and voting. Explore the 2026 round and earlier editions.</span></a>
-  <a class="vault-collection" href="{{ url_for('lfa_home') }}"><strong>LiteFeet Awards</strong><span>Explore the annual awards program, preserved results, and community contributions.</span></a>
   <a class="vault-collection" href="{{ url_for('hypeitup_awards') }}"><strong>HypeItUpTV Awards</strong><span>Follow the HypeItUpTV Awards. Program details and verified results will be added as they become available.</span></a>
 </div>
 {% elif section == 'dca' %}
@@ -55,7 +54,7 @@
 <div class="vault-section-grid lfv-dca-editions"><a class="vault-collection" href="{{ url_for('dca_2026_home') }}"><strong>2026</strong><span>Current DCA process, nominations and category results.</span></a><a class="vault-collection" href="{{ url_for('dca_2023_home') }}"><strong>2023</strong><span>Earlier DCA categories, nominees and award results.</span></a></div>
 {% elif section == 'community' %}
 <header><p class="vault-kicker">COMMUNITY</p><h1>Help preserve LiteFeet history.</h1><p>Share sources, correct the record and keep the community informed.</p></header>
-<section id="contribute"><h2>Historical information & corrections</h2><p>Submit award records, corrections and supporting sources through the existing review form.</p><a href="{{ url_for('lfa_home') }}#contribute">Contribute historical information</a></section>
+<section id="contribute"><h2>Historical information & corrections</h2><p>For sources and factual archive corrections, contact the Vault team. Award nomination requests are not collected here.</p><a href="{{ vault_contact }}">Contact the Vault</a></section>
 <section><h2>Media & general enquiries</h2><p>For photographs, footage or other archive enquiries, contact the Vault team.</p><a href="{{ vault_contact }}">Contact the Vault</a></section>
 {% if updates %}<section id="updates"><h2>Community updates</h2>{% for update in updates %}<article class="vault-update"><h3>{{ update.title }}</h3><time datetime="{{ update.created_at.isoformat() }}">{{ update.created_at.strftime('%B %d, %Y') }}</time><p>{{ update.details }}</p></article>{% endfor %}</section>{% endif %}
 {% elif section == 'about' %}
