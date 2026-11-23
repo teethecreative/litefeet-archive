@@ -14,10 +14,18 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/archive-v2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/archive-v3.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-public-profiles.css') }}">
+{% if record.record_type == 'film' %}
+<style>
+html.lfv-sitewide #archive-record.lfv-film-record,
+html.lfv-sitewide #archive-record.lfv-film-record * {
+  text-transform: none !important;
+}
+</style>
+{% endif %}
 </head>
 <body>
 {% include "_navigation.html" %}
-<main class="vault-section-page lfv-archive-detail" id="archive-record">
+<main class="vault-section-page lfv-archive-detail{% if record.record_type == "film" %} lfv-film-record{% endif %}" id="archive-record">
   <div class="lfv-archive-back"><a class="lfv-archive-back-link" href="{{ url_for('vault_archive') }}">The Archive</a> <span aria-hidden="true">/</span> {{ record.collection | capitalize }}</div>
   <header class="lfv-archive-record-hero">
     <p class="vault-kicker">{{ 'Battles & Events' if record.collection == 'events' else record.collection | capitalize }}</p>
@@ -215,9 +223,9 @@
       {% endif %}
       <div class="lfv-archive-redirect">
         {% if record.source_kind == 'research' %}
-        <a href="{{ url_for('vault_history_guide') }}">READ THE FULL CULTURAL HISTORY <span aria-hidden="true">→</span></a>
+        <a href="{{ url_for('vault_history_guide') }}">{{ "Read the full cultural history" if record.record_type == "film" else "READ THE FULL CULTURAL HISTORY" }} <span aria-hidden="true">→</span></a>
         {% endif %}
-        <a href="{{ url_for('vault_community') }}#contribute">CONTRIBUTE A SOURCE <span aria-hidden="true">→</span></a>
+        <a href="{{ url_for('vault_community') }}#contribute">{{ "Contribute a source" if record.record_type == "film" else "CONTRIBUTE A SOURCE" }} <span aria-hidden="true">→</span></a>
       </div>
     </aside>
   </div>
