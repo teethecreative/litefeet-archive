@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Complete your nominations | The LiteFeet Vault</title>
+<title>Check Missing Details | The LiteFeet Vault</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
@@ -13,8 +13,8 @@
 {% include "_navigation.html" %}
 <main class="lfv-nom-followup-page">
   <p class="lfv-nom-followup-kicker">Dancer's Choice Awards 2026</p>
-  <h1>Complete your nominations</h1>
-  <p>Some nominations may need more information before they can be reviewed. Your original nominations are saved. Adding details will not create another nomination or change the nomination count.</p>
+  <h1>Check Missing Details</h1>
+  <p>Some nominations need more information. Your nominations are saved, and adding details won't increase their totals.</p>
   {% with messages = get_flashed_messages() %}{% for message in messages %}
   <p class="lf9e-message" role="status">{{ message }}</p>
   {% endfor %}{% endwith %}
@@ -24,21 +24,21 @@
   <section class="lfv-nom-followup-card" aria-labelledby="lfv-followup-{{ item.nominee_id }}">
     <p class="lfv-nom-followup-category">{{ item.category }}</p>
     <h2 id="lfv-followup-{{ item.nominee_id }}">{{ item.nominee }}</h2>
-    <p>Tell us about their LiteFeet activity or contributions between November 2025 and November 2026.</p>
+    <p>Tell us about their LiteFeet contributions between November 2025 and November 2026.</p>
     <form method="post" action="{{ url_for('dca_my_nomination_followups') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <input type="hidden" name="nominee_id" value="{{ item.nominee_id }}">
-      <label for="lfv-followup-reason-{{ item.nominee_id }}">Why should this person be recognized?</label>
+      <label for="lfv-followup-reason-{{ item.nominee_id }}">Why does this nomination deserve recognition?</label>
       <textarea id="lfv-followup-reason-{{ item.nominee_id }}" name="reason" minlength="20" maxlength="2000" rows="5" required placeholder="Mention battles, sessions, music, teaching, community work, or another relevant contribution."></textarea>
       <label for="lfv-followup-source-{{ item.nominee_id }}">Supporting link (optional)</label>
       <input id="lfv-followup-source-{{ item.nominee_id }}" type="url" name="evidence_url" maxlength="500" placeholder="https://">
-      <button type="submit" class="lfv-nom-followup-submit">Submit details for review</button>
+      <button type="submit" class="lfv-nom-followup-submit">Submit Details</button>
     </form>
   </section>
   {% endfor %}
   {% else %}
   <section class="lfv-nom-followup-card">
-    <h2>You're all caught up</h2>
+    <h2>You're All Caught Up</h2>
     <p>There are no additional details to submit right now. Any information you've already sent is still subject to review.</p>
   </section>
   {% endif %}
