@@ -430,16 +430,17 @@ def install_information_architecture(app, ns):
         return section_page('dca')
 
     app.view_functions['awards_home'] = lambda: section_page('awards')
-    app.view_functions['legacy_about'] = lambda: section_page('about')
+    # One public About page: the approved letter and interactive story.
+    app.view_functions['legacy_about'] = lambda: render_template('about_story.html', **public_content())
 
     @app.get('/about/our-story', endpoint='vault_story')
     def story_page():
-        return render_template('about_story.html', **public_content())
+        return redirect(url_for('legacy_about'), code=301)
 
     @app.get('/about/founder', endpoint='vault_founder')
     def founder_page():
-        # Preserve links from earlier releases without presenting a biography.
-        return redirect(url_for('vault_story'), code=301)
+        # Retain past bookmarks, never duplicate the About content.
+        return redirect(url_for('legacy_about'), code=301)
     # Old About deep links remain usable, but the content now lives on /about.
     for about_path, page, anchor in (
         ('letter', 'letter', 'letter'),
