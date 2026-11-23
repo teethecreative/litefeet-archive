@@ -16,7 +16,7 @@ from sqlalchemy.exc import IntegrityError
 
 from dca_rebuild.archive_catalog import find_record
 from dca_rebuild.email_verification import verified_nominator_hash
-from dca_rebuild.models import VaultBattleOutcome, VaultBattleOutcomeHistory, VaultBattleVote
+from dca_rebuild.models import VaultBattleOutcome, VaultBattleOutcomeHistory, VaultBattleVote, VaultBattleVideo
 
 OCCURRENCE = {"unconfirmed", "scheduled", "happened", "did_not_happen", "postponed"}
 RESULTS = {"unknown", "a", "b", "tie", "youtube_decide", "no_contest"}
@@ -38,6 +38,11 @@ def matchups(record):
         items = []
         for item_index, text in enumerate(group.get("items") or []):
             label = str(text)
+            # The two team labels on Massacre Pt. 2 are references for the
+            # following tag-team battles, not independent matchups.
+            if (record["slug"] == "litefeet-massacre-pt2-2026"
+                    and label in ("Tok City vs Gotham City", "Groove Fam vs Lyve Fam")):
+                continue
             fingerprint = f'{record["slug"]}\0{group_index}\0{item_index}\0{label}'
             key = hashlib.sha256(fingerprint.encode("utf-8")).hexdigest()
             parts = [p.strip() for p in re.split(r"\s+vs\.?\s+", label, flags=re.I)]
@@ -67,6 +72,10 @@ def build_battle_rows(record, factory, voter_hash=None):
             r.battle_key: r for r in db.query(VaultBattleOutcome)
             .filter(VaultBattleOutcome.battle_key.in_(keys)).all()
         }
+        videos = {
+            r.battle_key: r.youtube_url for r in db.query(VaultBattleVideo)
+            .filter(VaultBattleVideo.battle_key.in_(keys)).all()
+        }
         tally = {
             (key, choice): count for key, choice, count in db.query(
                 VaultBattleVote.battle_key, VaultBattleVote.choice,
@@ -88,6 +97,7 @@ def build_battle_rows(record, factory, voter_hash=None):
             item["occurred"] = row.occurred if row else "unconfirmed"
             item["result"] = row.result if row else "unknown"
             item["source_note"] = row.source_note if row else ""
+            item["youtube_url"] = videos.get(item["key"], "")
             item["active_poll"] = (
                 item["occurred"] == "happened"
                 and item["result"] in POLL_RESULTS
