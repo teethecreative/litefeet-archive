@@ -1159,3 +1159,19 @@ class VaultBattleVideoHistory(Base):
     actor_type = Column(String(32), nullable=False)
     actor_account_id = Column(Integer, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class VaultAddedBattle(Base):
+    """Host- or admin-created battle that occurred outside advertised lineups.
+
+    Kept apart from the original archival flyers and matched by a stable key.
+    """
+    __tablename__ = "vault_added_battles"
+    battle_key = Column(String(64), primary_key=True)
+    event_slug = Column(String(255), nullable=False, index=True)
+    host_key = Column(String(40), nullable=False, index=True)
+    side_a = Column(String(220), nullable=False)
+    side_b = Column(String(220), nullable=False)
+    created_by = Column(String(120), nullable=False)
+    created_by_account_id = Column(Integer, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
