@@ -26,10 +26,10 @@
   {% for entry in archive_items %}
     <article class="lfv-archive-entry" role="listitem">
       <div class="lfv-archive-entry-main">
-        <h3><a href="{{ entry.href }}">{{ entry.title }}</a></h3>
+        <h3><a class="lfv-person-name-link" href="{{ entry.href }}">{{ entry.title }}</a></h3>
         {% if entry.summary %}<p>{{ entry.summary }}</p>{% endif %}
       </div>
-      <a class="lfv-archive-open" href="{{ entry.href }}">VIEW PROFILE →</a>
+
     </article>
   {% endfor %}
   </div>
