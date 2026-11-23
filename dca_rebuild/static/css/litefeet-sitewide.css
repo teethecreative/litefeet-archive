@@ -94,3 +94,56 @@ html.lfv-sitewide main.vault-section-page .vault-collection{display:flex;flex-di
 .vault-update{border-top:1px solid var(--lfv-line);padding:16px 0}.vault-update time{font-size:.8rem;color:var(--lfv-muted)}
 .vault-timeline{padding-left:22px}.vault-timeline li{padding:16px 0}
 @media(max-width:620px){.vault-section-grid{grid-template-columns:1fr}.lfv-breadcrumbs{font-size:.75rem}}
+
+/* LFV NOVEMBER 2026 BRAND CONSISTENCY — stable shared shell/footer only. */
+html.lfv-sitewide .lfv-shell {
+  background:var(--lfv-navy,#0a2c5f);
+  border-bottom:3px solid var(--lfv-gold,#c9a127);
+}
+html.lfv-sitewide .lfv-shell-brand {
+  font-family:var(--lfv-font,Arial,sans-serif);
+  font-weight:850;letter-spacing:.03em;text-transform:uppercase;
+  color:#fff!important;
+}
+html.lfv-sitewide .lfv-shell-brand span {color:var(--lfv-gold,#c9a127)!important;}
+html.lfv-sitewide :is(.lfv-breadcrumbs,.lfv-program-nav) {
+  color:var(--lfv-muted);font-size:.8rem;line-height:1.45;
+  font-family:var(--lfv-font,Arial,sans-serif);
+}
+html.lfv-sitewide .lfv-program-nav a[aria-current="page"] {
+  border-bottom:3px solid var(--lfv-gold,#c9a127);
+  color:var(--lfv-ink);
+}
+html.lfv-sitewide .ledger-footer {
+  background:var(--lfv-navy,#0a2c5f)!important;
+  color:#fff!important;
+  border-top:3px solid var(--lfv-gold,#c9a127);
+  font-family:var(--lfv-font,Arial,sans-serif);
+}
+html.lfv-sitewide .ledger-footer :is(.ledger-footer-brand p,.ledger-footer-newsletter p,.ledger-footer-bottom span,.ledger-newsletter-message) {color:#dce5f4!important;}
+html.lfv-sitewide .ledger-footer :is(.ledger-footer-brand a,.ledger-footer-heading) {color:#f5d577!important;}
+html.lfv-sitewide .ledger-footer .ledger-footer-links a {color:#fff!important;}
+html.lfv-sitewide .ledger-footer .ledger-footer-links a:is(:hover,:focus-visible) {
+  color:#f5d577!important;text-decoration:underline;text-underline-offset:4px;
+}
+html.lfv-sitewide .ledger-footer .ledger-newsletter-form input[type="email"] {
+  background:#fff!important;color:#07152b!important;border:1px solid #a6b7d0!important;
+  min-height:43px;
+}
+html.lfv-sitewide .ledger-footer .ledger-newsletter-form input::placeholder {color:#40516b!important;opacity:1;}
+html.lfv-sitewide .ledger-footer .ledger-newsletter-form button {
+  background:var(--lfv-gold,#c9a127)!important;color:#07152b!important;
+  border:1px solid var(--lfv-gold,#c9a127)!important;min-height:43px;font-weight:800;
+}
+html.lfv-sitewide .ledger-footer .ledger-newsletter-form button:focus-visible,
+html.lfv-sitewide .lfv-shell a:focus-visible,
+html.lfv-sitewide .lfv-program-nav a:focus-visible {
+  outline:3px solid var(--lfv-gold,#c9a127);outline-offset:3px;
+}
+html.lfv-sitewide :is(.lfv-menu-panel,.lfv-menu-panel a,.lfv-menu-section,.lfv-menu-back) {
+  font-family:var(--lfv-font,Arial,sans-serif);
+}
+@media(max-width:600px) {
+  html.lfv-sitewide .ledger-footer .ledger-footer-inner {gap:24px;}
+  html.lfv-sitewide .lfv-program-nav {gap:14px;scrollbar-width:thin;}
+}

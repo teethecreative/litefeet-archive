@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}LiteFeet Ledger | LiteFeet History, Dancers, Battles, Music & Events{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}The LiteFeet Ledger is a community-powered archive for LiteFeet history, dancers, teams, battles, music, events, awards, and verified community records.{% endblock %}">
+    <title>{% block title %}The LiteFeet Vault | LiteFeet Culture, History, Dancers, Battles, Music & Events{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}The LiteFeet Vault is a community-powered archive for LiteFeet history, dancers, teams, battles, music, events, awards, and verified community records.{% endblock %}">
     <link rel="canonical" href="{% block canonical_url %}https://thelitefeetvault.com{{ request.path }}{% endblock %}">
     <meta name="google-site-verification" content="8w8AbHhkZ2rx2Dqquv94WjpyqjJbWOI8jhT_khqv1jo" />
     <link rel="stylesheet" href="/static/css/style.css">
@@ -103,9 +103,9 @@
 
     {# phase13-public-polish social meta #}
     {% set phase13_meta = phase13_page_meta_defaults() if phase13_page_meta_defaults is defined else {} %}
-    <meta property="og:site_name" content="{{ phase13_meta.get('site_name', 'The LiteFeet Ledger') }}">
+    <meta property="og:site_name" content="{{ phase13_meta.get('site_name', 'The LiteFeet Vault') }}">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="{{ phase13_current_page_description() if phase13_current_page_description is defined else phase13_meta.get('default_description', 'The LiteFeet Ledger is a community-powered LiteFeet archive.') }}">
+    <meta property="og:description" content="{{ phase13_current_page_description() if phase13_current_page_description is defined else phase13_meta.get('default_description', 'The LiteFeet Vault is a community-powered LiteFeet archive.') }}">
     <meta name="twitter:card" content="summary_large_image">
 
 <style id="phase13-public-polish">
@@ -241,7 +241,7 @@
 
 {% if phase13_public_nav_links is defined %}
 <div class="phase13-mobile-bar">
-    <a href="{{ phase13_url_for('home', '/') }}">Ledger</a>
+    <a href="{{ phase13_url_for('home', '/') }}">Vault</a>
     <a href="{{ phase13_url_for('ask_archive', '/ask') }}">Ask</a>
     <a href="{{ phase13_url_for('submit_start_phase10a', '/submit/start') }}">Submit</a>
     <a href="{{ phase13_account_nav_url() }}">{{ phase13_account_nav_label() }}</a>
@@ -251,7 +251,7 @@
     <div class="site-shell">
         <header class="site-header">
             <a href="/" class="logo brand-with-logo">
-                <img src="/static/images/litefeet-ledger-logo.png" alt="LiteFeet Ledger logo">
+                <img src="/static/images/litefeet-ledger-logo.png" alt="The LiteFeet Vault">
                 <span>The LiteFeet Vault</span>
             </a>
 

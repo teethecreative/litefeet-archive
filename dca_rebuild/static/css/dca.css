@@ -1,27 +1,17 @@
+/* Shared Vault palette tokens; compatible with pages using only dca.css. */
 :root {
-    --blue: #092b63;
-    --blue-2: #0d3f86;
-    --gold: #c9a227;
-    --gold-light: #e7cb68;
-    --page: #f5f7fb;
-    --surface: #ffffff;
-    --surface-2: #eef2f8;
-    --text: #09152a;
-    --muted: #5c6677;
-    --border: #d7dce5;
-    --yes: #0d3f86;
-    --no: #727b89;
+  --blue:var(--lfv-navy,#0a2c5f);--blue-2:#0d3f86;
+  --gold:var(--lfv-gold,#c9a127);--gold-light:#e7cb68;
+  --page:var(--lfv-bg,#e9edf4);--surface:var(--lfv-surface,#fff);
+  --surface-2:var(--lfv-surface-muted,#f4f6f9);
+  --text:var(--lfv-ink,#07152b);--muted:var(--lfv-muted,#46536a);
+  --border:var(--lfv-line,#c9d2e0);--yes:#0d3f86;--no:#727b89;
 }
-
 html[data-theme="dark"] {
-    --page: #050a12;
-    --surface: #09111e;
-    --surface-2: #0d192b;
-    --text: #ffffff;
-    --muted: #aab5c7;
-    --border: #24344d;
-    --yes: #e7cb68;
-    --no: #8290a4;
+  --page:var(--lfv-bg,#0b1422);--surface:var(--lfv-surface,#142239);
+  --surface-2:var(--lfv-surface-muted,#1b2b43);
+  --text:var(--lfv-ink,#f3f6fc);--muted:var(--lfv-muted,#b6c3d8);
+  --border:var(--lfv-line,#364864);--yes:#e7cb68;--no:#8290a4;
 }
 
 * {
