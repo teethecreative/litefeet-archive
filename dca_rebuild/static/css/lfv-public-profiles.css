@@ -163,3 +163,11 @@ html.lfv-sitewide .lfv-profile-page .lfv-profile-header h1,
 @media(max-width:600px){
  .lfv-profile-page .lfv-profile-header{padding:17px!important}
 }
+
+/* Owner-approved presentation; archive information remains separate. */
+.lfv-profile-page .lfv-profile-owner-photo{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:8px;background:var(--profile-soft)}
+.lfv-profile-page .lfv-profile-status-line{margin:13px 0 0;font-size:.91rem;color:var(--profile-ink)}
+.lfv-profile-page .lfv-profile-owner-intro{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.94rem}
+.lfv-profile-page .lfv-profile-owner-field{white-space:pre-wrap;overflow-wrap:anywhere}
+.lfv-profile-page .lfv-profile-featured-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 13px;padding:0;margin:0 0 10px;list-style:none}
+.lfv-profile-page .lfv-profile-featured-links li{min-width:0;font-size:.84rem;overflow-wrap:anywhere}
