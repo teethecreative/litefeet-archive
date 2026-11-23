@@ -2291,130 +2291,21 @@ def dca_2023_home():
 
 @app.route("/awards/litefeet-awards/<int:year>")
 def lfa_year(year):
-
-    allowed_years = {2023, 2024, 2025, 2026}
-
-    if year not in allowed_years:
+    # The public LiteFeet Awards program is retired. Historical records remain private.
+    if year not in {2023, 2024, 2025, 2026}:
         abort(404)
+    return redirect(url_for("awards_home"), code=302)
 
-    return render_template(
-        "award_landing.html",
-        page_title=f"Litefeet Awards {year}",
-        eyebrow="LITEFEET AWARDS",
-        title=str(year),
-        subtitle="Litefeet Awards winner archive.",
-        page_type="lfa",
-        year=year,
-    )
-
-# ============================================================
-# LITEFEET AWARDS
-# ============================================================
 
 @app.route("/awards/litefeet-awards")
 def lfa_home():
-    return render_template("lfa_home.html")
+    return redirect(url_for("awards_home"), code=302)
 
 
-@app.route(
-    "/awards/litefeet-awards/submit",
-    methods=["POST"]
-)
+@app.route("/awards/litefeet-awards/submit", methods=["POST"])
 def lfa_submit():
-    db = SessionLocal()
-
-    try:
-        allowed_types = {
-            "nomination",
-            "award_winner",
-            "hall_of_fame",
-            "litefeet_achievement",
-            "litefeet_humanitarian",
-        }
-
-        submission_type = (
-            request.form.get("submission_type") or ""
-        ).strip()
-
-        year_raw = (
-            request.form.get("year") or ""
-        ).strip()
-
-        category_name = (
-            request.form.get("category_name") or ""
-        ).strip()
-
-        winner_name = (
-            request.form.get("winner_name") or ""
-        ).strip()
-
-        team_name = (
-            request.form.get("team_name") or ""
-        ).strip()
-
-        additional_details = (
-            request.form.get("additional_details") or ""
-        ).strip()
-
-        source_information = (
-            request.form.get("source_information") or ""
-        ).strip()
-
-        submitter_email = (
-            request.form.get("submitter_email") or ""
-        ).strip().lower()
-
-        if submission_type not in allowed_types:
-            flash("Choose what type of LiteFeet Awards information you're submitting.")
-            return redirect(
-                url_for("lfa_home") + "#contribute"
-            )
-
-        try:
-            year = int(year_raw)
-        except ValueError:
-            year = 0
-
-        if year not in {2023, 2024, 2025, 2026}:
-            flash("Choose a year.")
-            return redirect(
-                url_for("lfa_home") + "#contribute"
-            )
-
-        if not category_name:
-            flash("Enter the category or honor.")
-            return redirect(
-                url_for("lfa_home") + "#contribute"
-            )
-
-        if not winner_name:
-            flash("Enter the person, winner, or honoree.")
-            return redirect(
-                url_for("lfa_home") + "#contribute"
-            )
-
-        submission = LFAArchiveSubmission(
-            year=year,
-            submission_type=submission_type,
-            category_name=category_name,
-            winner_name=winner_name,
-            team_name=team_name or None,
-            additional_details=additional_details or None,
-            source_information=source_information or None,
-            submitter_email=submitter_email or None,
-            status="pending",
-        )
-
-        db.add(submission)
-        db.commit()
-
-        return render_template(
-            "lfa_submission_success.html"
-        )
-
-    finally:
-        db.close()
-
+    # Block old bookmarked forms and direct POSTs without persisting data.
+    abort(410, description="LiteFeet Awards submissions are closed.")
 
 
 # ============================================================
@@ -3853,10 +3744,7 @@ def short_dca_2023():
 
 @app.route("/litefeet-awards")
 def short_litefeet_awards():
-    return redirect(
-        url_for("lfa_home"),
-        code=302,
-    )
+    return redirect(url_for("awards_home"), code=302)
 
 
 @app.route("/hypeitup-awards")
