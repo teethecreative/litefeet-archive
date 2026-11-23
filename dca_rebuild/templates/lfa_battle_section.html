@@ -1,0 +1,81 @@
+{# LiteFeet Awards battle-day community opinions. Official awards remain unchanged. #}
+<section class="lfa-battle-section" id="battles" aria-labelledby="lfa-battle-heading">
+  <header class="lfa-battle-heading">
+    <p class="lfa-eyebrow">NOVEMBER 21, 2026 · BATTLE DAY</p>
+    <h2 id="lfa-battle-heading">Who won the battles?</h2>
+    <p>Watch each matchup and cast your community verdict. These opinions do not change the official result of any battle or award.</p>
+  </header>
+  {% for message in get_flashed_messages(category_filter=['lfa_battle']) %}
+    <p class="lfa-battle-notice" role="status">{{ message }}</p>
+  {% endfor %}
+  {% if lfa_battle_polls %}
+    <div class="lfa-battle-grid">
+      {% for battle in lfa_battle_polls %}
+        <article class="lfa-battle-card" id="lfa-battle-{{ battle.battle_key[:12] }}">
+          {% if not battle.published %}<p class="lfa-battle-draft">Hidden · Admin preview</p>{% endif %}
+          <h3>{{ battle.side_a }} <span>vs.</span> {{ battle.side_b }}</h3>
+          <p><a href="{{ battle.youtube_url }}" target="_blank" rel="noopener noreferrer">Watch on YouTube</a></p>
+          {% if battle.published %}
+            <h4>Community Verdict</h4>
+            {% if battle.already_voted %}
+              <p class="lfa-battle-status">Your vote is recorded.</p>
+            {% elif lfa_battle_poll_verified %}
+              <form method="post" action="{{ url_for('lfa_battle_vote', battle_key=battle.battle_key) }}">
+                <input type="hidden" name="csrf_token" value="{{ lfa_battle_poll_csrf }}">
+                <fieldset>
+                  <legend>Who do you think won?</legend>
+                  <label><input type="radio" name="choice" value="a" required> {{ battle.side_a }}</label>
+                  <label><input type="radio" name="choice" value="b" required> {{ battle.side_b }}</label>
+                  <label><input type="radio" name="choice" value="t" required> Tie</label>
+                </fieldset>
+                <button type="submit">Submit Vote</button>
+              </form>
+            {% else %}
+              <p><a href="{{ url_for('dca_verify_email', return_to='lfa_battles') }}">Verify your email to vote</a></p>
+            {% endif %}
+            <div class="lfa-battle-results" aria-label="Community vote totals">
+              {% for option, votes, percent in [(battle.side_a, battle.votes_a, battle.percent_a), (battle.side_b, battle.votes_b, battle.percent_b), ('Tie', battle.votes_tie, battle.percent_tie)] %}
+                <div class="lfa-battle-result">
+                  <div><span>{{ option }}</span><span>{{ votes }} vote{{ '' if votes == 1 else 's' }} · {{ percent }}%</span></div>
+                  <progress value="{{ votes }}" max="{{ battle.total_votes if battle.total_votes else 1 }}" aria-label="{{ option }} votes">{{ percent }}%</progress>
+                </div>
+              {% endfor %}
+              <p class="lfa-battle-total">{{ battle.total_votes }} total vote{{ '' if battle.total_votes == 1 else 's' }} · Poll stays open</p>
+            </div>
+          {% endif %}
+          {% if lfa_battle_poll_admin %}
+            <details class="lfa-battle-admin-edit">
+              <summary>Edit battle (admin)</summary>
+              <form method="post" action="{{ url_for('lfa_battle_admin_edit', battle_key=battle.battle_key) }}">
+                <input type="hidden" name="csrf_token" value="{{ lfa_battle_poll_csrf }}">
+                <label>First dancer or team <input name="side_a" value="{{ battle.side_a }}" maxlength="120" required></label>
+                <label>Second dancer or team <input name="side_b" value="{{ battle.side_b }}" maxlength="120" required></label>
+                <label>YouTube battle video <input name="youtube_url" type="url" value="{{ battle.youtube_url }}" maxlength="500" required></label>
+                <label>Visibility <select name="visibility">
+                  <option value="published" {% if battle.published %}selected{% endif %}>Published</option>
+                  <option value="hidden" {% if not battle.published %}selected{% endif %}>Hidden</option>
+                </select></label>
+                <button type="submit">Save Battle</button>
+              </form>
+            </details>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="lfa-battle-empty">Battle videos and voting matchups are being added to the archive.</p>
+  {% endif %}
+  {% if lfa_battle_poll_admin %}
+    <details class="lfa-battle-admin-create">
+      <summary>Add a battle (admin)</summary>
+      <form method="post" action="{{ url_for('lfa_battle_admin_create') }}">
+        <input type="hidden" name="csrf_token" value="{{ lfa_battle_poll_csrf }}">
+        <label>First dancer or team <input name="side_a" maxlength="120" required></label>
+        <label>Second dancer or team <input name="side_b" maxlength="120" required></label>
+        <label>YouTube battle video (required) <input name="youtube_url" type="url" placeholder="https://www.youtube.com/watch?v=..." maxlength="500" required></label>
+        <button type="submit">Publish Battle Poll</button>
+      </form>
+    </details>
+  {% endif %}
+  <p class="lfa-battle-disclaimer">Community voting is independent of the LiteFeet Awards judging panel and The LiteFeet Vault's historical records.</p>
+</section>
