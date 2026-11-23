@@ -43,6 +43,25 @@ def register_battle_polls(app, engine, current_user, is_admin):
                     UNIQUE (battle_id, voter_key)
                 )
             """))
+            conn.execute(text(f"""
+                CREATE TABLE IF NOT EXISTS battle_poll_round_votes (
+                    id {primary},
+                    battle_id INTEGER NOT NULL,
+                    voter_key TEXT NOT NULL,
+                    round_number INTEGER NOT NULL,
+                    choice TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    UNIQUE (battle_id, voter_key, round_number)
+                )
+            """))
+            # Earlier battle records may predate the round-count field.
+            if engine.dialect.name.startswith("postgres"):
+                conn.execute(text("ALTER TABLE battle_records ADD COLUMN IF NOT EXISTS round_count INTEGER DEFAULT 1"))
+            else:
+                existing = {row[1] for row in conn.execute(text("PRAGMA table_info(battle_records)"))}
+                if "round_count" not in existing:
+                    conn.execute(text("ALTER TABLE battle_records ADD COLUMN round_count INTEGER DEFAULT 1"))
 
     def csrf():
         if not session.get("battle_poll_csrf"):
@@ -92,6 +111,14 @@ def register_battle_polls(app, engine, current_user, is_admin):
         status = stored_status(battle_id)
         counts = {"one": 0, "two": 0, "tie": 0}
         own_choice = None
+        try:
+            round_count = max(1, min(20, int(battle.get("round_count") or 1)))
+        except (TypeError, ValueError):
+            round_count = 1
+        round_results = {
+            number: {"counts": {"one": 0, "two": 0, "tie": 0}, "own_choice": None}
+            for number in range(1, round_count + 1)
+        }
         comments = []
         with engine.connect() as conn:
             if status in POLL_LABELS:
@@ -107,6 +134,22 @@ def register_battle_polls(app, engine, current_user, is_admin):
                         text("SELECT choice FROM battle_poll_votes WHERE battle_id = :id AND voter_key = :voter"),
                         {"id": battle_id, "voter": voter_key},
                     ).scalar()
+                for row in conn.execute(text("""
+                    SELECT round_number, choice, COUNT(*) AS total
+                    FROM battle_poll_round_votes WHERE battle_id = :id
+                    GROUP BY round_number, choice
+                """), {"id": battle_id}).mappings():
+                    number = int(row["round_number"])
+                    if number in round_results and row["choice"] in CHOICES:
+                        round_results[number]["counts"][row["choice"]] = int(row["total"])
+                if voter_key:
+                    for row in conn.execute(text("""
+                        SELECT round_number, choice FROM battle_poll_round_votes
+                        WHERE battle_id = :id AND voter_key = :voter
+                    """), {"id": battle_id, "voter": voter_key}).mappings():
+                        number = int(row["round_number"])
+                        if number in round_results:
+                            round_results[number]["own_choice"] = row["choice"]
                 try:
                     comments = list(conn.execute(
                         text("""
@@ -122,6 +165,13 @@ def register_battle_polls(app, engine, current_user, is_admin):
                 except Exception:
                     comments = []
         total = sum(counts.values())
+        for result in round_results.values():
+            round_total = sum(result["counts"].values())
+            result["total"] = round_total
+            result["percent"] = {
+                choice: round(100 * count / round_total, 1) if round_total else 0
+                for choice, count in result["counts"].items()
+            }
         return {
             "status": status,
             "label": POLL_LABELS.get(status, ""),
@@ -130,6 +180,8 @@ def register_battle_polls(app, engine, current_user, is_admin):
             "total": total,
             "percent": {choice: (round(100 * count / total, 1) if total else 0) for choice, count in counts.items()},
             "own_choice": own_choice,
+            "round_count": round_count,
+            "rounds": round_results,
             "can_vote": bool(user_identity()),
             "can_manage": can_manage(),
             "csrf": csrf(),
@@ -145,74 +197,78 @@ def register_battle_polls(app, engine, current_user, is_admin):
             """)).fetchall()
         return {int(row[0]) for row in rows}
 
-    def seed_confirmed_awards_battle():
-        """One-time idempotent import from the event organizer's direct account.
+    def seed_confirmed_awards_battles():
+        """Idempotently include the two reported Nov 21 unjudged matchups.
 
-        We only import the confirmed one-round matchup. The Flii Boogiie
-        encounter needs its team/round format clarified before making a poll.
-        No official winner is assigned, and no footage is assumed.
+        Names, rounds and format come from the event report. Eloise's stage name
+        is not known, so do not assert one. No official winners or videos.
         """
         ensure_tables()
         now = datetime.utcnow().isoformat(timespec="seconds")
-        match = {
-            "a": "Tay Millz",
-            "b": "Boy Q",
-            "event": "5th Annual LiteFeet Awards Weekend — Battle Day",
-            "event_date": "2026-11-21",
-            "now": now,
-        }
+        battles = (
+            ("Tay Millz", "Boy Q", "1v1", 1,
+             "One-round unjudged battle. No official winner reported."),
+            ("Flii Boogiie", "King K & Eloise", "1v2", 2,
+             "Two-round 1v2 unjudged battle: Flii Boogiie versus King K and Eloise together. Eloise's dance name is not confirmed. No official winner reported."),
+        )
         with engine.begin() as conn:
-            # Two web workers may initialize at the same time on production.
             if engine.dialect.name.startswith("postgres"):
                 conn.execute(text("SELECT pg_advisory_xact_lock(20261121)"))
-            existing = conn.execute(text("""
-                SELECT id, official_winner, winner
-                FROM battle_records
-                WHERE (
-                    (LOWER(TRIM(competitor_one)) = LOWER(:a)
-                     AND LOWER(TRIM(competitor_two)) = LOWER(:b))
-                    OR
-                    (LOWER(TRIM(competitor_one)) = LOWER(:b)
-                     AND LOWER(TRIM(competitor_two)) = LOWER(:a))
-                )
-                AND (
-                    COALESCE(event_date, '') IN ('2026-11-21', '11/21/2026', '11-21-2026')
-                    OR LOWER(COALESCE(event_name, '')) LIKE '%litefeet award%'
-                )
-                ORDER BY id ASC LIMIT 1
-            """), match).mappings().first()
-            if existing:
-                battle_id = int(existing["id"])
-                has_official_winner = bool(str(existing["official_winner"] or existing["winner"] or "").strip())
-            else:
-                record = conn.execute(text("""
-                    INSERT INTO battle_records (
-                        event_name, event_date, battle_type,
-                        competitor_one, competitor_two,
-                        official_winner, winner, judges_text,
-                        notes, review_status, created_at, updated_at
+            for one, two, battle_type, round_count, note in battles:
+                params = {
+                    "one": one, "two": two, "battle_type": battle_type,
+                    "round_count": round_count, "note": note,
+                    "event": "5th Annual LiteFeet Awards Weekend — Battle Day",
+                    "date": "2026-11-21", "now": now,
+                }
+                existing = conn.execute(text("""
+                    SELECT id, official_winner, winner, round_count
+                    FROM battle_records
+                    WHERE (
+                        (LOWER(TRIM(competitor_one)) = LOWER(:one)
+                         AND LOWER(TRIM(competitor_two)) = LOWER(:two))
+                        OR
+                        (LOWER(TRIM(competitor_one)) = LOWER(:two)
+                         AND LOWER(TRIM(competitor_two)) = LOWER(:one))
                     )
-                    VALUES (
-                        :event, :event_date, '1v1',
-                        :a, :b, NULL, NULL, 'No judges / unjudged',
-                        'One-round battle. Reported from the event; footage not yet linked. No official winner was declared.',
-                        'Needs Verification', :now, :now
+                    AND (
+                        COALESCE(event_date, '') IN ('2026-11-21', '11/21/2026', '11-21-2026')
+                        OR LOWER(COALESCE(event_name, '')) LIKE '%litefeet award%'
                     )
-                    RETURNING id
-                """), match)
-                battle_id = int(record.scalar())
-                has_official_winner = False
-
-            # Never override a documented historical winner.
-            if not has_official_winner:
-                conn.execute(text("""
-                    INSERT INTO battle_poll_settings (battle_id, poll_status, updated_at, updated_by)
-                    VALUES (:id, 'unjudged', :now, 'event-admin-seed')
-                    ON CONFLICT (battle_id) DO NOTHING
-                """), {"id": battle_id, "now": now})
+                    ORDER BY id ASC LIMIT 1
+                """), params).mappings().first()
+                if existing:
+                    battle_id = int(existing["id"])
+                    has_winner = bool(str(existing["official_winner"] or existing["winner"] or "").strip())
+                    if not has_winner and (existing["round_count"] is None or int(existing["round_count"]) != round_count):
+                        conn.execute(text("""
+                            UPDATE battle_records
+                            SET round_count = :round_count, updated_at = :now
+                            WHERE id = :battle_id
+                        """), {"round_count": round_count, "battle_id": battle_id, "now": now})
+                else:
+                    battle_id = int(conn.execute(text("""
+                        INSERT INTO battle_records
+                            (event_name, event_date, battle_type, round_count,
+                             competitor_one, competitor_two, official_winner, winner,
+                             judges_text, notes, review_status, created_at, updated_at)
+                        VALUES
+                            (:event, :date, :battle_type, :round_count,
+                             :one, :two, NULL, NULL, 'No judges / unjudged',
+                             :note, 'Needs Verification', :now, :now)
+                        RETURNING id
+                    """), params).scalar())
+                    has_winner = False
+                if not has_winner:
+                    conn.execute(text("""
+                        INSERT INTO battle_poll_settings
+                            (battle_id, poll_status, updated_at, updated_by)
+                        VALUES (:battle_id, 'unjudged', :now, 'event-admin-seed')
+                        ON CONFLICT (battle_id) DO NOTHING
+                    """), {"battle_id": battle_id, "now": now})
 
     try:
-        seed_confirmed_awards_battle()
+        seed_confirmed_awards_battles()
     except Exception as exc:
         app.logger.warning("AWARDS_BATTLE_SEED_FAILED: %s: %s", type(exc).__name__, exc)
 
@@ -239,7 +295,19 @@ def register_battle_polls(app, engine, current_user, is_admin):
             return redirect(url_for("account_login", next=url_for("battle_record_detail_phase2", battle_id=battle_id)))
         choice = str(request.form.get("choice", "")).strip().lower()
         if choice not in CHOICES:
-            abort(400, "Choose a competitor or a tie.")
+            abort(400, "Choose an overall winner or a tie.")
+        try:
+            round_count = int(battle.get("round_count") or 1)
+        except (ValueError, TypeError):
+            round_count = 1
+        if not 1 <= round_count <= 20:
+            abort(400, "Invalid battle round count.")
+        round_choices = {}
+        for number in range(1, round_count + 1):
+            round_choice = str(request.form.get(f"round_{number}", "")).strip().lower()
+            if round_choice not in CHOICES:
+                abort(400, f"Choose a winner or a tie for round {number}.")
+            round_choices[number] = round_choice
         now = datetime.utcnow().isoformat(timespec="seconds")
         with engine.begin() as conn:
             conn.execute(text("""
@@ -248,7 +316,18 @@ def register_battle_polls(app, engine, current_user, is_admin):
                 ON CONFLICT (battle_id, voter_key)
                 DO UPDATE SET choice = EXCLUDED.choice, updated_at = EXCLUDED.updated_at
             """), {"battle_id": battle_id, "voter_key": identity, "choice": choice, "now": now})
-        flash("Your community vote was saved. It does not change the official result.", "success")
+            for number, round_choice in round_choices.items():
+                conn.execute(text("""
+                    INSERT INTO battle_poll_round_votes
+                        (battle_id, voter_key, round_number, choice, created_at, updated_at)
+                    VALUES (:battle_id, :voter_key, :number, :choice, :now, :now)
+                    ON CONFLICT (battle_id, voter_key, round_number)
+                    DO UPDATE SET choice = EXCLUDED.choice, updated_at = EXCLUDED.updated_at
+                """), {
+                    "battle_id": battle_id, "voter_key": identity,
+                    "number": number, "choice": round_choice, "now": now,
+                })
+        flash("Your overall and round-by-round community votes were saved. They do not change the official result.", "success")
         return redirect(url_for("battle_record_detail_phase2", battle_id=battle_id) + "#cultures-call")
 
     @app.route("/battle-records/<int:battle_id>/poll-settings", methods=["POST"], endpoint="battle_poll_settings_update")
