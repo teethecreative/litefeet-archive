@@ -12,6 +12,7 @@
     const count = browser.querySelector("[data-archive-count]");
     const empty = browser.querySelector("[data-archive-empty]");
     const timeline = browser.getAttribute("data-timeline") === "1";
+    const peopleDirectory = window.location.pathname === "/archive/people";
     const urlParams = new URLSearchParams(window.location.search);
     let lastPage = Math.max(1, Number(urlParams.get("page") || 1) || 1);
     let hasMore = !button.hidden;
@@ -22,6 +23,25 @@
       const row = document.createElement("article");
       row.className = "lfv-archive-entry";
       row.setAttribute("role", "listitem");
+      if (peopleDirectory) {
+        const body = document.createElement("div");
+        body.className = "lfv-archive-entry-main";
+        const heading = document.createElement("h3");
+        const link = document.createElement("a");
+        link.href = item.href;
+        link.textContent = item.title;
+        heading.appendChild(link);
+        const desc = document.createElement("p");
+        desc.textContent = item.summary || "";
+        body.append(heading, desc);
+        const open = document.createElement("a");
+        open.className = "lfv-archive-open";
+        open.href = item.href;
+        open.textContent = "VIEW PROFILE →";
+        open.setAttribute("aria-label", "View " + item.title + " profile");
+        row.append(body, open);
+        return row;
+      }
       const body = document.createElement("div");
       body.className = "lfv-archive-entry-main";
       const meta = document.createElement("p");
@@ -76,7 +96,7 @@
         timeline: timeline ? "1" : "0"
       });
       try {
-        const response = await fetch("/archive/api/records?" + params.toString(), {
+        const response = await fetch((peopleDirectory ? "/archive/api/people?" : "/archive/api/records?") + params.toString(), {
           credentials: "same-origin", headers: {Accept: "application/json"}
         });
         if (!response.ok) throw new Error("Archive request failed");
@@ -89,8 +109,8 @@
         hasMore = Boolean(payload.has_more);
         button.hidden = !hasMore;
         empty.hidden = payload.total !== 0;
-        count.textContent = String(payload.total) + (payload.total === 1 ? " entry" : " entries");
-        state.textContent = hasMore ? "SCROLL FOR MORE" : "ALL RECORDS LOADED";
+        count.textContent = String(payload.total) + (peopleDirectory ? (payload.total === 1 ? " profile" : " profiles") : (payload.total === 1 ? " entry" : " entries"));
+        state.textContent = hasMore ? "SCROLL FOR MORE" : (peopleDirectory ? "ALL PROFILES LOADED" : "ALL RECORDS LOADED");
         if (replace) {
           const dest = new URL(window.location.href);
           dest.searchParams.delete("page");
