@@ -4,7 +4,7 @@
     {% if identified %}
     <span class="lfv5-category-status">
       {% if closed %}CLOSED
-      {% elif category.remaining %}COOLDOWN <span data-cooldown-until="{{ category.next_at }}">{{ (category.remaining // 3600) }}H {{ ((category.remaining % 3600) // 60) }}M</span>
+      {% elif category.remaining %}AVAILABLE IN <span data-cooldown-until="{{ category.next_at }}">{{ (category.remaining // 3600) }}H {{ ((category.remaining % 3600) // 60) }}M</span>
       {% else %}AVAILABLE NOW{% endif %}
     </span>
     {% endif %}
@@ -18,8 +18,8 @@
       {% endfor %}
       </ol>
     {% else %}
-      <p>NO NOMINATIONS YET. YOU CAN BE THE FIRST.</p>
+      <p>No nominees yet. Be the first.</p>
     {% endif %}
-    <a class="lfv5-minimal-action" href="{{ url_for('dca_nominations_closed', category=category.id) }}">VIEW CATEGORY / NOMINATE <span aria-hidden="true">→</span></a>
+    <a class="lfv5-minimal-action" href="{{ url_for('dca_nominations_closed', category=category.id) }}">VIEW &amp; NOMINATE <span aria-hidden="true">→</span></a>
   </div>
 </details>
