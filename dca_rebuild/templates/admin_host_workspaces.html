@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Event Hosts | Vault Admin</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css') }}">
+</head><body class="ledger-admin">{% include "_admin_navigation.html" %}
+<main class="lfv-host-wrap">
+<p><a href="{{ url_for('admin_dashboard') }}">Admin Overview</a> / Event Hosts</p>
+<header><p class="lfv-host-eyebrow">HOST AFFILIATIONS / ADMIN</p><h1>Event hosts</h1>
+<p>Manage invitations and identify battles that still need official outcomes. Hosts can edit only their own events once they claim access.</p></header>
+{% for message in get_flashed_messages() %}<p class="lfv-host-notice" role="status">{{ message }}</p>{% endfor %}
+{% if new_link %}
+<section class="lfv-host-invite-result" id="new-private-link"><h2>New private invitation · {{ new_link.person }}</h2><p>{{ new_link.host }} · Copy the link now and send it directly to the intended person. It is single-use, expires in 14 days, and will not appear again.</p>
+<input type="text" readonly value="{{ new_link.url }}" aria-label="Private invitation link" onclick="this.select()">
+</section>{% endif %}
+<div class="lfv-host-admin-grid">
+{% for host in hosts %}
+<section class="lfv-host-panel" id="{{ host.key }}">
+<div class="lfv-host-panel-head"><h2>{{ host.name }}</h2><a href="{{ url_for('vault_admin_host_queue',host_key=host.key) }}">Review battle queue</a></div>
+<p>{{ host.queue.event_count }} events · <strong>{{ host.queue.pending }} missing results</strong> · {{ host.queue.complete }} resolved</p>
+<h3>Authorized people</h3>
+<div id="invitations">
+{% for person in host.people %}
+<div class="lfv-host-member">
+<div><strong>{{ person.name }}</strong>
+<small>{% if person.active %}Active · {{ person.display_name }}{% elif person.invite_status == 'pending' %}Invitation created{% else %}Not claimed{% endif %}</small>
+{% if person.email %}<small>{{ person.email }}</small>{% endif %}</div>
+{% if person.active %}
+<form method="post" action="{{ url_for('vault_admin_host_revoke',account_id=person.account_id) }}" onsubmit="return confirm('Revoke this host account?')">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">Revoke access</button></form>
+{% else %}
+<form method="post" action="{{ url_for('vault_admin_host_invite') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="host_key" value="{{ host.key }}">
+<input type="hidden" name="person_key" value="{{ person.key }}">
+<button type="submit">{{ 'Regenerate link' if person.invite_status == 'pending' else 'Create private link' }}</button>
+</form>{% endif %}
+</div>
+{% endfor %}</div></section>
+{% endfor %}
+</div>
+</main><script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script></body></html>

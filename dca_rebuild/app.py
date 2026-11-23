@@ -5291,6 +5291,9 @@ if (os.environ.get("DCA_2026_FOLLOWUPS_ENABLED") == "true"
     install_nomination_followups(app, SessionLocal)
 
 # Read-only public section navigation; existing business handlers are unchanged.
+from dca_rebuild.host_access import install_host_access
+install_host_access(app, globals())
+
 from dca_rebuild.battle_polls import install_battle_polls
 install_battle_polls(app, globals())
 
