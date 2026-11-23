@@ -10,8 +10,12 @@
       <p class="lf9e-name-check" data-name-check role="status" aria-live="polite" hidden></p>
       <label class="lf9e-distinct-confirm" data-name-distinct hidden><input type="checkbox" name="confirm_distinct" value="1"> THIS IS A DIFFERENT NOMINEE.</label>
       <label>{{ category.nomination_ui.support_label }} <span class="lf9e-optional">(optional)</span><input name="team" maxlength="250" placeholder="{{ category.nomination_ui.support_placeholder }}"></label>
+      {% if category.nomination_ui.kind in ("dancer", "producer", "team", "duo", "organization", "event", "general") %}
       <label>Location <span class="lf9e-optional">(optional)</span><input name="location" maxlength="250" placeholder="City / state"></label>
+      {% endif %}
+      {% if category.nomination_ui.kind in ("dancer", "producer", "team", "duo", "organization", "general") %}
       <label>Instagram <span class="lf9e-optional">(optional)</span><input name="instagram" maxlength="100" placeholder="@username"></label>
+      {% endif %}
       <label>Why does this nomination deserve recognition? <span class="lf9e-optional" data-reason-requirement>{{ '(required for new nominees)' if initial_reason_required else '(optional — reason already on file)' }}</span><textarea name="reason" minlength="20" maxlength="2000" rows="4" {% if initial_reason_required %}required{% endif %} placeholder="Describe their relevant LiteFeet activity or contributions during November 2025–November 2026."></textarea></label>
       <p class="lf9e-note" data-reason-help>{{ 'Tell us what the nominee did during the eligibility period.' if initial_reason_required else 'A reason is already on file. Adding more is optional.' }}</p>
       <p class="lf9e-note">Qualifying LiteFeet activity must be from November 2025 to November 2026.</p>
