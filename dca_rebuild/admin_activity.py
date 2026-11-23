@@ -10,6 +10,8 @@ from zoneinfo import ZoneInfo
 
 from flask import abort, render_template, request, url_for
 
+from dca_rebuild.profile_wall import VaultProfileWallPost, VaultProfileWallDecision
+
 from dca_rebuild.models import (
     BetaChangelog, BetaFeedback, DCANewCategorySuggestion,
     DCANominationSubmission, DCANominee, DCACategory, LFAArchiveSubmission,
@@ -82,6 +84,10 @@ SOURCES = (
                    "created_at", "Entry created", None, "admin_beta_changelog"),
     ActivitySource("community", "World Record interest", WorldRecordInterest, None,
                    "created_at", "Received", "status", "admin_world_record"),
+    ActivitySource("community", "Profile Wall", VaultProfileWallPost, "author_name",
+                   "created_at", "Submitted", "status", "admin_profile_walls"),
+    ActivitySource("community", "Profile Wall", VaultProfileWallPost, "author_name",
+                   "resolved_at", "Resolved", "status", "admin_profile_walls"),
 )
 
 
@@ -139,6 +145,9 @@ def _fetch_activity(db, area="all", period="30", page=1, size=20):
                     title = str(nominee_name).strip()[:120]
                 if category_name and str(category_name).strip():
                     subtitle = str(category_name).strip()[:120]
+            if source.model is VaultProfileWallPost:
+                subtitle = (record.profile_href + (" · Resolved by " + record.resolved_by
+                          if source.action == "Resolved" and record.resolved_by else ""))[:180]
             kwargs = {source.route_param: record.id} if source.route_param else {}
             candidates.append({
                 "area": source.area,
