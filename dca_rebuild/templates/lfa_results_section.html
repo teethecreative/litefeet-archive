@@ -1,0 +1,25 @@
+{% if winners_2026 %}
+<section class="lfa-results" id="winners-2026" aria-labelledby="lfa-results-heading">
+  <div class="lfa-results__intro">
+    <p class="lfa-results__eyebrow">5TH ANNUAL LITEFEET AWARDS · 2026</p>
+    <h2 id="lfa-results-heading">2026 AWARD WINNERS</h2>
+    <p>Seven categories recognized at the November 22, 2026 awards ceremony. These winner names were confirmed by The LiteFeet Vault administrator and are recorded separately from the Dancer's Choice Awards.</p>
+  </div>
+  <div class="lfa-results__grid">
+    {% for result in winners_2026 %}
+      <article class="lfa-results__card">
+        <span class="lfa-results__number">{{ "%02d"|format(loop.index) }} / AWARD</span>
+        <h3>{{ result.category }}</h3>
+        <p class="lfa-results__winner">{{ result.winner }}</p>
+        <span class="lfa-results__caption">2026 WINNER</span>
+      </article>
+    {% endfor %}
+  </div>
+  <div class="lfa-results__foot">
+    <p>Category names are documented from 2026 LiteFeet Awards nomination flyers. Winner confirmations were supplied to the Vault on November 23, 2026; ceremony source links can be added as they become available.</p>
+    {% if not lfa_year_page %}
+      <a href="{{ url_for('lfa_year', year=2026) }}">VIEW 2026 ARCHIVE <span aria-hidden="true">→</span></a>
+    {% endif %}
+  </div>
+</section>
+{% endif %}

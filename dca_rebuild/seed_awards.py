@@ -1,5 +1,6 @@
 from dca_rebuild.app import SessionLocal
-from dca_rebuild.models import DCAEdition, DCACategory
+from dca_rebuild.models import DCAEdition, DCACategory, LFARecord
+from dca_rebuild.lfa_2026_data import LFA_2026_WINNERS, LFA_2026_SOURCE
 
 
 HISTORICAL_CATEGORIES = [
@@ -82,6 +83,71 @@ def get_or_create_edition(db, year):
     return edition
 
 
+def _lfa_category_key(value):
+    return " ".join((value or "").casefold().split())
+
+
+def seed_lfa_2026(db):
+    """Import confirmed 2026 LFA winners without duplicating records.
+
+    Preserve the original community submission when correcting the
+    previously approved Lady of Lite entry; do not rewrite that submission.
+    """
+    existing = (
+        db.query(LFARecord)
+        .filter_by(year=2026, record_type="award_winner")
+        .all()
+    )
+    by_category = {}
+    for record in existing:
+        by_category.setdefault(_lfa_category_key(record.category_name), []).append(record)
+
+    added = 0
+    corrected = 0
+    for category, winner in LFA_2026_WINNERS:
+        matches = by_category.get(_lfa_category_key(category), [])
+        if len(matches) > 1:
+            raise RuntimeError(f"Duplicate 2026 LFA winner records need review: {category}")
+        if matches:
+            record = matches[0]
+            if record.person_name.strip().casefold() == winner.casefold():
+                continue
+            # The archived 2026 Lady of Lite entry was an approved
+            # community submission naming Jada Chanell, not the final result.
+            if category != "Lady of Lite" or record.person_name.strip().casefold() != "jada chanell":
+                raise RuntimeError(f"Conflicting 2026 LFA winner needs review: {category}")
+            prior_submission = record.source_submission_id
+            correction = (
+                "Correction (2026-11-23): the prior record named JADA CHANELL "
+                f"(source submission #{prior_submission or 'unknown'}). "
+                "The Vault administrator confirmed TY SHOTZ as the 2026 "
+                "Lady of Lite winner. The original community submission "
+                "is retained separately for historical review."
+            )
+            record.additional_details = "\n".join(
+                part for part in (record.additional_details, correction) if part
+            )
+            record.category_name = category
+            record.person_name = winner
+            record.team_name = None
+            record.source_submission_id = None
+            record.source_information = LFA_2026_SOURCE
+            corrected += 1
+        else:
+            db.add(LFARecord(
+                year=2026,
+                record_type="award_winner",
+                category_name=category,
+                person_name=winner,
+                team_name=winner if category == "Best Team" else None,
+                additional_details="5th Annual LiteFeet Awards ceremony: November 22, 2026.",
+                source_information=LFA_2026_SOURCE,
+                source_submission_id=None,
+            ))
+            added += 1
+    return added, corrected
+
+
 def seed():
     db = SessionLocal()
 
@@ -123,6 +189,7 @@ def seed():
 
             added += 1
 
+        lfa_added, lfa_corrected = seed_lfa_2026(db)
         db.commit()
 
         total = (
@@ -138,6 +205,8 @@ def seed():
         print("2026 EDITION: READY")
         print("CATEGORIES ADDED:", added)
         print("2023 CATEGORY TOTAL:", total)
+        print("2026 LFA WINNERS ADDED:", lfa_added)
+        print("2026 LFA WINNERS CORRECTED:", lfa_corrected)
 
     except Exception:
         db.rollback()

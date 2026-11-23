@@ -1,0 +1,94 @@
+/* 2026 LiteFeet Awards — concise award archive panels. Scoped to LFA only. */
+.lfa-results {
+  max-width: 1140px;
+  margin: clamp(24px, 5vw, 64px) auto;
+  padding: clamp(22px, 4vw, 48px);
+  border: 1px solid #bfa06a;
+  border-radius: 16px;
+  background: #171b1d;
+  color: #f8f5eb;
+  box-sizing: border-box;
+}
+.lfa-results__intro { max-width: 720px; margin-bottom: 30px; }
+.lfa-results__eyebrow, .lfa-results__number, .lfa-results__caption {
+  font-family: inherit;
+  font-size: .76rem;
+  letter-spacing: .1em;
+  font-weight: 650;
+  text-transform: uppercase;
+}
+.lfa-results__eyebrow, .lfa-results__number { color: #d9b56d; }
+.lfa-results__intro h2 {
+  color: #fff8e9;
+  margin: 9px 0 14px;
+  font-size: clamp(1.65rem, 3.6vw, 2.8rem);
+  line-height: 1.12;
+  letter-spacing: -.025em;
+  text-transform: none;
+}
+.lfa-results__intro p:not(.lfa-results__eyebrow) {
+  margin: 0;
+  color: #d4d1c9;
+  line-height: 1.55;
+  font-size: 1rem;
+}
+.lfa-results__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 238px), 1fr));
+  gap: 14px;
+}
+.lfa-results__card {
+  min-width: 0;
+  background: #242a2c;
+  border: 1px solid #454541;
+  border-radius: 11px;
+  padding: 22px 20px;
+}
+.lfa-results__card h3 {
+  margin: 15px 0 7px;
+  color: #f3e1b7;
+  font-size: 1.03rem;
+  line-height: 1.28;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 600;
+}
+.lfa-results__winner {
+  margin: 0 0 14px;
+  color: #fff;
+  line-height: 1.22;
+  font-weight: 750;
+  font-size: clamp(1.3rem, 2.2vw, 1.65rem);
+  letter-spacing: -.02em;
+}
+.lfa-results__caption { color: #c1c2bb; font-size: .68rem; }
+.lfa-results__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 22px;
+}
+.lfa-results__foot p {
+  max-width: 680px;
+  margin: 0;
+  font-size: .82rem;
+  color: #bbb9b1;
+  line-height: 1.5;
+}
+.lfa-results__foot a {
+  color: #eccc8c;
+  font-size: .78rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.lfa-results__foot a:hover, .lfa-results__foot a:focus-visible { color: #fff; }
+@media (max-width: 650px) {
+  .lfa-results { border-radius: 12px; }
+  .lfa-results__intro { margin-bottom: 20px; }
+  .lfa-results__grid { grid-template-columns: 1fr; gap: 10px; }
+  .lfa-results__card { padding: 17px 18px; }
+  .lfa-results__winner { font-size: 1.4rem; }
+}

@@ -35,6 +35,7 @@ from dca_rebuild.models import (
     LedgerPageView,
 )
 from dca_rebuild.models import LedgerEra
+from dca_rebuild.lfa_2026_data import LFA_2026_WINNERS
 from dca_rebuild.traffic_classification import classify_traffic
 
 app = Flask(__name__)
@@ -2289,22 +2290,42 @@ def dca_2023_home():
     )
 
 
+def _lfa_2026_results():
+    """Public LFA results come from approved archive records, not DCA."""
+    with SessionLocal() as db:
+        records = (
+            db.query(LFARecord)
+            .filter_by(year=2026, record_type="award_winner")
+            .all()
+        )
+        priority = {
+            category.casefold(): index
+            for index, (category, _) in enumerate(LFA_2026_WINNERS)
+        }
+        records.sort(key=lambda record: (
+            priority.get(record.category_name.strip().casefold(), 999),
+            record.category_name.casefold(),
+        ))
+        return [
+            {"category": record.category_name, "winner": record.person_name}
+            for record in records
+        ]
+
+
 @app.route("/awards/litefeet-awards/<int:year>")
 def lfa_year(year):
-
-    allowed_years = {2023, 2024, 2025, 2026}
-
-    if year not in allowed_years:
+    if year not in {2023, 2024, 2025, 2026}:
         abort(404)
-
     return render_template(
         "award_landing.html",
-        page_title=f"Litefeet Awards {year}",
+        page_title=f"LiteFeet Awards {year}",
         eyebrow="LITEFEET AWARDS",
         title=str(year),
-        subtitle="Litefeet Awards winner archive.",
+        subtitle="LiteFeet Awards winner archive.",
         page_type="lfa",
         year=year,
+        winners_2026=_lfa_2026_results() if year == 2026 else [],
+        lfa_year_page=True,
     )
 
 # ============================================================
@@ -2313,7 +2334,11 @@ def lfa_year(year):
 
 @app.route("/awards/litefeet-awards")
 def lfa_home():
-    return render_template("lfa_home.html")
+    return render_template(
+        "lfa_home.html",
+        winners_2026=_lfa_2026_results(),
+        lfa_year_page=False,
+    )
 
 
 @app.route(

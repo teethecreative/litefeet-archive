@@ -42,3 +42,35 @@ def test_lfa_explains_distinct_program(website):
     html = website.test_client().get("/awards/litefeet-awards").get_data(as_text=True)
     assert "The LiteFeet Awards are an established awards program" in html
     assert "The Dancer's Choice Awards are a separate, community-led program" in html
+
+
+def test_lfa_2026_winners_publish_and_correction_is_idempotent(website, database):
+    from dca_rebuild.seed_awards import seed_lfa_2026
+    from dca_rebuild.models import LFARecord
+
+    with database[1].begin() as db:
+        db.add(LFARecord(
+            year=2026, record_type="award_winner",
+            category_name="LADY OF LITE", person_name="JADA CHANELL",
+            team_name="2 Crafty", source_submission_id=2,
+        ))
+    with database[1].begin() as db:
+        assert seed_lfa_2026(db) == (6, 1)
+    with database[1].begin() as db:
+        assert seed_lfa_2026(db) == (0, 0)
+        rows = db.query(LFARecord).filter_by(year=2026, record_type="award_winner").all()
+        assert len(rows) == 7
+        lady = next(r for r in rows if r.category_name == "Lady of Lite")
+        assert lady.person_name == "Ty Shotz"
+        assert lady.source_submission_id is None
+        assert "JADA CHANELL" in lady.additional_details
+
+    for route in ("/awards/litefeet-awards", "/awards/litefeet-awards/2026"):
+        response = website.test_client().get(route)
+        assert response.status_code == 200
+        html = response.get_data(as_text=True)
+        for name in ("XO Wavy", "A Handro", "Speights Raw Kid", "D Ski",
+                     "Ty Shotz", "Team Demon", "Jay Bull"):
+            assert name in html
+        assert "JADA CHANELL" not in html
+        assert "2026 AWARD WINNERS" in html

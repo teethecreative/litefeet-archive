@@ -40,6 +40,7 @@
   <!-- LFV_EDITORIAL_V3_20261102 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v3.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfa-results.css') }}">
 </head>
 
 <body>
@@ -82,6 +83,9 @@
         <p class="dca-cycle-hero__lead">{{ subtitle }}</p>
     </section>
 
+    {% if page_type == 'lfa' and year == 2026 and winners_2026 %}
+        {% include "lfa_results_section.html" %}
+    {% else %}
     <section class="dca-cycle-section">
         <h2>HISTORICAL ARCHIVE</h2>
         <p>
@@ -92,6 +96,7 @@
             CONTRIBUTE HISTORICAL INFORMATION →
         </a>
     </section>
+    {% endif %}
 </main>
 {% endif %}
 
