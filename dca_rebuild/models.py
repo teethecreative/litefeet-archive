@@ -1087,3 +1087,53 @@ class VaultBattleVote(Base):
     voter_hash = Column(String(64), nullable=False)
     choice = Column(String(1), nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+# Host affiliations are assigned by the archive; access is invite-only.
+class VaultHostAccount(Base):
+    __tablename__ = "vault_host_accounts"
+    __table_args__ = (
+        UniqueConstraint("host_key", "person_key", name="uq_host_person"),
+        UniqueConstraint("email", name="uq_host_email"),
+    )
+    id = Column(Integer, primary_key=True)
+    host_key = Column(String(40), nullable=False, index=True)
+    person_key = Column(String(60), nullable=False)
+    display_name = Column(String(120), nullable=False)
+    email = Column(String(254), nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class VaultHostInvitation(Base):
+    __tablename__ = "vault_host_invitations"
+    id = Column(Integer, primary_key=True)
+    host_key = Column(String(40), nullable=False)
+    person_key = Column(String(60), nullable=False)
+    token_hash = Column(String(64), nullable=False, unique=True, index=True)
+    status = Column(String(16), nullable=False, default="pending")
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    claimed_at = Column(DateTime)
+
+
+class VaultHostClaimChallenge(Base):
+    __tablename__ = "vault_host_claim_challenges"
+    invitation_id = Column(Integer, ForeignKey("vault_host_invitations.id"), primary_key=True)
+    email = Column(String(254), nullable=False)
+    code_hash = Column(String(64), nullable=False)
+    attempts = Column(Integer, nullable=False, default=0)
+    sent_at = Column(DateTime, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    verified_at = Column(DateTime)
+
+
+class VaultHostBattleAudit(Base):
+    __tablename__ = "vault_host_battle_audit"
+    id = Column(Integer, primary_key=True)
+    battle_key = Column(String(64), nullable=False, index=True)
+    event_slug = Column(String(255), nullable=False)
+    actor_account_id = Column(Integer, ForeignKey("vault_host_accounts.id"), nullable=False)
+    occurred = Column(String(24), nullable=False)
+    result = Column(String(24), nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
