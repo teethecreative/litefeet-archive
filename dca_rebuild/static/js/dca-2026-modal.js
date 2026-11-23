@@ -71,7 +71,7 @@
       wrap.hidden = false;
       const title = wrap.querySelector('[data-dca-form-title]');
       if (title) title.textContent = existingName ? 'Nominate ' + existingName : 'Add a new nomination';
-      const input = form.elements.namedItem('name');
+      const input = form ? form.elements.namedItem('name') : null;
       if (input) { input.value = existingName || ''; input.focus(); if (existingName) checkNominee(panel); }
       else { const verify = wrap.querySelector('.lfv-dca-verify-link'); if (verify) verify.focus(); }
     }
@@ -102,6 +102,12 @@
         return null;
       }
       const nomineeName = input.value.trim();
+      if (form.elements.namedItem('activation_name')) {
+        if (status) status.hidden = true;
+        if (distinct) distinct.hidden = true;
+        setReasonRequired(panel, true);
+        return {reason_required:true,requires_confirmation:false};
+      }
       const checkUrl = new URL('/awards/dancers-choice/nominee-name-check', location.origin);
       checkUrl.searchParams.set('category_id', String(form.elements.namedItem('category_id').value));
       checkUrl.searchParams.set('name', nomineeName);
