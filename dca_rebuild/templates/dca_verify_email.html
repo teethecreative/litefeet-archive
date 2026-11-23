@@ -12,7 +12,7 @@
 <body>
 {% include "_navigation.html" %}
 <main class="lfv-nom-followup-page">
-<p class="lfv-nom-followup-kicker">Dancer's Choice Awards 2026</p>
+<p class="lfv-nom-followup-kicker">{{ 'The LiteFeet Vault · Profile Claim' if claim_profile_href else "Dancer's Choice Awards 2026" }}</p>
 <h1>Verify your email</h1>
 {% with messages = get_flashed_messages() %}{% for message in messages %}
 <p class="lf9e-message" role="status">{{ message }}</p>
@@ -48,7 +48,11 @@
 </form>
 </section>
 {% endif %}
+{% if claim_profile_href %}
+<p><a href="{{ url_for('vault_profile_claim', profile=claim_profile_href) }}">Return to profile claim</a></p>
+{% else %}
 <p><a href="{{ url_for('dca_nominations_closed') }}">Return to nominations</a></p>
+{% endif %}
 </main>
 {% include "_footer.html" %}
 <script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
