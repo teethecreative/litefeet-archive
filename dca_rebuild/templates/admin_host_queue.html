@@ -3,18 +3,14 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
-<link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css',v='20261123added') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css',v='20261123collab') }}">
 </head><body class="ledger-admin">{% include "_admin_navigation.html" %}
 <main class="lfv-host-wrap"><p><a href="{{ url_for('vault_admin_hosts') }}">Event hosts</a> / {{ queue.name }}</p>
 <header><p class="lfv-host-eyebrow">BATTLE RESULT TRACKING / ADMIN</p><h1>{{ queue.name }}</h1>
 <p>{{ queue.event_count }} events · {{ queue.pending }} need results · {{ queue.complete }} recorded</p></header>
-<nav class="lfv-host-filter" aria-label="Queue filters">
-<a href="{{ url_for('vault_admin_host_queue',host_key=queue.key,view='pending') }}" {% if view=='pending' %}aria-current="page"{% endif %}>Needs results</a>
-<a href="{{ url_for('vault_admin_host_queue',host_key=queue.key,view='all') }}" {% if view=='all' %}aria-current="page"{% endif %}>All battles</a>
-</nav>
+<p class="lfv-host-muted">All battles remain visible · Save videos and official results independently.</p>
 {% for event in queue.events %}
-{% set shown = event.pending if view=='pending' else event.pending + event.complete %}
-{% if shown or view=='all' %}
+{% if true %}
 <section class="lfv-host-event lfv-host-event--compact"><div class="lfv-host-event-head"><h2>{{ event.title }}</h2>
 <p>{{ event.date_label }} · {{ event.pending }} pending · {{ event.complete }} recorded</p>
 <a href="{{ url_for('vault_archive_record',slug=event.slug) }}">View archive event</a></div>
@@ -36,12 +32,13 @@
 </details>
 {% for section in event.sections %}
 {% for battle in section.rows %}
-{% if view=='all' or not battle.resolved %}
+
 <div class="lfv-host-battle lfv-host-battle--inline" id="battle-{{ battle.key[:12] }}">
-<div class="lfv-host-battle-name"><strong>{{ battle.label }}</strong>{% if battle.resolved %}<small>Recorded</small>{% endif %}</div>
-<form method="post" action="{{ url_for('vault_admin_host_result',host_key=queue.key,slug=event.slug,battle_key=battle.key) }}" class="lfv-host-result-form">
+<div class="lfv-host-battle-name"><strong>{{ battle.label }}</strong>{% if battle.resolved %}<small>Recorded</small>{% endif %}{% if battle.needs_video %}<small>Video needed</small>{% endif %}</div>
+<div class="lfv-host-row-controls">
+<form method="post" class="lfv-host-result-form lfv-host-outcome-form" action="{{ url_for('vault_admin_host_result',host_key=queue.key,slug=event.slug,battle_key=battle.key) }}">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-<label class="lfv-host-outcome"><span class="lfv-host-sr-only">Outcome for {{ battle.label }}</span><select name="outcome" aria-label="Outcome for {{ battle.label }}" required>
+<label class="lfv-host-outcome"><span class="lfv-host-sr-only">Official outcome for {{ battle.label }}</span><select name="outcome" aria-label="Outcome for {{ battle.label }}" required>
 <option value="" disabled {% if not battle.resolved %}selected{% endif %}>Choose result</option>
 {% if battle.contestants|length == 2 %}
 <option value="a" {% if battle.result == 'a' %}selected{% endif %}>{{ battle.contestants[0] }} won</option>
@@ -54,16 +51,28 @@
 <option value="postponed" {% if battle.occurred == 'postponed' %}selected{% endif %}>Postponed</option>
 <option value="unconfirmed" {% if battle.occurred == 'unconfirmed' %}selected{% endif %}>Outcome unconfirmed</option>
 </select></label>
-<label class="lfv-host-note"><span class="lfv-host-sr-only">YouTube video URL for {{ battle.label }}</span><input type="url" name="youtube_url" aria-label="YouTube video URL for {{ battle.label }}" maxlength="500" placeholder="YouTube battle link" value="{{ battle.youtube_url }}" data-youtube-link></label>
-<button type="submit">Save</button>
-</form></div>
-{% endif %}{% endfor %}{% endfor %}</section>
+<label class="lfv-host-reason" data-reason-field>
+<span class="lfv-host-sr-only">Reason battle was postponed or did not happen</span>
+<input name="reason" maxlength="500" value="{{ battle.reason or '' }}" placeholder="Why was it postponed/canceled?" aria-label="Reason for postponement or cancellation">
+</label>
+<button type="submit">Save result</button>
+</form>
+<form method="post" class="lfv-host-video-form" action="{{ url_for('vault_admin_host_video',host_key=queue.key,slug=event.slug,battle_key=battle.key) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="expected_url" value="{{ battle.youtube_url or '' }}">
+<label><span class="lfv-host-sr-only">YouTube video link for {{ battle.label }}</span><input type="url" name="youtube_url" maxlength="500" value="{{ battle.youtube_url or '' }}" placeholder="YouTube battle link" aria-label="YouTube video link for {{ battle.label }}" required></label>
+<button type="submit">Save link</button>
+</form>
+</div></div>
+{% endfor %}{% endfor %}</section>
 {% endif %}{% else %}<p>No events available.</p>{% endfor %}
 </main><script>
-document.querySelectorAll('form.lfv-host-result-form').forEach(function(form){
-  var outcome=form.querySelector('select[name="outcome"]'),url=form.querySelector('input[name="youtube_url"]');
-  if(!outcome||!url)return;
-  function sync(){url.required=['a','b','tie','youtube_decide','no_contest'].includes(outcome.value)}
-  outcome.addEventListener('change',sync);sync();
+document.querySelectorAll('form.lfv-host-outcome-form').forEach(function(form){
+ var select=form.querySelector('select[name="outcome"]');
+ var reason=form.querySelector('input[name="reason"]');
+ var field=form.querySelector('[data-reason-field]');
+ if(!select||!reason||!field)return;
+ function sync(){var needed=select.value==='postponed'||select.value==='did_not_happen';field.hidden=!needed;reason.required=needed;}
+ select.addEventListener('change',sync);sync();
 });
 </script><script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script></body></html>
