@@ -40,7 +40,7 @@ def test_ready_navigation_and_every_active_link(website):
             assert f'id="{url.fragment}"' in response.get_data(as_text=True), href
     assert 'href="/people/dancers"' not in html.split('<main',1)[1].split('</main>',1)[0]
     assert client.get('/submit/start').headers['Location'] == '/community#contribute'
-    for path in ['/people/dancers','/people/teams','/litefeet-music','/events','/battles','/awards/hypeitup','/awards/litefeet-awards','/awards/dancers-choice/2023']:
+    for path in ['/people/dancers','/people/teams','/litefeet-music','/events','/battles','/awards/hypeitup','/awards/dancers-choice/2023']:
         assert client.get(path).status_code == 200
     assert client.get('/dca/2023').status_code == 302
 
@@ -195,11 +195,10 @@ def test_awards_overview_and_hypeitup_are_integrated_and_vault_branded(website):
     overview = client.get('/awards')
     assert overview.status_code == 200
     text = overview.get_data(as_text=True)
-    assert 'three distinct awards programs' in text
-    assert 'Two distinct awards programs' not in text
+    assert 'three distinct awards programs' not in text
+    assert 'LiteFeet Awards</strong>' not in text
     for name, href in [
         ('Dancer’s Choice Awards', '/awards/dancers-choice'),
-        ('LiteFeet Awards', '/awards/litefeet-awards'),
         ('HypeItUpTV Awards', '/awards/hypeitup'),
     ]:
         assert name in text
@@ -217,18 +216,17 @@ def test_awards_overview_and_hypeitup_are_integrated_and_vault_branded(website):
 
     nav = next(item for item in navigation(text) if item['key'] == 'awards')
     assert [child['href'] for child in nav['children']] == [
-        '/awards/dancers-choice', '/awards/litefeet-awards',
-        '/awards/hypeitup',
+        '/awards/dancers-choice', '/awards/hypeitup',
     ]
     assert nav['children'][0]['label'] == 'Dancer’s Choice Awards'
 
     for path in ('/awards/dancers-choice/2026', '/awards/dancers-choice/2023',
                  '/awards/dancers-choice/nominations?view=results',
-                 '/awards/litefeet-awards', '/awards/hypeitup'):
+                 '/awards/hypeitup'):
         page = client.get(path).get_data(as_text=True)
         assert 'aria-label="Award program navigation"' in page
         assert 'href="/awards/hypeitup"' in page
-        assert 'href="/awards/litefeet-awards"' in page
+        assert 'href="/awards/litefeet-awards"' not in page
         assert 'href="/awards/dancers-choice"' in page
         program_nav = page.split('aria-label="Award program navigation"', 1)[1].split('</nav>', 1)[0]
         assert 'DCA 2026' not in program_nav
