@@ -134,19 +134,40 @@
           <span class="lfv-profile-count">Public · Moderated</span>
         </div>
         <div class="lfv-profile-card-content">
-          <div class="lfv-profile-wall-composer" aria-label="Future wall posting area">
+          {% set wall = vault_wall_view(profile) %}
+          {% for message in get_flashed_messages(category_filter=['wall']) %}<p role="status">{{ message }}</p>{% endfor %}
+          {% if wall.can_post %}
+          <form class="lfv-profile-wall-composer" action="{{ url_for('vault_wall_post') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ wall.csrf }}">
+            <input type="hidden" name="profile_href" value="{{ profile.href }}">
+            <label for="lfv-wall-author">Display name</label>
+            <input id="lfv-wall-author" name="author_name" required minlength="2" maxlength="80" autocomplete="nickname">
             <label for="lfv-wall-message">Leave a message, memory, or shout-out</label>
-            <textarea id="lfv-wall-message" placeholder="Wall posting is not available yet" rows="3" disabled></textarea>
+            <textarea id="lfv-wall-message" name="message" required minlength="5" maxlength="2000" rows="3" placeholder="Write something for {{ profile.name }}…"></textarea>
+            <input type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" class="lfv-wall-honeypot">
             <div class="lfv-profile-wall-actions">
-              <p>Posts will require approval by a Vault administrator or the claimed profile owner.</p>
-              <button type="button" disabled>Post to Wall</button>
+              <p>A Vault administrator or the verified profile owner can approve your post. Whoever acts first resolves it.</p>
+              <button type="submit">Post to Wall</button>
             </div>
+          </form>
+          {% else %}
+          <div class="lfv-profile-wall-composer">
+            <p>Verify your email to leave a message, memory, or shout-out.</p>
+            <a href="{{ url_for('dca_verify_email') if 'dca_verify_email' in current_app.view_functions else url_for('dca_nominations_closed') }}">Verify email</a>
           </div>
-          <div class="lfv-profile-wall-empty">
-            <span class="lfv-profile-wall-symbol" aria-hidden="true">♡</span>
-            <p>No approved Wall posts yet.</p>
-            <p class="lfv-profile-note">Posting and moderation tools are not active yet. Nothing submitted here is saved.</p>
-          </div>
+          {% endif %}
+          {% if wall.can_moderate %}
+          <p class="lfv-profile-wall-review"><a href="{{ url_for('admin_profile_walls', view='pending') if wall.is_admin else url_for('vault_wall_owner_queue') }}">Review pending Wall posts ({{ wall.pending }})</a></p>
+          {% endif %}
+          {% if wall.posts %}
+          <ul class="lfv-profile-wall-posts">
+            {% for post in wall.posts %}
+            <li><div><strong>{{ post.author_name }}</strong><time datetime="{{ post.created_at.isoformat() }}">{{ post.created_at.strftime('%b %d, %Y') }}</time></div><p>{{ post.message }}</p></li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <div class="lfv-profile-wall-empty"><span class="lfv-profile-wall-symbol" aria-hidden="true">♡</span><p>No approved Wall posts yet.</p></div>
+          {% endif %}
         </div>
       </section>
     </div>
