@@ -1166,6 +1166,8 @@ class LFABattlePoll(Base):
     __tablename__ = "lfa_battle_polls"
     battle_key = Column(String(64), primary_key=True)
     year = Column(Integer, nullable=False, index=True)
+    event_href = Column(String(400), nullable=False, index=True)
+    event_title = Column(String(250), nullable=False)
     side_a = Column(String(120), nullable=False)
     side_b = Column(String(120), nullable=False)
     youtube_url = Column(String(500), nullable=False)
