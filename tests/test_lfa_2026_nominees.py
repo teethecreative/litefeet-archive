@@ -44,6 +44,6 @@ def test_nominees_render_on_both_year_and_directory_pages(website, database):
         html = response.get_data(as_text=True)
         assert html.count('class="lfa-category lfa-category--simple"') == 7
         assert 'href="/people/cito"' in html
-        assert "Nominee" in html.upper().title()  # nominees visibly labeled
+        assert "NOMINEES" in html  # nominees visibly labeled
         assert "Original nominee list not yet documented." in html
         assert "<details class=\"lfa-category\"" not in html
