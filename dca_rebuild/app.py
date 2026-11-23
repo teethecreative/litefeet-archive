@@ -5358,6 +5358,10 @@ def vault_missing_url(error):
 from dca_rebuild.profile_wall import install_profile_wall
 install_profile_wall(app, SessionLocal, private_hash, admin_login_required)
 
+# Claims require verified mailboxes and administrator approval before owner access.
+from dca_rebuild.profile_claims import install_profile_claims
+install_profile_claims(app, SessionLocal)
+
 # Readable public aliases; existing record, submission and admin routes persist.
 from dca_rebuild.public_urls import install_clean_public_urls
 install_clean_public_urls(app, SessionLocal)
