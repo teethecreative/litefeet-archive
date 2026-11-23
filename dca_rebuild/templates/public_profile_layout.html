@@ -13,6 +13,15 @@
       <span>{{ archived.editorial_status }}</span>
       {% endif %}
     </div>
+    {% if profile.badges %}
+    <div class="lfv-profile-role-nav" role="group" aria-label="Profile role views" data-lfv-role-nav>
+      <button type="button" class="lfv-profile-role-badge is-active" data-lfv-role="overview" aria-pressed="true">Overview</button>
+      {% for badge in profile.badges %}
+      <button type="button" class="lfv-profile-role-badge" data-lfv-role="{{ badge.key }}" aria-pressed="false">{{ badge.label }}</button>
+      {% endfor %}
+    </div>
+    <p class="lfv-profile-role-help">Select a role to see that part of the profile. Basic profile information stays the same.</p>
+    {% endif %}
   </header>
 
   <div class="lfv-profile-columns">
@@ -84,6 +93,35 @@
           {% else %}<p class="lfv-profile-note">No {{ heading|lower }} documented yet.</p>{% endif %}
           {% endfor %}
           <p class="lfv-profile-note">Roster entries are published only when documented. No membership is inferred from nominations or battle listings.</p>
+        </div>
+      </section>
+      {% endif %}
+
+      {% if profile.badges %}
+      <section class="lfv-profile-card" aria-labelledby="profile-role-detail-title">
+        <h2 id="profile-role-detail-title" class="lfv-profile-card-title">Profile Activity</h2>
+        <div class="lfv-profile-card-content">
+          <div data-lfv-role-panel="overview">
+            <p class="lfv-profile-note">Select one of the role badges above to explore its documented activity.</p>
+          </div>
+          {% for badge in profile.badges %}
+          <div data-lfv-role-panel="{{ badge.key }}" hidden>
+            <h3 class="lfv-profile-subheading">{{ badge.title }}</h3>
+            {% if badge.note %}<p class="lfv-profile-note">{{ badge.note }}</p>{% endif %}
+            {% if badge.rows %}
+            <ul class="lfv-profile-entry-list">
+              {% for row in badge.rows %}
+              <li>
+                <div><strong>{{ row.title }}</strong>{% if row.detail %}<span class="lfv-profile-meta">{{ row.detail }}</span>{% endif %}</div>
+                {% if row.href %}<a href="{{ row.href }}">View record</a>{% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+              <p class="lfv-profile-note">No independently documented {{ badge.label|lower }} activity linked yet. An award nomination or role label does not establish an appearance or credit.</p>
+            {% endif %}
+          </div>
+          {% endfor %}
         </div>
       </section>
       {% endif %}
@@ -273,3 +311,26 @@
     </details>
   </section>
 </main>
+<script>
+(function () {
+  const root = document.querySelector('.lfv-profile-page');
+  if (!root) return;
+  const navigation = root.querySelector('[data-lfv-role-nav]');
+  if (!navigation) return;
+  const buttons = Array.from(navigation.querySelectorAll('[data-lfv-role]'));
+  const panels = Array.from(root.querySelectorAll('[data-lfv-role-panel]'));
+  navigation.addEventListener('click', function (event) {
+    const button = event.target.closest('[data-lfv-role]');
+    if (!button || !navigation.contains(button)) return;
+    const selected = button.getAttribute('data-lfv-role');
+    buttons.forEach(function (other) {
+      const active = other === button;
+      other.classList.toggle('is-active', active);
+      other.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    panels.forEach(function (panel) {
+      panel.hidden = panel.getAttribute('data-lfv-role-panel') !== selected;
+    });
+  });
+}());
+</script>
