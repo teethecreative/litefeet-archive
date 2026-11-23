@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ seo.title if seo else 'Why The Vault Exists | The LiteFeet Vault' }}</title>
+  {% include "_seo_head.html" %}
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-identity-phase1.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-story-page.css', v='20261123a') }}">
+</head>
+<body>
+  {% include "_navigation.html" %}
+  <main class="vault-section-page lfv-story-page" id="vault-story">
+    <nav class="lfv-story-breadcrumb" aria-label="About navigation">
+      <a href="{{ url_for('legacy_about') }}">About the Vault</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">Our Story</span>
+    </nav>
+
+    <header class="lfv-story-header">
+      <p class="lfv-story-eyebrow">THE LITEFEET VAULT / OUR STORY</p>
+      <h1>Why The Vault Exists</h1>
+      <p>Our culture has a history worth remembering, people worth recognizing, and stories worth preserving.</p>
+    </header>
+
+    <article class="lfv-story-letter" id="letter" aria-labelledby="story-letter-heading">
+      <p class="lfv-story-eyebrow">A LETTER TO THE COMMUNITY</p>
+      <h2 id="story-letter-heading">Dear LiteFeet,</h2>
+      <div class="lfv-story-letter-body">
+        <p>LiteFeet is more than dance. It's a culture built through creativity, individuality, competition, community, and the people who have continued to push it forward.</p>
+        <p>Over the years, the culture has created countless moments, memories, movements, and contributions that deserve to be remembered.</p>
+        <p>But not everything has been documented. Not every name has been recognized. Not every story has been told.</p>
+        <p>That's part of why I created <strong>The LiteFeet Vault</strong>.</p>
+        <p>I wanted to build a space where our history could be preserved, where our contributions could be acknowledged, and where the community could have a role in telling its own story.</p>
+        <p>This isn't just about looking back. It's about documenting what's happening now, connecting the past to the present, and creating something future generations can learn from.</p>
+        <p>The Vault is meant to continue growing alongside the culture. It won't be complete overnight, and it shouldn't depend on any one person's perspective.</p>
+        <p>Because LiteFeet's history belongs to the people who made it.</p>
+      </div>
+      <div class="lfv-story-signature">
+        <p>With love for the culture,</p>
+        <strong>Tee</strong>
+        <span>Founder, The LiteFeet Vault</span>
+      </div>
+    </article>
+
+    <section class="lfv-story-explore" id="explore" aria-labelledby="story-explore-heading">
+      <div class="lfv-story-section-head">
+        <div>
+          <p class="lfv-story-eyebrow">GET TO KNOW THE VAULT</p>
+          <h2 id="story-explore-heading">Explore the Story</h2>
+          <p>Select a topic to learn what the Vault is building and why it matters.</p>
+        </div>
+      </div>
+
+      <nav class="lfv-story-nav" aria-label="Explore our story">
+        <button type="button" class="lfv-story-topic" id="story-toggle-beginning" aria-controls="story-panel-beginning" aria-expanded="false" data-story-toggle>
+          <span class="lfv-story-topic-top"><span>01 / ORIGINS</span><span class="lfv-story-topic-symbol" aria-hidden="true">+</span></span>
+          <strong>The Beginning</strong>
+          <small>Why this project needed to exist</small>
+        </button>
+        <button type="button" class="lfv-story-topic" id="story-toggle-culture" aria-controls="story-panel-culture" aria-expanded="false" data-story-toggle>
+          <span class="lfv-story-topic-top"><span>02 / CULTURE</span><span class="lfv-story-topic-symbol" aria-hidden="true">+</span></span>
+          <strong>Beyond the Dance</strong>
+          <small>What belongs in the Vault</small>
+        </button>
+        <button type="button" class="lfv-story-topic" id="story-toggle-people" aria-controls="story-panel-people" aria-expanded="false" data-story-toggle>
+          <span class="lfv-story-topic-top"><span>03 / COMMUNITY</span><span class="lfv-story-topic-symbol" aria-hidden="true">+</span></span>
+          <strong>The People &amp; Voices</strong>
+          <small>Who shapes our history</small>
+        </button>
+        <button type="button" class="lfv-story-topic" id="story-toggle-roots" aria-controls="story-panel-roots" aria-expanded="false" data-story-toggle>
+          <span class="lfv-story-topic-top"><span>04 / PLACES</span><span class="lfv-story-topic-symbol" aria-hidden="true">+</span></span>
+          <strong>Roots &amp; Reach</strong>
+          <small>The spaces behind the culture</small>
+        </button>
+        <button type="button" class="lfv-story-topic" id="story-toggle-timeline" aria-controls="story-panel-timeline" aria-expanded="false" data-story-toggle>
+          <span class="lfv-story-topic-top"><span>05 / GENERATIONS</span><span class="lfv-story-topic-symbol" aria-hidden="true">+</span></span>
+          <strong>Then, Now &amp; Next</strong>
+          <small>Connecting generations</small>
+        </button>
+        <button type="button" class="lfv-story-topic" id="story-toggle-process" aria-controls="story-panel-process" aria-expanded="false" data-story-toggle>
+          <span class="lfv-story-topic-top"><span>06 / PRESERVATION</span><span class="lfv-story-topic-symbol" aria-hidden="true">+</span></span>
+          <strong>Building the Record</strong>
+          <small>How the community contributes</small>
+        </button>
+      </nav>
+
+      <div class="lfv-story-details" id="story-details" aria-live="off">
+        <section class="lfv-story-panel" id="story-panel-beginning" role="region" aria-labelledby="story-toggle-beginning" data-story-panel hidden>
+          <p class="lfv-story-eyebrow">THE BEGINNING / ORIGINS</p>
+          <h3>Where the idea began</h3>
+          <p>The Vault started with a problem: too much of our history lives in memories, scattered videos, old conversations, and posts that can disappear. The culture has continued to grow, but preserving its history hasn't always kept pace. The goal is to bring those pieces together without losing their context.</p>
+        </section>
+        <section class="lfv-story-panel" id="story-panel-culture" role="region" aria-labelledby="story-toggle-culture" data-story-panel hidden>
+          <p class="lfv-story-eyebrow">BEYOND THE DANCE / CULTURE</p>
+          <h3>A culture bigger than its highlights</h3>
+          <p>LiteFeet isn't only the moves people recognize. It's the dancers, teams, battles, music, events, creativity, competition, and community relationships surrounding them. The Vault connects these parts instead of treating each one like an isolated moment.</p>
+        </section>
+        <section class="lfv-story-panel" id="story-panel-people" role="region" aria-labelledby="story-toggle-people" data-story-panel hidden>
+          <p class="lfv-story-eyebrow">THE PEOPLE &amp; VOICES / COMMUNITY</p>
+          <h3>History belongs to the people who lived it</h3>
+          <p>Dancers, producers, teams, hosts, judges, organizers, spectators, and others have all contributed to LiteFeet. Their experiences matter, including stories that aren't widely known. The Vault makes room for multiple perspectives without treating every account as an automatically verified fact.</p>
+        </section>
+        <section class="lfv-story-panel" id="story-panel-roots" role="region" aria-labelledby="story-toggle-roots" data-story-panel hidden>
+          <p class="lfv-story-eyebrow">ROOTS &amp; REACH / PLACES</p>
+          <h3>The places that carry the culture</h3>
+          <p>From Harlem and across New York City to communities farther away, LiteFeet's story is connected to the spaces where people gathered, practiced, performed, and competed. The Vault documents those connections while distinguishing established history from stories that still need research.</p>
+        </section>
+        <section class="lfv-story-panel" id="story-panel-timeline" role="region" aria-labelledby="story-toggle-timeline" data-story-panel hidden>
+          <p class="lfv-story-eyebrow">THEN, NOW &amp; NEXT / GENERATIONS</p>
+          <h3>Not just a look back</h3>
+          <p>The Vault connects earlier generations with the dancers and events shaping the culture today. Historical records, upcoming gatherings, corrections, and newly discovered material all contribute to an evolving picture. A record can grow as additional sources become available.</p>
+        </section>
+        <section class="lfv-story-panel" id="story-panel-process" role="region" aria-labelledby="story-toggle-process" data-story-panel hidden>
+          <p class="lfv-story-eyebrow">BUILDING THE RECORD / PRESERVATION</p>
+          <h3>A record we build with care</h3>
+          <p>Community members can contribute information, photographs, footage, firsthand accounts, and corrections. Submissions are reviewed before publication. Sources, conflicting accounts, and unresolved questions remain visible where appropriate, because preserving history doesn't mean pretending every question has one settled answer.</p>
+          <a class="lfv-story-inline-link" href="{{ url_for('vault_community') }}#contribute">How to contribute <span aria-hidden="true">→</span></a>
+        </section>
+      </div>
+    </section>
+
+    <footer class="lfv-story-next" aria-labelledby="story-next-heading">
+      <div>
+        <h2 id="story-next-heading">History doesn't preserve itself.</h2>
+        <p>Explore the archive or help preserve a piece of LiteFeet history.</p>
+      </div>
+      <div class="lfv-story-next-links">
+        <a href="{{ url_for('vault_archive') }}">Explore the Archive <span aria-hidden="true">→</span></a>
+        <a href="{{ url_for('vault_community') }}#contribute">Contribute to the Vault <span aria-hidden="true">→</span></a>
+      </div>
+    </footer>
+  </main>
+  {% include "_footer.html" %}
+  <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/lfv-story-page.js', v='20261123a') }}"></script>
+</body>
+</html>
