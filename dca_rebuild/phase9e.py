@@ -860,10 +860,12 @@ def install_phase9e(app, ns):
                 if not token or not secrets.compare_digest(
                     token, session['lf9e_nomination_csrf']):
                     abort(400, 'Invalid form token')
-                email = (request.form.get('email') or '').strip().casefold()
-                if len(email) > 254 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
-                    abort(400, 'Enter a valid email address')
-                who = private_hash('dca-nomination:' + email)
+                from dca_rebuild.email_verification import verified_nominator_hash, verification_enabled
+                who = (verified_nominator_hash() if verification_enabled()
+                       else session.get('lf9e_recent_hash'))
+                if not who:
+                    flash('Verify your email before submitting a reason.')
+                    return redirect(url_for('dca_nominations_closed'), code=303)
                 nominee_id = request.form.get('nominee_id', type=int)
                 item = next((n for n in pending if n['nominee_id'] == nominee_id), None)
                 if not item:
@@ -891,7 +893,11 @@ def install_phase9e(app, ns):
                     abort(409, 'Reason already submitted')
                 flash('Reason submitted for eligibility review. Nomination totals have not changed.')
                 return redirect(url_for('phase9e_nomination_reasons'), code=303)
+            from dca_rebuild.email_verification import verified_nominator_hash, verification_enabled
+            verified_for_reasons = bool(verified_nominator_hash() if verification_enabled()
+                                        else session.get('lf9e_recent_hash'))
             return render_template('dca_nomination_reasons.html', pending=pending,
+                                   verified_for_reasons=verified_for_reasons,
                                    csrf_token=session['lf9e_nomination_csrf'])
 
     @app.route('/admin/dca/nomination-reasons', methods=['GET', 'POST'],
@@ -1147,8 +1153,9 @@ def install_phase9e(app, ns):
                 if (os.environ.get('DCA_2026_FOLLOWUPS_ENABLED') == 'true'
                     and (not verification_enabled() or verified_nominator_hash() == who)):
                     session['lf9e_reminder_hash'] = who
-                flash('Nomination received.')
+                flash('Nomination submitted!')
                 return redirect(url_for('dca_nominations_closed', view='results'))
+            from dca_rebuild.nominee_fields import nomination_fields
             results_view = display_args.get('view') == 'results'
             from dca_rebuild.email_verification import verification_enabled, verified_nominator_hash
             who = (verified_nominator_hash() if verification_enabled()
@@ -1171,7 +1178,7 @@ def install_phase9e(app, ns):
                     past = history[cat.id]
                     remaining = remaining_seconds(datetime.fromisoformat(past[0]['at']), now) if past else 0
                     row = dict(id=cat.id, name=writein_category_label(cat.name),
-                               description=cat.description or '',
+                               description=cat.description or '', nomination_ui=nomination_fields(cat.name),
                                nominees=nominees.get(cat.id, []), history=past,
                                remaining=remaining, available=not remaining and not is_closed(),
                                next_at=(datetime.fromisoformat(past[0]['at']) + timedelta(hours=24)).isoformat() if remaining else '',
