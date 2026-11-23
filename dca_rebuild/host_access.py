@@ -15,7 +15,7 @@ from dca_rebuild.battle_polls import matchups, find_matchup, OCCURRENCE, RESULTS
 from dca_rebuild.models import (
     VaultBattleOutcome, VaultBattleOutcomeHistory, VaultHostAccount,
     VaultHostInvitation, VaultHostClaimChallenge, VaultHostBattleAudit,
-    VaultBattleVideo, VaultBattleVideoHistory,
+    VaultBattleVideo, VaultBattleVideoHistory, VaultAddedBattle,
 )
 from dca_rebuild.email_verification import (
     _digest, _normalize, _secret, _send_email, EmailDeliveryError,
@@ -117,10 +117,18 @@ def roster_only(section):
 
 def host_queue(factory, host):
     records = events_for_host(host)
-    all_keys = [battle["key"] for record in records for group in matchups(record)
-                if not roster_only(group["section"]) for battle in group["items"]
-                if not is_team_listing(record, battle)]
+    slugs = [record["slug"] for record in records]
     with factory() as db:
+        added_rows = db.query(VaultAddedBattle).filter(
+            VaultAddedBattle.event_slug.in_(slugs), VaultAddedBattle.host_key == host
+        ).order_by(VaultAddedBattle.created_at, VaultAddedBattle.battle_key).all() if slugs else []
+        additions = {}
+        for added in added_rows:
+            additions.setdefault(added.event_slug, []).append(added)
+        all_keys = [battle["key"] for record in records
+                    for group in matchups(record, additions.get(record["slug"]))
+                    if not roster_only(group["section"]) for battle in group["items"]
+                    if not is_team_listing(record, battle)]
         outcomes = {row.battle_key: (row.occurred, row.result, row.source_note or "")
                     for row in db.query(VaultBattleOutcome).filter(
                         VaultBattleOutcome.battle_key.in_(all_keys)).all()} if all_keys else {}
@@ -132,7 +140,7 @@ def host_queue(factory, host):
         sections = []
         waiting = done = 0
         roster_count = 0
-        for section in matchups(record):
+        for section in matchups(record, additions.get(record["slug"])):
             if roster_only(section["section"]):
                 roster_count += len(section["items"])
                 continue
@@ -197,7 +205,9 @@ def secure_response(response):
 
 def save_outcome(db, record, key, occurred, result, source_note, actor_id=None,
                  youtube_url="", actor_type="admin"):
-    matchup = find_matchup(record, key)
+    added = db.get(VaultAddedBattle, key)
+    matchup = find_matchup(record, key,
+                           [added] if added and added.event_slug == record["slug"] else [])
     if is_team_listing(record, matchup):
         abort(403, "This is a team listing, not a battle")
     previous_result = db.get(VaultBattleOutcome, key)
@@ -242,6 +252,46 @@ def save_outcome(db, record, key, occurred, result, source_note, actor_id=None,
     if actor_id is not None:
         db.add(VaultHostBattleAudit(battle_key=key, event_slug=record["slug"],
                                     actor_account_id=actor_id, occurred=occurred, result=result))
+
+
+def create_spontaneous_battle(db, record, host_key, side_a, side_b, youtube_url,
+                              outcome, actor_label, actor_account_id=None, actor_type="admin"):
+    """Record an actual unadvertised matchup without editing event flyer data."""
+    if not record or record.get("record_type") != "event":
+        abort(404)
+    if (record.get("presenter") or "").casefold() != HOST_LABELS[host_key].casefold():
+        abort(403, "Event belongs to another host")
+    side_a, side_b = " ".join((side_a or "").split()), " ".join((side_b or "").split())
+    if not (2 <= len(side_a) <= 220 and 2 <= len(side_b) <= 220):
+        abort(400, "Both sides must have names of 2–220 characters")
+    if side_a.casefold() == side_b.casefold():
+        abort(400, "Choose two different sides")
+    if any(ord(ch) < 32 for ch in side_a + side_b):
+        abort(400)
+    if outcome not in ("unknown", "a", "b", "tie", "youtube_decide", "no_contest"):
+        abort(400, "Invalid outcome")
+    video = normalize_youtube_url(youtube_url)
+    if not video:
+        abort(400, "A YouTube battle link is required")
+    # Do not create a second archival record for a battle already advertised
+    # or already entered by this host (order-insensitive).
+    pair = {side_a.casefold(), side_b.casefold()}
+    candidates = [x for section in matchups(record) for x in section["items"]]
+    existing_added = db.query(VaultAddedBattle).filter_by(event_slug=record["slug"]).all()
+    candidates.extend(dict(contestants=[x.side_a, x.side_b]) for x in existing_added)
+    for candidate in candidates:
+        if len(candidate["contestants"]) == 2 and {x.casefold() for x in candidate["contestants"]} == pair:
+            abort(409, "This matchup is already listed for the event")
+    key = hashlib.sha256(secrets.token_bytes(32)).hexdigest()
+    db.add(VaultAddedBattle(
+        battle_key=key, event_slug=record["slug"], host_key=host_key,
+        side_a=side_a, side_b=side_b, created_by=actor_label[:120],
+        created_by_account_id=actor_account_id))
+    db.flush()
+    save_outcome(db, record, key, "happened", outcome,
+                 ("Added at event by " + actor_label)[:500],
+                 actor_id=actor_account_id, youtube_url=video, actor_type=actor_type)
+    return key
 
 
 def install_host_access(app, ns):
@@ -326,6 +376,23 @@ def install_host_access(app, ns):
                          youtube_url=youtube_url, actor_type="admin")
         flash("Battle result recorded with archival edit history.")
         return redirect(url_for("vault_admin_host_queue", host_key=host_key) + "#battle-" + battle_key[:12], code=303)
+
+    @app.post("/admin/hosts/<host_key>/events/<slug>/battles/add",
+              endpoint="vault_admin_host_add_battle")
+    @admin_required
+    def admin_add_battle(host_key, slug):
+        check_csrf("vault_host_admin_csrf")
+        if host_key not in HOST_LABELS:
+            abort(404)
+        record = find_record(slug)
+        with factory.begin() as db:
+            key = create_spontaneous_battle(
+                db, record, host_key, request.form.get("side_a"), request.form.get("side_b"),
+                request.form.get("youtube_url"), request.form.get("outcome") or "unknown",
+                "Vault administrator", actor_type="admin")
+        flash("Unadvertised battle added to the event with its YouTube link.")
+        return redirect(url_for("vault_admin_host_queue", host_key=host_key, view="all")
+                        + "#battle-" + key[:12], code=303)
 
     @app.post("/admin/hosts/invite", endpoint="vault_admin_host_invite")
     @admin_required
@@ -506,6 +573,25 @@ def install_host_access(app, ns):
             "host_workspace.html", account=account,
             queue=host_queue(factory, account["host_key"]),
             csrf_token=csrf("vault_host_claim_csrf"))))
+
+    @app.post("/hosts/workspace/<slug>/battles/add", endpoint="vault_host_add_battle")
+    def host_add_battle(slug):
+        account = active_host(factory)
+        if not account:
+            abort(403, "Sign in to add an event battle")
+        check_csrf("vault_host_claim_csrf")
+        record = find_record(slug)
+        with factory.begin() as db:
+            authorized = db.get(VaultHostAccount, account["id"])
+            if not authorized or not authorized.is_active or authorized.host_key != account["host_key"]:
+                abort(403)
+            key = create_spontaneous_battle(
+                db, record, account["host_key"], request.form.get("side_a"),
+                request.form.get("side_b"), request.form.get("youtube_url"),
+                request.form.get("outcome") or "unknown",
+                account["display_name"], actor_account_id=account["id"], actor_type="host")
+        flash("Battle added to your event, with video and host attribution.")
+        return redirect(url_for("vault_host_workspace") + "#battle-" + key[:12], code=303)
 
     @app.post("/hosts/workspace/<slug>/<battle_key>/outcome", endpoint="vault_host_result")
     def save_result(slug, battle_key):

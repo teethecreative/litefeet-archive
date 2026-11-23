@@ -16,7 +16,7 @@ from sqlalchemy.exc import IntegrityError
 
 from dca_rebuild.archive_catalog import find_record
 from dca_rebuild.email_verification import verified_nominator_hash
-from dca_rebuild.models import VaultBattleOutcome, VaultBattleOutcomeHistory, VaultBattleVote, VaultBattleVideo
+from dca_rebuild.models import VaultBattleOutcome, VaultBattleOutcomeHistory, VaultBattleVote, VaultBattleVideo, VaultAddedBattle
 
 OCCURRENCE = {"unconfirmed", "scheduled", "happened", "did_not_happen", "postponed"}
 RESULTS = {"unknown", "a", "b", "tie", "youtube_decide", "no_contest"}
@@ -29,7 +29,7 @@ RESULT_LABELS = {
 }
 
 
-def matchups(record):
+def matchups(record, added_battles=None):
     """Derive stable matchup keys without mistaking promotional names for results."""
     if not record or record.get("record_type") != "event":
         return []
@@ -49,13 +49,22 @@ def matchups(record):
             contestants = parts if len(parts) == 2 and all(parts) else []
             items.append(dict(key=key, label=label, contestants=contestants))
         groups.append(dict(section=group.get("section") or "Announced matchups", items=items))
+    if added_battles:
+        items = [
+            dict(key=row.battle_key, label=row.side_a + " vs " + row.side_b,
+                 contestants=[row.side_a, row.side_b], added=True,
+                 added_by=row.created_by)
+            for row in added_battles if row.event_slug == record["slug"]
+        ]
+        if items:
+            groups.append(dict(section="Added at the event", items=items, added=True))
     return groups
 
 
-def find_matchup(record, key):
+def find_matchup(record, key, added_battles=None):
     if not re.fullmatch(r"[a-f0-9]{64}", key or ""):
         abort(404)
-    for group in matchups(record):
+    for group in matchups(record, added_battles):
         for item in group["items"]:
             if item["key"] == key:
                 return item
@@ -63,11 +72,15 @@ def find_matchup(record, key):
 
 
 def build_battle_rows(record, factory, voter_hash=None):
-    groups = matchups(record)
-    keys = [item["key"] for group in groups for item in group["items"]]
-    if not keys:
-        return groups
+    if not record or record.get("record_type") != "event":
+        return []
     with factory() as db:
+        added = db.query(VaultAddedBattle).filter_by(event_slug=record["slug"]).order_by(
+            VaultAddedBattle.created_at, VaultAddedBattle.battle_key).all()
+        groups = matchups(record, added)
+        keys = [item["key"] for group in groups for item in group["items"]]
+        if not keys:
+            return groups
         outcomes = {
             r.battle_key: r for r in db.query(VaultBattleOutcome)
             .filter(VaultBattleOutcome.battle_key.in_(keys)).all()
@@ -120,7 +133,9 @@ def install_battle_polls(app, ns):
     @app.post("/archive/records/<slug>/battles/<battle_key>/vote", endpoint="vault_battle_vote")
     def vote(slug, battle_key):
         record = find_record(slug)
-        matchup = find_matchup(record, battle_key)
+        with ns["SessionLocal"]() as db:
+            added = db.get(VaultAddedBattle, battle_key)
+            matchup = find_matchup(record, battle_key, [added] if added and added.event_slug == slug else [])
         expected = session.get("vault_archive_csrf")
         if not expected or not secrets.compare_digest(expected, request.form.get("csrf_token") or ""):
             abort(400, "Invalid voting token")
@@ -152,7 +167,9 @@ def install_battle_polls(app, ns):
     @ns["admin_login_required"]
     def update_outcome(slug, battle_key):
         record = find_record(slug)
-        matchup = find_matchup(record, battle_key)
+        with ns["SessionLocal"]() as db:
+            added = db.get(VaultAddedBattle, battle_key)
+            matchup = find_matchup(record, battle_key, [added] if added and added.event_slug == slug else [])
         expected = session.get("vault_archive_csrf")
         if not expected or not secrets.compare_digest(expected, request.form.get("csrf_token") or ""):
             abort(400, "Invalid editorial token")

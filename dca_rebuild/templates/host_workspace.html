@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ queue.name }} Battle Results | Host Workspace</title>
-<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css',v='20261123ytlinks') }}"></head>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css',v='20261123added') }}"></head>
 <body>{% include "_navigation.html" %}
 <main class="lfv-host-wrap">
 <header><p class="lfv-host-eyebrow">EVENT HOST WORKSPACE</p><h1>{{ queue.name }}</h1><p>Signed in as {{ account.display_name }} · {{ queue.event_count }} events · <strong>{{ queue.pending }} results needed</strong> · {{ queue.complete }} recorded</p>
@@ -7,11 +7,28 @@
 {% for message in get_flashed_messages() %}<p class="lfv-host-notice" role="status">{{ message }}</p>{% endfor %}
 <p class="lfv-host-muted">Oldest events first · Select an outcome beside each battle. Tie and YouTube Decide results keep community voting open.</p>
 {% for event in queue.events %}
-{% if event.pending or event.complete %}
+{% if event.pending or event.complete or event.sections|length == 0 %}
 <section class="lfv-host-event lfv-host-event--compact">
 <div class="lfv-host-event-head"><h2>{{ event.title }}</h2>
 <p>{{ event.date_label }} · {{ event.pending }} pending · {{ event.complete }} recorded</p>
 <a href="{{ url_for('vault_archive_record',slug=event.slug) }}">View archive record</a></div>
+<details class="lfv-host-add-battle">
+<summary>+ Add battle that happened at this event</summary>
+<form method="post" action="{{ url_for('vault_host_add_battle',slug=event.slug) }}" class="lfv-host-add-battle-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label>Side A <input name="side_a" maxlength="220" required placeholder="Dancer or team" autocomplete="off"></label>
+<label>Side B <input name="side_b" maxlength="220" required placeholder="Dancer or team" autocomplete="off"></label>
+<label>Result <select name="outcome" required>
+<option value="unknown">Result not recorded yet</option>
+<option value="a">Side A won</option><option value="b">Side B won</option>
+<option value="tie">Tie</option><option value="youtube_decide">YouTube Decide</option>
+<option value="no_contest">No contest</option>
+</select></label>
+<label>YouTube battle link <input type="url" name="youtube_url" maxlength="500" placeholder="https://youtu.be/..." required></label>
+<button type="submit">Add battle</button>
+</form>
+<p class="lfv-host-muted">This battle will appear as “Added at the event,” separate from the advertised lineup.</p>
+</details>
 {% for section in event.sections %}{% for battle in section.rows %}
 <div class="lfv-host-battle lfv-host-battle--inline" id="battle-{{ battle.key[:12] }}">
 <div class="lfv-host-battle-name"><strong>{{ battle.label }}</strong>{% if battle.resolved %}<small>Recorded: {{ battle.result|replace("_", " ")|title }}</small>{% endif %}</div>

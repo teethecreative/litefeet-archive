@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
-<link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css',v='20261123ytlinks') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css',v='20261123added') }}">
 </head><body class="ledger-admin">{% include "_admin_navigation.html" %}
 <main class="lfv-host-wrap"><p><a href="{{ url_for('vault_admin_hosts') }}">Event hosts</a> / {{ queue.name }}</p>
 <header><p class="lfv-host-eyebrow">BATTLE RESULT TRACKING / ADMIN</p><h1>{{ queue.name }}</h1>
@@ -14,11 +14,26 @@
 </nav>
 {% for event in queue.events %}
 {% set shown = event.pending if view=='pending' else event.pending + event.complete %}
-{% if shown or (view=='all' and event.roster_count) %}
+{% if shown or view=='all' %}
 <section class="lfv-host-event lfv-host-event--compact"><div class="lfv-host-event-head"><h2>{{ event.title }}</h2>
 <p>{{ event.date_label }} · {{ event.pending }} pending · {{ event.complete }} recorded</p>
 <a href="{{ url_for('vault_archive_record',slug=event.slug) }}">View archive event</a></div>
 {% if event.roster_count %}<p class="lfv-host-muted">{{ event.roster_count }} initial team-roster entries excluded from result assignment.</p>{% endif %}
+<details class="lfv-host-add-battle">
+<summary>+ Add battle that happened at this event</summary>
+<form method="post" action="{{ url_for('vault_admin_host_add_battle',host_key=queue.key,slug=event.slug) }}" class="lfv-host-add-battle-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label>Side A <input name="side_a" maxlength="220" required placeholder="Dancer or team" autocomplete="off"></label>
+<label>Side B <input name="side_b" maxlength="220" required placeholder="Dancer or team" autocomplete="off"></label>
+<label>Result <select name="outcome" required>
+<option value="unknown">Result not recorded yet</option>
+<option value="a">Side A won</option><option value="b">Side B won</option>
+<option value="tie">Tie</option><option value="youtube_decide">YouTube Decide</option>
+<option value="no_contest">No contest</option></select></label>
+<label>YouTube battle link <input type="url" name="youtube_url" maxlength="500" placeholder="https://youtu.be/..." required></label>
+<button type="submit">Add battle</button></form>
+<p class="lfv-host-muted">This battle appears as “Added at the event,” separate from the advertised lineup.</p>
+</details>
 {% for section in event.sections %}
 {% for battle in section.rows %}
 {% if view=='all' or not battle.resolved %}

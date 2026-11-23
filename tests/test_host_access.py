@@ -268,3 +268,104 @@ def test_massacre_teams_are_not_separate_battles(database):
     queue = host_queue(database[1], "hypeituptv")
     massacre = next(event for event in queue["events"] if event["slug"] == "litefeet-massacre-pt2-2026")
     assert massacre["pending"] == 9
+
+
+def test_host_can_add_unadvertised_battle_without_altering_flyer(website, database):
+    from dca_rebuild.models import VaultAddedBattle, VaultBattleVideo
+    client = website.test_client()
+    with database[1].begin() as db:
+        db.add(VaultHostAccount(
+            host_key="hypeituptv", person_key="ty-shotz",
+            display_name="Ty Shotz", email="eventhost@example.com",
+            password_hash=generate_password_hash("a-long-test-password")))
+    with client.session_transaction() as state:
+        state["vault_host_account_id"] = 1
+    assert client.get("/hosts/workspace").status_code == 200
+    with client.session_transaction() as state:
+        csrf = state["vault_host_claim_csrf"]
+    slug = "whos-world-is-this-2025"
+    path = f"/hosts/workspace/{slug}/battles/add"
+    data = {
+        "csrf_token": csrf, "side_a": "Surprise Dancer", "side_b": "Another Dancer",
+        "outcome": "youtube_decide",
+        "youtube_url": "https://youtu.be/abcdefghijk",
+    }
+    assert client.post(path, data=data).status_code == 303
+    with database[1]() as db:
+        added = db.query(VaultAddedBattle).one()
+        assert added.event_slug == slug
+        assert added.host_key == "hypeituptv"
+        assert added.created_by == "Ty Shotz"
+        assert db.get(VaultBattleOutcome, added.battle_key).result == "youtube_decide"
+        assert db.get(VaultBattleVideo, added.battle_key).youtube_url.endswith("abcdefghijk")
+        added_key = added.battle_key
+    queue = host_queue(database[1], "hypeituptv")
+    event = next(entry for entry in queue["events"] if entry["slug"] == slug)
+    extra_group = next(section for section in event["sections"] if section["name"] == "Added at the event")
+    assert any(row["key"] == added_key for row in extra_group["rows"])
+    public = client.get("/archive/records/" + slug).get_data(as_text=True)
+    assert "Surprise Dancer vs Another Dancer" in public
+    assert "Added at the event" in public
+    assert "Watch battle on YouTube" in public
+    assert "Voting open" in public
+    assert all(row["label"] != "Surprise Dancer vs Another Dancer"
+               for group in matchups(find_record(slug)) for row in group["items"])
+    assert client.post(path, data=data).status_code == 409
+
+
+def test_spontaneous_battles_reject_wrong_host_invalid_links_and_missing_sides(website, database):
+    from dca_rebuild.models import VaultAddedBattle
+    client = website.test_client()
+    with database[1].begin() as db:
+        db.add(VaultHostAccount(
+            host_key="body-bag", person_key="sns",
+            display_name="SNS", email="sns-new@example.com",
+            password_hash=generate_password_hash("test-strong-password")))
+    with client.session_transaction() as state:
+        state["vault_host_account_id"] = 1
+    client.get("/hosts/workspace")
+    with client.session_transaction() as state:
+        csrf = state["vault_host_claim_csrf"]
+    data = {
+        "csrf_token": csrf, "side_a": "Spontaneous A", "side_b": "Spontaneous B",
+        "outcome": "a", "youtube_url": "https://youtu.be/abcdefghijk",
+    }
+    assert client.post("/hosts/workspace/whos-world-is-this-2025/battles/add",
+                       data=data).status_code == 403
+    slug = "bodybag-body-bag-vol-2"
+    url = f"/hosts/workspace/{slug}/battles/add"
+    assert client.post(url, data={**data, "youtube_url": ""}).status_code == 400
+    assert client.post(url, data={**data, "youtube_url": "https://example.com/not-youtube"}).status_code == 400
+    assert client.post(url, data={**data, "side_b": "Spontaneous A"}).status_code == 400
+    assert client.post(url, data={**data, "side_a": "Kid Smoove", "side_b": "Flii Boogie"}).status_code == 409
+    with database[1]() as db:
+        assert db.query(VaultAddedBattle).count() == 0
+
+
+def test_admin_can_add_battle_to_existing_event_even_without_advertised_lineup(website, database):
+    from dca_rebuild.models import VaultAddedBattle
+    client = website.test_client()
+    assert client.post("/admin/hosts/hypeituptv/events/whos-world-is-this-2025/battles/add",
+                       data={"side_a": "A", "side_b": "B"}).status_code in (302, 303)
+    with client.session_transaction() as state:
+        state["ledger_admin_authenticated"] = True
+    page = client.get("/admin/hosts/hypeituptv/battles?view=all")
+    assert page.status_code == 200
+    assert "+ Add battle that happened at this event" in page.get_data(as_text=True)
+    with client.session_transaction() as state:
+        csrf = state["vault_host_admin_csrf"]
+    data = {
+        "csrf_token": csrf, "side_a": "Late Entry A", "side_b": "Late Entry B",
+        "outcome": "unknown", "youtube_url": "https://www.youtube.com/watch?v=abcdefghijk",
+    }
+    path = "/admin/hosts/hypeituptv/events/whos-world-is-this-2025/battles/add"
+    assert client.post(path, data=data).status_code == 303
+    with database[1]() as db:
+        battle = db.query(VaultAddedBattle).one()
+        assert battle.created_by == "Vault administrator"
+        assert db.get(VaultBattleOutcome, battle.battle_key).result == "unknown"
+    # A result can be filled in later without losing the video link.
+    page = client.get("/admin/hosts/hypeituptv/battles?view=all")
+    assert "Late Entry A vs Late Entry B" in page.get_data(as_text=True)
+    path = f"/admin/hosts/hypeituptv/battles/whos-world-is-this-2025/{battle.battle_key}/outcome"
+    assert client.post(path, data={"csrf_token": csrf, "outcome": "a"}).status_code == 303
