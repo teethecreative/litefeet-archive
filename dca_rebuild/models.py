@@ -1175,3 +1175,30 @@ class VaultAddedBattle(Base):
     created_by = Column(String(120), nullable=False)
     created_by_account_id = Column(Integer, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+# Explanation attached to an interrupted battle. Kept separate from the
+# documented historical result and from YouTube evidence.
+class VaultBattleInterruptionReason(Base):
+    __tablename__ = "vault_battle_interruption_reasons"
+    battle_key = Column(String(64), primary_key=True)
+    event_slug = Column(String(255), nullable=False, index=True)
+    occurrence = Column(String(24), nullable=False)
+    reason = Column(Text, nullable=False)
+    actor_type = Column(String(32), nullable=False)
+    actor_account_id = Column(Integer, nullable=True)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class VaultBattleInterruptionReasonHistory(Base):
+    __tablename__ = "vault_battle_interruption_reason_history"
+    id = Column(Integer, primary_key=True)
+    battle_key = Column(String(64), nullable=False, index=True)
+    event_slug = Column(String(255), nullable=False)
+    previous_occurrence = Column(String(24), nullable=True)
+    previous_reason = Column(Text, nullable=True)
+    occurrence = Column(String(24), nullable=True)
+    reason = Column(Text, nullable=True)
+    actor_type = Column(String(32), nullable=False)
+    actor_account_id = Column(Integer, nullable=True)
+    changed_at = Column(DateTime, nullable=False, default=datetime.utcnow)
