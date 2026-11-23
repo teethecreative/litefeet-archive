@@ -17,6 +17,7 @@ from dca_rebuild.models import (
     VaultDevelopmentItem, VaultDevelopmentFeedback, VaultArchiveContribution,
 )
 from dca_rebuild.phase9e import NomineeQualificationReason9E
+from dca_rebuild.profile_wall import VaultProfileWallPost
 
 AREAS = ("site", "archive", "awards", "events", "music", "lock-in", "other")
 DEVELOPMENT_STATES = ("needs_review", "needs_work", "planned", "active", "done", "not_planned")
@@ -34,6 +35,7 @@ PENDING_REVIEW_SOURCES = (
  ("Lock In", LockInCardRequest, "status", "pending", "admin_vault_auxiliary_review", {"source": "lock-in"}),
  ("Beta feedback", BetaFeedback, "status", "new", "admin_beta_feedback", {}),
  ("Website feedback", VaultDevelopmentFeedback, "status", "new", "admin_vault_development", {}),
+ ("Profile Walls", VaultProfileWallPost, "status", "pending", "admin_profile_walls", {"view": "pending"}),
 )
 
 def _pending_review_summary(db):
