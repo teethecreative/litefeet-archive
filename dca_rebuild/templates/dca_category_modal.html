@@ -7,6 +7,9 @@
       <p class="lfv-dca-modal-kicker">DANCER'S CHOICE / 2026</p>
       <h2>{{ category.name }}</h2>
       <p class="lfv-dca-modal-description">{{ category.description }}</p>
+      {% if category.name|trim|lower in ('most improved', 'most improved dancer') %}
+      <p class="lfv-dca-modal-description"><strong>Most Improved Dancer eligibility:</strong> Nominees must have at least two distinct LiteFeet moments during the award eligibility period (November 2025–November 2026). Examples include battles, viral videos, and standout performances.</p>
+      {% endif %}
       <div class="lfv-dca-modal-nominees">
         <h3>Nominations</h3>
         {% if category.nominees %}
