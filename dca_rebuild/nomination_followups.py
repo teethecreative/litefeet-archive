@@ -128,7 +128,7 @@ def install_nomination_followups(app, session_factory):
                 except IntegrityError:
                     db.rollback()
                     abort(409, "You already submitted information for this nominee.")
-                flash("Details received for review. Your original nomination is unchanged.")
+                flash("Details submitted! Your nomination hasn't changed.")
                 return redirect(url_for("dca_my_nomination_followups"), code=303)
             response = render_template(
                 "dca_my_nomination_followups.html",
