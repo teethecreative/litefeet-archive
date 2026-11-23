@@ -491,12 +491,12 @@ main {
 /* ---------- DARK MODE ---------- */
 
 html[data-theme="dark"] {
-    --page: #02060d;
-    --surface: #07111f;
-    --surface-2: #0c1b30;
-    --text: #ffffff;
-    --muted: #c0c9d6;
-    --border: #28405f;
+    --page: var(--lfv-bg, #0b1422);
+    --surface: var(--lfv-surface, #142239);
+    --surface-2: var(--lfv-surface-muted, #1b2b43);
+    --text: var(--lfv-ink, #f3f6fc);
+    --muted: var(--lfv-muted, #b6c3d8);
+    --border: var(--lfv-line, #364864);
 }
 
 /* Major sections should separate from the page */
@@ -541,12 +541,12 @@ html[data-theme="dark"] .choices label:has(input:checked) {
 /* ---------- LIGHT MODE ---------- */
 
 html[data-theme="light"] {
-    --page: #e9edf4;
-    --surface: #ffffff;
-    --surface-2: #edf3fb;
-    --text: #07152b;
-    --muted: #526174;
-    --border: #b7c3d2;
+    --page: var(--lfv-bg, #e9edf4);
+    --surface: var(--lfv-surface, #ffffff);
+    --surface-2: var(--lfv-surface-muted, #f4f6f9);
+    --text: var(--lfv-ink, #07152b);
+    --muted: var(--lfv-muted, #46536a);
+    --border: var(--lfv-line, #c9d2e0);
 }
 
 html[data-theme="light"] section {

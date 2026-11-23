@@ -147,3 +147,42 @@ html.lfv-sitewide :is(.lfv-menu-panel,.lfv-menu-panel a,.lfv-menu-section,.lfv-m
   html.lfv-sitewide .ledger-footer .ledger-footer-inner {gap:24px;}
   html.lfv-sitewide .lfv-program-nav {gap:14px;scrollbar-width:thin;}
 }
+
+
+
+/* Unified theme behavior: same surfaces and readable text for either mode.
+   Uses low-specificity defaults so award, event, and admin components keep
+   their intentionally styled states and business behavior. */
+html[data-theme="light"]{color-scheme:light;}
+html[data-theme="dark"]{color-scheme:dark;}
+html[data-theme="dark"].lfv-sitewide body,
+html[data-theme="dark"].lfv-sitewide .lfv-menu-panel {
+  background:var(--lfv-bg,#0b1422);
+  color:var(--lfv-ink,#f3f6fc);
+}
+html[data-theme="dark"].lfv-sitewide :where(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  color-scheme:dark;
+  color:var(--lfv-ink,#f3f6fc);
+  background:var(--lfv-surface,#142239);
+  border-color:var(--lfv-line,#364864);
+}
+html[data-theme="light"].lfv-sitewide :where(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  color-scheme:light;
+  color:var(--lfv-ink,#07152b);
+  background:var(--lfv-surface,#fff);
+  border-color:var(--lfv-line,#c9d2e0);
+}
+html.lfv-sitewide :where(input,textarea)::placeholder {
+  color:var(--lfv-muted,#46536a);
+  opacity:1;
+}
+html.lfv-sitewide :where(button,a,input,textarea,select,summary):focus-visible {
+  outline:3px solid var(--lfv-gold,#c9a127);
+  outline-offset:3px;
+}
+html[data-theme="dark"].lfv-sitewide .lfv-menu-panel :is(a,button) {
+  color:var(--lfv-ink,#f3f6fc);
+}
+html[data-theme="dark"].lfv-sitewide .lfv-menu-panel :is(a:hover,a[aria-current="page"],button:hover) {
+  color:var(--lfv-gold,#c9a127);
+}

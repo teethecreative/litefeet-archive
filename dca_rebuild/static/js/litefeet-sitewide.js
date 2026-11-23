@@ -97,15 +97,35 @@
       }
     });
     function applyTheme(theme) {
-      document.documentElement.dataset.theme = theme;
-      document.documentElement.classList.toggle('dark', theme === 'dark');
-      themeButton.setAttribute('aria-label', 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' mode');
+      const next = theme === 'dark' ? 'dark' : 'light';
+      if (window.LFVTheme) window.LFVTheme.apply(next);
+      else {
+        document.documentElement.dataset.theme = next;
+        document.documentElement.classList.toggle('dark', next === 'dark');
+      }
+      themeButton.setAttribute('aria-label', 'Switch to ' + (next === 'dark' ? 'light' : 'dark') + ' mode');
+      themeButton.setAttribute('aria-pressed', String(next === 'dark'));
+      themeButton.title = 'Switch to ' + (next === 'dark' ? 'light' : 'dark') + ' mode';
     }
-    let saved = 'light'; try { saved = localStorage.getItem('litefeet-ledger-theme') || 'light'; } catch (_) {}
-    applyTheme(saved === 'dark' ? 'dark' : 'light');
+    let initial = window.LFVTheme ? window.LFVTheme.get() : document.documentElement.dataset.theme;
+    if (initial !== 'dark' && initial !== 'light') {
+      try { initial = localStorage.getItem('litefeet-ledger-theme'); } catch (_) {}
+    }
+    applyTheme(initial === 'dark' ? 'dark' : 'light');
+    document.documentElement.addEventListener('lfv:themechange', function (event) {
+      const active = event.detail && event.detail.theme === 'dark' ? 'dark' : 'light';
+      themeButton.setAttribute('aria-label', 'Switch to ' + (active === 'dark' ? 'light' : 'dark') + ' mode');
+      themeButton.setAttribute('aria-pressed', String(active === 'dark'));
+      themeButton.title = 'Switch to ' + (active === 'dark' ? 'light' : 'dark') + ' mode';
+    });
     themeButton.addEventListener('click', function () {
-      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; applyTheme(next);
-      try { localStorage.setItem('litefeet-ledger-theme', next); } catch (_) {}
+      const current = window.LFVTheme ? window.LFVTheme.get() : document.documentElement.dataset.theme;
+      const next = current === 'dark' ? 'light' : 'dark';
+      if (window.LFVTheme) window.LFVTheme.set(next);
+      else {
+        applyTheme(next);
+        try { localStorage.setItem('litefeet-ledger-theme', next); } catch (_) {}
+      }
     });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();

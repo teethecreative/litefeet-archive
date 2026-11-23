@@ -1,3 +1,4 @@
+<script src="{{ url_for('static', filename='js/lfv-theme-init.js', v='20261123') }}"></script>
 <nav
     class="ledger-admin-nav"
     aria-label="The LiteFeet Vault Admin"
@@ -290,10 +291,8 @@ body.ledger-admin .lfv-admin-workspace .lfv-admin-metrics a{
 </style>
 <script>
 (function(){
- var key='litefeet-ledger-theme';
- function apply(theme){
-  document.documentElement.dataset.theme=theme;
-  document.documentElement.classList.toggle('dark',theme==='dark');
+ function syncButton(){
+  var theme=window.LFVTheme?window.LFVTheme.get():document.documentElement.dataset.theme;
   document.querySelectorAll('.lfv-admin-theme-toggle').forEach(function(button){
    button.setAttribute('aria-label','Switch to '+(theme==='dark'?'light':'dark')+' mode');
    button.setAttribute('aria-pressed',String(theme==='dark'));
@@ -301,12 +300,15 @@ body.ledger-admin .lfv-admin-workspace .lfv-admin-metrics a{
    if(label) label.textContent=theme==='dark'?'LIGHT MODE':'DARK MODE';
   });
  }
- var saved='light';try{saved=localStorage.getItem(key)||'light';}catch(_){}
- apply(saved==='dark'?'dark':'light');
+ syncButton();
+ document.documentElement.addEventListener('lfv:themechange',syncButton);
  document.querySelectorAll('.lfv-admin-theme-toggle').forEach(function(button){
   button.addEventListener('click',function(){
-   var next=document.documentElement.dataset.theme==='dark'?'light':'dark';
-   apply(next);try{localStorage.setItem(key,next);}catch(_){}
+   var theme=window.LFVTheme?window.LFVTheme.get():document.documentElement.dataset.theme;
+   var next=theme==='dark'?'light':'dark';
+   if(window.LFVTheme)window.LFVTheme.set(next);
+   else{document.documentElement.dataset.theme=next;document.documentElement.classList.toggle('dark',next==='dark');try{localStorage.setItem('litefeet-ledger-theme',next);}catch(_){}}
+   syncButton();
   });
  });
 })();

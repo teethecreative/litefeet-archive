@@ -99,19 +99,32 @@
     function dark() {
       return document.documentElement.dataset.theme === 'dark' || document.documentElement.classList.contains('dark');
     }
-    function themeLabel() { themeButton.setAttribute('aria-label', 'Switch to ' + (dark() ? 'light' : 'dark') + ' mode'); }
+    function themeLabel() {
+      var isDark = dark();
+      themeButton.setAttribute('aria-label', 'Switch to ' + (isDark ? 'light' : 'dark') + ' mode');
+      themeButton.setAttribute('aria-pressed', String(isDark));
+      themeButton.title = 'Switch to ' + (isDark ? 'light' : 'dark') + ' mode';
+    }
     themeButton.addEventListener('click', function () {
       var next = dark() ? 'light' : 'dark';
-      try { if (typeof window.setTheme === 'function') window.setTheme(next); } catch (e) { /* use fallback */ }
-      document.documentElement.dataset.theme = next;
-      document.documentElement.classList.toggle('dark', next === 'dark');
-      try { localStorage.setItem('litefeet-ledger-theme', next); } catch (e) { /* storage can be disabled */ }
+      if (window.LFVTheme) window.LFVTheme.set(next);
+      else {
+        document.documentElement.dataset.theme = next;
+        document.documentElement.classList.toggle('dark', next === 'dark');
+        try { localStorage.setItem('litefeet-ledger-theme', next); } catch (e) {}
+      }
       themeLabel();
     });
-    try {
-      var savedTheme = localStorage.getItem('litefeet-ledger-theme');
-      if (savedTheme === 'light' || savedTheme === 'dark') document.documentElement.dataset.theme = savedTheme;
-    } catch (_) { /* Theme remains usable without browser storage. */ }
+    document.documentElement.addEventListener('lfv:themechange', themeLabel);
+    if (!window.LFVTheme) {
+      try {
+        var savedTheme = localStorage.getItem('litefeet-ledger-theme');
+        if (savedTheme === 'light' || savedTheme === 'dark') {
+          document.documentElement.dataset.theme = savedTheme;
+          document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+        }
+      } catch (_) {}
+    }
     themeLabel();
   }
   function findOriginalNavigation() {
