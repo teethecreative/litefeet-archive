@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-editorial-v2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-consistency-v5.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-calendar-pages.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfa-results.css') }}">
 </head>
 <body>
 {% include "_navigation.html" %}
@@ -50,6 +51,7 @@
 {% if event.source_href %}<a class="lfv-event-secondary-action" href="{{ event.source_href }}" target="_blank" rel="noopener noreferrer">View source / more information ↗</a>{% endif %}
 </div>
 </section>
+{% include "lfa_battle_section.html" %}
 </main>
 {% include "_footer.html" %}
 <script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
