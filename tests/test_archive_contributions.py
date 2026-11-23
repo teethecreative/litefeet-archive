@@ -104,43 +104,48 @@ def test_type_specific_answers_are_saved_and_only_selected_type_is_used(website,
     assert "Must not be stored" not in admin.get_data(as_text=True)
 
 
-def test_general_submit_has_one_alphabetical_picker_and_tailored_forms(website):
+def test_general_submit_two_step_dropdown_is_sorted_by_category(website):
     from html.parser import HTMLParser
     from dca_rebuild.gathering_submissions import GATHERING_TYPES
     from dca_rebuild.archive_contributions import CONTRIBUTION_TYPES
 
-    class SelectParser(HTMLParser):
+    class PickerParser(HTMLParser):
         def __init__(self):
             super().__init__()
-            self.in_picker = False
-            self.options = []
+            self.active = None
+            self.options = {"lfv-submit-category-select": [], "lfv-submit-type-select": []}
         def handle_starttag(self, tag, attrs):
             attrs = dict(attrs)
-            if tag == "select" and attrs.get("id") == "lfv-submit-type-select":
-                self.in_picker = True
-            if tag == "option" and self.in_picker:
-                self.options.append(attrs.get("value"))
+            if tag == "select" and attrs.get("id") in self.options:
+                self.active = attrs["id"]
+            if tag == "option" and self.active:
+                self.options[self.active].append((attrs.get("value"), attrs.get("data-submit-kind")))
         def handle_endtag(self, tag):
-            if tag == "select" and self.in_picker:
-                self.in_picker = False
+            if tag == "select":
+                self.active = None
 
     response = website.test_client().get("/submit")
     assert response.status_code == 200
     html = response.get_data(as_text=True)
-    parser = SelectParser()
+    parser = PickerParser()
     parser.feed(html)
-    expected = sorted(
-        [(label.title(), "Upcoming event", f"gathering:{value}")
-         for value, label in GATHERING_TYPES]
-        + [(label, "Historical archive", f"archive:{value}")
-           for value, label in CONTRIBUTION_TYPES],
-        key=lambda item: (item[0].casefold(), item[1].casefold()),
+    assert parser.options["lfv-submit-category-select"] == [
+        ("", None), ("archive", None), ("gathering", None)
+    ]
+    expected_archive = [
+        (f"archive:{value}", "archive")
+        for value, label in sorted(CONTRIBUTION_TYPES, key=lambda row: row[1].casefold())
+    ]
+    expected_gathering = [
+        (f"gathering:{value}", "gathering")
+        for value, label in sorted(GATHERING_TYPES, key=lambda row: row[1].casefold())
+    ]
+    assert parser.options["lfv-submit-type-select"] == (
+        [("", None)] + expected_archive + expected_gathering
     )
-    assert parser.options == [""] + [item[2] for item in expected]
-    assert len(parser.options) == 1 + len(GATHERING_TYPES) + len(CONTRIBUTION_TYPES)
-    assert 'data-submit-kind' not in html
-    assert 'id="lfv-general-archive-form"' in html
-    assert 'id="lfv-general-event-form"' in html
+    assert 'id="lfv-submit-subtype-wrap" class="lfv-submit-subtype" hidden' in html
+    assert 'id="lfv-submit-type-select" aria-describedby="lfv-submit-select-instruction" disabled' in html
+    assert 'data-submit-kind' in html
     assert 'data-archive-type="person"' in html
     assert 'data-event-type="battle"' in html
     assert 'action="/archive/contribute"' in html

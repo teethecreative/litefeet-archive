@@ -71,15 +71,20 @@ def install_gathering_submissions(app, ns):
     def submit():
         if request.method == "GET":
             from dca_rebuild.archive_contributions import _public_csrf, CONTRIBUTION_TYPES
-            submission_options = sorted(
-                ([{"value": f"gathering:{value}", "label": label.title(),
-                   "kind": "Upcoming event"} for value, label in GATHERING_TYPES]
-                 + [{"value": f"archive:{value}", "label": label,
-                     "kind": "Historical archive"} for value, label in CONTRIBUTION_TYPES]),
-                key=lambda item: (item["label"].casefold(), item["kind"].casefold()),
+            # Both second-level dropdowns are alphabetized independently.
+            archive_submission_options = sorted(
+                [{"value": f"archive:{value}", "label": label}
+                 for value, label in CONTRIBUTION_TYPES],
+                key=lambda item: item["label"].casefold(),
+            )
+            gathering_submission_options = sorted(
+                [{"value": f"gathering:{value}", "label": label.title()}
+                 for value, label in GATHERING_TYPES],
+                key=lambda item: item["label"].casefold(),
             )
             return render_template("vault_submit.html", submission_types=GATHERING_TYPES,
-                                   submission_options=submission_options,
+                                   archive_submission_options=archive_submission_options,
+                                   gathering_submission_options=gathering_submission_options,
                                    recurrence_choices=RECURRENCE_CHOICES, submit_csrf=csrf_token(),
                                    archive_contribution_csrf=_public_csrf(),
                                    archive_contribution_types=CONTRIBUTION_TYPES)

@@ -31,3 +31,8 @@
 /* One picker on the general page; the archive form still retains its
    own selector in standalone and modal contexts. */
 #lfv-general-archive-form [data-archive-type-label]{display:none!important}
+
+/* Category first; only then disclose the alphabetized secondary dropdown. */
+.lfv-submit-types .lfv-submit-subtype[hidden]{display:none!important}
+.lfv-submit-types .lfv-submit-subtype{margin-top:16px;padding-top:15px;border-top:1px solid var(--lfv-border,#aab7c8)}
+.lfv-submit-types select:disabled{opacity:.65}

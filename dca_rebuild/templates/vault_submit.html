@@ -16,15 +16,26 @@
 </header>
 <section class="lfv-submit-types" aria-labelledby="lfv-submit-types-heading">
   <h2 id="lfv-submit-types-heading">What are you submitting?</h2>
-  <label for="lfv-submit-type-select">Choose the submission type</label>
-  <select id="lfv-submit-type-select" name="submission_selector" aria-describedby="lfv-submit-select-instruction" required>
-    <option value="">Select a submission type</option>
-    {% for item in submission_options %}
-    <option value="{{ item.value }}">{{ item.label }} — {{ item.kind }}</option>
-    {% endfor %}
+  <label for="lfv-submit-category-select">Submission category</label>
+  <select id="lfv-submit-category-select" aria-controls="lfv-submit-subtype-wrap" aria-describedby="lfv-submit-select-instruction">
+    <option value="">Select a category</option>
+    <option value="archive">Historical Event / Archive</option>
+    <option value="gathering">Upcoming Event / Calendar</option>
   </select>
+  <div id="lfv-submit-subtype-wrap" class="lfv-submit-subtype" hidden>
+    <label for="lfv-submit-type-select">What type of information?</label>
+    <select id="lfv-submit-type-select" aria-describedby="lfv-submit-select-instruction" disabled>
+      <option value="">Select a submission type</option>
+      {% for item in archive_submission_options %}
+      <option data-submit-kind="archive" value="{{ item.value }}">{{ item.label }}</option>
+      {% endfor %}
+      {% for item in gathering_submission_options %}
+      <option data-submit-kind="gathering" value="{{ item.value }}">{{ item.label }}</option>
+      {% endfor %}
+    </select>
+  </div>
 </section>
-<p id="lfv-submit-select-instruction" class="lfv-submit-selection-note">Choose one submission type above to start.</p>
+<p id="lfv-submit-select-instruction" class="lfv-submit-selection-note">Choose a submission category, then select the specific type.</p>
 <div id="lfv-general-archive-form" class="lfv-submit-selected-form" hidden>
 <h2 id="lfv-archive-selection-heading" tabindex="-1">Submit historical information</h2>
 {% include "archive_contribution_form.html" %}
@@ -95,7 +106,11 @@
 <script defer src="{{ url_for('static',filename='js/archive-contribution.js',v='20261123e') }}"></script>
 <script>
 (function(){
+  const category=document.getElementById('lfv-submit-category-select');
   const choice=document.getElementById('lfv-submit-type-select');
+  const subtypeWrap=document.getElementById('lfv-submit-subtype-wrap');
+  const availableTypeOptions=[...choice.querySelectorAll('option[data-submit-kind]')]
+    .map(option=>option.cloneNode(true));
   const archiveForm=document.getElementById('lfv-general-archive-form');
   const eventForm=document.getElementById('lfv-general-event-form');
   const archiveSelect=archiveForm.querySelector('[data-archive-type-select]');
@@ -158,6 +173,20 @@
       selectedNote.hidden=false;
     }
   }
+  function syncCategory(kind){
+    const valid=kind==='archive'||kind==='gathering';
+    subtypeWrap.hidden=!valid;
+    choice.disabled=!valid;
+    choice.replaceChildren(new Option('Select a submission type',''));
+    if(valid){
+      availableTypeOptions.filter(option=>option.dataset.submitKind===kind)
+        .forEach(option=>choice.appendChild(option.cloneNode(true)));
+    }
+    selectType('','');
+  }
+  category.addEventListener('change',function(){
+    syncCategory(category.value);
+  });
   choice.addEventListener('change',function(){
     const parts=choice.value.split(':');
     selectType(parts[0],parts[1]||'');
@@ -205,9 +234,14 @@
   setEnabled(eventForm,false);
   syncEventDetails('');
   const initial=new URLSearchParams(window.location.search).get('type');
-  if(initial && [...choice.options].some(option=>option.value===initial)){
+  if(initial&&initial.includes(':')){
     const parts=initial.split(':');
-    selectType(parts[0],parts[1]);
+    if(['archive','gathering'].includes(parts[0])
+        &&availableTypeOptions.some(option=>option.value===initial)){
+      category.value=parts[0];
+      syncCategory(parts[0]);
+      selectType(parts[0],parts[1]);
+    }
   }
 })();
 </script></body></html>
