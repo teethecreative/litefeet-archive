@@ -2291,21 +2291,38 @@ def dca_2023_home():
 
 @app.route("/awards/litefeet-awards/<int:year>")
 def lfa_year(year):
-    # The public LiteFeet Awards program is retired. Historical records remain private.
-    if year not in {2023, 2024, 2025, 2026}:
-        abort(404)
-    return redirect(url_for("awards_home"), code=302)
 
+    allowed_years = {2023, 2024, 2025, 2026}
+
+    if year not in allowed_years:
+        abort(404)
+
+    return render_template(
+        "award_landing.html",
+        page_title=f"Litefeet Awards {year}",
+        eyebrow="LITEFEET AWARDS",
+        title=str(year),
+        subtitle="Litefeet Awards winner archive.",
+        page_type="lfa",
+        year=year,
+    )
+
+# ============================================================
+# LITEFEET AWARDS
+# ============================================================
 
 @app.route("/awards/litefeet-awards")
 def lfa_home():
-    return redirect(url_for("awards_home"), code=302)
+    return render_template("lfa_home.html")
 
 
-@app.route("/awards/litefeet-awards/submit", methods=["POST"])
+@app.route(
+    "/awards/litefeet-awards/submit",
+    methods=["POST"]
+)
 def lfa_submit():
-    # Block old bookmarked forms and direct POSTs without persisting data.
-    abort(410, description="LiteFeet Awards submissions are closed.")
+    # Historical LiteFeet Awards pages remain public; archive additions are closed.
+    abort(410, description="Public LiteFeet Awards archive submissions are closed.")
 
 
 # ============================================================
@@ -3744,7 +3761,10 @@ def short_dca_2023():
 
 @app.route("/litefeet-awards")
 def short_litefeet_awards():
-    return redirect(url_for("awards_home"), code=302)
+    return redirect(
+        url_for("lfa_home"),
+        code=302,
+    )
 
 
 @app.route("/hypeitup-awards")
