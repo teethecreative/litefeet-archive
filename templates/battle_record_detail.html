@@ -170,22 +170,34 @@
     <div class="battle-culture-layout">
         <article class="battle-culture-card">
             <p class="eyebrow">{{ poll.label }}</p>
-            <h3>Who do you think won?</h3>
+            <h3>Who do you think won overall?</h3>
+            <p class="small-note">Choose a winner for each round first, then give your overall decision.</p>
             {% if poll.can_vote %}
             <form method="POST" action="{{ url_for('battle_poll_vote', battle_id=battle['id']) }}" class="battle-culture-vote-form">
                 <input type="hidden" name="csrf_token" value="{{ poll.csrf }}">
+                {% for number, round in poll.rounds.items() %}
+                <fieldset class="battle-culture-round-fieldset">
+                    <legend>Round {{ number }}</legend>
+                    <label><input type="radio" name="round_{{ number }}" value="one" {% if round.own_choice == 'one' %}checked{% endif %} required> {{ phase7_value(battle, 'competitor_one', default='Competitor 1') }}</label>
+                    <label><input type="radio" name="round_{{ number }}" value="two" {% if round.own_choice == 'two' %}checked{% endif %}> {{ phase7_value(battle, 'competitor_two', default='Competitor 2') }}</label>
+                    <label><input type="radio" name="round_{{ number }}" value="tie" {% if round.own_choice == 'tie' %}checked{% endif %}> Tie</label>
+                </fieldset>
+                {% endfor %}
+                <fieldset class="battle-culture-round-fieldset">
+                <legend>Overall decision</legend>
                 <label><input type="radio" name="choice" value="one" {% if poll.own_choice == 'one' %}checked{% endif %} required> {{ phase7_value(battle, 'competitor_one', default='Competitor 1') }}</label>
                 <label><input type="radio" name="choice" value="two" {% if poll.own_choice == 'two' %}checked{% endif %}> {{ phase7_value(battle, 'competitor_two', default='Competitor 2') }}</label>
                 <label><input type="radio" name="choice" value="tie" {% if poll.own_choice == 'tie' %}checked{% endif %}> It was a tie</label>
+                </fieldset>
                 <button class="button primary" type="submit">{{ 'Update My Vote' if poll.own_choice else 'Cast My Vote' }}</button>
             </form>
             {% else %}
             <p><a href="{{ url_for('account_login', next=request.path) }}">Sign in</a> to vote. Results are public.</p>
             {% endif %}
-            <p class="small-note">One current vote per signed-in account. Changing your opinion updates your existing vote; votes do not establish an official winner.</p>
+            <p class="small-note">One ballot per signed-in account. Each ballot includes every round and the overall decision. Updating a ballot replaces the previous choices; community votes do not establish an official winner.</p>
         </article>
         <article class="battle-culture-card">
-            <p class="eyebrow">The culture's current opinion</p>
+            <p class="eyebrow">The culture's overall opinion</p>
             <h3>{{ poll.total }} vote{{ '' if poll.total == 1 else 's' }}</h3>
             {% for option, label in [('one',phase7_value(battle,'competitor_one',default='Competitor 1')),('two',phase7_value(battle,'competitor_two',default='Competitor 2')),('tie','Tie')] %}
             <div class="battle-culture-result">
@@ -194,6 +206,17 @@
             </div>
             {% endfor %}
             <p class="small-note">Live community opinion, not an official award or judged decision. This poll does not automatically close.</p>
+            {% for number, round in poll.rounds.items() %}
+            <div class="battle-culture-round-summary">
+                <h4>Round {{ number }} · {{ round.total }} vote{{ '' if round.total == 1 else 's' }}</h4>
+                {% for option, label in [('one',phase7_value(battle,'competitor_one',default='Competitor 1')),('two',phase7_value(battle,'competitor_two',default='Competitor 2')),('tie','Tie')] %}
+                <div class="battle-culture-result">
+                    <div class="battle-culture-result-label"><span>{{ label }}</span><span>{{ round.counts[option] }} · {{ round.percent[option] }}%</span></div>
+                    <div class="battle-culture-bar"><div style="width: {{ round.percent[option] }}%"></div></div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
         </article>
     </div>
     {% if poll.comments %}
@@ -231,6 +254,9 @@
 .battle-culture-card {border:1px solid var(--border-color,rgba(127,127,127,.25));border-radius:14px;padding:18px;background:var(--card-bg,rgba(127,127,127,.05));margin:12px 0}
 .battle-culture-vote-form {display:grid;gap:12px;margin:14px 0}
 .battle-culture-vote-form label {display:flex;align-items:center;gap:10px}
+.battle-culture-round-fieldset {border:1px solid var(--border-color,rgba(127,127,127,.25));border-radius:10px;display:grid;gap:10px;padding:12px}
+.battle-culture-round-fieldset legend {font-weight:600;padding:0 5px}
+.battle-culture-round-summary {border-top:1px solid var(--border-color,rgba(127,127,127,.25));margin-top:18px;padding-top:14px}
 .battle-culture-result {margin:16px 0}
 .battle-culture-result-label {display:flex;justify-content:space-between;gap:12px;font-size:.9rem}
 .battle-culture-bar {height:7px;background:var(--border-color,rgba(127,127,127,.22));border-radius:10px;overflow:hidden;margin-top:7px}
