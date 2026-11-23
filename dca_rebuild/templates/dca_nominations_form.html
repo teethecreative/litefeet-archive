@@ -18,10 +18,12 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dca-standings-grid.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dca-2026-minimal.css', v='20261123b') }}">
+  <script defer src="{{ url_for('static', filename='js/dca-2026-modal.js', v='20261123b') }}"></script>
 </head>
 <body{% if results_view %} class="lfv-standings-body"{% endif %}>
 {% include "_navigation.html" %}
-<main class="lf-nom-2026 lf9e{% if results_view %} lf9e-standings-page{% elif not identified %} lf9e-intro-page{% endif %}" id="nominations">
+<main class="lf-nom-2026 lf9e{% if results_view %} lf9e-standings-page{% elif not identified %} lf9e-intro-page{% endif %}" id="nominations" data-dca-grid-url="{{ url_for('dca_nominations_closed', category=selected.id) if selected else url_for('dca_nominations_closed') }}">
   {% if results_view %}<section class="lf9e-standings-surface" aria-label="Nominee standings">{% endif %}
   <p class="lf-nom-eyebrow">{% if results_view or not identified %}DCA 2026{% else %}DANCER'S CHOICE AWARDS · 2026{% endif %}</p>
   {% with messages = get_flashed_messages() %}{% for message in messages %}
@@ -33,77 +35,89 @@
     {% include "dca_nominee_standings.html" %}
     </section>
   {% elif not identified %}
-  <section class="lf9e-introduction" aria-labelledby="intro-title">
-    <h1 id="intro-title">2026 NOMINATIONS</h1>
-    {% include "dca_eligibility_notice.html" %}
-    <p class="lf9e-round-notice">Nominations determine the finalists, not the winners.</p>
-    <ol class="lf9e-intro-steps">
-      <li>Choose a category.</li>
-      <li>Nominate someone or something new, or support an existing nominee.</li>
-      <li>You can nominate once per category every rolling 24 hours.</li>
-      <li>The five eligible nominees with the most nominations advance to voting.</li>
-    </ol>
-    <h2 id="intro-categories-title">Official Top 25</h2>
-    <div class="lf9e-intro-category-scroll" role="region" aria-labelledby="intro-categories-title" tabindex="0">
-      <ol class="lf9e-intro-categories" id="lf9e-intro-categories">
-        {% for category in intro_categories %}<li>{{ category.name }}</li>{% endfor %}
-      </ol>
-    </div>
-    <p class="lf9e-writein-link"><a href="{{ url_for('phase9e_writeins') }}">WRITE-IN CATEGORIES →</a> <span>Explore additional categories suggested by the community.</span></p>
-    {% if not closed %}
-    <form method="post" class="lf9e-entry-form lf9e-email-form" id="lf9e-email-start" aria-labelledby="email-title">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <input type="hidden" name="action" value="identify">
-      {% if requested_category_id %}<input type="hidden" name="return_category" value="{{ requested_category_id }}">{% endif %}
-      <label id="email-title">Your email<input name="email" type="email" maxlength="254" autocomplete="email" required></label>
-      <button type="submit" class="lf9e-primary">CONTINUE</button>
-    </form>
-    <p class="lf9e-note">Verify your email to start nominating. Your email stays private.</p>
-    {% endif %}
-    <a class="lf9e-intro-results" href="{{ url_for('dca_nominations_closed', view='results') }}">View Standings</a>
-  </section>
-  {% else %}
-    <div class="lf9e-buttons">
-      <a class="lf9e-secondary" href="{{ url_for('dca_my_nomination_followups') }}">CHECK MISSING DETAILS</a>
-      <form method="post" action="{{ url_for('dca_nominations_closed') }}" class="lf9e-done-form">
+  <div class="lfv-dca-nomination-layout">
+    <section class="lfv-dca-main lf9e-introduction" aria-labelledby="intro-title">
+      <h1 id="intro-title">2026 NOMINATIONS</h1>
+      <p class="lfv-dca-intro-copy">Explore the categories, then verify your email to nominate. The five eligible nominees with the most nominations advance to voting.</p>
+      <h2 id="intro-categories-title">Official Top 25</h2>
+      <div class="lf9e-intro-category-scroll" role="region" aria-labelledby="intro-categories-title" tabindex="0">
+        <ol class="lf9e-intro-categories" id="lf9e-intro-categories">
+          {% for category in intro_categories %}<li>{{ category.name }}</li>{% endfor %}
+        </ol>
+      </div>
+      <p class="lf9e-writein-link"><a href="{{ url_for('phase9e_writeins') }}">Write-in categories →</a></p>
+      {% if not closed %}
+      <form method="post" class="lf9e-entry-form lf9e-email-form" id="lf9e-email-start" aria-labelledby="email-title">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <input type="hidden" name="action" value="done">
-        <input type="hidden" name="next" value="standings">
-        <button class="lf9e-secondary lf9e-done-button" type="submit">FINISH &amp; VIEW STANDINGS</button>
+        <input type="hidden" name="action" value="identify">
+        {% if requested_category_id %}<input type="hidden" name="return_category" value="{{ requested_category_id }}">{% endif %}
+        <label id="email-title">Your email<input name="email" type="email" maxlength="254" autocomplete="email" required></label>
+        <button type="submit" class="lf9e-primary">VERIFY &amp; CONTINUE</button>
       </form>
-      {% if selected %}<a class="lf9e-secondary" href="{{ url_for('dca_nominations_closed') }}">ALL CATEGORIES</a>{% endif %}
-    </div>
+      <p class="lf9e-note">Email verification is required once; your email stays private.</p>
+      {% endif %}
+      <a class="lf9e-intro-results" href="{{ url_for('dca_nominations_closed', view='results') }}">View Standings</a>
+    </section>
+    <aside class="lfv-dca-rules-aside" aria-label="Nomination qualification update">
+      {% include "dca_eligibility_notice.html" %}
+    </aside>
+  </div>
+  {% else %}
     {% if selected %}
       {% set category = selected %}
-      <h1 class="lf9e-category-title">{{ category.name }}</h1>
-      <p class="lf9e-note">Nominees must have relevant LiteFeet activity during the eligibility period. You only need to add a reason if one isn't already on file.</p>
-      <p>{{ category.description }}</p>
-      <p class="lf9e-round-notice">Add a new nominee or support an existing one.</p>
-      {% if show_form %}
-        <a class="lf9e-back-link" href="{{ url_for('dca_nominations_closed', category=category.id) }}">Back to Nominees</a>
-        {% include "dca_phase9e_nomination_card.html" %}
-      {% elif suggestion %}
-        {% include "dca_nomination_suggestion_details.html" %}
-      {% else %}
-        {% include "dca_nomination_suggestions.html" %}
-      {% endif %}
+      <section class="lfv-dca-category-only" aria-labelledby="dca-category-title">
+        <a class="lfv-dca-compact-link" href="{{ url_for('dca_nominations_closed') }}">← All categories</a>
+        <h1 id="dca-category-title">{{ category.name }}</h1>
+        <p>{{ category.description }}</p>
+        <h2>Nominations</h2>
+        {% if category.nominees %}
+          <ul class="lfv-dca-nominee-list">
+            {% for nominee in category.nominees %}
+            <li>
+              <span class="lfv-dca-nominee-name">{{ nominee.name }}</span>
+              <span class="lfv-dca-nominee-total">{{ nominee.count }} nomination{{ 's' if nominee.count != 1 else '' }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>No nominations yet.</p>
+        {% endif %}
+        {% if category.available %}
+          <button type="button" class="lfv-dca-add-new" data-dca-open-category="{{ category.id }}" aria-haspopup="dialog">Nominate in this category</button>
+        {% elif category.remaining %}
+          <p class="lfv-dca-modal-status">You can nominate again after this category's 24-hour cooldown.</p>
+        {% endif %}
+      </section>
     {% else %}
-      <h1 class="lf9e-nomination-heading">Choose a Category</h1>
-      {% include "dca_eligibility_notice.html" %}
-      <p class="lf9e-nomination-description">Choose a category to nominate someone or something new, or support an existing nominee. The five eligible nominees with the most nominations advance to voting. One nomination per category every rolling 24 hours.</p>
-      {% if closed %}<p class="lf9e-message">Nominations are closed. Your history and suggestions remain available inside each category.</p>{% endif %}
-      <section aria-labelledby="official-title"><h2 id="official-title">Official Top 25</h2>
-        <div class="lf9e-category-grid">{% for category in categories %}{% include "dca_nomination_grid_card.html" %}{% endfor %}</div>
-      </section>
-      <p class="lf9e-writein-link"><a href="{{ url_for('phase9e_writeins') }}">WRITE-IN CATEGORIES →</a> <span>Explore additional categories suggested by the community.</span></p>
-      <section class="lf9e-saved-ideas" aria-labelledby="lf9e-saved-title">
-        <h2 id="lf9e-saved-title">Saved nomination ideas</h2>
-        <p class="lf9e-note">Private drafts stored in this browser. These have not been submitted.</p>
-        <div id="lf9e-saved-list"></div>
-      </section>
+      <div class="lfv-dca-nomination-layout">
+        <div class="lfv-dca-main">
+          <h1 class="lf9e-nomination-heading">Choose a Category</h1>
+          <p class="lfv-dca-intro-copy">Select a category to nominate an existing name or add someone or something new. One nomination per category every rolling 24 hours.</p>
+          {% if closed %}<p class="lf9e-message">Nominations are closed. You can still browse the standings.</p>{% endif %}
+          <section aria-labelledby="official-title">
+            <h2 id="official-title">Official Top 25</h2>
+            <div class="lf9e-category-grid">
+              {% for category in categories %}{% include "dca_nomination_grid_card.html" %}{% endfor %}
+            </div>
+          </section>
+          <p class="lf9e-writein-link"><a href="{{ url_for('phase9e_writeins') }}">Write-in categories →</a></p>
+          <section class="lf9e-saved-ideas" aria-labelledby="lf9e-saved-title">
+            <h2 id="lf9e-saved-title">Saved nomination ideas</h2>
+            <div id="lf9e-saved-list"></div>
+          </section>
+        </div>
+        <aside class="lfv-dca-rules-aside" aria-label="Nomination qualification update">
+          {% include "dca_eligibility_notice.html" %}
+          <p><a href="{{ url_for('dca_my_nomination_followups') }}">Check missing details →</a></p>
+          <p><a href="{{ url_for('dca_nominations_closed', view='results') }}">View standings →</a></p>
+        </aside>
+      </div>
     {% endif %}
   {% endif %}
 </main>
+{% if identified and not results_view %}
+{% include "dca_category_modal.html" %}
+{% endif %}
 {% include "_footer.html" %}
   <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script> <!-- LFV_SITEWIDE_V1 -->
 </body>

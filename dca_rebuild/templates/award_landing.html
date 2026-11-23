@@ -53,24 +53,17 @@
     <div class="lfv3-awards-intro">
       <p class="lfv3-eyebrow">DANCER'S CHOICE AWARDS / 2026</p>
       <h1 id="dca-title">THE CULTURE<br>DECIDES.</h1>
-      <p>The Dancer’s Choice Awards give the LiteFeet community a voice in recognizing its own culture.</p>
-      <p>Recognizing the dancers, producers, teams, creators, and people who contribute to the culture. DCA is separate from the LiteFeet Awards.</p>
+      <p>Celebrating the dancers, teams, producers, and creators shaping LiteFeet — chosen by the community.</p>
     </div>
   </section>
-  <section class="lfv3-section lfv-dca-current" aria-labelledby="dca-current-title">
+  <section class="lfv3-section lfv-dca-current lfv-dca-current-minimal" aria-labelledby="dca-current-title">
     <p class="lfv3-eyebrow">2026 AWARDS</p>
-    <h2 id="dca-current-title">NOMINATIONS</h2>
-    <p>Nominate someone or something new, or support an entry already listed. The five eligible nominees with the most nominations in each category advance to voting.</p>
-    <ol class="lfv-dca-stages">
-      <li><strong>01 / CATEGORIES</strong><span>Help choose the awards.</span></li>
-      <li><strong>02 / NOMINATIONS</strong><span>Nominate once per category every rolling 24 hours.</span></li>
-      <li><strong>03 / FINALISTS</strong><span>The top five eligible nominees advance.</span></li>
-      <li><strong>04 / VOTING</strong><span>The community chooses the winners.</span></li>
-    </ol>
-    <p>{{ nomination_schedule }}</p>
+    <h2 id="dca-current-title">Nominations are open</h2>
+    <p>Nominate once per category every rolling 24 hours. The top five eligible nominees in each category advance to the final vote.</p>
+    <p class="lfv-dca-date">{{ nomination_schedule }}</p>
     <div class="lfv3-actions">
-      <a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_nominations_closed') }}">Nominate Now <span aria-hidden="true">→</span></a>
-      <a class="lfv3-button lfv3-button-gold" href="{{ url_for('round2') }}">View Category Results <span aria-hidden="true">→</span></a>
+      <a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_nominations_closed') }}">Explore Categories <span aria-hidden="true">→</span></a>
+      <a class="lfv3-button" href="{{ url_for('dca_nominations_closed', view='results') }}">View Nominee Standings <span aria-hidden="true">→</span></a>
     </div>
   </section>
 </main>

@@ -1,0 +1,73 @@
+<dialog id="lfv-dca-category-dialog" class="lfv-dca-category-dialog" aria-label="Dancer's Choice category nominations">
+  <div class="lfv-dca-dialog-shell">
+    <button type="button" class="lfv-dca-dialog-close" data-dca-close aria-label="Close category">×</button>
+    <p class="lfv-dca-modal-feedback" data-dca-global-feedback role="status" aria-live="polite" hidden></p>
+    {% for category in categories + writeins if not selected or category.id == selected.id %}
+    <section class="lfv-dca-dialog-category" data-dca-modal-category="{{ category.id }}" hidden>
+      <p class="lfv-dca-modal-kicker">DANCER'S CHOICE / 2026</p>
+      <h2>{{ category.name }}</h2>
+      <p class="lfv-dca-modal-description">{{ category.description }}</p>
+      <div class="lfv-dca-modal-nominees">
+        <h3>Nominations</h3>
+        {% if category.nominees %}
+        <ul class="lfv-dca-nominee-list">
+          {% for nominee in category.nominees %}
+          <li>
+            <span class="lfv-dca-nominee-name">{{ nominee.name }}</span>
+            <span class="lfv-dca-nominee-total">{{ nominee.count }} nomination{{ 's' if nominee.count != 1 else '' }}</span>
+            {% if category.available %}
+            <button type="button" class="lfv-dca-nominee-action" data-dca-select-nominee="{{ nominee.name }}">Nominate</button>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="lfv-dca-modal-empty">No nominations yet.</p>
+        {% endif %}
+      </div>
+      {% if category.available %}
+      <button type="button" class="lfv-dca-add-new" data-dca-add-new>+ Add a new nominee</button>
+      <div class="lfv-dca-modal-form-wrap" data-dca-form-wrap hidden>
+        <h3 data-dca-form-title>New nomination</h3>
+        <form method="post" action="{{ url_for('dca_nominations_closed') }}" class="lf9e-entry-form lfv-dca-modal-form" data-dca-nomination-form>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="category_id" value="{{ category.id }}">
+          <label>{{ category.nomination_ui.label }}
+            <input name="name" minlength="2" maxlength="250" required autocomplete="off" placeholder="{{ category.nomination_ui.placeholder }}">
+          </label>
+          <p class="lf9e-name-check" data-dca-name-check role="status" aria-live="polite" hidden></p>
+          <label class="lf9e-distinct-confirm" data-dca-name-distinct hidden>
+            <input type="checkbox" name="confirm_distinct" value="1"> This is a different nominee.
+          </label>
+          <label>{{ category.nomination_ui.support_label }} <span class="lf9e-optional">(optional)</span>
+            <input name="team" maxlength="250" placeholder="{{ category.nomination_ui.support_placeholder }}">
+          </label>
+          {% if category.nomination_ui.kind in ("dancer", "producer", "team", "duo", "organization", "event", "general") %}
+          <label>Location <span class="lf9e-optional">(optional)</span>
+            <input name="location" maxlength="250" placeholder="City / state">
+          </label>
+          {% endif %}
+          {% if category.nomination_ui.kind in ("dancer", "producer", "team", "duo", "organization", "general") %}
+          <label>Instagram <span class="lf9e-optional">(optional)</span>
+            <input name="instagram" maxlength="100" placeholder="@username">
+          </label>
+          {% endif %}
+          <label>Why does this nominee deserve recognition? <span class="lf9e-optional" data-dca-reason-label>(required for a new nominee)</span>
+            <textarea name="reason" minlength="20" maxlength="2000" rows="3" required placeholder="Describe relevant LiteFeet activity or contributions from November 2025 through November 2026."></textarea>
+          </label>
+          <p class="lf9e-note" data-dca-reason-help>A reason is required unless this nominee already has one on file.</p>
+          <div class="lfv-dca-modal-form-actions">
+            <button type="submit" class="lf9e-primary">Submit nomination</button>
+            <button type="button" class="lfv-dca-save-draft" data-dca-save-draft>Save idea for later</button>
+          </div>
+        </form>
+      </div>
+      {% elif closed %}
+      <p class="lfv-dca-modal-status">Nominations are closed.</p>
+      {% else %}
+      <p class="lfv-dca-modal-status">This category is available again in <span data-cooldown-until="{{ category.next_at }}">{{ (category.remaining // 3600) }}h {{ ((category.remaining % 3600) // 60) }}m</span>.</p>
+      {% endif %}
+    </section>
+    {% endfor %}
+  </div>
+</dialog>

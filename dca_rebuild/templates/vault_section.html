@@ -41,18 +41,15 @@
   <a class="vault-collection" href="{{ url_for('hypeitup_awards') }}"><strong>HypeItUpTV Awards</strong><span>Follow the HypeItUpTV Awards. Program details and verified results will be added as they become available.</span></a>
 </div>
 {% elif section == 'dca' %}
-<header><p class="vault-kicker">DANCER'S CHOICE AWARDS</p><h1>THE CULTURE DECIDES.</h1>
-<p>The Dancer’s Choice Awards give the LiteFeet community a voice in recognizing its own culture.</p>
-<p>Recognizing the dancers, producers, teams, creators, and people who contribute to the culture.</p></header>
-<section class="lfv-dca-process" aria-labelledby="dca-process-title">
-<h2 id="dca-process-title">How It Works</h2>
-<ol><li><strong>Suggest Categories:</strong> Help decide what gets recognized.</li>
-<li><strong>Nominate:</strong> Choose a new nominee or support an existing one.</li>
-<li><strong>Top 5:</strong> The five eligible nominees with the most nominations advance.</li>
-<li><strong>Vote:</strong> Choose the winner from the finalists.</li></ol>
-<p>{{ nomination_schedule }}</p>
-</section>
-<div class="vault-section-grid lfv-dca-editions"><a class="vault-collection" href="{{ url_for('dca_2026_home') }}"><strong>2026</strong><span>Current DCA process, nominations and category results.</span></a><a class="vault-collection" href="{{ url_for('dca_2023_home') }}"><strong>2023</strong><span>Earlier DCA categories, nominees and award results.</span></a></div>
+<header>
+  <p class="vault-kicker">DANCER'S CHOICE AWARDS</p>
+  <h1>THE CULTURE DECIDES.</h1>
+  <p>LiteFeet's community-led awards recognizing dancers, producers, teams, creators, and contributions to the culture.</p>
+</header>
+<div class="vault-section-grid lfv-dca-editions">
+  <a class="vault-collection" href="{{ url_for('dca_2026_home') }}"><strong>2026 Awards</strong><span>Current nominations, category standings, and finalist updates.</span></a>
+  <a class="vault-collection" href="{{ url_for('dca_2023_home') }}"><strong>2023 Archive</strong><span>Explore the earlier awards and recorded results.</span></a>
+</div>
 {% elif section == 'community' %}
 <header><p class="vault-kicker">COMMUNITY</p><h1>Help preserve LiteFeet history.</h1><p>Share sources, correct the record and keep the community informed.</p></header>
 <section id="contribute"><h2>Community historical research</h2><p>Share general LiteFeet history, event documentation, and research sources for review. The LiteFeet Awards maintains its own archival results and does not accept public award entries.</p><a href="{{ url_for('vault_submit') }}">Contribute general historical information</a></section>
