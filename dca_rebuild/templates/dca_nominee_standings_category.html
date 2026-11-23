@@ -4,7 +4,7 @@
     {% if closed or identified %}
     <span class="lfv5-category-status">
       {% if closed %}CLOSED
-      {% elif category.remaining %}COOLDOWN <span data-cooldown-until="{{ category.next_at }}">{{ (category.remaining // 3600) }}H {{ ((category.remaining % 3600) // 60) }}M</span>
+      {% elif category.remaining %}AVAILABLE IN <span data-cooldown-until="{{ category.next_at }}">{{ (category.remaining // 3600) }}H {{ ((category.remaining % 3600) // 60) }}M</span>
       {% else %}AVAILABLE NOW{% endif %}
     </span>
     {% endif %}
@@ -13,8 +13,8 @@
   <div class="lfv5-category-panel">
     {% if category.nominees %}
     <table>
-      <caption class="lf9e-visually-hidden">{{ category.name }} NOMINATION TOTALS</caption>
-      <thead class="lf9e-visually-hidden"><tr><th scope="col">NOMINEE</th><th scope="col">TOTAL NOMINATIONS</th></tr></thead>
+      <caption class="lf9e-visually-hidden">{{ category.name }} Nominations</caption>
+      <thead class="lf9e-visually-hidden"><tr><th scope="col">NOMINEE</th><th scope="col">Total</th></tr></thead>
       <tbody>{% for nominee in category.nominees %}
         <tr><th scope="row"><a href="{{ clean_nominee_url(category, nominee) }}">{{ nominee.name }}</a></th><td>{{ nominee.count }}</td></tr>
       {% endfor %}</tbody>
