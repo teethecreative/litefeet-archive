@@ -216,7 +216,7 @@ def test_host_workspaces_use_compact_inline_battle_rows(website, database):
     assert content.index("Who&#39;s World Is This?!") < content.index("Class Is in Session")
 
 
-def test_host_youtube_link_required_and_persisted_on_edit(website, database):
+def test_host_links_and_results_are_saved_independently(website, database):
     from dca_rebuild.models import VaultBattleVideo, VaultBattleVideoHistory
     record = find_record("whos-world-is-this-2025")
     battle = matchups(record)[0]["items"][0]
@@ -227,34 +227,125 @@ def test_host_youtube_link_required_and_persisted_on_edit(website, database):
                                password_hash=generate_password_hash("secure-passphrase-for-host")))
     with client.session_transaction() as state:
         state["vault_host_account_id"] = 1
-    assert client.get("/hosts/workspace").status_code == 200
+    page = client.get("/hosts/workspace")
+    assert page.status_code == 200
+    assert page.get_data(as_text=True).count('lfv-host-row-controls') >= 8
     with client.session_transaction() as state:
         csrf = state["vault_host_claim_csrf"]
-    path = f"/hosts/workspace/{record['slug']}/{battle['key']}/outcome"
-    no_url = client.post(path, data={"csrf_token": csrf, "outcome": "a"})
-    assert no_url.status_code == 400
-    non_youtube = client.post(path, data={
-        "csrf_token": csrf, "outcome": "a", "youtube_url": "https://example.org/watch?v=abcdefghijk"})
-    assert non_youtube.status_code == 400
-    with database[1]() as db:
-        assert db.get(VaultBattleOutcome, battle["key"]) is None
-        assert db.get(VaultBattleVideo, battle["key"]) is None
-    saved = client.post(path, data={
-        "csrf_token": csrf, "outcome": "a", "youtube_url": "https://youtu.be/abcdefghijk?t=95"})
-    assert saved.status_code == 303
+    result_path = f"/hosts/workspace/{record['slug']}/{battle['key']}/outcome"
+    video_path = f"/hosts/workspace/{record['slug']}/{battle['key']}/video"
+    # Host can enter an outcome before the administrator attaches footage.
+    assert client.post(result_path, data={
+        "csrf_token": csrf, "outcome": "a"}).status_code == 303
     with database[1]() as db:
         assert db.get(VaultBattleOutcome, battle["key"]).result == "a"
-        assert db.get(VaultBattleVideo, battle["key"]).youtube_url == (
-            "https://www.youtube.com/watch?v=abcdefghijk&t=95s")
+        assert db.get(VaultBattleVideo, battle["key"]) is None
+    # Link save doesn't change the already recorded outcome.
+    assert client.post(video_path, data={
+        "csrf_token": csrf, "expected_url": "",
+        "youtube_url": "https://example.org/watch?v=abcdefghijk"}).status_code == 400
+    assert client.post(video_path, data={
+        "csrf_token": csrf, "expected_url": "",
+        "youtube_url": "https://youtu.be/abcdefghijk?t=95"}).status_code == 303
+    normalized = "https://www.youtube.com/watch?v=abcdefghijk&t=95s"
+    with database[1]() as db:
+        assert db.get(VaultBattleVideo, battle["key"]).youtube_url == normalized
+        assert db.get(VaultBattleOutcome, battle["key"]).result == "a"
         assert db.query(VaultBattleVideoHistory).count() == 1
-    # Re-saving an already linked battle does not erase its URL.
-    assert client.post(path, data={"csrf_token": csrf, "outcome": "tie"}).status_code == 303
+    # An outdated form cannot erase a new link that another person saved.
+    assert client.post(video_path, data={
+        "csrf_token": csrf, "expected_url": "",
+        "youtube_url": "https://youtu.be/lmnopqrstuv"}).status_code == 409
+    assert client.post(result_path, data={"csrf_token": csrf, "outcome": "tie"}).status_code == 303
     with database[1]() as db:
         assert db.get(VaultBattleOutcome, battle["key"]).result == "tie"
-        assert db.get(VaultBattleVideo, battle["key"]).youtube_url.endswith("&t=95s")
+        assert db.get(VaultBattleVideo, battle["key"]).youtube_url == normalized
         assert db.query(VaultBattleVideoHistory).count() == 1
+    page = client.get("/hosts/workspace").get_data(as_text=True)
+    assert normalized.replace("&", "&amp;") in page
+    assert "Anna Luv vs Chris Stylez" in page
     archive = client.get("/archive/records/" + record["slug"]).get_data(as_text=True)
     assert "Watch battle on YouTube" in archive
+
+
+def test_interrupted_battles_require_reason_and_remain_visible(website, database):
+    from dca_rebuild.models import (
+        VaultBattleInterruptionReason, VaultBattleInterruptionReasonHistory,
+    )
+    event = find_record("whos-world-is-this-2025")
+    battle = matchups(event)[0]["items"][0]
+    with database[1].begin() as db:
+        db.add(VaultHostAccount(host_key="hypeituptv", person_key="ty-shotz",
+            display_name="Ty Shotz", email="reason@example.com",
+            password_hash=generate_password_hash("a-long-test-passphrase")))
+    client = website.test_client()
+    with client.session_transaction() as state:
+        state["vault_host_account_id"] = 1
+    client.get("/hosts/workspace")
+    with client.session_transaction() as state:
+        csrf = state["vault_host_claim_csrf"]
+    path = f"/hosts/workspace/{event['slug']}/{battle['key']}/outcome"
+    assert client.post(path, data={"csrf_token": csrf, "outcome": "postponed"}).status_code == 400
+    assert client.post(path, data={
+        "csrf_token": csrf, "outcome": "did_not_happen", "reason": "No"}).status_code == 400
+    assert client.post(path, data={
+        "csrf_token": csrf, "outcome": "postponed",
+        "reason": "The venue closed unexpectedly"}).status_code == 303
+    queue = host_queue(database[1], "hypeituptv")
+    row = next(x for evt in queue["events"] if evt["slug"] == event["slug"]
+               for section in evt["sections"] for x in section["rows"]
+               if x["key"] == battle["key"])
+    assert row["resolved"] and row["reason"] == "The venue closed unexpectedly"
+    html = client.get("/hosts/workspace").get_data(as_text=True)
+    assert "Anna Luv vs Chris Stylez" in html
+    assert "The venue closed unexpectedly" in html
+    archive = client.get("/archive/records/" + event["slug"]).get_data(as_text=True)
+    assert "Reason: The venue closed unexpectedly" in archive
+    with database[1]() as db:
+        assert db.get(VaultBattleInterruptionReason, battle["key"]).occurrence == "postponed"
+        assert db.query(VaultBattleInterruptionReasonHistory).count() == 1
+    assert client.post(path, data={
+        "csrf_token": csrf, "outcome": "did_not_happen"}).status_code == 400
+    assert client.post(path, data={
+        "csrf_token": csrf, "outcome": "did_not_happen",
+        "reason": "Organizers could not proceed"}).status_code == 303
+    with database[1]() as db:
+        assert db.query(VaultBattleInterruptionReasonHistory).count() == 2
+    # Changing to a completed battle clears the current interruption reason,
+    # retaining its historical revisions.
+    assert client.post(path, data={
+        "csrf_token": csrf, "outcome": "a"}).status_code == 303
+    with database[1]() as db:
+        assert db.get(VaultBattleInterruptionReason, battle["key"]) is None
+        assert db.query(VaultBattleInterruptionReasonHistory).count() == 3
+
+
+def test_admin_queue_defaults_to_all_battles_and_saves_link_only(website, database):
+    from dca_rebuild.models import VaultBattleVideo
+    client = website.test_client()
+    with client.session_transaction() as state:
+        state["ledger_admin_authenticated"] = True
+    record = find_record("whos-world-is-this-2025")
+    battle = matchups(record)[0]["items"][0]
+    response = client.get("/admin/hosts/hypeituptv/battles")
+    assert response.status_code == 200
+    assert 'Save link' in response.get_data(as_text=True)
+    assert 'Save result' in response.get_data(as_text=True)
+    assert 'Anna Luv vs Chris Stylez' in response.get_data(as_text=True)
+    with client.session_transaction() as state:
+        csrf = state["vault_host_admin_csrf"]
+    path = f"/admin/hosts/hypeituptv/battles/{record['slug']}/{battle['key']}/video"
+    assert client.post(path, data={
+        "csrf_token": csrf, "expected_url": "",
+        "youtube_url": "https://youtu.be/abcdefghijk"}).status_code == 303
+    with database[1]() as db:
+        assert db.get(VaultBattleVideo, battle["key"]).youtube_url.endswith("abcdefghijk")
+        assert db.get(VaultBattleOutcome, battle["key"]) is None
+    result_path = f"/admin/hosts/hypeituptv/battles/{record['slug']}/{battle['key']}/outcome"
+    assert client.post(result_path, data={"csrf_token": csrf, "outcome": "a"}).status_code == 303
+    with database[1]() as db:
+        assert db.get(VaultBattleOutcome, battle["key"]).result == "a"
+    assert "Anna Luv vs Chris Stylez" in client.get("/admin/hosts/hypeituptv/battles").get_data(as_text=True)
 
 
 def test_massacre_teams_are_not_separate_battles(database):
