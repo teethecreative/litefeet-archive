@@ -5363,6 +5363,10 @@ install_profile_wall(app, SessionLocal, private_hash, admin_login_required)
 from dca_rebuild.profile_claims import install_profile_claims
 install_profile_claims(app, SessionLocal)
 
+# Editable owner presentation; admin approval before public publication.
+from dca_rebuild.profile_owner_editor import install_profile_owner_editor
+install_profile_owner_editor(app, SessionLocal, admin_login_required)
+
 # Readable public aliases; existing record, submission and admin routes persist.
 from dca_rebuild.public_urls import install_clean_public_urls
 install_clean_public_urls(app, SessionLocal)
