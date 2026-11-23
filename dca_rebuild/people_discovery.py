@@ -62,7 +62,7 @@ def find_profiles(index, query="", page=1, page_size=PAGE_SIZE):
         page = max(1, min(int(page), 10000))
     except (ValueError, TypeError):
         page = 1
-    page_size = max(1, min(int(page_size), MAX_PAGE_SIZE))
+    page_size = max(1, min(int(page_size), 500))
     matches = []
     for row in profile_rows(index):
         archived = index.by_name(row["name"])
