@@ -103,3 +103,41 @@ def test_lfa_previous_year_archive_has_no_submissions_cta(website):
         assert "Results not yet documented" in html
         assert "CONTRIBUTE HISTORICAL INFORMATION" not in html
         assert 'href="/awards/litefeet-awards#contribute"' not in html
+
+
+def test_homepage_announces_documented_lfa_2026_winners_in_own_brand(website, database):
+    from dca_rebuild.seed_awards import seed_lfa_2026
+
+    with database[1].begin() as db:
+        assert seed_lfa_2026(db) == (7, 0)
+    response = website.test_client().get("/")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert "Dear LiteFeet," in html
+    assert "And the winners are" in html
+    assert html.index("Dear LiteFeet,") < html.index("And the winners are")
+    assert "THE LITEFEET AWARDS · 2026" in html
+    assert "THE LITEFEET VAULT" in html
+    assert "lfv-home-lfa-2026.css" in html
+    assert 'href="/awards/litefeet-awards/2026"' in html
+    for category, name in (
+        ("Kid of the Year", "XO Wavy"),
+        ("Rookie of the Year", "A Handro"),
+        ("Producer of the Year", "Speights Raw Kid"),
+        ("Shaker of the Year", "D Ski"),
+        ("Lady of Lite", "Ty Shotz"),
+        ("Best Team", "Team Demon"),
+        ("I Am the Lite", "Jay Bull"),
+    ):
+        assert category in html
+        assert name in html
+    assert "Dancer’s Choice Awards 2026" in html
+    assert "THIS MONTH IN LITEFEET" in html
+    assert "Help Make It Happen" in html
+    assert 'lfa-contribution-form' not in html
+
+
+def test_homepage_does_not_invent_awards_before_results_exist(website):
+    html = website.test_client().get("/").get_data(as_text=True)
+    assert "Dear LiteFeet," in html
+    assert "And the winners are" not in html

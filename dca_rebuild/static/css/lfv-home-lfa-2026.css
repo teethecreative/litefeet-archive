@@ -1,0 +1,107 @@
+/* 2026 LFA announcement — Vault navy/gold editorial treatment.
+   This is deliberately homepage-scoped, after existing design layers. */
+html.lfv-sitewide #vault-home .lfv-home-founder-links {
+  display:flex;flex-wrap:wrap;align-items:center;gap:15px 23px;margin-top:17px;
+}
+html.lfv-sitewide #vault-home .lfv-home-founder-news {
+  display:inline-flex;align-items:center;gap:7px;min-height:42px;
+  color:var(--lfv-ink)!important;border-bottom:2px solid var(--lfv-gold);
+  font-size:.82rem;font-weight:800;text-decoration:none;
+}
+html.lfv-sitewide #vault-home .lfv-home-founder-news:hover,
+html.lfv-sitewide #vault-home .lfv-home-founder-news:focus-visible {
+  border-bottom-width:3px;
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-announcement {
+  margin:0 0 clamp(42px,5.5vw,74px)!important;
+  padding:0!important;background:transparent!important;border:0!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-topline {
+  border-top:2px solid var(--lfv-ink);
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature {
+  display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
+  align-items:stretch;gap:0;border:1px solid var(--lfv-line);
+  border-top:4px solid var(--lfv-gold);border-radius:6px;overflow:hidden;
+  background:var(--lfv-navy)!important;color:#fff!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__story {
+  min-width:0;display:flex;flex-direction:column;align-items:flex-start;
+  justify-content:center;gap:0;padding:clamp(26px,4vw,52px);
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__overline {
+  color:#f3d679!important;font-size:.74rem!important;
+  font-weight:850!important;letter-spacing:.11em;
+  margin:0 0 18px!important;line-height:1.3!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__story h2 {
+  color:#fff!important;font-size:clamp(2.05rem,4.4vw,4.35rem)!important;
+  line-height:1.03!important;letter-spacing:-.052em!important;
+  text-transform:none!important;margin:0 0 19px!important;
+  max-width:610px;
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__lead {
+  color:#e0e8f6!important;font-size:clamp(.99rem,1.25vw,1.15rem)!important;
+  line-height:1.6!important;max-width:560px;
+  margin:0 0 28px!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__actions {
+  display:flex;flex-wrap:wrap;align-items:center;gap:18px;
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__button {
+  display:inline-flex;align-items:center;gap:14px;
+  background:var(--lfv-gold)!important;color:#07152b!important;
+  padding:14px 20px;border:1px solid var(--lfv-gold);
+  border-radius:5px;text-decoration:none!important;
+  font-size:.85rem;font-weight:850;
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__button:hover,
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__button:focus-visible {
+  background:#f0c54c!important;border-color:#f0c54c;
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__count {
+  color:#e7d39f!important;font-size:.7rem;font-weight:850;letter-spacing:.09em;
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__results {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  align-content:stretch;
+  min-width:0;border-left:1px solid rgba(255,255,255,.2);
+  background:#10346c!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__result {
+  min-width:0;display:flex;flex-direction:column;justify-content:center;
+  padding:clamp(17px,2vw,27px);
+  border-bottom:1px solid rgba(255,255,255,.2);
+  border-right:1px solid rgba(255,255,255,.15);
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__result:last-child {
+  border-bottom:0;
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__category {
+  display:block;color:#ecd594!important;font-size:.73rem;font-weight:750;
+  line-height:1.35;margin:0 0 9px;letter-spacing:.015em;
+}
+html.lfv-sitewide #vault-home .lfv-home-lfa-feature__result strong {
+  color:#fff!important;display:block;font-size:clamp(1.08rem,1.55vw,1.38rem);
+  line-height:1.18;letter-spacing:-.018em;font-weight:850;overflow-wrap:anywhere;
+}
+@media(max-width:900px) {
+  html.lfv-sitewide #vault-home .lfv-home-lfa-feature {
+    grid-template-columns:1fr;
+  }
+  html.lfv-sitewide #vault-home .lfv-home-lfa-feature__results {
+    border-left:0;border-top:1px solid rgba(255,255,255,.2);
+  }
+}
+@media(max-width:590px) {
+  html.lfv-sitewide #vault-home .lfv-home-founder-links{align-items:flex-start;flex-direction:column;}
+  html.lfv-sitewide #vault-home .lfv-home-lfa-feature__story{padding:25px 21px 28px;}
+  html.lfv-sitewide #vault-home .lfv-home-lfa-feature__story h2{font-size:clamp(2.05rem,9vw,3rem)!important;}
+  html.lfv-sitewide #vault-home .lfv-home-lfa-feature__results{grid-template-columns:1fr 1fr;}
+  html.lfv-sitewide #vault-home .lfv-home-lfa-feature__result{padding:17px 13px;}
+  html.lfv-sitewide #vault-home .lfv-home-lfa-feature__category{font-size:.66rem;}
+  html.lfv-sitewide #vault-home .lfv-home-lfa-feature__result strong{font-size:1.05rem;}
+}
+@media(max-width:370px) {
+  html.lfv-sitewide #vault-home .lfv-home-lfa-feature__results{grid-template-columns:1fr;}
+}

@@ -163,6 +163,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-world-record.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-calendar-pages.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-home-lfa-2026.css', v='20261123') }}">
 </head>
 
 <body>
@@ -179,9 +180,40 @@
         <p>LiteFeet is more than dance. It's a culture built through creativity, individuality, competition, community, and the people who have continued to push it forward.</p>
         <p>But not everything has been documented. Not every name has been recognized. Not every story has been told. That's part of why I created The LiteFeet Vault.</p>
       </div>
-      <a class="lfv3-button lfv3-button-gold lfv-primary-cta" href="/about#letter">Read more <span aria-hidden="true">→</span></a>
+      <div class="lfv-home-founder-links">
+        <a class="lfv3-button lfv3-button-gold lfv-primary-cta" href="/about#letter">Read my full letter <span aria-hidden="true">→</span></a>
+        <a class="lfv-home-founder-news" href="#lfa-2026-announcement">2026 LiteFeet Awards winners announced <span aria-hidden="true">↓</span></a>
+      </div>
     </div>
   </section>
+
+  {% if home_lfa_2026_winners %}
+  <section class="lfv3-section lfv-home-lfa-announcement" id="lfa-2026-announcement" aria-labelledby="lfa-home-heading">
+    <div class="lfv4-section-topline lfv-home-lfa-topline">
+      <p class="lfv3-eyebrow">LATEST IN THE VAULT / AWARDS</p>
+      <span>5TH ANNUAL · NOVEMBER 22, 2026</span>
+    </div>
+    <div class="lfv-home-lfa-feature">
+      <div class="lfv-home-lfa-feature__story">
+        <p class="lfv-home-lfa-feature__overline">THE LITEFEET AWARDS · 2026</p>
+        <h2 id="lfa-home-heading">And the winners are<span aria-hidden="true">…</span></h2>
+        <p class="lfv-home-lfa-feature__lead">The results of the 5th Annual LiteFeet Awards are now documented in The LiteFeet Vault. Celebrate the dancers, producers, and teams recognized this year.</p>
+        <div class="lfv-home-lfa-feature__actions">
+          <a class="lfv-home-lfa-feature__button" href="{{ url_for('lfa_year', year=2026) }}">See all 2026 award results <span aria-hidden="true">→</span></a>
+          <span class="lfv-home-lfa-feature__count">{{ home_lfa_2026_winners|length }} WINNERS · 2026</span>
+        </div>
+      </div>
+      <div class="lfv-home-lfa-feature__results" aria-label="2026 LiteFeet Awards winners">
+        {% for result in home_lfa_2026_winners %}
+        <div class="lfv-home-lfa-feature__result">
+          <span class="lfv-home-lfa-feature__category">{{ result.category }}</span>
+          <strong>{{ result.winner }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
 
   <section class="lfv3-section lfv4-current-awards" id="recognition" aria-labelledby="awards-title">
     <div class="lfv4-section-topline"><p class="lfv3-eyebrow">HAPPENING NOW / AWARDS</p><span>2026 EDITION</span></div>

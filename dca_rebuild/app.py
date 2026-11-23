@@ -234,7 +234,11 @@ def client_ip():
 
 @app.route("/")
 def index():
-    return render_template("ledger_home.html")
+    # Keep the founder-led hub intact; announce only approved LFA results.
+    return render_template(
+        "ledger_home.html",
+        home_lfa_2026_winners=_lfa_2026_results(),
+    )
 
 
 # ============================================================
