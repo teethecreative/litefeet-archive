@@ -2535,8 +2535,9 @@ def admin_dashboard():
     if page < 1 or page > 100:
         abort(400)
     with SessionLocal() as db:
+        # Short, cross-section preview. Full activity has its own paginated page.
         recent_activity_rows, has_more = _fetch_activity(
-            db, area="all", period="30", page=page, size=20
+            db, area="all", period="30", page=1, size=5, diverse_preview=True
         )
         pending_total, pending_review_links = _pending_review_summary(db)
     return render_template(

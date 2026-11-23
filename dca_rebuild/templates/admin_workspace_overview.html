@@ -15,7 +15,7 @@
   <header class="lfv-admin-workspace-head">
     <p class="lfv-admin-overline">THE LITEFEET VAULT / ADMIN</p>
     <h1>Overview</h1>
-    <p>One timeline of submissions, reviews, and updates from the last 30 days. Open a record or workspace to manage it.</p>
+    <p>A concise overview of recorded activity across the Vault. Open a record or workspace to manage it.</p>
   </header>
 
   <section class="lfv-admin-workspace-section lfv-admin-overview__attention" id="needs-attention" aria-labelledby="admin-attention-title">
@@ -33,7 +33,7 @@
       <div>
         <p class="lfv-admin-overline">LAST 30 DAYS · NEWEST FIRST</p>
         <h2 id="admin-activity-title">Activity</h2>
-        <p>Recorded changes only. Timestamps use New York time.</p>
+        <p>5 recent highlights across site sections. Timestamps use New York time.</p>
       </div>
       <a href="{{ url_for('admin_vault_activity', period='30') }}">View full activity</a>
     </div>
@@ -53,15 +53,7 @@
       <p class="lfv-admin-overview__empty">No recorded activity in the last 30 days.</p>
       {% endfor %}
     </div>
-    <nav class="lfv-admin-overview__pages" aria-label="Overview activity pages">
-      {% if activity_page > 1 %}
-        <a href="{{ url_for('admin_dashboard',page=activity_page - 1) }}#recent-activity">← Previous</a>
-      {% else %}<span aria-hidden="true"></span>{% endif %}
-      <span>Page {{ activity_page }}</span>
-      {% if activity_has_more %}
-        <a href="{{ url_for('admin_dashboard',page=activity_page + 1) }}#recent-activity">Next →</a>
-      {% else %}<span aria-hidden="true"></span>{% endif %}
-    </nav>
+
   </section>
 
   <section class="lfv-admin-workspace-section lfv-admin-overview__workspace" id="workspace-links" aria-labelledby="workspace-heading">

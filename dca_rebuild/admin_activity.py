@@ -10,16 +10,23 @@ from zoneinfo import ZoneInfo
 
 from flask import abort, render_template, request, url_for
 
-from dca_rebuild.profile_wall import VaultProfileWallPost, VaultProfileWallDecision
+from dca_rebuild.profile_wall import (VaultProfileWallPost, VaultProfileWallDecision,
+                                      VaultProfileWallOwnerAudit)
+from dca_rebuild.profile_claims import VaultProfileClaim
 
 from dca_rebuild.models import (
     BetaChangelog, BetaFeedback, DCANewCategorySuggestion,
     DCANominationSubmission, DCANominee, DCACategory, LFAArchiveSubmission,
     LockInCardRequest, VaultArchiveVerification, VaultDevelopmentFeedback,
     VaultDevelopmentItem, VaultGatheringSubmission, WorldRecordInterest, VaultArchiveContribution,
+    DCACategorySuggestionSubmission, DCACategoryBallotSubmission, DCAReturningCategoryReview,
+    LFARecord, NewsletterSubscriber, VaultGatheringReviewHistory,
+    VaultGatheringOccurrenceOverride, VaultArchiveContributionReview,
+    VaultBattleOutcomeHistory, VaultBattleVote, VaultHostAccount,
+    VaultHostInvitation, VaultHostBattleAudit,
 )
 
-AREAS = ("all", "awards", "events", "archive", "feedback", "development", "community")
+AREAS = ("all", "awards", "events", "archive", "people", "hosts", "feedback", "development", "community")
 PERIODS = ("7", "30", "90", "all")
 EASTERN = ZoneInfo("America/New_York")
 
@@ -88,6 +95,45 @@ SOURCES = (
                    "created_at", "Submitted", "status", "admin_profile_walls"),
     ActivitySource("community", "Profile Wall", VaultProfileWallPost, "author_name",
                    "resolved_at", "Resolved", "status", "admin_profile_walls"),
+    # Other timestamped activity across the Vault, not just award nominations.
+    ActivitySource("awards", "DCA category survey", DCACategorySuggestionSubmission, None,
+                   "submitted_at", "Received", None, "admin_round1"),
+    ActivitySource("awards", "DCA category ballot", DCACategoryBallotSubmission, None,
+                   "submitted_at", "Received", None, "admin_round1"),
+    ActivitySource("awards", "DCA category review", DCAReturningCategoryReview, "name_override",
+                   "updated_at", "Updated", "status", "admin_dca_workspace"),
+    ActivitySource("awards", "LiteFeet Award record", LFARecord, "person_name",
+                   "created_at", "Recorded", None, "admin_lfa_records"),
+    ActivitySource("events", "Event review", VaultGatheringReviewHistory, None,
+                   "created_at", "Updated", None, "admin_vault_gatherings"),
+    ActivitySource("events", "Event schedule", VaultGatheringOccurrenceOverride, None,
+                   "updated_at", "Updated", None, "admin_vault_gatherings"),
+    ActivitySource("archive", "Archive review", VaultArchiveContributionReview, None,
+                   "created_at", "Reviewed", None, "admin_archive_contributions"),
+    ActivitySource("archive", "Battle result", VaultBattleOutcomeHistory, "event_slug",
+                   "updated_at", "Updated", None, "vault_admin_hosts"),
+    ActivitySource("community", "Battle poll", VaultBattleVote, None,
+                   "created_at", "Voted", None, "vault_admin_hosts"),
+    ActivitySource("people", "Profile claim", VaultProfileClaim, "profile_href",
+                   "created_at", "Submitted", "status", "admin_profile_claims"),
+    ActivitySource("people", "Profile claim", VaultProfileClaim, "profile_href",
+                   "resolved_at", "Reviewed", "status", "admin_profile_claims"),
+    ActivitySource("people", "Wall moderation", VaultProfileWallDecision, None,
+                   "created_at", "Resolved", None, "admin_profile_walls"),
+    ActivitySource("people", "Wall owner access", VaultProfileWallOwnerAudit, "profile_href",
+                   "created_at", "Updated", None, "admin_profile_walls"),
+    ActivitySource("hosts", "Event host", VaultHostAccount, "display_name",
+                   "created_at", "Activated", None, "vault_admin_hosts"),
+    ActivitySource("hosts", "Host invitation", VaultHostInvitation, "host_key",
+                   "created_at", "Invited", "status", "vault_admin_hosts"),
+    ActivitySource("hosts", "Host invitation", VaultHostInvitation, "host_key",
+                   "claimed_at", "Claimed", "status", "vault_admin_hosts"),
+    ActivitySource("hosts", "Host battle update", VaultHostBattleAudit, "event_slug",
+                   "created_at", "Updated", None, "vault_admin_hosts"),
+    ActivitySource("community", "Newsletter", NewsletterSubscriber, None,
+                   "subscribed_at", "Subscribed", None, "admin_analytics"),
+    ActivitySource("community", "Newsletter", NewsletterSubscriber, None,
+                   "unsubscribed_at", "Unsubscribed", None, "admin_analytics"),
 )
 
 
@@ -97,7 +143,7 @@ def _label_status(value):
     return str(value).replace("_", " ").strip().title()
 
 
-def _fetch_activity(db, area="all", period="30", page=1, size=20):
+def _fetch_activity(db, area="all", period="30", page=1, size=20, diverse_preview=False):
     """Return one globally date-sorted page without exposing private identifiers."""
     if area not in AREAS or period not in PERIODS or page < 1 or page > 100:
         abort(400)
@@ -163,6 +209,28 @@ def _fetch_activity(db, area="all", period="30", page=1, size=20):
             })
 
     candidates.sort(key=lambda item: item["_sort"], reverse=True)
+    if diverse_preview:
+        # The Overview is a cross-section, not a flood of one category.
+        # Newest item per active area first; then fill by timestamp.
+        # The full history stays strictly chronological.
+        selected, seen_areas = [], set()
+        for item in candidates:
+            if item["area"] not in seen_areas:
+                selected.append(item)
+                seen_areas.add(item["area"])
+                if len(selected) == size:
+                    break
+        if len(selected) < size:
+            chosen = {id(item) for item in selected}
+            for item in candidates:
+                if id(item) not in chosen:
+                    selected.append(item)
+                    if len(selected) == size:
+                        break
+        rows = sorted(selected, key=lambda item: item["_sort"], reverse=True)
+        for row in rows:
+            del row["_sort"]
+        return rows, False
     start, stop = (page - 1) * size, page * size
     rows = candidates[start:stop]
     for row in rows:
@@ -178,7 +246,7 @@ def install_admin_activity(app, ns):
         if request.endpoint != "admin_dashboard":
             return {}
         with ns["SessionLocal"]() as db:
-            rows, _ = _fetch_activity(db, size=8)
+            rows, _ = _fetch_activity(db, size=5, diverse_preview=True)
         return {"recent_activity_rows": rows}
 
     @app.get("/admin/activity", endpoint="admin_vault_activity")
