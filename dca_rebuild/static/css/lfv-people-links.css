@@ -100,3 +100,20 @@ html.lfv-sitewide #vault-section-people .lfv-profile-discovery-note {
   html.lfv-sitewide #vault-section-people .lfv-archive-entry {padding:11px 0!important;}
   html.lfv-sitewide #vault-section-people .lfv-archive-searchline>button[type="submit"] {min-height:42px!important;}
 }
+
+
+/* Activity cloud: explain the rolling window without introducing CTA boxes. */
+html.lfv-sitewide #vault-section-people .lfv-people-activity-intro,
+html.lfv-sitewide #vault-section-people .lfv-people-activity-empty{
+  max-width:880px!important;
+  margin:5px auto 12px!important;
+  color:var(--lfv-muted)!important;
+  text-align:center!important;
+  font-size:.8rem!important;
+  line-height:1.5!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+}
+html.lfv-sitewide #vault-section-people .lfv-people-activity-empty {
+  padding:18px 0!important;
+}
