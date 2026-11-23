@@ -52,10 +52,15 @@ html.lfv-sitewide #vault-story .lfv-story-letter h2 {
   line-height:1.15!important; letter-spacing:-.018em!important;
   text-transform:none!important;
 }
-html.lfv-sitewide #vault-story .lfv-story-letter-body { max-width:73ch; }
+/* The letter's text uses the actual card width rather than an arbitrary 73ch column.
+   The narrower limit previously left an empty strip on desktop. */
+html.lfv-sitewide #vault-story .lfv-story-letter-body {
+  width:100%;
+  max-width:none;
+}
 html.lfv-sitewide #vault-story .lfv-story-letter-body p {
   max-width:100%; margin:0 0 16px!important; padding:0!important;
-  color:var(--lfv-ink)!important; font-size:clamp(.96rem,1.08vw,1.04rem)!important;
+  color:var(--lfv-ink)!important; font-size:clamp(1rem,1.14vw,1.1rem)!important;
   font-weight:400!important; line-height:1.68!important;
   letter-spacing:normal!important; text-transform:none!important;
 }
