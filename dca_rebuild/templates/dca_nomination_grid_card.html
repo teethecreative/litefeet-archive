@@ -11,7 +11,7 @@
   {% if category.nominees %}
   <ol class="lfv-dca-grid-preview" aria-label="Current nominees">
     {% for nominee in category.nominees[:3] %}
-    <li><span>{{ nominee.name }}</span><span>{{ nominee.count }}</span></li>
+    <li><span>{% set profile_url = vault_profile_url(nominee.name) %}{% if profile_url %}<a href="{{ profile_url }}">{{ nominee.name }}</a>{% else %}{{ nominee.name }}{% endif %}</span><span>{{ nominee.count }}</span></li>
     {% endfor %}
   </ol>
   {% else %}
