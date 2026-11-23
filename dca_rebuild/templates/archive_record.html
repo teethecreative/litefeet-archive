@@ -42,16 +42,17 @@
           {% endfor %}
           </dl>
         </section>
-        {% if record.battles %}
+        {% if battle_groups %}
           <section>
-            <h2>Announced lineup</h2>
-            <p>Advertised lineup · Results not confirmed</p>
+            <h2>Event battles</h2>
+            <p>Promoted matchups are preserved separately from battles added after the event.</p>
             {% for group in battle_groups %}
              <h3>{{ group.section }}</h3>
              <ol class="lfv-archive-battles lfv-battle-list">
                {% for battle in group['items'] %}
                <li class="lfv-battle-line" id="battle-{{ battle.key[:12] }}">
                  <span class="lfv-battle-name">{{ battle.label }}</span>
+                 {% if battle.added %}<small class="lfv-battle-status">Added at event · {{ battle.added_by }}</small>{% endif %}
                  {% if battle.occurred == 'did_not_happen' %}<span class="lfv-battle-status">Did not happen</span>
                  {% elif battle.occurred == 'postponed' %}<span class="lfv-battle-status">Postponed</span>
                  {% elif battle.occurred == 'scheduled' %}<span class="lfv-battle-status">Scheduled</span>
