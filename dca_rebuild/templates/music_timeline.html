@@ -58,10 +58,19 @@
 .lfv-music-table td[colspan]{display:block}
 .lfv-music-table td[colspan]::before{display:none}
 }
+.lfv-music-filter{align-items:end;gap:12px}.lfv-music-filter label{display:grid;gap:5px;flex:1 1 145px;font-size:.85rem}.lfv-music-filter input,.lfv-music-filter select{min-width:0;width:100%;box-sizing:border-box;padding:9px;border:1px solid #8894a8;border-radius:6px}.lfv-music-page a.lfv-radar-link,html.lfv-sitewide .lfv-music-page a.lfv-radar-link{display:inline!important;background:none!important;border:0!important;box-shadow:none!important;padding:0!important;min-height:0!important;color:inherit!important;text-decoration:underline!important;text-transform:none!important}.lfv-radar-pagination{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-top:18px}.lfv-radar-pagination nav{display:flex;gap:16px;align-items:center}
 </style></head><body>{% include "_navigation.html" %}
 <main class="lfv-music-page">
 <header class="lfv-music-header"><p class="lfv-music-kicker">The LiteFeet Vault / Music</p><h1>LiteFeet Music</h1><p class="lfv-music-subtitle">New releases, tracks, and projects from LiteFeet producers. Find out what is circulating now.</p></header>
-<form class="lfv-music-filter" method="get" action="{{ url_for('vault_music_public') }}"><label for="music-q" class="sr-only">Search releases</label><input id="music-q" type="search" name="q" value="{{ search }}" placeholder="Search titles, artists, producers"><button type="submit" class="lfv-music-button">Search</button></form>
+<p><a class="lfv-radar-link" href="/litefeet-music/submit">+ Submit a release</a></p>
+<form class="lfv-music-filter" method="get" action="{{ url_for('vault_music_public') }}">
+<label>Search releases<input type="search" name="q" value="{{ search }}" placeholder="Search all releases"></label>
+<label>Song name<input type="search" name="title" value="{{ filters.title }}" placeholder="Song or project"></label>
+<label>Producer<input type="search" name="producer" value="{{ filters.producer }}" placeholder="Producer name"></label>
+<label>Release year<input type="number" name="year" min="1900" max="2100" value="{{ filters.year }}" placeholder="Any year"></label>
+<label>Sort by<select name="sort">{% for value, label in [('date_desc','Release date: newest'),('date_asc','Release date: oldest'),('title_asc','Song name: A–Z'),('title_desc','Song name: Z–A'),('producer_asc','Producer: A–Z'),('producer_desc','Producer: Z–A')] %}<option value="{{ value }}" {% if filters.sort == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+<button type="submit">Apply filters</button><a class="lfv-radar-link" href="{{ url_for('vault_music_public') }}">Clear filters</a>
+</form>
 <section aria-labelledby="music-releases-title">
 <p class="lfv-music-kicker">Music / Discovery</p><h2 id="music-releases-title">Release Radar</h2><p class="lfv-music-description">Includes sourced tracks and projects. Dates and durations are shown only where documented; some source links lead to artist profiles or full projects.</p>
 <div class="lfv-music-table-scroll">
@@ -90,9 +99,10 @@
 </div></td>
 </tr>
 {% else %}
-<tr><td colspan="6">No published music releases are available in this site's current database. No historical records have been deleted.</td></tr>
+<tr><td colspan="6">No releases match these filters.</td></tr>
 {% endfor %}
 </tbody></table></div>
+<div class="lfv-radar-pagination"><span>{% if total %}Showing {{ (page-1)*10+1 }}–{{ [page*10,total]|min }} of {{ total }} releases{% else %}0 releases{% endif %}</span><nav aria-label="Release Radar pages">{% if page > 1 %}<a class="lfv-radar-link" href="{{ url_for('vault_music_public', page=page-1, **filters) }}">Previous</a>{% endif %}<span>Page {{ page }} of {{ pages }}</span>{% if page < pages %}<a class="lfv-radar-link" href="{{ url_for('vault_music_public', page=page+1, **filters) }}">Next</a>{% endif %}</nav></div>
 </section>
 <dialog class="lfv-music-choice" id="lfv-music-choice" aria-labelledby="lfv-music-choice-heading" aria-describedby="lfv-music-choice-summary">
   <form method="dialog"><button class="lfv-music-choice-close" aria-label="Close destination choices" value="cancel" type="submit">×</button></form>
