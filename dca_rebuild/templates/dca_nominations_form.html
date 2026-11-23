@@ -34,14 +34,14 @@
     </section>
   {% elif not identified %}
   <section class="lf9e-introduction" aria-labelledby="intro-title">
-    <h1 id="intro-title">NOMINATIONS</h1>
+    <h1 id="intro-title">2026 NOMINATIONS</h1>
     {% include "dca_eligibility_notice.html" %}
-    <p class="lf9e-round-notice"><strong>THIS IS THE NOMINATION ROUND, NOT THE FINAL VOTE.</strong> You're suggesting who deserves to be a finalist. Nothing you submit here counts as a vote for the award winner.</p>
+    <p class="lf9e-round-notice">Nominations determine the finalists, not the winners.</p>
     <ol class="lf9e-intro-steps">
-      <li>Pick a category and nominate a dancer, producer, crew, creator or other eligible candidate.</li>
-      <li>You can nominate someone who is already listed. Each valid nomination adds one to that candidate's nomination total. For example, 8 nominations means 8 nominations of support, not 8 winning votes.</li>
-      <li>Submit one nomination per category every rolling 24 hours. You can nominate in other available categories while waiting.</li>
-      <li>The top five eligible nominees in each category become the finalists. Only then does the community vote for the winner.</li>
+      <li>Choose a category.</li>
+      <li>Nominate someone or something new, or support an existing nominee.</li>
+      <li>You can nominate once per category every rolling 24 hours.</li>
+      <li>The five eligible nominees with the most nominations advance to voting.</li>
     </ol>
     <h2 id="intro-categories-title">Official Top 25</h2>
     <div class="lf9e-intro-category-scroll" role="region" aria-labelledby="intro-categories-title" tabindex="0">
@@ -49,7 +49,7 @@
         {% for category in intro_categories %}<li>{{ category.name }}</li>{% endfor %}
       </ol>
     </div>
-    <p class="lf9e-writein-link"><a href="{{ url_for('phase9e_writeins') }}">WRITE-IN CATEGORIES →</a> <span>View every community-suggested category and learn how write-ins qualify.</span></p>
+    <p class="lf9e-writein-link"><a href="{{ url_for('phase9e_writeins') }}">WRITE-IN CATEGORIES →</a> <span>Explore additional categories suggested by the community.</span></p>
     {% if not closed %}
     <form method="post" class="lf9e-entry-form lf9e-email-form" id="lf9e-email-start" aria-labelledby="email-title">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -58,29 +58,29 @@
       <label id="email-title">Your email<input name="email" type="email" maxlength="254" autocomplete="email" required></label>
       <button type="submit" class="lf9e-primary">CONTINUE</button>
     </form>
-    <p class="lf9e-note">Your email stays private. We'll send a one-time code to confirm you can access it.</p>
+    <p class="lf9e-note">Verify your email to start nominating. Your email stays private.</p>
     {% endif %}
-    <a class="lf9e-intro-results" href="{{ url_for('dca_nominations_closed', view='results') }}">View nominee standings</a>
+    <a class="lf9e-intro-results" href="{{ url_for('dca_nominations_closed', view='results') }}">View Standings</a>
   </section>
   {% else %}
     <div class="lf9e-buttons">
-      <a class="lf9e-secondary" href="{{ url_for('dca_my_nomination_followups') }}">CHECK MY NOMINATIONS</a>
+      <a class="lf9e-secondary" href="{{ url_for('dca_my_nomination_followups') }}">CHECK MISSING DETAILS</a>
       <form method="post" action="{{ url_for('dca_nominations_closed') }}" class="lf9e-done-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="action" value="done">
         <input type="hidden" name="next" value="standings">
-        <button class="lf9e-secondary lf9e-done-button" type="submit">DONE / VIEW NOMINEE STANDINGS</button>
+        <button class="lf9e-secondary lf9e-done-button" type="submit">FINISH &amp; VIEW STANDINGS</button>
       </form>
       {% if selected %}<a class="lf9e-secondary" href="{{ url_for('dca_nominations_closed') }}">ALL CATEGORIES</a>{% endif %}
     </div>
     {% if selected %}
       {% set category = selected %}
       <h1 class="lf9e-category-title">{{ category.name }}</h1>
-      <p class="lf9e-note">Nominees must have relevant LiteFeet activity between November 2025 and November 2026. A reason is required only if the nominee does not already have one on file.</p>
+      <p class="lf9e-note">Nominees must have relevant LiteFeet activity during the eligibility period. You only need to add a reason if one isn't already on file.</p>
       <p>{{ category.description }}</p>
-      <p class="lf9e-round-notice">Suggest a new name or add a nomination to someone already listed. Each nomination increases the candidate's total; this is not a vote for the winner.</p>
+      <p class="lf9e-round-notice">Add a new nominee or support an existing one.</p>
       {% if show_form %}
-        <a class="lf9e-back-link" href="{{ url_for('dca_nominations_closed', category=category.id) }}">Back to suggestions</a>
+        <a class="lf9e-back-link" href="{{ url_for('dca_nominations_closed', category=category.id) }}">Back to Nominees</a>
         {% include "dca_phase9e_nomination_card.html" %}
       {% elif suggestion %}
         {% include "dca_nomination_suggestion_details.html" %}
@@ -88,14 +88,14 @@
         {% include "dca_nomination_suggestions.html" %}
       {% endif %}
     {% else %}
-      <h1 class="lf9e-nomination-heading">Nominate for the 2026 Awards</h1>
+      <h1 class="lf9e-nomination-heading">Choose a Category</h1>
       {% include "dca_eligibility_notice.html" %}
-      <p class="lf9e-nomination-description">Nominations are open for suggestions. Suggest a new entry or support an existing nominee. Each nomination adds one to that nominee's total; the top five eligible nominees in each category advance to the final vote. You can submit one nomination per category every rolling 24 hours.</p>
+      <p class="lf9e-nomination-description">Choose a category to nominate someone or something new, or support an existing nominee. The five eligible nominees with the most nominations advance to voting. One nomination per category every rolling 24 hours.</p>
       {% if closed %}<p class="lf9e-message">Nominations are closed. Your history and suggestions remain available inside each category.</p>{% endif %}
       <section aria-labelledby="official-title"><h2 id="official-title">Official Top 25</h2>
         <div class="lf9e-category-grid">{% for category in categories %}{% include "dca_nomination_grid_card.html" %}{% endfor %}</div>
       </section>
-      <p class="lf9e-writein-link"><a href="{{ url_for('phase9e_writeins') }}">WRITE-IN CATEGORIES →</a> <span>Browse all submitted categories, nominate and see qualification rules.</span></p>
+      <p class="lf9e-writein-link"><a href="{{ url_for('phase9e_writeins') }}">WRITE-IN CATEGORIES →</a> <span>Explore additional categories suggested by the community.</span></p>
       <section class="lf9e-saved-ideas" aria-labelledby="lf9e-saved-title">
         <h2 id="lf9e-saved-title">Saved nomination ideas</h2>
         <p class="lf9e-note">Private drafts stored in this browser. These have not been submitted.</p>
