@@ -76,22 +76,24 @@ def test_lfa_2026_winners_publish_and_correction_is_idempotent(website, database
         assert "2026 LITEFEET AWARDS" in html
 
 
-def test_lfa_directory_is_compact_and_lists_nominees_without_public_submission(website):
+def test_lfa_directory_uses_compact_winner_rows_and_nominee_dropdowns(website):
     client = website.test_client()
     response = client.get("/awards/litefeet-awards")
     html = response.get_data(as_text=True)
     assert response.status_code == 200
     assert "THE LITEFEET VAULT" in html
     assert "2026 LITEFEET AWARDS" in html
-    assert '<article class="lfa-category lfa-category--simple">' in html
-    assert '<details class="lfa-category"' not in html
+    assert '<details class="lfa-category lfa-category--grammys">' in html
+    assert html.count('<details class="lfa-category lfa-category--grammys">') == 7
+    assert "<summary>" in html
+    assert '<a href="/people/cito">Cito</a>' in html
     for name in ("Cito", "XO Wavy", "Lexii", "Taylah Gang", "Ash Rocket",
                  "Playdo", "A Haundro", "Red Robin", "Y Axis", "King Kai",
                  "Lil Live", "Phresh Tune", "Sound Wave", "Kid Smoove",
                  "Tiny Rillz", "Lady Live", "Jada Chanell", "2 Real Boyz",
                  "2 Crafty", "2 Live Krew", "Bomb Squad", "Noah Lot", "Tah Swag"):
         assert name in html
-    assert "Original nominee list not yet documented." in html
+    assert "Nominee list not yet documented." in html
     assert "lfa-contribution-form" not in html
     assert 'action="/awards/litefeet-awards/submit"' not in html
     assert "HELP BUILD THE ARCHIVE" not in html
