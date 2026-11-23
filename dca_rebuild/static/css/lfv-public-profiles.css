@@ -119,3 +119,7 @@ html[data-theme="dark"] .lfv-profile-page{
 .lfv-profile-page .lfv-profile-wall-posts>li>div{display:flex;gap:12px;align-items:baseline;justify-content:space-between}
 .lfv-profile-page .lfv-profile-wall-posts time{color:var(--profile-muted);font-size:.75rem}
 .lfv-profile-page .lfv-profile-wall-posts p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9rem;line-height:1.6}
+
+/* Team-specific roster; plain hyperlinked names, not action buttons. */
+.lfv-profile-page .lfv-profile-roster-list{margin:8px 0 18px;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px 18px}
+.lfv-profile-page .lfv-profile-roster-list li{padding:9px 0;border-bottom:1px solid var(--profile-line);font-size:.87rem;overflow-wrap:anywhere}
