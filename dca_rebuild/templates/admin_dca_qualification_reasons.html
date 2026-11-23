@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nominee qualification reasons | The LiteFeet Vault Admin</title>
+<title>Nominee Reasons &amp; Evidence | The LiteFeet Vault Admin</title>
 <link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
@@ -13,8 +13,8 @@
 <p><a href="{{ url_for('admin_dca_workspace') }}">← Awards management</a></p>
 <header class="lfv-admin-workspace-head">
 <p class="lfv-admin-overline">AWARDS / QUALIFICATION REVIEW</p>
-<h1>Nominee qualification reasons</h1>
-<p>Review supporting statements and evidence. Verifying a reason removes the nominee from the missing-reason list; it does not establish final ballot eligibility.</p>
+<h1>Nominee Reasons &amp; Evidence</h1>
+<p>Review reasons and evidence. Verifying a reason clears the missing-reason flag; it does not guarantee eligibility.</p>
 </header>
 <section class="lfv-admin-workspace-section">
 <h2>Submitted reasons</h2>
@@ -28,7 +28,7 @@
 <td>{{ item.status|replace('_',' ')|title }}</td>
 <td><form method="post" class="lfv-admin-reason-actions"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="reason_id" value="{{ item.id }}">
 <button name="decision" value="verified" type="submit">Verify</button>
-<button name="decision" value="insufficient" type="submit">Needs detail</button>
+<button name="decision" value="insufficient" type="submit">More Info Needed</button>
 <button name="decision" value="rejected" type="submit">Reject</button>
 </form></td></tr>{% endfor %}</tbody></table></div>
 {% else %}<p class="lfv-admin-workspace-count">No qualification reasons have been submitted yet.</p>{% endif %}
