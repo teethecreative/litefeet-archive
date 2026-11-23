@@ -2,17 +2,81 @@
 <input type="hidden" name="csrf_token" value="{{ archive_contribution_csrf }}">
 <div class="lfv-archive-honeypot" aria-hidden="true"><label>Leave blank<input name="website" tabindex="-1" autocomplete="off"></label></div>
 <div class="lfv-archive-form-grid">
-<label>Type of historical information <span aria-hidden="true">*</span>
-<select name="contribution_type" required><option value="">Select a type</option>{% for value, label in archive_contribution_types %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></label>
-<label>Title or subject <span aria-hidden="true">*</span><input name="title" required minlength="3" maxlength="240" placeholder="Who or what is this about?"></label>
-<label class="lfv-archive-full">What would you like to share? <span aria-hidden="true">*</span><textarea name="description" required minlength="20" maxlength="4000" rows="5" placeholder="What happened, what is known, and what should the archive document?"></textarea></label>
+<label class="lfv-archive-full">What are you submitting? <span aria-hidden="true">*</span><select name="contribution_type" required data-archive-type-select><option value="">Choose a submission type</option>{% for value, label in archive_contribution_types %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></label>
+</div>
+<p class="lfv-archive-type-hint" data-archive-type-hint>Select a type to see the relevant questions.</p>
+<fieldset class="lfv-archive-detail-group" data-archive-type="history" hidden disabled><legend>Historical background</legend><div class="lfv-archive-form-grid">
+<label class="">Era or time period <span class="lfv-archive-optional">(if known)</span><input name="detail_era" maxlength="500" placeholder="e.g. 2006–2010"></label>
+<label class="">Neighborhood / location <span class="lfv-archive-optional">(if known)</span><input name="detail_location" maxlength="500" placeholder="Where was this happening?"></label>
+<label class="">People involved <span class="lfv-archive-optional">(if known)</span><input name="detail_people_involved" maxlength="500" placeholder="Dancers, crews, witnesses"></label>
+<label class="lfv-archive-full">Why is this historically significant? <span class="lfv-archive-optional">(if known)</span><textarea name="detail_story_context" rows="3" maxlength="1500" placeholder="Context and community significance"></textarea></label>
+</div></fieldset>
+<fieldset class="lfv-archive-detail-group" data-archive-type="person" hidden disabled><legend>Dancer / person details</legend><div class="lfv-archive-form-grid">
+<label class="">Dancer / person name <span class="lfv-archive-optional">(if known)</span><input name="detail_person_name" maxlength="500" placeholder="Stage name or known name"></label>
+<label class="">Other names / aliases <span class="lfv-archive-optional">(if known)</span><input name="detail_aliases" maxlength="500" placeholder="If known"></label>
+<label class="">Crews / affiliations <span class="lfv-archive-optional">(if known)</span><input name="detail_teams" maxlength="500" placeholder="If known"></label>
+<label class="">Active years <span class="lfv-archive-optional">(if known)</span><input name="detail_active_years" maxlength="500" placeholder="Approximate years are fine"></label>
+<label class="lfv-archive-full">Notable contributions <span class="lfv-archive-optional">(if known)</span><textarea name="detail_contributions" rows="3" maxlength="1500" placeholder="Moves, battles, roles, community impact"></textarea></label>
+</div></fieldset>
+<fieldset class="lfv-archive-detail-group" data-archive-type="team" hidden disabled><legend>Crew / team details</legend><div class="lfv-archive-form-grid">
+<label class="">Crew / team name <span class="lfv-archive-optional">(if known)</span><input name="detail_team_name" maxlength="500" placeholder="Official or commonly used name"></label>
+<label class="">Founded / active period <span class="lfv-archive-optional">(if known)</span><input name="detail_founding_period" maxlength="500" placeholder="Approximate if unknown"></label>
+<label class="lfv-archive-full">Members / key figures <span class="lfv-archive-optional">(if known)</span><textarea name="detail_team_members" rows="3" maxlength="1500" placeholder="List only what is known"></textarea></label>
+<label class="">Neighborhood / area <span class="lfv-archive-optional">(if known)</span><input name="detail_team_location" maxlength="500" placeholder="If known"></label>
+<label class="lfv-archive-full">Team history / notable moments <span class="lfv-archive-optional">(if known)</span><textarea name="detail_team_history" rows="3" maxlength="1500" placeholder="Battles, appearances, milestones"></textarea></label>
+</div></fieldset>
+<fieldset class="lfv-archive-detail-group" data-archive-type="battle" hidden disabled><legend>Battle documentation</legend><div class="lfv-archive-form-grid">
+<label class="">Battle / competition name <span class="lfv-archive-optional">(if known)</span><input name="detail_battle_name" maxlength="500" placeholder="If known"></label>
+<label class="">Date or approximate year <span class="lfv-archive-optional">(if known)</span><input name="detail_battle_date" maxlength="500" placeholder="Unknown is okay"></label>
+<label class="">Venue / location <span class="lfv-archive-optional">(if known)</span><input name="detail_battle_location" maxlength="500" placeholder="If known"></label>
+<label class="lfv-archive-full">Participants / crews <span class="lfv-archive-optional">(if known)</span><textarea name="detail_participants" rows="3" maxlength="1500" placeholder="Known participants"></textarea></label>
+<label class="">Winner / outcome <span class="lfv-archive-optional">(if known)</span><input name="detail_battle_result" maxlength="500" placeholder="Leave blank if unconfirmed"></label>
+<label class="">Judges / host <span class="lfv-archive-optional">(if known)</span><input name="detail_judges" maxlength="500" placeholder="If known"></label>
+<label class="lfv-archive-full">Video timestamps / notes <span class="lfv-archive-optional">(if known)</span><textarea name="detail_footage_timestamps" rows="3" maxlength="1500" placeholder="Links belong in source link below"></textarea></label>
+</div></fieldset>
+<fieldset class="lfv-archive-detail-group" data-archive-type="event_history" hidden disabled><legend>Past event documentation</legend><div class="lfv-archive-form-grid">
+<label class="">Historical event name <span class="lfv-archive-optional">(if known)</span><input name="detail_event_name" maxlength="500" placeholder="Event, session or gathering"></label>
+<label class="">Date / timeframe <span class="lfv-archive-optional">(if known)</span><input name="detail_event_date" maxlength="500" placeholder="Not an upcoming calendar event"></label>
+<label class="">Venue / neighborhood <span class="lfv-archive-optional">(if known)</span><input name="detail_event_location" maxlength="500" placeholder="Where did it happen?"></label>
+<label class="">Organizers / hosts <span class="lfv-archive-optional">(if known)</span><input name="detail_organizers" maxlength="500" placeholder="If known"></label>
+<label class="lfv-archive-full">Performers / attendees <span class="lfv-archive-optional">(if known)</span><textarea name="detail_event_participants" rows="3" maxlength="1500" placeholder="Known details"></textarea></label>
+<label class="lfv-archive-full">What happened? <span class="lfv-archive-optional">(if known)</span><textarea name="detail_event_outcome" rows="3" maxlength="1500" placeholder="Highlights or documented outcomes"></textarea></label>
+</div></fieldset>
+<fieldset class="lfv-archive-detail-group" data-archive-type="music" hidden disabled><legend>Music and producer details</legend><div class="lfv-archive-form-grid">
+<label class="">Track / project title <span class="lfv-archive-optional">(if known)</span><input name="detail_track_title" maxlength="500" placeholder="If known"></label>
+<label class="">Artist / producer <span class="lfv-archive-optional">(if known)</span><input name="detail_artist_producer" maxlength="500" placeholder="Credit all known creators"></label>
+<label class="">Release period / year <span class="lfv-archive-optional">(if known)</span><input name="detail_release_period" maxlength="500" placeholder="Approximate if needed"></label>
+<label class="lfv-archive-full">Relationship to LiteFeet <span class="lfv-archive-optional">(if known)</span><textarea name="detail_music_context" rows="3" maxlength="1500" placeholder="Sessions, dances, battles, cultural context"></textarea></label>
+<label class="lfv-archive-full">Additional credits / aliases <span class="lfv-archive-optional">(if known)</span><textarea name="detail_music_credits" rows="3" maxlength="1500" placeholder="Do not upload copyrighted audio"></textarea></label>
+</div></fieldset>
+<fieldset class="lfv-archive-detail-group" data-archive-type="media" hidden disabled><legend>Media details</legend><div class="lfv-archive-form-grid">
+<label class="">Media format <span class="lfv-archive-optional">(if known)</span><select name="detail_media_type"><option value="">Select format</option><option value="Video">Video</option><option value="Photograph">Photograph</option><option value="Flyer">Flyer</option><option value="Interview">Interview</option><option value="Other">Other</option></select></label>
+<label class="">Who / what appears? <span class="lfv-archive-optional">(if known)</span><input name="detail_media_subject" maxlength="500" placeholder="People, teams, or event"></label>
+<label class="">Date filmed / created <span class="lfv-archive-optional">(if known)</span><input name="detail_media_date" maxlength="500" placeholder="Approximate if known"></label>
+<label class="">Photographer / creator / uploader <span class="lfv-archive-optional">(if known)</span><input name="detail_media_creator" maxlength="500" placeholder="Credit source when known"></label>
+<label class="lfv-archive-full">Context / relevant timestamps <span class="lfv-archive-optional">(if known)</span><textarea name="detail_media_context" rows="3" maxlength="1500" placeholder="What does the material document?"></textarea></label>
+<label class="lfv-archive-full">Permission / ownership notes <span class="lfv-archive-optional">(if known)</span><textarea name="detail_media_permissions" rows="3" maxlength="1500" placeholder="If relevant"></textarea></label>
+</div></fieldset>
+<fieldset class="lfv-archive-detail-group" data-archive-type="correction" hidden disabled><legend>Correction details</legend><div class="lfv-archive-form-grid">
+<label class="">Archive record or page URL <span class="lfv-archive-optional">(if known)</span><input name="detail_record_reference" maxlength="500" placeholder="Identify the record to correct"></label>
+<label class="lfv-archive-full">Current information / claim <span class="lfv-archive-optional">(if known)</span><textarea name="detail_current_claim" rows="3" maxlength="1500" placeholder="What does the Vault currently say?"></textarea></label>
+<label class="lfv-archive-full">Proposed correction <span class="lfv-archive-optional">(if known)</span><textarea name="detail_proposed_correction" rows="3" maxlength="1500" placeholder="What should it say instead?"></textarea></label>
+<label class="lfv-archive-full">Reason / supporting evidence <span class="lfv-archive-optional">(if known)</span><textarea name="detail_correction_evidence" rows="3" maxlength="1500" placeholder="What supports the correction?"></textarea></label>
+</div></fieldset>
+<fieldset class="lfv-archive-detail-group" data-archive-type="other" hidden disabled><legend>Additional context</legend><div class="lfv-archive-form-grid">
+<label class="">Person / event / subject <span class="lfv-archive-optional">(if known)</span><input name="detail_other_subject" maxlength="500" placeholder="What is this about?"></label>
+<label class="lfv-archive-full">Relevant background <span class="lfv-archive-optional">(if known)</span><textarea name="detail_other_context" rows="3" maxlength="1500" placeholder="How does this relate to LiteFeet?"></textarea></label>
+</div></fieldset>
+<div class="lfv-archive-form-grid">
+<label class="lfv-archive-full">Submission title <span aria-hidden="true">*</span><input name="title" minlength="3" maxlength="240" required placeholder="A short title for this submission"></label>
+<label class="lfv-archive-full">Tell us what should be documented <span aria-hidden="true">*</span><textarea name="description" minlength="20" maxlength="4000" rows="4" required placeholder="Describe the information, including anything uncertain or disputed."></textarea></label>
 <label>When did it happen? <span class="lfv-archive-optional">(if known)</span><input name="historical_period" maxlength="120" placeholder="Year, date, period, or unknown"></label>
 <label>Source link <span class="lfv-archive-optional">(if available)</span><input name="source_url" type="url" maxlength="1000" placeholder="https://..."></label>
-<label class="lfv-archive-full">How do you know? / Source context <span class="lfv-archive-optional">(required if no link)</span><textarea name="source_description" maxlength="1500" rows="3" placeholder="Your firsthand experience, interview, flyer, footage, or other documentation"></textarea></label>
+<label class="lfv-archive-full">How do you know? / Source context <span class="lfv-archive-optional">(required if no link)</span><textarea name="source_description" maxlength="1500" rows="3" placeholder="Firsthand experience, interview, footage, flyer, document, or an account that needs verification"></textarea></label>
 <label>Your name <span class="lfv-archive-optional">(optional)</span><input name="contributor_name" maxlength="160" autocomplete="name" placeholder="Name or dancer name"></label>
-<label>Email for editorial follow-up <span aria-hidden="true">*</span><input name="contact_email" type="email" required maxlength="320" autocomplete="email" placeholder="you@example.com"></label>
+<label>Email for editorial follow-up <span aria-hidden="true">*</span><input name="contact_email" type="email" maxlength="320" autocomplete="email" required placeholder="you@example.com"></label>
 </div>
-<p class="lfv-archive-form-note">Your email stays private. Submission does not confirm a historical claim or publish a new record. Public LiteFeet Awards entries are not accepted here.</p>
+<p class="lfv-archive-form-note">Every submission is reviewed before publication. Unconfirmed details remain labeled as such. Your email stays private. Public LiteFeet Awards entries are not accepted.</p>
 <p class="lfv-archive-form-status" role="status" aria-live="polite" data-archive-status></p>
 <div class="lfv-archive-form-actions"><button class="lfv-archive-form-submit" type="submit">Send for archive review</button><button type="button" class="lfv-archive-form-cancel" data-archive-close>Cancel</button></div>
 </form>

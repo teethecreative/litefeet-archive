@@ -52,7 +52,11 @@ def install_gathering_submissions(app, ns):
     @app.route("/submit", methods=["GET", "POST"], endpoint="vault_submit")
     def submit():
         if request.method == "GET":
-            return render_template("vault_submit.html", submission_types=GATHERING_TYPES, recurrence_choices=RECURRENCE_CHOICES, submit_csrf=csrf_token())
+            from dca_rebuild.archive_contributions import _public_csrf, CONTRIBUTION_TYPES
+            return render_template("vault_submit.html", submission_types=GATHERING_TYPES,
+                                   recurrence_choices=RECURRENCE_CHOICES, submit_csrf=csrf_token(),
+                                   archive_contribution_csrf=_public_csrf(),
+                                   archive_contribution_types=CONTRIBUTION_TYPES)
 
         if not secrets.compare_digest(str(session.get("lfv_submit_csrf", "")), str(request.form.get("csrf_token") or "")) or not session.get("lfv_submit_csrf"):
             abort(400)

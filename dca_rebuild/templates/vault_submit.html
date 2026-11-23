@@ -6,13 +6,29 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-editorial-v2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-consistency-v5.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/vault-submit.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/archive-contribution.css',v='20261123d') }}">
 </head><body>
 {% include "_navigation.html" %}
 <main class="lfv-submit" id="vault-submit">
 <nav class="lfv-submit-breadcrumb"><a href="{{ url_for('vault_archive') }}">THE ARCHIVE</a> / SUBMIT</nav>
 <header><p class="lfv-submit-kicker">ADD TO THE CULTURE</p><h1>SUBMIT</h1>
-<p>Help keep the culture connected. Share a battle, lab session, link-up, workshop, class or other gathering.</p>
+<p>Help preserve the culture. Choose what you are submitting to see the right questions and review process.</p>
 </header>
+<section class="lfv-submit-choice" aria-label="Submission category">
+<label for="lfv-general-submit-type">What would you like to submit?</label>
+<select id="lfv-general-submit-type">
+<option value="">Choose one</option>
+<option value="event">Upcoming battle, session, class, workshop, or gathering</option>
+<option value="archive">Historical information, dancer, crew, battle result, music, media, or correction</option>
+</select>
+<p id="lfv-submit-choice-help">Upcoming gatherings go to the calendar; historical materials go to private archive review.</p>
+</section>
+<div id="lfv-general-archive-form" hidden>
+<h2>Submit historical information</h2>
+{% include "archive_contribution_form.html" %}
+</div>
+<div id="lfv-general-event-form" hidden>
+<h2>Submit an upcoming event</h2>
 {% with messages=get_flashed_messages() %}{% for message in messages %}<p class="lfv-submit-warning" role="alert">{{ message }}</p>{% endfor %}{% endwith %}
 <form method="post" action="{{ url_for('vault_submit') }}" class="lfv-submit-form">
 <input type="hidden" name="csrf_token" value="{{ submit_csrf }}">
@@ -74,10 +90,23 @@
 <p class="lfv-submit-privacy">Submissions are reviewed before being added to the public calendar. Contact information and private notes are never displayed publicly. No flyer or account required.</p>
 <button class="lfv-primary-cta" type="submit">Submit <span aria-hidden="true">→</span></button>
 </form>
+</div>
 </main>{% include "_footer.html" %}
 <script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+<script defer src="{{ url_for('static',filename='js/archive-contribution.js',v='20261123d') }}"></script>
 <script>
 (function(){
+  const choice=document.getElementById('lfv-general-submit-type');
+  const archiveForm=document.getElementById('lfv-general-archive-form');
+  const eventForm=document.getElementById('lfv-general-event-form');
+  function choose(){
+    const isArchive=choice.value==='archive', isEvent=choice.value==='event';
+    archiveForm.hidden=!isArchive;eventForm.hidden=!isEvent;
+    archiveForm.querySelectorAll('input,textarea,select,button').forEach(function(el){el.disabled=!isArchive;});
+    eventForm.querySelectorAll('input,textarea,select,button').forEach(function(el){el.disabled=!isEvent;});
+    if(isEvent){syncRepeat();}
+  }
+  choice.addEventListener('change',choose);
   const repeatToggle=document.getElementById('repeat-toggle');
   const repeatOptions=document.getElementById('repeat-options');
   const rule=document.getElementById('recurrence-rule');
@@ -117,5 +146,6 @@
   virtualToggle.addEventListener('change',syncLocation);
   syncRepeat();
   syncLocation();
+  choose();
 })();
 </script></body></html>

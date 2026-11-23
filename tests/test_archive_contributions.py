@@ -72,3 +72,47 @@ def test_awards_not_a_submission_type(website):
         "source_description": "Self nomination", "contact_email": "me@example.org",
     }, headers={"Accept": "application/json"})
     assert response.status_code == 400
+
+def test_type_specific_answers_are_saved_and_only_selected_type_is_used(website, database):
+    client = website.test_client()
+    client.get("/archive/contribute")
+    with client.session_transaction() as state:
+        token = state["vault_archive_contribution_csrf"]
+    response = client.post("/archive/contribute", data={
+        "csrf_token": token, "contribution_type": "battle",
+        "title": "Harlem battle footage",
+        "description": "A documented battle with competing accounts about the result.",
+        "source_description": "Witness account, footage currently being located.",
+        "contact_email": "archive@example.org",
+        "detail_battle_name": "Harlem 2008",
+        "detail_battle_result": "Unknown",
+        "detail_person_name": "Must not be stored",
+    }, headers={"Accept": "application/json"})
+    assert response.status_code == 201
+    from dca_rebuild.models import VaultArchiveContributionDetail
+    import json
+    with database[1]() as db:
+        detail = db.query(VaultArchiveContributionDetail).one()
+        values = json.loads(detail.details_json)
+        assert values == {"battle_name": "Harlem 2008", "battle_result": "Unknown"}
+    admin = client.get("/admin/archive/contributions")
+    assert admin.status_code in (302, 303, 401, 403)
+    with client.session_transaction() as state:
+        state["ledger_admin_authenticated"] = True
+    admin = client.get("/admin/archive/contributions")
+    assert "Harlem 2008" in admin.get_data(as_text=True)
+    assert "Must not be stored" not in admin.get_data(as_text=True)
+
+
+def test_general_submit_offers_distinct_event_and_archive_forms(website):
+    client = website.test_client()
+    page = client.get("/submit")
+    assert page.status_code == 200
+    html = page.get_data(as_text=True)
+    assert 'id="lfv-general-submit-type"' in html
+    assert 'id="lfv-general-archive-form"' in html
+    assert 'id="lfv-general-event-form"' in html
+    assert 'action="/archive/contribute"' in html
+    assert 'action="/submit"' in html
+    assert 'data-archive-type="battle"' in html
+    assert 'data-archive-type="person"' in html

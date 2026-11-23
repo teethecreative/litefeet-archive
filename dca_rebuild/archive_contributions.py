@@ -4,11 +4,12 @@ This does NOT create event/calendar records, modify source records or accept
 LiteFeet Awards submissions. Every contribution stays private until reviewed.
 """
 from datetime import datetime
+import json
 from urllib.parse import urlsplit
 import secrets
 
 from flask import abort, jsonify, redirect, render_template, request, session, url_for
-from dca_rebuild.models import VaultArchiveContribution, VaultArchiveContributionReview
+from dca_rebuild.models import VaultArchiveContribution, VaultArchiveContributionReview, VaultArchiveContributionDetail
 
 CONTRIBUTION_TYPES = (
     ("history", "LiteFeet history"),
@@ -23,6 +24,45 @@ CONTRIBUTION_TYPES = (
 )
 _ALLOWED_TYPES = {value for value, _ in CONTRIBUTION_TYPES}
 _REVIEW_STATUSES = ("pending", "approved", "rejected")
+
+# Server-side whitelist: never trust the dynamically hidden browser fields.
+DETAIL_FIELDS = {
+    "history": ("era", "location", "people_involved", "story_context"),
+    "person": ("person_name", "aliases", "teams", "active_years", "contributions"),
+    "team": ("team_name", "founding_period", "team_members", "team_location", "team_history"),
+    "battle": ("battle_name", "battle_date", "battle_location", "participants",
+               "battle_result", "judges", "footage_timestamps"),
+    "event_history": ("event_name", "event_date", "event_location", "organizers",
+                      "event_participants", "event_outcome"),
+    "music": ("track_title", "artist_producer", "release_period", "music_context", "music_credits"),
+    "media": ("media_type", "media_subject", "media_date", "media_creator",
+              "media_context", "media_permissions"),
+    "correction": ("record_reference", "current_claim", "proposed_correction", "correction_evidence"),
+    "other": ("other_subject", "other_context"),
+}
+DETAIL_LABELS = {
+    "era": "Era", "location": "Location", "people_involved": "People involved",
+    "story_context": "Historical significance", "person_name": "Person / dancer",
+    "aliases": "Aliases", "teams": "Crews / affiliations", "active_years": "Active years",
+    "contributions": "Notable contributions", "team_name": "Crew / team",
+    "founding_period": "Founded / active period", "team_members": "Members",
+    "team_location": "Team location", "team_history": "Team history",
+    "battle_name": "Battle", "battle_date": "Battle date", "battle_location": "Battle venue",
+    "participants": "Participants", "battle_result": "Result (if confirmed)",
+    "judges": "Judges / host", "footage_timestamps": "Footage / timestamps",
+    "event_name": "Historical event", "event_date": "Event date",
+    "event_location": "Event location", "organizers": "Organizers",
+    "event_participants": "Participants", "event_outcome": "What happened",
+    "track_title": "Track", "artist_producer": "Artist / producer",
+    "release_period": "Release period", "music_context": "LiteFeet context",
+    "music_credits": "Credits", "media_type": "Media type",
+    "media_subject": "Media subject", "media_date": "Media date",
+    "media_creator": "Creator", "media_context": "Media context",
+    "media_permissions": "Rights / permissions",
+    "record_reference": "Archive record", "current_claim": "Current claim",
+    "proposed_correction": "Proposed correction", "correction_evidence": "Evidence",
+    "other_subject": "Subject", "other_context": "Context",
+}
 
 
 def _public_csrf():
@@ -82,10 +122,25 @@ def _validate():
             "@" not in contact_email or "." not in contact_email.rsplit("@", 1)[-1]
             or any(char.isspace() for char in contact_email)):
         return None, "Enter a valid contact email for editorial follow-up."
+    details = {}
+    for field in DETAIL_FIELDS[kind]:
+        value = (request.form.get("detail_" + field) or "").strip()
+        limit = 1500 if field in {
+            "story_context", "contributions", "team_members", "team_history",
+            "participants", "footage_timestamps", "event_participants",
+            "event_outcome", "music_context", "music_credits", "media_context",
+            "media_permissions", "current_claim", "proposed_correction",
+            "correction_evidence", "other_context",
+        } else 500
+        if len(value) > limit:
+            return None, "A type-specific answer is too long."
+        if value:
+            details[field] = value
     return dict(contribution_type=kind, title=title, description=description,
                 historical_period=historical_period or None, source_url=source_url or None,
                 source_description=source_description or None,
-                contributor_name=contributor_name or None, contact_email=contact_email), None
+                contributor_name=contributor_name or None, contact_email=contact_email,
+                details=details), None
 
 
 def install_archive_contributions(app, ns):
@@ -124,8 +179,14 @@ def install_archive_contributions(app, ns):
                                    archive_contribution_types=CONTRIBUTION_TYPES,
                                    archive_error=error), 400
 
+        details = data.pop("details")
         with ns["SessionLocal"].begin() as db:
-            db.add(VaultArchiveContribution(**data, status="pending"))
+            entry = VaultArchiveContribution(**data, status="pending")
+            db.add(entry)
+            db.flush()
+            db.add(VaultArchiveContributionDetail(
+                contribution_id=entry.id,
+                details_json=json.dumps(details, ensure_ascii=False)))
         session["vault_archive_contribution_last_at"] = datetime.utcnow().isoformat()
         if is_ajax:
             return jsonify(ok=True, message="Historical information received for private archive review."), 201
@@ -149,7 +210,18 @@ def install_archive_contributions(app, ns):
                 VaultArchiveContribution.created_at.desc(),
                 VaultArchiveContribution.id.desc()
             ).offset((page - 1) * 20).limit(20).all()
+            selected_ids = [r.id for r in records]
+            details_by_id = {}
+            if selected_ids:
+                details_by_id = {
+                    d.contribution_id: json.loads(d.details_json or "{}")
+                    for d in db.query(VaultArchiveContributionDetail)
+                    .filter(VaultArchiveContributionDetail.contribution_id.in_(selected_ids)).all()
+                }
             rows = [dict(id=r.id, contribution_type=r.contribution_type,
+                         details=[(DETAIL_LABELS.get(key, key.replace("_", " ").title()), val)
+                                  for key, val in details_by_id.get(r.id, {}).items()
+                                  if key in DETAIL_FIELDS.get(r.contribution_type, ())],
                          title=r.title, description=r.description,
                          historical_period=r.historical_period, source_url=r.source_url,
                          source_description=r.source_description,

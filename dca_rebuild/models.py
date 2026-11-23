@@ -895,6 +895,19 @@ class VaultArchiveContribution(Base):
     reviewed_at = Column(DateTime)
 
 
+class VaultArchiveContributionDetail(Base):
+    """Typed submission answers, stored independently of existing archive rows.
+
+    A separate table allows an additive schema update without altering
+    already-recorded community contributions.
+    """
+    __tablename__ = "vault_archive_contribution_details"
+    id = Column(Integer, primary_key=True)
+    contribution_id = Column(Integer, ForeignKey("vault_archive_contributions.id"),
+                             nullable=False, unique=True, index=True)
+    details_json = Column(Text, nullable=False, default="{}")
+
+
 class VaultArchiveContributionReview(Base):
     """Append-only internal record of editorial decisions."""
     __tablename__ = "vault_archive_contribution_reviews"
