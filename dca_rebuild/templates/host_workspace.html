@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ queue.name }} Battle Results | Host Workspace</title>
-<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css') }}"></head>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css',v='20261123inline') }}"></head>
 <body>{% include "_navigation.html" %}
 <main class="lfv-host-wrap">
 <header><p class="lfv-host-eyebrow">EVENT HOST WORKSPACE</p><h1>{{ queue.name }}</h1><p>Signed in as {{ account.display_name }} · {{ queue.event_count }} events · <strong>{{ queue.pending }} results needed</strong> · {{ queue.complete }} recorded</p>
