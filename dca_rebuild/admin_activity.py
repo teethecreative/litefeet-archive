@@ -119,7 +119,7 @@ def _fetch_activity(db, area="all", period="30", page=1, size=20):
                 "title": title,
                 "action": source.action,
                 "status": _label_status(getattr(record, source.status_field, None)) if source.status_field else "",
-                "at": eastern.strftime("%b %-d, %Y · %-I:%M %p"),
+                "at": eastern.strftime("%m-%d-%Y · %-I:%M %p"),
                 "iso_at": utc.isoformat(),
                 "url": url_for(source.endpoint, **kwargs),
                 "_sort": (utc, source.area, source.label, record.id, source.action),

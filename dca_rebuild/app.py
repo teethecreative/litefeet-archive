@@ -2363,24 +2363,26 @@ def lfa_submit():
 @app.route("/admin")
 @admin_login_required
 def admin_dashboard():
-    from dca_rebuild.models import VaultGatheringSubmission, VaultDevelopmentItem, LedgerPageView
+    """One chronological 30-day activity list; detail remains in each workspace."""
+    from dca_rebuild.admin_activity import _fetch_activity
     from dca_rebuild.admin_workspace import _queue
-    recent = datetime.utcnow() - timedelta(days=7)
+    try:
+        page = int(request.args.get("page", "1"))
+    except (TypeError, ValueError):
+        abort(400)
+    if page < 1 or page > 100:
+        abort(400)
     with SessionLocal() as db:
-        pending_total, rows = _queue(db, "all", 1, "oldest")
-        event_pending = db.query(VaultGatheringSubmission).filter_by(status="pending").count()
-        development_pending = db.query(VaultDevelopmentItem).filter_by(status="needs_review").count()
-        recent_views = db.query(LedgerPageView).filter(
-            LedgerPageView.viewed_at >= recent)
-        seven_day_views = recent_views.filter(
-            LedgerPageView.traffic_type == "human").count()
-        seven_day_bot_views = recent_views.filter(
-            LedgerPageView.traffic_type == "bot").count()
+        recent_activity_rows, has_more = _fetch_activity(
+            db, area="all", period="30", page=page, size=20
+        )
+        pending_total, _ = _queue(db, "all", 1, "oldest")
     return render_template(
-        "admin_workspace_overview.html", pending_total=pending_total, rows=rows,
-        event_pending=event_pending, development_pending=development_pending,
-        seven_day_views=seven_day_views,
-        seven_day_bot_views=seven_day_bot_views,
+        "admin_workspace_overview.html",
+        recent_activity_rows=recent_activity_rows,
+        activity_page=page,
+        activity_has_more=has_more,
+        pending_total=pending_total,
     )
 
 @app.route("/admin/lfa/submissions")

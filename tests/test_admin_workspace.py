@@ -32,9 +32,9 @@ def test_admin_overview_reuses_existing_routes_and_pending_sources(website, data
     assert client.get("/admin").status_code in (302, 303, 401, 403)
     token = admin(client)
     html = client.get("/admin").get_data(as_text=True)
-    assert "Needs Attention" in html
+    assert "Activity" in html and "LAST 30 DAYS" in html
     assert "Development" in html and "Analytics" in html
-    assert html.index("Studio Event") < html.index("example-event") < html.index("Beta issue")
+    assert html.index("Beta issue") < html.index("example-event") < html.index("Studio Event")
     assert client.get("/admin/review-queue?section=events").status_code == 200
     assert client.get("/admin/review-queue?sort=invalid").status_code == 400
     assert client.get("/admin/review-queue?page=0").status_code == 400
@@ -159,9 +159,11 @@ def test_admin_footer_navigation_and_queue_review_reasons(website, database):
     admin(client)
     overview = client.get("/admin").get_data(as_text=True)
     queue = client.get("/admin/review-queue").get_data(as_text=True)
+    assert "Why it needs attention" not in overview
+    assert "Check event details and decide whether to publish." not in overview
+    assert "Why it needs attention" in queue
+    assert "Check event details and decide whether to publish." in queue
     for html in (overview, queue):
-        assert "Why it needs attention" in html
-        assert "Check event details and decide whether to publish." in html
         assert 'class="ledger-admin-nav"' in html
         assert 'class="lfv-admin-theme-toggle"' in html
     assert client.get("/admin/analytics").status_code == 200
@@ -176,3 +178,26 @@ def test_admin_login_redirects_to_unified_overview(website, monkeypatch):
     response = client.get("/admin/login")
     assert response.status_code in (302, 303)
     assert response.headers["Location"].endswith("/admin")
+
+
+def test_admin_overview_date_scope_and_simple_workspaces(website, database):
+    from datetime import datetime, timedelta
+    now = datetime.utcnow()
+    with database[1].begin() as db:
+        db.add(VaultDevelopmentItem(title="Current activity", area="site",
+                                    updated_at=now-timedelta(days=2)))
+        db.add(VaultDevelopmentItem(title="Too old for overview", area="site",
+                                    updated_at=now-timedelta(days=40)))
+    client=website.test_client()
+    admin(client)
+    overview=client.get("/admin")
+    html=overview.get_data(as_text=True)
+    assert 'class="lfv-admin-overview__list"' in html
+    assert "Current activity" in html
+    assert "Too old for overview" not in html
+    assert "Recent Activity" not in html
+    assert "Needs Attention" not in html
+    assert "Workspace" in html
+    assert "lfv-admin-overview__tools" in html
+    assert (now-timedelta(days=2)).strftime("%m-%d-%Y") in html
+    assert client.get("/admin?page=0").status_code == 400

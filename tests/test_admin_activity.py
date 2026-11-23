@@ -26,12 +26,12 @@ def test_recent_activity_private_and_linked_from_overview(website, database):
     assert client.get("/admin/activity").status_code in (302, 303, 401, 403)
     _admin(client)
     overview = client.get("/admin").get_data(as_text=True)
-    assert "Recent Activity" in overview
+    assert "Activity" in overview and "LAST 30 DAYS" in overview
     assert "Dance Lab" in overview
     page = client.get("/admin/activity").get_data(as_text=True)
     assert page.index("Reviewed") < page.index("Fix search navigation") < page.index("Submitted")
     assert "Approved" in page
-    assert "View all activity" in overview
+    assert "View full activity" in overview
 
 
 def test_activity_filters_and_private_contact_details(website, database):
