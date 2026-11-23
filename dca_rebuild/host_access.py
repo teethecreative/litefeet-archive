@@ -189,6 +189,45 @@ def install_host_access(app, ns):
             "admin_host_workspaces.html", hosts=cards, new_link=fresh,
             csrf_token=csrf("vault_host_admin_csrf"))))
 
+    @app.get("/admin/hosts/<host_key>/battles", endpoint="vault_admin_host_queue")
+    @admin_required
+    def admin_host_queue(host_key):
+        view = request.args.get("view", "pending")
+        if view not in ("pending", "all"):
+            abort(400)
+        queue = host_queue(factory, host_key)
+        return secure_response(make_response(render_template(
+            "admin_host_queue.html", queue=queue, view=view,
+            csrf_token=csrf("vault_host_admin_csrf"))))
+
+    @app.post("/admin/hosts/<host_key>/battles/<slug>/<battle_key>/outcome",
+              endpoint="vault_admin_host_result")
+    @admin_required
+    def admin_host_result(host_key, slug, battle_key):
+        check_csrf("vault_host_admin_csrf")
+        if host_key not in HOST_LABELS:
+            abort(404)
+        record = find_record(slug)
+        if not record or (record.get("presenter") or "").casefold() != HOST_LABELS[host_key].casefold():
+            abort(403)
+        if any(item["key"] == battle_key for group in matchups(record)
+               if roster_only(group["section"]) for item in group["items"]):
+            abort(403)
+        choice = request.form.get("outcome")
+        if choice in ("a", "b", "tie", "youtube_decide", "no_contest"):
+            occurred, result = "happened", choice
+        elif choice in ("did_not_happen", "postponed", "unconfirmed"):
+            occurred, result = choice, "unknown"
+        else:
+            abort(400)
+        note = " ".join((request.form.get("source_note") or "").split())
+        if not 5 <= len(note) <= 300:
+            abort(400, "Admin changes require a source or explanation")
+        with factory.begin() as db:
+            save_outcome(db, record, battle_key, occurred, result, note)
+        flash("Battle result recorded with archival edit history.")
+        return redirect(url_for("vault_admin_host_queue", host_key=host_key) + "#battle-" + battle_key[:12], code=303)
+
     @app.post("/admin/hosts/invite", endpoint="vault_admin_host_invite")
     @admin_required
     def admin_invite():
