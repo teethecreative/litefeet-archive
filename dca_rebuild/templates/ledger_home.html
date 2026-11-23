@@ -198,6 +198,21 @@
       <div class="lfv-home-card-label"><span>DANCER’S CHOICE AWARDS</span><span>2026</span></div>
       <h2 id="awards-title">Dancer’s Choice Awards 2026</h2>
       <p>Community-led recognition. Explore the categories, nominations, and official updates.</p>
+      <div class="lfv-home-dca-latest" aria-labelledby="lfv-home-dca-latest-title">
+        <h3 id="lfv-home-dca-latest-title">Latest Nominations</h3>
+        {% if home_dca_latest_nominations %}
+        <ul aria-label="Most recent 2026 Dancer's Choice nominations, including write-ins">
+          {% for nomination in home_dca_latest_nominations %}
+          <li>
+            <span class="lfv-home-dca-category">{{ nomination.category }}</span>
+            <strong class="lfv-home-dca-nominee">{{ nomination.nominee }}</strong>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="lfv-home-dca-empty">No nominations have been submitted yet.</p>
+        {% endif %}
+      </div>
       <a class="lfv-home-card-action" href="{{ url_for('dca_2026_home') }}">Explore the 2026 awards <span aria-hidden="true">→</span></a>
     </article>
 
