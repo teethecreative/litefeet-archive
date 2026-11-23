@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Archive Submissions | The LiteFeet Vault Admin</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
+<style>
+.lfv-ac-admin{max-width:1100px;margin:0 auto;padding:25px 20px 70px;color:var(--text)}
+.lfv-ac-admin h1{font-size:clamp(2rem,4vw,3rem);margin:8px 0}
+.lfv-ac-filters{display:flex;gap:9px;flex-wrap:wrap;margin:22px 0}
+.lfv-ac-filters a{border:1px solid var(--border);padding:8px 12px;color:var(--text);text-decoration:none}
+.lfv-ac-filters a[aria-current]{border-color:var(--gold);font-weight:800}
+.lfv-ac-record{padding:18px;margin:15px 0;border:1px solid var(--border);border-radius:8px;background:var(--surface)}
+.lfv-ac-record h2{font-size:1.2rem;margin:4px 0 12px}.lfv-ac-record p{white-space:pre-wrap;overflow-wrap:anywhere}
+.lfv-ac-meta{font-size:.82rem;color:var(--muted)}.lfv-ac-record a{overflow-wrap:anywhere}
+.lfv-ac-record form{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:15px}
+.lfv-ac-record textarea{min-width:min(100%,340px);flex:1;padding:10px;border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.lfv-ac-record button{padding:10px 16px;border:1px solid var(--gold);background:var(--gold);color:#091b36;font-weight:800;cursor:pointer}
+.lfv-ac-paging{display:flex;gap:15px;margin-top:24px}
+</style></head><body class="ledger-admin">{% include "_admin_navigation.html" %}
+<main class="lfv-ac-admin"><p><a href="{{ url_for('admin_dashboard') }}">← Admin Overview</a></p><h1>Archive submissions</h1><p>Community contributions are private until reviewed. Approval here is an editorial intake decision, not automatic publication or verification.</p>
+<nav class="lfv-ac-filters">{% for option in ['pending','approved','rejected','all'] %}<a href="{{ url_for('admin_archive_contributions',status=option) }}" {% if status==option %}aria-current="page"{% endif %}>{{ option|title }}</a>{% endfor %}</nav>
+<p>{{ total }} record{{ '' if total==1 else 's' }} · Page {{ page }} of {{ pages }}</p>
+{% for item in rows %}<article class="lfv-ac-record">
+<p class="lfv-ac-meta">{{ item.created_at.strftime('%m-%d-%Y · %I:%M %p') if item.created_at else 'Date unknown' }} · {{ item.contribution_type|replace('_',' ')|title }} · {{ item.status|title }}</p>
+<h2>{{ item.title }}</h2><p>{{ item.description }}</p>
+{% if item.historical_period %}<p><strong>When:</strong> {{ item.historical_period }}</p>{% endif %}
+{% if item.source_description %}<p><strong>Source context:</strong> {{ item.source_description }}</p>{% endif %}
+{% if item.source_url %}<p><strong>Source:</strong> <a href="{{ item.source_url }}" target="_blank" rel="noopener noreferrer">{{ item.source_url }}</a></p>{% endif %}
+<p><strong>Contributor:</strong> {{ item.contributor_name or 'Not provided' }} · <strong>Private contact:</strong> {{ item.contact_email }}</p>
+{% if item.status == 'pending' %}<form method="post" action="{{ url_for('admin_archive_contribution_decision', record_id=item.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label>Review note <span class="lfv-archive-optional">(optional)</span><textarea name="note" maxlength="1000" rows="2"></textarea></label>
+<button type="submit" name="decision" value="approved">Approve intake</button>
+<button type="submit" name="decision" value="rejected">Reject</button>
+</form>{% endif %}</article>
+{% else %}<p>No submissions match this filter.</p>{% endfor %}
+<nav class="lfv-ac-paging">{% if page>1 %}<a href="{{ url_for('admin_archive_contributions',status=status,page=page-1) }}">← Previous</a>{% endif %}{% if page<pages %}<a href="{{ url_for('admin_archive_contributions',status=status,page=page+1) }}">Next →</a>{% endif %}</nav>
+</main></body></html>

@@ -1,0 +1,18 @@
+<form class="lfv-archive-contribution-form" action="{{ url_for('vault_archive_contribute') }}" method="post" data-archive-form>
+<input type="hidden" name="csrf_token" value="{{ archive_contribution_csrf }}">
+<div class="lfv-archive-honeypot" aria-hidden="true"><label>Leave blank<input name="website" tabindex="-1" autocomplete="off"></label></div>
+<div class="lfv-archive-form-grid">
+<label>Type of historical information <span aria-hidden="true">*</span>
+<select name="contribution_type" required><option value="">Select a type</option>{% for value, label in archive_contribution_types %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></label>
+<label>Title or subject <span aria-hidden="true">*</span><input name="title" required minlength="3" maxlength="240" placeholder="Who or what is this about?"></label>
+<label class="lfv-archive-full">What would you like to share? <span aria-hidden="true">*</span><textarea name="description" required minlength="20" maxlength="4000" rows="5" placeholder="What happened, what is known, and what should the archive document?"></textarea></label>
+<label>When did it happen? <span class="lfv-archive-optional">(if known)</span><input name="historical_period" maxlength="120" placeholder="Year, date, period, or unknown"></label>
+<label>Source link <span class="lfv-archive-optional">(if available)</span><input name="source_url" type="url" maxlength="1000" placeholder="https://..."></label>
+<label class="lfv-archive-full">How do you know? / Source context <span class="lfv-archive-optional">(required if no link)</span><textarea name="source_description" maxlength="1500" rows="3" placeholder="Your firsthand experience, interview, flyer, footage, or other documentation"></textarea></label>
+<label>Your name <span class="lfv-archive-optional">(optional)</span><input name="contributor_name" maxlength="160" autocomplete="name" placeholder="Name or dancer name"></label>
+<label>Email for editorial follow-up <span aria-hidden="true">*</span><input name="contact_email" type="email" required maxlength="320" autocomplete="email" placeholder="you@example.com"></label>
+</div>
+<p class="lfv-archive-form-note">Your email stays private. Submission does not confirm a historical claim or publish a new record. Public LiteFeet Awards entries are not accepted here.</p>
+<p class="lfv-archive-form-status" role="status" aria-live="polite" data-archive-status></p>
+<div class="lfv-archive-form-actions"><button class="lfv-archive-form-submit" type="submit">Send for archive review</button><button type="button" class="lfv-archive-form-cancel" data-archive-close>Cancel</button></div>
+</form>

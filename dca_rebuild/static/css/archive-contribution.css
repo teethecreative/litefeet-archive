@@ -1,0 +1,25 @@
+.lfv-archive-modal[hidden]{display:none!important}
+.lfv-archive-modal{position:fixed;inset:0;z-index:100000;display:grid;place-items:center;padding:16px}
+.lfv-archive-modal__shade{position:absolute;inset:0;background:rgba(6,15,32,.78)}
+.lfv-archive-modal__window{position:relative;z-index:1;width:min(760px,100%);max-height:min(92vh,900px);overflow-y:auto;overscroll-behavior:contain;padding:clamp(18px,3vw,30px);background:var(--surface,#fff);color:var(--text,#10203b);border:1px solid var(--border,#ccd4e0);border-top:4px solid var(--gold,#c9a227);border-radius:10px;box-shadow:0 22px 90px rgba(0,0,0,.3)}
+.lfv-archive-modal__header{display:flex;justify-content:space-between;align-items:start;gap:14px}
+.lfv-archive-modal__eyebrow{margin:0;font-size:.74rem!important;letter-spacing:.08em;font-weight:800;color:var(--muted,#526072)}
+.lfv-archive-modal__window h2{margin:5px 0 10px!important;font-size:clamp(1.45rem,3vw,2rem)!important;line-height:1.2}
+.lfv-archive-modal__close{border:1px solid var(--border,#ccd4e0);background:transparent;color:inherit;font-size:1.65rem;line-height:1;padding:5px 11px;cursor:pointer}
+.lfv-archive-modal__intro{font-size:.9rem;line-height:1.5;margin:0 0 18px!important;color:var(--muted,#526072)}
+.lfv-archive-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.lfv-archive-contribution-form label{display:flex;flex-direction:column;gap:6px;font-size:.8rem;font-weight:750;line-height:1.4}
+.lfv-archive-full{grid-column:1/-1}
+.lfv-archive-contribution-form :is(input:not([type=hidden]),select,textarea){box-sizing:border-box;width:100%;min-height:40px;padding:10px;border:1px solid var(--border,#ccd4e0);border-radius:5px;background:var(--surface,#fff);color:var(--text,#10203b);font:inherit;font-size:.9rem;resize:vertical}
+.lfv-archive-optional{font-weight:400;opacity:.75}
+.lfv-archive-form-note{font-size:.77rem!important;line-height:1.5;margin:14px 0!important;color:var(--muted,#526072)}
+.lfv-archive-form-status{font-size:.88rem!important;line-height:1.5;min-height:0;margin:9px 0!important;color:var(--text,#10203b)}
+.lfv-archive-form-status:empty{display:none}
+.lfv-archive-form-error{padding:10px;border-left:3px solid #bb4d4d}
+.lfv-archive-form-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lfv-archive-contribution-form .lfv-archive-form-submit{background:var(--gold,#c9a227);color:#091b36;border:1px solid var(--gold,#c9a227);padding:11px 16px;border-radius:5px;font-weight:800;cursor:pointer}
+.lfv-archive-form-cancel{border:1px solid var(--border,#ccd4e0);background:transparent;color:inherit;border-radius:5px;padding:10px 16px;cursor:pointer}
+.lfv-archive-honeypot{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+.lfv-archive-standalone{max-width:780px;padding:30px 22px 80px;margin:0 auto;color:var(--text)}
+.lfv-archive-standalone h1{font-size:clamp(1.8rem,4vw,2.5rem)}
+@media(max-width:540px){.lfv-archive-form-grid{grid-template-columns:1fr}.lfv-archive-modal{padding:0}.lfv-archive-modal__window{max-height:100dvh;height:100dvh;border-radius:0}.lfv-archive-contribution-form .lfv-archive-form-submit{width:100%}}

@@ -5249,6 +5249,10 @@ if (os.environ.get("DCA_2026_FOLLOWUPS_ENABLED") == "true"
 from dca_rebuild.information_architecture import install_information_architecture
 install_information_architecture(app, globals())
 
+# Separate general archival submissions from event/calendar submissions.
+from dca_rebuild.archive_contributions import install_archive_contributions
+install_archive_contributions(app, globals())
+
 # Moderated public submissions for battles, labs, link-ups, classes and workshops.
 from dca_rebuild.gathering_submissions import install_gathering_submissions
 install_gathering_submissions(app, globals())

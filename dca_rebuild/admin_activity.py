@@ -14,7 +14,7 @@ from dca_rebuild.models import (
     BetaChangelog, BetaFeedback, DCANewCategorySuggestion,
     DCANominationSubmission, DCANominee, DCACategory, LFAArchiveSubmission,
     LockInCardRequest, VaultArchiveVerification, VaultDevelopmentFeedback,
-    VaultDevelopmentItem, VaultGatheringSubmission, WorldRecordInterest,
+    VaultDevelopmentItem, VaultGatheringSubmission, WorldRecordInterest, VaultArchiveContribution,
 )
 
 AREAS = ("all", "awards", "events", "archive", "feedback", "development", "community")
@@ -56,6 +56,10 @@ SOURCES = (
                    "submitted_at", "Received", None, "admin_dca_nominations"),
     ActivitySource("awards", "LiteFeet Award", LFAArchiveSubmission, "winner_name",
                    "created_at", "Submitted", "status", "admin_lfa_submissions"),
+    ActivitySource("archive", "Archive submission", VaultArchiveContribution, "title",
+                   "created_at", "Submitted", "status", "admin_archive_contributions"),
+    ActivitySource("archive", "Archive submission", VaultArchiveContribution, "title",
+                   "reviewed_at", "Reviewed", "status", "admin_archive_contributions"),
     ActivitySource("archive", "Archive response", VaultArchiveVerification, "record_slug",
                    "created_at", "Submitted", "moderation_status",
                    "admin_vault_auxiliary_review"),

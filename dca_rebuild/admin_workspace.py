@@ -14,7 +14,7 @@ from sqlalchemy import or_
 from dca_rebuild.models import (
     VaultGatheringSubmission, LFAArchiveSubmission, DCANewCategorySuggestion,
     DCANominee, BetaFeedback, VaultArchiveVerification, LockInCardRequest,
-    VaultDevelopmentItem, VaultDevelopmentFeedback,
+    VaultDevelopmentItem, VaultDevelopmentFeedback, VaultArchiveContribution,
 )
 from dca_rebuild.phase9e import NomineeQualificationReason9E
 
@@ -30,6 +30,7 @@ PENDING_REVIEW_SOURCES = (
  ("DCA qualification reasons", NomineeQualificationReason9E, "moderation_status", "pending", "phase9e_admin_qualification_reasons", {}),
  ("LiteFeet Awards", LFAArchiveSubmission, "status", "pending", "admin_lfa_submissions", {}),
  ("Archive", VaultArchiveVerification, "moderation_status", "pending", "admin_vault_auxiliary_review", {"source": "archive"}),
+ ("Archive submissions", VaultArchiveContribution, "status", "pending", "admin_archive_contributions", {}),
  ("Lock In", LockInCardRequest, "status", "pending", "admin_vault_auxiliary_review", {"source": "lock-in"}),
  ("Beta feedback", BetaFeedback, "status", "new", "admin_beta_feedback", {}),
  ("Website feedback", VaultDevelopmentFeedback, "status", "new", "admin_vault_development", {}),

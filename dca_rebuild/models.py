@@ -875,6 +875,37 @@ class LedgerPageView(Base):
 # Separate from all DCA and historical awards tables.
 # ============================================================
 
+class VaultArchiveContribution(Base):
+    """Private community historical submission, separate from event calendars.
+
+    Accepting a submission for research does not publish or verify a claim.
+    """
+    __tablename__ = "vault_archive_contributions"
+    id = Column(Integer, primary_key=True)
+    contribution_type = Column(String(32), nullable=False, index=True)
+    title = Column(String(240), nullable=False)
+    description = Column(Text, nullable=False)
+    historical_period = Column(String(120))
+    source_url = Column(String(1000))
+    source_description = Column(Text)
+    contributor_name = Column(String(160))
+    contact_email = Column(String(320), nullable=False)
+    status = Column(String(24), nullable=False, default="pending", index=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
+    reviewed_at = Column(DateTime)
+
+
+class VaultArchiveContributionReview(Base):
+    """Append-only internal record of editorial decisions."""
+    __tablename__ = "vault_archive_contribution_reviews"
+    id = Column(Integer, primary_key=True)
+    contribution_id = Column(Integer, ForeignKey("vault_archive_contributions.id"),
+                             nullable=False, index=True)
+    decision = Column(String(24), nullable=False)
+    note = Column(Text)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
 class VaultArchiveVerification(Base):
     __tablename__ = "vault_archive_verifications"
     __table_args__ = (
