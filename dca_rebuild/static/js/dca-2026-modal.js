@@ -133,9 +133,12 @@
       const documentCopy = new DOMParser().parseFromString(html, 'text/html');
       const newGrid = documentCopy.querySelector('.lfv-dca-main .lf9e-category-grid');
       const oldGrid = root.querySelector('.lfv-dca-main .lf9e-category-grid');
+      const newCategory = documentCopy.querySelector('.lfv-dca-category-only');
+      const oldCategory = root.querySelector('.lfv-dca-category-only');
       const newDialog = documentCopy.querySelector('#lfv-dca-category-dialog');
-      if (!newGrid || !oldGrid || !newDialog) return false;
-      oldGrid.replaceWith(newGrid);
+      if (!newDialog || !(newGrid && oldGrid || newCategory && oldCategory)) return false;
+      if (newGrid && oldGrid) oldGrid.replaceWith(newGrid);
+      if (newCategory && oldCategory) oldCategory.replaceWith(newCategory);
       dialog.querySelector('.lfv-dca-dialog-shell').replaceWith(newDialog.querySelector('.lfv-dca-dialog-shell'));
       return true;
     }
