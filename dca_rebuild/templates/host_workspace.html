@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ queue.name }} Battle Results | Host Workspace</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css') }}"></head>
+<body>{% include "_navigation.html" %}
+<main class="lfv-host-wrap">
+<header><p class="lfv-host-eyebrow">EVENT HOST WORKSPACE</p><h1>{{ queue.name }}</h1><p>Signed in as {{ account.display_name }} · {{ queue.event_count }} events · <strong>{{ queue.pending }} results needed</strong> · {{ queue.complete }} recorded</p>
+<form method="post" action="{{ url_for('vault_host_logout') }}" class="lfv-host-logout"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit">Sign out</button></form></header>
+{% for message in get_flashed_messages() %}<p class="lfv-host-notice" role="status">{{ message }}</p>{% endfor %}
+<p class="lfv-host-muted">Record the historical outcome for each advertised matchup. Your changes carry your host attribution and do not change the original advertised lineup. Tie and YouTube Decide results open permanent community polls.</p>
+{% for event in queue.events %}
+{% if event.pending or event.complete %}
+<section class="lfv-host-event">
+<div class="lfv-host-event-head"><h2>{{ event.title }}</h2>
+<p>{{ event.date_label }} · {{ event.pending }} need results · {{ event.complete }} recorded</p>
+<a href="{{ url_for('vault_archive_record',slug=event.slug) }}">View archive record</a></div>
+{% for section in event.sections %}{% for battle in section.rows %}
+<div class="lfv-host-battle" id="battle-{{ battle.key[:12] }}">
+<div class="lfv-host-battle-name"><strong>{{ battle.label }}</strong><small>{{ 'Recorded: '+battle.result|replace('_',' ') if battle.resolved else 'Needs outcome' }}</small></div>
+<form method="post" class="lfv-host-result-form" action="{{ url_for('vault_host_result',slug=event.slug,battle_key=battle.key) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label><span>Official outcome</span><select name="outcome" required>
+<option value="" disabled selected>Choose outcome</option>
+{% if battle.contestants|length == 2 %}
+<option value="a">{{ battle.contestants[0] }} won</option><option value="b">{{ battle.contestants[1] }} won</option>
+<option value="tie">Tie</option><option value="youtube_decide">YouTube Decide</option>{% endif %}
+<option value="no_contest">No contest</option><option value="did_not_happen">Did not happen</option>
+<option value="postponed">Postponed</option><option value="unconfirmed">Outcome unconfirmed</option>
+</select></label>
+<label><span>Optional evidence / context</span><input name="source_note" maxlength="300" placeholder="Video timestamp, judge call, etc."></label>
+<button type="submit">Save result</button>
+</form></div>
+{% endfor %}{% endfor %}</section>{% endif %}
+{% else %}<p>No archived events are associated with this host yet.</p>{% endfor %}
+</main><script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script></body></html>
