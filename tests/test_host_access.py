@@ -122,7 +122,8 @@ def test_same_host_result_is_recorded_with_audit_and_source(website, database):
     record = find_record("bodybag-body-bag-vol-2")
     battle = matchups(record)[0]["items"][0]
     response = client.post(f"/hosts/workspace/{record['slug']}/{battle['key']}/outcome",
-                           data={"csrf_token": csrf, "outcome": "youtube_decide", "source_note": "Official upload"})
+                           data={"csrf_token": csrf, "outcome": "youtube_decide",
+                                 "youtube_url": "https://youtu.be/abcdefghijk"})
     assert response.status_code == 303
     with database[1]() as db:
         outcome = db.get(VaultBattleOutcome, battle["key"])
@@ -133,6 +134,10 @@ def test_same_host_result_is_recorded_with_audit_and_source(website, database):
         assert entry.actor_account_id == account_id
         assert entry.event_slug == record["slug"]
     assert host_queue(database[1], "body-bag")["complete"] == 1
+    from dca_rebuild.models import VaultBattleVideo
+    with database[1]() as db:
+        video = db.get(VaultBattleVideo, battle["key"])
+        assert video.youtube_url == "https://www.youtube.com/watch?v=abcdefghijk"
 
 
 def test_verified_email_claim_creates_scoped_password_account(website, database, monkeypatch):
@@ -209,3 +214,57 @@ def test_host_workspaces_use_compact_inline_battle_rows(website, database):
     assert 'lfv-host-battle--inline' in content
     assert 'lfv-host-event--compact' in content
     assert content.index("Who&#39;s World Is This?!") < content.index("Class Is in Session")
+
+
+def test_host_youtube_link_required_and_persisted_on_edit(website, database):
+    from dca_rebuild.models import VaultBattleVideo, VaultBattleVideoHistory
+    record = find_record("whos-world-is-this-2025")
+    battle = matchups(record)[0]["items"][0]
+    client = website.test_client()
+    with database[1].begin() as db:
+        db.add(VaultHostAccount(host_key="hypeituptv", person_key="ty-shotz",
+                               display_name="Ty Shotz", email="ty2@example.com",
+                               password_hash=generate_password_hash("secure-passphrase-for-host")))
+    with client.session_transaction() as state:
+        state["vault_host_account_id"] = 1
+    assert client.get("/hosts/workspace").status_code == 200
+    with client.session_transaction() as state:
+        csrf = state["vault_host_claim_csrf"]
+    path = f"/hosts/workspace/{record['slug']}/{battle['key']}/outcome"
+    no_url = client.post(path, data={"csrf_token": csrf, "outcome": "a"})
+    assert no_url.status_code == 400
+    non_youtube = client.post(path, data={
+        "csrf_token": csrf, "outcome": "a", "youtube_url": "https://example.org/watch?v=abcdefghijk"})
+    assert non_youtube.status_code == 400
+    with database[1]() as db:
+        assert db.get(VaultBattleOutcome, battle["key"]) is None
+        assert db.get(VaultBattleVideo, battle["key"]) is None
+    saved = client.post(path, data={
+        "csrf_token": csrf, "outcome": "a", "youtube_url": "https://youtu.be/abcdefghijk?t=95"})
+    assert saved.status_code == 303
+    with database[1]() as db:
+        assert db.get(VaultBattleOutcome, battle["key"]).result == "a"
+        assert db.get(VaultBattleVideo, battle["key"]).youtube_url == (
+            "https://www.youtube.com/watch?v=abcdefghijk&t=95s")
+        assert db.query(VaultBattleVideoHistory).count() == 1
+    # Re-saving an already linked battle does not erase its URL.
+    assert client.post(path, data={"csrf_token": csrf, "outcome": "tie"}).status_code == 303
+    with database[1]() as db:
+        assert db.get(VaultBattleOutcome, battle["key"]).result == "tie"
+        assert db.get(VaultBattleVideo, battle["key"]).youtube_url.endswith("&t=95s")
+        assert db.query(VaultBattleVideoHistory).count() == 1
+    archive = client.get("/archive/records/" + record["slug"]).get_data(as_text=True)
+    assert "Watch battle on YouTube" in archive
+
+
+def test_massacre_teams_are_not_separate_battles(database):
+    from dca_rebuild.host_access import host_queue
+    event = find_record("litefeet-massacre-pt2-2026")
+    all_matches = [b["label"] for group in matchups(event) for b in group["items"]]
+    assert "Tok City vs Gotham City" not in all_matches
+    assert "Groove Fam vs Lyve Fam" not in all_matches
+    assert "Money Mase & Noah Shifty vs Lyght House & A Handro" in all_matches
+    assert "BBQ & Tre Buckz vs Lil Live & Be Lyve" in all_matches
+    queue = host_queue(database[1], "hypeituptv")
+    massacre = next(event for event in queue["events"] if event["slug"] == "litefeet-massacre-pt2-2026")
+    assert massacre["pending"] == 9
