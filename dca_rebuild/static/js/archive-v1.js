@@ -16,7 +16,7 @@
     const peopleDirectory = window.location.pathname === "/archive/people";
     const urlParams = new URLSearchParams(window.location.search);
     let lastPage = Math.max(1, Number(urlParams.get("page") || 1) || 1);
-    let hasMore = !button.hidden;
+    let hasMore = Boolean(button && !button.hidden);
     let busy = false;
     let observer = null;
 
@@ -83,8 +83,8 @@
     async function load(page, replace) {
       if (busy || (!hasMore && !replace)) return;
       busy = true;
-      button.disabled = true;
-      state.textContent = "Loading more records…";
+      if (button) button.disabled = true;
+      if (state) state.textContent = peopleDirectory ? "Searching profiles…" : "Loading more records…";
       const current = criteria();
       const params = new URLSearchParams({
         page: String(page),
@@ -105,10 +105,10 @@
         list.appendChild(fragment);
         lastPage = payload.page;
         hasMore = Boolean(payload.has_more);
-        button.hidden = !hasMore;
+        if (button) button.hidden = !hasMore;
         empty.hidden = payload.total !== 0;
         count.textContent = String(payload.total) + (peopleDirectory ? (payload.total === 1 ? " profile" : " profiles") : (payload.total === 1 ? " entry" : " entries"));
-        state.textContent = hasMore ? "SCROLL FOR MORE" : (peopleDirectory && !payload.total ? "NO MATCHING PROFILES" : (peopleDirectory ? "ALL PROFILES LOADED" : "ALL RECORDS LOADED"));
+        if (state) state.textContent = hasMore ? "SCROLL FOR MORE" : (peopleDirectory && !payload.total ? "NO MATCHING PROFILES" : (peopleDirectory ? "ALL PROFILES LOADED" : "ALL RECORDS LOADED"));
         if (replace) {
           const dest = new URL(window.location.href);
           dest.searchParams.delete("page");
@@ -124,22 +124,22 @@
           form.submit();
           return;
         }
-        state.textContent = peopleDirectory ? "Could not load more profiles. Try again." : "Could not load more records. Try again.";
-        button.hidden = false;
-        hasMore = true;
+        if (state) state.textContent = "Could not load more records. Try again.";
+        if (button) button.hidden = false;
+        hasMore = !peopleDirectory;
       } finally {
         busy = false;
-        button.disabled = false;
+        if (button) button.disabled = false;
       }
     }
 
-    button.addEventListener("click", () => load(lastPage + 1, false));
+    if (button) button.addEventListener("click", () => load(lastPage + 1, false));
     form.addEventListener("submit", event => {
       event.preventDefault();
       hasMore = true;
       load(1, true);
     });
-    if ("IntersectionObserver" in window) {
+    if (button && "IntersectionObserver" in window) {
       observer = new IntersectionObserver(entries => {
         if (entries.some(entry => entry.isIntersecting) && hasMore && !busy) {
           load(lastPage + 1, false);
