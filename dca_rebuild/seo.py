@@ -23,7 +23,7 @@ PAGES = {
     ),
     "/awards/litefeet-awards": (
         "LiteFeet Awards History & Results | The LiteFeet Vault",
-        "Explore the LiteFeet Awards historical archive and contribute information about past categories, winners and honorees for verification.",
+        "Explore LiteFeet Awards historical information, documented categories, winners and honorees.",
     ),
     "/awards/hypeitup": (
         "HypeItUpTV Awards | The LiteFeet Vault",
