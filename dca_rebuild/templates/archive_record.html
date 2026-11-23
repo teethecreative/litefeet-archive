@@ -74,6 +74,7 @@
                  {% elif battle.already_voted %}<span class="lfv-battle-voted">Your vote is recorded.</span>
                  {% else %}<span class="lfv-battle-verify">Verify your email to vote.</span>{% endif %}
                  {% endif %}
+                 {% if battle.interruption_reason %}<small class="lfv-battle-source">Reason: {{ battle.interruption_reason }}</small>{% endif %}
                  {% if battle.youtube_url %}<a class="lfv-battle-video" href="{{ battle.youtube_url }}" target="_blank" rel="noopener noreferrer">Watch battle on YouTube</a>{% endif %}
                  {% if battle.source_note %}<small class="lfv-battle-source">Record: {{ battle.source_note }}</small>{% endif %}
                  {% if battle_poll_admin %}

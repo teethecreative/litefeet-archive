@@ -16,6 +16,7 @@ from dca_rebuild.models import (
     VaultBattleOutcome, VaultBattleOutcomeHistory, VaultHostAccount,
     VaultHostInvitation, VaultHostClaimChallenge, VaultHostBattleAudit,
     VaultBattleVideo, VaultBattleVideoHistory, VaultAddedBattle,
+    VaultBattleInterruptionReason, VaultBattleInterruptionReasonHistory,
 )
 from dca_rebuild.email_verification import (
     _digest, _normalize, _secret, _send_email, EmailDeliveryError,
@@ -134,6 +135,9 @@ def host_queue(factory, host):
                         VaultBattleOutcome.battle_key.in_(all_keys)).all()} if all_keys else {}
         videos = {row.battle_key: row.youtube_url for row in db.query(VaultBattleVideo).filter(
             VaultBattleVideo.battle_key.in_(all_keys)).all()} if all_keys else {}
+        reasons = {row.battle_key: (row.occurrence, row.reason)
+                   for row in db.query(VaultBattleInterruptionReason).filter(
+                       VaultBattleInterruptionReason.battle_key.in_(all_keys)).all()} if all_keys else {}
     groups = []
     pending = complete = 0
     for record in records:
@@ -149,11 +153,14 @@ def host_queue(factory, host):
                 if is_team_listing(record, battle):
                     continue
                 occurred, result, note = outcomes.get(battle["key"], ("unconfirmed", "unknown", ""))
-                resolved = occurred == "did_not_happen" or (occurred == "happened" and result != "unknown")
+                video = videos.get(battle["key"]) or legacy_youtube_url(note)
+                interruption = reasons.get(battle["key"])
+                reason = interruption[1] if interruption and interruption[0] == occurred else ""
+                resolved = occurred in ("did_not_happen", "postponed") or (occurred == "happened" and result != "unknown")
                 rows.append({**battle, "occurred": occurred, "result": result,
-                             "source_note": note,
-                             "youtube_url": videos.get(battle["key"]) or legacy_youtube_url(note),
-                             "resolved": resolved})
+                             "source_note": note, "reason": reason,
+                             "youtube_url": video, "resolved": resolved,
+                             "needs_video": occurred == "happened" and not video})
                 if resolved:
                     done += 1
                 else:
@@ -204,7 +211,7 @@ def secure_response(response):
 
 
 def save_outcome(db, record, key, occurred, result, source_note, actor_id=None,
-                 youtube_url="", actor_type="admin"):
+                 youtube_url="", actor_type="admin", require_video=True, reason=""):
     added = db.get(VaultAddedBattle, key)
     matchup = find_matchup(record, key,
                            [added] if added and added.event_slug == record["slug"] else [])
@@ -215,7 +222,7 @@ def save_outcome(db, record, key, occurred, result, source_note, actor_id=None,
     previous_url = video_record.youtube_url if video_record else legacy_youtube_url(
         previous_result.source_note if previous_result else "")
     normalized_url = normalize_youtube_url(youtube_url) if youtube_url else previous_url
-    if occurred == "happened" and not normalized_url:
+    if require_video and occurred == "happened" and not normalized_url:
         abort(400, "YouTube link is required to record a completed battle")
     if normalized_url and (not video_record or video_record.youtube_url != normalized_url):
         if video_record:
@@ -236,6 +243,37 @@ def save_outcome(db, record, key, occurred, result, source_note, actor_id=None,
         abort(400, "Multi-person or non-versus lineups need editorial handling")
     if not source_note or len(source_note) > 500:
         abort(400, "Missing outcome attribution")
+    reason = " ".join((reason or "").split())
+    if len(reason) > 500:
+        abort(400, "Reason is too long")
+    previous_reason = db.get(VaultBattleInterruptionReason, key)
+    interrupted = occurred in ("postponed", "did_not_happen")
+    if interrupted:
+        if not reason and previous_reason and previous_reason.occurrence == occurred:
+            reason = previous_reason.reason
+        if len(reason) < 5:
+            abort(400, "Explain why the battle was postponed or did not happen")
+    old_reason = previous_reason.reason if previous_reason else None
+    old_reason_occurrence = previous_reason.occurrence if previous_reason else None
+    if interrupted:
+        if previous_reason:
+            previous_reason.occurrence, previous_reason.reason = occurred, reason
+            previous_reason.actor_type, previous_reason.actor_account_id = actor_type, actor_id
+            previous_reason.updated_at = datetime.utcnow()
+        else:
+            db.add(VaultBattleInterruptionReason(
+                battle_key=key, event_slug=record["slug"], occurrence=occurred,
+                reason=reason, actor_type=actor_type, actor_account_id=actor_id))
+    elif previous_reason:
+        db.delete(previous_reason)
+    if (old_reason, old_reason_occurrence) != ((reason if interrupted else None),
+                                                 (occurred if interrupted else None)):
+        db.add(VaultBattleInterruptionReasonHistory(
+            battle_key=key, event_slug=record["slug"],
+            previous_occurrence=old_reason_occurrence, previous_reason=old_reason,
+            occurrence=occurred if interrupted else None,
+            reason=reason if interrupted else None,
+            actor_type=actor_type, actor_account_id=actor_id))
     row = db.get(VaultBattleOutcome, key)
     old_occurred, old_result = (row.occurred, row.result) if row else (None, None)
     if row:
@@ -252,6 +290,31 @@ def save_outcome(db, record, key, occurred, result, source_note, actor_id=None,
     if actor_id is not None:
         db.add(VaultHostBattleAudit(battle_key=key, event_slug=record["slug"],
                                     actor_account_id=actor_id, occurred=occurred, result=result))
+
+
+def save_battle_video(db, record, key, url, actor_type, actor_id=None, expected_url=None):
+    """Update only footage, never the outcome. Reject stale forms to prevent overwrites."""
+    added = db.get(VaultAddedBattle, key)
+    find_matchup(record, key, [added] if added and added.event_slug == record["slug"] else [])
+    current = db.get(VaultBattleVideo, key)
+    prior = current.youtube_url if current else legacy_youtube_url(
+        (db.get(VaultBattleOutcome, key).source_note if db.get(VaultBattleOutcome, key) else ""))
+    if expected_url is not None and expected_url != prior:
+        abort(409, "Video was updated by someone else. Refresh before saving again")
+    normalized = normalize_youtube_url(url)
+    if not normalized:
+        abort(400, "Paste a YouTube battle link")
+    if normalized == prior:
+        return
+    if current:
+        current.youtube_url = normalized
+        current.updated_at = datetime.utcnow()
+    else:
+        db.add(VaultBattleVideo(battle_key=key, event_slug=record["slug"],
+                                youtube_url=normalized))
+    db.add(VaultBattleVideoHistory(
+        battle_key=key, event_slug=record["slug"], previous_url=prior or None,
+        youtube_url=normalized, actor_type=actor_type, actor_account_id=actor_id))
 
 
 def create_spontaneous_battle(db, record, host_key, side_a, side_b, youtube_url,
@@ -341,7 +404,7 @@ def install_host_access(app, ns):
     @app.get("/admin/hosts/<host_key>/battles", endpoint="vault_admin_host_queue")
     @admin_required
     def admin_host_queue(host_key):
-        view = request.args.get("view", "pending")
+        view = request.args.get("view", "all")
         if view not in ("pending", "all"):
             abort(400)
         queue = host_queue(factory, host_key)
@@ -369,13 +432,31 @@ def install_host_access(app, ns):
             occurred, result = choice, "unknown"
         else:
             abort(400)
-        youtube_url = request.form.get("youtube_url", "")
         with factory.begin() as db:
             save_outcome(db, record, battle_key, occurred, result,
                          "Recorded by Vault administrator",
-                         youtube_url=youtube_url, actor_type="admin")
+                         actor_type="admin", require_video=False,
+                         reason=request.form.get("reason", ""))
         flash("Battle result recorded with archival edit history.")
-        return redirect(url_for("vault_admin_host_queue", host_key=host_key) + "#battle-" + battle_key[:12], code=303)
+        return redirect(url_for("vault_admin_host_queue", host_key=host_key, view="all")
+                        + "#battle-" + battle_key[:12], code=303)
+
+    @app.post("/admin/hosts/<host_key>/battles/<slug>/<battle_key>/video",
+              endpoint="vault_admin_host_video")
+    @admin_required
+    def admin_host_video(host_key, slug, battle_key):
+        check_csrf("vault_host_admin_csrf")
+        if host_key not in HOST_LABELS:
+            abort(404)
+        record = find_record(slug)
+        if not record or (record.get("presenter") or "").casefold() != HOST_LABELS[host_key].casefold():
+            abort(403)
+        with factory.begin() as db:
+            save_battle_video(db, record, battle_key, request.form.get("youtube_url"),
+                              "admin", expected_url=request.form.get("expected_url"))
+        flash("YouTube link saved without changing the battle result.")
+        return redirect(url_for("vault_admin_host_queue", host_key=host_key, view="all")
+                        + "#battle-" + battle_key[:12], code=303)
 
     @app.post("/admin/hosts/<host_key>/events/<slug>/battles/add",
               endpoint="vault_admin_host_add_battle")
@@ -593,6 +674,25 @@ def install_host_access(app, ns):
         flash("Battle added to your event, with video and host attribution.")
         return redirect(url_for("vault_host_workspace") + "#battle-" + key[:12], code=303)
 
+    @app.post("/hosts/workspace/<slug>/<battle_key>/video", endpoint="vault_host_video")
+    def host_video(slug, battle_key):
+        account = active_host(factory)
+        if not account:
+            abort(403)
+        check_csrf("vault_host_claim_csrf")
+        record = find_record(slug)
+        if not record or (record.get("presenter") or "").casefold() != HOST_LABELS[account["host_key"]].casefold():
+            abort(403)
+        with factory.begin() as db:
+            active = db.get(VaultHostAccount, account["id"])
+            if not active or not active.is_active or active.host_key != account["host_key"]:
+                abort(403)
+            save_battle_video(db, record, battle_key, request.form.get("youtube_url"),
+                              "host", actor_id=account["id"],
+                              expected_url=request.form.get("expected_url"))
+        flash("YouTube link saved without changing the battle result.")
+        return redirect(url_for("vault_host_workspace") + "#battle-" + battle_key[:12], code=303)
+
     @app.post("/hosts/workspace/<slug>/<battle_key>/outcome", endpoint="vault_host_result")
     def save_result(slug, battle_key):
         account = active_host(factory)
@@ -602,7 +702,6 @@ def install_host_access(app, ns):
         record = find_record(slug)
         if not record or (record.get("presenter") or "").casefold() != HOST_LABELS[account["host_key"]].casefold():
             abort(403, "The battle belongs to another host")
-        matchup = find_matchup(record, battle_key)
         if any(row["key"] == battle_key for group in matchups(record)
                if roster_only(group["section"]) for row in group["items"]):
             abort(403, "Team roster is not a matchup")
@@ -613,13 +712,13 @@ def install_host_access(app, ns):
             occurred, result = choice, "unknown"
         else:
             abort(400)
-        youtube_url = request.form.get("youtube_url", "")
         source = "Host confirmation by " + account["display_name"] + " (" + HOST_LABELS[account["host_key"]] + ")"
         with factory.begin() as db:
             row = db.get(VaultHostAccount, account["id"])
             if not row or not row.is_active:
                 abort(403)
             save_outcome(db, record, battle_key, occurred, result, source, account["id"],
-                         youtube_url=youtube_url, actor_type="host")
+                         actor_type="host", require_video=False,
+                         reason=request.form.get("reason", ""))
         flash("Battle outcome saved; the promoted lineup is unchanged.")
         return redirect(url_for("vault_host_workspace") + "#battle-" + battle_key[:12], code=303)

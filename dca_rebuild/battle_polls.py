@@ -16,7 +16,7 @@ from sqlalchemy.exc import IntegrityError
 
 from dca_rebuild.archive_catalog import find_record
 from dca_rebuild.email_verification import verified_nominator_hash
-from dca_rebuild.models import VaultBattleOutcome, VaultBattleOutcomeHistory, VaultBattleVote, VaultBattleVideo, VaultAddedBattle
+from dca_rebuild.models import VaultBattleOutcome, VaultBattleOutcomeHistory, VaultBattleVote, VaultBattleVideo, VaultAddedBattle, VaultBattleInterruptionReason
 
 OCCURRENCE = {"unconfirmed", "scheduled", "happened", "did_not_happen", "postponed"}
 RESULTS = {"unknown", "a", "b", "tie", "youtube_decide", "no_contest"}
@@ -89,6 +89,10 @@ def build_battle_rows(record, factory, voter_hash=None):
             r.battle_key: r.youtube_url for r in db.query(VaultBattleVideo)
             .filter(VaultBattleVideo.battle_key.in_(keys)).all()
         }
+        interruptions = {
+            r.battle_key: (r.occurrence, r.reason) for r in db.query(VaultBattleInterruptionReason)
+            .filter(VaultBattleInterruptionReason.battle_key.in_(keys)).all()
+        }
         tally = {
             (key, choice): count for key, choice, count in db.query(
                 VaultBattleVote.battle_key, VaultBattleVote.choice,
@@ -111,6 +115,11 @@ def build_battle_rows(record, factory, voter_hash=None):
             item["result"] = row.result if row else "unknown"
             item["source_note"] = row.source_note if row else ""
             item["youtube_url"] = videos.get(item["key"], "")
+            interruption = interruptions.get(item["key"])
+            item["interruption_reason"] = (
+                interruption[1] if interruption and interruption[0] == item["occurred"]
+                else ""
+            )
             item["active_poll"] = (
                 item["occurred"] == "happened"
                 and item["result"] in POLL_RESULTS
