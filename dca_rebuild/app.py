@@ -2420,19 +2420,14 @@ def admin_dca_nomination_participant_emails():
 
 @app.route("/awards")
 def awards_home():
-    return redirect(url_for("dca_2026_home"))
+    # Take visitors directly into the active DCA nomination experience.
+    return redirect(url_for("dca_nominations_closed"), code=302)
 
 
 @app.route("/awards/dancers-choice/2026")
 def dca_2026_home():
-    return render_template(
-        "award_landing.html",
-        page_title="Dancer's Choice Awards 2026",
-        eyebrow="DANCER'S CHOICE AWARDS",
-        title="2026",
-        subtitle="The current Dancer's Choice Awards cycle.",
-        page_type="dca-2026",
-    )
+    # Preserve shared/bookmarked URLs without showing an extra landing page.
+    return redirect(url_for("dca_nominations_closed"), code=302)
 
 
 @app.route("/awards/dancers-choice/2023")
