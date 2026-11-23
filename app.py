@@ -28910,3 +28910,13 @@ try:
 except Exception as exc:
     print(f"MUSIC PROJECT PULL INFO setup failed: {type(exc).__name__}: {exc}")
 
+
+
+# Community opinion for unjudged / tied / YouTube Decide battles.
+# Registered last to keep historical result fields unchanged.
+try:
+    from battle_polls import register_battle_polls
+    register_battle_polls(app, engine, current_user, current_user_is_admin)
+    print("CULTURES_CALL polls active")
+except Exception as exc:
+    print(f"CULTURES_CALL_SETUP_FAILED: {type(exc).__name__}: {exc}")
