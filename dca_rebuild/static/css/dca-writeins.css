@@ -1,222 +1,258 @@
-/* 2026 DCA write-ins: visual parity with the nominee standings cards.
-   All colors follow the Vault's light/dark theme variables. */
-html.lfv-sitewide .lfv-writeins {
+/* DCA write-ins uses the same page structure as the main nomination grid.
+   Keep the sitewide navigation, themes, cards and sidebar; avoid the generic
+   main > header navy hero and main > section framing. */
+html.lfv-sitewide main.lfv-writeins {
   box-sizing: border-box;
-  width: min(calc(100% - 44px), 1140px);
-  max-width: 1140px !important;
-  margin: 18px auto 56px;
-  padding: clamp(20px, 3vw, 34px);
-  color: var(--lfv-ink, #102039);
-  background: var(--lfv-surface, #fff);
-  border: 1px solid var(--lfv-line, #cbd5e1);
-  border-radius: 12px;
+  width: calc(100% - 2 * var(--lfv-gutter, 24px)) !important;
+  max-width: 1440px !important;
+  margin: 0 auto 56px !important;
+  padding: clamp(24px, 3.2vw, 42px) clamp(16px, 2.1vw, 28px) 70px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: var(--lfv-ink, #0c1d38) !important;
   letter-spacing: normal;
 }
-html.lfv-sitewide .lfv-writeins :is(h1,h2,h3) {
-  line-height: 1.22;
-  letter-spacing: -.025em;
-  color: var(--lfv-ink, #102039);
+html.lfv-sitewide .lfv-writeins-eyebrow {
+  margin: 0 0 26px !important;
+  color: var(--lfv-gold, #caa326) !important;
+  font-size: .82rem !important;
+  font-weight: 800;
+  letter-spacing: .07em;
+  line-height: 1.4;
 }
-html.lfv-sitewide .lfv-writeins-intro { margin: 0 0 18px; }
-html.lfv-sitewide .lfv-writeins-intro .lfv3-eyebrow {
-  font-size: .71rem; margin: 0 0 8px; letter-spacing: .1em; font-weight: 800;
+html.lfv-sitewide .lfv-writeins-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 270px);
+  align-items: start;
+  gap: clamp(20px, 3vw, 42px);
+  width: 100%;
 }
-html.lfv-sitewide .lfv-writeins h1 {
-  font-size: clamp(1.6rem, 3.2vw, 2.25rem) !important;
-  line-height: 1.14 !important; margin: 0 0 10px !important;
+html.lfv-sitewide .lfv-writeins-main { min-width: 0; }
+html.lfv-sitewide .lfv-writeins-main > h1 {
+  margin: 0 0 12px !important;
+  font-size: clamp(1.7rem, 3.5vw, 2.5rem) !important;
+  font-weight: 850 !important;
+  line-height: 1.16 !important;
+  letter-spacing: -.03em !important;
   text-transform: none !important;
+  color: var(--lfv-ink, #0c1d38) !important;
 }
 html.lfv-sitewide .lfv-writeins-lead {
-  max-width: 70ch; line-height: 1.55; margin: 0 0 14px;
-  color: var(--lfv-muted, #5d697a); font-size: .95rem;
-  text-transform: none;
+  max-width: 64ch;
+  margin: 0 0 18px !important;
+  font-size: .96rem !important;
+  line-height: 1.58 !important;
+  color: var(--lfv-muted, #566477) !important;
+  text-transform: none !important;
 }
-html.lfv-sitewide .lfv-writeins-explainer {
-  display: block; margin: 12px 0 22px; padding: 0;
-  background: transparent; border: 0; border-bottom: 1px solid var(--lfv-line, #cbd5e1);
-  border-radius: 0; box-shadow: none;
+html.lfv-sitewide .lfv-writeins-directory {
+  box-sizing: border-box;
+  padding: clamp(18px, 2.8vw, 34px);
+  background: var(--lfv-surface, #fff) !important;
+  color: var(--lfv-ink, #0c1d38) !important;
+  border: 1px solid var(--lfv-line, #cad4e0) !important;
+  border-top: 3px solid var(--lfv-gold, #caa326) !important;
+  border-radius: 3px !important;
+  box-shadow: none !important;
+  min-width: 0;
 }
-html.lfv-sitewide .lfv-writeins-explainer > summary {
-  display: flex; justify-content: space-between; gap: 14px;
-  cursor: pointer; list-style: none; padding: 12px 0;
-  font-weight: 750; font-size: .88rem;
-}
-html.lfv-sitewide .lfv-writeins-explainer > summary::-webkit-details-marker { display: none; }
-html.lfv-sitewide .lfv-writeins-explainer[open] > summary > span { transform: rotate(45deg); }
-html.lfv-sitewide .lfv-writeins-explainer .lfv-writeins-rules {
-  padding: 2px 0 15px; max-width: 78ch; font-size: .88rem;
-  color: var(--lfv-ink, #102039); line-height: 1.55;
-}
-html.lfv-sitewide .lfv-writeins-rules p { margin: 2px 0 10px; }
-html.lfv-sitewide .lfv-writeins-rules ol { margin: 0; padding-left: 1.3rem; }
-html.lfv-sitewide .lfv-writeins-rules li { margin: 5px 0; }
 html.lfv-sitewide .lfv-writeins-heading {
-  display: flex; align-items: baseline; justify-content: space-between;
-  flex-wrap: wrap; gap: 8px 18px; margin: 0 0 14px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 16px;
 }
 html.lfv-sitewide .lfv-writeins-heading h2 {
-  margin: 0 !important; font-size: clamp(1.14rem, 2vw, 1.45rem) !important;
+  margin: 0 !important;
+  font-size: clamp(1rem, 1.7vw, 1.18rem) !important;
+  font-weight: 850 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0 !important;
+  text-transform: uppercase !important;
+  color: var(--lfv-ink, #0c1d38) !important;
 }
 html.lfv-sitewide .lfv-writeins-heading > span {
-  font-size: .82rem; color: var(--lfv-muted, #5d697a);
+  font-size: .79rem; color: var(--lfv-muted, #566477);
   font-variant-numeric: tabular-nums;
 }
 html.lfv-sitewide .lfv-writeins-search { margin: 0 0 10px; }
 html.lfv-sitewide .lfv-writeins-search label {
-  display: block; margin: 0 0 7px; font-size: .82rem; font-weight: 750;
+  display: block; font-size: .77rem; font-weight: 750; margin: 0 0 7px;
+  color: var(--lfv-ink, #0c1d38);
 }
-html.lfv-sitewide .lfv-writeins-search-row {
-  display: flex; align-items: stretch; gap: 10px;
-}
+html.lfv-sitewide .lfv-writeins-search-row { display: flex; align-items: stretch; gap: 10px; }
 html.lfv-sitewide .lfv-writeins-search input {
-  box-sizing: border-box; min-width: 0; flex: 1;
-  padding: 11px 13px; background: var(--lfv-surface, #fff);
-  color: var(--lfv-ink, #102039);
-  border: 1px solid var(--lfv-line, #cbd5e1);
-  border-radius: 7px; font: inherit; font-size: .88rem;
+  box-sizing: border-box; flex: 1; min-width: 0;
+  border: 1px solid var(--lfv-line, #cad4e0); border-radius: 7px;
+  background: var(--lfv-surface, #fff); color: var(--lfv-ink, #0c1d38);
+  padding: 10px 13px; font: inherit; font-size: .84rem;
 }
-html.lfv-sitewide .lfv-writeins-button {
-  display: inline-flex; justify-content: center; align-items: center;
-  min-height: 42px; padding: 10px 18px; border: 0;
-  border-radius: 7px; background: var(--lfv-gold, #caa326);
-  color: var(--lfv-navy, #0b1b38) !important;
-  font: inherit; font-size: .84rem; font-weight: 800;
-  text-transform: none; text-decoration: none; cursor: pointer;
+html.lfv-sitewide .lfv-writeins-search .lfv-writeins-button {
+  padding: 10px 16px; min-height: 42px;
+  background: var(--lfv-gold, #caa326);
+  color: var(--lfv-navy, #0b1c36) !important;
+  border: none; border-radius: 7px;
+  font: inherit; font-size: .78rem; font-weight: 850; cursor: pointer;
 }
 html.lfv-sitewide .lfv-writeins-clear {
-  display: inline-block; margin: 8px 0 0; color: var(--lfv-ink, #102039);
-  font-size: .8rem; text-underline-offset: 3px;
+  display: inline-block; margin: 7px 0 0; font-size: .78rem;
+  color: var(--lfv-ink, #0c1d38); text-underline-offset: 3px;
 }
 html.lfv-sitewide .lfv-writeins-note {
-  color: var(--lfv-muted, #5d697a);
-  font-size: .78rem; line-height: 1.5; margin: 10px 0 18px;
+  margin: 8px 0 15px;
+  font-size: .75rem;
+  color: var(--lfv-muted, #566477);
+  line-height: 1.4;
 }
 html.lfv-sitewide .lfv-writeins-grid {
-  display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 13px; align-items: start; width: 100%; max-width: 100%;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: start;
+  gap: 13px !important;
+  max-width: 100%;
 }
 html.lfv-sitewide .lfv-writeins-card {
-  display: block !important; box-sizing: border-box; min-width: 0;
-  padding: 0 14px !important; margin: 0 !important;
+  box-sizing: border-box; min-width: 0;
+  display: flex; flex-direction: column; gap: 9px;
+  padding: 16px;
   background: var(--lfv-surface, #fff) !important;
-  border: 1px solid var(--lfv-line, #cbd5e1) !important;
-  border-radius: 9px !important;
-  box-shadow: none !important; overflow: hidden; color: var(--lfv-ink, #102039);
-}
-html.lfv-sitewide .lfv-writeins-card[open] {
-  border-color: var(--lfv-gold, #caa326) !important;
-}
-html.lfv-sitewide .lfv-writeins-card > summary {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) 16px;
-  grid-template-rows: auto auto;
-  align-content: center; align-items: center;
-  column-gap: 10px; row-gap: 6px;
-  min-height: 92px; box-sizing: border-box; margin: 0 !important;
-  padding: 13px 0 !important; background: transparent !important;
-  border: 0 !important; cursor: pointer; list-style: none;
-}
-html.lfv-sitewide .lfv-writeins-card > summary::-webkit-details-marker { display: none; }
-html.lfv-sitewide .lfv-writeins-card > summary .lfv5-category-name {
-  grid-column: 1; grid-row: 1; min-width: 0; overflow-wrap: anywhere;
-  font-size: .86rem !important; font-weight: 850; line-height: 1.3;
-  text-transform: uppercase;
-}
-html.lfv-sitewide .lfv-writeins-card > summary .lfv5-category-status {
-  grid-column: 1; grid-row: 2;
-  font-size: .68rem !important; font-weight: 650; line-height: 1.35;
-  color: var(--lfv-muted, #5d697a); text-transform: uppercase;
-  letter-spacing: .02em; overflow-wrap: anywhere;
-}
-html.lfv-sitewide .lfv-writeins-summary-count {
-  display: block; margin-top: 4px; font-size: .7rem;
-  font-weight: 550; letter-spacing: normal; text-transform: none;
-}
-html.lfv-sitewide .lfv-writeins-card > summary .lfv5-category-chevron {
-  grid-column: 2; grid-row: 1 / 3; align-self: center; justify-self: end;
-  color: var(--lfv-gold, #b18d26); font-size: 1.15rem; line-height: 1;
-  transition: transform .15s ease;
-}
-html.lfv-sitewide .lfv-writeins-card[open] > summary .lfv5-category-chevron { transform: rotate(45deg); }
-html.lfv-sitewide .lfv-writeins-card > summary:focus-visible,
-html.lfv-sitewide .lfv-writeins-explainer > summary:focus-visible {
-  outline: 3px solid var(--lfv-gold, #caa326); outline-offset: -3px;
-}
-html.lfv-sitewide .lfv-writeins-panel {
-  padding: 10px 0 15px; border-top: 1px solid var(--lfv-line, #cbd5e1);
+  color: var(--lfv-ink, #0c1d38) !important;
+  border: 1px solid var(--lfv-line, #cad4e0) !important;
+  border-radius: 9px; box-shadow: none !important;
   overflow-wrap: anywhere;
 }
-html.lfv-sitewide .lfv-writeins-description {
-  font-size: .83rem; margin: 0 0 12px; line-height: 1.5;
-  color: var(--lfv-ink, #102039);
+html.lfv-sitewide .lfv-writeins-card-title {
+  margin: 0 !important;
+  font-size: .98rem !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  font-weight: 850 !important;
+  color: var(--lfv-ink, #0c1d38) !important;
 }
-html.lfv-sitewide .lfv-writeins-count {
-  font-size: .73rem; margin: 5px 0 10px;
-  color: var(--lfv-muted, #5d697a); font-weight: 650;
+html.lfv-sitewide .lfv-writeins-card-status {
+  margin: 0 !important;
+  color: var(--lfv-muted, #566477) !important;
+  font-size: .7rem;
+  font-weight: 700; line-height: 1.36;
 }
-html.lfv-sitewide .lfv-writeins-nominees {
-  display: table; border-collapse: collapse; table-layout: fixed;
-  width: 100%; margin: 5px 0 8px; padding: 0;
-  color: var(--lfv-ink, #102039); background: transparent;
-}
-html.lfv-sitewide .lfv-writeins-nominees :is(th,td) {
-  padding: 8px 0; border: 0; border-bottom: 1px solid var(--lfv-line, #cbd5e1);
-  background: transparent !important; color: inherit;
-  font-size: .82rem; line-height: 1.4; text-align: left;
-  overflow-wrap: anywhere; vertical-align: top;
-}
-html.lfv-sitewide .lfv-writeins-nominees td {
-  width: 46px; padding-left: 5px; text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-html.lfv-sitewide .lfv-writeins-nominees th a {
-  display: inline-block; color: var(--lfv-ink, #102039);
-  font-weight: 650; text-decoration: none;
-}
-html.lfv-sitewide .lfv-writeins-nominees th a:hover {
-  text-decoration: underline; text-underline-offset: 3px;
-}
-html.lfv-sitewide .lfv-writeins-sr-only {
-  position: absolute; width: 1px; height: 1px; margin: -1px;
-  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
-}
-html.lfv-sitewide .lfv-writeins-empty-nominees {
-  font-size: .8rem; margin: 9px 0; color: var(--lfv-muted, #5d697a);
-}
-html.lfv-sitewide .lfv-writeins-action {
-  padding-top: 11px; margin-top: 10px;
-  border-top: 1px solid var(--lfv-line, #cbd5e1);
-}
+html.lfv-sitewide .lfv-writeins-action { min-width: 0; margin: 0; padding: 0; }
 html.lfv-sitewide .lfv-writeins-action form { margin: 0; }
 html.lfv-sitewide .lfv-writeins-action-link {
-  display: inline-flex; align-items: center; gap: 9px;
-  min-height: 40px; box-sizing: border-box; padding: 8px 0;
-  border: 0; background: transparent; color: var(--lfv-ink, #102039);
-  font: inherit; font-size: .79rem; line-height: 1.35; font-weight: 800;
-  text-decoration: none; cursor: pointer; text-align: left; white-space: normal;
+  box-sizing: border-box;
+  display: inline-flex; align-items: center; flex-wrap: wrap; gap: 5px;
+  padding: 2px 0; margin: 0;
+  border: 0 !important; border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--lfv-ink, #0c1d38) !important;
+  text-align: left; font: inherit; font-size: .77rem !important;
+  font-weight: 800 !important; line-height: 1.35 !important;
+  text-decoration: none; cursor: pointer;
+  box-shadow: none !important;
 }
-html.lfv-sitewide .lfv-writeins-action-link:hover { text-decoration: underline; text-underline-offset: 3px; }
-html.lfv-sitewide .lfv-writeins-closed { font-size: .78rem; color: var(--lfv-muted, #5d697a); }
-html.lfv-sitewide .lfv-writeins-empty {
-  grid-column: 1 / -1; font-size: .87rem;
+html.lfv-sitewide .lfv-writeins-action-link:hover {
+  text-decoration: underline; text-underline-offset: 3px;
 }
-html.lfv-sitewide .lfv-writeins-back { margin: 25px 0 0; }
+html.lfv-sitewide .lfv-writeins-action-link:focus-visible {
+  outline: 3px solid var(--lfv-gold, #caa326); outline-offset: 3px;
+}
+html.lfv-sitewide .lfv-writeins-preview {
+  display: grid; gap: 7px; list-style: none;
+  padding: 10px 0 0; margin: 0;
+  border-top: 1px solid var(--lfv-line, #cad4e0);
+}
+html.lfv-sitewide .lfv-writeins-preview li {
+  display: flex; justify-content: space-between; align-items: start;
+  gap: 8px; line-height: 1.38; font-size: .78rem;
+  min-width: 0;
+}
+html.lfv-sitewide .lfv-writeins-preview-name {
+  min-width: 0; overflow-wrap: anywhere;
+}
+html.lfv-sitewide .lfv-writeins-preview-total {
+  flex-shrink: 0; color: var(--lfv-muted, #566477);
+  font-size: .73rem; font-variant-numeric: tabular-nums;
+}
+html.lfv-sitewide .lfv-writeins-no-nominees,
+html.lfv-sitewide .lfv-writeins-more,
+html.lfv-sitewide .lfv-writeins-support-count,
+html.lfv-sitewide .lfv-writeins-closed {
+  margin: 0; font-size: .73rem; line-height: 1.4;
+  color: var(--lfv-muted, #566477);
+}
+html.lfv-sitewide .lfv-writeins-about {
+  border-top: 1px solid var(--lfv-line, #cad4e0);
+  margin-top: 3px; padding: 8px 0 0;
+}
+html.lfv-sitewide .lfv-writeins-about > summary {
+  cursor: pointer; color: var(--lfv-ink, #0c1d38); font-size: .74rem; font-weight: 750;
+}
+html.lfv-sitewide .lfv-writeins-about p {
+  font-size: .76rem; line-height: 1.48; margin: 8px 0 2px;
+  color: var(--lfv-muted, #566477);
+}
+html.lfv-sitewide .lfv-writeins-empty { grid-column: 1/-1; font-size: .85rem; }
+html.lfv-sitewide .lfv-writeins-back { margin: 20px 0; }
 html.lfv-sitewide .lfv-writeins-back a {
-  color: var(--lfv-ink, #102039); font-size: .86rem; text-underline-offset: 3px;
+  color: var(--lfv-ink, #0c1d38); text-underline-offset: 3px; font-size: .83rem;
 }
-@media (max-width: 950px) {
+html.lfv-sitewide .lfv-writeins-rules-aside {
+  box-sizing: border-box;
+  padding: 17px;
+  background: var(--lfv-surface, #fff) !important;
+  border: 1px solid var(--lfv-line, #cad4e0);
+  border-radius: 9px;
+  color: var(--lfv-ink, #0c1d38);
+}
+html.lfv-sitewide .lfv-writeins-rules-aside h2 {
+  margin: 0 0 10px !important;
+  font-size: .94rem !important; font-weight: 850 !important;
+  line-height: 1.25 !important; letter-spacing: 0 !important;
+  text-transform: uppercase !important;
+  color: var(--lfv-ink, #0c1d38) !important;
+}
+html.lfv-sitewide .lfv-writeins-rules-aside p {
+  margin: 0 0 11px;
+  color: var(--lfv-muted, #566477);
+  font-size: .8rem; line-height: 1.56;
+  text-transform: none;
+}
+html.lfv-sitewide .lfv-writeins-rules-aside strong { color: var(--lfv-ink, #0c1d38); }
+html.lfv-sitewide .lfv-writeins-rule-details {
+  border-top: 1px solid var(--lfv-line, #cad4e0); padding-top: 10px;
+  font-size: .78rem; line-height: 1.48;
+}
+html.lfv-sitewide .lfv-writeins-rule-details summary {
+  display: flex; justify-content: space-between; align-items: center;
+  cursor: pointer; font-weight: 750; list-style: none;
+}
+html.lfv-sitewide .lfv-writeins-rule-details summary::-webkit-details-marker { display: none; }
+html.lfv-sitewide .lfv-writeins-rule-details[open] summary span { transform: rotate(45deg); }
+html.lfv-sitewide .lfv-writeins-rule-details ol {
+  margin: 11px 0 0; padding-left: 18px;
+}
+html.lfv-sitewide .lfv-writeins-rule-details li { padding: 2px 0; }
+@media (max-width: 1110px) {
+  html.lfv-sitewide .lfv-writeins-layout {
+    grid-template-columns: minmax(0,1fr) 220px; gap: 20px;
+  }
   html.lfv-sitewide .lfv-writeins-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
-@media (max-width: 620px) {
-  html.lfv-sitewide .lfv-writeins {
-    width: calc(100% - 24px); margin: 12px auto 44px; padding: 18px 14px;
-  }
-  html.lfv-sitewide .lfv-writeins-grid {
-    grid-template-columns: 1fr;
-  }
-  html.lfv-sitewide .lfv-writeins-heading { align-items: flex-start; }
-  html.lfv-sitewide .lfv-writeins-search-row { gap: 8px; }
-  html.lfv-sitewide .lfv-writeins-button { padding-inline: 12px; }
+@media (max-width: 780px) {
+  html.lfv-sitewide .lfv-writeins-layout { grid-template-columns: 1fr; }
+  html.lfv-sitewide .lfv-writeins-rules-aside { order: 2; }
+  html.lfv-sitewide .lfv-writeins-main { order: 1; }
+}
+@media (max-width: 560px) {
+  html.lfv-sitewide main.lfv-writeins { padding: 20px 10px 44px !important; }
+  html.lfv-sitewide .lfv-writeins-grid { grid-template-columns: 1fr !important; }
+  html.lfv-sitewide .lfv-writeins-search-row { gap: 7px; }
+  html.lfv-sitewide .lfv-writeins-search .lfv-writeins-button { padding: 9px 12px; }
+  html.lfv-sitewide .lfv-writeins-directory { padding: 17px 14px; }
 }
