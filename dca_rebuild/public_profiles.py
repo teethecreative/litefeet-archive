@@ -41,6 +41,96 @@ def is_team_award_category(category):
                 and not re.search(r"\b(?:member|individual|solo)\b", name))
 
 
+# Roles affect profile views, not identity or ownership. Judge is secondary only;
+# Historian is an account-contribution designation and never inferred here.
+ROLE_LABELS = {
+    "dancer": "Dancer",
+    "team": "Team / Crew",
+    "producer": "Producer",
+    "dj": "DJ",
+    "host": "Host / MC",
+    "organizer": "Organizer",
+    "photographer": "Photographer",
+    "videographer": "Videographer",
+    "creator": "Content Creator",
+    "educator": "Educator",
+    "judge": "Judge",
+}
+ROLE_HEADINGS = {
+    "dancer": "Dance & Performances",
+    "team": "Team History",
+    "producer": "Productions & Releases",
+    "dj": "DJ Mixes & Sets",
+    "host": "Hosting History",
+    "organizer": "Organized Events",
+    "photographer": "Photography & Credits",
+    "videographer": "Video & Credits",
+    "creator": "Creative Projects",
+    "educator": "Teaching & Workshops",
+    "judge": "Judging History",
+}
+ROLE_NOTES = {
+    "dancer": "Battle listings are announced appearances, not confirmed results.",
+    "judge": "Event flyers document advertised judges. A specific battle is shown as judged only when directly documented.",
+}
+ROLE_ALIASES = {
+    "mc": "host", "emcee": "host", "event host": "host",
+    "promoter": "organizer", "event organizer": "organizer",
+    "beatmaker": "producer", "music producer": "producer",
+    "disc jockey": "dj",
+    "camera operator": "videographer", "video creator": "videographer",
+    "teacher": "educator", "instructor": "educator",
+    "crew": "team",
+}
+
+
+def normalized_role(value):
+    role = identity_key(value).replace("-", " ")
+    role = ROLE_ALIASES.get(role, role)
+    return role if role in ROLE_LABELS else None
+
+
+def category_role(category):
+    """Award-category hints only, not identity or verified professional claims."""
+    name = identity_key(category)
+    if re.search(r"\b(?:team|crew)(?: of the year)?\b", name) and not re.search(
+            r"\b(?:member|video|collab|tag team|dancer)\b", name):
+        return "team"
+    if "producer" in name:
+        return "producer"
+    if "content creator" in name:
+        return "creator"
+    if re.search(r"\bphotographer\b", name):
+        return "photographer"
+    if re.search(r"\bvideographer\b", name):
+        return "videographer"
+    return None
+
+
+def documented_role_records(record, role):
+    """No private source, no arbitrary external links, and no fabricated history."""
+    details = (record or {}).get("role_records") or {}
+    entries = details.get(role, []) if isinstance(details, dict) else []
+    if not isinstance(entries, list):
+        return []
+    rows = []
+    for item in entries[:100]:
+        if not isinstance(item, dict):
+            continue
+        title = " ".join(str(item.get("title") or "").split())[:200]
+        if not title:
+            continue
+        href = item.get("href") or ""
+        if not isinstance(href, str) or not href.startswith("/") or href.startswith("//"):
+            href = ""
+        rows.append({
+            "title": title,
+            "detail": " ".join(str(item.get("detail") or "").split())[:400],
+            "href": href,
+        })
+    return rows
+
+
 def matchup_participants(value):
     """Extract only explicitly separated sides of an announced matchup.
 
@@ -86,7 +176,7 @@ class PublicProfileIndex:
                 entry = self._get_or_create(nominee.name)
                 if entry is None:
                     continue  # Historical identity ambiguity requires review.
-                entry["is_team"] |= is_team_award_category(category.name)
+                self._mark_category_role(entry, category.name)
                 row = dict(
                     program="Dancer's Choice Awards", year=2023,
                     category=category.name,
@@ -104,7 +194,7 @@ class PublicProfileIndex:
                 entry = self._get_or_create(nominee["name"])
                 if entry is None:
                     continue
-                entry["is_team"] |= is_team_award_category(category["name"])
+                self._mark_category_role(entry, category["name"])
                 self._append_once(entry["nominations"], dict(
                     program="Dancer's Choice Awards", year=2026,
                     category=category["name"],
@@ -120,7 +210,7 @@ class PublicProfileIndex:
                 entry = self._get_or_create(name)
                 if entry is None:
                     continue
-                entry["is_team"] |= is_team_award_category(category_name)
+                self._mark_category_role(entry, category_name)
                 self._append_once(entry["nominations"], dict(
                     program="LiteFeet Awards", year=2026,
                     category=category_name,
@@ -131,7 +221,7 @@ class PublicProfileIndex:
             entry = self._get_or_create(winner.person_name)
             if entry is None:
                 continue
-            entry["is_team"] |= is_team_award_category(winner.category_name)
+            self._mark_category_role(entry, winner.category_name)
             self._append_once(entry["wins"], dict(
                 program="LiteFeet Awards", year=winner.year,
                 category=winner.category_name,
@@ -174,6 +264,26 @@ class PublicProfileIndex:
                     linked.append(member)
                 entry["team_details"][field] = linked
 
+        # A flyer that *lists* a judge supports only an event appearance, not
+        # a claim that the person judged every battle on that card.
+        for event in records:
+            if event.get("collection") != "events":
+                continue
+            for label, value in event.get("information") or []:
+                if identity_key(label) not in {"judges", "judge"}:
+                    continue
+                for listed in str(value).split(","):
+                    entry = self.by_name(listed)
+                    if entry is None or entry["is_team"]:
+                        continue
+                    entry["roles"].add("judge")
+                    entry["judge_events"].append({
+                        "title": event["title"],
+                        "detail": (event.get("date_label") or "Date not confirmed") +
+                                  " · Listed as a judge in the event announcement; specific battles unconfirmed",
+                        "href": "/archive/records/" + event["slug"],
+                    })
+
         # An explicit identity-only match: never bind a short nickname inside
         # an unrelated word, or a near-match spelling to another person.
         for event in records:
@@ -193,22 +303,44 @@ class PublicProfileIndex:
                         self._append_battle(entry, event, label)
 
         for entry in self._profiles.values():
+            # Never make Judge a standalone identity type. It appears only as
+            # a switchable badge on a person's existing profile.
+            if "judge" in entry["roles"] and not (entry["roles"] - {"judge"}):
+                entry["roles"].remove("judge")
+            ordered = ("team", "dancer", "producer", "dj", "host", "organizer",
+                       "photographer", "videographer", "creator", "educator", "judge")
+            entry["badges"] = [{"key": role, "label": ROLE_LABELS[role],
+                                "title": ROLE_HEADINGS[role],
+                                "rows": self._view_rows(entry, role),
+                                "note": ROLE_NOTES.get(role, "")}
+                               for role in ordered if role in entry["roles"]]
             entry["wins"].sort(key=lambda row: (-row["year"], row["program"], row["category"]))
             entry["nominations"].sort(key=lambda row: (-row["year"], row["program"], row["category"]))
             entry["battles"].sort(key=lambda row: (row["date"] or "", row["event"]), reverse=True)
 
     @staticmethod
     def _new_profile(name, record=None):
-        # Only explicitly supplied archive team details may populate history.
-        details = (record or {}).get("team_details") or {}
+        record = record or {}
+        details = record.get("team_details") or {}
         if not isinstance(details, dict):
             details = {}
-        record_type = identity_key((record or {}).get("record_type"))
-        is_team = bool(record_type in {"team", "crew"} or
-                       re.match(r"^(?:team|crew)\b", name, flags=re.I))
+        kind = identity_key(record.get("record_type"))
+        # Preserved legacy role labels are NOT verified badges.
+        explicit_roles = record.get("profile_roles") or []
+        if not isinstance(explicit_roles, (list, tuple)):
+            explicit_roles = []
+        roles = set()
+        if kind == "dancer_profile":
+            roles.add("dancer")
+        if kind in {"team", "crew"}:
+            roles.add("team")
+        if kind != "legacy_identity":
+            roles.update(role for raw in explicit_roles
+                         for role in [normalized_role(raw)] if role)
         return dict(
-            name=name, archive_record=record, wins=[], nominations=[],
-            battles=[], href="", is_team=is_team,
+            name=name, archive_record=record or None,
+            wins=[], nominations=[], battles=[], href="",
+            is_team="team" in roles, roles=roles, badges=[], judge_events=[],
             team_details={
                 "founded": details.get("founded") or "",
                 "founders": details.get("founders") or [],
@@ -216,6 +348,28 @@ class PublicProfileIndex:
                 "former_roster": details.get("former_roster") or [],
             },
         )
+
+    @staticmethod
+    def _mark_category_role(entry, category):
+        role = category_role(category)
+        if role:
+            entry["roles"].add(role)
+            if role == "team":
+                entry["is_team"] = True
+
+    @staticmethod
+    def _view_rows(entry, role):
+        if role == "judge":
+            return entry["judge_events"] + documented_role_records(entry["archive_record"], role)
+        if role == "dancer":
+            return [
+                {"title": battle["matchup"],
+                 "detail": battle["event"] + " · " + battle["date_label"] +
+                           " · " + battle["status"],
+                 "href": battle["href"]}
+                for battle in entry["battles"]
+            ] + documented_role_records(entry["archive_record"], role)
+        return documented_role_records(entry["archive_record"], role)
 
     @staticmethod
     def _append_once(rows, row):
