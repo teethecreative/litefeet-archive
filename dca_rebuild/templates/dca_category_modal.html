@@ -2,7 +2,7 @@
   <div class="lfv-dca-dialog-shell">
     <button type="button" class="lfv-dca-dialog-close" data-dca-close aria-label="Close category">×</button>
     <p class="lfv-dca-modal-feedback" data-dca-global-feedback role="status" aria-live="polite" hidden></p>
-    {% for category in categories %}
+    {% for category in categories + writeins if not selected or category.id == selected.id %}
     <section class="lfv-dca-dialog-category" data-dca-modal-category="{{ category.id }}" hidden>
       <p class="lfv-dca-modal-kicker">DANCER'S CHOICE / 2026</p>
       <h2>{{ category.name }}</h2>
