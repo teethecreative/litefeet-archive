@@ -1,55 +1,41 @@
 {% if winners_2026 %}
-<section class="lfa-results" id="winners-2026" aria-labelledby="lfa-results-heading">
+<section class="lfa-results lfa-results--simple" id="winners-2026" aria-labelledby="lfa-results-heading">
   <div class="lfa-results__heading">
     <div>
       <p class="lfa-eyebrow">5TH ANNUAL · NOVEMBER 22, 2026</p>
-      <h2 id="lfa-results-heading">2026 AWARD WINNERS</h2>
-      <p>Explore the seven documented award categories and their winners.</p>
+      <h2 id="lfa-results-heading">2026 LITEFEET AWARDS</h2>
+      <p>Winners and nominees from the fifth annual LiteFeet Awards.</p>
     </div>
-    <span class="lfa-results__count">07 CATEGORIES</span>
+    <span class="lfa-results__count">{{ winners_2026|length }} CATEGORIES</span>
   </div>
-  <label class="lfa-search" for="lfa-category-search">
-    <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
-      <circle cx="10.8" cy="10.8" r="7"></circle><path d="m16 16 5 5"></path>
-    </svg>
-    <span class="visually-hidden">Search categories or winners</span>
-    <input id="lfa-category-search" type="search" placeholder="Search award categories or winners" autocomplete="off">
-  </label>
-  <div class="lfa-category-list" id="lfa-category-list">
+  <div class="lfa-category-list lfa-category-list--simple">
     {% for result in winners_2026 %}
-    <details class="lfa-category" data-lfa-search="{{ (result.category ~ ' ' ~ result.winner)|lower }}">
-      <summary>
-        <span class="lfa-category__title">{{ result.category }}</span>
-        <span class="lfa-category__preview"><span>WINNER</span> {{ result.winner }}</span>
-        <svg class="lfa-category__arrow" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-      </summary>
-      <div class="lfa-category__details">
-        <p class="lfa-category__badge">2026 WINNER</p>
-        <h3>{% set profile_url = vault_profile_url(result.winner) %}{% if profile_url %}<a href="{{ profile_url }}">{{ result.winner }}</a>{% else %}{{ result.winner }}{% endif %}</h3>
-        <p>5th Annual LiteFeet Awards · November 22, 2026</p>
+    <article class="lfa-category lfa-category--simple">
+      <h3 class="lfa-category__title">{{ result.category }}</h3>
+      <div class="lfa-category__winner">
+        <span class="lfa-category__label">WINNER</span>
+        {% set winner_profile = vault_profile_url(result.winner) %}
+        {% if winner_profile %}<a href="{{ winner_profile }}" class="lfa-category__winner-name">{{ result.winner }}</a>{% else %}<strong class="lfa-category__winner-name">{{ result.winner }}</strong>{% endif %}
       </div>
-    </details>
+      <div class="lfa-category__nominees">
+        <h4>NOMINEES</h4>
+        {% if result.nominees %}
+        <ul>
+        {% for nominee in result.nominees %}
+          {% set nominee_profile = vault_profile_url(nominee) %}
+          <li>
+            {% if nominee_profile %}<a href="{{ nominee_profile }}">{{ nominee }}</a>{% else %}<span>{{ nominee }}</span>{% endif %}
+            {% if nominee|lower == result.winner|lower %}<span class="lfa-category__winning-tag">Winner</span>{% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+        {% else %}
+        <p class="lfa-category__pending">Original nominee list not yet documented.</p>
+        {% endif %}
+      </div>
+    </article>
     {% endfor %}
   </div>
-  <p class="lfa-search-empty" id="lfa-search-empty" role="status" hidden>No award categories or winners match your search.</p>
-  <p class="lfa-results__source">Category names documented from 2026 LiteFeet Awards nomination flyers. Winner names confirmed for The LiteFeet Vault on November 23, 2026.</p>
+  <p class="lfa-results__source">Nominee names are transcribed from original 2026 nomination flyers and retain their original spelling. Winners were confirmed for the Vault on November 23, 2026. Missing nominee information remains unlisted pending documentation.</p>
 </section>
-<script>
-(function(){
-  const field=document.getElementById('lfa-category-search');
-  const items=Array.from(document.querySelectorAll('.lfa-category'));
-  const empty=document.getElementById('lfa-search-empty');
-  if(!field || !items.length || !empty) return;
-  field.addEventListener('input',function(){
-    const query=field.value.trim().toLocaleLowerCase();
-    let visible=0;
-    items.forEach(function(item){
-      const match=item.dataset.lfaSearch.includes(query);
-      item.hidden=!match;
-      if(match) visible++;
-    });
-    empty.hidden=visible>0;
-  });
-})();
-</script>
 {% endif %}

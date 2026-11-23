@@ -2427,8 +2427,18 @@ def _lfa_2026_results():
             priority.get(record.category_name.strip().casefold(), 999),
             record.category_name.casefold(),
         ))
+        from dca_rebuild.lfa_2026_data import LFA_2026_NOMINEES
         return [
-            {"category": record.category_name, "winner": record.person_name}
+            {
+                "category": record.category_name,
+                "winner": record.person_name,
+                # Read-only published flyer roster; never replace approved results.
+                "nominees": LFA_2026_NOMINEES.get(
+                    next((name for name in LFA_2026_NOMINEES
+                          if name.casefold() == record.category_name.strip().casefold()), ""),
+                    (),
+                ),
+            }
             for record in records
         ]
 

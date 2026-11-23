@@ -72,19 +72,26 @@ def test_lfa_2026_winners_publish_and_correction_is_idempotent(website, database
         for name in ("XO Wavy", "A Handro", "Speights Raw Kid", "D Ski",
                      "Ty Shotz", "Team Demon", "Jay Bull"):
             assert name in html
-        assert "JADA CHANELL" not in html
-        assert "2026 AWARD WINNERS" in html
+        assert "Jada Chanell" in html  # nominee, not winner
+        assert "2026 LITEFEET AWARDS" in html
 
 
-def test_lfa_directory_is_branded_searchable_and_not_a_public_submission_form(website):
+def test_lfa_directory_is_compact_and_lists_nominees_without_public_submission(website):
     client = website.test_client()
     response = client.get("/awards/litefeet-awards")
     html = response.get_data(as_text=True)
     assert response.status_code == 200
     assert "THE LITEFEET VAULT" in html
-    assert "Search award categories or winners" in html
-    assert '<details class="lfa-category"' in html
-    assert "2026 AWARD WINNERS" in html
+    assert "2026 LITEFEET AWARDS" in html
+    assert '<article class="lfa-category lfa-category--simple">' in html
+    assert '<details class="lfa-category"' not in html
+    for name in ("Cito", "XO Wavy", "Lexii", "Taylah Gang", "Ash Rocket",
+                 "Playdo", "A Haundro", "Red Robin", "Y Axis", "King Kai",
+                 "Lil Live", "Phresh Tune", "Sound Wave", "Kid Smoove",
+                 "Tiny Rillz", "Lady Live", "Jada Chanell", "2 Real Boyz",
+                 "2 Crafty", "2 Live Krew", "Bomb Squad", "Noah Lot", "Tah Swag"):
+        assert name in html
+    assert "Original nominee list not yet documented." in html
     assert "lfa-contribution-form" not in html
     assert 'action="/awards/litefeet-awards/submit"' not in html
     assert "HELP BUILD THE ARCHIVE" not in html

@@ -103,6 +103,20 @@ class PublicProfileIndex:
                     provisional=True,
                 ))
 
+        # LFA nomination flyers are historical nomination records, never wins.
+        # Keep their names as printed, including unreviewed spelling variations.
+        from dca_rebuild.lfa_2026_data import LFA_2026_NOMINEES
+        for category_name, names in LFA_2026_NOMINEES.items():
+            for name in names:
+                entry = self._get_or_create(name)
+                if entry is None:
+                    continue
+                self._append_once(entry["nominations"], dict(
+                    program="LiteFeet Awards", year=2026,
+                    category=category_name,
+                    href="/awards/litefeet-awards/2026",
+                ))
+
         for winner in lfa_winners:
             entry = self._get_or_create(winner.person_name)
             if entry is None:
