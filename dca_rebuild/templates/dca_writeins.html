@@ -15,7 +15,7 @@
 </head>
 <body>
 {% include "_navigation.html" %}
-<main class="lfv-writeins" data-dca-grid-url="{{ url_for('phase9e_writeins', **({'q': search} if search else {})) }}">
+<main class="lfv-writeins" data-dca-grid-url="{{ url_for('phase9e_writeins', q=search) if search else url_for('phase9e_writeins') }}">
   <p class="lfv-writeins-eyebrow">DANCER'S CHOICE AWARDS · 2026</p>
   <div class="lfv-writeins-layout">
     <div class="lfv-writeins-main">
