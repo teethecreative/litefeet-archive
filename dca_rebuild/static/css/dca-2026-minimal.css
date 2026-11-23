@@ -1,0 +1,230 @@
+/* DCA 2026: editorial, responsive three-column nominations and a single nomination dialog.
+   Loaded after the sitewide stylesheet to override former 5/4-column rules. */
+html.lfv-sitewide main#nominations.lf9e {
+  --dca-card-bg: var(--lfv-surface, #fff);
+  --dca-card-ink: var(--lfv-ink, #122139);
+  --dca-card-border: var(--lfv-line, #cbd5e1);
+  --dca-muted: var(--lfv-muted, #596579);
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-nomination-layout {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 270px);
+  align-items: start; gap: clamp(20px, 3vw, 42px);
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-nomination-layout > * { min-width: 0; }
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-main > h1 {
+  font-size: clamp(1.65rem, 3.5vw, 2.5rem) !important;
+  margin: 8px 0 10px !important; line-height: 1.15 !important; letter-spacing: -.03em !important;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-intro-copy {
+  max-width: 64ch; margin: 0 0 18px; font-size: .96rem;
+  color: var(--dca-muted); line-height: 1.6; text-transform: none;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-rules-aside {
+  border: 1px solid var(--dca-card-border); border-radius: 9px;
+  background: var(--dca-card-bg); padding: 17px; color: var(--dca-card-ink);
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-rules-aside h2 {
+  font-size: .94rem !important; margin: 0 0 10px !important;
+  line-height: 1.3 !important; letter-spacing: 0 !important;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-rules-aside p {
+  font-size: .8rem !important; line-height: 1.55 !important; margin: 0 0 11px !important;
+  color: var(--dca-muted); text-transform: none !important;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-rules-aside p:last-child { margin-bottom: 0 !important; }
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-rules-aside a {
+  font-weight: 750; color: var(--dca-card-ink);
+  text-underline-offset: 3px;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-rules-aside .lfv-eligibility-notice {
+  margin: 0 !important; padding: 0 !important; border: 0 !important;
+  background: transparent !important; box-shadow: none !important;
+  max-width: none !important;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-main .lf9e-category-grid {
+  display: grid !important; grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+  gap: 14px !important; max-width: 100% !important; margin: 16px 0 24px !important;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-main .lfv-dca-grid-card {
+  min-width: 0; display: flex; flex-direction: column; gap: 10px;
+  padding: 17px; border: 1px solid var(--dca-card-border);
+  border-radius: 9px; background: var(--dca-card-bg);
+  color: var(--dca-card-ink); box-shadow: none;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-main .lfv-dca-grid-open {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 9px; width: 100%; padding: 0; border: 0;
+  background: none; color: inherit; cursor: pointer; text-align: left; font: inherit;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-main .lfv-dca-grid-open:hover .lfv-dca-grid-title {
+  text-decoration: underline; text-underline-offset: 3px;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-main .lfv-dca-grid-open:focus-visible {
+  outline: 3px solid var(--lfv-gold, #b28e24); outline-offset: 5px;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-grid-title {
+  font-size: .98rem; font-weight: 850; line-height: 1.35; overflow-wrap: anywhere;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-grid-status {
+  font-size: .7rem; line-height: 1.35; color: var(--dca-muted); font-weight: 650;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-grid-preview {
+  list-style: none; padding: 10px 0 0; margin: 0;
+  border-top: 1px solid var(--dca-card-border); display: grid; gap: 7px;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-grid-preview li {
+  display: flex; justify-content: space-between; align-items: start;
+  gap: 8px; font-size: .78rem; overflow-wrap: anywhere;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-grid-preview li span:last-child {
+  font-variant-numeric: tabular-nums; font-size: .73rem; color: var(--dca-muted); white-space: nowrap;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-grid-cta {
+  color: var(--dca-card-ink); font-size: .77rem; font-weight: 800;
+  margin-top: auto; padding-top: 2px;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-grid-empty {
+  font-size: .77rem; color: var(--dca-muted); margin: 0;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-main section > h2 {
+  font-size: 1.1rem !important; margin: 20px 0 8px !important;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-category-only {
+  max-width: 800px; padding: 6px 0 28px;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-category-only h1 {
+  font-size: clamp(1.9rem, 4vw, 3rem) !important; line-height: 1.16 !important;
+  margin: 6px 0 16px !important;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-category-only > p {
+  max-width: 65ch; line-height: 1.6; color: var(--dca-muted);
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-category-only h2 {
+  margin: 28px 0 12px !important; font-size: 1.15rem !important;
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-category-only .lfv-dca-nominee-list {
+  border-top: 1px solid var(--dca-card-border);
+}
+html.lfv-sitewide main#nominations.lf9e .lfv-dca-compact-link {
+  display: inline-block; margin: 6px 0 14px; font-size: .86rem;
+  color: var(--dca-card-ink); text-decoration: underline; text-underline-offset: 3px;
+}
+html.lfv-sitewide main#nominations.lf9e .lf9e-intro-category-scroll {
+  max-height: 250px; border-radius: 8px;
+}
+html.lfv-sitewide main#nominations.lf9e .lf9e-intro-categories {
+  grid-template-columns: repeat(3,minmax(0,1fr)) !important; gap: 6px !important;
+  padding: 8px !important;
+}
+html.lfv-sitewide main#nominations.lf9e .lf9e-intro-categories li {
+  font-size: .78rem !important; padding: 8px !important;
+}
+html.lfv-sitewide main#nominations.lf9e .lf9e-intro-steps {
+  margin: 10px 0; font-size: .86rem; max-width: 65ch;
+}
+/* Native dialog: same theme variables as the rest of the Vault. */
+html.lfv-sitewide dialog.lfv-dca-category-dialog {
+  box-sizing: border-box; position: fixed; inset: 0; margin: auto;
+  width: min(680px, calc(100vw - 28px)); max-width: none;
+  max-height: min(90dvh, 900px); overflow-y: auto;
+  padding: clamp(19px, 3.5vw, 32px);
+  border: 1px solid var(--lfv-line, #cbd5e1);
+  border-radius: 12px; background: var(--lfv-surface, #fff);
+  color: var(--lfv-ink, #122139); box-shadow: 0 20px 70px #0005;
+}
+html.lfv-sitewide dialog.lfv-dca-category-dialog::backdrop { background: rgb(5 15 27 / 64%); }
+html.lfv-sitewide dialog.lfv-dca-category-dialog [hidden] { display: none !important; }
+html.lfv-sitewide .lfv-dca-dialog-shell { position: relative; }
+html.lfv-sitewide .lfv-dca-dialog-close {
+  position: sticky; top: 0; z-index: 1; float: right;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--lfv-line, #cbd5e1); background: var(--lfv-surface, #fff);
+  color: var(--lfv-ink, #122139); cursor: pointer; font-size: 1.4rem; line-height: 1;
+}
+html.lfv-sitewide .lfv-dca-dialog-category > h2 {
+  margin: 8px 40px 12px 0 !important; font-size: clamp(1.5rem, 4vw, 2.2rem) !important;
+  line-height: 1.2 !important; letter-spacing: -.03em !important; color: inherit !important;
+}
+html.lfv-sitewide .lfv-dca-modal-kicker { font-size: .71rem; font-weight: 800; letter-spacing: .11em; color: var(--lfv-muted, #687185); }
+html.lfv-sitewide .lfv-dca-modal-description { max-width: 60ch; font-size: .94rem; line-height: 1.55; margin: 0 0 24px; }
+html.lfv-sitewide .lfv-dca-dialog-category h3 {
+  font-size: 1.05rem !important; margin: 18px 0 11px !important; letter-spacing: 0 !important;
+}
+html.lfv-sitewide .lfv-dca-nominee-list {
+  display: grid; gap: 0; margin: 0; padding: 0; list-style: none;
+}
+html.lfv-sitewide .lfv-dca-nominee-list > li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 0; border-bottom: 1px solid var(--lfv-line, #cbd5e1);
+  font-size: .88rem;
+}
+html.lfv-sitewide .lfv-dca-nominee-name { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
+html.lfv-sitewide .lfv-dca-nominee-total { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--lfv-muted, #687185); font-size: .78rem; }
+html.lfv-sitewide .lfv-dca-nominee-action,
+html.lfv-sitewide .lfv-dca-add-new {
+  border: 1px solid var(--lfv-line, #cbd5e1); border-radius: 6px;
+  background: transparent; color: var(--lfv-ink, #122139);
+  font: inherit; font-size: .79rem; font-weight: 750;
+  cursor: pointer; padding: 8px 10px;
+}
+html.lfv-sitewide .lfv-dca-add-new { margin: 17px 0 5px; min-height: 42px; }
+html.lfv-sitewide .lfv-dca-nominee-action:hover,
+html.lfv-sitewide .lfv-dca-add-new:hover { border-color: var(--lfv-gold, #b28e24); }
+html.lfv-sitewide .lfv-dca-modal-status,
+html.lfv-sitewide .lfv-dca-modal-empty { font-size: .88rem; color: var(--lfv-muted, #687185); }
+html.lfv-sitewide .lfv-dca-modal-form-wrap {
+  margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--lfv-line, #cbd5e1);
+}
+html.lfv-sitewide .lfv-dca-modal-form {
+  display: grid; gap: 12px;
+}
+html.lfv-sitewide .lfv-dca-modal-form label { font-size: .85rem; color: var(--lfv-ink, #122139); }
+html.lfv-sitewide .lfv-dca-modal-form input,
+html.lfv-sitewide .lfv-dca-modal-form textarea {
+  width: 100%; box-sizing: border-box; background: transparent;
+  color: var(--lfv-ink, #122139); border: 1px solid var(--lfv-line, #cbd5e1);
+}
+html.lfv-sitewide .lfv-dca-modal-form-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+html.lfv-sitewide .lfv-dca-modal-form-actions .lf9e-primary {
+  background: var(--lfv-gold, #caa326); color: var(--lfv-navy, #09203a); border-radius: 5px;
+  min-height: 44px; padding: 10px 18px; cursor: pointer;
+}
+html.lfv-sitewide .lfv-dca-save-draft {
+  padding: 8px; border: 0; color: var(--lfv-ink, #122139);
+  background: transparent; text-decoration: underline; cursor: pointer;
+}
+html.lfv-sitewide .lfv-dca-modal-feedback {
+  margin: 6px 0 12px; padding: 11px 12px; border-left: 3px solid var(--lfv-gold, #caa326);
+  color: var(--lfv-ink, #122139); background: var(--lfv-surface-muted, #f7f7f7); font-size: .84rem;
+}
+html.lfv-sitewide .lfv-dca-dialog-category .lf9e-name-check { font-size: .82rem; }
+html.lfv-sitewide .lfv-dca-dialog-category .lf9e-distinct-confirm {
+  display: flex; flex-direction: row; align-items: center; font-size: .77rem; gap: 8px;
+}
+html.lfv-sitewide .lfv-dca-dialog-category .lf9e-distinct-confirm input { width: auto; }
+@media (max-width: 1110px) {
+  html.lfv-sitewide main#nominations.lf9e .lfv-dca-nomination-layout {
+    grid-template-columns: minmax(0, 1fr) 220px; gap: 20px;
+  }
+  html.lfv-sitewide main#nominations.lf9e .lfv-dca-main .lf9e-category-grid {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media (max-width: 780px) {
+  html.lfv-sitewide main#nominations.lf9e .lfv-dca-nomination-layout { grid-template-columns: 1fr; }
+  html.lfv-sitewide main#nominations.lf9e .lfv-dca-rules-aside { order: 2; }
+  html.lfv-sitewide main#nominations.lf9e .lfv-dca-main { order: 1; }
+  html.lfv-sitewide main#nominations.lf9e .lf9e-intro-categories { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+}
+@media (max-width: 560px) {
+  html.lfv-sitewide main#nominations.lf9e .lfv-dca-main .lf9e-category-grid,
+  html.lfv-sitewide main#nominations.lf9e .lf9e-intro-categories {
+    grid-template-columns: 1fr !important;
+  }
+  html.lfv-sitewide dialog.lfv-dca-category-dialog {
+    padding: 16px; max-height: 92dvh;
+  }
+  html.lfv-sitewide .lfv-dca-nominee-list > li { flex-wrap: wrap; }
+  html.lfv-sitewide .lfv-dca-nominee-name { flex-basis: 60%; }
+  html.lfv-sitewide .lfv-dca-nominee-action { flex: 0 0 auto; }
+}
