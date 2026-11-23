@@ -1,0 +1,20 @@
+.lfv-host-wrap{max-width:1080px;margin:0 auto;padding:24px 20px 70px;color:var(--text,#17233d);line-height:1.5}
+.lfv-host-wrap h1{font-size:clamp(1.8rem,3.5vw,2.6rem);margin:.15em 0}.lfv-host-wrap h2{font-size:1.25rem;margin:0}.lfv-host-wrap h3{font-size:1rem;margin:.8rem 0}
+.lfv-host-wrap a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.lfv-host-wrap header{margin:12px 0 28px}.lfv-host-eyebrow{font-size:.75rem;letter-spacing:.1em;font-weight:750;text-transform:uppercase;opacity:.7}
+.lfv-host-admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:18px}
+.lfv-host-panel,.lfv-host-event,.lfv-host-invite-result{background:var(--surface,#fff);color:var(--text,#17233d);border:1px solid var(--border,#d5d9de);border-radius:8px;padding:18px;margin:16px 0}
+.lfv-host-panel-head,.lfv-host-event-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}.lfv-host-panel-head>a{font-size:.85rem}
+.lfv-host-member,.lfv-host-battle{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--border,#ddd);align-items:center;flex-wrap:wrap}
+.lfv-host-member small,.lfv-host-battle small{display:block;opacity:.7;font-size:.8rem}.lfv-host-member form{margin:0}
+.lfv-host-wrap button{cursor:pointer;background:var(--text,#1a304e);color:var(--surface,#fff);border:1px solid currentColor;border-radius:5px;font:inherit;font-size:.85rem;padding:7px 12px}
+.lfv-host-result-form{display:flex;gap:9px;align-items:end;flex-wrap:wrap;flex:1;justify-content:flex-end}
+.lfv-host-result-form label{font-size:.75rem;display:flex;flex-direction:column;gap:4px;min-width:min(100%,185px)}
+.lfv-host-result-form select,.lfv-host-result-form input,.lfv-host-auth-form select,.lfv-host-auth-form input,.lfv-host-invite-result input{border:1px solid var(--border,#ccc);border-radius:5px;padding:8px;background:var(--surface,#fff);color:var(--text,#17233d);font:inherit;max-width:100%}
+.lfv-host-battle-name{flex:1;min-width:170px;font-size:.9rem}.lfv-host-muted{opacity:.72;font-size:.85rem}
+.lfv-host-auth{max-width:580px}.lfv-host-auth-form{display:grid;gap:15px;padding:20px;border:1px solid var(--border,#ccc);border-radius:8px}
+.lfv-host-auth-form label{display:grid;gap:5px;font-size:.9rem}.lfv-host-auth-form button{justify-self:start}
+.lfv-host-invite-result input{width:100%}.lfv-host-notice{padding:12px 0;border-top:1px solid var(--border,#ccc);border-bottom:1px solid var(--border,#ccc)}
+.lfv-host-filter{display:flex;gap:16px}.lfv-host-filter [aria-current]{font-weight:bold}
+.lfv-host-logout{margin-top:10px}.lfv-host-wrap .lfv-host-logout button{background:transparent;color:inherit}
+@media(max-width:720px){.lfv-host-result-form{justify-content:flex-start}.lfv-host-battle{align-items:stretch;flex-direction:column}.lfv-host-result-form label{flex:1}}
