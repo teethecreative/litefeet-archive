@@ -11,6 +11,7 @@
     const state = browser.querySelector("[data-archive-state]");
     const count = browser.querySelector("[data-archive-count]");
     const empty = browser.querySelector("[data-archive-empty]");
+    const results = browser.querySelector("[data-archive-results]");
     const timeline = browser.getAttribute("data-timeline") === "1";
     const peopleDirectory = window.location.pathname === "/archive/people";
     const urlParams = new URLSearchParams(window.location.search);
@@ -98,6 +99,7 @@
         if (!response.ok) throw new Error("Archive request failed");
         const payload = await response.json();
         if (replace) list.replaceChildren();
+        if (peopleDirectory && results) results.hidden = false;
         const fragment = document.createDocumentFragment();
         for (const item of payload.records) fragment.appendChild(itemNode(item));
         list.appendChild(fragment);
@@ -106,7 +108,7 @@
         button.hidden = !hasMore;
         empty.hidden = payload.total !== 0;
         count.textContent = String(payload.total) + (peopleDirectory ? (payload.total === 1 ? " profile" : " profiles") : (payload.total === 1 ? " entry" : " entries"));
-        state.textContent = hasMore ? "SCROLL FOR MORE" : (peopleDirectory ? "ALL PROFILES LOADED" : "ALL RECORDS LOADED");
+        state.textContent = hasMore ? "SCROLL FOR MORE" : (peopleDirectory && !payload.total ? "NO MATCHING PROFILES" : (peopleDirectory ? "ALL PROFILES LOADED" : "ALL RECORDS LOADED"));
         if (replace) {
           const dest = new URL(window.location.href);
           dest.searchParams.delete("page");
@@ -116,7 +118,13 @@
           window.history.replaceState({}, "", dest.toString());
         }
       } catch (_) {
-        state.textContent = "Could not load more records. Try again.";
+        if (peopleDirectory && replace) {
+          // If enhanced search fails, use the normal GET form rather than
+          // leaving the page looking empty.
+          form.submit();
+          return;
+        }
+        state.textContent = peopleDirectory ? "Could not load more profiles. Try again." : "Could not load more records. Try again.";
         button.hidden = false;
         hasMore = true;
       } finally {
