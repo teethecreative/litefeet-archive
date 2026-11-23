@@ -5,7 +5,7 @@ def test_awards_hub_groups_results_under_dca(website):
     client = website.test_client()
     html = client.get("/awards").get_data(as_text=True)
     assert "Dancer’s Choice Awards" in html
-    assert 'href="/awards/litefeet-awards"' not in html
+    assert "LiteFeet Awards" in html
     assert "<h2>Historical Results</h2>" not in html
     assert 'href="/awards/dancers-choice"' in html
 
@@ -38,14 +38,24 @@ def test_nomination_page_separates_nomination_totals_from_final_votes(website):
     assert "The top five eligible nominees" in html
 
 
-def test_lfa_public_program_retired_without_affecting_dca(website):
+def test_lfa_explains_distinct_program(website):
+    html = website.test_client().get("/awards/litefeet-awards").get_data(as_text=True)
+    assert "The LiteFeet Awards are an established awards program" in html
+    assert "The Dancer's Choice Awards are a separate, community-led program" in html
+
+def test_lfa_archive_public_and_submission_closed(website):
     client = website.test_client()
-    assert client.get("/awards/litefeet-awards").status_code == 302
-    assert client.get("/awards/litefeet-awards/2026").status_code == 302
+    landing = client.get("/awards/litefeet-awards")
+    assert landing.status_code == 200
+    content = landing.get_data(as_text=True)
+    assert "LITEFEET" in content
+    assert "The LiteFeet Awards are an established awards program" in content
+    assert 'name="submission_type"' not in content
+    assert 'action="/awards/litefeet-awards/submit"' not in content
+    assert client.get("/awards/litefeet-awards/2026").status_code == 200
     assert client.get("/litefeet-awards").status_code == 302
     assert client.post("/awards/litefeet-awards/submit", data={
         "submission_type": "nomination", "year": "2026",
-        "category_name": "Best Dancer", "winner_name": "Unverified Claim"
+        "category_name": "Example", "winner_name": "Example"
     }).status_code == 410
     assert client.get("/awards/dancers-choice").status_code == 200
-    assert client.get("/awards/hypeitup").status_code == 200
