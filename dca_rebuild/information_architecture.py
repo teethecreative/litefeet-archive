@@ -444,10 +444,10 @@ def install_information_architecture(app, ns):
     # Old About deep links remain usable, but the content now lives on /about.
     for about_path, page, anchor in (
         ('letter', 'letter', 'letter'),
-        ('mission', 'mission', 'mission'),
-        ('archive', 'archive', 'about'),
-        ('how-it-works', 'how_it_works', 'how-it-works'),
-        ('contact', 'contact', 'contact'),
+        ('mission', 'mission', 'explore'),
+        ('archive', 'archive', 'explore'),
+        ('how-it-works', 'how_it_works', 'explore'),
+        ('contact', 'contact', 'explore'),
     ):
         def about_view(anchor=anchor):
             return redirect('/about#' + anchor, code=301)
