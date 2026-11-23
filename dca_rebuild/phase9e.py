@@ -696,6 +696,7 @@ def install_phase9e(app, ns):
             entries = []
             requirement = 20
             floor = 0
+            accepting_support = False
             if edition:
                 stages = stages_for(db, edition)
                 top_names = {
