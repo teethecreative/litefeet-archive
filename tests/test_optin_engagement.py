@@ -3,6 +3,8 @@ from dca_rebuild.analytics_engagement import VaultPageEngagement, VaultAnalytics
 
 def test_optin_and_revoke_engagement(website, database):
     client=website.test_client()
+    # Isolated tests do not install the production after-request visitor cookie hook.
+    client.set_cookie("lf_ledger_visitor", "b"*32)
     assert client.get("/privacy/analytics").status_code==200
     with client.session_transaction() as state:
         csrf=state["lfv_privacy_form_token"]

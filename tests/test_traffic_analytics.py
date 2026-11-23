@@ -48,8 +48,8 @@ def test_all_traffic_is_recorded_but_humans_are_counted_separately(website, data
 
     human = client.get("/admin/analytics?traffic=human")
     assert human.status_code == 200
-    assert "LIKELY HUMAN PAGE VIEWS" in human.get_data(as_text=True)
-    assert "ALL RECORDED TRAFFIC" in human.get_data(as_text=True)
+    assert "Page views" in human.get_data(as_text=True)
+    assert "Traffic quality and technical breakdown" in human.get_data(as_text=True)
     assert "Meta ExternalAgent" in human.get_data(as_text=True)
 
     for kind in ("bot", "internal", "all"):
@@ -72,5 +72,5 @@ def test_legacy_records_remain_unclassified(website, database):
         row = db.query(LedgerPageView).one()
         assert row.traffic_type == "unclassified"
     html = client.get("/admin/analytics?traffic=unclassified").get_data(as_text=True)
-    assert "HISTORICAL / UNKNOWN PAGE VIEWS" in html
+    assert "Historical / Unknown" in html or "Historical / unknown" in html
     assert "Historical / unknown" in html

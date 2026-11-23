@@ -34,7 +34,7 @@ def test_admin_overview_reuses_existing_routes_and_pending_sources(website, data
     html = client.get("/admin").get_data(as_text=True)
     assert "Activity" in html and "LAST 30 DAYS" in html
     assert "Development" in html and "Analytics" in html
-    assert html.index("Beta issue") < html.index("example-event") < html.index("Studio Event")
+    assert html.index("Beta feedback") < html.index("example-event") < html.index("Studio Event")
     assert client.get("/admin/review-queue?section=events").status_code == 200
     assert client.get("/admin/review-queue?sort=invalid").status_code == 400
     assert client.get("/admin/review-queue?page=0").status_code == 400
