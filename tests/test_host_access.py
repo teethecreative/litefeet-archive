@@ -134,6 +134,13 @@ def test_same_host_result_is_recorded_with_audit_and_source(website, database):
         assert entry.actor_account_id == account_id
         assert entry.event_slug == record["slug"]
     assert host_queue(database[1], "body-bag")["complete"] == 1
+    # Outcomes and footage now save independently; adding a result does not
+    # silently attach or overwrite video in an old combined form.
+    assert client.post(
+        f"/hosts/workspace/{record['slug']}/{battle['key']}/video",
+        data={"csrf_token": csrf, "expected_url": "",
+              "youtube_url": "https://youtu.be/abcdefghijk"},
+    ).status_code == 303
     from dca_rebuild.models import VaultBattleVideo
     with database[1]() as db:
         video = db.get(VaultBattleVideo, battle["key"])
