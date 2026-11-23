@@ -3,7 +3,7 @@
 (function () {
   'use strict';
   document.addEventListener('DOMContentLoaded', function () {
-    const root = document.querySelector('main#nominations.lf9e');
+    const root = document.querySelector('main#nominations.lf9e, main.lfv-writeins');
     let dialog = document.getElementById('lfv-dca-category-dialog');
     if (!root || !dialog) return;
     const draftKey = 'lf9e-future-nomination-ideas';
@@ -67,12 +67,13 @@
     function displayForm(panel, existingName) {
       const wrap = panel.querySelector('[data-dca-form-wrap]');
       const form = formFor(panel);
-      if (!wrap || !form) return;
+      if (!wrap) return;
       wrap.hidden = false;
       const title = wrap.querySelector('[data-dca-form-title]');
       if (title) title.textContent = existingName ? 'Nominate ' + existingName : 'Add a new nomination';
       const input = form.elements.namedItem('name');
       if (input) { input.value = existingName || ''; input.focus(); if (existingName) checkNominee(panel); }
+      else { const verify = wrap.querySelector('.lfv-dca-verify-link'); if (verify) verify.focus(); }
     }
     function setReasonRequired(panel, isRequired) {
       const form = formFor(panel);
@@ -126,13 +127,37 @@
         return null;
       }
     }
+    // Create a category only on an actual nomination attempt, not when a
+    // write-in card is viewed or the modal is opened.
+    async function activatePending(panel) {
+      const form = formFor(panel);
+      if (!form) throw new Error('Verify your email to nominate.');
+      const pending = form.elements.namedItem('activation_name');
+      if (!pending) return;
+      const token = document.querySelector('input[name="writeins_csrf"]');
+      if (!token || !pending.value) throw new Error('Unable to open this category. Refresh the page.');
+      const body = new FormData();
+      body.append('csrf_token', token.value);
+      body.append('category', pending.value);
+      const response = await fetch('/awards/dancers-choice/write-ins/activate', {
+        method:'POST', body, credentials:'same-origin', redirect:'follow',
+        headers:{'Accept':'application/json','X-DCA-Modal':'1'}
+      });
+      if (!response.ok) throw new Error('This write-in could not be opened for nominations. Please try again.');
+      const data = await response.json();
+      if (!data.success || !data.category_id) throw new Error('Category activation was not confirmed.');
+      form.elements.namedItem('category_id').value = data.category_id;
+      panel.dataset.dcaModalCategory = String(data.category_id);
+      activeCategory = String(data.category_id);
+      pending.remove();
+    }
     async function refreshGrid() {
       const response = await fetch(url.href, {credentials:'same-origin',cache:'no-store',headers:{'Accept':'text/html'}});
       if (!response.ok) return false;
       const html = await response.text();
       const documentCopy = new DOMParser().parseFromString(html, 'text/html');
-      const newGrid = documentCopy.querySelector('.lfv-dca-main .lf9e-category-grid');
-      const oldGrid = root.querySelector('.lfv-dca-main .lf9e-category-grid');
+      const newGrid = documentCopy.querySelector('.lfv-dca-main .lf9e-category-grid, .lfv-writeins-grid');
+      const oldGrid = root.querySelector('.lfv-dca-main .lf9e-category-grid, .lfv-writeins-grid');
       const newCategory = documentCopy.querySelector('.lfv-dca-category-only');
       const oldCategory = root.querySelector('.lfv-dca-category-only');
       const newDialog = documentCopy.querySelector('#lfv-dca-category-dialog');
@@ -232,6 +257,13 @@
       event.preventDefault();
       const panel = form.closest('[data-dca-modal-category]');
       clearTimeout(panel._checkTimer);
+      if (!form.reportValidity()) return;
+      pending = true;
+      const submit = form.querySelector('[type="submit"]');
+      if (submit) submit.disabled = true;
+      showFeedback('Submitting nomination…');
+      try {
+      await activatePending(panel);
       const result = await checkNominee(panel);
       if (!result) {showFeedback('Check the nominee name and try again.');return;}
       const distinct = form.elements.namedItem('confirm_distinct');
@@ -239,13 +271,7 @@
         showFeedback('Confirm whether this is a different nominee before submitting.');
         distinct.focus();return;
       }
-      if (!form.reportValidity()) return;
-      pending = true;
-      const submit = form.querySelector('[type="submit"]');
-      if (submit) submit.disabled = true;
-      showFeedback('Submitting nomination…');
-      try {
-        const response = await fetch(form.action, {
+      const response = await fetch(form.action, {
           method:'POST', body:new FormData(form), credentials:'same-origin',
           redirect:'follow',headers:{'Accept':'application/json','X-DCA-Modal':'1'}
         });
