@@ -29,17 +29,13 @@
         const heading = document.createElement("h3");
         const link = document.createElement("a");
         link.href = item.href;
+        link.className = "lfv-person-name-link";
         link.textContent = item.title;
         heading.appendChild(link);
         const desc = document.createElement("p");
         desc.textContent = item.summary || "";
         body.append(heading, desc);
-        const open = document.createElement("a");
-        open.className = "lfv-archive-open";
-        open.href = item.href;
-        open.textContent = "VIEW PROFILE →";
-        open.setAttribute("aria-label", "View " + item.title + " profile");
-        row.append(body, open);
+        row.append(body);
         return row;
       }
       const body = document.createElement("div");
