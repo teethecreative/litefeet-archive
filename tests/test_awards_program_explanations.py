@@ -176,3 +176,42 @@ def test_sitewide_palette_is_shared_across_awards():
     assert "--gold:var(--lfv-gold" in core
     assert "--page:var(--lfv-bg" in core
     assert "LFV NOVEMBER 2026 BRAND CONSISTENCY" in shell
+
+
+def test_awards_nav_has_no_retired_public_lfa_form(website):
+    html = website.test_client().get("/awards/litefeet-awards/2026").get_data(as_text=True)
+    assert "/awards/litefeet-awards#contribute" not in html
+
+
+def test_theme_bootstrap_is_shared_between_public_admin_and_legacy():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    dca = root / "dca_rebuild"
+    public = (dca / "templates" / "_navigation.html").read_text()
+    admin = (dca / "templates" / "_admin_navigation.html").read_text()
+    legacy = (root / "templates" / "base.html").read_text()
+    for html in (public, admin, legacy):
+        assert "lfv-theme-init.js" in html
+    public_js = (dca / "static" / "js" / "litefeet-sitewide.js").read_text()
+    admin_html = admin
+    legacy_js = (root / "static" / "js" / "litefeet-sitewide.js").read_text()
+    for text in (public_js, admin_html, legacy_js):
+        assert "window.LFVTheme.set(next)" in text
+        assert "lfv:themechange" in text
+    theme_a = (dca / "static" / "js" / "lfv-theme-init.js").read_text()
+    theme_b = (root / "static" / "js" / "lfv-theme-init.js").read_text()
+    assert theme_a == theme_b
+    assert "localStorage.setItem(KEY, theme)" in theme_a
+    assert "window.addEventListener('storage'" in theme_a
+    assert "root.style.colorScheme = theme" in theme_a
+
+
+def test_theme_css_provides_both_mode_surfaces_and_lfa_selectors():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1] / "dca_rebuild" / "static" / "css"
+    css = (root / "litefeet-sitewide.css").read_text()
+    lfa = (root / "lfa-results.css").read_text()
+    assert 'html[data-theme="light"]' in css
+    assert 'html[data-theme="dark"]' in css
+    assert 'html:is(.lfv-root,.lfv-sitewide)' in lfa
+    assert 'html[data-theme="dark"]:is(.lfv-root,.lfv-sitewide)' in lfa

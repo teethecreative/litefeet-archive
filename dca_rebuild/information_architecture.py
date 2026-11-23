@@ -117,9 +117,6 @@ def install_information_architecture(app, ns):
                        dict(label='HypeItUpTV Awards', href='/awards/hypeitup')]
             # Award program navigation lists only award programs. DCA editions
             # live inside the Dancer's Choice Awards hub, not at this level.
-            if path.startswith('/awards/litefeet-awards'):
-                program.append(dict(label='Contribute historical records',
-                                    href='/awards/litefeet-awards#contribute'))
         calendar = upcoming_calendar(session_factory=ns['SessionLocal'])
         page_size = 5
         selected_day = request.args.get('calendar_day', '').strip()
