@@ -163,7 +163,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-world-record.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-calendar-pages.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-home-lfa-2026.css', v='20261123') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-home-compact.css', v='20261123c') }}">
 </head>
 
 <body>
@@ -172,78 +172,49 @@
 {% include "_beta_bar.html" %}
 
 <main class="lfv3-hub lfv3-wrap lfv1-home lfv4-home" id="vault-home">
-  <section class="lfv3-hero lfv3-hero-simple lfv1-hero lfv4-letter-lead" aria-labelledby="vault-heading">
-    <div class="lfv3-hero-copy">
-      <p class="lfv3-eyebrow">FROM THE FOUNDER</p>
-      <h1 id="vault-heading">Dear LiteFeet,</h1>
-      <div class="lfv4-excerpt">
-        <p>LiteFeet is more than dance. It's a culture built through creativity, individuality, competition, community, and the people who have continued to push it forward.</p>
-        <p>But not everything has been documented. Not every name has been recognized. Not every story has been told. That's part of why I created The LiteFeet Vault.</p>
-      </div>
-      <div class="lfv-home-founder-links">
-        <a class="lfv3-button lfv3-button-gold lfv-primary-cta" href="/about#letter">Read more from my letter <span aria-hidden="true">→</span></a>
-        <a class="lfv-home-founder-news" href="#lfa-2026-announcement">2026 LiteFeet Awards winners announced <span aria-hidden="true">↓</span></a>
-      </div>
-    </div>
-  </section>
-
-  {% if home_lfa_2026_winners %}
-  <section class="lfv3-section lfv-home-lfa-announcement" id="lfa-2026-announcement" aria-labelledby="lfa-home-heading">
-    <div class="lfv4-section-topline lfv-home-lfa-topline">
-      <p class="lfv3-eyebrow">LATEST IN THE VAULT / AWARDS</p>
-      <span>5TH ANNUAL · NOVEMBER 22, 2026</span>
-    </div>
-    <div class="lfv-home-lfa-feature">
-      <div class="lfv-home-lfa-feature__story">
-        <p class="lfv-home-lfa-feature__overline">THE LITEFEET AWARDS · 2026</p>
-        <h2 id="lfa-home-heading">And the winners are<span aria-hidden="true">…</span></h2>
-        <p class="lfv-home-lfa-feature__lead">The results of the 5th Annual LiteFeet Awards are now documented in The LiteFeet Vault. Celebrate the dancers, producers, and teams recognized this year.</p>
-        <div class="lfv-home-lfa-feature__actions">
-          <a class="lfv-home-lfa-feature__button" href="{{ url_for('lfa_year', year=2026) }}">See all 2026 award results <span aria-hidden="true">→</span></a>
-          <span class="lfv-home-lfa-feature__count">{{ home_lfa_2026_winners|length }} WINNERS · 2026</span>
-        </div>
-      </div>
-      <div class="lfv-home-lfa-feature__results" aria-label="2026 LiteFeet Awards winners">
+  <div class="lfv-home-compact-head">
+    <p>FEATURED IN THE VAULT</p>
+    <span>NEWS · AWARDS · COMMUNITY</span>
+  </div>
+  <div class="lfv-home-compact-grid" aria-label="Featured Vault content">
+    {% if home_lfa_2026_winners %}
+    <article class="lfv-home-compact-card lfv-home-compact-card--lfa" id="lfa-2026-announcement" aria-labelledby="lfa-home-heading">
+      <div class="lfv-home-card-label"><span>LITEFEET AWARDS</span><span>2026 RESULTS</span></div>
+      <h1 id="lfa-home-heading">And the winners are<span aria-hidden="true">…</span></h1>
+      <p>The 5th Annual LiteFeet Awards honored {{ home_lfa_2026_winners|length }} winners on November 22, 2026.</p>
+      <ul class="lfv-home-winners-preview" aria-label="2026 award winners">
         {% for result in home_lfa_2026_winners %}
-        <div class="lfv-home-lfa-feature__result">
-          <span class="lfv-home-lfa-feature__category">{{ result.category }}</span>
-          <strong>{{ result.winner }}</strong>
-        </div>
+        <li title="{{ result.category }}">{{ result.winner }}</li>
         {% endfor %}
-      </div>
-    </div>
-  </section>
-  {% endif %}
+      </ul>
+      <a class="lfv-home-card-action" href="{{ url_for('lfa_year', year=2026) }}">View categories and winners <span aria-hidden="true">→</span></a>
+    </article>
+    {% endif %}
 
-  <section class="lfv3-section lfv4-current-awards" id="recognition" aria-labelledby="awards-title">
-    <div class="lfv4-section-topline"><p class="lfv3-eyebrow">HAPPENING NOW / AWARDS</p><span>2026 EDITION</span></div>
-    <div class="lfv4-awards-feature">
-      <div class="lfv4-awards-copy">
-        <h2 id="awards-title">Dancer’s Choice Awards 2026</h2>
-        <p>Recognition shaped by the LiteFeet community. Explore the 2026 categories, nomination information and official program updates.</p>
-        <a class="lfv3-button lfv3-button-gold lfv-primary-cta" href="{{ url_for('dca_2026_home') }}">Explore the 2026 Awards <span aria-hidden="true">→</span></a>
-      </div>
-      <div class="lfv4-awards-side" aria-hidden="true">
-        <span>THE DANCER’S CHOICE</span>
-        <strong>2026</strong>
-        <span>THE LITEFEET VAULT</span>
-      </div>
-    </div>
-  </section>
+    <article class="lfv-home-compact-card lfv-home-compact-card--dca" id="recognition" aria-labelledby="awards-title">
+      <div class="lfv-home-card-label"><span>DANCER’S CHOICE AWARDS</span><span>2026</span></div>
+      <h2 id="awards-title">Dancer’s Choice Awards 2026</h2>
+      <p>Community-led recognition. Explore the categories, nominations, and official updates.</p>
+      <a class="lfv-home-card-action" href="{{ url_for('dca_2026_home') }}">Explore the 2026 awards <span aria-hidden="true">→</span></a>
+    </article>
 
-  <section class="lfv3-section lfv-world-home-feature" aria-labelledby="world-home-title">
-    <div class="lfv4-section-topline"><p class="lfv3-eyebrow">COMMUNITY / BUILD THE ATTEMPT</p><span>PLANNING FOR 2027</span></div>
-    <div class="lfv-world-home-feature-inner">
-      <div>
-        <h2 id="world-home-title">Let's Make LiteFeet History.</h2>
-        <p>We're building a community-led attempt to bring 500+ LiteFeet dancers together for one synchronized performance in Harlem. We need dancers, choreography collaborators, rehearsal captains, rehearsal spaces, and volunteers.</p>
-        <p class="lfv-world-home-note">A proposed record attempt. Official record approval, date and venue have not been confirmed.</p>
-      </div>
-      <a class="lfv3-button lfv3-button-gold lfv-primary-cta" href="{{ url_for('vault_world_record') }}">Help Make It Happen <span aria-hidden="true">→</span></a>
-    </div>
-  </section>
+    <article class="lfv-home-compact-card lfv-home-compact-card--founder" aria-labelledby="founder-heading">
+      <div class="lfv-home-card-label"><span>FROM THE FOUNDER</span><span>ABOUT THE VAULT</span></div>
+      <h2 id="founder-heading">Dear LiteFeet,</h2>
+      <p>LiteFeet is more than dance. Not every name has been recognized or story documented. That's part of why I created The LiteFeet Vault.</p>
+      <a class="lfv-home-card-action" href="/about#letter">Read more from my letter <span aria-hidden="true">→</span></a>
+    </article>
 
-  <section class="lfv3-section lfv5-month-calendar" id="whats-new" aria-labelledby="month-title">
+    <article class="lfv-home-compact-card lfv-home-compact-card--community" aria-labelledby="world-home-title">
+      <div class="lfv-home-card-label"><span>COMMUNITY PROJECT</span><span>2027 GOAL</span></div>
+      <h2 id="world-home-title">Let's Make LiteFeet History.</h2>
+      <p>Help bring 500+ LiteFeet dancers together for a synchronized performance in Harlem.</p>
+      <p class="lfv-home-card-disclaimer">Proposed attempt; approval, date, and venue are unconfirmed.</p>
+      <a class="lfv-home-card-action" href="{{ url_for('vault_world_record') }}">Help Make It Happen <span aria-hidden="true">→</span></a>
+    </article>
+  </div>
+
+  <section class="lfv3-section lfv5-month-calendar lfv-home-compact-calendar" id="whats-new" aria-labelledby="month-title">
     <div class="lfv4-section-topline"><p class="lfv3-eyebrow">WHAT'S HAPPENING</p><span>{{ vault_upcoming_calendar.label }}</span></div>
     <h2 id="month-title">THIS MONTH IN LITEFEET</h2>
     <p class="lfv5-calendar-intro">Upcoming battles, events and community gatherings in the next 30 days.</p>

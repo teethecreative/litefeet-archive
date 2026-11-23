@@ -1,0 +1,128 @@
+/* Compact 2026 homepage — page-scoped, both themes.
+   The Vault's navy and gold remain the brand; card surfaces follow theme tokens. */
+html.lfv-sitewide main#vault-home {
+  box-sizing:border-box;width:calc(100% - clamp(28px,6vw,100px))!important;
+  max-width:1180px!important;margin-inline:auto!important;
+  padding:clamp(20px,3vw,42px) 0 72px!important;
+  background:transparent!important;
+}
+html.lfv-sitewide #vault-home * {box-sizing:border-box;}
+html.lfv-sitewide #vault-home .lfv-home-compact-head {
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:8px 16px;margin:0 0 12px!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-compact-head :is(p,span) {
+  margin:0!important;font-size:.7rem!important;letter-spacing:.09em;
+  font-weight:800!important;line-height:1.35!important;
+  color:var(--lfv-muted)!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-compact-head p {color:var(--lfv-gold)!important;}
+html.lfv-sitewide #vault-home .lfv-home-compact-grid {
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px!important;
+  align-items:stretch;
+  margin:0 0 34px!important;padding:0!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-compact-card {
+  min-height:224px!important;min-width:0;
+  display:flex!important;flex-direction:column;align-items:stretch;
+  padding:clamp(18px,2.2vw,27px)!important;margin:0!important;
+  border:1px solid var(--lfv-line)!important;
+  border-top:3px solid var(--lfv-gold)!important;
+  border-radius:8px!important;box-shadow:none!important;
+  background:var(--lfv-surface)!important;color:var(--lfv-ink)!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-compact-card--lfa {
+  border-top-color:var(--lfv-navy)!important;
+}
+html[data-theme="dark"].lfv-sitewide #vault-home .lfv-home-compact-card--lfa {
+  border-top-color:var(--lfv-gold)!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-card-label {
+  display:flex;justify-content:space-between;gap:8px 15px;flex-wrap:wrap;
+  align-items:center;margin:0 0 11px!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-card-label span {
+  font-size:.66rem!important;font-weight:800!important;
+  letter-spacing:.09em;line-height:1.4!important;color:var(--lfv-muted)!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-card-label span:first-child {color:var(--lfv-gold)!important;}
+html.lfv-sitewide #vault-home .lfv-home-compact-card :is(h1,h2) {
+  margin:0 0 10px!important;font-family:var(--lfv-font,Arial,sans-serif);
+  font-size:clamp(1.3rem,2vw,1.8rem)!important;
+  line-height:1.17!important;letter-spacing:-.028em!important;
+  font-weight:800!important;text-transform:none!important;
+  color:var(--lfv-ink)!important;max-width:none!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-compact-card>p {
+  margin:0 0 12px!important;font-size:.89rem!important;
+  line-height:1.51!important;max-width:68ch;
+  color:var(--lfv-muted)!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-compact-card .lfv-home-card-disclaimer {
+  margin-top:-4px!important;font-size:.75rem!important;
+  color:var(--lfv-muted)!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-winners-preview {
+  display:flex;flex-wrap:wrap;gap:6px 8px;
+  list-style:none;margin:0 0 15px!important;padding:0!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-winners-preview li {
+  padding:5px 8px;margin:0!important;
+  background:var(--lfv-surface-muted)!important;
+  color:var(--lfv-ink)!important;border:1px solid var(--lfv-line);
+  border-radius:4px;font-size:.75rem!important;line-height:1.2!important;
+  font-weight:750!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-card-action {
+  display:inline-flex!important;align-items:center;justify-content:space-between;
+  gap:14px;align-self:stretch;width:100%;
+  margin-top:auto!important;padding:12px 0 0!important;
+  border:0!important;border-top:1px solid var(--lfv-line)!important;
+  border-radius:0!important;background:transparent!important;
+  color:var(--lfv-ink)!important;text-decoration:none!important;
+  font-size:.82rem!important;line-height:1.3!important;
+  font-weight:800!important;min-height:38px!important;
+  box-shadow:none!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-card-action span {
+  font-size:1.03rem!important;color:var(--lfv-gold)!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-card-action:hover,
+html.lfv-sitewide #vault-home .lfv-home-card-action:focus-visible {
+  text-decoration:underline!important;text-decoration-color:var(--lfv-gold)!important;
+  text-underline-offset:3px;
+}
+/* Only the calendar remains full-width and follows the cards. */
+html.lfv-sitewide #vault-home>.lfv-home-compact-calendar {
+  display:block!important;
+  margin:0 0 20px!important;padding:clamp(17px,2.5vw,28px)!important;
+  background:var(--lfv-surface)!important;
+  border:1px solid var(--lfv-line)!important;
+  border-top:3px solid var(--lfv-gold)!important;
+  border-radius:8px!important;
+  color:var(--lfv-ink)!important;
+  box-shadow:none!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-compact-calendar .lfv4-section-topline {
+  border:0!important;margin:0 0 7px!important;padding:0!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-compact-calendar #month-title {
+  font-size:clamp(1.35rem,2.15vw,1.9rem)!important;
+  line-height:1.15!important;margin:0 0 5px!important;
+  color:var(--lfv-ink)!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-compact-calendar .lfv5-calendar-intro {
+  margin:0 0 17px!important;color:var(--lfv-muted)!important;
+}
+html.lfv-sitewide #vault-home .lfv-home-compact-calendar .lfv-calendar-actions {
+  margin-top:15px!important;
+}
+@media(max-width:720px) {
+  html.lfv-sitewide main#vault-home {width:calc(100% - 30px)!important;padding-top:22px!important;}
+  html.lfv-sitewide #vault-home .lfv-home-compact-grid {grid-template-columns:1fr;gap:12px!important;}
+  html.lfv-sitewide #vault-home .lfv-home-compact-card {min-height:0!important;padding:20px!important;}
+  html.lfv-sitewide #vault-home>.lfv-home-compact-calendar {padding:19px 15px!important;}
+}
