@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/archive-v1.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/archive-v2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/archive-v3.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-public-profiles.css') }}">
 </head>
 <body>
 {% include "_navigation.html" %}
@@ -171,6 +172,9 @@
       </div>
     </aside>
   </div>
+  {% if profile %}
+  {% include "public_profile_sections.html" %}
+  {% endif %}
   {% if related_records %}
   <section class="lfv-archive-related" aria-labelledby="archive-related-heading">
     <h2 id="archive-related-heading">Related records</h2>
