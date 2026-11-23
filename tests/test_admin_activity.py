@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from dca_rebuild.models import (
     BetaFeedback, VaultDevelopmentItem, VaultDevelopmentFeedback,
-    VaultGatheringSubmission,
+    VaultGatheringSubmission, DCANominee, DCANominationSubmission,
 )
 
 
@@ -59,3 +59,35 @@ def test_activity_filters_and_private_contact_details(website, database):
     assert client.get("/admin/activity?period=banana").status_code == 400
     assert client.get("/admin/activity?area=banana").status_code == 400
     assert client.get("/admin/activity?page=0").status_code == 400
+
+def test_nomination_activity_displays_nominee_name_and_category(website, database):
+    edition_id = database[2]
+    now = datetime.utcnow()
+    with database[1].begin() as db:
+        from dca_rebuild.models import DCACategory
+        category = db.query(DCACategory).filter_by(
+            edition_id=edition_id, name="Category 1"
+        ).one()
+        nominee = DCANominee(
+            edition_id=edition_id,
+            category_id=category.id,
+            name="Example LiteFeet Dancer",
+            normalized_name="example litefeet dancer",
+            moderation_status="approved",
+            created_at=now - timedelta(hours=3),
+        )
+        db.add(nominee)
+        db.flush()
+        db.add(DCANominationSubmission(
+            edition_id=edition_id, nominee_id=nominee.id,
+            submitter_hash="test-only-nomination-hash",
+            submitted_at=now - timedelta(minutes=5),
+        ))
+    client = website.test_client()
+    _admin(client)
+    overview = client.get("/admin").get_data(as_text=True)
+    assert "<strong>Example LiteFeet Dancer</strong><small>Category 1</small>" in overview
+    assert "<strong>DCA nomination</strong>" not in overview
+    history = client.get("/admin/activity?area=awards&period=7").get_data(as_text=True)
+    assert "<strong>Example LiteFeet Dancer</strong><small>Category 1</small>" in history
+    assert "Received" in history

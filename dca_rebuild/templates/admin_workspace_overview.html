@@ -28,7 +28,7 @@
     {% for item in pending_review_links %}<a href="{{ item.url }}" aria-label="{{ item.name }}: {{ item.count }} pending"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></a>{% endfor %}
     </div>{% else %}<p class="lfv-admin-overview__empty">Nothing waiting for review.</p>{% endif %}
   </section>
-  <section class="lfv-admin-workspace-section lfv-admin-overview__activity' id="recent-activity" aria-labelledby="admin-activity-title">
+  <section class="lfv-admin-workspace-section lfv-admin-overview__activity" id="recent-activity" aria-labelledby="admin-activity-title">
     <div class="lfv-admin-workspace-heading">
       <div>
         <p class="lfv-admin-overline">LAST 30 DAYS · NEWEST FIRST</p>
@@ -44,7 +44,7 @@
       {% for activity in recent_activity_rows %}
       <a class="lfv-admin-overview__entry" href="{{ activity.url }}">
         <time datetime="{{ activity.iso_at }}">{{ activity.at }}</time>
-        <span class="lfv-admin-overview__item"><strong>{{ activity.title }}</strong><small>{{ activity.action }}</small></span>
+        <span class="lfv-admin-overview__item"><strong>{{ activity.title }}</strong><small>{{ activity.subtitle or activity.action }}</small></span>
         <span class="lfv-admin-overview__section">{{ activity.label }}</span>
         <span class="lfv-admin-overview__status">{{ activity.status or '—' }}</span>
         <span class="lfv-admin-overview__arrow" aria-label="Open details">→</span>

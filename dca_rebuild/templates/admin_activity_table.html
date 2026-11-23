@@ -6,7 +6,7 @@
 <tr>
 <td><time datetime="{{ activity.iso_at }}">{{ activity.at }}</time></td>
 <td>{{ activity.label }}</td>
-<td><strong>{{ activity.title }}</strong></td>
+<td><strong>{{ activity.title }}</strong>{% if activity.subtitle %}<small>{{ activity.subtitle }}</small>{% endif %}</td>
 <td>{{ activity.action }}</td>
 <td>{{ activity.status or '—' }}</td>
 <td><a href="{{ activity.url }}">Open</a></td>

@@ -12,7 +12,7 @@ from flask import abort, render_template, request, url_for
 
 from dca_rebuild.models import (
     BetaChangelog, BetaFeedback, DCANewCategorySuggestion,
-    DCANominationSubmission, DCANominee, LFAArchiveSubmission,
+    DCANominationSubmission, DCANominee, DCACategory, LFAArchiveSubmission,
     LockInCardRequest, VaultArchiveVerification, VaultDevelopmentFeedback,
     VaultDevelopmentItem, VaultGatheringSubmission, WorldRecordInterest,
 )
@@ -103,6 +103,22 @@ def _fetch_activity(db, area="all", period="30", page=1, size=20):
         if cutoff is not None:
             query = query.filter(date_column >= cutoff)
         records = query.order_by(date_column.desc(), source.model.id.desc()).limit(sample_size).all()
+
+        # Resolve the submitted nominee and category in one query instead of
+        # leaving each nomination activity row with a generic title.
+        nomination_details = {}
+        if source.model is DCANominationSubmission and records:
+            nominee_ids = {record.nominee_id for record in records}
+            nomination_details = {
+                nominee_id: (nominee_name, category_name)
+                for nominee_id, nominee_name, category_name in (
+                    db.query(DCANominee.id, DCANominee.name, DCACategory.name)
+                    .outerjoin(DCACategory, DCANominee.category_id == DCACategory.id)
+                    .filter(DCANominee.id.in_(nominee_ids))
+                    .all()
+                )
+            }
+
         for record in records:
             stamped = getattr(record, source.time_field)
             if not isinstance(stamped, datetime):
@@ -112,11 +128,19 @@ def _fetch_activity(db, area="all", period="30", page=1, size=20):
             eastern = utc.astimezone(EASTERN)
             title = getattr(record, source.title_field, None) if source.title_field else None
             title = str(title).strip()[:120] if title else source.label
+            subtitle = None
+            if source.model is DCANominationSubmission:
+                nominee_name, category_name = nomination_details.get(record.nominee_id, (None, None))
+                if nominee_name and str(nominee_name).strip():
+                    title = str(nominee_name).strip()[:120]
+                if category_name and str(category_name).strip():
+                    subtitle = str(category_name).strip()[:120]
             kwargs = {source.route_param: record.id} if source.route_param else {}
             candidates.append({
                 "area": source.area,
                 "label": source.label,
                 "title": title,
+                "subtitle": subtitle,
                 "action": source.action,
                 "status": _label_status(getattr(record, source.status_field, None)) if source.status_field else "",
                 "at": eastern.strftime("%m-%d-%Y · %-I:%M %p"),
