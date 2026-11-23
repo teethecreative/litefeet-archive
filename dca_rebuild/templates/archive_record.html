@@ -46,15 +46,61 @@
           <section>
             <h2>Announced lineup</h2>
             <p>Advertised lineup · Results not confirmed</p>
-            {% for group in record.battles %}
-            <h3>{{ group.section }}</h3>
-            <ol class="lfv-archive-battles">
-              {% for battle in group['items'] %}
-              <li>{{ battle }}</li>
-              {% endfor %}
-            </ol>
-            {% endfor %}
-            {% for battle in record.lineup_participants | default([]) %}
+            {% for group in battle_groups %}
+             <h3>{{ group.section }}</h3>
+             <ol class="lfv-archive-battles lfv-battle-list">
+               {% for battle in group['items'] %}
+               <li class="lfv-battle-line" id="battle-{{ battle.key[:12] }}">
+                 <span class="lfv-battle-name">{{ battle.label }}</span>
+                 {% if battle.occurred == 'did_not_happen' %}<span class="lfv-battle-status">Did not happen</span>
+                 {% elif battle.occurred == 'postponed' %}<span class="lfv-battle-status">Postponed</span>
+                 {% elif battle.occurred == 'scheduled' %}<span class="lfv-battle-status">Scheduled</span>
+                 {% elif battle.occurred == 'happened' %}<span class="lfv-battle-status">{{ battle.outcome_label }}</span>
+                 {% else %}<span class="lfv-battle-status">Outcome unconfirmed</span>{% endif %}
+                 {% if battle.active_poll %}
+                 <span class="lfv-battle-poll-inline" aria-label="Community poll results"><strong>Community:</strong>
+                   {{ battle.contestants[0] }} {{ battle.percent_a }}% ({{ battle.votes_a }}) ·
+                   {{ battle.contestants[1] }} {{ battle.percent_b }}% ({{ battle.votes_b }}) ·
+                   {{ battle.total_votes }} vote{{ '' if battle.total_votes == 1 else 's' }} · Voting open
+                 </span>
+                 {% if battle_poll_verified and not battle.already_voted %}
+                 <form class="lfv-battle-poll-form" method="post" action="{{ url_for('vault_battle_vote',slug=record.slug,battle_key=battle.key) }}">
+                   <input type="hidden" name="csrf_token" value="{{ archive_csrf }}">
+                   <label><input type="radio" name="choice" value="a" required> {{ battle.contestants[0] }}</label>
+                   <label><input type="radio" name="choice" value="b" required> {{ battle.contestants[1] }}</label>
+                   <button type="submit">Vote</button>
+                 </form>
+                 {% elif battle.already_voted %}<span class="lfv-battle-voted">Your vote is recorded.</span>
+                 {% else %}<span class="lfv-battle-verify">Verify your email to vote.</span>{% endif %}
+                 {% endif %}
+                 {% if battle.source_note %}<small class="lfv-battle-source">Source: {{ battle.source_note }}</small>{% endif %}
+                 {% if battle_poll_admin %}
+                 <details class="lfv-battle-edit"><summary>Record outcome</summary>
+                   <form method="post" action="{{ url_for('vault_battle_outcome',slug=record.slug,battle_key=battle.key) }}">
+                     <input type="hidden" name="csrf_token" value="{{ archive_csrf }}">
+                     <label>Occurred <select name="occurred">
+                       {% for status in ['unconfirmed','scheduled','happened','did_not_happen','postponed'] %}
+                         <option value="{{ status }}" {% if battle.occurred == status %}selected{% endif %}>{{ status | replace('_',' ') | title }}</option>
+                       {% endfor %}
+                     </select></label>
+                     <label>Result <select name="result">
+                       {% for result in ['unknown','a','b','tie','youtube_decide','no_contest'] %}
+                         <option value="{{ result }}" {% if battle.result == result %}selected{% endif %}>{{ battle.contestants[0] if result == 'a' and battle.contestants else battle.contestants[1] if result == 'b' and battle.contestants else result | replace('_',' ') | title }}</option>
+                       {% endfor %}
+                     </select></label>
+                     <label>Supporting source <input type="text" name="source_note" value="{{ battle.source_note or '' }}" maxlength="500"></label>
+                     <button type="submit">Save outcome</button>
+                   </form>
+                 </details>
+                 {% endif %}
+               </li>
+               {% endfor %}
+             </ol>
+             {% endfor %}
+             {% for message in get_flashed_messages(category_filter=['battle']) %}
+               <p role="status">{{ message }}</p>
+             {% endfor %}
+             {% for battle in record.lineup_participants | default([]) %}
               <p class="lfv-archive-participants"><strong>{{ battle.name }} PARTICIPANTS:</strong> {{ battle.featuring | join(', ') }}</p>
             {% endfor %}
           </section>
