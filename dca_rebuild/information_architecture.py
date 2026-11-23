@@ -282,7 +282,8 @@ def install_information_architecture(app, ns):
         if record.get("collection") == "people":
             from dca_rebuild.public_profiles import profile_index
             profile = profile_index(ns["SessionLocal"]).for_archive_record(slug)
-        return render_template('archive_record.html', record=public_record(record),
+        template = 'public_profile.html' if profile is not None else 'archive_record.html'
+        return render_template(template, record=public_record(record),
                                related_records=[public_record(item) for item in related_records],
                                archive_csrf=session['vault_archive_csrf'],
                                profile=profile,
