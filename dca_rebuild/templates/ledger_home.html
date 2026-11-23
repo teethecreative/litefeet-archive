@@ -163,7 +163,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-world-record.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-calendar-pages.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-home-compact.css', v='20261123c') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-home-compact.css', v='20261123e') }}">
 </head>
 
 <body>
@@ -182,9 +182,12 @@
       <div class="lfv-home-card-label"><span>LITEFEET AWARDS</span><span>2026 RESULTS</span></div>
       <h1 id="lfa-home-heading">And the winners are<span aria-hidden="true">…</span></h1>
       <p>The 5th Annual LiteFeet Awards honored {{ home_lfa_2026_winners|length }} winners on November 22, 2026.</p>
-      <ul class="lfv-home-winners-preview" aria-label="2026 award winners">
+      <ul class="lfv-home-winners-preview" aria-label="2026 award categories and winners">
         {% for result in home_lfa_2026_winners %}
-        <li title="{{ result.category }}">{{ result.winner }}</li>
+        <li>
+          <span class="lfv-home-winner-category">{{ result.category }}</span>
+          <strong class="lfv-home-winner-name">{{ result.winner }}</strong>
+        </li>
         {% endfor %}
       </ul>
       <a class="lfv-home-card-action" href="{{ url_for('lfa_year', year=2026) }}">View categories and winners <span aria-hidden="true">→</span></a>
@@ -202,7 +205,7 @@
       <div class="lfv-home-card-label"><span>FROM THE FOUNDER</span><span>ABOUT THE VAULT</span></div>
       <h2 id="founder-heading">Dear LiteFeet,</h2>
       <p>LiteFeet is more than dance. Not every name has been recognized or story documented. That's part of why I created The LiteFeet Vault.</p>
-      <a class="lfv-home-card-action" href="/about#letter">Read more from my letter <span aria-hidden="true">→</span></a>
+      <a class="lfv-home-card-action" href="/about#letter">The Founder <span aria-hidden="true">→</span></a>
     </article>
 
     <article class="lfv-home-compact-card lfv-home-compact-card--community" aria-labelledby="world-home-title">
@@ -226,7 +229,11 @@
       </a>
       {% endfor %}
     </div>
-    <div class="lfv5-calendar-events" id="calendar-events">
+    <div class="lfv-home-calendar-list-heading">
+      <h3 id="home-events-heading">Upcoming events</h3>
+      <span>{{ vault_calendar_page.total }} events in the next 30 days</span>
+    </div>
+    <div class="lfv5-calendar-events" id="calendar-events" aria-labelledby="home-events-heading">
     {% if vault_calendar_page.selected_day %}
     <div class="lfv-calendar-filter-active"><strong>Showing {{ vault_calendar_page.selected_day }} only</strong> <a href="{{ url_for('index') }}#calendar-events">Show all events</a></div>
     {% endif %}
