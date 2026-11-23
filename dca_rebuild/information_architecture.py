@@ -432,9 +432,14 @@ def install_information_architecture(app, ns):
     app.view_functions['awards_home'] = lambda: section_page('awards')
     app.view_functions['legacy_about'] = lambda: section_page('about')
 
+    @app.get('/about/our-story', endpoint='vault_story')
+    def story_page():
+        return render_template('about_story.html', **public_content())
+
     @app.get('/about/founder', endpoint='vault_founder')
     def founder_page():
-        return render_template('about_founder.html', **public_content())
+        # Preserve links from earlier releases without presenting a biography.
+        return redirect(url_for('vault_story'), code=301)
     # Old About deep links remain usable, but the content now lives on /about.
     for about_path, page, anchor in (
         ('letter', 'letter', 'letter'),
