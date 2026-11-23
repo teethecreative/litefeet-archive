@@ -11,6 +11,8 @@ def test_about_page_is_story_and_preserves_letter(website):
     assert "How much of our history do we actually have documented" in html
     assert "We can't change what was never documented" in html
     assert "With love for the culture," in html
+    assert html.index('id="explore"') < html.index('id="letter"')
+    assert html.index('id="letter"') < html.index('class="lfv-story-next"')
     assert "lfv-story-page.css" in html
     assert "20261123b" in html
     assert "lfv-story-page.js" in html
