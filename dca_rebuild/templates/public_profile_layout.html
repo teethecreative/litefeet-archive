@@ -153,7 +153,7 @@
           {% else %}
           <div class="lfv-profile-wall-composer">
             <p>Verify your email to leave a message, memory, or shout-out.</p>
-            <a href="{{ url_for('dca_verify_email') if 'dca_verify_email' in current_app.view_functions else url_for('dca_nominations_closed') }}">Verify email</a>
+            <a href="/awards/dancers-choice/verify-email">Verify email</a>
           </div>
           {% endif %}
           {% if wall.can_moderate %}
