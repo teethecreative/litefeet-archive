@@ -52,6 +52,7 @@
 </article>
 {% else %}<p>No Wall submissions in this view.</p>{% endfor %}
 <section class="lfv-wall-row"><h2>Profile owner access</h2>
+<p><a href="{{ url_for('admin_profile_claims') }}">Review pending profile ownership claims</a></p>
 <p>Only grant access after verifying the person is the approved owner. An email verification alone does not prove identity.</p>
 <form class="lfv-wall-owner-form" method="post" action="{{ url_for('admin_wall_owner_access') }}">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
