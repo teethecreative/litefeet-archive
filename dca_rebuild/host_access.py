@@ -154,7 +154,15 @@ def save_outcome(db, record, key, occurred, result, source_note, actor_id=None):
 
 
 def install_host_access(app, ns):
-    factory = ns["SessionLocal"]
+    # Resolve SessionLocal at request time; isolated app fixtures and future
+    # database reconnections must not retain the startup session factory.
+    class FactoryProxy:
+        def __call__(self, *args, **kwargs):
+            return ns["SessionLocal"](*args, **kwargs)
+        def begin(self):
+            return ns["SessionLocal"].begin()
+
+    factory = FactoryProxy()
     admin_required = ns["admin_login_required"]
 
     @app.before_request
