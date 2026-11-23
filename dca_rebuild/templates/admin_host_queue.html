@@ -1,0 +1,47 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ queue.name }} Battle Results | Vault Admin</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css') }}">
+</head><body class="ledger-admin">{% include "_admin_navigation.html" %}
+<main class="lfv-host-wrap"><p><a href="{{ url_for('vault_admin_hosts') }}">Event hosts</a> / {{ queue.name }}</p>
+<header><p class="lfv-host-eyebrow">BATTLE RESULT TRACKING / ADMIN</p><h1>{{ queue.name }}</h1>
+<p>{{ queue.event_count }} events · {{ queue.pending }} need results · {{ queue.complete }} recorded</p></header>
+<nav class="lfv-host-filter" aria-label="Queue filters">
+<a href="{{ url_for('vault_admin_host_queue',host_key=queue.key,view='pending') }}" {% if view=='pending' %}aria-current="page"{% endif %}>Needs results</a>
+<a href="{{ url_for('vault_admin_host_queue',host_key=queue.key,view='all') }}" {% if view=='all' %}aria-current="page"{% endif %}>All battles</a>
+</nav>
+{% for event in queue.events %}
+{% set shown = event.pending if view=='pending' else event.pending + event.complete %}
+{% if shown or (view=='all' and event.roster_count) %}
+<section class="lfv-host-event"><div class="lfv-host-event-head"><h2>{{ event.title }}</h2>
+<p>{{ event.date_label }} · {{ event.pending }} pending · {{ event.complete }} resolved</p>
+<a href="{{ url_for('vault_archive_record',slug=event.slug) }}">View archive event</a></div>
+{% if event.roster_count %}<p class="lfv-host-muted">{{ event.roster_count }} initial team-roster entries excluded from result assignment.</p>{% endif %}
+{% for section in event.sections %}
+{% for battle in section.rows %}
+{% if view=='all' or not battle.resolved %}
+<div class="lfv-host-battle" id="battle-{{ battle.key[:12] }}">
+<div class="lfv-host-battle-name"><strong>{{ battle.label }}</strong><small>{{ 'Recorded' if battle.resolved else 'Result needed' }}</small></div>
+<form method="post" action="{{ url_for('vault_admin_host_result',host_key=queue.key,slug=event.slug,battle_key=battle.key) }}" class="lfv-host-result-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label><span>Official outcome</span><select name="outcome" required>
+<option value="" disabled selected>Choose result</option>
+{% if battle.contestants|length == 2 %}
+<option value="a">{{ battle.contestants[0] }} won</option>
+<option value="b">{{ battle.contestants[1] }} won</option>
+<option value="tie">Tie</option>
+<option value="youtube_decide">YouTube Decide</option>
+{% endif %}
+<option value="no_contest">No contest</option>
+<option value="did_not_happen">Did not happen</option>
+<option value="postponed">Postponed</option>
+<option value="unconfirmed">Outcome unconfirmed</option>
+</select></label>
+<label><span>Source / context</span><input name="source_note" maxlength="300" placeholder="Footage, host confirmation, etc." value=""></label>
+<button type="submit">Save</button>
+</form></div>
+{% endif %}{% endfor %}{% endfor %}</section>
+{% endif %}{% else %}<p>No events available.</p>{% endfor %}
+</main><script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script></body></html>
