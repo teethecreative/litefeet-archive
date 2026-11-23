@@ -312,3 +312,101 @@ html.lfv-sitewide main.lfv-writeins .lfv-writeins-grid .lfv-writeins-card .lfv-w
   outline: 3px solid var(--lfv-gold, #caa326) !important;
   outline-offset: 3px !important;
 }
+
+
+/* Keep both awards directories on the *same actual card component*.
+   Main nominations uses this partial as well: dca_nomination_grid_card.html. */
+html.lfv-sitewide main.lfv-writeins .lfv-writeins-grid .lfv-dca-grid-card {
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:17px;
+  border:1px solid var(--lfv-line,#cad4e0);
+  border-radius:9px;
+  background:var(--lfv-surface,#fff);
+  color:var(--lfv-ink,#0c1d38);
+  box-shadow:none;
+  overflow-wrap:anywhere;
+}
+html.lfv-sitewide main.lfv-writeins .lfv-writeins-grid .lfv-dca-grid-open {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:9px;
+  width:100%;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+html.lfv-sitewide main.lfv-writeins .lfv-writeins-grid .lfv-dca-grid-open:hover .lfv-dca-grid-title {
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+html.lfv-sitewide main.lfv-writeins .lfv-writeins-grid .lfv-dca-grid-open:focus-visible {
+  outline:3px solid var(--lfv-gold,#caa326);
+  outline-offset:5px;
+}
+html.lfv-sitewide main.lfv-writeins .lfv-writeins-grid .lfv-dca-grid-title {
+  font-size:.98rem;
+  line-height:1.35;
+  font-weight:850;
+  overflow-wrap:anywhere;
+}
+html.lfv-sitewide main.lfv-writeins .lfv-writeins-grid .lfv-dca-grid-status {
+  font-size:.7rem;
+  line-height:1.35;
+  font-weight:650;
+  color:var(--lfv-muted,#566477);
+}
+html.lfv-sitewide main.lfv-writeins .lfv-writeins-grid .lfv-dca-grid-cta {
+  display:inline-block;
+  margin-top:auto;
+  padding-top:2px;
+  font-size:.77rem;
+  font-weight:800;
+  line-height:1.35;
+  color:var(--lfv-ink,#0c1d38);
+}
+html.lfv-sitewide main.lfv-writeins .lfv-writeins-grid .lfv-dca-grid-preview {
+  display:grid;
+  gap:7px;
+  margin:0;
+  padding:10px 0 0;
+  border-top:1px solid var(--lfv-line,#cad4e0);
+  list-style:none;
+}
+html.lfv-sitewide main.lfv-writeins .lfv-writeins-grid .lfv-dca-grid-preview li {
+  display:flex;
+  justify-content:space-between;
+  align-items:start;
+  gap:8px;
+  font-size:.78rem;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+html.lfv-sitewide main.lfv-writeins .lfv-writeins-grid .lfv-dca-grid-preview li span:last-child {
+  flex-shrink:0;
+  font-size:.73rem;
+  color:var(--lfv-muted,#566477);
+  font-variant-numeric:tabular-nums;
+}
+html.lfv-sitewide main.lfv-writeins .lfv-writeins-grid .lfv-dca-grid-empty {
+  margin:0;
+  font-size:.77rem;
+  color:var(--lfv-muted,#566477);
+}
+html.lfv-sitewide dialog.lfv-dca-category-dialog .lfv-dca-verify-link {
+  display:inline-block;
+  margin-top:8px;
+  color:var(--lfv-ink,#0c1d38);
+  font-size:.9rem;
+  font-weight:750;
+  text-underline-offset:4px;
+}

@@ -696,6 +696,7 @@ def install_phase9e(app, ns):
             entries = []
             requirement = 20
             floor = 0
+            accepting_support = False
             if edition:
                 stages = stages_for(db, edition)
                 top_names = {
@@ -755,6 +756,37 @@ def install_phase9e(app, ns):
                         public_nominees=public_nominees.get(cat.id, []) if cat is not None else [],
                         public_supporters=public_support.get(cat.id, 0) if cat is not None else 0,
                     ))
+            # Reuse the exact Official Top 25 category cards and nomination dialog.
+            # All public write-in suggestions are shown, including unstaged entries.
+            from dca_rebuild.nominee_fields import nomination_fields
+            from dca_rebuild.nomination_service import category_history, remaining_seconds
+            from dca_rebuild.email_verification import verification_enabled, verified_nominator_hash
+            who = (verified_nominator_hash() if verification_enabled()
+                   else session.get('lf9e_recent_hash'))
+            history = {}
+            if who and edition:
+                for submitted, nominee in category_history(db, edition.id, who):
+                    history.setdefault(nominee.category_id, submitted.submitted_at)
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
+            display_categories = []
+            for index, item in enumerate(entries):
+                cid = item['category_id']
+                when = history.get(cid) if cid else None
+                remaining = remaining_seconds(when, now) if when else 0
+                accepting = item['open_for_nominations'] if cid else item['accepting_support']
+                display_categories.append(dict(
+                    id=cid if cid else f'pending-{index}',
+                    name=item['name'],
+                    description=item['description'],
+                    nominees=item['public_nominees'],
+                    pending=cid is None,
+                    activation_name=item['name'] if cid is None else '',
+                    nomination_ui=nomination_fields(item['name']),
+                    available=bool(accepting and not remaining),
+                    remaining=remaining,
+                    next_at=(when + timedelta(hours=24)).isoformat() if remaining else '',
+                ))
+            session.setdefault('lf9e_nomination_csrf', secrets.token_urlsafe(32))
             total = len(entries)
             search = (request.args.get('q') or '').strip()[:100]
             if search:
@@ -762,10 +794,17 @@ def install_phase9e(app, ns):
                     item for item in entries
                     if search.casefold() in (item['name'] + ' ' + item['description']).casefold()
                 ]
+                display_categories = [
+                    category for category in display_categories
+                    if search.casefold() in (category['name'] + ' ' + category['description']).casefold()
+                ]
             session.setdefault('lf9e_writeins_csrf', secrets.token_urlsafe(32))
             response = render_template(
                 'dca_writeins.html', entries=entries, total=total, search=search,
-                requirement=requirement, floor=floor,
+                requirement=requirement, floor=floor, writeins=display_categories,
+                categories=[], selected=None, identified=bool(who),
+                closed=not accepting_support,
+                csrf_token=session['lf9e_nomination_csrf'],
                 writeins_csrf=session['lf9e_writeins_csrf'],
             )
             return response
@@ -799,6 +838,8 @@ def install_phase9e(app, ns):
             existing = next((cat for stage, cat in stages
                              if writein_category_key(cat.name) == key), None)
             if existing:
+                if request.headers.get('X-DCA-Modal') == '1':
+                    return jsonify(success=True, category_id=existing.id)
                 return redirect(url_for('dca_nominations_closed', category=existing.id))
             # Only names already provided through the recorded category round.
             # Reject names previously moderated out of the public list.
@@ -833,6 +874,8 @@ def install_phase9e(app, ns):
                 edition_id=edition.id, category_id=record.id, stage='write_in',
                 position=max((stage.position for stage, _ in stages), default=25) + 1))
             db.commit()
+            if request.headers.get('X-DCA-Modal') == '1':
+                return jsonify(success=True, category_id=record.id)
             return redirect(url_for('dca_nominations_closed', category=record.id))
         except IntegrityError:
             db.rollback()
@@ -840,6 +883,8 @@ def install_phase9e(app, ns):
             existing = next((cat for stage, cat in stages_for(db, edition)
                              if writein_category_key(cat.name) == key), None)
             if existing:
+                if request.headers.get('X-DCA-Modal') == '1':
+                    return jsonify(success=True, category_id=existing.id)
                 return redirect(url_for('dca_nominations_closed', category=existing.id))
             raise
         finally:

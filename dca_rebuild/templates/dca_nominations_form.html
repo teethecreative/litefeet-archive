@@ -45,7 +45,7 @@
           {% for category in intro_categories %}<li>{{ category.name }}</li>{% endfor %}
         </ol>
       </div>
-      <p class="lf9e-writein-link"><a href="{{ url_for('phase9e_writeins') }}">Write-in categories →</a></p>
+      <p class="lf9e-writein-link"><a class="lf9e-primary lfv-dca-writeins-button" href="{{ url_for('phase9e_writeins') }}">Browse All Write-In Categories →</a></p>
       {% if not closed %}
       <form method="post" class="lf9e-entry-form lf9e-email-form" id="lf9e-email-start" aria-labelledby="email-title">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -94,13 +94,13 @@
           <h1 class="lf9e-nomination-heading">Choose a Category</h1>
           <p class="lfv-dca-intro-copy">Select a category to nominate an existing name or add someone or something new. One nomination per category every rolling 24 hours.</p>
           {% if closed %}<p class="lf9e-message">Nominations are closed. You can still browse the standings.</p>{% endif %}
+          <p class="lf9e-writein-link"><a class="lf9e-primary lfv-dca-writeins-button" href="{{ url_for('phase9e_writeins') }}">Browse All Write-In Categories →</a></p>
           <section aria-labelledby="official-title">
             <h2 id="official-title">Official Top 25</h2>
             <div class="lf9e-category-grid">
               {% for category in categories %}{% include "dca_nomination_grid_card.html" %}{% endfor %}
             </div>
           </section>
-          <p class="lf9e-writein-link"><a href="{{ url_for('phase9e_writeins') }}">Write-in categories →</a></p>
           <section class="lf9e-saved-ideas" aria-labelledby="lf9e-saved-title">
             <h2 id="lf9e-saved-title">Saved nomination ideas</h2>
             <div id="lf9e-saved-list"></div>

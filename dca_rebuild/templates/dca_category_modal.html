@@ -26,12 +26,14 @@
         {% endif %}
       </div>
       {% if category.available %}
-      <button type="button" class="lfv-dca-add-new" data-dca-add-new>+ Add a new nominee</button>
+      <button type="button" class="lfv-dca-add-new" data-dca-add-new>+ Add someone new</button>
       <div class="lfv-dca-modal-form-wrap" data-dca-form-wrap hidden>
         <h3 data-dca-form-title>New nomination</h3>
+        {% if identified %}
         <form method="post" action="{{ url_for('dca_nominations_closed') }}" class="lf9e-entry-form lfv-dca-modal-form" data-dca-nomination-form>
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <input type="hidden" name="category_id" value="{{ category.id }}">
+          <input type="hidden" name="category_id" value="{{ '' if category.pending else category.id }}">
+          {% if category.pending %}<input type="hidden" name="activation_name" value="{{ category.activation_name }}">{% endif %}
           <label>{{ category.nomination_ui.label }}
             <input name="name" minlength="2" maxlength="250" required autocomplete="off" placeholder="{{ category.nomination_ui.placeholder }}">
           </label>
@@ -61,6 +63,10 @@
             <button type="button" class="lfv-dca-save-draft" data-dca-save-draft>Save idea for later</button>
           </div>
         </form>
+        {% else %}
+        <p>Verify your email once to nominate an existing name or add someone new.</p>
+        <a class="lfv-dca-verify-link" href="{{ url_for('dca_nominations_closed') }}">Verify email to nominate →</a>
+        {% endif %}
       </div>
       {% elif closed %}
       <p class="lfv-dca-modal-status">Nominations are closed.</p>
