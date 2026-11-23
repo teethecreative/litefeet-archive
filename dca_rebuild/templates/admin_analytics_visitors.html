@@ -58,8 +58,8 @@ href="{{ url_for('static', filename='css/dca.css') }}">
 
     {% if date_scope %}
     <p class="analytics-period-label">
-        {{ date_scope.start_day }} —
-        {{ date_scope.end_day }} · NEW YORK TIME
+        {{ date_scope.start_day.strftime('%m-%d-%Y') }} —
+        {{ date_scope.end_day.strftime('%m-%d-%Y') }} · NEW YORK TIME
         <a href="{{ url_for('admin_analytics_visitors') }}">
             CLEAR DATE FILTER
         </a>
@@ -71,9 +71,9 @@ href="{{ url_for('static', filename='css/dca.css') }}">
     <form method="get" class="analytics-directory-filters">
         {% if date_scope %}
         <input type="hidden" name="start"
-               value="{{ date_scope.start_day }}">
+               value="{{ date_scope.start_day.strftime('%m-%d-%Y') }}">
         <input type="hidden" name="end"
-               value="{{ date_scope.end_day }}">
+               value="{{ date_scope.end_day.strftime('%m-%d-%Y') }}">
         {% endif %}
         <label>
             SEARCH SESSION OR PAGE
@@ -143,14 +143,14 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                         {{ visitor.first_seen.replace(
                             tzinfo=utc_timezone
                         ).astimezone(ny_timezone).strftime(
-                            '%b %d, %Y · %I:%M %p'
+                            '%m-%d-%Y · %I:%M %p'
                         ) }}
                     </td>
                     <td>
                         {{ visitor.last_seen.replace(
                             tzinfo=utc_timezone
                         ).astimezone(ny_timezone).strftime(
-                            '%b %d, %Y · %I:%M %p'
+                            '%m-%d-%Y · %I:%M %p'
                         ) }}
                     </td>
                     <td>

@@ -46,8 +46,8 @@ href="{{ url_for('static', filename='css/dca.css') }}">
 
     {% if date_scope %}
     <p class="analytics-period-label">
-        {{ date_scope.start_day }} —
-        {{ date_scope.end_day }} · NEW YORK TIME
+        {{ date_scope.start_day.strftime('%m-%d-%Y') }} —
+        {{ date_scope.end_day.strftime('%m-%d-%Y') }} · NEW YORK TIME
     </p>
     <p>
         <a href="{{ url_for(
@@ -88,7 +88,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                 {{ first_seen.replace(
                     tzinfo=utc_timezone
                 ).astimezone(ny_timezone).strftime(
-                    '%b %d, %Y · %I:%M %p'
+                    '%m-%d-%Y · %I:%M %p'
                 ) }}
             </span>
         </article>
@@ -98,7 +98,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                 {{ last_seen.replace(
                     tzinfo=utc_timezone
                 ).astimezone(ny_timezone).strftime(
-                    '%b %d, %Y · %I:%M %p'
+                    '%m-%d-%Y · %I:%M %p'
                 ) }}
             </span>
         </article>
@@ -168,7 +168,7 @@ href="{{ url_for('static', filename='css/dca.css') }}">
                         {{ item.viewed_at.replace(
                             tzinfo=utc_timezone
                         ).astimezone(ny_timezone).strftime(
-                            '%b %d, %Y · %I:%M %p'
+                            '%m-%d-%Y · %I:%M %p'
                         ) }}
                     </td>
                     <td>{{ item.path }}</td>
