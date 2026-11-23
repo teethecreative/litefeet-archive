@@ -21,6 +21,10 @@ PAGES = {
         "Dancer's Choice Awards 2023 Archive | The LiteFeet Vault",
         "Explore the August 2023 Dancer's Choice Awards archive: 31 award categories, 152 nominee entries and 32 recorded winning entries.",
     ),
+    "/awards/litefeet-awards": (
+        "LiteFeet Awards History & Results | The LiteFeet Vault",
+        "Explore LiteFeet Awards historical information, documented categories, winners and honorees.",
+    ),
     "/awards/hypeitup": (
         "HypeItUpTV Awards | The LiteFeet Vault",
         "Find updates about the HypeItUpTV Awards, a developing section of The LiteFeet Vault awards archive.",
@@ -85,6 +89,11 @@ SITEMAP_PATHS = (
     "/about",
     "/awards/dancers-choice/2026",
     "/awards/dancers-choice/2023",
+    "/awards/litefeet-awards",
+    "/awards/litefeet-awards/2023",
+    "/awards/litefeet-awards/2024",
+    "/awards/litefeet-awards/2025",
+    "/awards/litefeet-awards/2026",
     "/awards/hypeitup",
     "/submit",
     "/awards/dancers-choice/nominations",
