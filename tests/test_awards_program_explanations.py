@@ -74,3 +74,32 @@ def test_lfa_2026_winners_publish_and_correction_is_idempotent(website, database
             assert name in html
         assert "JADA CHANELL" not in html
         assert "2026 AWARD WINNERS" in html
+
+
+def test_lfa_directory_is_branded_searchable_and_not_a_public_submission_form(website):
+    client = website.test_client()
+    response = client.get("/awards/litefeet-awards")
+    html = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert "THE LITEFEET VAULT" in html
+    assert "Search award categories or winners" in html
+    assert '<details class="lfa-category"' in html
+    assert "2026 AWARD WINNERS" in html
+    assert "lfa-contribution-form" not in html
+    assert 'action="/awards/litefeet-awards/submit"' not in html
+    assert "HELP BUILD THE ARCHIVE" not in html
+    assert client.post("/awards/litefeet-awards/submit", data={
+        "submission_type": "award_winner", "year": "2026",
+        "category_name": "Invented award", "winner_name": "Invented winner"
+    }).status_code == 410
+
+
+def test_lfa_previous_year_archive_has_no_submissions_cta(website):
+    client = website.test_client()
+    for year in (2023, 2024, 2025):
+        response = client.get(f"/awards/litefeet-awards/{year}")
+        assert response.status_code == 200
+        html = response.get_data(as_text=True)
+        assert "Results not yet documented" in html
+        assert "CONTRIBUTE HISTORICAL INFORMATION" not in html
+        assert 'href="/awards/litefeet-awards#contribute"' not in html

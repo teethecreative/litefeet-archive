@@ -1,25 +1,55 @@
 {% if winners_2026 %}
 <section class="lfa-results" id="winners-2026" aria-labelledby="lfa-results-heading">
-  <div class="lfa-results__intro">
-    <p class="lfa-results__eyebrow">5TH ANNUAL LITEFEET AWARDS · 2026</p>
-    <h2 id="lfa-results-heading">2026 AWARD WINNERS</h2>
-    <p>Seven categories recognized at the November 22, 2026 awards ceremony. These winner names were confirmed by The LiteFeet Vault administrator and are recorded separately from the Dancer's Choice Awards.</p>
+  <div class="lfa-results__heading">
+    <div>
+      <p class="lfa-eyebrow">5TH ANNUAL · NOVEMBER 22, 2026</p>
+      <h2 id="lfa-results-heading">2026 AWARD WINNERS</h2>
+      <p>Explore the seven documented award categories and their winners.</p>
+    </div>
+    <span class="lfa-results__count">07 CATEGORIES</span>
   </div>
-  <div class="lfa-results__grid">
+  <label class="lfa-search" for="lfa-category-search">
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+      <circle cx="10.8" cy="10.8" r="7"></circle><path d="m16 16 5 5"></path>
+    </svg>
+    <span class="visually-hidden">Search categories or winners</span>
+    <input id="lfa-category-search" type="search" placeholder="Search award categories or winners" autocomplete="off">
+  </label>
+  <div class="lfa-category-list" id="lfa-category-list">
     {% for result in winners_2026 %}
-      <article class="lfa-results__card">
-        <span class="lfa-results__number">{{ "%02d"|format(loop.index) }} / AWARD</span>
-        <h3>{{ result.category }}</h3>
-        <p class="lfa-results__winner">{{ result.winner }}</p>
-        <span class="lfa-results__caption">2026 WINNER</span>
-      </article>
+    <details class="lfa-category" data-lfa-search="{{ (result.category ~ ' ' ~ result.winner)|lower }}">
+      <summary>
+        <span class="lfa-category__title">{{ result.category }}</span>
+        <span class="lfa-category__preview"><span>WINNER</span> {{ result.winner }}</span>
+        <svg class="lfa-category__arrow" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="lfa-category__details">
+        <p class="lfa-category__badge">2026 WINNER</p>
+        <h3>{{ result.winner }}</h3>
+        <p>5th Annual LiteFeet Awards · November 22, 2026</p>
+      </div>
+    </details>
     {% endfor %}
   </div>
-  <div class="lfa-results__foot">
-    <p>Category names are documented from 2026 LiteFeet Awards nomination flyers. Winner confirmations were supplied to the Vault on November 23, 2026; ceremony source links can be added as they become available.</p>
-    {% if not lfa_year_page %}
-      <a href="{{ url_for('lfa_year', year=2026) }}">VIEW 2026 ARCHIVE <span aria-hidden="true">→</span></a>
-    {% endif %}
-  </div>
+  <p class="lfa-search-empty" id="lfa-search-empty" role="status" hidden>No award categories or winners match your search.</p>
+  <p class="lfa-results__source">Category names documented from 2026 LiteFeet Awards nomination flyers. Winner names confirmed for The LiteFeet Vault on November 23, 2026.</p>
 </section>
+<script>
+(function(){
+  const field=document.getElementById('lfa-category-search');
+  const items=Array.from(document.querySelectorAll('.lfa-category'));
+  const empty=document.getElementById('lfa-search-empty');
+  if(!field || !items.length || !empty) return;
+  field.addEventListener('input',function(){
+    const query=field.value.trim().toLocaleLowerCase();
+    let visible=0;
+    items.forEach(function(item){
+      const match=item.dataset.lfaSearch.includes(query);
+      item.hidden=!match;
+      if(match) visible++;
+    });
+    empty.hidden=visible>0;
+  });
+})();
+</script>
 {% endif %}

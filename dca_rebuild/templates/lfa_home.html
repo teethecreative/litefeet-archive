@@ -1,337 +1,54 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-<script>
-(function () {
-    const key = "litefeet-ledger-theme";
-    const saved = localStorage.getItem(key);
-
-    if (saved === "light" || saved === "dark") {
-        document.documentElement.dataset.theme = saved;
-    } else {
-        document.documentElement.dataset.theme = "light";
-    }
-})();
-</script>
-
-    <meta charset="utf-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1"
-    >
-
-    <title>{{ seo.title }}</title>
-{% include "_seo_head.html" %}
-
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/dca.css') }}"
-    >
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/lfa-results.css') }}">
-    <!-- LITEFEET_SHELLTOE_FAVICON_2026 -->
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png', v='20261102') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png', v='20261102') }}">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico', v='20261102') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png', v='20261102') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}"> <!-- LFV_SITEWIDE_V1 -->
-  <!-- LFV_EDITORIAL_V2_20261102 -->
+  <script>
+    (function(){const k="litefeet-ledger-theme",v=localStorage.getItem(k);document.documentElement.dataset.theme=v==="light"||v==="dark"?v:"light";})();
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ seo.title }}</title>
+  {% include "_seo_head.html" %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png', v='20261102') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico', v='20261102') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png', v='20261102') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfa-results.css', v='20261123b') }}">
 </head>
-
 <body>
+  {% include "_navigation.html" %}
+  {% include "_beta_bar.html" %}
+  <main class="lfa-directory" id="litefeet-awards">
+    <header class="lfa-hero">
+      <p class="lfa-crumb">THE LITEFEET VAULT <span aria-hidden="true">/</span> AWARDS</p>
+      <p class="lfa-eyebrow">THE LITEFEET AWARDS</p>
+      <h1>Honoring the culture.</h1>
+      <p class="lfa-lead">The LiteFeet Awards are an established awards program recognizing achievements, contributions, and milestones in LiteFeet culture.</p>
+    </header>
 
-{% include "_navigation.html" %}
-{% include "_beta_bar.html" %}
-
-<main class="award-landing">
-
-    <section class="award-landing-hero">
-
-        <div class="section-kicker">
-            THE LITEFEET VAULT / AWARDS
-        </div>
-
-        <h1>
-            LITEFEET<br>
-            AWARDS
-        </h1>
-
-        <div class="gold-rule"></div>
-
-        <p class="award-landing-lead">The LiteFeet Awards are an established awards program recognizing achievements, contributions, and milestones in LiteFeet culture. Like a traditional awards ceremony, the program honors standout dancers, creators, crews, and community figures through its own recognition process.</p>
-        <p class="award-landing-lead">The Dancer's Choice Awards are a separate, community-led program where people help select categories, nominate their choices, and vote for the winners. These two programs should not be confused.</p>
-        <p class="award-landing-lead">The Vault preserves documented results while continuing to review missing years, sources, and community-submitted corrections.</p>
-
-    </section>
+    <nav class="lfa-editions" aria-label="LiteFeet Awards editions">
+      <span class="lfa-editions__label">EXPLORE BY YEAR</span>
+      <a class="is-current" aria-current="page" href="{{ url_for('lfa_home') }}">2026</a>
+      <a href="{{ url_for('lfa_year', year=2025) }}">2025</a>
+      <a href="{{ url_for('lfa_year', year=2024) }}">2024</a>
+      <a href="{{ url_for('lfa_year', year=2023) }}">2023</a>
+    </nav>
 
     {% include "lfa_results_section.html" %}
 
-    <section
-        id="contribute"
-        class="archive-status-card"
-    >
-
-        <div class="number">
-            HELP BUILD THE ARCHIVE
-        </div>
-
-        <h2>
-            WHAT DO YOU KNOW?
-        </h2>
-
-        <p>
-            We're collecting information from previous
-            years of the LiteFeet Awards so the results
-            can be preserved accurately.
-        </p>
-
-        <p>
-            If you know an award category, winner,
-            team, year, correction, or other result,
-            submit what you know for review.
-        </p>
-
-        <p>
-            Community submissions are not automatically
-            treated as verified results. Information
-            will be reviewed before being added to the
-            archive.
-        </p>
-
-        <form
-            method="post"
-            action="{{ url_for('lfa_submit') }}"
-            class="lfa-contribution-form"
-        >
-            <label>
-                WHAT ARE YOU SUBMITTING?
-
-                <select
-                    name="submission_type"
-                    id="lfaSubmissionType"
-                    required
-                >
-                    <option value="">
-                        Choose a submission type
-                    </option>
-
-                    <option value="nomination">
-                        Nomination
-                    </option>
-
-                    <option value="award_winner">
-                        Award Winner
-                    </option>
-
-                    <option value="hall_of_fame">
-                        Hall of Fame
-                    </option>
-
-                    <option value="litefeet_achievement">
-                        LiteFeet Achievement
-                    </option>
-
-                    <option value="litefeet_humanitarian">
-                        LiteFeet Humanitarian
-                    </option>
-                </select>
-            </label>
-
-            <label>
-                YEAR
-
-                <select name="year" required>
-                    <option value="">Choose a year</option>
-                    <option value="2026">2026</option>
-                    <option value="2025">2025</option>
-                    <option value="2024">2024</option>
-                    <option value="2023">2023</option>
-                </select>
-            </label>
-
-            <label>
-                <span id="lfaCategoryLabel">
-                    CATEGORY / HONOR
-                </span>
-
-                <input
-                    type="text"
-                    name="category_name"
-                    id="lfaCategoryInput"
-                    placeholder="Category or honor"
-                    required
-                >
-            </label>
-
-            <label>
-                <span id="lfaPersonLabel">
-                    PERSON / WINNER / HONOREE
-                </span>
-
-                <input
-                    type="text"
-                    name="winner_name"
-                    id="lfaPersonInput"
-                    placeholder="Name"
-                    required
-                >
-            </label>
-
-            <label>
-                TEAM
-
-                <input
-                    type="text"
-                    name="team_name"
-                    placeholder="Team, if known"
-                >
-            </label>
-
-            <label class="lfa-email-field">
-                EMAIL
-
-                <input
-                    type="email"
-                    name="submitter_email"
-                    placeholder="Optional"
-                >
-            </label>
-
-
-            <!-- PHASE 3B: ARCHIVE EVIDENCE -->
-            <label>
-                ADDITIONAL DETAILS
-                <textarea
-                    name="additional_details"
-                    rows="4"
-                    maxlength="5000"
-                    placeholder="Dates, corrections, context, or other details"
-                ></textarea>
-            </label>
-
-            <label>
-                SOURCES / SUPPORTING EVIDENCE
-                <textarea
-                    name="source_information"
-                    rows="4"
-                    maxlength="5000"
-                    placeholder="Links, videos, flyers, interviews, or references"
-                ></textarea>
-            </label>
-
-            <button type="submit">
-                SUBMIT FOR REVIEW →
-            </button>
-        </form>
-
-    </section>
-
-</main>
-
-
-    {% include "_footer.html" %}
-
-<script>
-(function () {
-    const type =
-        document.getElementById("lfaSubmissionType");
-
-    const categoryLabel =
-        document.getElementById("lfaCategoryLabel");
-
-    const categoryInput =
-        document.getElementById("lfaCategoryInput");
-
-    const personLabel =
-        document.getElementById("lfaPersonLabel");
-
-    const personInput =
-        document.getElementById("lfaPersonInput");
-
-    if (!type) {
-        return;
-    }
-
-    const labels = {
-        nomination: {
-            category: "CATEGORY",
-            categoryPlaceholder: "Nomination category",
-            person: "NOMINEE",
-            personPlaceholder: "Nominee name"
-        },
-
-        award_winner: {
-            category: "AWARD CATEGORY",
-            categoryPlaceholder: "Award category",
-            person: "WINNER",
-            personPlaceholder: "Winner name"
-        },
-
-        hall_of_fame: {
-            category: "HALL OF FAME HONOR",
-            categoryPlaceholder: "Hall of Fame honor",
-            person: "HONOREE",
-            personPlaceholder: "Honoree name"
-        },
-
-        litefeet_achievement: {
-            category: "ACHIEVEMENT / HONOR",
-            categoryPlaceholder: "Achievement or honor",
-            person: "RECIPIENT",
-            personPlaceholder: "Recipient name"
-        },
-
-        litefeet_humanitarian: {
-            category: "HUMANITARIAN HONOR",
-            categoryPlaceholder: "Humanitarian honor",
-            person: "RECIPIENT",
-            personPlaceholder: "Recipient name"
-        }
-    };
-
-    function updateFields() {
-        const config = labels[type.value];
-
-        if (!config) {
-            categoryLabel.textContent =
-                "CATEGORY / HONOR";
-
-            categoryInput.placeholder =
-                "Category or honor";
-
-            personLabel.textContent =
-                "PERSON / WINNER / HONOREE";
-
-            personInput.placeholder =
-                "Name";
-
-            return;
-        }
-
-        categoryLabel.textContent =
-            config.category;
-
-        categoryInput.placeholder =
-            config.categoryPlaceholder;
-
-        personLabel.textContent =
-            config.person;
-
-        personInput.placeholder =
-            config.personPlaceholder;
-    }
-
-    type.addEventListener(
-        "change",
-        updateFields
-    );
-
-    updateFields();
-})();
-</script>
-
-  <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script> <!-- LFV_SITEWIDE_V1 -->
+    <aside class="lfa-about" aria-label="About the awards">
+      <div>
+        <h2>About the LiteFeet Awards</h2>
+        <p>The LiteFeet Awards recognize standout dancers, producers, crews, and contributors through their own awards process.</p>
+      </div>
+      <div>
+        <h2>A separate program</h2>
+        <p>The Dancer's Choice Awards are a separate, community-led program where people help select categories, nominate their choices, and vote for the winners. <a href="{{ url_for('vault_dca_program') }}">Explore Dancer’s Choice</a>.</p>
+      </div>
+    </aside>
+  </main>
+  {% include "_footer.html" %}
+  <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>
 </body>
 </html>

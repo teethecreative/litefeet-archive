@@ -2341,105 +2341,10 @@ def lfa_home():
     )
 
 
-@app.route(
-    "/awards/litefeet-awards/submit",
-    methods=["POST"]
-)
+@app.route("/awards/litefeet-awards/submit", methods=["POST"])
 def lfa_submit():
-    db = SessionLocal()
-
-    try:
-        allowed_types = {
-            "nomination",
-            "award_winner",
-            "hall_of_fame",
-            "litefeet_achievement",
-            "litefeet_humanitarian",
-        }
-
-        submission_type = (
-            request.form.get("submission_type") or ""
-        ).strip()
-
-        year_raw = (
-            request.form.get("year") or ""
-        ).strip()
-
-        category_name = (
-            request.form.get("category_name") or ""
-        ).strip()
-
-        winner_name = (
-            request.form.get("winner_name") or ""
-        ).strip()
-
-        team_name = (
-            request.form.get("team_name") or ""
-        ).strip()
-
-        additional_details = (
-            request.form.get("additional_details") or ""
-        ).strip()
-
-        source_information = (
-            request.form.get("source_information") or ""
-        ).strip()
-
-        submitter_email = (
-            request.form.get("submitter_email") or ""
-        ).strip().lower()
-
-        if submission_type not in allowed_types:
-            flash("Choose what type of LiteFeet Awards information you're submitting.")
-            return redirect(
-                url_for("lfa_home") + "#contribute"
-            )
-
-        try:
-            year = int(year_raw)
-        except ValueError:
-            year = 0
-
-        if year not in {2023, 2024, 2025, 2026}:
-            flash("Choose a year.")
-            return redirect(
-                url_for("lfa_home") + "#contribute"
-            )
-
-        if not category_name:
-            flash("Enter the category or honor.")
-            return redirect(
-                url_for("lfa_home") + "#contribute"
-            )
-
-        if not winner_name:
-            flash("Enter the person, winner, or honoree.")
-            return redirect(
-                url_for("lfa_home") + "#contribute"
-            )
-
-        submission = LFAArchiveSubmission(
-            year=year,
-            submission_type=submission_type,
-            category_name=category_name,
-            winner_name=winner_name,
-            team_name=team_name or None,
-            additional_details=additional_details or None,
-            source_information=source_information or None,
-            submitter_email=submitter_email or None,
-            status="pending",
-        )
-
-        db.add(submission)
-        db.commit()
-
-        return render_template(
-            "lfa_submission_success.html"
-        )
-
-    finally:
-        db.close()
-
+    """Retired public LFA submission endpoint. Admin record management remains."""
+    abort(410, description="Public LiteFeet Awards submissions are closed.")
 
 
 # ============================================================

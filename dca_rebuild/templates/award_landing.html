@@ -40,7 +40,7 @@
   <!-- LFV_EDITORIAL_V3_20261102 -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v3.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfa-results.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfa-results.css', v='20261123b') }}">
 </head>
 
 <body>
@@ -75,28 +75,29 @@
   </section>
 </main>
 {% else %}
-<!-- PHASE 3A: HISTORICAL AWARDS -->
-<main class="dca-cycle-hub">
-    <section class="dca-cycle-hero">
-        <div class="label">{{ eyebrow }} · {{ title }}</div>
-        <h1>{{ page_title }}</h1>
-        <p class="dca-cycle-hero__lead">{{ subtitle }}</p>
-    </section>
-
-    {% if page_type == 'lfa' and year == 2026 and winners_2026 %}
-        {% include "lfa_results_section.html" %}
-    {% else %}
-    <section class="dca-cycle-section">
-        <h2>HISTORICAL ARCHIVE</h2>
-        <p>
-            Historical categories, nominees, and winners
-            are being collected and verified.
-        </p>
-        <a href="{{ url_for('lfa_home') }}#contribute">
-            CONTRIBUTE HISTORICAL INFORMATION →
-        </a>
-    </section>
-    {% endif %}
+<main class="lfa-directory lfa-directory--year" id="litefeet-awards-{{ year }}">
+  <header class="lfa-hero">
+    <p class="lfa-crumb"><a href="{{ url_for('lfa_home') }}">LITEFEET AWARDS</a> <span aria-hidden="true">/</span> {{ year }}</p>
+    <p class="lfa-eyebrow">LITEFEET AWARDS ARCHIVE</p>
+    <h1>{{ year }} awards.</h1>
+    <p class="lfa-lead">Browse documented results from the annual LiteFeet Awards.</p>
+  </header>
+  <nav class="lfa-editions" aria-label="LiteFeet Awards editions">
+    <span class="lfa-editions__label">EXPLORE BY YEAR</span>
+    {% for edition in [2026,2025,2024,2023] %}
+    <a href="{{ url_for('lfa_year', year=edition) }}" {% if edition==year %}class="is-current" aria-current="page"{% endif %}>{{ edition }}</a>
+    {% endfor %}
+  </nav>
+  {% if year == 2026 and winners_2026 %}
+    {% include "lfa_results_section.html" %}
+  {% else %}
+  <section class="lfa-archive-pending">
+    <p class="lfa-eyebrow">{{ year }} / HISTORICAL ARCHIVE</p>
+    <h2>Results not yet documented</h2>
+    <p>Verified categories and award recipients for this edition have not yet been published in the Vault. No winner is listed without documentation.</p>
+    <a href="{{ url_for('lfa_year', year=2026) }}">Browse the 2026 results <span aria-hidden="true">→</span></a>
+  </section>
+  {% endif %}
 </main>
 {% endif %}
 
