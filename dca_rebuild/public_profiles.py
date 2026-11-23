@@ -94,7 +94,7 @@ def category_role(category):
     """Award-category hints only, not identity or verified professional claims."""
     name = identity_key(category)
     if re.search(r"\b(?:team|crew)(?: of the year)?\b", name) and not re.search(
-            r"\b(?:member|video|collab|tag team|dancer)\b", name):
+            r"\b(?:member|collab|tag team|dancer)\b", name):
         return "team"
     if "producer" in name:
         return "producer"
@@ -305,7 +305,8 @@ class PublicProfileIndex:
         for entry in self._profiles.values():
             # Never make Judge a standalone identity type. It appears only as
             # a switchable badge on a person's existing profile.
-            if "judge" in entry["roles"] and not (entry["roles"] - {"judge"}):
+            if "judge" in entry["roles"] and (entry["is_team"] or
+                                                   not (entry["roles"] - {"judge"})):
                 entry["roles"].remove("judge")
             ordered = ("team", "dancer", "producer", "dj", "host", "organizer",
                        "photographer", "videographer", "creator", "educator", "judge")
