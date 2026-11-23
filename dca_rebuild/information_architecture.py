@@ -65,6 +65,7 @@ def install_information_architecture(app, ns):
         content = public_content()
         children = {
             'awards': [dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
+                       dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
                        dict(label='HypeItUpTV Awards', href='/awards/hypeitup')],
             'about': [],
         }
@@ -109,11 +110,16 @@ def install_information_architecture(app, ns):
                 breadcrumbs.append(dict(label=section['label'] if path == section['href'] else 'Current page', href=None))
             else:
                 breadcrumbs = []
-        if path.startswith('/awards/') and not path.startswith('/awards/litefeet-awards'):
+        if path.startswith('/awards/') and not path.startswith('/awards/litefeet-awards/submit'):
             program = [dict(label='Awards overview', href='/awards'),
                        dict(label="Dancer’s Choice Awards", href='/awards/dancers-choice'),
+                       dict(label='LiteFeet Awards', href='/awards/litefeet-awards'),
                        dict(label='HypeItUpTV Awards', href='/awards/hypeitup')]
-            # DCA editions live inside the Dancer's Choice Awards hub.
+            # Award program navigation lists only award programs. DCA editions
+            # live inside the Dancer's Choice Awards hub, not at this level.
+            if path.startswith('/awards/litefeet-awards'):
+                program.append(dict(label='Contribute historical records',
+                                    href='/awards/litefeet-awards#contribute'))
         calendar = upcoming_calendar(session_factory=ns['SessionLocal'])
         page_size = 5
         selected_day = request.args.get('calendar_day', '').strip()
