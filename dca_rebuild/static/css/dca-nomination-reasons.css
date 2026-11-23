@@ -1,0 +1,153 @@
+/* Scoped mobile-first qualification page; never changes other Vault routes. */
+html.lfv-sitewide #nominee-qualification-reasons {
+  box-sizing: border-box;
+  width: min(calc(100% - 32px), 920px) !important;
+  max-width: 920px !important;
+  min-width: 0;
+  margin: clamp(28px, 5vw, 62px) auto 72px !important;
+  color: var(--lfv-ink, #07152b);
+}
+#nominee-qualification-reasons,
+#nominee-qualification-reasons * { box-sizing: border-box; }
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-intro {
+  max-width: 72ch;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-eyebrow {
+  margin: 0 0 10px;
+  color: var(--lfv-muted, #44516a) !important;
+  font-size: .85rem !important;
+  font-weight: 700;
+  line-height: 1.4 !important;
+  letter-spacing: .015em !important;
+  text-transform: none !important;
+}
+html.lfv-sitewide #nominee-qualification-reasons h1 {
+  margin: 0 0 20px;
+  max-width: 22ch;
+  font-size: clamp(1.85rem, 4.6vw, 3.15rem) !important;
+  line-height: 1.12 !important;
+  letter-spacing: -.025em !important;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
+  text-wrap: pretty;
+  text-transform: none !important;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-intro > p:not(.lfv-qual-eyebrow) {
+  margin: 0 0 16px;
+  color: var(--lfv-ink, #07152b) !important;
+  font-size: clamp(.96rem, 1.5vw, 1.065rem) !important;
+  line-height: 1.6 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 12px 24px; margin: 24px 0;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-toolbar p {
+  margin: 0; font-size: .9rem !important; line-height: 1.45 !important;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-back {
+  display: inline-flex; align-items: center; min-height: 44px;
+  padding: 10px 0; color: var(--lfv-navy, #0a2c5f);
+  font-weight: 700; text-decoration: underline; text-underline-offset: 3px;
+}
+html.lfv-sitewide #nominee-qualification-reasons :is(.lfv-qual-auth,.lfv-qual-session,.lfv-qual-notice,.lfv-qual-empty) {
+  border: 1px solid var(--lfv-line, #cbd3e0); border-radius: 10px;
+  padding: 16px 18px; margin: 18px 0 25px;
+  background: var(--lfv-surface, #fff);
+  font-size: .96rem !important; line-height: 1.55 !important;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-auth p { margin: 0 0 14px; }
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-category { margin: 30px 0; min-width: 0; }
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-category h2 {
+  margin: 0 0 12px;
+  font-size: clamp(1.17rem, 2.4vw, 1.48rem) !important;
+  line-height: 1.25 !important; letter-spacing: .005em !important;
+  text-transform: none !important;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-items { display: grid; gap: 10px; }
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-item {
+  min-width: 0; overflow: hidden; border-radius: 12px;
+  border: 1px solid var(--lfv-line, #cbd3e0);
+  background: var(--lfv-surface, #fff);
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-item > summary {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 16px; align-items: center;
+  padding: 17px 19px; cursor: pointer; list-style-position: inside;
+  color: var(--lfv-ink, #07152b) !important; line-height: 1.4 !important;
+  text-transform: none !important; letter-spacing: normal !important;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-name {
+  min-width: 0; font-weight: 800; font-size: 1.03rem;
+  overflow-wrap: anywhere; text-transform: none !important;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-meta {
+  font-size: .83rem; font-weight: 600; line-height: 1.45;
+  color: var(--lfv-muted, #46536a); text-transform: none !important;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-item-body {
+  min-width: 0; padding: 17px 20px 22px;
+  border-top: 1px solid var(--lfv-line, #cbd3e0);
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-item-body > p {
+  margin: 0 0 18px; font-size: .95rem !important; line-height: 1.6 !important;
+  text-transform: none !important;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-form,
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-field {
+  display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-form { gap: 19px; }
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-field { gap: 8px; }
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-field label {
+  display: block; padding: 0; margin: 0; width: auto;
+  font: 700 .94rem/1.4 var(--lfv-font, Arial, sans-serif);
+  letter-spacing: normal !important; text-transform: none !important;
+  color: var(--lfv-ink, #07152b) !important;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-field :is(input,textarea) {
+  box-sizing: border-box !important; display: block !important;
+  position: static !important; float: none !important;
+  width: 100% !important; max-width: 100% !important; min-width: 0 !important;
+  height: auto; margin: 0 !important; padding: 13px 14px !important;
+  border: 1px solid var(--lfv-line, #b7c4d8) !important; border-radius: 8px !important;
+  background: var(--lfv-surface, #fff) !important;
+  color: var(--lfv-ink, #07152b) !important;
+  font: 400 16px/1.5 var(--lfv-font, Arial, sans-serif) !important;
+  letter-spacing: normal !important; text-transform: none !important;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-field textarea {
+  min-height: 148px; resize: vertical;
+}
+html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-action {
+  display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box; width: fit-content; max-width: 100%; min-height: 46px;
+  padding: 12px 18px; border: 0; border-radius: 8px;
+  background: var(--lfv-gold, #c9a127) !important; color: #07152b !important;
+  font: 800 .96rem/1.3 var(--lfv-font, Arial, sans-serif);
+  text-align: center; text-decoration: none;
+  text-transform: none !important; white-space: normal; cursor: pointer;
+}
+html.lfv-sitewide #nominee-qualification-reasons :is(button,input,textarea,a,summary):focus-visible {
+  outline: 3px solid #386cc6; outline-offset: 3px;
+}
+/* On this long form page, a fixed share widget obscures fields on phones. */
+body:has(#nominee-qualification-reasons) .lfv-share-entry {
+  position: static !important; inset: auto !important; transform: none !important;
+  display: flex !important; justify-content: flex-end;
+  width: min(calc(100% - 32px), 920px); margin: 0 auto 26px !important;
+  z-index: auto;
+}
+@media (max-width: 640px) {
+  html.lfv-sitewide #nominee-qualification-reasons { width: calc(100% - 30px) !important; margin-top: 26px !important; }
+  html.lfv-sitewide #nominee-qualification-reasons h1 { max-width: 100%; font-size: clamp(1.7rem, 6vw, 2.05rem) !important; }
+  html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-toolbar { align-items: flex-start; flex-direction: column; gap: 6px; }
+  html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-item > summary {
+    grid-template-columns: minmax(0, 1fr); gap: 3px; padding: 15px 16px;
+  }
+  html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-item-body { padding: 16px; }
+  html.lfv-sitewide #nominee-qualification-reasons .lfv-qual-action { width: 100%; }
+}
