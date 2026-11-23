@@ -34,6 +34,13 @@ def is_person_or_team_category(category):
     )
 
 
+def is_team_award_category(category):
+    """Recognize team awards without classifying individual team members as teams."""
+    name = identity_key(category)
+    return bool(re.search(r"\b(?:team|teams|crew|crews)\b", name)
+                and not re.search(r"\b(?:member|individual|solo)\b", name))
+
+
 def matchup_participants(value):
     """Extract only explicitly separated sides of an announced matchup.
 
@@ -79,6 +86,7 @@ class PublicProfileIndex:
                 entry = self._get_or_create(nominee.name)
                 if entry is None:
                     continue  # Historical identity ambiguity requires review.
+                entry["is_team"] |= is_team_award_category(category.name)
                 row = dict(
                     program="Dancer's Choice Awards", year=2023,
                     category=category.name,
@@ -96,6 +104,7 @@ class PublicProfileIndex:
                 entry = self._get_or_create(nominee["name"])
                 if entry is None:
                     continue
+                entry["is_team"] |= is_team_award_category(category["name"])
                 self._append_once(entry["nominations"], dict(
                     program="Dancer's Choice Awards", year=2026,
                     category=category["name"],
@@ -111,6 +120,7 @@ class PublicProfileIndex:
                 entry = self._get_or_create(name)
                 if entry is None:
                     continue
+                entry["is_team"] |= is_team_award_category(category_name)
                 self._append_once(entry["nominations"], dict(
                     program="LiteFeet Awards", year=2026,
                     category=category_name,
@@ -121,6 +131,7 @@ class PublicProfileIndex:
             entry = self._get_or_create(winner.person_name)
             if entry is None:
                 continue
+            entry["is_team"] |= is_team_award_category(winner.category_name)
             self._append_once(entry["wins"], dict(
                 program="LiteFeet Awards", year=winner.year,
                 category=winner.category_name,
@@ -144,6 +155,24 @@ class PublicProfileIndex:
             reserved.add(slug)
             entry["href"] = "/people/" + slug
             self._by_slug[slug] = entry
+
+        # Link explicitly documented team members to existing exact-name profiles.
+        # Missing roster/founding data stays empty; never infer it from awards.
+        for entry in self._profiles.values():
+            if not entry["is_team"]:
+                continue
+            for field in ("founders", "current_roster", "former_roster"):
+                linked = []
+                for item in entry["team_details"][field]:
+                    member = {"name": item} if isinstance(item, str) else dict(item) if isinstance(item, dict) else {}
+                    if not identity_key(member.get("name")):
+                        continue
+                    if not member.get("href"):
+                        href = self.href(member["name"])
+                        if href and href != entry["href"]:
+                            member["href"] = href
+                    linked.append(member)
+                entry["team_details"][field] = linked
 
         # An explicit identity-only match: never bind a short nickname inside
         # an unrelated word, or a near-match spelling to another person.
@@ -170,8 +199,23 @@ class PublicProfileIndex:
 
     @staticmethod
     def _new_profile(name, record=None):
-        return dict(name=name, archive_record=record, wins=[], nominations=[],
-                    battles=[], href="")
+        # Only explicitly supplied archive team details may populate history.
+        details = (record or {}).get("team_details") or {}
+        if not isinstance(details, dict):
+            details = {}
+        record_type = identity_key((record or {}).get("record_type"))
+        is_team = bool(record_type in {"team", "crew"} or
+                       re.match(r"^(?:team|crew)\b", name, flags=re.I))
+        return dict(
+            name=name, archive_record=record, wins=[], nominations=[],
+            battles=[], href="", is_team=is_team,
+            team_details={
+                "founded": details.get("founded") or "",
+                "founders": details.get("founders") or [],
+                "current_roster": details.get("current_roster") or [],
+                "former_roster": details.get("former_roster") or [],
+            },
+        )
 
     @staticmethod
     def _append_once(rows, row):
