@@ -10,22 +10,11 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-public-profiles.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-public-profiles.css', v='20261123-myspace') }}">
 </head>
 <body>
 {% include "_navigation.html" %}
-<main class="lfv-profile-page">
-  <nav class="lfv-profile-breadcrumb" aria-label="Breadcrumb">
-    <a href="{{ url_for('vault_archive_people') }}">People &amp; Teams</a>
-    <span aria-hidden="true">/</span> Profile
-  </nav>
-  <header class="lfv-profile-intro">
-    <p class="vault-kicker">THE LITEFEET VAULT / PUBLIC PROFILE</p>
-    <h1>{{ profile.name }}</h1>
-    <p>Publicly listed awards, nominations and battle appearances. This starter profile is not a verified biography or an assertion of identity beyond the linked records.</p>
-  </header>
-  {% include "public_profile_sections.html" %}
-</main>
+{% include "public_profile_layout.html" %}
 {% include "_footer.html" %}
 <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>
 </body>
