@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
-<link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css',v='20261123tightrow') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css',v='20261123ytlinks') }}">
 </head><body class="ledger-admin">{% include "_admin_navigation.html" %}
 <main class="lfv-host-wrap"><p><a href="{{ url_for('vault_admin_hosts') }}">Event hosts</a> / {{ queue.name }}</p>
 <header><p class="lfv-host-eyebrow">BATTLE RESULT TRACKING / ADMIN</p><h1>{{ queue.name }}</h1>
@@ -27,21 +27,28 @@
 <form method="post" action="{{ url_for('vault_admin_host_result',host_key=queue.key,slug=event.slug,battle_key=battle.key) }}" class="lfv-host-result-form">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 <label class="lfv-host-outcome"><span class="lfv-host-sr-only">Outcome for {{ battle.label }}</span><select name="outcome" aria-label="Outcome for {{ battle.label }}" required>
-<option value="" disabled selected>Choose result</option>
+<option value="" disabled {% if not battle.resolved %}selected{% endif %}>Choose result</option>
 {% if battle.contestants|length == 2 %}
-<option value="a">{{ battle.contestants[0] }} won</option>
-<option value="b">{{ battle.contestants[1] }} won</option>
-<option value="tie">Tie</option>
-<option value="youtube_decide">YouTube Decide</option>
+<option value="a" {% if battle.result == 'a' %}selected{% endif %}>{{ battle.contestants[0] }} won</option>
+<option value="b" {% if battle.result == 'b' %}selected{% endif %}>{{ battle.contestants[1] }} won</option>
+<option value="tie" {% if battle.result == 'tie' %}selected{% endif %}>Tie</option>
+<option value="youtube_decide" {% if battle.result == 'youtube_decide' %}selected{% endif %}>YouTube Decide</option>
 {% endif %}
-<option value="no_contest">No contest</option>
-<option value="did_not_happen">Did not happen</option>
-<option value="postponed">Postponed</option>
-<option value="unconfirmed">Outcome unconfirmed</option>
+<option value="no_contest" {% if battle.result == 'no_contest' %}selected{% endif %}>No contest</option>
+<option value="did_not_happen" {% if battle.occurred == 'did_not_happen' %}selected{% endif %}>Did not happen</option>
+<option value="postponed" {% if battle.occurred == 'postponed' %}selected{% endif %}>Postponed</option>
+<option value="unconfirmed" {% if battle.occurred == 'unconfirmed' %}selected{% endif %}>Outcome unconfirmed</option>
 </select></label>
-<label class="lfv-host-note"><span class="lfv-host-sr-only">Source for {{ battle.label }}</span><input name="source_note" aria-label="Source for {{ battle.label }}" maxlength="300" placeholder="Source / explanation (required)" value="" required minlength="5"></label>
+<label class="lfv-host-note"><span class="lfv-host-sr-only">YouTube video URL for {{ battle.label }}</span><input type="url" name="youtube_url" aria-label="YouTube video URL for {{ battle.label }}" maxlength="500" placeholder="YouTube battle link" value="{{ battle.youtube_url }}" data-youtube-link></label>
 <button type="submit">Save</button>
 </form></div>
 {% endif %}{% endfor %}{% endfor %}</section>
 {% endif %}{% else %}<p>No events available.</p>{% endfor %}
-</main><script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script></body></html>
+</main><script>
+document.querySelectorAll('form.lfv-host-result-form').forEach(function(form){
+  var outcome=form.querySelector('select[name="outcome"]'),url=form.querySelector('input[name="youtube_url"]');
+  if(!outcome||!url)return;
+  function sync(){url.required=['a','b','tie','youtube_decide','no_contest'].includes(outcome.value)}
+  outcome.addEventListener('change',sync);sync();
+});
+</script><script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script></body></html>
