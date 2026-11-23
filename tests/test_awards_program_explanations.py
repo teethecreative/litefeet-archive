@@ -73,7 +73,7 @@ def test_lfa_2026_winners_publish_and_correction_is_idempotent(website, database
                      "Ty Shotz", "Team Demon", "Jay Bull"):
             assert name in html
         assert "Jada Chanell" in html  # nominee, not winner
-        assert "2026 AWARD WINNERS" in html
+        assert "2026 LITEFEET AWARDS" in html
 
 
 def test_lfa_directory_is_compact_and_lists_nominees_without_public_submission(website):
