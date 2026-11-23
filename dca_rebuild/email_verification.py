@@ -5,7 +5,8 @@ are never persisted in plaintext; the nomination history is unchanged.
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 import hashlib
 import hmac
 import os
@@ -26,6 +27,8 @@ from dca_rebuild.nomination_service import insert_for
 SESSION_CHALLENGE = "lfv_email_challenge"
 SESSION_VERIFIED = "lf9e_verified_hash"
 SESSION_VERIFIED_AT = "lf9e_verified_at"
+SESSION_TIMEZONE = "lf9e_local_timezone"
+SESSION_LOCAL_DAY = "lf9e_local_verification_day"
 SESSION_CSRF = "lfv_verify_csrf"
 VALIDITY = timedelta(minutes=10)
 VERIFIED_SECONDS = 7 * 24 * 3600
@@ -53,7 +56,50 @@ def verification_enabled():
     return os.getenv("DCA_2026_VERIFIED_EMAIL_ENABLED") == "true"
 
 
+def _safe_timezone(value):
+    """Use the visitor's IANA timezone; fall back to UTC for older clients."""
+    if not isinstance(value, str) or not 1 <= len(value) <= 64:
+        return "UTC"
+    try:
+        ZoneInfo(value)
+    except (ZoneInfoNotFoundError, ValueError, KeyError):
+        return "UTC"
+    return value
+
+
+def _local_day(timezone_name, *, now=None):
+    instant = now or datetime.now(timezone.utc)
+    return instant.astimezone(ZoneInfo(_safe_timezone(timezone_name))).date().isoformat()
+
+
+def start_nomination_day(timezone_name):
+    """Bind browser verification to the current date in its local timezone."""
+    zone = _safe_timezone(timezone_name)
+    session[SESSION_TIMEZONE] = zone
+    session[SESSION_LOCAL_DAY] = _local_day(zone)
+
+
+def expire_nomination_at_midnight():
+    """Expire nomination identity on the first request after local midnight.
+
+    The verification state is distinct from nomination submissions and their
+    server-side rolling 24-hour cooldowns, which must remain intact.
+    """
+    keys = (SESSION_VERIFIED, SESSION_VERIFIED_AT, SESSION_CHALLENGE,
+            "lf9e_recent_hash", "lf9e_reminder_hash")
+    if not any(session.get(key) for key in keys):
+        return False
+    zone = session.get(SESSION_TIMEZONE)
+    day = session.get(SESSION_LOCAL_DAY)
+    if day and day == _local_day(zone):
+        return False
+    for key in (*keys, "lf9e_skipped", SESSION_TIMEZONE, SESSION_LOCAL_DAY):
+        session.pop(key, None)
+    return True
+
+
 def verified_nominator_hash():
+    expire_nomination_at_midnight()
     who = session.get(SESSION_VERIFIED)
     verified_at = session.get(SESSION_VERIFIED_AT)
     if (not isinstance(who, str) or len(who) != 64
@@ -145,7 +191,7 @@ def _send_email(email, code):
         raise EmailDeliveryError(f"provider_http_{int(response.status_code)}")
 
 
-def begin_verification(app, session_factory, email, network=""):
+def begin_verification(app, session_factory, email, network="", timezone_name=None):
     """Send a code and return a redirect. Never authenticate from typed email."""
     email = _normalize(email)
     # Optional staging-only guard: never email anyone outside the intended test.
@@ -160,7 +206,10 @@ def begin_verification(app, session_factory, email, network=""):
     session.pop("lf9e_reminder_hash", None)
     session.pop(SESSION_VERIFIED, None)
     session.pop(SESSION_VERIFIED_AT, None)
+    session.pop(SESSION_TIMEZONE, None)
+    session.pop(SESSION_LOCAL_DAY, None)
     session.pop(SESSION_CHALLENGE, None)
+    start_nomination_day(timezone_name)
     session.pop("lf9e_skipped", None)
 
     with session_factory.begin() as db:
@@ -215,6 +264,10 @@ def begin_verification(app, session_factory, email, network=""):
 
 
 def install_email_verification(app, session_factory, private_hash):
+    @app.before_request
+    def dca_local_midnight_expiry():
+        expire_nomination_at_midnight()
+
     status = delivery_config_status()
     app.logger.warning(
         "dca_verification_email_config api_key_present=%s sender_present=%s sender_format_valid=%s",
@@ -237,6 +290,7 @@ def install_email_verification(app, session_factory, private_hash):
                 return begin_verification(
                     app, session_factory, request.form.get("email", ""),
                     request.remote_addr or "",
+                    request.form.get("timezone"),
                 )
             if action == "resend":
                 request_id = session.get(SESSION_CHALLENGE)
@@ -247,7 +301,10 @@ def install_email_verification(app, session_factory, private_hash):
                     if not old or old.used_at:
                         abort(400, "Enter your email to request a new code.")
                     email = old.email_address
-                return begin_verification(app, session_factory, email, request.remote_addr or "")
+                return begin_verification(
+                    app, session_factory, email, request.remote_addr or "",
+                    request.form.get("timezone") or session.get(SESSION_TIMEZONE),
+                )
             if action != "verify":
                 abort(400, "This action isn't supported.")
             request_id = session.get(SESSION_CHALLENGE)
@@ -297,6 +354,7 @@ def install_email_verification(app, session_factory, private_hash):
             session.pop(SESSION_CHALLENGE, None)
             session[SESSION_VERIFIED] = who
             session[SESSION_VERIFIED_AT] = int(time.time())
+            start_nomination_day(request.form.get("timezone") or session.get(SESSION_TIMEZONE))
             session["lf9e_recent_hash"] = who
             session["lf9e_reminder_hash"] = who
             flash("Email verified. You're ready to nominate.")
