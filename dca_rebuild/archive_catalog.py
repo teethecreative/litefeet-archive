@@ -51,7 +51,7 @@ def public_record(item):
         "source_label", "summary", "description", "presenter", "series",
         "information", "battles", "notes", "lineup_participants",
         "related_to", "research_findings", "research_sources",
-        "can_verify", "claim",
+        "can_verify", "claim", "profile_roles", "role_records", "team_details",
     )
     return {key: item[key] for key in allowed if key in item}
 
@@ -141,6 +141,11 @@ def _research(raw, enrichment=None):
         "title": raw["title"],
         "collection": collection,
         "record_type": typ,
+        # Editor-reviewed role metadata only; legacy role labels remain private
+        # and are never inferred into identity badges.
+        "profile_roles": raw.get("profile_roles") or [],
+        "role_records": raw.get("role_records") or {},
+        "team_details": raw.get("team_details") or {},
         "date": "",
         "date_label": "Historical research",
         "date_certainty": "unspecified",
