@@ -14,8 +14,8 @@ def test_homepage_compact_cards_and_calendar_last(website, database):
     assert 'class="lfv-home-compact-card lfv-home-compact-card--founder"' in html
     assert 'class="lfv-home-compact-card lfv-home-compact-card--dca"' in html
     assert 'class="lfv-home-compact-card lfv-home-compact-card--community"' in html
-    assert html.index("And the winners are") < html.index("Dear LiteFeet,")
-    assert html.index("Dear LiteFeet,") < html.index('id="whats-new"')
+    assert html.index("And the winners are") < html.index("Why The Vault Exists")
+    assert html.index("Why The Vault Exists") < html.index('id="whats-new"')
     assert "THIS MONTH IN LITEFEET" in html
     assert "lfv5-calendar-strip" in html
     assert "lfv-home-compact.css" in html
