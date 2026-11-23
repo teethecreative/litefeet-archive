@@ -16,18 +16,18 @@
   {% include "_navigation.html" %}
   <main id="dca-2023-archive" class="dca23">
     <header class="dca23-header">
-      <p class="dca23-eyebrow">HISTORICAL AWARDS ARCHIVE · AUGUST 2023</p>
+      <p class="dca23-eyebrow">DANCER'S CHOICE AWARDS / 2023</p>
       <h1>Dancer’s Choice Awards 2023</h1>
-      <p>Explore the archived results of the August 2023 Dancer’s Choice Awards, recognizing LiteFeet dancers, producers, creators, teams, performances, and community contributions.</p>
-      <p>Browse the award categories to discover the recorded winners and nominees from this edition.</p>
+      <p>Explore the categories, nominees, and winners from the 2023 Dancer's Choice Awards.</p>
+      <p>Browse the 2023 award results.</p>
     </header>
     <section class="dca23-overview" aria-labelledby="archive-overview-title">
-      <h2 id="archive-overview-title">Archive overview</h2>
+      <h2 id="archive-overview-title">2023 Overview</h2>
       <dl>
         <div><dt>Award categories</dt><dd>{{ category_count }}</dd></div>
-        <div><dt>Nominee entries</dt><dd>{{ nominee_count }}</dd></div>
-        <div><dt>Winning entries</dt><dd>{{ winner_count }}</dd></div>
-        <div><dt>Category with co-winners</dt><dd>{{ co_winner_categories }}</dd></div>
+        <div><dt>Nominees</dt><dd>{{ nominee_count }}</dd></div>
+        <div><dt>Winners</dt><dd>{{ winner_count }}</dd></div>
+        <div><dt>Shared Awards</dt><dd>{{ co_winner_categories }}</dd></div>
       </dl>
     </section>
     <section class="dca23-results" aria-labelledby="archive-results-title">
@@ -54,7 +54,7 @@
       <p id="dca23-empty" hidden>No matching categories.</p>
     </section>
     <section class="dca23-contribute" aria-labelledby="archive-contribute-title">
-      <h2 id="archive-contribute-title">Help Preserve LiteFeet History</h2>
+      <h2 id="archive-contribute-title">Help Complete the Archive</h2>
       <p>Have additional records, photographs, videos, or corrections related to the 2023 Dancer’s Choice Awards? Contribute historical information to help us maintain an accurate community archive.</p>
       <a class="dca23-contribution-link" href="{{ url_for('lfa_home') }}#contribute">Contribute historical information</a>
     </section>
