@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Manage My Profile | The LiteFeet Vault</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-public-profiles.css') }}">
+<style>
+.lfv-owner-dashboard{width:min(980px,calc(100% - 32px));margin:26px auto 80px;color:var(--lfv-ink,inherit)}
+.lfv-owner-dashboard h1{font-size:clamp(1.8rem,3vw,2.5rem);margin:10px 0}
+.lfv-owner-dashboard a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.lfv-owner-dashboard .lfv-owner-tools{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}
+.lfv-owner-dashboard .lfv-owner-card{border:1px solid var(--lfv-line,#cdd5df);border-radius:12px;padding:20px;margin:18px 0;background:var(--lfv-surface,#fff)}
+.lfv-owner-dashboard .lfv-owner-card h2{font-size:1.15rem;margin:0 0 11px}
+.lfv-owner-dashboard .lfv-owner-card p{font-size:.9rem;line-height:1.6}
+.lfv-owner-dashboard .lfv-owner-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.lfv-owner-dashboard .lfv-owner-form label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.84rem}
+.lfv-owner-dashboard .lfv-owner-form label.wide{grid-column:1/-1}
+.lfv-owner-dashboard .lfv-owner-form textarea,.lfv-owner-dashboard .lfv-owner-form input{width:100%;border:1px solid var(--lfv-line,#cdd5df);background:var(--lfv-surface,#fff);color:inherit;border-radius:7px;padding:11px;font:inherit;font-weight:400}
+.lfv-owner-dashboard .lfv-owner-form textarea{resize:vertical}
+.lfv-owner-dashboard .lfv-owner-form button{grid-column:1/-1;justify-self:start;padding:10px 18px;border:1px solid var(--lfv-line,#cdd5df);border-radius:7px;font-weight:750;cursor:pointer}
+.lfv-owner-dashboard .lfv-owner-form button:disabled{opacity:.5;cursor:not-allowed}
+.lfv-owner-dashboard .lfv-owner-help{color:var(--lfv-muted,#64748b);font-size:.8rem;font-weight:400}
+.lfv-owner-dashboard .lfv-owner-notice{border-left:3px solid currentColor;padding:12px;margin:14px 0;background:var(--lfv-surface-muted,#f3f5f8)}
+@media(max-width:640px){.lfv-owner-dashboard .lfv-owner-form{grid-template-columns:1fr}.lfv-owner-dashboard .lfv-owner-card{padding:15px}}
+</style></head><body>
+{% include "_navigation.html" %}
+<main class="lfv-owner-dashboard">
+<p>THE LITEFEET VAULT / MY PROFILE</p><h1>Manage My Profile</h1>
+<p>Customize your presentation without editing the documented history, awards, battles, or archive sources. Edits appear publicly after Vault administrator approval.</p>
+<div class="lfv-owner-tools"><a href="{{ url_for('vault_wall_owner_queue') }}">Review Wall posts</a>
+{% if selected %}<a href="{{ selected }}">View public profile</a>{% endif %}</div>
+{% for notice in get_flashed_messages(category_filter=['profile-edit']) %}<div class="lfv-owner-notice" role="status">{{ notice }}</div>{% endfor %}
+{% if not profiles %}
+<section class="lfv-owner-card"><h2>No approved profiles connected yet</h2>
+<p>Your verified email must have an approved profile claim before you can edit a page. You can still browse profiles and submit an ownership request.</p>
+<p><a href="{{ url_for('vault_archive_people') }}">Find your profile</a></p></section>
+{% else %}
+{% if profiles|length > 1 %}
+<nav class="lfv-owner-tools" aria-label="Choose profile">
+{% for p in profiles %}<a href="{{ url_for('vault_owner_profile_editor',profile=p.href) }}" {% if selected == p.href %}aria-current="page"{% endif %}>{{ p.name }}</a>{% endfor %}
+</nav>{% endif %}
+{% if pending %}
+<div class="lfv-owner-notice" role="status"><strong>Changes waiting for approval.</strong>
+<p>Your public profile still displays the last approved presentation. You can make another submission once this one is reviewed.</p></div>
+{% elif last and last.status == 'rejected' %}
+<div class="lfv-owner-notice"><strong>Previous edit request was declined.</strong>
+{% if last.admin_note %}<p>Admin note: {{ last.admin_note }}</p>{% endif %}</div>
+{% elif last and last.status == 'approved' %}
+<p class="lfv-owner-help">Your most recent profile edits were approved.</p>
+{% endif %}
+<section class="lfv-owner-card"><h2>Profile presentation</h2>
+<form class="lfv-owner-form" method="post" action="{{ url_for('vault_owner_profile_submit') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="profile_href" value="{{ selected }}">
+<label class="wide">Status message
+<input name="status_line" maxlength="140" value="{{ fields.status_line }}" placeholder="A short message under your name" {% if pending %}disabled{% endif %}>
+<span class="lfv-owner-help">Up to 140 characters.</span></label>
+<label class="wide">About Me / About the Team
+<textarea name="about_me" rows="6" maxlength="1600" {% if pending %}disabled{% endif %} placeholder="Your own introduction">{{ fields.about_me }}</textarea>
+<span class="lfv-owner-help">Your words appear separately from historical documentation.</span></label>
+<label>Style / specialties
+<textarea name="dance_style" rows="3" maxlength="360" {% if pending %}disabled{% endif %}>{{ fields.dance_style }}</textarea></label>
+<label>Influences
+<textarea name="influences" rows="3" maxlength="400" {% if pending %}disabled{% endif %}>{{ fields.influences }}</textarea></label>
+<label class="wide">Interests
+<textarea name="interests" rows="3" maxlength="400" {% if pending %}disabled{% endif %}>{{ fields.interests }}</textarea></label>
+<label class="wide">Profile photo URL
+<input name="photo_url" type="url" maxlength="1200" value="{{ fields.photo_url }}" placeholder="https://example.com/photo.jpg" {% if pending %}disabled{% endif %}>
+<span class="lfv-owner-help">For now, use a direct HTTPS image link ending in .jpg, .jpeg, .png, .webp or .gif. Uploads will be added separately.</span></label>
+<label class="wide">Featured Dance Circle — up to eight profiles
+<textarea name="featured_connections" rows="5" maxlength="2400" {% if pending %}disabled{% endif %} placeholder="/people/example-one&#10;/people/example-two">{{ fields.featured_connections|join('\n') }}</textarea>
+<span class="lfv-owner-help">Enter one published Vault profile path per line. These are featured connections, not claims of verified team membership.</span></label>
+<button type="submit" {% if pending %}disabled{% endif %}>Submit edits for approval</button>
+</form></section>
+<section class="lfv-owner-card"><h2>Wall management</h2>
+<p>You and Vault administrators can review Wall submissions. The first approval or rejection resolves the post; all resolutions stay visible in the admin history.</p>
+<a href="{{ url_for('vault_wall_owner_queue') }}">Go to Wall approvals</a></section>
+{% endif %}
+</main>{% include "_footer.html" %}</body></html>
