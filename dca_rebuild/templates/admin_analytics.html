@@ -48,6 +48,7 @@
         <article><span>Visits</span><strong>{{ total_visits }}</strong><small>30-minute visit rule</small></article>
         <article><span>Browser identifiers</span><strong>{{ unique_visitors }}</strong><small>Not unique people</small></article>
         <article><span>Returning identifiers</span><strong>{{ repeat_session_count }}</strong><small>Seen before this period</small></article>
+        <article><span>Avg. active time</span><strong>{{ (engagement_average_seconds|string ~ ' sec') if engagement_average_seconds is not none else '—' }}</strong><small>{{ engagement_sample_count }} opted-in pages</small></article>
       </div>
     </section>
 
@@ -57,7 +58,7 @@
         {% set max_page = popular_pages[0][1] if popular_pages else 0 %}
         <ol class="lfv-analytics-pages">
         {% for path, count in popular_pages[:10] %}
-          <li><span class="lfv-analytics-path" title="{{ path }}">{{ path }}</span><strong>{{ count }}</strong>
+          <li><span class="lfv-analytics-path" title="{{ path }}">{{ path }}{% if path in engagement_totals %}<small>Avg. active time: {{ (engagement_totals[path].total / engagement_totals[path].samples)|round|int }} sec · consenting sample</small>{% endif %}</span><strong>{{ count }}</strong>
             <span class="lfv-analytics-bar" aria-hidden="true"><i style="width:{{ (count/max_page*100)|round(1) if max_page else 0 }}%"></i></span>
           </li>
         {% else %}<li class="lfv-analytics-empty">No page views for this period.</li>{% endfor %}
@@ -88,7 +89,7 @@
         <a href="{{ url_for('admin_vault_activity') }}"><strong>Site activity</strong><span>Submissions, reviews and updates</span></a>
         <a href="{{ url_for('admin_dashboard') }}"><strong>Admin overview</strong><span>Return to the management workspace</span></a>
       </div>
-      <p class="lfv-analytics-note">Browser sessions can include multiple people or multiple devices for one person. Email addresses collected for nominations or newsletters are not proof that a browser belongs to that individual. Page time is not currently measured by the existing page-view log.</p>
+      <p class="lfv-analytics-note">Browser sessions can include multiple people or multiple devices for one person. Email addresses collected for nominations or newsletters are not proof that a browser belongs to that individual. Active time is now tracked only for visitors who opt in. It measures visible, focused time, not how long a page was left open. Verified-email associations require separate, explicit consent.</p>
     </section>
 
     <details class="lfv-analytics-details">

@@ -46,3 +46,8 @@ html[data-theme="dark"] .lfv-analytics-bar i {background:#7fa4e4;}
 .lfv-analytics-traffic-list a {display:flex;justify-content:space-between;padding:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text)!important;text-decoration:none!important;}
 @media(max-width:850px) {.lfv-analytics-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.lfv-analytics-columns{grid-template-columns:1fr;}.lfv-analytics-links{grid-template-columns:1fr;}}
 @media(max-width:500px) {.lfv-analytics-stats{gap:8px}.lfv-analytics-controls label{width:100%}.lfv-analytics-controls select{width:100%}.lfv-analytics-traffic-list{grid-template-columns:1fr;}}
+
+.lfv-analytics-stats {grid-template-columns:repeat(5,minmax(0,1fr));}
+.lfv-analytics-path small {display:block;font-size:.7rem;color:var(--muted);margin-top:5px;font-weight:500;}
+@media(max-width:1050px){.lfv-analytics-stats{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(max-width:600px){.lfv-analytics-stats{grid-template-columns:repeat(2,minmax(0,1fr));}}

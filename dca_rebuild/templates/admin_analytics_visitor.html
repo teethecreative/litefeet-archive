@@ -65,7 +65,15 @@ href="{{ url_for('static', filename='css/dca.css') }}">
         SESSION ID: <code>{{ visitor_id }}</code> · {{ traffic_type|upper }}{% if traffic_source %} · {{ traffic_source }}{% endif %}
     </p>
 
+    {% if verified_profile_email %}
+    <p class="analytics-footnote">Verified email linked with explicit consent: <strong>{{ verified_profile_email }}</strong>. The opt-in includes existing and future analytics for this browser ID.</p>
+    {% endif %}
     <div class="analytics-metrics">
+        <article class="analytics-metric">
+            <div class="label">AVG. ACTIVE TIME</div>
+            <strong>{{ (average_active_seconds|string ~ " sec") if average_active_seconds is not none else "—" }}</strong>
+            <span>{{ engagement_count }} voluntarily measured page visits</span>
+        </article>
         <article class="analytics-metric">
             <div class="label">PAGE VIEWS</div>
             <strong>{{ total }}</strong>

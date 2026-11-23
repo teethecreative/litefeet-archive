@@ -4732,6 +4732,25 @@ def admin_analytics():
             key=lambda record: record["last"],
             reverse=True,
         )
+        # A separately opted-in dataset: never represent the sample as all visitors.
+        engagement_query = db.query(VaultPageEngagement).filter(
+            VaultPageEngagement.created_at >= start_utc,
+            VaultPageEngagement.created_at < end_utc,
+        )
+        engagement_rows = (engagement_query.all()
+                           if traffic in ("human", "all") else [])
+        engagement_totals = {}
+        for item in engagement_rows:
+            counter = engagement_totals.setdefault(
+                item.path, {"total": 0, "samples": 0})
+            counter["total"] += item.active_seconds
+            counter["samples"] += 1
+        engagement_sample_count = len(engagement_rows)
+        engagement_average_seconds = (
+            round(sum(item.active_seconds for item in engagement_rows)
+                  / engagement_sample_count)
+            if engagement_sample_count else None
+        )
 
         search = request.args.get("q", "").strip().lower()
         if search:
@@ -4887,6 +4906,9 @@ def admin_analytics():
             ),
             unique_visitors=len(visitor_data),
             popular_pages=page_counts.most_common(20),
+            engagement_totals=engagement_totals,
+            engagement_sample_count=engagement_sample_count,
+            engagement_average_seconds=engagement_average_seconds,
             analytics_daily=analytics_daily,
             analytics_daily_visits=analytics_daily_visits,
             analytics_weekly=analytics_weekly,
@@ -5077,6 +5099,24 @@ def admin_analytics_visitor(visitor_id):
             .all()
         )
 
+        engagement_base = db.query(VaultPageEngagement).filter_by(visitor_id=visitor_id)
+        if date_scope:
+            engagement_base = engagement_base.filter(
+                VaultPageEngagement.created_at >= date_scope["start_utc"],
+                VaultPageEngagement.created_at < date_scope["end_utc"],
+            )
+        recorded = engagement_base.all() if traffic in ("all","human") else []
+        engagement_count = len(recorded)
+        average_active_seconds = (
+            round(sum(item.active_seconds for item in recorded)/engagement_count)
+            if engagement_count else None
+        )
+        identity = db.get(VaultAnalyticsIdentityLink, visitor_id)
+        verified_profile_email = None
+        if identity and traffic in ("all","human"):
+            contact = db.get(DCANominationContact, identity.submitter_hash)
+            verified_profile_email = contact.email_address if contact else None
+
         total_pages = max(1, (total + per_page - 1) // per_page)
         page = min(page, total_pages)
 
@@ -5098,6 +5138,9 @@ def admin_analytics_visitor(visitor_id):
             traffic_source=(activity[0].traffic_source if activity else None),
             total=total,
             visits=visits,
+            engagement_count=engagement_count,
+            average_active_seconds=average_active_seconds,
+            verified_profile_email=verified_profile_email,
             first_seen=first_seen,
             last_seen=last_seen,
             top_pages=top_pages,
