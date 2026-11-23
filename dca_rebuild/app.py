@@ -37,6 +37,7 @@ from dca_rebuild.models import (
 from dca_rebuild.models import LedgerEra
 from dca_rebuild.lfa_2026_data import LFA_2026_WINNERS
 from dca_rebuild.traffic_classification import classify_traffic
+from dca_rebuild.analytics_engagement import VaultPageEngagement, VaultAnalyticsIdentityLink
 
 app = Flask(__name__)
 app.secret_key = (
@@ -133,6 +134,122 @@ def ensure_vault_gathering_recurrence_columns():
 
 ensure_vault_gathering_recurrence_columns()
 SessionLocal = sessionmaker(bind=engine)
+
+
+
+@app.route("/privacy/analytics", methods=["GET", "POST"])
+def analytics_preferences():
+    """A public opt-in page. Email submitted for awards/newsletters is NOT consent."""
+    import hmac
+    from flask import make_response
+    from dca_rebuild.email_verification import verified_nominator_hash
+    token = session.setdefault("lfv_privacy_form_token", secrets.token_urlsafe(24))
+    visitor_id = request.cookies.get("lf_ledger_visitor", "")
+    valid_id = len(visitor_id) == 32 and all(c in "0123456789abcdef" for c in visitor_id)
+    verified_hash = verified_nominator_hash()
+    with SessionLocal() as db:
+        link = db.get(VaultAnalyticsIdentityLink,visitor_id) if valid_id else None
+    if request.method == "POST":
+        if not hmac.compare_digest(token,request.form.get("csrf_token","")):
+            abort(400)
+        action=request.form.get("action")
+        if action not in ("enable","disable") or not valid_id:
+            abort(400)
+        response=make_response(redirect(url_for("analytics_preferences"),code=303))
+        if action == "disable":
+            with SessionLocal.begin() as db:
+                db.query(VaultPageEngagement).filter_by(visitor_id=visitor_id).delete()
+                db.query(VaultAnalyticsIdentityLink).filter_by(visitor_id=visitor_id).delete()
+            session.pop("lfv_engagement_token",None)
+            response.delete_cookie("lfv_engagement_consent",path="/")
+            response.delete_cookie("lfv_engagement_token",path="/")
+        else:
+            if request.form.get("agree") != "yes":
+                abort(400)
+            wants_link=request.form.get("link_email")=="yes"
+            if wants_link and not verified_hash:
+                abort(403)
+            with SessionLocal.begin() as db:
+                if wants_link:
+                    if not db.get(DCANominationContact,verified_hash):
+                        abort(403)
+                    existing=db.get(VaultAnalyticsIdentityLink,visitor_id)
+                    if existing:
+                        existing.submitter_hash=verified_hash
+                        existing.linked_at=datetime.utcnow()
+                    else:
+                        db.add(VaultAnalyticsIdentityLink(
+                            visitor_id=visitor_id,submitter_hash=verified_hash))
+                else:
+                    db.query(VaultAnalyticsIdentityLink).filter_by(visitor_id=visitor_id).delete()
+            session.permanent=True
+            beacon_token=session.setdefault("lfv_engagement_token",secrets.token_urlsafe(24))
+            for key,value in (
+                ("lfv_engagement_consent","1"),
+                ("lfv_engagement_token",beacon_token),
+            ):
+                response.set_cookie(key,value,max_age=30*86400,
+                    secure=request.is_secure,httponly=False,samesite="Lax",path="/")
+        response.headers["Cache-Control"]="no-store"
+        return response
+    response=make_response(render_template("analytics_preferences.html",
+        csrf_token=token,
+        opted_in=request.cookies.get("lfv_engagement_consent")=="1",
+        email_verified=bool(verified_hash),
+        email_linked=bool(link and verified_hash and
+                          link.submitter_hash==verified_hash)))
+    response.headers["Cache-Control"]="no-store"
+    return response
+
+
+@app.post("/analytics/engagement")
+def analytics_engagement():
+    """Track only a voluntary browser's visible and focused active seconds."""
+    import hmac
+    from urllib.parse import urlparse
+    if request.cookies.get("lfv_engagement_consent")!="1":
+        abort(403)
+    expected=session.get("lfv_engagement_token") or ""
+    if not expected or not hmac.compare_digest(expected,request.form.get("token","")):
+        abort(403)
+    origin=request.headers.get("Origin")
+    if origin and urlparse(origin).netloc != request.host:
+        abort(403)
+    if request.content_length and request.content_length>4096:
+        abort(413)
+    kind,_=classify_traffic(request.headers.get("User-Agent"))
+    if kind!="human":
+        abort(403)
+    visitor=request.cookies.get("lf_ledger_visitor","")
+    instance=request.form.get("instance","")
+    path=request.form.get("path","")
+    if (len(visitor)!=32 or len(instance)!=32
+       or any(ch not in "0123456789abcdef" for ch in visitor+instance)
+       or not path.startswith("/") or len(path)>500
+       or path.startswith(("/admin","/analytics","/privacy"))):
+        abort(400)
+    try:
+        seconds=int(request.form.get("seconds",""))
+    except ValueError:
+        abort(400)
+    if not 1<=seconds<=14400:
+        abort(400)
+    now=datetime.utcnow()
+    with SessionLocal.begin() as db:
+        existing=db.query(VaultPageEngagement).filter_by(page_instance=instance).first()
+        if existing:
+            if existing.visitor_id!=visitor or existing.path!=path:
+                abort(409)
+            existing.active_seconds=max(existing.active_seconds,seconds)
+            existing.updated_at=now
+        else:
+            db.add(VaultPageEngagement(
+                visitor_id=visitor,page_instance=instance,path=path,
+                active_seconds=seconds,created_at=now,updated_at=now))
+        db.query(VaultPageEngagement).filter(
+            VaultPageEngagement.created_at<now-timedelta(days=180)
+        ).delete(synchronize_session=False)
+    return ("",204)
 
 
 # Public analytics only. Browser-session identifier, not a user identity.

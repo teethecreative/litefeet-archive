@@ -130,3 +130,38 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
+
+/* Only for visitors explicitly opting in to anonymous page engagement. */
+(function(){
+  if (!document.body || document.body.classList.contains('ledger-admin')) return;
+  if (/^\/(admin|analytics|privacy)(\/|$)/.test(location.pathname)) return;
+  const cookies=Object.fromEntries(document.cookie.split('; ').filter(Boolean).map(part=>{
+    const i=part.indexOf('=');return [part.slice(0,i),part.slice(i+1)];
+  }));
+  if(cookies.lfv_engagement_consent!=='1'||!cookies.lfv_engagement_token) return;
+  if(!crypto || !crypto.getRandomValues) return;
+  const random=new Uint8Array(16);crypto.getRandomValues(random);
+  const instance=Array.from(random,b=>b.toString(16).padStart(2,'0')).join('');
+  let active=0,last=performance.now(),sent=0;
+  function clock(){
+    const current=performance.now(),delta=Math.min(10000,Math.max(0,current-last));
+    if(!document.hidden&&document.hasFocus())active+=delta;
+    last=current;
+  }
+  function report(){
+    clock();
+    const seconds=Math.min(14400,Math.floor(active/1000));
+    if(seconds<=sent)return;
+    sent=seconds;
+    const fields=new FormData();
+    fields.set('instance',instance);
+    fields.set('seconds',String(seconds));
+    fields.set('path',location.pathname);
+    fields.set('token',decodeURIComponent(cookies.lfv_engagement_token));
+    if(navigator.sendBeacon)navigator.sendBeacon('/analytics/engagement',fields);
+    else fetch('/analytics/engagement',{method:'POST',body:fields,keepalive:true}).catch(()=>{});
+  }
+  setInterval(()=>{clock();if(active/1000-sent>=20)report();},5000);
+  document.addEventListener('visibilitychange',()=>{report();last=performance.now();});
+  window.addEventListener('pagehide',report);
+})();

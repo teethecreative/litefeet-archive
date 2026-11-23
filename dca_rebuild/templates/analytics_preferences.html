@@ -1,0 +1,46 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Analytics Preferences | The LiteFeet Vault</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-editorial-v2.css') }}">
+<style>
+.lfv-privacy{box-sizing:border-box;max-width:780px;padding:50px 22px 85px;margin:auto;color:var(--lfv-ink);}
+.lfv-privacy h1{font-size:clamp(2rem,4vw,2.8rem);line-height:1.12;margin:10px 0 17px;color:var(--lfv-ink);}
+.lfv-privacy p{line-height:1.6;color:var(--lfv-muted);}
+.lfv-privacy .card{border:1px solid var(--lfv-line);border-radius:8px;padding:25px;background:var(--lfv-surface);margin:20px 0;}
+.lfv-privacy label{display:flex;align-items:start;gap:12px;margin:16px 0;line-height:1.5;color:var(--lfv-ink);}
+.lfv-privacy label input{margin-top:4px;flex:0 0 18px;width:18px;height:18px;}
+.lfv-privacy button{padding:13px 19px;border-radius:6px;min-height:44px;border:1px solid var(--lfv-navy);background:var(--lfv-navy);color:#fff;font-weight:800;}
+.lfv-privacy .revoke button{margin-top:12px;background:transparent;color:var(--lfv-ink);border-color:var(--lfv-line);}
+</style></head><body>
+{% include "_navigation.html" %}
+<main class="lfv-privacy">
+<p>THE LITEFEET VAULT / PRIVACY</p><h1>Analytics preferences</h1>
+<p>The Vault already records basic anonymous page loads. You can separately choose to share approximate active time on public pages, measured only while your tab is visible and focused.</p>
+<p><strong>Active-time collection: {{ 'Enabled' if opted_in else 'Disabled' }}</strong></p>
+<div class="card">
+<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="action" value="enable">
+<label><input type="checkbox" name="agree" value="yes" required {% if opted_in %}checked{% endif %}>
+<span>I agree to collect approximate active time on pages and associate it with this browser's analytics identifier. I can withdraw consent here.</span></label>
+{% if email_verified %}
+<label><input type="checkbox" name="link_email" value="yes" {% if email_linked %}checked{% endif %}>
+<span>Also link this browser's <strong>existing and future</strong> analytics activity to my verified email address, visible only to administrators. This is optional.</span></label>
+{% else %}
+<p>Connecting a browser to an email requires a verified email session and a separate opt-in. Simply providing an email for nominations or updates does not identify your browsing history.</p>
+{% endif %}
+<button type="submit">Save preferences</button>
+</form>
+{% if opted_in %}
+<form class="revoke" method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="action" value="disable">
+<button type="submit">Stop tracking and delete this browser's active-time records</button>
+</form>
+{% endif %}
+</div>
+<p>Disabling detailed analytics does not delete previously counted anonymous page views. Clearing browser cookies also prevents the Vault from matching this browser to earlier records for deletion.</p>
+</main>{% include "_footer.html" %}
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+</body></html>
