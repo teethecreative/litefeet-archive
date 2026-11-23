@@ -12,6 +12,7 @@ def test_about_page_is_story_and_preserves_letter(website):
     assert "We can't change what was never documented" in html
     assert "With love for the culture," in html
     assert "lfv-story-page.css" in html
+    assert "20261123b" in html
     assert "lfv-story-page.js" in html
     assert 'href="/archive"' in html
     assert 'href="/community#contribute"' in html
@@ -41,3 +42,11 @@ def test_home_card_links_to_single_about_page(website):
     html = response.get_data(as_text=True)
     assert 'href="/about">Read Our Story' in html
     assert "Meet the founder" not in html
+
+
+def test_about_letter_uses_available_card_width():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    css = (root / "dca_rebuild" / "static" / "css" / "lfv-story-page.css").read_text()
+    assert ".lfv-story-letter-body {\n  width:100%;\n  max-width:none;" in css
+    assert "max-width:73ch" not in css
