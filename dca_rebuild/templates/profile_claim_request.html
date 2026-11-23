@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Claim {{ profile.name }} | The LiteFeet Vault</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-public-profiles.css') }}">
+<style>.lfv-claim-wrap{max-width:690px;margin:36px auto 90px;padding:0 20px;color:var(--lfv-ink,inherit)}.lfv-claim-wrap h1{font-size:clamp(1.7rem,4vw,2.7rem)}.lfv-claim-wrap a{color:inherit;text-decoration:underline}.lfv-claim-panel{border:1px solid var(--lfv-line,#ccd3db);border-radius:12px;padding:22px;background:var(--lfv-surface,#fff);margin:20px 0}.lfv-claim-panel label{display:block;font-weight:700;margin:18px 0 7px}.lfv-claim-panel select,.lfv-claim-panel textarea{width:100%;padding:12px;background:var(--lfv-surface,#fff);color:inherit;border:1px solid var(--lfv-line,#ccd3db);border-radius:7px}.lfv-claim-panel textarea{min-height:140px}.lfv-claim-panel button{padding:11px 17px;margin-top:18px;border-radius:7px;cursor:pointer}.lfv-claim-muted{font-size:.9rem;opacity:.8;line-height:1.6}</style>
+</head><body>{% include "_navigation.html" %}
+<main class="lfv-claim-wrap">
+<p><a href="{{ profile.href }}">← Back to {{ profile.name }}</a></p>
+<h1>Claim This Profile</h1>
+<p>Request verified ownership of <strong>{{ profile.name }}</strong>{{ ' (team / crew)' if profile.is_team else '' }}. All requests are reviewed by a Vault administrator before anyone receives editing or Wall moderation privileges.</p>
+{% for notice in get_flashed_messages(category_filter=['claim']) %}<p role="status" class="lfv-claim-panel">{{ notice }}</p>{% endfor %}
+{% if owner_status == 'owned_by_you' %}
+<section class="lfv-claim-panel"><h2>You're the verified profile owner</h2><p>You already have access to moderate posts on this profile.</p><p><a href="{{ url_for('vault_wall_owner_queue') }}">Review Wall posts</a></p></section>
+{% elif owner_status == 'claimed' %}
+<section class="lfv-claim-panel"><h2>Profile already claimed</h2><p>This profile already has an approved owner. If you believe this is incorrect, contact the Vault administrator to request a review.</p></section>
+{% elif own_claim and own_claim.status == 'pending' %}
+<section class="lfv-claim-panel"><h2>Claim under review</h2><p>Your request is awaiting administrator approval. The archive has not changed.</p></section>
+{% elif not verified %}
+<section class="lfv-claim-panel"><h2>Verify your email first</h2><p>Verify your email through the Vault, then return to this profile to request ownership. Verification alone does not establish your identity.</p><p><a href="{{ url_for('dca_verify_email') }}">Verify email</a></p></section>
+{% else %}
+{% if own_claim and own_claim.status == 'rejected' %}<p class="lfv-claim-muted">Your previous claim was declined.{% if own_claim.admin_note %} Administrator note: {{ own_claim.admin_note }}{% endif %} You can submit new information for review.</p>{% endif %}
+<form method="post" class="lfv-claim-panel">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="profile_href" value="{{ profile.href }}">
+<label for="claim-relationship">Your relationship to this profile</label>
+<select id="claim-relationship" name="relationship" required>
+{% if profile.is_team %}<option value="representative">Founder or authorized team representative</option>{% else %}<option value="self">This is my profile</option>{% endif %}
+</select>
+<label for="claim-evidence">How can we verify this is your profile?</label>
+<textarea id="claim-evidence" name="explanation" minlength="30" maxlength="1500" required placeholder="Share identifying context, relevant links, or details the Vault can review. Do not include passwords or sensitive documents."></textarea>
+<p class="lfv-claim-muted">This information is reviewed privately by administrators. Claims do not automatically edit historical records. A verified email is required, and approval is not automatic.</p>
+<button type="submit">Submit Claim for Review</button>
+</form>
+{% endif %}
+</main>{% include "_footer.html" %}</body></html>
