@@ -133,3 +133,61 @@ html:is(.lfv-root,.lfv-sitewide) .lfa-directory .lfa-archive-pending a {color:va
   .lfa-about {grid-template-columns:1fr;gap:28px;}
 }
 @media(prefers-reduced-motion:reduce) {.lfa-category__arrow {transition:none;}}
+
+/* 2026 compact nominee cards. Static and always expanded; no gold winner banners. */
+.lfa-directory .lfa-results--simple {margin-bottom:36px}
+.lfa-directory .lfa-results--simple .lfa-results__heading {padding-bottom:18px}
+html:is(.lfv-root,.lfv-sitewide) .lfa-directory .lfa-results--simple .lfa-results__heading h2{
+  font-size:clamp(1.5rem,2.5vw,2.1rem)!important;letter-spacing:-.025em!important;
+}
+.lfa-directory .lfa-category-list--simple {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;
+  border:0;
+}
+.lfa-directory .lfa-category--simple {
+  display:flex;flex-direction:column;gap:0;
+  padding:19px 21px 17px;border:1px solid var(--lfa-line);
+  border-radius:10px;background:var(--lfa-paper);min-height:0;
+}
+html:is(.lfv-root,.lfv-sitewide) .lfa-directory .lfa-category--simple .lfa-category__title {
+  margin:0 0 15px!important;font-size:1.13rem!important;
+  line-height:1.35!important;font-weight:760!important;letter-spacing:-.01em!important;
+}
+.lfa-category--simple .lfa-category__winner{
+  display:flex;flex-direction:column;align-items:flex-start;gap:5px;
+  padding:0 0 13px;margin:0 0 13px;border-bottom:1px solid var(--lfa-line);
+}
+.lfa-category--simple .lfa-category__label,
+.lfa-category--simple .lfa-category__nominees h4{
+  font-size:.68rem;letter-spacing:.095em;font-weight:800;
+  color:var(--lfa-gold);line-height:1.4;margin:0;
+}
+html:is(.lfv-root,.lfv-sitewide) .lfa-directory .lfa-category--simple .lfa-category__winner-name {
+  font-size:1.1rem!important;font-weight:780!important;line-height:1.38!important;
+  color:var(--lfa-ink)!important;background:none!important;padding:0!important;
+  box-shadow:none!important;text-decoration:none;
+}
+.lfa-directory .lfa-category--simple a:hover,.lfa-directory .lfa-category--simple a:focus-visible{
+  text-decoration:underline!important;text-underline-offset:3px;
+}
+.lfa-category--simple .lfa-category__nominees h4{color:var(--lfa-muted);margin:0 0 7px}
+.lfa-directory .lfa-category--simple .lfa-category__nominees ul {
+  list-style:none;display:flex;flex-wrap:wrap;gap:5px 15px;padding:0;margin:0;
+}
+html:is(.lfv-root,.lfv-sitewide) .lfa-directory .lfa-category--simple .lfa-category__nominees li{
+  font-size:.88rem!important;line-height:1.55!important;white-space:normal;
+  color:var(--lfa-ink)!important;margin:0;padding:0;
+}
+html:is(.lfv-root,.lfv-sitewide) .lfa-directory .lfa-category--simple .lfa-category__nominees li a{
+  color:var(--lfa-ink)!important;text-decoration:none;
+}
+.lfa-category--simple .lfa-category__winning-tag{
+  font-size:.67rem;font-weight:800;color:var(--lfa-gold);margin-left:4px;
+}
+html:is(.lfv-root,.lfv-sitewide) .lfa-directory .lfa-category--simple .lfa-category__pending{
+  font-size:.85rem!important;line-height:1.4!important;margin:0!important;
+}
+@media(max-width:700px){
+  .lfa-directory .lfa-category-list--simple{grid-template-columns:1fr;gap:11px}
+  .lfa-directory .lfa-category--simple{padding:16px 17px}
+}
