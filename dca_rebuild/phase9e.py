@@ -1020,6 +1020,7 @@ def install_phase9e(app, ns):
                 if not token or not secrets.compare_digest(token, session['lf9e_nomination_csrf']):
                     abort(400, 'Invalid submission token')
                 action = request.form.get('action', 'nominate')
+                modal_submission = request.headers.get('X-DCA-Modal') == '1' and action == 'nominate'
                 if action in ('change-email', 'done'):
                     # Done ends only this visitor's selected email session.
                     # Persistent per-email nomination cooldowns and submissions stay intact.
@@ -1120,12 +1121,16 @@ def install_phase9e(app, ns):
                 if (not any(match['type'] == 'existing' for match in matches)
                     and any(match['type'] == 'similar' for match in matches)
                     and request.form.get('confirm_distinct') != '1'):
+                    if modal_submission:
+                        return jsonify(success=False, message="A similar nominee is already listed. Confirm whether it's a different nominee.")
                     flash("A similar nominee is already listed. Check whether it's the same entry.")
                     return redirect(url_for('dca_nominations_closed', category=cid, nominate=1), code=303)
                 contact = db.get(DCANominationContact, who)
                 if contact is None:
                     # Existing pre-migration sessions have hashes but no stored email.
                     session.pop('lf9e_recent_hash', None)
+                    if modal_submission:
+                        return jsonify(success=False, message='Your verified email session expired. Reverify to nominate.')
                     flash('Please enter your email again to complete your nomination.')
                     return redirect(url_for('dca_nominations_closed'))
                 try:
@@ -1135,7 +1140,10 @@ def install_phase9e(app, ns):
                                                       description=reason)
                     if not created:
                         db.rollback()
-                        flash("You've already nominated in this category. Try another category or come back when the 24-hour wait ends.")
+                        message = "You've already nominated in this category. Try another category or come back when the 24-hour wait ends."
+                        if modal_submission:
+                            return jsonify(success=False, message=message)
+                        flash(message)
                         return redirect(url_for('dca_nominations_closed'))
                     submission = (db.query(DCANominationSubmission).filter_by(
                         nominee_id=nominee.id, submitter_hash=who)
@@ -1146,13 +1154,18 @@ def install_phase9e(app, ns):
                     db.commit()
                 except IntegrityError:
                     db.rollback()
-                    flash("Your nomination wasn't saved. Check your category status and try again.")
+                    message = "Your nomination wasn't saved. Check your category status and try again."
+                    if modal_submission:
+                        return jsonify(success=False, message=message)
+                    flash(message)
                     return redirect(url_for('dca_nominations_closed'))
                 session['lf9e_skipped'] = [x for x in session.get('lf9e_skipped', []) if x != cid]
                 # Retain the reminder only while the reviewed feature is enabled.
                 if (os.environ.get('DCA_2026_FOLLOWUPS_ENABLED') == 'true'
                     and (not verification_enabled() or verified_nominator_hash() == who)):
                     session['lf9e_reminder_hash'] = who
+                if modal_submission:
+                    return jsonify(success=True, message='Nomination submitted!', category_id=cid)
                 flash('Nomination submitted!')
                 return redirect(url_for('dca_nominations_closed', view='results'))
             from dca_rebuild.nominee_fields import nomination_fields
