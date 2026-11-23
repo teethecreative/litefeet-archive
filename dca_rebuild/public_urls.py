@@ -191,9 +191,14 @@ def install_clean_public_urls(app, session_factory):
     @app.get("/people/<person_slug>", endpoint="vault_clean_person")
     def clean_person(person_slug):
         record = person_by_slug(person_slug, all_records())
-        if not record:
+        if record:
+            return current_app.view_functions["vault_archive_record"](record["slug"])
+        from dca_rebuild.public_profiles import profile_index
+        profile = profile_index(session_factory).by_slug(person_slug)
+        if profile is None:
             abort(404)
-        return current_app.view_functions["vault_archive_record"](record["slug"])
+        from flask import render_template
+        return render_template("public_profile.html", profile=profile)
 
     @app.get("/music", endpoint="vault_clean_music_index")
     def clean_music_index():
@@ -244,8 +249,12 @@ def install_clean_public_urls(app, session_factory):
             record = next((r for r in all_records() if r["slug"] == record_slug), None)
             return (person_href(record, all_records()) if record else
                     "/archive/records/" + record_slug)
+        def profile_link(name):
+            from dca_rebuild.public_profiles import profile_index
+            return profile_index(session_factory).href(name)
         return {
             "clean_category_url": lambda c: category_href(c, categories()),
             "clean_nominee_url": lambda c, n: nominee_href(c, n, categories()),
             "clean_person_link": person_link,
+            "vault_profile_url": profile_link,
         }

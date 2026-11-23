@@ -1,0 +1,21 @@
+.lfv-profile-page{width:min(1040px,calc(100% - 36px));margin:0 auto;padding:34px 0 76px;color:var(--text-primary,#15233a)}
+.lfv-profile-breadcrumb{display:flex;align-items:center;gap:10px;margin-bottom:28px;font-size:.85rem;opacity:.8}
+.lfv-profile-breadcrumb a{color:inherit}
+.lfv-profile-intro{max-width:780px;margin:0 0 30px}
+.lfv-profile-intro h1{font-size:clamp(2.25rem,6vw,4.5rem);line-height:1.04;letter-spacing:-.04em;margin:10px 0 16px;overflow-wrap:anywhere}
+.lfv-profile-intro p{max-width:720px;line-height:1.65}
+.lfv-profile-sections{display:grid;gap:18px;margin:18px 0 32px}
+.lfv-profile-section{border:1px solid var(--lfv-profile-line,#cdd5e1);border-radius:12px;padding:clamp(18px,3vw,27px);background:var(--lfv-profile-bg,#fff);color:var(--lfv-profile-fg,#15233a)}
+.lfv-profile-heading{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--lfv-profile-line,#cdd5e1);padding-bottom:13px;margin-bottom:8px}
+.lfv-profile-heading h2{font-size:1.27rem;letter-spacing:-.02em;margin:0}
+.lfv-profile-heading span{font-size:.8rem;font-weight:700;opacity:.66}
+.lfv-profile-rows{list-style:none;margin:0;padding:0}
+.lfv-profile-rows li{display:flex;align-items:center;justify-content:space-between;gap:22px;border-bottom:1px solid var(--lfv-profile-line,#cdd5e1);padding:15px 0}
+.lfv-profile-rows li:last-child{border-bottom:0;padding-bottom:4px}
+.lfv-profile-rows strong{display:block;line-height:1.4}
+.lfv-profile-rows p{font-size:.87rem;opacity:.73;margin:4px 0 0}
+.lfv-profile-rows small{font-size:.8rem;opacity:.72;display:block;margin-top:6px}
+.lfv-profile-rows a{font-size:.85rem;text-decoration:underline;text-underline-offset:3px;color:var(--lfv-profile-link,#174d91);flex-shrink:0}
+.lfv-profile-disclaimer,.lfv-profile-empty{font-size:.88rem;line-height:1.6;opacity:.72;margin:12px 0}
+[data-theme="dark"] .lfv-profile-page,html.dark .lfv-profile-page{--lfv-profile-bg:#112239;--lfv-profile-fg:#f1f4fa;--lfv-profile-line:#354961;--lfv-profile-link:#a8d0ff;color:#f1f4fa}
+@media(max-width:600px){.lfv-profile-rows li{align-items:flex-start;flex-direction:column;gap:7px}.lfv-profile-page{width:calc(100% - 28px)}}

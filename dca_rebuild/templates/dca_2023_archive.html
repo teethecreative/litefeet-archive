@@ -42,11 +42,11 @@
         <details class="dca23-category" id="dca23-{{ category.id }}" data-category-name="{{ category.name }}">
           <summary>
             <span class="dca23-category-name">{{ category.name }}</span>
-            <span class="dca23-winners"><span class="dca23-winner-label">{{ 'Co-winners' if category.winners|length > 1 else 'Winner' }}</span>{% for winner in category.winners %}<strong data-winner>{{ winner.name }}</strong>{% endfor %}</span>
+            <span class="dca23-winners"><span class="dca23-winner-label">{{ 'Co-winners' if category.winners|length > 1 else 'Winner' }}</span>{% for winner in category.winners %}{% set profile_url = vault_profile_url(winner.name) %}<strong data-winner>{% if profile_url %}<a href="{{ profile_url }}">{{ winner.name }}</a>{% else %}{{ winner.name }}{% endif %}</strong>{% endfor %}</span>
           </summary>
           <div class="dca23-nominees">
             <h3>Other nominees</h3>
-            <ul>{% for nominee in category.other_nominees %}<li data-other-nominee>{{ nominee.name }}</li>{% endfor %}</ul>
+            <ul>{% for nominee in category.other_nominees %}<li data-other-nominee>{% set profile_url = vault_profile_url(nominee.name) %}{% if profile_url %}<a href="{{ profile_url }}">{{ nominee.name }}</a>{% else %}{{ nominee.name }}{% endif %}</li>{% endfor %}</ul>
           </div>
         </details>
         {% endfor %}

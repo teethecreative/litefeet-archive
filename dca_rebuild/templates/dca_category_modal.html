@@ -16,7 +16,7 @@
         <ul class="lfv-dca-nominee-list">
           {% for nominee in category.nominees %}
           <li>
-            <span class="lfv-dca-nominee-name">{{ nominee.name }}</span>
+            <span class="lfv-dca-nominee-name">{% set profile_url = vault_profile_url(nominee.name) %}{% if profile_url %}<a href="{{ profile_url }}">{{ nominee.name }}</a>{% else %}{{ nominee.name }}{% endif %}</span>
             <span class="lfv-dca-nominee-total">{{ nominee.count }} nomination{{ 's' if nominee.count != 1 else '' }}</span>
             {% if category.available %}
             <button type="button" class="lfv-dca-nominee-action" data-dca-select-nominee="{{ nominee.name }}">Nominate</button>
