@@ -145,6 +145,77 @@ def register_battle_polls(app, engine, current_user, is_admin):
             """)).fetchall()
         return {int(row[0]) for row in rows}
 
+    def seed_confirmed_awards_battle():
+        """One-time idempotent import from the event organizer's direct account.
+
+        We only import the confirmed one-round matchup. The Flii Boogiie
+        encounter needs its team/round format clarified before making a poll.
+        No official winner is assigned, and no footage is assumed.
+        """
+        ensure_tables()
+        now = datetime.utcnow().isoformat(timespec="seconds")
+        match = {
+            "a": "Tay Millz",
+            "b": "Boy Q",
+            "event": "5th Annual LiteFeet Awards Weekend — Battle Day",
+            "event_date": "2026-11-21",
+            "now": now,
+        }
+        with engine.begin() as conn:
+            # Two web workers may initialize at the same time on production.
+            if engine.dialect.name.startswith("postgres"):
+                conn.execute(text("SELECT pg_advisory_xact_lock(20261121)"))
+            existing = conn.execute(text("""
+                SELECT id, official_winner, winner
+                FROM battle_records
+                WHERE (
+                    (LOWER(TRIM(competitor_one)) = LOWER(:a)
+                     AND LOWER(TRIM(competitor_two)) = LOWER(:b))
+                    OR
+                    (LOWER(TRIM(competitor_one)) = LOWER(:b)
+                     AND LOWER(TRIM(competitor_two)) = LOWER(:a))
+                )
+                AND (
+                    COALESCE(event_date, '') IN ('2026-11-21', '11/21/2026', '11-21-2026')
+                    OR LOWER(COALESCE(event_name, '')) LIKE '%litefeet award%'
+                )
+                ORDER BY id ASC LIMIT 1
+            """), match).mappings().first()
+            if existing:
+                battle_id = int(existing["id"])
+                has_official_winner = bool(str(existing["official_winner"] or existing["winner"] or "").strip())
+            else:
+                record = conn.execute(text("""
+                    INSERT INTO battle_records (
+                        event_name, event_date, battle_type,
+                        competitor_one, competitor_two,
+                        official_winner, winner, judges_text,
+                        notes, review_status, created_at, updated_at
+                    )
+                    VALUES (
+                        :event, :event_date, '1v1',
+                        :a, :b, NULL, NULL, 'No judges / unjudged',
+                        'One-round battle. Reported from the event; footage not yet linked. No official winner was declared.',
+                        'Needs Verification', :now, :now
+                    )
+                    RETURNING id
+                """), match)
+                battle_id = int(record.scalar())
+                has_official_winner = False
+
+            # Never override a documented historical winner.
+            if not has_official_winner:
+                conn.execute(text("""
+                    INSERT INTO battle_poll_settings (battle_id, poll_status, updated_at, updated_by)
+                    VALUES (:id, 'unjudged', :now, 'event-admin-seed')
+                    ON CONFLICT (battle_id) DO NOTHING
+                """), {"id": battle_id, "now": now})
+
+    try:
+        seed_confirmed_awards_battle()
+    except Exception as exc:
+        app.logger.warning("AWARDS_BATTLE_SEED_FAILED: %s: %s", type(exc).__name__, exc)
+
     @app.context_processor
     def inject_battle_poll_helpers():
         return {
