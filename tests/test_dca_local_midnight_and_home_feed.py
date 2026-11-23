@@ -1,4 +1,4 @@
-"""DCA local-midnight verification expiry and live homepage nomination feed."""
+"""Sitewide local-midnight automatic logout and live homepage nomination feed."""
 from datetime import datetime, timezone
 
 from conftest import identify
@@ -23,7 +23,7 @@ def test_browser_timezone_is_saved_with_nomination_session(website):
         assert sess.get("lf9e_recent_hash")
 
 
-def test_session_expires_after_local_midnight_without_erasing_submissions(website, database, monkeypatch):
+def test_sitewide_logout_after_local_midnight_without_erasing_submissions(website, database, monkeypatch):
     from dca_rebuild import email_verification as v
     client = website.test_client()
     token = identify(client)
@@ -51,6 +51,25 @@ def test_session_expires_after_local_midnight_without_erasing_submissions(websit
         assert not sess.get("lf9e_verified_hash")
     with database[1]() as db:
         assert db.query(DCANominationSubmission).count() == 1
+
+
+def test_admin_login_session_is_logged_out_at_local_midnight(website, monkeypatch):
+    from dca_rebuild import email_verification as verification
+    client = website.test_client()
+    with client.session_transaction() as sess:
+        sess["ledger_admin_authenticated"] = True
+        sess["lf9e_local_timezone"] = "America/New_York"
+        sess["lf9e_local_verification_day"] = "2026-11-23"
+        sess["dca_moderation_csrf"] = "private-admin-csrf"
+    monkeypatch.setattr(verification, "_local_day", lambda name, **kwargs: "2026-11-23")
+    assert client.get("/admin").status_code == 200
+    monkeypatch.setattr(verification, "_local_day", lambda name, **kwargs: "2026-11-24")
+    protected = client.get("/admin")
+    assert protected.status_code in (302, 303, 401, 403)
+    with client.session_transaction() as sess:
+        assert "ledger_admin_authenticated" not in sess
+        assert "dca_moderation_csrf" not in sess
+        assert "lf9e_local_verification_day" not in sess
 
 
 def test_local_date_uses_timezone_not_utc():
