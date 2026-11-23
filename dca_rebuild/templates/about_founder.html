@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ seo.title if seo else "The Founder | The LiteFeet Vault" }}</title>
+  {% include "_seo_head.html" %}
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-identity-phase1.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-founder-page.css', v='20261123') }}">
+</head>
+<body>
+  {% include "_navigation.html" %}
+  <main class="vault-section-page lfv-founder-page" id="vault-founder">
+    <nav class="lfv-founder-breadcrumb" aria-label="About navigation">
+      <a href="{{ url_for('legacy_about') }}">About the Vault</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">The Founder</span>
+    </nav>
+
+    <header class="lfv-founder-header">
+      <p class="lfv-founder-kicker">THE LITEFEET VAULT / THE FOUNDER</p>
+      <div class="lfv-founder-intro">
+        <div>
+          <h1>Tee</h1>
+          <p class="lfv-founder-role">Founder, The LiteFeet Vault</p>
+        </div>
+        <p class="lfv-founder-lead">I created the Vault to help preserve the culture, recognize the people who built it, and connect our history to what’s happening now.</p>
+      </div>
+    </header>
+
+    <div class="lfv-founder-layout">
+      <article class="lfv-founder-letter" id="letter" aria-labelledby="lfv-founder-letter-title">
+        <p class="lfv-founder-section-label">A LETTER TO THE COMMUNITY</p>
+        <h2 id="lfv-founder-letter-title">Dear LiteFeet,</h2>
+        <div class="lfv-founder-letter-copy">
+          <p>LiteFeet is more than dance. It's a culture built through creativity, individuality, competition, community, and the people who have continued to push it forward.</p>
+          <p>Over the years, the culture has created countless moments, memories, movements, and contributions that deserve to be remembered.</p>
+          <p>But not everything has been documented. Not every name has been recognized. Not every story has been told.</p>
+          <p>That's part of why I created <strong>The LiteFeet Vault</strong>.</p>
+          <p>I wanted to build a space where our history could be preserved, where our contributions could be acknowledged, and where the community could have a role in telling its own story.</p>
+          <p>This isn't just about looking back. It's about documenting what's happening now, connecting the past to the present, and creating something future generations can learn from.</p>
+          <p>The Vault is meant to continue growing alongside the culture. It won't be complete overnight, and it shouldn't depend on any one person's perspective.</p>
+          <p>Because LiteFeet's history belongs to the people who made it.</p>
+        </div>
+        <div class="lfv-founder-signature">
+          <p>With love for the culture,</p>
+          <strong>Tee</strong>
+          <span>Founder, The LiteFeet Vault</span>
+        </div>
+      </article>
+
+      <aside class="lfv-founder-sidebar" aria-label="About the project">
+        <section class="lfv-founder-card" aria-labelledby="lfv-founder-purpose">
+          <p class="lfv-founder-section-label">WHY THE VAULT EXISTS</p>
+          <h3 id="lfv-founder-purpose">A living record, shaped by the community.</h3>
+          <p>History should make room for the people, the sources, and the different perspectives that shaped the culture.</p>
+          <p>Some stories are documented. Others still need research, firsthand accounts, and context.</p>
+        </section>
+        <nav class="lfv-founder-card lfv-founder-links" aria-label="Keep exploring">
+          <h3>Keep exploring</h3>
+          <a href="{{ url_for('legacy_about') }}#mission">Our mission <span aria-hidden="true">→</span></a>
+          <a href="{{ url_for('vault_archive') }}">The archive <span aria-hidden="true">→</span></a>
+          <a href="{{ url_for('vault_community') }}#contribute">Contribute to the Vault <span aria-hidden="true">→</span></a>
+        </nav>
+      </aside>
+    </div>
+  </main>
+  {% include "_footer.html" %}
+  <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>
+</body>
+</html>
