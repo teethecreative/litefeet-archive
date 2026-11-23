@@ -25,7 +25,7 @@ def test_category_detail_only_shows_name_description_and_nominations(website):
     assert 'class="lfv-dca-category-only"' in html
     assert "Nominations</h2>" in html
     assert 'class="lf9e-nominate-first"' not in html
-    assert 'data-dca-nomination-form' not in html
+    assert 'data-dca-nomination-form' in html  # opens in a dialog, not inline on the page
 
 
 def test_modal_submission_reuses_session_and_respects_cooldown(website):
