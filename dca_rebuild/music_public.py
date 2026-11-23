@@ -83,9 +83,35 @@ def install_music_public(app, engine):
                 ("title", "artist", "artist_or_creator", "producer", "producer_name",
                  "description", "project_title", "record_type")
             ).casefold()]
+        title = (request.args.get("title") or "").strip()[:120]
+        producer = (request.args.get("producer") or "").strip()[:120]
+        year = (request.args.get("year") or "").strip()[:4]
+        sort = request.args.get("sort", "date_desc")
+        if sort not in ("date_desc", "date_asc", "title_asc", "title_desc", "producer_asc", "producer_desc"):
+            sort = "date_desc"
+        def credit(row):
+            return str(row.get("producer_credit") or row.get("producer_name") or row.get("producer") or row.get("artist_or_creator") or row.get("artist") or "")
+        def date_key(row):
+            return str(row.get("release_date") or row.get("release_year") or "")
+        if title:
+            releases = [r for r in releases if title.casefold() in str(r.get("title") or "").casefold()]
+        if producer:
+            releases = [r for r in releases if producer.casefold() in credit(r).casefold()]
+        if year:
+            releases = [r for r in releases if date_key(r).startswith(year)]
+        field, direction = sort.split("_")
+        key = {"date": date_key, "title": lambda r: str(r.get("title") or "").casefold(),
+               "producer": lambda r: credit(r).casefold()}[field]
+        known = [r for r in releases if key(r)]
+        unknown = [r for r in releases if not key(r)]
+        releases = sorted(known, key=key, reverse=direction == "desc") + unknown
+        total = len(releases)
+        pages = max(1, (total + 9) // 10)
+        page = min(pages, max(1, request.args.get("page", 1, type=int)))
+        filters = dict(q=search, title=title, producer=producer, year=year, sort=sort)
         return render_template("music_timeline.html",
-                               releases=[with_release_display(row) for row in releases],
-                               search=search)
+                               releases=[with_release_display(row) for row in releases[(page-1)*10:page*10]],
+                               search=search, filters=filters, page=page, pages=pages, total=total)
 
     @app.get("/litefeet-music/release/<int:item_id>", endpoint="vault_music_release")
     def vault_music_release(item_id):
