@@ -1137,3 +1137,25 @@ class VaultHostBattleAudit(Base):
     occurred = Column(String(24), nullable=False)
     result = Column(String(24), nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+# A YouTube upload belongs to a specific battle, not the event flyer. A
+# separate table avoids changing deployed historical outcome-table columns.
+class VaultBattleVideo(Base):
+    __tablename__ = "vault_battle_videos"
+    battle_key = Column(String(64), primary_key=True)
+    event_slug = Column(String(255), nullable=False, index=True)
+    youtube_url = Column(String(500), nullable=False)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class VaultBattleVideoHistory(Base):
+    __tablename__ = "vault_battle_video_history"
+    id = Column(Integer, primary_key=True)
+    battle_key = Column(String(64), nullable=False, index=True)
+    event_slug = Column(String(255), nullable=False)
+    previous_url = Column(String(500), nullable=True)
+    youtube_url = Column(String(500), nullable=True)
+    actor_type = Column(String(32), nullable=False)
+    actor_account_id = Column(Integer, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
