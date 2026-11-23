@@ -8,11 +8,13 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-editorial-v2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-consistency-v5.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dca-writeins.css', v='20261123-match-nominations') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dca-2026-minimal.css', v='20261123b') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dca-writeins.css', v='20261123-shared-popup') }}">
+<script defer src="{{ url_for('static', filename='js/dca-2026-modal.js', v='20261123-shared-popup') }}"></script>
 </head>
 <body>
 {% include "_navigation.html" %}
-<main class="lfv-writeins">
+<main class="lfv-writeins" data-dca-grid-url="{{ url_for('phase9e_writeins', **({'q': search} if search else {})) }}">
   <p class="lfv-writeins-eyebrow">DANCER'S CHOICE AWARDS · 2026</p>
   <div class="lfv-writeins-layout">
     <div class="lfv-writeins-main">
@@ -34,57 +36,9 @@
         </form>
         <p class="lfv-writeins-note">Totals are provisional until review.</p>
 
-        <div class="lfv-writeins-grid">
-          {% for item in entries %}
-          <article class="lfv-writeins-card">
-            <h3 class="lfv-writeins-card-title">{{ item.name }}</h3>
-            <p class="lfv-writeins-card-status">
-              {% if item.qualified %}Qualified
-              {% elif item.meets_threshold %}Requirements met — under review
-              {% elif item.accepting_support %}Open for nominations
-              {% elif item.published %}Nominations closed
-              {% else %}Suggested category{% endif %}
-            </p>
-            <div class="lfv-writeins-action">
-              {% if item.category_id and item.open_for_nominations %}
-                <a class="lfv-writeins-action-link" href="{{ url_for('dca_nominations_closed', category=item.category_id) }}">View nominees &amp; nominate <span aria-hidden="true">→</span></a>
-              {% elif not item.published and item.accepting_support %}
-                <form action="{{ url_for('phase9e_activate_writein') }}" method="post">
-                  <input type="hidden" name="csrf_token" value="{{ writeins_csrf }}">
-                  <input type="hidden" name="category" value="{{ item.name }}">
-                  <button class="lfv-writeins-action-link" type="submit">View nominees &amp; nominate <span aria-hidden="true">→</span></button>
-                </form>
-              {% elif item.category_id %}
-                <a class="lfv-writeins-action-link" href="{{ url_for('dca_nominations_closed', view='results', category=item.category_id) }}">View nominees <span aria-hidden="true">→</span></a>
-              {% else %}
-                <span class="lfv-writeins-closed">Nominations closed</span>
-              {% endif %}
-            </div>
-            {% if item.public_nominees %}
-            <ol class="lfv-writeins-preview" aria-label="Current nominees">
-              {% for nominee in item.public_nominees[:3] %}
-              <li>
-                <span class="lfv-writeins-preview-name">{{ nominee.name }}</span>
-                <span class="lfv-writeins-preview-total" aria-label="{{ nominee.count }} nominations">{{ nominee.count }}</span>
-              </li>
-              {% endfor %}
-            </ol>
-            {% if item.public_nominees | length > 3 %}
-              <p class="lfv-writeins-more">{{ item.public_nominees | length - 3 }} more nominees</p>
-            {% endif %}
-            {% else %}
-            <p class="lfv-writeins-no-nominees">No nominees yet.</p>
-            {% endif %}
-            {% if item.published %}
-              <p class="lfv-writeins-support-count">{{ item.public_supporters }} supporter{{ 's' if item.public_supporters != 1 else '' }}</p>
-            {% endif %}
-            {% if item.description %}
-              <details class="lfv-writeins-about">
-                <summary>About this category</summary>
-                <p>{{ item.description }}</p>
-              </details>
-            {% endif %}
-          </article>
+        <div class="lfv-writeins-grid" aria-label="All write-in categories">
+          {% for category in writeins %}
+            {% include "dca_nomination_grid_card.html" %}
           {% else %}
             <p class="lfv-writeins-empty">No matching categories found. Try a different search.</p>
           {% endfor %}
@@ -108,6 +62,7 @@
     </aside>
   </div>
 </main>
+{% include "dca_category_modal.html" %}
 {% include "_footer.html" %}
 <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>
 </body></html>
