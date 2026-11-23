@@ -1435,6 +1435,8 @@ def admin_login():
         if username_ok and password_ok:
             session.clear()
             session["ledger_admin_authenticated"] = True
+            from dca_rebuild.email_verification import start_site_session
+            start_site_session()
 
             return redirect(
                 url_for("admin_dashboard")
