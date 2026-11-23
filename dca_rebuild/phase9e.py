@@ -1146,7 +1146,7 @@ def install_phase9e(app, ns):
                     db.commit()
                 except IntegrityError:
                     db.rollback()
-                    flash('Your nomination wasn't saved. Check your category status and try again.')
+                    flash("Your nomination wasn't saved. Check your category status and try again.")
                     return redirect(url_for('dca_nominations_closed'))
                 session['lf9e_skipped'] = [x for x in session.get('lf9e_skipped', []) if x != cid]
                 # Retain the reminder only while the reviewed feature is enabled.
