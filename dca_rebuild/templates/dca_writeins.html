@@ -15,36 +15,36 @@
 <main class="lfv-writeins lfv3-wrap">
   <p class="lfv3-eyebrow">Dancer's Choice Awards / 2026</p>
   <h1>WRITE-IN CATEGORIES</h1>
-  <p class="lfv-writeins-lead">All eligible community-suggested categories outside the Top 25 are open for nomination support while nominations are active. Choose a category to nominate someone or support a nominee already listed. These are not final votes.</p>
+  <p class="lfv-writeins-lead">These categories were suggested by the community. Nominate someone or something in a category to help it qualify for the awards.</p>
   <section class="lfv-writeins-explainer" aria-labelledby="lfv-how-it-works">
-    <h2 id="lfv-how-it-works">HOW WRITE-INS WORK</h2>
+    <h2 id="lfv-how-it-works">How Write-Ins Work</h2>
     <ol>
-      <li><strong>Find a category.</strong> Search the community's submitted write-in categories below.</li>
-      <li><strong>Nominate someone.</strong> Pick a category, then submit a candidate's name. You can support someone already nominated; each valid nomination adds to their total.</li>
-      <li><strong>Build support.</strong> Write-ins must receive at least {{ requirement }} distinct supporters, more unique support than the least-supported official Top 25 category, and at least five eligible nominees.</li>
-      <li><strong>Qualification.</strong> When nominations close, categories that meet the requirements can enter the award program. Nomination totals are not votes for the winner.</li>
+      <li><strong>Choose a write-in category.</strong></li>
+      <li><strong>Nominate.</strong> Add a new nominee or support an existing one.</li>
+      <li><strong>Build support.</strong> A category needs at least {{ requirement }} different supporters, more supporters than the least-supported Top 25 category, and five eligible nominees.</li>
+      <li><strong>Review.</strong> Categories that meet the requirements are reviewed after nominations close.</li>
     </ol>
-    <p class="lfv-writeins-note">One nomination per category per email address every rolling 24 hours. Category access is separate from final qualification. All categories remain subject to the published participation rules.</p>
+    <p class="lfv-writeins-note">One nomination per category every rolling 24 hours. Being open for nominations doesn't mean a category has qualified. All categories remain subject to the participation rules.</p>
   </section>
   <section aria-labelledby="lfv-category-list-title">
-    <div class="lfv-writeins-heading"><h2 id="lfv-category-list-title">ALL WRITE-IN CATEGORIES</h2><span>{{ total }} categories</span></div>
+    <div class="lfv-writeins-heading"><h2 id="lfv-category-list-title">All Write-In Categories</h2><span>{{ total }} categories</span></div>
     <form class="lfv-writeins-search" action="{{ url_for('phase9e_writeins') }}" method="get">
-      <label for="lfv-writeins-query">Search write-in categories</label>
-      <div><input id="lfv-writeins-query" type="search" name="q" value="{{ search }}" placeholder="Search category names"><button type="submit" class="lfv-writeins-button">SEARCH</button></div>
+      <label for="lfv-writeins-query">Find a Category</label>
+      <div><input id="lfv-writeins-query" type="search" name="q" value="{{ search }}" placeholder="Search categories"><button type="submit" class="lfv-writeins-button">SEARCH</button></div>
     </form>
-    <p class="lfv-writeins-note">Nomination totals include eligible-to-display submissions awaiting moderation; category qualification uses reviewed support.</p>
+    <p class="lfv-writeins-note">Totals may change after review. Qualification is based on reviewed nominations.</p>
     <div class="lfv-writeins-list">
       {% for item in entries %}
       <article class="lfv-writeins-item">
         <div class="lfv-writeins-copy"><h3>{{ item.name }}</h3>
           {% if item.description %}<p>{{ item.description }}</p>{% endif %}
           {% if item.qualified %}<span class="lfv-writeins-status">QUALIFIED</span>
-          {% elif item.meets_threshold %}<span class="lfv-writeins-status">REQUIREMENTS MET</span>
-          {% elif item.accepting_support %}<span class="lfv-writeins-status">OPEN FOR SUPPORT</span>
+          {% elif item.meets_threshold %}<span class="lfv-writeins-status">REQUIREMENTS MET — UNDER REVIEW</span>
+          {% elif item.accepting_support %}<span class="lfv-writeins-status">OPEN FOR NOMINATIONS</span>
           {% elif item.published %}<span class="lfv-writeins-status">NOMINATIONS CLOSED</span>
-          {% else %}<span class="lfv-writeins-status">COMMUNITY SUGGESTION</span>{% endif %}
+          {% else %}<span class="lfv-writeins-status">SUGGESTED CATEGORY</span>{% endif %}
           {% if item.published %}
-          <p class="lfv-writeins-count">{{ item.public_supporters }} unique supporters · {{ item.public_nominees | length }} nominees</p>
+          <p class="lfv-writeins-count">{{ item.public_supporters }} supporters · {{ item.public_nominees | length }} nominee{{ 's' if item.public_nominees | length != 1 else '' }}</p>
           <details class="lfv-writeins-nominees">
             <summary>View nominees ({{ item.public_nominees | length }}) <span class="lfv-writeins-nominees-plus" aria-hidden="true">+</span></summary>
             {% if item.public_nominees %}
@@ -57,16 +57,16 @@
             </table>
             {% else %}<p>No nominations yet.</p>{% endif %}
           </details>
-          {% else %}<p class="lfv-writeins-count">No nominations yet. Support this category to begin.</p>{% endif %}
+          {% else %}<p class="lfv-writeins-count">No nominees yet. Be the first to nominate.</p>{% endif %}
         </div>
         <div class="lfv-writeins-action">
           {% if item.category_id and item.open_for_nominations %}
-          <a class="lfv-writeins-button" href="{{ url_for('dca_nominations_closed', category=item.category_id) }}">SUPPORT CATEGORY <span aria-hidden="true">→</span></a>
+          <a class="lfv-writeins-button" href="{{ url_for('dca_nominations_closed', category=item.category_id) }}">VIEW &amp; NOMINATE <span aria-hidden="true">→</span></a>
           {% elif not item.published and item.accepting_support %}
           <form action="{{ url_for('phase9e_activate_writein') }}" method="post">
             <input type="hidden" name="csrf_token" value="{{ writeins_csrf }}">
             <input type="hidden" name="category" value="{{ item.name }}">
-            <button class="lfv-writeins-button" type="submit">SUPPORT CATEGORY <span aria-hidden="true">→</span></button>
+            <button class="lfv-writeins-button" type="submit">VIEW &amp; NOMINATE <span aria-hidden="true">→</span></button>
           </form>
           {% else %}<span class="lfv-writeins-closed">NOMINATIONS CLOSED</span>{% endif %}
         </div>
@@ -74,7 +74,7 @@
       {% else %}<p class="lfv-writeins-empty">No matching categories found. Try a different search.</p>{% endfor %}
     </div>
   </section>
-  <p class="lfv-writeins-back"><a href="{{ url_for('dca_nominations_closed') }}">BACK TO NOMINATIONS <span aria-hidden="true">→</span></a></p>
+  <p class="lfv-writeins-back"><a href="{{ url_for('dca_nominations_closed') }}">Back to Nominations <span aria-hidden="true">→</span></a></p>
 </main>
 {% include "_footer.html" %}
 <script defer src="{{ url_for('static', filename='js/litefeet-sitewide.js') }}"></script>
