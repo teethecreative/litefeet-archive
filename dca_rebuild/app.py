@@ -5351,6 +5351,10 @@ def vault_missing_url(error):
     return render_template("error_404.html"), 404, {"X-Robots-Tag": "noindex, follow"}
 
 
+# Public profile Walls: admin/owner moderation and permanent resolution history.
+from dca_rebuild.profile_wall import install_profile_wall
+install_profile_wall(app, SessionLocal, private_hash, admin_login_required)
+
 # Readable public aliases; existing record, submission and admin routes persist.
 from dca_rebuild.public_urls import install_clean_public_urls
 install_clean_public_urls(app, SessionLocal)
