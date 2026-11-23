@@ -91,3 +91,38 @@ def test_nomination_activity_displays_nominee_name_and_category(website, databas
     history = client.get("/admin/activity?area=awards&period=7").get_data(as_text=True)
     assert "<strong>Example LiteFeet Dancer</strong><small>Category 1</small>" in history
     assert "Received" in history
+
+
+def test_overview_is_short_cross_section_but_history_remains_complete(website, database):
+    """A flood of DCA entries must not crowd out recent activity from other sections."""
+    from dca_rebuild.models import VaultArchiveContribution
+    from dca_rebuild.profile_claims import VaultProfileClaim
+    from dca_rebuild.admin_activity import _fetch_activity
+    now = datetime.utcnow()
+    with database[1].begin() as db:
+        for index in range(9):
+            db.add(VaultDevelopmentItem(
+                title=f"Development update {index}", area="site", status="active",
+                updated_at=now - timedelta(minutes=index)))
+        db.add(VaultArchiveContribution(
+            contribution_type="historical_event", title="Historic dance event",
+            description="Archive contribution", contact_email="private@example.org",
+            created_at=now - timedelta(hours=2)))
+        db.add(VaultProfileClaim(
+            profile_href="/people/example", claimant_hash="test-hash",
+            masked_email="te***@example.org", relationship="self",
+            explanation="My profile", created_at=now - timedelta(hours=3)))
+    client = website.test_client()
+    _admin(client)
+    overview = client.get("/admin").get_data(as_text=True)
+    assert overview.count('class="lfv-admin-overview__entry"') <= 5
+    assert "Historic dance event" in overview
+    assert "/people/example" in overview
+    history = client.get("/admin/activity?period=30").get_data(as_text=True)
+    assert "Development update 8" in history
+    assert "Historic dance event" in history
+    assert "/people/example" in history
+    with database[1]() as db:
+        rows, _ = _fetch_activity(db, period="30", size=20)
+    assert len(rows) >= 11
+    assert all(rows[i]["iso_at"] >= rows[i+1]["iso_at"] for i in range(len(rows)-1))
