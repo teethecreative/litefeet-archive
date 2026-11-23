@@ -1,18 +1,18 @@
 <section class="lf9e-nominate-first" aria-labelledby="nominate-first-title">
-  <p class="lf9e-nominate-eyebrow">YOUR NOMINATION MATTERS</p>
-  <h2 id="nominate-first-title">WHO DESERVES THIS AWARD?</h2>
-  <p>Put forward a dancer, crew or creator who deserves recognition in this category. You can also support a name already submitted.</p>
+  <p class="lf9e-nominate-eyebrow">MAKE YOUR NOMINATION</p>
+  <h2 id="nominate-first-title">WHO OR WHAT ARE YOU NOMINATING?</h2>
+  <p>Nominate someone or something new, or choose an existing nominee.</p>
   <a class="lf9e-primary lf9e-nominate-link" href="{{ url_for('dca_nominations_closed', category=category.id, nominate=1) }}">NOMINATE SOMEONE <span aria-hidden="true">→</span></a>
 </section>
 <details class="lf9e-suggestions-compact" aria-labelledby="suggestions-title">
-  <summary id="suggestions-title">SUGGESTIONS <span>{{ category.nominees | length }} NAMES</span></summary>
+  <summary id="suggestions-title">CURRENT NOMINEES <span>{{ category.nominees | length }} NAMES</span></summary>
   {% if category.nominees %}
     <ul class="lf9e-suggestion-list">
       {% for person in category.nominees %}
       <li><a href="{{ url_for('dca_nominations_closed', category=category.id, suggestion=person.id) }}"><strong>{{ person.name }}</strong><span>{{ person.count }} NOMINATION{{ 'S' if person.count != 1 else '' }}</span></a></li>
       {% endfor %}
     </ul>
-  {% else %}<p>NO SUGGESTIONS YET. BE THE FIRST TO NOMINATE.</p>{% endif %}
+  {% else %}<p>No nominees yet. Be the first.</p>{% endif %}
 </details>
 {% include "dca_nomination_status.html" %}
 {% include "dca_nomination_history.html" %}
