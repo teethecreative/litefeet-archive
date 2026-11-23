@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profile Edits | Vault Admin</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
+<style>.lfv-edits-admin{width:min(1050px,calc(100% - 32px));margin:30px auto 80px;color:var(--lfv-ink,inherit)}.lfv-edits-admin h1{font-size:clamp(1.8rem,3vw,2.5rem)}.lfv-edits-admin a{color:inherit;text-decoration:underline}.lfv-edits-tabs{display:flex;gap:16px;flex-wrap:wrap;margin:22px 0}.lfv-edit-item{border:1px solid var(--lfv-line,#cdd5df);border-radius:10px;padding:19px;margin:16px 0;background:var(--lfv-surface,#fff)}.lfv-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.lfv-edit-grid div{min-width:0;overflow-wrap:anywhere}.lfv-edit-grid pre{white-space:pre-wrap;font:inherit;font-size:.86rem}.lfv-edit-item textarea{width:100%;min-height:65px;border:1px solid var(--lfv-line,#cdd5df);padding:10px;background:var(--lfv-surface,#fff);color:inherit}.lfv-edit-actions{display:flex;flex-wrap:wrap;gap:10px}.lfv-edit-actions button{padding:10px 14px;cursor:pointer}@media(max-width:660px){.lfv-edit-grid{grid-template-columns:1fr}}</style>
+</head><body class="ledger-admin">{% include "_admin_navigation.html" %}
+<main class="lfv-edits-admin"><p>THE LITEFEET VAULT / ADMIN</p><h1>Profile Edits</h1>
+<p>Review owner-proposed profile presentation updates. Approvals do not change historical records, awards, rosters, or archival evidence.</p>
+<nav class="lfv-edits-tabs">{% for tab in ['pending','approved','rejected','all'] %}<a href="{{ url_for('admin_profile_edits',view=tab) }}" {% if tab == view %}aria-current="page"{% endif %}>{{ tab|title }}</a>{% endfor %}</nav>
+{% for msg in get_flashed_messages(category_filter=['profile-edit']) %}<p role="status">{{ msg }}</p>{% endfor %}
+{% for item in edits %}
+<article class="lfv-edit-item">
+<h2><a href="{{ item.profile_href }}">{{ item.profile_href }}</a></h2>
+<p><strong>{{ item.status|title }}</strong> · Submitted {{ item.created_at.strftime('%b %d, %Y') }}
+{% if item.resolved_at %} · Reviewed {{ item.resolved_at.strftime('%b %d, %Y') }}{% endif %}</p>
+{% if not item.owner_active %}<p><strong>Owner permission no longer active.</strong> Approval is blocked unless ownership is restored.</p>{% endif %}
+<div class="lfv-edit-grid">
+<div><h3>Current public presentation</h3>
+{% for key,value in item.current.items() %}<p><strong>{{ key|replace('_',' ')|title }}:</strong> {{ value|join(', ') if value is sequence and value is not string else (value or '—') }}</p>{% endfor %}
+</div><div><h3>Proposed presentation</h3>
+{% for key,value in item.proposed.items() %}<p><strong>{{ key|replace('_',' ')|title }}:</strong> {{ value|join(', ') if value is sequence and value is not string else (value or '—') }}</p>{% endfor %}
+</div></div>
+{% if item.admin_note %}<p><strong>Admin note:</strong> {{ item.admin_note }}</p>{% endif %}
+{% if item.status == 'pending' %}
+<form method="post" action="{{ url_for('admin_profile_edit_decision',edit_id=item.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label>Admin note (optional)<textarea name="admin_note" maxlength="600"></textarea></label>
+<div class="lfv-edit-actions"><button type="submit" name="decision" value="approved" {% if not item.owner_active %}disabled{% endif %}>Approve edits</button>
+<button type="submit" name="decision" value="rejected">Reject edits</button></div></form>
+{% endif %}
+</article>
+{% else %}<p>No profile edit requests in this view.</p>{% endfor %}
+</main></body></html>
