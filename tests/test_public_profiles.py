@@ -192,3 +192,40 @@ def test_historian_requires_verified_account_approved_contribution_and_no_archiv
         approved_contributions=3, account_verified=False, has_archival_mention=False)
     assert not eligible_historian_contributor(
         approved_contributions=3, account_verified=True, has_archival_mention=True)
+
+
+def test_people_search_finds_nomination_only_team():
+    from dca_rebuild.people_discovery import find_profiles
+    current = [{"name": "Best Team",
+                "nominees": [{"name": "Team Demon"}, {"name": "2 Live Krew"}]}]
+    index = PublicProfileIndex([], [], current, [])
+    results = find_profiles(index, query="TEAM DEMON")
+    assert results["count"] == 1
+    assert results["items"][0]["href"] == "/people/team-demon"
+    assert results["items"][0]["is_team"] is True
+
+
+def test_people_search_includes_archive_and_nomination_only_profiles():
+    from dca_rebuild.people_discovery import find_profiles
+    records = [dict(slug="person-old", title="Old School Dancer",
+                    collection="people", record_type="dancer_profile")]
+    current = [{"name": "Best Team", "nominees": [{"name": "Team Demon"}]}]
+    index = PublicProfileIndex(records, [], current, [])
+    results = find_profiles(index, page_size=8)
+    assert results["count"] == 2
+    assert {row["href"] for row in results["items"]} == {
+        "/people/old-school-dancer", "/people/team-demon"
+    }
+    assert find_profiles(index, query="not a real dancer")["count"] == 0
+
+
+def test_people_cloud_links_award_nominees_to_profiles():
+    from dca_rebuild.people_discovery import nominee_people_cloud
+    current = [{"name": "Most Improved", "nominees": [
+        {"name": "XO Wavy"}, {"name": "Kid Smoove"}]}]
+    index = PublicProfileIndex([], [], current, [])
+    cloud = nominee_people_cloud(index, [], limit=8)
+    assert {row["href"] for row in cloud} == {
+        "/people/xo-wavy", "/people/kid-smoove"
+    }
+    assert all(row["is_nominee"] for row in cloud)
