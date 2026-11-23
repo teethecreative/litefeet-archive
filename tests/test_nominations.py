@@ -555,7 +555,7 @@ def test_event_of_2023_category_renamed_only_for_2026(database):
 
 
 def test_writein_directory_shows_same_nominee_totals_as_standings(website, database):
-    """Published write-ins expose expandable nominee names and matching totals."""
+    """Published write-ins preview nominee totals, matching standings."""
     _, factory, edition_id = database
     assert nominate(factory, edition_id, category=26, who='first-supporter',
                     name='Write In Dancer')
@@ -563,10 +563,11 @@ def test_writein_directory_shows_same_nominee_totals_as_standings(website, datab
                     name='Write In Dancer')
     client = website.test_client()
     html = client.get('/write-ins').get_data(as_text=True)
-    assert 'class="lfv-writeins-card lfv5-category-disclosure"' in html
+    assert 'class="lfv-writeins-card"' in html
     assert 'Write In Dancer' in html
-    assert 'view=results' in html and 'suggestion=' in html
-    assert '<td>2</td>' in html
+    assert 'class="lfv-writeins-preview-total"' in html
+    assert '<span class="lfv-writeins-preview-total" aria-label="2 nominations">2</span>' in html
+    assert 'View nominees &amp; nominate' in html
     standings = client.get(PATH + '?view=results').get_data(as_text=True)
     assert 'Write In Dancer' in standings
     assert '<td>2</td>' in standings
