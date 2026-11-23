@@ -176,6 +176,15 @@
         </div>
       </section>
 
+      {% set lfa_profile_polls = lfa_profile_battle_polls(profile.name) %}
+      {% if lfa_profile_polls or lfa_battle_poll_admin %}
+      {% set lfa_battle_polls = lfa_profile_polls %}
+      {% set lfa_profile_return_href = profile.href %}
+      <div class="lfv-profile-card lfv-profile-battle-polls" aria-label="Battle community voting">
+        {% include "lfa_battle_section.html" %}
+      </div>
+      {% endif %}
+
       <section class="lfv-profile-card" aria-labelledby="profile-battles-title">
         <div class="lfv-profile-card-title lfv-profile-card-title-row">
           <h2 id="profile-battles-title">Battles &amp; Moments</h2>
