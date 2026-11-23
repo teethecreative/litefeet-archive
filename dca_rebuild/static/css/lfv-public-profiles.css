@@ -19,3 +19,92 @@
 .lfv-profile-disclaimer,.lfv-profile-empty{font-size:.88rem;line-height:1.6;opacity:.72;margin:12px 0}
 [data-theme="dark"] .lfv-profile-page,html.dark .lfv-profile-page{--lfv-profile-bg:#112239;--lfv-profile-fg:#f1f4fa;--lfv-profile-line:#354961;--lfv-profile-link:#a8d0ff;color:#f1f4fa}
 @media(max-width:600px){.lfv-profile-rows li{align-items:flex-start;flex-direction:column;gap:7px}.lfv-profile-page{width:calc(100% - 28px)}}
+
+
+/* Modern MySpace-style profile layout: isolated from legacy global DCA anchor/button styling. */
+html.lfv-sitewide .lfv-profile-page, .lfv-profile-page{
+  --profile-bg:var(--lfv-surface,#fff);--profile-ink:var(--lfv-ink,#15233a);
+  --profile-muted:var(--lfv-muted,#657184);--profile-line:var(--lfv-line,#d4dbe6);
+  --profile-soft:var(--lfv-surface-muted,#f4f6fa);
+  width:min(1120px,calc(100% - 32px));margin:0 auto;padding:26px 0 64px;
+  color:var(--profile-ink);font-family:var(--lfv-font,Arial,sans-serif);
+}
+.lfv-profile-page *{box-sizing:border-box}
+.lfv-profile-page .lfv-profile-header{margin:0 0 20px;padding:7px 0 18px;border-bottom:1px solid var(--profile-line)}
+.lfv-profile-page .lfv-profile-header h1{font-size:clamp(2rem,5vw,3.4rem)!important;font-weight:850;line-height:1.08;letter-spacing:-.035em;margin:0 0 12px;overflow-wrap:anywhere;text-transform:none}
+.lfv-profile-page .lfv-profile-header-meta{display:flex;flex-wrap:wrap;gap:9px;align-items:center;color:var(--profile-muted);font-size:.8rem}
+.lfv-profile-page .lfv-profile-type{font-weight:750;color:var(--profile-ink)}
+.lfv-profile-page .lfv-profile-columns{display:grid;grid-template-columns:minmax(235px,305px) minmax(0,1fr);align-items:start;gap:24px}
+.lfv-profile-page .lfv-profile-sidebar,.lfv-profile-page .lfv-profile-main{display:grid;gap:16px;min-width:0}
+.lfv-profile-page .lfv-profile-card,.lfv-profile-page .lfv-profile-photo-card{border:1px solid var(--profile-line);border-radius:12px;overflow:hidden;background:var(--profile-bg);color:var(--profile-ink);box-shadow:none}
+.lfv-profile-page .lfv-profile-photo-card{padding:12px}
+.lfv-profile-page .lfv-profile-photo-placeholder{background:var(--profile-soft);min-height:285px;aspect-ratio:4/5;border-radius:8px;display:flex;flex-direction:column;gap:18px;justify-content:center;align-items:center}
+.lfv-profile-page .lfv-profile-avatar{display:block;position:relative;height:120px;width:120px;max-width:55%;border-radius:50%;background:var(--profile-line);opacity:.85;overflow:hidden}
+.lfv-profile-page .lfv-profile-avatar:before{content:"";position:absolute;width:36%;aspect-ratio:1;left:32%;top:18%;border-radius:50%;background:var(--profile-soft)}
+.lfv-profile-page .lfv-profile-avatar:after{content:"";position:absolute;width:76%;height:55%;left:12%;bottom:-23%;border-radius:48% 48% 0 0;background:var(--profile-soft)}
+.lfv-profile-page .lfv-profile-photo-label{font-size:.78rem;color:var(--profile-muted)}
+.lfv-profile-page .lfv-profile-card-title{background:var(--profile-soft);color:var(--profile-ink);font-size:1rem!important;line-height:1.3;padding:13px 17px;margin:0!important;font-weight:800;letter-spacing:-.012em;text-transform:none}
+.lfv-profile-page .lfv-profile-card-title-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.lfv-profile-page .lfv-profile-card-title-row h2{font-size:inherit!important;line-height:inherit;margin:0!important;letter-spacing:inherit;text-transform:none}
+.lfv-profile-page .lfv-profile-count{color:var(--profile-muted);font-size:.73rem;font-weight:600;white-space:nowrap}
+.lfv-profile-page .lfv-profile-card-content{padding:17px}
+.lfv-profile-page .lfv-profile-card-content>p:first-child{margin-top:0}
+.lfv-profile-page .lfv-profile-card-content>p:last-child{margin-bottom:0}
+.lfv-profile-page .lfv-profile-card-content p{font-size:.9rem;line-height:1.6}
+.lfv-profile-page .lfv-profile-note,.lfv-profile-page .lfv-profile-meta{color:var(--profile-muted);font-size:.8rem;line-height:1.55}
+.lfv-profile-page .lfv-profile-facts{padding:15px 17px;display:grid;gap:12px;margin:0}
+.lfv-profile-page .lfv-profile-facts>div{display:grid;grid-template-columns:minmax(75px,35%) 1fr;gap:10px;align-items:baseline}
+.lfv-profile-page .lfv-profile-facts dt{color:var(--profile-muted);font-size:.78rem;font-weight:700}
+.lfv-profile-page .lfv-profile-facts dd{font-size:.85rem;margin:0;overflow-wrap:anywhere}
+.lfv-profile-page .lfv-profile-nav{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.lfv-profile-page :is(a,a:visited){color:var(--profile-ink)!important;text-decoration:underline!important;text-underline-offset:3px;display:inline!important;background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding:0!important;width:auto!important;min-height:0!important;font-weight:650!important;font-size:inherit;line-height:inherit}
+.lfv-profile-page a:hover{text-decoration-thickness:2px!important;color:var(--profile-ink)!important;background:transparent!important}
+.lfv-profile-page .lfv-profile-subheading{font-size:.78rem!important;letter-spacing:.04em;text-transform:uppercase;font-weight:800;margin:18px 0 5px}
+.lfv-profile-page .lfv-profile-subheading:first-child{margin-top:0}
+.lfv-profile-page .lfv-profile-entry-list{list-style:none;padding:0;margin:0}
+.lfv-profile-page .lfv-profile-entry-list li{display:flex;justify-content:space-between;align-items:start;gap:15px;padding:12px 0;border-bottom:1px solid var(--profile-line);font-size:.85rem}
+.lfv-profile-page .lfv-profile-entry-list li:last-child{border-bottom:0}
+.lfv-profile-page .lfv-profile-entry-list strong{display:block;font-weight:750;margin-bottom:5px;line-height:1.4}
+.lfv-profile-page .lfv-profile-entry-list .lfv-profile-meta{display:block;margin:4px 0}
+.lfv-profile-page .lfv-profile-entry-list a{white-space:nowrap;font-size:.8rem}
+.lfv-profile-page .lfv-profile-wall-composer{padding:15px;border:1px solid var(--profile-line);border-radius:9px;background:var(--profile-soft)}
+.lfv-profile-page .lfv-profile-wall-composer label{display:block;font-size:.84rem;font-weight:750;margin-bottom:9px}
+.lfv-profile-page .lfv-profile-wall-composer textarea{width:100%;padding:12px;resize:vertical;border-radius:6px;border:1px solid var(--profile-line);color:var(--profile-muted);background:var(--profile-bg);font:inherit}
+.lfv-profile-page .lfv-profile-wall-actions{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:10px}
+.lfv-profile-page .lfv-profile-wall-actions p{font-size:.76rem;color:var(--profile-muted);margin:0;line-height:1.4}
+.lfv-profile-page .lfv-profile-wall-actions button{padding:9px 13px;border:1px solid var(--profile-line);border-radius:7px;white-space:nowrap;font-weight:750;cursor:not-allowed;opacity:.6}
+.lfv-profile-page .lfv-profile-wall-empty{text-align:center;padding:25px 12px 4px}
+.lfv-profile-page .lfv-profile-wall-empty p{margin:4px 0}
+.lfv-profile-page .lfv-profile-wall-symbol{font-size:2rem;color:var(--profile-muted)}
+.lfv-profile-page .lfv-profile-archive-panel{border:1px solid var(--profile-line);border-radius:12px;margin:24px 0 0;background:var(--profile-bg);overflow:hidden}
+.lfv-profile-page .lfv-profile-archive-panel summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:16px 18px;font-size:.96rem;font-weight:800;gap:12px}
+.lfv-profile-page .lfv-profile-summary-hint{font-size:.72rem;color:var(--profile-muted);font-weight:600}
+.lfv-profile-page .lfv-profile-archive-panel details[open] .lfv-profile-summary-hint{display:none}
+.lfv-profile-page .lfv-profile-archive-content{border-top:1px solid var(--profile-line);padding:20px 18px;line-height:1.6;font-size:.88rem}
+.lfv-profile-page .lfv-profile-archive-content h3{font-size:1rem;margin:20px 0 9px;letter-spacing:0;text-transform:none}
+.lfv-profile-page .lfv-profile-archive-content h3:first-child{margin-top:0}
+.lfv-profile-page .lfv-profile-facts-detailed{padding:0}
+.lfv-profile-page .lfv-profile-sources{padding-left:18px}
+.lfv-profile-page .lfv-profile-verification{margin-top:23px;border-top:1px solid var(--profile-line);padding-top:15px}
+.lfv-profile-page .lfv-profile-verification fieldset{border:1px solid var(--profile-line);border-radius:6px;margin:13px 0;padding:10px 12px}
+.lfv-profile-page .lfv-profile-verification fieldset label{margin:8px 15px 8px 0;display:inline-block}
+.lfv-profile-page .lfv-profile-verification textarea{display:block;width:100%;padding:10px;margin:10px 0;border:1px solid var(--profile-line);border-radius:6px;background:var(--profile-bg);color:var(--profile-ink)}
+.lfv-profile-page .lfv-profile-verification button{padding:11px 15px;border-radius:7px}
+html[data-theme="dark"] .lfv-profile-page{
+ --profile-bg:var(--lfv-surface,#112239);--profile-ink:var(--lfv-ink,#f1f4fa);--profile-muted:var(--lfv-muted,#a9b5c6);
+ --profile-line:var(--lfv-line,#354961);--profile-soft:var(--lfv-surface-muted,#1c3049)
+}
+@media(max-width:760px){
+ .lfv-profile-page .lfv-profile-columns{grid-template-columns:1fr;gap:16px}
+ .lfv-profile-page .lfv-profile-sidebar{display:contents}
+ .lfv-profile-page .lfv-profile-photo-card{grid-row:1}
+ .lfv-profile-page .lfv-profile-main{grid-row:2}
+ .lfv-profile-page .lfv-profile-header{margin-bottom:14px}
+ .lfv-profile-page .lfv-profile-photo-placeholder{min-height:250px;max-height:390px;aspect-ratio:4/3}
+ .lfv-profile-page .lfv-profile-entry-list li{flex-wrap:wrap;gap:5px}
+}
+@media(max-width:480px){
+ .lfv-profile-page .lfv-profile-card-content{padding:14px}
+ .lfv-profile-page .lfv-profile-wall-actions{align-items:flex-start;flex-direction:column}
+ .lfv-profile-page .lfv-profile-card-title{padding:12px 14px}
+}
