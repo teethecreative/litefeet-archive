@@ -12,6 +12,7 @@
 {% set selected_type = phase7_selected_battle_filter() %}
 {% set selected_view = phase7_selected_battle_view() %}
 {% set search_query = phase7_battle_search_query() %}
+{% set open_poll_ids = open_battle_poll_ids() %}
 {% set battle_rows = battle_records if battle_records is defined and battle_records else phase7_fetch_battle_records() %}
 
 <section class="content-section battles-page">
@@ -103,7 +104,8 @@
                                     <td>{{ phase7_battle_winner(battle) or "Needs confirmation" }}</td>
                                     <td>{{ phase7_battle_status(battle) }}</td>
                                     <td>
-                                        <a class="button small-button secondary" href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">Open</a>
+                                        <a href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">Open</a>
+                                        {% if battle['id'] in open_poll_ids %} · <a href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}#cultures-call">Culture’s Call · Vote</a>{% endif %}
                                     </td>
                                 </tr>
                             {% endif %}
@@ -152,7 +154,8 @@
                             {% endif %}
 
                             <div class="hero-actions">
-                                <a class="button small-button secondary" href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">Details</a>
+                                <a href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}">Details</a>
+                                {% if battle['id'] in open_poll_ids %}<a href="{{ url_for('battle_record_detail_phase2', battle_id=battle['id']) }}#cultures-call">Culture’s Call · Vote</a>{% endif %}
                                 {% if phase7_battle_video_url(battle) %}
                                     <a class="button small-button secondary" href="{{ phase7_battle_video_url(battle) }}" target="_blank" rel="noopener">Watch</a>
                                 {% endif %}
