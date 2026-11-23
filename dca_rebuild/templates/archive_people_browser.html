@@ -34,9 +34,6 @@
   {% endfor %}
   </div>
   <p class="lfv-archive-empty" data-archive-empty {% if archive_items %}hidden{% endif %}>NO MATCHING PROFILES.</p>
-  <div class="lfv-archive-pagination">
-    <p class="lfv-archive-load-state" aria-live="polite" data-archive-state>{% if archive_pagination.has_more %}SCROLL FOR MORE{% elif archive_pagination.count %}ALL RESULTS LOADED{% else %}NO MATCHING PROFILES{% endif %}</p>
-    <button type="button" data-archive-load {% if not archive_pagination.has_more %}hidden{% endif %}>LOAD MORE PROFILES</button>
-  </div>
+
   </div>
 </section>
