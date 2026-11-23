@@ -1,0 +1,228 @@
+{# Shared MySpace-inspired presentation for award-linked and published archive profiles.
+   Content remains sourced from the public profile index and optional archival record. #}
+{% set archived = record if record is defined and record else none %}
+<main class="lfv-profile-page" id="profile">
+  <header class="lfv-profile-header">
+    <h1>{{ profile.name }}</h1>
+    <div class="lfv-profile-header-meta">
+      <span class="lfv-profile-type">LiteFeet profile</span>
+      <span aria-hidden="true">·</span>
+      <span>{{ 'Archive-listed' if archived else 'Award / nomination-linked' }}</span>
+      {% if archived and archived.editorial_status %}
+      <span aria-hidden="true">·</span>
+      <span>{{ archived.editorial_status }}</span>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="lfv-profile-columns">
+    <aside class="lfv-profile-sidebar" aria-label="Profile details">
+      <section class="lfv-profile-photo-card" aria-label="Profile photo">
+        <div class="lfv-profile-photo-placeholder" role="img" aria-label="No profile photo is currently documented">
+          <span class="lfv-profile-avatar" aria-hidden="true"></span>
+          <span class="lfv-profile-photo-label">No photo on file</span>
+        </div>
+      </section>
+
+      <section class="lfv-profile-card" aria-labelledby="profile-facts-title">
+        <h2 id="profile-facts-title" class="lfv-profile-card-title">Profile Details</h2>
+        <dl class="lfv-profile-facts">
+          <div><dt>Name</dt><dd>{{ profile.name }}</dd></div>
+          <div><dt>Listed as</dt><dd>{{ 'Archive subject' if archived else 'Award / nomination entry' }}</dd></div>
+          {% if archived and archived.date_label and archived.date_label != 'Historical research' %}
+          <div><dt>Record period</dt><dd>{{ archived.date_label }}</dd></div>
+          {% endif %}
+        </dl>
+      </section>
+
+      <section class="lfv-profile-card" aria-labelledby="profile-connections-title">
+        <h2 id="profile-connections-title" class="lfv-profile-card-title">Dance Circle</h2>
+        <div class="lfv-profile-card-content">
+          <p class="lfv-profile-note">Documented teams and connected dancers will appear here as the archive grows.</p>
+        </div>
+      </section>
+
+      <section class="lfv-profile-card" aria-labelledby="profile-links-title">
+        <h2 id="profile-links-title" class="lfv-profile-card-title">Explore</h2>
+        <nav class="lfv-profile-card-content lfv-profile-nav" aria-label="Explore connected Vault sections">
+          <a href="{{ url_for('vault_archive_people') }}">People &amp; Teams</a>
+          <a href="{{ url_for('vault_archive') }}">The Archive</a>
+        </nav>
+      </section>
+    </aside>
+
+    <div class="lfv-profile-main">
+      <section class="lfv-profile-card" aria-labelledby="profile-about-title">
+        <h2 id="profile-about-title" class="lfv-profile-card-title">About Me</h2>
+        <div class="lfv-profile-card-content">
+          <p>{% if archived and archived.record_type != 'legacy_identity' and archived.description %}{{ archived.description }}{% else %}A personal biography has not been documented for this profile yet.{% endif %}</p>
+          {% if archived and archived.record_type != 'legacy_identity' and archived.description %}
+          <p class="lfv-profile-note">This description comes from the archive and should not be treated as an owner-written biography.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="lfv-profile-card" aria-labelledby="profile-awards-title">
+        <div class="lfv-profile-card-title lfv-profile-card-title-row">
+          <h2 id="profile-awards-title">Awards &amp; Recognition</h2>
+          <span class="lfv-profile-count">{{ profile.wins|length + profile.nominations|length }} linked</span>
+        </div>
+        <div class="lfv-profile-card-content">
+          {% if profile.wins %}
+          <h3 class="lfv-profile-subheading">Awards won</h3>
+          <ul class="lfv-profile-entry-list">
+            {% for win in profile.wins %}
+            <li>
+              <div><strong>{{ win.category }}</strong><span class="lfv-profile-meta">{{ win.program }} · {{ win.year }}</span></div>
+              <a href="{{ win.href }}">Award record</a>
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+          {% if profile.nominations %}
+          <h3 class="lfv-profile-subheading">Nominations</h3>
+          <ul class="lfv-profile-entry-list">
+            {% for nominee in profile.nominations %}
+            <li>
+              <div><strong>{{ nominee.category }}</strong><span class="lfv-profile-meta">{{ nominee.program }} · {{ nominee.year }}{% if nominee.provisional %} · Provisional{% endif %}</span></div>
+              <a href="{{ nominee.href }}">Nomination record</a>
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+          {% if not profile.wins and not profile.nominations %}
+          <p class="lfv-profile-note">No awards or nominations linked in the Vault yet.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="lfv-profile-card" aria-labelledby="profile-battles-title">
+        <div class="lfv-profile-card-title lfv-profile-card-title-row">
+          <h2 id="profile-battles-title">Battles &amp; Moments</h2>
+          {% if profile.battles %}<span class="lfv-profile-count">{{ profile.battles|length }} listings</span>{% endif %}
+        </div>
+        <div class="lfv-profile-card-content">
+          {% if profile.battles %}
+          <p class="lfv-profile-note">Announced appearances are not proof that a battle happened or confirmation of its winner.</p>
+          <ul class="lfv-profile-entry-list">
+            {% for battle in profile.battles %}
+            <li>
+              <div><strong>{{ battle.matchup }}</strong>
+                <span class="lfv-profile-meta">{{ battle.event }} · {{ battle.date_label }}</span>
+                <span class="lfv-profile-meta">{{ battle.status }}</span>
+              </div>
+              <a href="{{ battle.href }}">Event record</a>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="lfv-profile-note">No exact-name battle listings or documented moments linked yet.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="lfv-profile-card" aria-labelledby="profile-media-title">
+        <h2 id="profile-media-title" class="lfv-profile-card-title">Photos &amp; Videos</h2>
+        <div class="lfv-profile-card-content">
+          <p class="lfv-profile-note">Approved photos and videos linked to this profile will appear here.</p>
+        </div>
+      </section>
+
+      <section class="lfv-profile-card" id="wall" aria-labelledby="profile-wall-title">
+        <div class="lfv-profile-card-title lfv-profile-card-title-row">
+          <h2 id="profile-wall-title">{{ profile.name }}'s Wall</h2>
+          <span class="lfv-profile-count">Public · Moderated</span>
+        </div>
+        <div class="lfv-profile-card-content">
+          <div class="lfv-profile-wall-composer" aria-label="Future wall posting area">
+            <label for="lfv-wall-message">Leave a message, memory, or shout-out</label>
+            <textarea id="lfv-wall-message" placeholder="Wall posting is not available yet" rows="3" disabled></textarea>
+            <div class="lfv-profile-wall-actions">
+              <p>Posts will require approval by a Vault administrator or the claimed profile owner.</p>
+              <button type="button" disabled>Post to Wall</button>
+            </div>
+          </div>
+          <div class="lfv-profile-wall-empty">
+            <span class="lfv-profile-wall-symbol" aria-hidden="true">♡</span>
+            <p>No approved Wall posts yet.</p>
+            <p class="lfv-profile-note">Posting and moderation tools are not active yet. Nothing submitted here is saved.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <section class="lfv-profile-archive-panel" aria-labelledby="profile-archive-title">
+    <details>
+      <summary id="profile-archive-title">
+        <span>Archive Information &amp; Sources</span>
+        <span class="lfv-profile-summary-hint">Expand</span>
+      </summary>
+      <div class="lfv-profile-archive-content">
+        {% if archived %}
+          <p class="lfv-profile-note">This is a preserved archive entry. Source claims and community recollections are not automatically verified biographical facts.</p>
+          {% if archived.record_type == 'legacy_identity' %}
+            <h3>Recovered historical name</h3>
+          {% else %}
+            <h3>Documented context</h3>
+          {% endif %}
+          {% if archived.description %}<p>{{ archived.description }}</p>{% endif %}
+          {% if archived.information %}
+          <dl class="lfv-profile-facts lfv-profile-facts-detailed">
+            {% for label, detail in archived.information %}
+            <div><dt>{{ label }}</dt><dd>{{ detail }}</dd></div>
+            {% endfor %}
+          </dl>
+          {% endif %}
+          {% if archived.related_to %}<p><strong>Related subjects:</strong> {{ archived.related_to }}</p>{% endif %}
+          {% if archived.research_findings %}
+          <h3>Research findings</h3>
+          <ul>{% for finding in archived.research_findings %}<li>{{ finding }}</li>{% endfor %}</ul>
+          {% endif %}
+          <h3>Sources</h3>
+          {% if archived.research_sources %}
+          <ul class="lfv-profile-sources">
+            {% for source in archived.research_sources %}
+            <li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }}</a>{% if source.date %} · {{ source.date }}{% endif %}</li>
+            {% endfor %}
+          </ul>
+          {% elif archived.source_url and archived.source_url.startswith('https://') %}
+          <p><a href="{{ archived.source_url }}" target="_blank" rel="noopener noreferrer">Original source</a></p>
+          {% else %}
+          <p class="lfv-profile-note">{{ archived.source_label or 'No direct public source link available.' }}</p>
+          {% endif %}
+          {% if archived.can_verify and archive_csrf is defined %}
+          <div class="lfv-profile-verification" id="verification">
+            <h3>Community verification</h3>
+            {% if archived.claim %}<p>{{ archived.claim }}</p>{% endif %}
+            {% for message in get_flashed_messages(category_filter=['archive']) %}<p role="status">{{ message }}</p>{% endfor %}
+            <form action="{{ url_for('vault_archive_verify', slug=archived.slug) }}" method="post" data-archive-verify>
+              <input type="hidden" name="csrf_token" value="{{ archive_csrf }}">
+              <fieldset>
+                <legend>Is this archival information accurate?</legend>
+                <label><input type="radio" name="choice" value="true" required> True</label>
+                <label><input type="radio" name="choice" value="false" required> False</label>
+                <label><input type="radio" name="choice" value="debatable" required> Debatable</label>
+              </fieldset>
+              <label for="profile-verify-explanation">Additional context (optional)</label>
+              <textarea id="profile-verify-explanation" name="explanation" maxlength="1000" rows="3"></textarea>
+              <button type="submit">Submit for review</button>
+            </form>
+            <p class="lfv-profile-note">Responses enter editorial review. They do not automatically change the archive.</p>
+          </div>
+          {% endif %}
+        {% else %}
+        <p class="lfv-profile-note">This page links already-public awards and battle listings. There is no verified personal biography or separate archived identity record yet.</p>
+        {% endif %}
+        {% if related_records is defined and related_records %}
+        <h3>Related records</h3>
+        <ul class="lfv-profile-sources">
+          {% for related in related_records %}
+          <li><a href="{{ url_for('vault_archive_record', slug=related.slug) }}">{{ related.title }}</a></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+    </details>
+  </section>
+</main>
