@@ -18,7 +18,7 @@
 {% elif own_claim and own_claim.status == 'pending' %}
 <section class="lfv-claim-panel"><h2>Claim under review</h2><p>Your request is awaiting administrator approval. The archive has not changed.</p></section>
 {% elif not verified %}
-<section class="lfv-claim-panel"><h2>Verify your email first</h2><p>Verify your email through the Vault, then return to this profile to request ownership. Verification alone does not establish your identity.</p><p><a href="{{ url_for('dca_verify_email') }}">Verify email</a></p></section>
+<section class="lfv-claim-panel"><h2>Verify your email first</h2><p>Verify your email through the Vault, then return to this profile to request ownership. Verification alone does not establish your identity.</p><p><a href="{{ url_for('dca_verify_email', profile=profile.href) }}">Verify email</a></p></section>
 {% else %}
 {% if own_claim and own_claim.status == 'rejected' %}<p class="lfv-claim-muted">Your previous claim was declined.{% if own_claim.admin_note %} Administrator note: {{ own_claim.admin_note }}{% endif %} You can submit new information for review.</p>{% endif %}
 <form method="post" class="lfv-claim-panel">
