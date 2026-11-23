@@ -5298,6 +5298,10 @@ install_host_access(app, globals())
 from dca_rebuild.battle_polls import install_battle_polls
 install_battle_polls(app, globals())
 
+# Film-linked 2026 LFA community verdicts; not the DCA nomination process.
+from dca_rebuild.lfa_battle_polls import install_lfa_battle_polls
+install_lfa_battle_polls(app, SessionLocal, admin_login_required)
+
 from dca_rebuild.information_architecture import install_information_architecture
 install_information_architecture(app, globals())
 

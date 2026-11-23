@@ -31,6 +31,7 @@ SESSION_TIMEZONE = "lf9e_local_timezone"
 SESSION_LOCAL_DAY = "lf9e_local_verification_day"
 SESSION_CSRF = "lfv_verify_csrf"
 SESSION_RETURN_CLAIM = "lfv_verify_return_profile_claim"
+SESSION_RETURN_LFA_BATTLES = "lfv_verify_return_lfa_battles"
 VALIDITY = timedelta(minutes=10)
 MAX_ATTEMPTS = 5
 MAX_EMAILS_PER_HOUR = 5
@@ -314,7 +315,10 @@ def install_email_verification(app, session_factory, private_hash):
                 if _profile_for_path(requested_claim, session_factory) is None:
                     abort(404)
                 session[SESSION_RETURN_CLAIM] = requested_claim
+            elif request.args.get("return_to") == "lfa_battles":
+                session[SESSION_RETURN_LFA_BATTLES] = True
             elif not session.get(SESSION_CHALLENGE):
+                session.pop(SESSION_RETURN_LFA_BATTLES, None)
                 # A new generic nomination verification must not inherit an old claim.
                 session.pop(SESSION_RETURN_CLAIM, None)
         if request.method == "POST":
@@ -398,6 +402,9 @@ def install_email_verification(app, session_factory, private_hash):
             if claim_path:
                 flash("Email verified. You can now submit your profile claim.", "claim")
                 return redirect(url_for("vault_profile_claim", profile=claim_path), code=303)
+            if session.pop(SESSION_RETURN_LFA_BATTLES, False):
+                flash("Email verified. You can now vote on the LiteFeet Awards battles.", "lfa_battle")
+                return redirect(url_for("lfa_home") + "#battles", code=303)
             flash("Email verified. You're ready to nominate.")
             return redirect(url_for("dca_nominations_closed"), code=303)
 
@@ -412,6 +419,7 @@ def install_email_verification(app, session_factory, private_hash):
             "dca_verify_email.html",
             csrf_token=session[SESSION_CSRF], masked_email=masked,
             claim_profile_href=_claim_return_path(session_factory),
+            return_lfa_battles=bool(session.get(SESSION_RETURN_LFA_BATTLES)),
         ))
         response.headers["Cache-Control"] = "private, no-store"
         response.headers["X-Robots-Tag"] = "noindex, nofollow"

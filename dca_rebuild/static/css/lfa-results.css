@@ -270,3 +270,34 @@ html.lfv-sitewide body main.lfa-directory .lfa-category--grammys .lfa-category__
   color:var(--lfa-gold)!important;
   text-decoration:underline!important;
 }
+
+
+/* LFA Battle Day community verdicts: compact cards, same theme in both modes. */
+.lfa-battle-section{margin:35px 0 50px;border-top:1px solid var(--lfa-line);padding-top:30px;color:var(--lfa-ink)}
+.lfa-battle-heading{max-width:750px;margin:0 0 24px}
+html:is(.lfv-root,.lfv-sitewide) .lfa-directory .lfa-battle-heading h2{font-size:clamp(1.55rem,3vw,2.4rem)!important;margin:0 0 10px!important}
+.lfa-battle-heading>p:last-child,.lfa-battle-disclaimer{font-size:.9rem;line-height:1.5;color:var(--lfa-muted)}
+.lfa-battle-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:15px}
+.lfa-battle-card{border:1px solid var(--lfa-line);border-radius:9px;padding:18px;background:var(--lfa-paper);min-width:0}
+html:is(.lfv-root,.lfv-sitewide) .lfa-directory .lfa-battle-card h3{font-size:1.17rem!important;margin:0 0 10px!important;line-height:1.3!important}
+.lfa-battle-card h3 span{font-size:.83rem;font-weight:500;color:var(--lfa-muted)}
+.lfa-battle-card h4{margin:15px 0 8px;color:var(--lfa-ink);font-size:.88rem}
+.lfa-battle-card a{color:var(--lfa-ink);text-decoration:underline;text-underline-offset:3px}
+.lfa-battle-card fieldset{border:0;padding:0;margin:12px 0 10px;min-width:0}
+.lfa-battle-card legend{font-size:.87rem;font-weight:650;margin-bottom:8px;color:var(--lfa-ink)}
+.lfa-battle-card fieldset label{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:.89rem;cursor:pointer}
+.lfa-battle-card button,.lfa-battle-admin-create button{cursor:pointer;padding:9px 15px;border:1px solid var(--lfa-ink);background:var(--lfa-ink);color:var(--lfa-paper);border-radius:6px;font-weight:650}
+.lfa-battle-card .lfa-battle-results{margin-top:15px;border-top:1px solid var(--lfa-line);padding-top:12px}
+.lfa-battle-result{margin:9px 0}
+.lfa-battle-result>div{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:.78rem;color:var(--lfa-ink)}
+.lfa-battle-result progress{display:block;width:100%;height:7px;margin:5px 0;accent-color:#8298bc}
+.lfa-battle-total,.lfa-battle-status,.lfa-battle-draft{font-size:.77rem;color:var(--lfa-muted)}
+.lfa-battle-notice{border-left:3px solid var(--lfa-gold);padding:10px 14px;background:var(--lfa-hover)}
+.lfa-battle-admin-create,.lfa-battle-admin-edit{border-top:1px solid var(--lfa-line);margin-top:17px;padding-top:12px}
+.lfa-battle-admin-create{border:1px solid var(--lfa-line);border-radius:9px;padding:16px}
+.lfa-battle-admin-create summary,.lfa-battle-admin-edit summary{cursor:pointer;font-weight:650;font-size:.88rem}
+.lfa-battle-admin-create form,.lfa-battle-admin-edit form{display:grid;gap:12px;margin-top:16px}
+.lfa-battle-admin-create label,.lfa-battle-admin-edit label{display:grid;gap:5px;font-size:.83rem}
+.lfa-battle-admin-create input,.lfa-battle-admin-edit input,.lfa-battle-admin-edit select{width:100%;max-width:100%;padding:10px;background:var(--lfa-paper);color:var(--lfa-ink);border:1px solid var(--lfa-line);border-radius:5px}
+.lfa-battle-empty{padding:16px 0;color:var(--lfa-muted)}
+html[data-theme="dark"] .lfa-battle-card button,html[data-theme="dark"] .lfa-battle-admin-create button{color:#0e2852;background:#e3ba57;border-color:#e3ba57}

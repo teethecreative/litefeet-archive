@@ -1159,3 +1159,16 @@ class VaultBattleVideoHistory(Base):
     actor_type = Column(String(32), nullable=False)
     actor_account_id = Column(Integer, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+# LiteFeet Awards Battle Day: community verdicts, separate from official results.
+class LFABattlePoll(Base):
+    __tablename__ = "lfa_battle_polls"
+    battle_key = Column(String(64), primary_key=True)
+    year = Column(Integer, nullable=False, index=True)
+    side_a = Column(String(120), nullable=False)
+    side_b = Column(String(120), nullable=False)
+    youtube_url = Column(String(500), nullable=False)
+    published = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
