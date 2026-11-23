@@ -141,3 +141,38 @@ def test_homepage_does_not_invent_awards_before_results_exist(website):
     html = website.test_client().get("/").get_data(as_text=True)
     assert "Dear LiteFeet," in html
     assert "And the winners are" not in html
+
+
+
+def test_sitewide_brand_public_templates_use_same_shell():
+    from pathlib import Path
+    templates = Path(__file__).resolve().parents[1] / "dca_rebuild" / "templates"
+    for name in (
+        "ledger_home.html",
+        "lfa_home.html",
+        "award_landing.html",
+        "dca_nominations_form.html",
+        "vault_calendar.html",
+        "vault_calendar_event.html",
+        "vault_submit.html",
+        "vault_submit_success.html",
+        "dca_verify_email.html",
+        "error_404.html",
+        "round1_success.html",
+    ):
+        html = (templates / name).read_text()
+        assert "litefeet-sitewide.css" in html, name
+        assert "lfv-editorial-v2.css" in html, name
+        assert "_navigation.html" in html, name
+
+
+def test_sitewide_palette_is_shared_across_awards():
+    from pathlib import Path
+    styles = (Path(__file__).resolve().parents[1]
+              / "dca_rebuild" / "static" / "css")
+    core = (styles / "dca.css").read_text()
+    shell = (styles / "litefeet-sitewide.css").read_text()
+    assert "--blue:var(--lfv-navy" in core
+    assert "--gold:var(--lfv-gold" in core
+    assert "--page:var(--lfv-bg" in core
+    assert "LFV NOVEMBER 2026 BRAND CONSISTENCY" in shell
