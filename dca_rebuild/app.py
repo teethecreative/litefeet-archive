@@ -349,12 +349,49 @@ def client_ip():
     return request.remote_addr or ""
 
 
+def latest_dca_nominations(limit=6):
+    """Latest public-facing 2026 submission activity, both Top 25 and write-ins.
+
+    Show the nominee and category only. No voter email, hash or submitted
+    justification leaves the private nomination ledger.
+    """
+    from dca_rebuild.phase9e import CategoryStage9E, writein_category_label
+    with SessionLocal() as db:
+        edition = db.query(DCAEdition).filter_by(year=2026).first()
+        if not edition:
+            return []
+        rows = (
+            db.query(DCANominationSubmission, DCANominee, DCACategory)
+            .join(DCANominee, DCANominationSubmission.nominee_id == DCANominee.id)
+            .join(DCACategory, DCANominee.category_id == DCACategory.id)
+            .join(CategoryStage9E,
+                  (CategoryStage9E.category_id == DCACategory.id)
+                  & (CategoryStage9E.edition_id == edition.id))
+            .filter(
+                DCANominationSubmission.edition_id == edition.id,
+                DCANominee.moderation_status.in_(("pending", "approved")),
+                CategoryStage9E.stage.in_(("top25", "write_in", "qualified")),
+            )
+            .order_by(
+                DCANominationSubmission.submitted_at.desc(),
+                DCANominationSubmission.id.desc(),
+            )
+            .limit(limit)
+            .all()
+        )
+        return [
+            dict(category=writein_category_label(category.name),
+                 nominee=nominee.name)
+            for submission, nominee, category in rows
+        ]
+
+
 @app.route("/")
 def index():
-    # Keep the founder-led hub intact; announce only approved LFA results.
     return render_template(
         "ledger_home.html",
         home_lfa_2026_winners=_lfa_2026_results(),
+        home_dca_latest_nominations=latest_dca_nominations(),
     )
 
 

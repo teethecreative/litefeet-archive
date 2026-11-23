@@ -52,7 +52,13 @@ def test_returning_nominator_sees_private_reminder_only_for_missing_details(webs
     homepage = client.get("/").get_data(as_text=True)
     assert 'nomination-followups.js' in homepage
     assert 'nomination-followups.css' in homepage
-    assert 'Historic Nominee' not in homepage
+    # Public latest-nomination activity may name nominees, but never exposes
+    # a participant's private follow-up status, contact, or identity hash.
+    assert 'Latest Nominations' in homepage
+    assert 'Historic Nominee' in homepage
+    assert 'needs_details' not in homepage
+    with client.session_transaction() as sess:
+        assert sess['lf9e_recent_hash'] not in homepage
 
     response = client.get(PATH)
     assert response.status_code == 200

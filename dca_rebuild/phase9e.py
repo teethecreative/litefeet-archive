@@ -1101,7 +1101,8 @@ def install_phase9e(app, ns):
                     from dca_rebuild.email_verification import verification_enabled, verified_nominator_hash, begin_verification
                     if verification_enabled():
                         return begin_verification(
-                            app, SessionLocal, email, request.remote_addr or ''
+                            app, SessionLocal, email, request.remote_addr or '',
+                            request.form.get('timezone')
                         )
                     who = private_hash('dca-nomination:' + email)
                     # Store the normalized email on the server, never in the
@@ -1127,6 +1128,8 @@ def install_phase9e(app, ns):
                     if who != session.get('lf9e_recent_hash'):
                         session.pop('lf9e_skipped', None)
                     session['lf9e_recent_hash'] = who
+                    from dca_rebuild.email_verification import start_nomination_day
+                    start_nomination_day(request.form.get('timezone'))
                     requested = request.form.get('return_category', '').strip()
                     if requested:
                         try:
