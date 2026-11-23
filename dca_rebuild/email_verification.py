@@ -30,6 +30,7 @@ SESSION_VERIFIED_AT = "lf9e_verified_at"
 SESSION_TIMEZONE = "lf9e_local_timezone"
 SESSION_LOCAL_DAY = "lf9e_local_verification_day"
 SESSION_CSRF = "lfv_verify_csrf"
+SESSION_RETURN_CLAIM = "lfv_verify_return_profile_claim"
 VALIDITY = timedelta(minutes=10)
 MAX_ATTEMPTS = 5
 MAX_EMAILS_PER_HOUR = 5
@@ -110,6 +111,18 @@ def logout_site_session_at_midnight():
         return False
     session.clear()
     return True
+
+
+def _claim_return_path(session_factory):
+    """Only return to a published Vault profile; never redirect to arbitrary URLs."""
+    path = session.get(SESSION_RETURN_CLAIM)
+    if not path:
+        return None
+    from dca_rebuild.profile_wall import _profile_for_path
+    if _profile_for_path(path, session_factory) is None:
+        session.pop(SESSION_RETURN_CLAIM, None)
+        return None
+    return path
 
 
 def verified_nominator_hash():
@@ -269,7 +282,7 @@ def begin_verification(app, session_factory, email, network="", timezone_name=No
             if challenge:
                 challenge.used_at = datetime.utcnow()
         flash("We couldn't send a code right now. Please try again shortly.")
-        return redirect(url_for("dca_nominations_closed"), code=303)
+        return redirect(url_for("dca_verify_email", profile=session.get(SESSION_RETURN_CLAIM)), code=303)
 
     session[SESSION_CHALLENGE] = request_id
     session.setdefault(SESSION_CSRF, secrets.token_urlsafe(32))
@@ -294,6 +307,16 @@ def install_email_verification(app, session_factory, private_hash):
         if not verification_enabled():
             abort(404)
         session.setdefault(SESSION_CSRF, secrets.token_urlsafe(32))
+        if request.method == "GET":
+            requested_claim = request.args.get("profile")
+            if requested_claim is not None:
+                from dca_rebuild.profile_wall import _profile_for_path
+                if _profile_for_path(requested_claim, session_factory) is None:
+                    abort(404)
+                session[SESSION_RETURN_CLAIM] = requested_claim
+            elif not session.get(SESSION_CHALLENGE):
+                # A new generic nomination verification must not inherit an old claim.
+                session.pop(SESSION_RETURN_CLAIM, None)
         if request.method == "POST":
             supplied = request.form.get("csrf_token", "")
             if not supplied or not secrets.compare_digest(supplied, session[SESSION_CSRF]):
@@ -370,6 +393,11 @@ def install_email_verification(app, session_factory, private_hash):
             start_site_session(request.form.get("timezone") or session.get(SESSION_TIMEZONE))
             session["lf9e_recent_hash"] = who
             session["lf9e_reminder_hash"] = who
+            claim_path = _claim_return_path(session_factory)
+            session.pop(SESSION_RETURN_CLAIM, None)
+            if claim_path:
+                flash("Email verified. You can now submit your profile claim.", "claim")
+                return redirect(url_for("vault_profile_claim", profile=claim_path), code=303)
             flash("Email verified. You're ready to nominate.")
             return redirect(url_for("dca_nominations_closed"), code=303)
 
@@ -383,6 +411,7 @@ def install_email_verification(app, session_factory, private_hash):
         response = make_response(render_template(
             "dca_verify_email.html",
             csrf_token=session[SESSION_CSRF], masked_email=masked,
+            claim_profile_href=_claim_return_path(session_factory),
         ))
         response.headers["Cache-Control"] = "private, no-store"
         response.headers["X-Robots-Tag"] = "noindex, nofollow"
