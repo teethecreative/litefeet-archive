@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-editorial-v2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/nomination-followups.css') }}">
+<script defer src="{{ url_for('static', filename='js/dca-midnight-session.js', v='20261123a') }}"></script>
 </head>
 <body>
 {% include "_navigation.html" %}
@@ -21,6 +22,7 @@
 <section class="lfv-nom-followup-card">
 <form method="post" autocomplete="off">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="timezone" value="UTC">
 <input type="hidden" name="action" value="verify">
 <label for="verify-code">6-Digit Code</label>
 <input id="verify-code" name="code" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required autofocus>
@@ -28,6 +30,7 @@
 </form>
 <form method="post">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="timezone" value="UTC">
 <input type="hidden" name="action" value="resend">
 <button class="lfv-nom-followup-later" type="submit">Resend Code</button>
 </form>
@@ -37,6 +40,7 @@
 <section class="lfv-nom-followup-card">
 <form method="post">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="timezone" value="UTC">
 <input type="hidden" name="action" value="send">
 <label for="verify-email-address">Email address</label>
 <input id="verify-email-address" name="email" type="email" maxlength="254" autocomplete="email" required autofocus>
