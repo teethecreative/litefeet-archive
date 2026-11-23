@@ -23,6 +23,24 @@ GATHERING_TYPES = (
     ("other", "OTHER"),
 )
 VALID_TYPES = {key for key, _ in GATHERING_TYPES}
+# Contextual questions for each upcoming gathering; never accept fields
+# belonging to another type even if a client submits them manually.
+GATHERING_DETAIL_FIELDS = {
+    "battle": (("format", "Battle format"), ("participants", "Competing dancers / crews"),
+               ("judges", "Judges and host"), ("prizes", "Prizes")),
+    "lab": (("session_focus", "Session focus"), ("facilitators", "Session leaders"),
+            ("experience", "Who can attend")),
+    "link_up": (("meetup_purpose", "Purpose"), ("meetup_info", "Meeting information")),
+    "workshop": (("instructor", "Instructor"), ("curriculum", "Workshop topics"),
+                 ("skill_level", "Experience level"), ("capacity", "Capacity / registration")),
+    "class": (("teacher", "Teacher"), ("class_level", "Experience level"),
+              ("class_audience", "Audience / age group"), ("class_materials", "What to bring")),
+    "event": (("performers", "Performers"), ("program", "Event program"),
+              ("admission_details", "Ticket / admission notes")),
+    "community": (("community_goal", "Community purpose"), ("activities", "Activities"),
+                  ("partners", "Partner groups")),
+    "other": (("other_kind", "Gathering format"), ("special_info", "Instructions")),
+}
 RECURRENCE_CHOICES = (("none", "Does not repeat"), ("daily", "Daily"), ("weekly", "Weekly"), ("monthly", "Monthly"), ("yearly", "Yearly"))
 VALID_RECURRENCE = {key for key, _ in RECURRENCE_CHOICES}
 
@@ -116,11 +134,32 @@ def install_gathering_submissions(app, ns):
                 raise ValueError("ENTER A STREET ADDRESS OR, FOR A VIRTUAL EVENT, A MEETING LINK OR JOINING INSTRUCTIONS.")
             if not title or len(title) < 3 or kind not in VALID_TYPES:
                 raise ValueError("ADD A NAME AND SELECT THE TYPE OF GATHERING.")
+            # Preserve type-specific answers for admin review without changing
+            # the existing gathering data model or publishing them automatically.
+            extra_notes = []
+            for field, label in GATHERING_DETAIL_FIELDS[kind]:
+                answer = (request.form.get("gathering_detail_" + field) or "").strip()
+                if len(answer) > (650 if field in {
+                        "participants", "meetup_purpose", "meetup_info", "curriculum",
+                        "performers", "program", "community_goal", "activities",
+                        "special_info"} else 300):
+                    raise ValueError("SHORTEN THE TYPE-SPECIFIC SUBMISSION DETAILS.")
+                if answer:
+                    extra_notes.append(label + ": " + answer)
+            manual_notes = (request.form.get("additional_notes") or "").strip()
+            if len(manual_notes) > 2000:
+                raise ValueError("ADDITIONAL NOTES ARE TOO LONG.")
+            extra_summary = "Submission details:\n" + "\n".join(extra_notes) if extra_notes else ""
+            combined_notes = "\n\n".join(part for part in (
+                extra_summary, manual_notes) if part)
+            if len(combined_notes) > 2000:
+                raise ValueError("SHORTEN THE ADDITIONAL DETAILS AND NOTES.")
             if email and ("@" not in email or "." not in email.split("@")[-1]):
                 raise ValueError("ENTER A VALID EMAIL OR LEAVE IT BLANK.")
         except (ValueError, TypeError) as exc:
             flash(str(exc) if str(exc) else "CHECK YOUR SUBMISSION DETAILS.")
-            return redirect(url_for("vault_submit"))
+            safe_type = kind if kind in VALID_TYPES else "other"
+            return redirect(url_for("vault_submit", type="gathering:" + safe_type))
 
         with ns["SessionLocal"].begin() as db:
             db.add(VaultGatheringSubmission(
@@ -143,7 +182,7 @@ def install_gathering_submissions(app, ns):
                 admission=trim(request.form, "admission", 160) or None,
                 contact_name=trim(request.form, "contact_name", 160) or None,
                 contact_email=email or None,
-                additional_notes=trim(request.form, "additional_notes", 2000) or None,
+                additional_notes=combined_notes or None,
                 status="pending",
             ))
         session.pop("lfv_submit_csrf", None)

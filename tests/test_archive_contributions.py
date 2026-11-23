@@ -104,15 +104,52 @@ def test_type_specific_answers_are_saved_and_only_selected_type_is_used(website,
     assert "Must not be stored" not in admin.get_data(as_text=True)
 
 
-def test_general_submit_offers_distinct_event_and_archive_forms(website):
+def test_general_submit_lists_every_submission_type_and_tailors_forms(website):
+    from dca_rebuild.gathering_submissions import GATHERING_TYPES
+    from dca_rebuild.archive_contributions import CONTRIBUTION_TYPES
     client = website.test_client()
-    page = client.get("/submit")
-    assert page.status_code == 200
-    html = page.get_data(as_text=True)
-    assert 'id="lfv-general-submit-type"' in html
+    response = client.get("/submit")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+    assert 'id="lfv-submit-types-heading"' in html
+    assert 'id="lfv-general-submit-type"' not in html
     assert 'id="lfv-general-archive-form"' in html
     assert 'id="lfv-general-event-form"' in html
     assert 'action="/archive/contribute"' in html
     assert 'action="/submit"' in html
-    assert 'data-archive-type="battle"' in html
+    for value, label in GATHERING_TYPES:
+        assert f'data-submit-kind="gathering" data-submit-value="{value}"' in html
+    for value, label in CONTRIBUTION_TYPES:
+        assert f'data-submit-kind="archive" data-submit-value="{value}"' in html
+    assert 'data-event-type="battle"' in html
+    assert 'data-event-type="class"' in html
     assert 'data-archive-type="person"' in html
+    assert 'data-archive-type="correction"' in html
+
+
+def test_event_type_specific_answers_are_private_and_other_type_ignored(website, database):
+    from datetime import date, timedelta
+    from dca_rebuild.models import VaultGatheringSubmission
+    from dca_rebuild.gathering_submissions import GATHERING_DETAIL_FIELDS
+    client=website.test_client()
+    client.get("/submit")
+    with client.session_transaction() as state:
+        token=state["lfv_submit_csrf"]
+    day=(date.today()+timedelta(days=20)).isoformat()
+    response=client.post("/submit",data={
+        "csrf_token":token,"gathering_type":"workshop",
+        "title":"Foundations Workshop","start_date":day,
+        "start_time":"15:00","end_time":"17:00",
+        "hosts":"Community Teacher","address":"123 Example Street",
+        "gathering_detail_instructor":"Example Teacher",
+        "gathering_detail_curriculum":"LiteFeet fundamentals",
+        "gathering_detail_battle_result":"Unrelated",
+    })
+    assert response.status_code==303
+    with database[1]() as db:
+        row=db.query(VaultGatheringSubmission).one()
+        assert row.status=="pending"
+        assert "Instructor: Example Teacher" in row.additional_notes
+        assert "Workshop topics: LiteFeet fundamentals" in row.additional_notes
+        assert "Unrelated" not in row.additional_notes
+    assert GATHERING_DETAIL_FIELDS["workshop"]

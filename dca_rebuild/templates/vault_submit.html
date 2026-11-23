@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-editorial-v2.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/lfv-consistency-v5.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/vault-submit.css') }}">
-<link rel="stylesheet" href="{{ url_for('static',filename='css/archive-contribution.css',v='20261123d') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/archive-contribution.css',v='20261123e') }}">
 </head><body>
 {% include "_navigation.html" %}
 <main class="lfv-submit" id="vault-submit">
@@ -14,31 +14,38 @@
 <header><p class="lfv-submit-kicker">ADD TO THE CULTURE</p><h1>SUBMIT</h1>
 <p>Help preserve the culture. Choose what you are submitting to see the right questions and review process.</p>
 </header>
-<section class="lfv-submit-choice" aria-label="Submission category">
-<label for="lfv-general-submit-type">What would you like to submit?</label>
-<select id="lfv-general-submit-type">
-<option value="">Choose one</option>
-<option value="event">Upcoming battle, session, class, workshop, or gathering</option>
-<option value="archive">Historical information, dancer, crew, battle result, music, media, or correction</option>
-</select>
-<p id="lfv-submit-choice-help">Upcoming gatherings go to the calendar; historical materials go to private archive review.</p>
+<section class="lfv-submit-types" aria-labelledby="lfv-submit-types-heading">
+  <div class="lfv-submit-types__heading">
+    <h2 id="lfv-submit-types-heading">What are you submitting?</h2>
+    <p>Select a type below. The form underneath will show only the questions relevant to that submission.</p>
+  </div>
+  <div class="lfv-submit-types__grid" role="group" aria-label="Available submission types">
+  {% for value, label in submission_types %}
+    <button type="button" class="lfv-submit-type-card" data-submit-kind="gathering" data-submit-value="{{ value }}" aria-pressed="false" aria-controls="lfv-general-event-form">
+      <strong>{{ label|title }}</strong><span>Upcoming event / calendar</span>
+    </button>
+  {% endfor %}
+  {% for value, label in archive_contribution_types %}
+    <button type="button" class="lfv-submit-type-card" data-submit-kind="archive" data-submit-value="{{ value }}" aria-pressed="false" aria-controls="lfv-general-archive-form">
+      <strong>{{ label }}</strong><span>Historical archive</span>
+    </button>
+  {% endfor %}
+  </div>
 </section>
-<div id="lfv-general-archive-form" hidden>
-<h2>Submit historical information</h2>
+<p id="lfv-submit-select-instruction" class="lfv-submit-selection-note">Choose one submission type above to start.</p>
+<div id="lfv-general-archive-form" class="lfv-submit-selected-form" hidden>
+<h2 id="lfv-archive-selection-heading" tabindex="-1">Submit historical information</h2>
 {% include "archive_contribution_form.html" %}
 </div>
-<div id="lfv-general-event-form" hidden>
-<h2>Submit an upcoming event</h2>
+<div id="lfv-general-event-form" class="lfv-submit-selected-form" hidden>
+<h2 id="lfv-event-selection-heading" tabindex="-1">Submit an upcoming event</h2>
 {% with messages=get_flashed_messages() %}{% for message in messages %}<p class="lfv-submit-warning" role="alert">{{ message }}</p>{% endfor %}{% endwith %}
 <form method="post" action="{{ url_for('vault_submit') }}" class="lfv-submit-form">
 <input type="hidden" name="csrf_token" value="{{ submit_csrf }}">
 <div class="lfv-submit-trap" aria-hidden="true"><label>WEBSITE <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
-<div class="lfv-submit-two">
-<label>What are you sharing? <select name="gathering_type" required><option value="">Choose one</option>
-{% for value,label in submission_types %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
-</select></label>
-<label>Name / title <input name="title" maxlength="240" placeholder="What is it called?" required></label>
-</div>
+<input type="hidden" name="gathering_type" id="lfv-selected-gathering-type" required>
+<label><span id="lfv-event-title-label">Event name / title</span> * <input name="title" maxlength="240" placeholder="What is it called?" required></label>
+{% include "gathering_type_fields.html" %}
 <p class="lfv-submit-hint">Fields marked * are required.</p>
 <div class="lfv-submit-two">
 <label>Start date * <input type="date" name="start_date" id="start-date" required></label>
@@ -78,7 +85,7 @@
 <label>City / borough <span class="lfv-submit-optional">Optional</span><input name="city" maxlength="120" placeholder="Harlem, Bronx, Brooklyn…"></label>
 </div>
 <label><span id="location-label">Street address *</span><input name="address" id="event-location" maxlength="350" placeholder="Street address for in-person events" required><span class="lfv-submit-optional" id="location-help">For virtual events, enter the Zoom/meeting link or instructions for getting it.</span></label>
-<label>Details <span class="lfv-submit-optional">Optional</span><textarea name="description" maxlength="3000" rows="3" placeholder="What should people know?"></textarea></label>
+<label><span id="lfv-event-description-label">Event details</span> <span class="lfv-submit-optional">Optional</span><textarea name="description" maxlength="3000" rows="3" placeholder="What should people know?"></textarea></label>
 <label>Event / registration / source link <span class="lfv-submit-optional">Optional</span><input type="url" name="link" maxlength="1200" placeholder="HTTPS://…"></label>
 <details class="lfv-submit-more"><summary>Contact & additional notes (optional)</summary>
 <div class="lfv-submit-two">
@@ -93,20 +100,81 @@
 </div>
 </main>{% include "_footer.html" %}
 <script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
-<script defer src="{{ url_for('static',filename='js/archive-contribution.js',v='20261123d') }}"></script>
+<script defer src="{{ url_for('static',filename='js/archive-contribution.js',v='20261123e') }}"></script>
 <script>
 (function(){
-  const choice=document.getElementById('lfv-general-submit-type');
+  const cards=[...document.querySelectorAll('[data-submit-kind][data-submit-value]')];
   const archiveForm=document.getElementById('lfv-general-archive-form');
   const eventForm=document.getElementById('lfv-general-event-form');
-  function choose(){
-    const isArchive=choice.value==='archive', isEvent=choice.value==='event';
-    archiveForm.hidden=!isArchive;eventForm.hidden=!isEvent;
-    archiveForm.querySelectorAll('input,textarea,select,button').forEach(function(el){el.disabled=!isArchive;});
-    eventForm.querySelectorAll('input,textarea,select,button').forEach(function(el){el.disabled=!isEvent;});
-    if(isEvent){syncRepeat();}
+  const archiveSelect=archiveForm.querySelector('[data-archive-type-select]');
+  const eventTypeInput=document.getElementById('lfv-selected-gathering-type');
+  const eventDetailGroups=[...eventForm.querySelectorAll('[data-event-type]')];
+  const eventHeading=document.getElementById('lfv-event-selection-heading');
+  const archiveHeading=document.getElementById('lfv-archive-selection-heading');
+  const selectedNote=document.getElementById('lfv-submit-select-instruction');
+  const titleLabel=document.getElementById('lfv-event-title-label');
+  const descriptionLabel=document.getElementById('lfv-event-description-label');
+  const eventLabels={
+    battle:['Battle name','Battle description'],
+    lab:['Session / lab name','What will happen in this session?'],
+    link_up:['Link-up name','What should participants know?'],
+    workshop:['Workshop title','What will the workshop cover?'],
+    class:['Class name','Class details'],
+    event:['Showcase / event name','Event program and details'],
+    community:['Community gathering name','Purpose and details'],
+    other:['Gathering name','Describe the gathering']
+  };
+  function setEnabled(root,enabled){
+    root.querySelectorAll('input,textarea,select,button').forEach(function(el){el.disabled=!enabled;});
   }
-  choice.addEventListener('change',choose);
+  function syncEventDetails(type){
+    eventDetailGroups.forEach(function(group){
+      const active=group.dataset.eventType===type;
+      group.hidden=!active;
+      group.disabled=!active;
+      group.querySelectorAll('input,textarea,select').forEach(function(el){el.disabled=!active;});
+    });
+  }
+  function selectType(kind,value,focus){
+    const isArchive=kind==='archive';
+    const isEvent=kind==='gathering';
+    archiveForm.hidden=!isArchive;
+    eventForm.hidden=!isEvent;
+    setEnabled(archiveForm,isArchive);
+    setEnabled(eventForm,isEvent);
+    cards.forEach(function(card){
+      const selected=card.dataset.submitKind===kind&&card.dataset.submitValue===value;
+      card.setAttribute('aria-pressed',String(selected));
+    });
+    if(isArchive){
+      archiveSelect.value=value;
+      archiveSelect.dispatchEvent(new Event('change',{bubbles:true}));
+      const label=cards.find(card=>card.dataset.submitKind===kind&&card.dataset.submitValue===value)?.querySelector('strong')?.textContent||'Archive information';
+      archiveHeading.textContent='Submit: '+label;
+      selectedNote.hidden=true;
+    }else if(isEvent){
+      eventTypeInput.value=value;
+      syncEventDetails(value);
+      const label=cards.find(card=>card.dataset.submitKind===kind&&card.dataset.submitValue===value)?.querySelector('strong')?.textContent||'Upcoming event';
+      eventHeading.textContent='Submit: '+label;
+      titleLabel.textContent=(eventLabels[value]||['Event name','Event details'])[0];
+      descriptionLabel.textContent=(eventLabels[value]||['Event name','Event details'])[1];
+      selectedNote.hidden=true;
+      syncRepeat();
+    }else{
+      selectedNote.hidden=false;
+    }
+    if(focus){
+      const heading=isArchive?archiveHeading:eventHeading;
+      if(heading){
+        heading.scrollIntoView({behavior:'smooth',block:'start'});
+        heading.focus({preventScroll:true});
+      }
+    }
+  }
+  cards.forEach(function(card){
+    card.addEventListener('click',function(){selectType(card.dataset.submitKind,card.dataset.submitValue,true);});
+  });
   const repeatToggle=document.getElementById('repeat-toggle');
   const repeatOptions=document.getElementById('repeat-options');
   const rule=document.getElementById('recurrence-rule');
@@ -146,6 +214,14 @@
   virtualToggle.addEventListener('change',syncLocation);
   syncRepeat();
   syncLocation();
-  choose();
+  setEnabled(archiveForm,false);
+  setEnabled(eventForm,false);
+  syncEventDetails('');
+  const initial=new URLSearchParams(window.location.search).get('type');
+  if(initial&&initial.includes(':')){
+    const parts=initial.split(':');
+    const match=cards.some(card=>card.dataset.submitKind===parts[0]&&card.dataset.submitValue===parts[1]);
+    if(match)selectType(parts[0],parts[1],false);
+  }
 })();
 </script></body></html>
