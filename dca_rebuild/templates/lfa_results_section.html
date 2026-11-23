@@ -1,41 +1,37 @@
 {% if winners_2026 %}
-<section class="lfa-results lfa-results--simple" id="winners-2026" aria-labelledby="lfa-results-heading">
+<section class="lfa-results lfa-results--grammys" id="winners-2026" aria-labelledby="lfa-results-heading">
   <div class="lfa-results__heading">
     <div>
       <p class="lfa-eyebrow">5TH ANNUAL · NOVEMBER 22, 2026</p>
       <h2 id="lfa-results-heading">2026 LITEFEET AWARDS</h2>
-      <p>Winners and nominees from the fifth annual LiteFeet Awards.</p>
+      <p>Explore the winners and nominees by category.</p>
     </div>
     <span class="lfa-results__count">{{ winners_2026|length }} CATEGORIES</span>
   </div>
-  <div class="lfa-category-list lfa-category-list--simple">
+  <div class="lfa-category-list lfa-category-list--grammys">
     {% for result in winners_2026 %}
-    <article class="lfa-category lfa-category--simple">
-      <h3 class="lfa-category__title">{{ result.category }}</h3>
-      <div class="lfa-category__winner">
-        <span class="lfa-category__label">WINNER</span>
-        {% set winner_profile = vault_profile_url(result.winner) %}
-        {% if winner_profile %}<a href="{{ winner_profile }}" class="lfa-category__winner-name">{{ result.winner }}</a>{% else %}<strong class="lfa-category__winner-name">{{ result.winner }}</strong>{% endif %}
-      </div>
+    <details class="lfa-category lfa-category--grammys">
+      <summary>
+        <span class="lfa-category__title">{{ result.category }}</span>
+        <span class="lfa-category__preview"><span>WINNER</span><strong>{{ result.winner }}</strong></span>
+        <svg class="lfa-category__arrow" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
       <div class="lfa-category__nominees">
-        <h4>NOMINEES</h4>
+        <p class="lfa-category__nominees-heading">NOMINEES</p>
         {% if result.nominees %}
         <ul>
-        {% for nominee in result.nominees %}
+          {% for nominee in result.nominees %}
           {% set nominee_profile = vault_profile_url(nominee) %}
-          <li>
-            {% if nominee_profile %}<a href="{{ nominee_profile }}">{{ nominee }}</a>{% else %}<span>{{ nominee }}</span>{% endif %}
-            {% if nominee|lower == result.winner|lower %}<span class="lfa-category__winning-tag">Winner</span>{% endif %}
-          </li>
-        {% endfor %}
+          <li>{% if nominee_profile %}<a href="{{ nominee_profile }}">{{ nominee }}</a>{% else %}<span>{{ nominee }}</span>{% endif %}</li>
+          {% endfor %}
         </ul>
         {% else %}
-        <p class="lfa-category__pending">Original nominee list not yet documented.</p>
+        <p class="lfa-category__pending">Nominee list not yet documented.</p>
         {% endif %}
       </div>
-    </article>
+    </details>
     {% endfor %}
   </div>
-  <p class="lfa-results__source">Nominee names are transcribed from original 2026 nomination flyers and retain their original spelling. Winners were confirmed for the Vault on November 23, 2026. Missing nominee information remains unlisted pending documentation.</p>
+  <p class="lfa-results__source">Nominee names are transcribed from the available original 2026 nomination flyers. Winner names were confirmed for the Vault on November 23, 2026. Missing nominees are not inferred.</p>
 </section>
 {% endif %}
