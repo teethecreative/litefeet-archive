@@ -1,25 +1,20 @@
-<details class="lf9e-grid-card lfv5-category-disclosure" data-category-id="{{ category.id }}">
-  <summary>
-    <span class="lfv5-category-name">{{ category.name }}</span>
-    {% if identified %}
-    <span class="lfv5-category-status">
-      {% if closed %}CLOSED
-      {% elif category.remaining %}AVAILABLE IN <span data-cooldown-until="{{ category.next_at }}">{{ (category.remaining // 3600) }}H {{ ((category.remaining % 3600) // 60) }}M</span>
-      {% else %}AVAILABLE NOW{% endif %}
+<article class="lfv-dca-grid-card" data-category-id="{{ category.id }}">
+  <button type="button" class="lfv-dca-grid-open" data-dca-open-category="{{ category.id }}" aria-haspopup="dialog" aria-label="Open {{ category.name }} nominations">
+    <span class="lfv-dca-grid-title">{{ category.name }}</span>
+    <span class="lfv-dca-grid-status">
+      {% if closed %}Nominations closed
+      {% elif category.remaining %}Available in <span data-cooldown-until="{{ category.next_at }}">{{ (category.remaining // 3600) }}h {{ ((category.remaining % 3600) // 60) }}m</span>
+      {% else %}Available to nominate{% endif %}
     </span>
-    {% endif %}
-    <span class="lfv5-category-chevron" aria-hidden="true">+</span>
-  </summary>
-  <div class="lfv5-category-panel">
-    {% if category.nominees %}
-      <ol class="lfv5-nominee-minilist">
-      {% for nominee in category.nominees %}
-        <li><span>{{ nominee.name }}</span><span>{{ nominee.count }} NOMINATION{{ 'S' if nominee.count != 1 else '' }}</span></li>
-      {% endfor %}
-      </ol>
-    {% else %}
-      <p>No nominees yet. Be the first.</p>
-    {% endif %}
-    <a class="lfv5-minimal-action" href="{{ url_for('dca_nominations_closed', category=category.id) }}">VIEW &amp; NOMINATE <span aria-hidden="true">→</span></a>
-  </div>
-</details>
+    <span class="lfv-dca-grid-cta">View nominees &amp; nominate →</span>
+  </button>
+  {% if category.nominees %}
+  <ol class="lfv-dca-grid-preview" aria-label="Current nominees">
+    {% for nominee in category.nominees[:3] %}
+    <li><span>{{ nominee.name }}</span><span>{{ nominee.count }}</span></li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p class="lfv-dca-grid-empty">No nominations yet.</p>
+  {% endif %}
+</article>
