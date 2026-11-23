@@ -13,6 +13,18 @@
       <span>{{ archived.editorial_status }}</span>
       {% endif %}
     </div>
+    {% set claim_status = vault_profile_claim_status(profile) %}
+    <div class="lfv-profile-claim-line">
+      {% if claim_status == 'owned_by_you' %}
+      <span class="lfv-profile-claim-state">You manage this profile</span>
+      {% elif claim_status == 'claimed' %}
+      <span class="lfv-profile-claim-state">Claimed profile</span>
+      {% elif claim_status == 'pending' %}
+      <span class="lfv-profile-claim-state">Your profile claim is pending review</span>
+      {% else %}
+      <a href="{{ url_for('vault_profile_claim', profile=profile.href) }}">Claim This Profile</a>
+      {% endif %}
+    </div>
     {% if profile.badges %}
     <div class="lfv-profile-role-nav" role="group" aria-label="Profile role views" data-lfv-role-nav>
       <button type="button" class="lfv-profile-role-badge is-active" data-lfv-role="overview" aria-pressed="true">Overview</button>
