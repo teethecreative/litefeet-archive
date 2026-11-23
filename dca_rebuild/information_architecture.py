@@ -17,6 +17,7 @@ from dca_rebuild.archive_catalog import (
     COLLECTIONS, PAGE_SIZE, all_records, browse, find_record,
     listing_payload, public_record, people_crew_cloud,
 )
+from dca_rebuild.people_discovery import find_profiles, nominee_people_cloud
 
 # Stable future catalog; readiness is separate from the intended ordering.
 SECTION_CATALOG = (
@@ -164,16 +165,36 @@ def install_information_architecture(app, ns):
 
     @app.get('/archive/people', endpoint='vault_archive_people')
     def archive_people():
-        """Separate People & Teams browser, never the deleted Archive landing page."""
+        """Search every public profile, including award nominees and teams."""
+        from dca_rebuild.public_profiles import profile_index
         current_page = max(1, request.args.get('page', 1, type=int) or 1)
-        query = request.args.get('q', '').strip()
-        filtered = browse(query=query, collection='people', page=current_page) if query else {
-            'items': [], 'count': 0, 'has_more': False, 'next_page': None,
-            'page': current_page, 'collection': 'people'
-        }
+        query = request.args.get('q', '').strip()[:120]
+        profiles = profile_index(ns['SessionLocal'])
+        filtered = find_profiles(profiles, query=query, page=current_page)
         return section_page('people', archive_items=filtered['items'],
-                            archive_pagination=filtered, people_cloud=people_crew_cloud(),
+                            archive_pagination=filtered,
+                            people_cloud=nominee_people_cloud(profiles, people_crew_cloud()),
                             archive_start_page=current_page)
+
+    @app.get('/archive/api/people', endpoint='vault_archive_people_api')
+    def archive_people_api():
+        """Pagination and live search share the exact same public profile index."""
+        from dca_rebuild.public_profiles import profile_index
+        filtered = find_profiles(
+            profile_index(ns['SessionLocal']),
+            query=request.args.get('q', '')[:120],
+            page=max(1, request.args.get('page', 1, type=int) or 1),
+        )
+        response = jsonify({
+            'records': [{
+                'title': row['title'], 'href': row['href'],
+                'summary': row['summary'], 'label': row['label'],
+            } for row in filtered['items']],
+            'page': filtered['page'], 'next_page': filtered['next_page'],
+            'has_more': filtered['has_more'], 'total': filtered['count'],
+        })
+        response.headers['Cache-Control'] = 'public, max-age=30'
+        return response
 
     @app.get('/archive/lock-in', endpoint='vault_lock_in')
     def lock_in():
