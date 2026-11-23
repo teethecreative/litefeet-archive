@@ -48,9 +48,9 @@
 {% include "_beta_bar.html" %}
 
 <main class="lfv3-results lfv3-wrap" id="dca-results">
-  <header class="lfv3-results-hero"><p class="lfv3-eyebrow">DANCER'S CHOICE AWARDS / 2026</p><div class="lfv3-results-top"><div><h1>THE CATEGORY<br>RESULTS.</h1><p>Recorded Round 1 community preferences. The numbers below are not a final announcement of official categories.</p></div><aside><span>ROUND 1</span><strong>{% if round1_is_closed %}CLOSED{% else %}IN PROGRESS{% endif %}</strong><small>{{ round1_submission_count }} completed submissions</small><a href="{{ url_for('dca_nominations_closed') }}">2026 nominations <span aria-hidden="true"><svg class="lfv-link-icon" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><path d="M3 13 13 3M3 3h10v10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></a></aside></div></header>
+  <header class="lfv3-results-hero"><p class="lfv3-eyebrow">DANCER'S CHOICE AWARDS / 2026</p><div class="lfv3-results-top"><div><h1>CATEGORY<br>RESULTS</h1><p>See how the community responded to proposed categories in Round 1. These results are not the final category list.</p></div><aside><span>ROUND 1</span><strong>{% if round1_is_closed %}CLOSED{% else %}IN PROGRESS{% endif %}</strong><small>{{ round1_submission_count }} completed submissions</small><a href="{{ url_for('dca_nominations_closed') }}">2026 nominations <span aria-hidden="true"><svg class="lfv-link-icon" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><path d="M3 13 13 3M3 3h10v10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></a></aside></div></header>
   <nav class="lfv3-section-jump" aria-label="On this page"><a href="#returning">Returning categories</a><a href="#new-categories">New suggestions</a><a href="#method">Selection method</a></nav>
-  <section class="lfv3-results-section" id="returning"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">01 / COMMUNITY RESULTS</p><h2>Returning categories</h2></div><p>These are Keep and Remove responses for categories from the previous awards edition.</p></div>
+  <section class="lfv3-results-section" id="returning"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">01 / COMMUNITY RESULTS</p><h2>Returning categories</h2></div><p>See which previous award categories the community wanted to keep or remove.</p></div>
     {% if category_items %}
     <div class="lfv-category-results" data-category-results>
       <div class="lfv-results-tools"><label>Search returning categories<input type="search" data-category-search placeholder="Search categories" aria-controls="returning-results-table"></label><span data-results-count role="status">{{ category_items|length }} categories</span></div>
@@ -70,7 +70,7 @@
       <p data-no-results hidden>No matching categories.</p>
     </div>{% else %}<p>No recorded returning-category responses to display.</p>{% endif %}
   </section>
-  <section class="lfv3-results-section" id="new-categories"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">02 / COMMUNITY SUGGESTIONS</p><h2>New category ideas</h2></div><p>Moderated suggestions, with duplicate ideas grouped together. Listing does not indicate final category approval.</p></div>
+  <section class="lfv3-results-section" id="new-categories"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">02 / COMMUNITY SUGGESTIONS</p><h2>New category ideas</h2></div><p>Community-suggested categories and their results. Duplicate suggestions have been combined; listing does not mean approval.</p></div>
     {% if approved_suggestions %}
     <div class="lfv-category-results" data-category-results>
       <div class="lfv-results-tools"><label>Search new category ideas<input type="search" data-category-search placeholder="Search categories" aria-controls="new-results-table"></label><span data-results-count role="status">{{ approved_suggestions|length }} categories</span></div>
@@ -90,11 +90,11 @@
       <p data-no-results hidden>No matching categories.</p>
     </div>{% else %}<p>No approved new-category suggestions to display.</p>{% endif %}
   </section>
-  <section class="lfv3-results-section lfv3-method" id="method"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">03 / THE COMMUNITY'S PREFERENCE</p><h2>How should categories be selected?</h2></div><p>The Round 1 preference was preliminary. It was not the binding category-selection ballot.</p></div>
+  <section class="lfv3-results-section lfv3-method" id="method"><div class="lfv3-section-heading"><div><p class="lfv3-eyebrow">03 / THE COMMUNITY'S PREFERENCE</p><h2>How Should Categories Be Chosen?</h2></div><p>These results helped guide selection but did not determine the final categories.</p></div>
     <div class="lfv3-method-grid">{% for method in method_results %}<div><span>{{ method.label }}</span><strong>{{ method.percent }}%</strong><div class="lfv3-meter"><span style="width:{{ method.percent }}%"></span></div><small>{{ method.count }} vote{% if method.count != 1 %}s{% endif %}</small></div>{% endfor %}</div>
     {% if round1_winner %}<p class="lfv3-method-note">Recorded leading preference: <strong>{{ round1_winner }}</strong>{% if round1_method_tied %} (tie){% endif %}. Nominations and eligibility are managed separately.</p>{% endif %}
   </section>
-  <footer class="lfv3-results-cta"><div><p class="lfv3-eyebrow">WHAT'S NEXT</p><h2>Know someone who deserves recognition?</h2><p>See the current nominations page for participation details and availability.</p></div><a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_nominations_closed') }}">Visit nominations <span aria-hidden="true"><svg class="lfv-link-icon" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><path d="M3 13 13 3M3 3h10v10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></a></footer>
+  <footer class="lfv3-results-cta"><div><p class="lfv3-eyebrow">WHAT'S NEXT</p><h2>Ready to Nominate?</h2><p>Choose a category and submit a nomination.</p></div><a class="lfv3-button lfv3-button-gold" href="{{ url_for('dca_nominations_closed') }}">Go to Nominations <span aria-hidden="true"><svg class="lfv-link-icon" aria-hidden="true" focusable="false" viewBox="0 0 16 16"><path d="M3 13 13 3M3 3h10v10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></a></footer>
 </main>
 
 {% include "_footer.html" %}
