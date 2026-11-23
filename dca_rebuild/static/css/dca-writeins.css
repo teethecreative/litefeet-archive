@@ -1,11 +1,222 @@
-.lfv-writeins{max-width:1120px;margin:0 auto;padding:clamp(24px,4vw,52px) 24px 90px;color:var(--color-text,#f0f2f8);letter-spacing:.012em}.lfv-writeins h1,.lfv-writeins h2,.lfv-writeins h3{line-height:1.15;letter-spacing:.025em}.lfv-writeins h1{font-size:clamp(2rem,5vw,3.8rem);margin:.35em 0}.lfv-writeins-lead{max-width:74ch;line-height:1.65}.lfv-writeins-explainer{margin:32px 0 42px;border:1px solid var(--color-border,#34435b);border-top:3px solid #d3aa31;border-radius:9px;padding:clamp(18px,3vw,30px);background:var(--color-surface,#18243b)}.lfv-writeins-explainer ol{padding-left:1.3em;line-height:1.7}.lfv-writeins-explainer li+li{margin-top:12px}.lfv-writeins-note,.lfv-writeins-item p,.lfv-writeins-count{opacity:.8}.lfv-writeins-heading{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}.lfv-writeins-search{margin:16px 0 22px}.lfv-writeins-search label{display:block;font-size:.85rem;font-weight:700;margin-bottom:8px}.lfv-writeins-search>div{display:flex;gap:12px}.lfv-writeins-search input{flex:1;min-width:0;border:1px solid #6b7992;border-radius:8px;padding:12px 16px;background:var(--color-surface,#17243b);color:inherit}.lfv-writeins-button{display:inline-flex;align-items:center;justify-content:center;gap:16px;padding:12px 20px;border:0;border-radius:9px;background:#d3aa31;color:#08172b!important;text-decoration:none;font-weight:750;letter-spacing:.02em;cursor:pointer;white-space:nowrap}.lfv-writeins-item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 4px;border-bottom:1px solid #536078}.lfv-writeins-item h3{margin:0 0 5px;font-size:1.13rem;text-transform:uppercase}.lfv-writeins-item p{margin:6px 0;line-height:1.45}.lfv-writeins-copy{min-width:0}.lfv-writeins-status,.lfv-writeins-closed{font-size:.75rem;letter-spacing:.04em;font-weight:750}.lfv-writeins-status{color:#d3aa31}.lfv-writeins-back{margin-top:30px}.lfv-writeins-back a{color:inherit;text-decoration:underline;text-underline-offset:5px}@media(max-width:560px){.lfv-writeins{padding:24px 16px 72px}.lfv-writeins-item{align-items:flex-start;flex-direction:column}.lfv-writeins-search>div{flex-wrap:wrap}.lfv-writeins-search input{flex-basis:100%}}
-/* Expandable nominee totals follow the same counts as public nomination standings. */
-.lfv-writeins-nominees{margin-top:12px;max-width:640px;border:1px solid var(--color-border,#536078);border-radius:8px;overflow:hidden}
-.lfv-writeins-nominees>summary{cursor:pointer;padding:10px 12px;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:8px}
-.lfv-writeins-nominees>summary::-webkit-details-marker{display:none}
-.lfv-writeins-nominees[open] .lfv-writeins-nominees-plus{transform:rotate(45deg)}
-.lfv-writeins-nominees table{border-collapse:collapse;width:100%;font-size:.92rem}
-.lfv-writeins-nominees th,.lfv-writeins-nominees td{padding:10px 12px;border-top:1px solid var(--color-border,#536078);text-align:left}
-.lfv-writeins-nominees td{text-align:right;font-variant-numeric:tabular-nums}
-.lfv-writeins-nominees th a{color:inherit;text-decoration:underline;text-underline-offset:3px}
-.lfv-writeins-nominees>p{padding:0 12px 12px}
+/* 2026 DCA write-ins: visual parity with the nominee standings cards.
+   All colors follow the Vault's light/dark theme variables. */
+html.lfv-sitewide .lfv-writeins {
+  box-sizing: border-box;
+  width: min(calc(100% - 44px), 1140px);
+  max-width: 1140px !important;
+  margin: 18px auto 56px;
+  padding: clamp(20px, 3vw, 34px);
+  color: var(--lfv-ink, #102039);
+  background: var(--lfv-surface, #fff);
+  border: 1px solid var(--lfv-line, #cbd5e1);
+  border-radius: 12px;
+  letter-spacing: normal;
+}
+html.lfv-sitewide .lfv-writeins :is(h1,h2,h3) {
+  line-height: 1.22;
+  letter-spacing: -.025em;
+  color: var(--lfv-ink, #102039);
+}
+html.lfv-sitewide .lfv-writeins-intro { margin: 0 0 18px; }
+html.lfv-sitewide .lfv-writeins-intro .lfv3-eyebrow {
+  font-size: .71rem; margin: 0 0 8px; letter-spacing: .1em; font-weight: 800;
+}
+html.lfv-sitewide .lfv-writeins h1 {
+  font-size: clamp(1.6rem, 3.2vw, 2.25rem) !important;
+  line-height: 1.14 !important; margin: 0 0 10px !important;
+  text-transform: none !important;
+}
+html.lfv-sitewide .lfv-writeins-lead {
+  max-width: 70ch; line-height: 1.55; margin: 0 0 14px;
+  color: var(--lfv-muted, #5d697a); font-size: .95rem;
+  text-transform: none;
+}
+html.lfv-sitewide .lfv-writeins-explainer {
+  display: block; margin: 12px 0 22px; padding: 0;
+  background: transparent; border: 0; border-bottom: 1px solid var(--lfv-line, #cbd5e1);
+  border-radius: 0; box-shadow: none;
+}
+html.lfv-sitewide .lfv-writeins-explainer > summary {
+  display: flex; justify-content: space-between; gap: 14px;
+  cursor: pointer; list-style: none; padding: 12px 0;
+  font-weight: 750; font-size: .88rem;
+}
+html.lfv-sitewide .lfv-writeins-explainer > summary::-webkit-details-marker { display: none; }
+html.lfv-sitewide .lfv-writeins-explainer[open] > summary > span { transform: rotate(45deg); }
+html.lfv-sitewide .lfv-writeins-explainer .lfv-writeins-rules {
+  padding: 2px 0 15px; max-width: 78ch; font-size: .88rem;
+  color: var(--lfv-ink, #102039); line-height: 1.55;
+}
+html.lfv-sitewide .lfv-writeins-rules p { margin: 2px 0 10px; }
+html.lfv-sitewide .lfv-writeins-rules ol { margin: 0; padding-left: 1.3rem; }
+html.lfv-sitewide .lfv-writeins-rules li { margin: 5px 0; }
+html.lfv-sitewide .lfv-writeins-heading {
+  display: flex; align-items: baseline; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px 18px; margin: 0 0 14px;
+}
+html.lfv-sitewide .lfv-writeins-heading h2 {
+  margin: 0 !important; font-size: clamp(1.14rem, 2vw, 1.45rem) !important;
+}
+html.lfv-sitewide .lfv-writeins-heading > span {
+  font-size: .82rem; color: var(--lfv-muted, #5d697a);
+  font-variant-numeric: tabular-nums;
+}
+html.lfv-sitewide .lfv-writeins-search { margin: 0 0 10px; }
+html.lfv-sitewide .lfv-writeins-search label {
+  display: block; margin: 0 0 7px; font-size: .82rem; font-weight: 750;
+}
+html.lfv-sitewide .lfv-writeins-search-row {
+  display: flex; align-items: stretch; gap: 10px;
+}
+html.lfv-sitewide .lfv-writeins-search input {
+  box-sizing: border-box; min-width: 0; flex: 1;
+  padding: 11px 13px; background: var(--lfv-surface, #fff);
+  color: var(--lfv-ink, #102039);
+  border: 1px solid var(--lfv-line, #cbd5e1);
+  border-radius: 7px; font: inherit; font-size: .88rem;
+}
+html.lfv-sitewide .lfv-writeins-button {
+  display: inline-flex; justify-content: center; align-items: center;
+  min-height: 42px; padding: 10px 18px; border: 0;
+  border-radius: 7px; background: var(--lfv-gold, #caa326);
+  color: var(--lfv-navy, #0b1b38) !important;
+  font: inherit; font-size: .84rem; font-weight: 800;
+  text-transform: none; text-decoration: none; cursor: pointer;
+}
+html.lfv-sitewide .lfv-writeins-clear {
+  display: inline-block; margin: 8px 0 0; color: var(--lfv-ink, #102039);
+  font-size: .8rem; text-underline-offset: 3px;
+}
+html.lfv-sitewide .lfv-writeins-note {
+  color: var(--lfv-muted, #5d697a);
+  font-size: .78rem; line-height: 1.5; margin: 10px 0 18px;
+}
+html.lfv-sitewide .lfv-writeins-grid {
+  display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px; align-items: start; width: 100%; max-width: 100%;
+}
+html.lfv-sitewide .lfv-writeins-card {
+  display: block !important; box-sizing: border-box; min-width: 0;
+  padding: 0 14px !important; margin: 0 !important;
+  background: var(--lfv-surface, #fff) !important;
+  border: 1px solid var(--lfv-line, #cbd5e1) !important;
+  border-radius: 9px !important;
+  box-shadow: none !important; overflow: hidden; color: var(--lfv-ink, #102039);
+}
+html.lfv-sitewide .lfv-writeins-card[open] {
+  border-color: var(--lfv-gold, #caa326) !important;
+}
+html.lfv-sitewide .lfv-writeins-card > summary {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 16px;
+  grid-template-rows: auto auto;
+  align-content: center; align-items: center;
+  column-gap: 10px; row-gap: 6px;
+  min-height: 92px; box-sizing: border-box; margin: 0 !important;
+  padding: 13px 0 !important; background: transparent !important;
+  border: 0 !important; cursor: pointer; list-style: none;
+}
+html.lfv-sitewide .lfv-writeins-card > summary::-webkit-details-marker { display: none; }
+html.lfv-sitewide .lfv-writeins-card > summary .lfv5-category-name {
+  grid-column: 1; grid-row: 1; min-width: 0; overflow-wrap: anywhere;
+  font-size: .86rem !important; font-weight: 850; line-height: 1.3;
+  text-transform: uppercase;
+}
+html.lfv-sitewide .lfv-writeins-card > summary .lfv5-category-status {
+  grid-column: 1; grid-row: 2;
+  font-size: .68rem !important; font-weight: 650; line-height: 1.35;
+  color: var(--lfv-muted, #5d697a); text-transform: uppercase;
+  letter-spacing: .02em; overflow-wrap: anywhere;
+}
+html.lfv-sitewide .lfv-writeins-summary-count {
+  display: block; margin-top: 4px; font-size: .7rem;
+  font-weight: 550; letter-spacing: normal; text-transform: none;
+}
+html.lfv-sitewide .lfv-writeins-card > summary .lfv5-category-chevron {
+  grid-column: 2; grid-row: 1 / 3; align-self: center; justify-self: end;
+  color: var(--lfv-gold, #b18d26); font-size: 1.15rem; line-height: 1;
+  transition: transform .15s ease;
+}
+html.lfv-sitewide .lfv-writeins-card[open] > summary .lfv5-category-chevron { transform: rotate(45deg); }
+html.lfv-sitewide .lfv-writeins-card > summary:focus-visible,
+html.lfv-sitewide .lfv-writeins-explainer > summary:focus-visible {
+  outline: 3px solid var(--lfv-gold, #caa326); outline-offset: -3px;
+}
+html.lfv-sitewide .lfv-writeins-panel {
+  padding: 10px 0 15px; border-top: 1px solid var(--lfv-line, #cbd5e1);
+  overflow-wrap: anywhere;
+}
+html.lfv-sitewide .lfv-writeins-description {
+  font-size: .83rem; margin: 0 0 12px; line-height: 1.5;
+  color: var(--lfv-ink, #102039);
+}
+html.lfv-sitewide .lfv-writeins-count {
+  font-size: .73rem; margin: 5px 0 10px;
+  color: var(--lfv-muted, #5d697a); font-weight: 650;
+}
+html.lfv-sitewide .lfv-writeins-nominees {
+  display: table; border-collapse: collapse; table-layout: fixed;
+  width: 100%; margin: 5px 0 8px; padding: 0;
+  color: var(--lfv-ink, #102039); background: transparent;
+}
+html.lfv-sitewide .lfv-writeins-nominees :is(th,td) {
+  padding: 8px 0; border: 0; border-bottom: 1px solid var(--lfv-line, #cbd5e1);
+  background: transparent !important; color: inherit;
+  font-size: .82rem; line-height: 1.4; text-align: left;
+  overflow-wrap: anywhere; vertical-align: top;
+}
+html.lfv-sitewide .lfv-writeins-nominees td {
+  width: 46px; padding-left: 5px; text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+html.lfv-sitewide .lfv-writeins-nominees th a {
+  display: inline-block; color: var(--lfv-ink, #102039);
+  font-weight: 650; text-decoration: none;
+}
+html.lfv-sitewide .lfv-writeins-nominees th a:hover {
+  text-decoration: underline; text-underline-offset: 3px;
+}
+html.lfv-sitewide .lfv-writeins-sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+html.lfv-sitewide .lfv-writeins-empty-nominees {
+  font-size: .8rem; margin: 9px 0; color: var(--lfv-muted, #5d697a);
+}
+html.lfv-sitewide .lfv-writeins-action {
+  padding-top: 11px; margin-top: 10px;
+  border-top: 1px solid var(--lfv-line, #cbd5e1);
+}
+html.lfv-sitewide .lfv-writeins-action form { margin: 0; }
+html.lfv-sitewide .lfv-writeins-action-link {
+  display: inline-flex; align-items: center; gap: 9px;
+  min-height: 40px; box-sizing: border-box; padding: 8px 0;
+  border: 0; background: transparent; color: var(--lfv-ink, #102039);
+  font: inherit; font-size: .79rem; line-height: 1.35; font-weight: 800;
+  text-decoration: none; cursor: pointer; text-align: left; white-space: normal;
+}
+html.lfv-sitewide .lfv-writeins-action-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+html.lfv-sitewide .lfv-writeins-closed { font-size: .78rem; color: var(--lfv-muted, #5d697a); }
+html.lfv-sitewide .lfv-writeins-empty {
+  grid-column: 1 / -1; font-size: .87rem;
+}
+html.lfv-sitewide .lfv-writeins-back { margin: 25px 0 0; }
+html.lfv-sitewide .lfv-writeins-back a {
+  color: var(--lfv-ink, #102039); font-size: .86rem; text-underline-offset: 3px;
+}
+@media (max-width: 950px) {
+  html.lfv-sitewide .lfv-writeins-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 620px) {
+  html.lfv-sitewide .lfv-writeins {
+    width: calc(100% - 24px); margin: 12px auto 44px; padding: 18px 14px;
+  }
+  html.lfv-sitewide .lfv-writeins-grid {
+    grid-template-columns: 1fr;
+  }
+  html.lfv-sitewide .lfv-writeins-heading { align-items: flex-start; }
+  html.lfv-sitewide .lfv-writeins-search-row { gap: 8px; }
+  html.lfv-sitewide .lfv-writeins-button { padding-inline: 12px; }
+}
