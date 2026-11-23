@@ -283,7 +283,13 @@ def install_information_architecture(app, ns):
             from dca_rebuild.public_profiles import profile_index
             profile = profile_index(ns["SessionLocal"]).for_archive_record(slug)
         template = 'public_profile.html' if profile is not None else 'archive_record.html'
+        from dca_rebuild.battle_polls import build_battle_rows
+        from dca_rebuild.email_verification import verified_nominator_hash
+        poll_identity = verified_nominator_hash()
+        battle_groups = build_battle_rows(record, ns["SessionLocal"], poll_identity)
         return render_template(template, record=public_record(record),
+                               battle_groups=battle_groups, battle_poll_verified=bool(poll_identity),
+                               battle_poll_admin=bool(session.get("ledger_admin_authenticated")),
                                related_records=[public_record(item) for item in related_records],
                                archive_csrf=session['vault_archive_csrf'],
                                profile=profile,
