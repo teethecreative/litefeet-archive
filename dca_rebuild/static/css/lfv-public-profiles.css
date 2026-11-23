@@ -108,3 +108,14 @@ html[data-theme="dark"] .lfv-profile-page{
  .lfv-profile-page .lfv-profile-wall-actions{align-items:flex-start;flex-direction:column}
  .lfv-profile-page .lfv-profile-card-title{padding:12px 14px}
 }
+
+.lfv-profile-page .lfv-profile-wall-composer input:not([type=hidden]),.lfv-profile-page .lfv-profile-wall-composer textarea{display:block;width:100%;padding:10px 12px;border-radius:6px;border:1px solid var(--profile-line);background:var(--profile-bg);color:var(--profile-ink);font:inherit;margin:7px 0 13px}
+.lfv-profile-page .lfv-profile-wall-composer .lfv-wall-honeypot{display:none!important}
+.lfv-profile-page .lfv-profile-wall-composer button{cursor:pointer!important;opacity:1!important;background:var(--profile-ink)!important;color:var(--profile-bg)!important}
+.lfv-profile-page .lfv-profile-wall-review{margin:16px 0;font-size:.86rem}
+.lfv-profile-page .lfv-profile-wall-posts{list-style:none;margin:18px 0 0;padding:0}
+.lfv-profile-page .lfv-profile-wall-posts>li{padding:15px 0;border-bottom:1px solid var(--profile-line)}
+.lfv-profile-page .lfv-profile-wall-posts>li:last-child{border-bottom:0}
+.lfv-profile-page .lfv-profile-wall-posts>li>div{display:flex;gap:12px;align-items:baseline;justify-content:space-between}
+.lfv-profile-page .lfv-profile-wall-posts time{color:var(--profile-muted);font-size:.75rem}
+.lfv-profile-page .lfv-profile-wall-posts p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.9rem;line-height:1.6}
