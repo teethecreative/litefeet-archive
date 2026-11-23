@@ -170,9 +170,14 @@ def install_information_architecture(app, ns):
         current_page = max(1, request.args.get('page', 1, type=int) or 1)
         query = request.args.get('q', '').strip()[:120]
         profiles = profile_index(ns['SessionLocal'])
-        filtered = find_profiles(profiles, query=query, page=current_page)
+        filtered = (find_profiles(profiles, query=query, page=current_page)
+                    if query else {
+                        'items': [], 'count': 0, 'page': 1,
+                        'has_more': False, 'next_page': None,
+                        'query': '', 'collection': 'people',
+                    })
         return section_page('people', archive_items=filtered['items'],
-                            archive_pagination=filtered,
+                            archive_pagination=filtered, archive_query=query,
                             people_cloud=nominee_people_cloud(profiles, people_crew_cloud()),
                             archive_start_page=current_page)
 
