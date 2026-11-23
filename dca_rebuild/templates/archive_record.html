@@ -138,11 +138,11 @@
         </section>
       {% else %}
         <section>
-          <h2>{% if record.collection == 'people' %}Documented research{% elif record.collection == 'moves' %}Movement research{% else %}Historical context{% endif %}</h2>
+          <h2>{% if record.record_type == 'film' %}About the film{% elif record.collection == 'people' %}Documented research{% elif record.collection == 'moves' %}Movement research{% else %}Historical context{% endif %}</h2>
           <p>{{ record.description }}</p>
           {% if record.related_to %}<p><strong>Related subjects:</strong> {{ record.related_to }}</p>{% endif %}
           {% if record.research_findings %}
-            <h3>Additional sourced findings</h3>
+            <h3>{{ 'Production and community involvement' if record.record_type == 'film' else 'Additional sourced findings' }}</h3>
             <ol class="lfv-archive-findings">
             {% for finding in record.research_findings %}
               <li>{{ finding }}</li>

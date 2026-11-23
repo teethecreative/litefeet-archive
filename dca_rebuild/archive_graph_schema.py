@@ -5,7 +5,7 @@ GRAPH_TABLES = {"graph_records", "graph_aliases", "graph_links", "graph_decision
 KIND_MAP = {
     "dancer_profile": "person", "legacy_identity": "person", "person_candidate": "person",
     "person": "person", "team": "team", "event": "event", "battle": "battle",
-    "track": "track", "footage": "footage", "historical_claim": "claim",
+    "track": "track", "film": "footage", "footage": "footage", "historical_claim": "claim",
     "move_info": "move", "award_archive": "award",
 }
 GRAPH_SCHEMA = """

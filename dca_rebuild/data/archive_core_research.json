@@ -2,6 +2,16 @@
   "notice": "Public-research excerpts from the older repository seed, presented as research under review, not confirmed biographies or verified historical facts.",
   "records": [
     {
+      "slug": "get-lite-teyana-taylor",
+      "title": "Get Lite — a film by Teyana Taylor",
+      "record_type": "film",
+      "collection": "history",
+      "date": "2027-08-20",
+      "date_label": "Scheduled U.S. release · August 20, 2027",
+      "summary": "A Bronx teenager finds a crew on the New York City subway in Teyana Taylor’s first feature as director. Ceyair Wright plays the dancer and Storm Reid plays the beatmaker who draws him into LiteFeet. Paramount has scheduled the film for U.S. theaters on August 20, 2027.",
+      "related_to": "Harlem, Bronx, subway dance, Kingdome, Kid the Wiz"
+    },
+    {
       "slug": "research-litefeet-get-lite-emerged-from-harlem-and-the-bronx",
       "title": "LiteFeet / Get Lite Emerged from Harlem and the Bronx",
       "record_type": "historical_claim",

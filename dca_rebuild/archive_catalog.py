@@ -146,8 +146,8 @@ def _research(raw, enrichment=None):
         "profile_roles": raw.get("profile_roles") or [],
         "role_records": raw.get("role_records") or {},
         "team_details": raw.get("team_details") or {},
-        "date": "",
-        "date_label": "Historical research",
+        "date": raw.get("date", ""),
+        "date_label": raw.get("date_label", "Historical research"),
         "date_certainty": "unspecified",
         "source_kind": "research",
         "editorial_status": "Research under review",
@@ -175,6 +175,8 @@ def _research(raw, enrichment=None):
         "can_verify": typ in ("historical_claim", "move_info"),
         "claim": description if typ in ("historical_claim", "move_info") else "",
     }
+    if typ == "film":
+        record.update(date_certainty="scheduled", editorial_status="Upcoming film")
     return record
 
 

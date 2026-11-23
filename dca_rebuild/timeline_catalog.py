@@ -82,6 +82,7 @@ def record_metadata(item):
         "move_info": "LITEFEET MOVE",
         "historical_claim": "HISTORY",
         "award_archive": "AWARDS",
+        "film": "SCHEDULED FILM RELEASE",
     }.get(item.get("record_type"))
     if not kind:
         kind = {"people": "DANCER / TEAM", "music": "LITEFEET MUSIC",
@@ -119,7 +120,7 @@ def all_timeline_entries():
             detail=[], sources=sources, kind="record",
             **record_metadata(item),
             search=" ".join([item["title"], item.get("summary") or "",
-                             item.get("collection") or ""]).casefold(),
+                             item.get("collection") or "", item.get("related_to") or ""]).casefold(),
         ))
     for index, milestone in enumerate(guide["timeline"]):
         year = _milestone_year(milestone["year"])
