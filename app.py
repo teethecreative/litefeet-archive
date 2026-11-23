@@ -8940,6 +8940,15 @@ def battle_submit_phase2():
         return render_template("battle_submit.html")
 
     battle_type = request.form.get("battle_type", "").strip()
+    try:
+        round_count = int(request.form.get("round_count", "1") or "1")
+    except (TypeError, ValueError):
+        round_count = 0
+    if not 1 <= round_count <= 20:
+        return render_template(
+            "battle_submit.html",
+            error="The number of rounds must be between 1 and 20.",
+        ), 400
     competitor_one = request.form.get("competitor_one", "").strip()
     competitor_two = request.form.get("competitor_two", "").strip()
     competitor_one_team = request.form.get("competitor_one_team", "").strip()
@@ -8970,6 +8979,7 @@ def battle_submit_phase2():
 
     details = [
         {"label": "Battle Type", "value": battle_type},
+        {"label": "Rounds", "value": str(round_count)},
         {"label": "Competitor One", "value": competitor_one},
         {"label": "Competitor Two", "value": competitor_two},
         {"label": "Competitor One Team", "value": competitor_one_team},
@@ -9011,6 +9021,7 @@ def battle_submit_phase2():
             "submission_id": submission_id,
             "event_submission_id": None,
             "battle_type": battle_type,
+            "round_count": round_count,
             "competitor_one": competitor_one,
             "competitor_two": competitor_two,
             "competitor_one_team": competitor_one_team,
@@ -14238,6 +14249,7 @@ def ensure_phase7_battle_tables():
             ("event_name", "TEXT"),
             ("event_date", "TEXT"),
             ("battle_type", "TEXT"),
+            ("round_count", "INTEGER DEFAULT 1"),
             ("competitor_one", "TEXT"),
             ("competitor_two", "TEXT"),
             ("official_winner", "TEXT"),
