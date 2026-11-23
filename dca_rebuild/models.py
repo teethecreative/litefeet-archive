@@ -1053,3 +1053,37 @@ class WorldRecordInterest(Base):
     contact_permission = Column(Boolean, nullable=False, default=False)
     status = Column(String(32), nullable=False, default="interested", index=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+# Permanent community polls, kept separate from official archival battle outcomes.
+class VaultBattleOutcome(Base):
+    __tablename__ = "vault_battle_outcomes"
+    battle_key = Column(String(64), primary_key=True)
+    event_slug = Column(String(255), nullable=False, index=True)
+    lineup_label = Column(String(500), nullable=False)
+    occurred = Column(String(24), nullable=False, default="unconfirmed")
+    result = Column(String(24), nullable=False, default="unknown")
+    source_note = Column(Text, nullable=True)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class VaultBattleOutcomeHistory(Base):
+    __tablename__ = "vault_battle_outcome_history"
+    id = Column(Integer, primary_key=True)
+    battle_key = Column(String(64), nullable=False, index=True)
+    event_slug = Column(String(255), nullable=False)
+    previous_occurrence = Column(String(24), nullable=True)
+    previous_result = Column(String(24), nullable=True)
+    occurred = Column(String(24), nullable=False)
+    result = Column(String(24), nullable=False)
+    source_note = Column(Text, nullable=True)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+
+class VaultBattleVote(Base):
+    __tablename__ = "vault_battle_votes"
+    __table_args__ = (UniqueConstraint("battle_key", "voter_hash", name="uq_vault_battle_voter"),)
+    id = Column(Integer, primary_key=True)
+    battle_key = Column(String(64), nullable=False, index=True)
+    voter_hash = Column(String(64), nullable=False)
+    choice = Column(String(1), nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
