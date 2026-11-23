@@ -116,3 +116,67 @@ def test_team_founders_and_roster_only_link_exact_profiles():
     assert team["team_details"]["current_roster"][0]["href"] == "/people/flii-boogie"
     assert "href" not in team["team_details"]["former_roster"][0]
     assert index.by_name("Kid Smoove")["is_team"] is False
+
+
+def test_judge_is_secondary_and_lists_only_advertised_event_appearances():
+    records = [
+        dict(slug="dancer-a", title="Dancer A", collection="people",
+             record_type="dancer_profile"),
+        dict(slug="event-one", title="Body Bag 2026", collection="events",
+             date="2026-10-01", date_label="October 1, 2026",
+             information=[("Judges", "Dancer A, Unlisted Judge")],
+             battles=[{"items": ["Dancer A vs Another Dancer"]}],
+             lineup_participants=[]),
+    ]
+    index = PublicProfileIndex(records, [], [], [])
+    dancer = index.for_archive_record("dancer-a")
+    assert [badge["key"] for badge in dancer["badges"]] == ["dancer", "judge"]
+    judging = next(badge for badge in dancer["badges"] if badge["key"] == "judge")
+    assert len(judging["rows"]) == 1
+    assert judging["rows"][0]["title"] == "Body Bag 2026"
+    assert "specific battles unconfirmed" in judging["rows"][0]["detail"]
+    assert "Another Dancer" not in judging["rows"][0]["detail"]
+
+
+def test_judge_role_alone_cannot_create_standalone_judge_page():
+    records = [dict(slug="person", title="Someone", collection="people",
+                    profile_roles=["Judge"], record_type="person")]
+    index = PublicProfileIndex(records, [], [], [])
+    entry = index.for_archive_record("person")
+    assert entry["badges"] == []
+    assert "judge" not in entry["roles"]
+
+
+def test_historian_not_inferred_from_archive_mentions_or_legacy_roles():
+    records = [
+        dict(slug="legacy", title="Historian Name", collection="people",
+             record_type="legacy_identity", profile_roles=["Historian"],
+             information=[("Original role labels (unverified)", "Historian")]),
+        dict(slug="person", title="Archivist", collection="people",
+             record_type="dancer_profile", profile_roles=["Historian"]),
+    ]
+    index = PublicProfileIndex(records, [], [], [])
+    assert index.for_archive_record("legacy")["badges"] == []
+    assert "historian" not in index.for_archive_record("person")["roles"]
+
+
+def test_source_supported_role_overlaps_do_not_duplicate_identity():
+    records = [dict(slug="person", title="DJ Creator", collection="people",
+                    record_type="dancer_profile", profile_roles=[
+                        "Producer", "DJ", "Host", "Videographer", "Educator"],
+                    role_records={"producer": [
+                        {"title": "Documented beat", "href": "/music/example",
+                         "detail": "Released 2024"}]})]
+    index = PublicProfileIndex(records, [], [], [])
+    profile = index.for_archive_record("person")
+    keys = [badge["key"] for badge in profile["badges"]]
+    assert keys == ["dancer", "producer", "dj", "host", "videographer", "educator"]
+    assert next(b for b in profile["badges"] if b["key"] == "producer")["rows"][0]["href"] == "/music/example"
+
+
+def test_award_category_does_not_create_unearned_judging_or_historian_badges():
+    categories = [{"name": "Best Team", "nominees": [{"name": "Team Demon"}]},
+                  {"name": "Producer of the Year", "nominees": [{"name": "Sound Wave"}]}]
+    index = PublicProfileIndex([], [], categories, [])
+    assert [b["key"] for b in index.by_name("Team Demon")["badges"]] == ["team"]
+    assert [b["key"] for b in index.by_name("Sound Wave")["badges"]] == ["producer"]
