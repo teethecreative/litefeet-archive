@@ -2482,7 +2482,7 @@ def lfa_submit():
 def admin_dashboard():
     """One chronological 30-day activity list; detail remains in each workspace."""
     from dca_rebuild.admin_activity import _fetch_activity
-    from dca_rebuild.admin_workspace import _queue
+    from dca_rebuild.admin_workspace import _pending_review_summary
     try:
         page = int(request.args.get("page", "1"))
     except (TypeError, ValueError):
@@ -2493,13 +2493,14 @@ def admin_dashboard():
         recent_activity_rows, has_more = _fetch_activity(
             db, area="all", period="30", page=page, size=20
         )
-        pending_total, _ = _queue(db, "all", 1, "oldest")
+        pending_total, pending_review_links = _pending_review_summary(db)
     return render_template(
         "admin_workspace_overview.html",
         recent_activity_rows=recent_activity_rows,
         activity_page=page,
         activity_has_more=has_more,
         pending_total=pending_total,
+        pending_review_links=pending_review_links,
     )
 
 @app.route("/admin/lfa/submissions")

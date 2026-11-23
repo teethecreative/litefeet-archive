@@ -58,17 +58,16 @@ body.ledger-admin .lfv-admin-overview__entry:is(:hover,:focus-visible) {
 .lfv-admin-overview__pages a {color:var(--text)!important;font-weight:800;text-decoration:none!important;}
 .lfv-admin-overview__pages a:last-child {justify-self:end;}
 .lfv-admin-overview__pages span {color:var(--muted);}
-.lfv-admin-overview__queue-note {
-  display:flex;justify-content:space-between;align-items:center;
-  gap:12px 25px;flex-wrap:wrap;
-  border-top:1px solid var(--border);padding:17px 0 0;
-  color:var(--muted);font-size:.81rem;line-height:1.5;
-}
-.lfv-admin-overview__queue-note strong {color:var(--text);}
-.lfv-admin-overview__queue-note a {
-  color:var(--text)!important;font-weight:800;text-decoration:underline!important;
-  text-decoration-color:var(--gold)!important;text-underline-offset:4px;
-}
+.lfv-admin-overview__attention-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.lfv-admin-overview__attention-head h2{margin:4px 0 6px}
+.lfv-admin-overview__attention-head p:last-child{color:var(--muted);font-size:.82rem;margin:0}
+.lfv-admin-overview__attention-total{flex:none;font-size:1.55rem;color:var(--text);background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:11px;min-width:56px;text-align:center}
+.lfv-admin-overview__attention-links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}
+body.ledger-admin main#admin-overview .lfv-admin-overview__attention-links>a{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:10px!important;min-width:0!important;min-height:44px!important;padding:10px 12px!important;margin:0!important;background:var(--surface-2)!important;color:var(--text)!important;border:1px solid var(--border)!important;border-radius:6px!important;box-shadow:none!important;text-decoration:none!important;font-size:.78rem!important;font-weight:750!important;line-height:1.3!important}
+body.ledger-admin main#admin-overview .lfv-admin-overview__attention-links>a:is(:hover,:focus-visible){border-color:var(--gold)!important;background:var(--surface)!important}
+.lfv-admin-overview__attention-links span{min-width:0;overflow-wrap:anywhere}
+@media(max-width:800px){.lfv-admin-overview__attention-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:550px){.lfv-admin-overview__attention-links{grid-template-columns:1fr}}
 .lfv-admin-overview__tools {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
 body.ledger-admin .lfv-admin-overview__tools a {
   display:flex;flex-direction:column;gap:5px;
@@ -152,7 +151,6 @@ body.ledger-admin main#admin-overview .lfv-admin-overview__entry .lfv-admin-over
 }
 /* Navigation controls: not giant gold buttons. */
 body.ledger-admin main#admin-overview .lfv-admin-overview__pages > a,
-body.ledger-admin main#admin-overview .lfv-admin-overview__queue-note > a,
 body.ledger-admin main#admin-overview .lfv-admin-overview__activity .lfv-admin-workspace-heading > a {
   display:inline-flex!important;width:auto!important;min-height:0!important;
   padding:4px 0!important;margin:0!important;

@@ -21,42 +21,28 @@ from dca_rebuild.phase9e import NomineeQualificationReason9E
 AREAS = ("site", "archive", "awards", "events", "music", "lock-in", "other")
 DEVELOPMENT_STATES = ("needs_review", "needs_work", "planned", "active", "done", "not_planned")
 FEEDBACK_STATES = ("new", "reviewed", "dismissed", "converted")
-QUEUE_SECTIONS = ("all", "events", "awards", "archive", "community", "lock-in")
 PAGE_SIZE = 10
-# Status-specific work expected from the reviewer; these labels do not claim
-# a submitted record is invalid or that a historical result is incorrect.
-REVIEW_REASONS = {
-    "Event submission": "Check event details and decide whether to publish.",
-    "DCA category suggestion": "Review the proposed category; approve, merge, or reject.",
-    "DCA nominee": "Review the nominee and decide approval or rejection.",
-    "LiteFeet Awards submission": "Verify the historical award information before approval.",
-    "DCA qualification reason": "Review supporting statements or evidence; eligibility is not automatic.",
-    "Beta feedback": "Triage new Beta feedback and decide the next action.",
-    "Archive response": "Review a community statement against available sources.",
-    "Lock In card request": "Review the card suggestion before adding it to the game.",
-    "Website feedback": "Triage the website report and decide whether to create a task.",
-}
-# Every spec is a real, existing source, not a synthetic task.
-SOURCES = (
-    ("events", VaultGatheringSubmission, "status", "pending", "created_at",
-     "title", "Event submission", "admin_vault_gathering_edit"),
-    ("awards", DCANewCategorySuggestion, "moderation_status", "pending", "created_at",
-     "category_name", "DCA category suggestion", "admin_round1"),
-    ("awards", DCANominee, "moderation_status", "pending", "created_at",
-     "name", "DCA nominee", "admin_dca_nominations"),
-    ("awards", LFAArchiveSubmission, "status", "pending", "created_at",
-     "winner_name", "LiteFeet Awards submission", "admin_lfa_submissions"),
-    ("awards", NomineeQualificationReason9E, "moderation_status", "pending", "submitted_at",
-     "reason", "DCA qualification reason", "phase9e_admin_qualification_reasons"),
-    ("community", BetaFeedback, "status", "new", "created_at",
-     "message", "Beta feedback", "admin_beta_feedback"),
-    ("archive", VaultArchiveVerification, "moderation_status", "pending", "created_at",
-     "record_slug", "Archive response", "admin_vault_auxiliary_review"),
-    ("lock-in", LockInCardRequest, "status", "pending", "created_at",
-     "card_name", "Lock In card request", "admin_vault_auxiliary_review"),
-    ("community", VaultDevelopmentFeedback, "status", "new", "created_at",
-     "title", "Website feedback", "admin_vault_development"),
+# Count actionable review work only; historical DCA category suggestions remain
+# accessible in the Round 1 archive but are not active review work.
+PENDING_REVIEW_SOURCES = (
+ ("Events", VaultGatheringSubmission, "status", "pending", "admin_vault_gatherings", {}),
+ ("DCA nominees", DCANominee, "moderation_status", "pending", "admin_dca_nominations", {}),
+ ("DCA qualification reasons", NomineeQualificationReason9E, "moderation_status", "pending", "phase9e_admin_qualification_reasons", {}),
+ ("LiteFeet Awards", LFAArchiveSubmission, "status", "pending", "admin_lfa_submissions", {}),
+ ("Archive", VaultArchiveVerification, "moderation_status", "pending", "admin_vault_auxiliary_review", {"source": "archive"}),
+ ("Lock In", LockInCardRequest, "status", "pending", "admin_vault_auxiliary_review", {"source": "lock-in"}),
+ ("Beta feedback", BetaFeedback, "status", "new", "admin_beta_feedback", {}),
+ ("Website feedback", VaultDevelopmentFeedback, "status", "new", "admin_vault_development", {}),
 )
+
+def _pending_review_summary(db):
+    items, total = [], 0
+    for name, model, status_field, pending_value, endpoint, kwargs in PENDING_REVIEW_SOURCES:
+        count = db.query(model).filter(getattr(model, status_field) == pending_value).count()
+        total += count
+        if count:
+            items.append({"name": name, "count": count, "url": url_for(endpoint, **kwargs)})
+    return total, items
 
 
 def _admin_token():
@@ -82,36 +68,6 @@ def _clamp_page():
     return page
 
 
-def _queue(db, section="all", page=1, sort="oldest"):
-    if section not in QUEUE_SECTIONS or sort not in ("oldest", "newest"):
-        abort(400)
-    count, candidates = 0, []
-    # Fetch enough candidates from each source to produce correct global page
-    # ordering, rather than independently paginating each source's rows.
-    sample_size = page * PAGE_SIZE
-    for category, model, status_attr, pending_value, time_attr, title_attr, label, endpoint in SOURCES:
-        if section != "all" and section != category:
-            continue
-        q = db.query(model).filter(getattr(model, status_attr) == pending_value)
-        count += q.count()
-        date_col = getattr(model, time_attr)
-        rows = q.order_by(date_col.desc() if sort == "newest" else date_col.asc(),
-                          model.id.desc() if sort == "newest" else model.id.asc()).limit(sample_size).all()
-        for entry in rows:
-            received = getattr(entry, time_attr)
-            candidates.append(dict(
-                id=entry.id, section=category, label=label,
-                title=str(getattr(entry, title_attr) or "Untitled")[:180],
-                received=received, endpoint=endpoint,
-                reason=REVIEW_REASONS.get(label, "Pending moderation decision."),
-            ))
-    candidates.sort(
-        key=lambda x: (x["received"] or datetime.min, x["section"], x["id"]),
-        reverse=(sort == "newest"),
-    )
-    return count, candidates[(page - 1) * PAGE_SIZE:page * PAGE_SIZE]
-
-
 def install_admin_workspace(app, ns):
     # Read the active session factory at request time for isolated test databases.
     admin_required = ns["admin_login_required"]
@@ -119,15 +75,7 @@ def install_admin_workspace(app, ns):
     @app.get("/admin/review-queue", endpoint="admin_vault_review_queue")
     @admin_required
     def admin_review_queue():
-        section = request.args.get("section", "all")
-        sort = request.args.get("sort", "oldest")
-        page = _clamp_page()
-        with ns["SessionLocal"]() as db:
-            total, rows = _queue(db, section, page, sort)
-        return render_template("admin_workspace_queue.html", rows=rows,
-                               section=section, sort=sort, page=page,
-                               total=total, pages=(total + PAGE_SIZE - 1) // PAGE_SIZE,
-                               sections=QUEUE_SECTIONS)
+        return redirect(url_for("admin_dashboard") + "#needs-attention", code=303)
 
     @app.get("/admin/review-records", endpoint="admin_vault_auxiliary_review")
     @admin_required

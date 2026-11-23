@@ -11,7 +11,7 @@ def test_admin_activity_rows_override_old_link_buttons(website):
     css=(BASE/"static"/"css"/"admin-overview-v2.css").read_text()
     assert "lfv-admin-overview__list" in template
     assert "lfv-admin-overview__entry" in template
-    assert "admin-overview-v2.css', v='20261123b'" in template
+    assert "admin-overview-v2.css', v='20261123c'" in template
     assert "ONE FULL-WIDTH GRID ROW" in css
     assert "display:grid!important" in css
     assert "width:100%!important" in css

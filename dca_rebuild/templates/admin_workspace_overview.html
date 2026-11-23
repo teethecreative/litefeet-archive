@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-workspace.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-overview-v2.css', v='20261123b') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-overview-v2.css', v='20261123c') }}">
 </head>
 <body class="ledger-admin">
 {% include "_admin_navigation.html" %}
@@ -18,7 +18,17 @@
     <p>One timeline of submissions, reviews, and updates from the last 30 days. Open a record or workspace to manage it.</p>
   </header>
 
-  <section class="lfv-admin-workspace-section lfv-admin-overview__activity" id="recent-activity" aria-labelledby="admin-activity-title">
+  <section class="lfv-admin-workspace-section lfv-admin-overview__attention" id="needs-attention" aria-labelledby="admin-attention-title">
+    <div class="lfv-admin-overview__attention-head">
+      <div><p class="lfv-admin-overline">PENDING APPROVALS</p><h2 id="admin-attention-title">Needs attention</h2>
+      <p>{{ pending_total }} item{{ '' if pending_total == 1 else 's' }} waiting for review. Open the section to take action.</p></div>
+      <strong class="lfv-admin-overview__attention-total">{{ pending_total }}</strong>
+    </div>
+    {% if pending_review_links %}<div class="lfv-admin-overview__attention-links">
+    {% for item in pending_review_links %}<a href="{{ item.url }}" aria-label="{{ item.name }}: {{ item.count }} pending"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></a>{% endfor %}
+    </div>{% else %}<p class="lfv-admin-overview__empty">Nothing waiting for review.</p>{% endif %}
+  </section>
+  <section class="lfv-admin-workspace-section lfv-admin-overview__activity' id="recent-activity" aria-labelledby="admin-activity-title">
     <div class="lfv-admin-workspace-heading">
       <div>
         <p class="lfv-admin-overline">LAST 30 DAYS · NEWEST FIRST</p>
@@ -52,10 +62,6 @@
         <a href="{{ url_for('admin_dashboard',page=activity_page + 1) }}#recent-activity">Next →</a>
       {% else %}<span aria-hidden="true"></span>{% endif %}
     </nav>
-    <div class="lfv-admin-overview__queue-note">
-      <span><strong>{{ pending_total }}</strong> items currently require review. The queue includes older pending records not shown in the 30-day activity timeline.</span>
-      <a href="{{ url_for('admin_vault_review_queue') }}">Open review queue →</a>
-    </div>
   </section>
 
   <section class="lfv-admin-workspace-section lfv-admin-overview__workspace" id="workspace-links" aria-labelledby="workspace-heading">
@@ -65,7 +71,6 @@
       <p>Choose a section for its full records, actions, filters, and history.</p>
     </div></div>
     <div class="lfv-admin-overview__tools">
-      <a href="{{ url_for('admin_vault_review_queue') }}"><strong>Review Queue</strong><span>Pending moderation</span></a>
       <a href="{{ url_for('admin_dca_workspace') }}"><strong>Dancer's Choice Awards</strong><span>Categories, nominees, standings</span></a>
       <a href="{{ url_for('admin_lfa_submissions') }}"><strong>LiteFeet Awards</strong><span>Award records</span></a>
       <a href="{{ url_for('admin_vault_gatherings') }}"><strong>Events</strong><span>Submissions and dates</span></a>

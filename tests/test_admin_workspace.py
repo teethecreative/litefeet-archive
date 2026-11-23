@@ -35,33 +35,20 @@ def test_admin_overview_reuses_existing_routes_and_pending_sources(website, data
     assert "Activity" in html and "LAST 30 DAYS" in html
     assert "Development" in html and "Analytics" in html
     assert html.index("Beta feedback") < html.index("example-event") < html.index("Studio Event")
-    assert client.get("/admin/review-queue?section=events").status_code == 200
-    assert client.get("/admin/review-queue?sort=invalid").status_code == 400
-    assert client.get("/admin/review-queue?page=0").status_code == 400
+    assert client.get("/admin/review-queue?section=events").status_code == 303
     assert client.get("/admin/analytics").status_code == 200
 
 
-def test_queue_global_sort_filter_and_page_order(website, database):
+def test_pending_links_without_queue(website, database):
     with database[1].begin() as db:
-        for i in range(14):
-            db.add(VaultGatheringSubmission(
-                title=f"Event {i:02}", gathering_type="class",
-                start_date="2026-12-05", hosts="Host", address="Test address",
-                start_time="09:00", end_time="11:00", status="pending",
-                created_at=datetime(2026, 11, 1) + timedelta(hours=i)))
-        db.add(BetaFeedback(email="x@example.org", message="First beta",
-                            status="new", created_at=datetime(2026, 10, 29)))
-    client = website.test_client()
+        db.add(BetaFeedback(email="x@example.org", message="Feedback", status="new", created_at=datetime.utcnow()))
+    client=website.test_client()
     admin(client)
-    first = client.get("/admin/review-queue?sort=oldest").get_data(as_text=True)
-    second = client.get("/admin/review-queue?sort=oldest&page=2").get_data(as_text=True)
-    assert "First beta" in first and "Event 00" in first
-    assert "Event 13" in second and "Event 00" not in second
-    assert "15 pending items" in first
-    newest = client.get("/admin/review-queue?sort=newest").get_data(as_text=True)
-    assert newest.index("Event 13") < newest.index("Event 12")
-    only_events = client.get("/admin/review-queue?section=events").get_data(as_text=True)
-    assert "First beta" not in only_events
+    html=client.get("/admin").get_data(as_text=True)
+    assert "Needs attention" in html
+    assert 'aria-label="Beta feedback: 1 pending"' in html
+    assert "Review Queue" not in html
+    assert client.get("/admin/review-queue").status_code == 303
 
 
 def test_development_actions_are_protected_and_preserve_existing_records(website, database):
@@ -146,27 +133,14 @@ def test_archive_and_lock_in_review_controls_do_not_publish_records(website, dat
         assert db.get(VaultArchiveVerification, archive_id).moderation_status == "rejected"
 
 
-def test_admin_footer_navigation_and_queue_review_reasons(website, database):
-    client = website.test_client()
-    public = client.get("/").get_data(as_text=True)
-    assert 'href="/admin"' in public
-    assert "Admin" in public
-    with database[1].begin() as db:
-        db.add(VaultGatheringSubmission(
-            title="Needs event approval", gathering_type="lab",
-            start_date="2026-12-05", hosts="Example", address="123 Example",
-            status="pending", created_at=datetime(2026, 11, 8, 12)))
+def test_admin_navigation_points_to_sections(website, database):
+    client=website.test_client()
     admin(client)
-    overview = client.get("/admin").get_data(as_text=True)
-    queue = client.get("/admin/review-queue").get_data(as_text=True)
-    assert "Why it needs attention" not in overview
-    assert "Check event details and decide whether to publish." not in overview
-    assert "Why it needs attention" in queue
-    assert "Check event details and decide whether to publish." in queue
-    for html in (overview, queue):
-        assert 'class="ledger-admin-nav"' in html
-        assert 'class="lfv-admin-theme-toggle"' in html
-    assert client.get("/admin/analytics").status_code == 200
+    html=client.get("/admin").get_data(as_text=True)
+    assert 'class="ledger-admin-nav"' in html
+    assert 'class="lfv-admin-theme-toggle"' in html
+    assert "Review Queue" not in html
+    assert client.get("/admin/review-records?source=archive").status_code == 200
 
 def test_admin_login_redirects_to_unified_overview(website, monkeypatch):
     import os
@@ -196,7 +170,8 @@ def test_admin_overview_date_scope_and_simple_workspaces(website, database):
     assert "Current activity" in html
     assert "Too old for overview" not in html
     assert "Recent Activity" not in html
-    assert "Needs Attention" not in html
+    assert "Needs attention" in html
+    assert "Review Queue" not in html
     assert "Workspace" in html
     assert "lfv-admin-overview__tools" in html
     assert (now-timedelta(days=2)).strftime("%m-%d-%Y") in html
