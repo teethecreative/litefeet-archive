@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profile Claims | The LiteFeet Vault Admin</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
+<style>.lfv-claim-admin{max-width:1000px;margin:30px auto 80px;padding:0 20px;color:var(--lfv-ink,inherit)}.lfv-claim-admin h1{font-size:clamp(1.8rem,4vw,2.5rem)}.lfv-claim-admin nav{display:flex;gap:16px;flex-wrap:wrap;margin:20px 0}.lfv-claim-admin a{color:inherit;text-decoration:underline}.lfv-claim-item{border:1px solid var(--lfv-line,#ccd3db);border-radius:10px;padding:18px;margin:15px 0;background:var(--lfv-surface,#fff)}.lfv-claim-item p{line-height:1.6;overflow-wrap:anywhere}.lfv-claim-item textarea{display:block;width:100%;padding:10px;margin:12px 0;color:inherit;background:var(--lfv-surface,#fff);border:1px solid var(--lfv-line,#ccd3db)}.lfv-claim-item .actions{display:flex;gap:10px;flex-wrap:wrap}.lfv-claim-item button{padding:10px 15px;cursor:pointer}</style>
+</head><body class="ledger-admin">{% include "_admin_navigation.html" %}
+<main class="lfv-claim-admin"><p>THE LITEFEET VAULT / ADMIN</p><h1>Profile Claims</h1>
+<p>Verify each person's identity or team authorization before granting access. Email verification alone does not prove profile ownership.</p>
+<nav aria-label="Claim status">{% for tab in ['pending','approved','rejected','all'] %}<a href="{{ url_for('admin_profile_claims',view=tab) }}" {% if view == tab %}aria-current="page"{% endif %}>{{ tab|title }}</a>{% endfor %}</nav>
+{% for notice in get_flashed_messages(category_filter=['claim']) %}<p role="status">{{ notice }}</p>{% endfor %}
+{% for claim in claims %}
+<article class="lfv-claim-item">
+<h2><a href="{{ claim.profile_href }}">{{ claim.profile_href }}</a></h2>
+<p><strong>{{ claim.status|title }}</strong> · {{ claim.relationship|replace('_',' ')|title }} · {{ claim.masked_email }} · {{ claim.created_at.strftime('%b %d, %Y') }}</p>
+<p>{{ claim.explanation }}</p>
+{% if claim.conflicting_owner %}<p><strong>Ownership conflict:</strong> Another verified mailbox currently manages this profile. Reconcile access before approval.</p>{% endif %}
+{% if claim.admin_note %}<p><strong>Admin note:</strong> {{ claim.admin_note }}</p>{% endif %}
+{% if claim.status == 'pending' %}
+<form method="post" action="{{ url_for('admin_profile_claim_decision',claim_id=claim.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label for="note-{{ claim.id }}">Review note (optional)<textarea id="note-{{ claim.id }}" name="admin_note" rows="2" maxlength="1000"></textarea></label>
+<div class="actions"><button name="decision" value="approved" type="submit" {% if claim.conflicting_owner %}disabled{% endif %}>Approve claim</button><button name="decision" value="rejected" type="submit">Reject claim</button></div>
+</form>
+{% endif %}
+</article>
+{% else %}<p>No claims in this view.</p>{% endfor %}
+</main></body></html>
