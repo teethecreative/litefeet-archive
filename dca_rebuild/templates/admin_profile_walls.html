@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profile Wall Moderation | The LiteFeet Vault</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
+<style>
+.lfv-wall-admin{max-width:1100px;margin:30px auto 90px;padding:0 20px;color:var(--lfv-ink,inherit)}
+.lfv-wall-admin h1{font-size:clamp(1.7rem,4vw,2.6rem);margin:14px 0}.lfv-wall-tabs{display:flex;gap:16px;flex-wrap:wrap;margin:24px 0}
+.lfv-wall-tabs a,.lfv-wall-admin a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.lfv-wall-admin .lfv-wall-row{padding:18px;margin:14px 0;border:1px solid var(--lfv-line,#c7ced8);border-radius:10px;background:var(--lfv-surface,#fff)}
+.lfv-wall-row header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.lfv-wall-row p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
+.lfv-wall-row small{color:var(--lfv-muted,#657184)}.lfv-wall-row .lfv-wall-actions{display:flex;gap:8px;flex-wrap:wrap}
+.lfv-wall-row button,.lfv-wall-owner-form button{padding:9px 13px;cursor:pointer;border-radius:5px}
+.lfv-wall-owner-form{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.lfv-wall-owner-form label{display:grid;gap:5px;font-size:.83rem;flex:1 1 200px}
+.lfv-wall-owner-form input,.lfv-wall-owner-form select{padding:10px;width:100%;color:inherit;background:var(--lfv-surface,#fff);border:1px solid var(--lfv-line,#c7ced8)}
+.lfv-wall-history{padding-left:20px;font-size:.82rem}
+</style></head><body class="ledger-admin">{% include "_admin_navigation.html" %}
+<main class="lfv-wall-admin"><p>THE LITEFEET VAULT / ADMIN</p><h1>Profile Walls</h1>
+<p>Every submission remains here after a decision. The admin can see whether the profile owner or an administrator resolved it first.</p>
+<nav class="lfv-wall-tabs" aria-label="Wall status filters">
+<a href="{{ url_for('admin_profile_walls',view='all') }}" {% if view == 'all' %}aria-current="page"{% endif %}>All</a>
+<a href="{{ url_for('admin_profile_walls',view='pending') }}" {% if view == 'pending' %}aria-current="page"{% endif %}>Pending</a>
+<a href="{{ url_for('admin_profile_walls',view='resolved') }}" {% if view == 'resolved' %}aria-current="page"{% endif %}>Resolved</a></nav>
+{% for notice in get_flashed_messages(category_filter=['wall']) %}<p role="status">{{ notice }}</p>{% endfor %}
+{% for post in posts %}
+<article class="lfv-wall-row"><header><div>
+<a href="{{ post.profile_href }}#wall">{{ post.profile_href }}</a>
+<strong> · {{ post.author_name }}</strong></div>
+<small>{{ post.created_at.strftime('%b %d, %Y · %I:%M %p') }}</small></header>
+<p>{{ post.message }}</p>
+<p><strong>{{ post.status|capitalize }}</strong>{% if post.resolved_by %} · Resolved by {{ post.resolved_by }} on {{ post.resolved_at.strftime('%b %d, %Y · %I:%M %p') }}{% endif %}</p>
+{% if post.status == 'pending' %}
+<div class="lfv-wall-actions">{% for decision in ['approved','rejected'] %}
+<form action="{{ url_for('vault_wall_review',post_id=post.id) }}" method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="decision" value="{{ decision }}">
+<button type="submit">{{ decision|capitalize }}</button></form>{% endfor %}</div>
+{% else %}
+<details><summary>Admin override</summary>
+<p>Overrides do not erase the prior decision. They are recorded separately.</p>
+<div class="lfv-wall-actions">{% for decision in ['approved','rejected'] %}
+<form action="{{ url_for('admin_wall_override',post_id=post.id) }}" method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="decision" value="{{ decision }}">
+<button type="submit">Override: {{ decision|capitalize }}</button></form>{% endfor %}</div></details>
+{% endif %}
+{% if post.history %}
+<details><summary>Decision history ({{ post.history|length }})</summary><ol class="lfv-wall-history">
+{% for event in post.history %}<li>{{ event.created_at.strftime('%b %d, %Y · %I:%M %p') }} · {{ event.action|replace('_',' ')|title }} · {{ event.actor }}</li>{% endfor %}</ol></details>
+{% endif %}
+</article>
+{% else %}<p>No Wall submissions in this view.</p>{% endfor %}
+<section class="lfv-wall-row"><h2>Profile owner access</h2>
+<p>Only grant access after verifying the person is the approved owner. An email verification alone does not prove identity.</p>
+<form class="lfv-wall-owner-form" method="post" action="{{ url_for('admin_wall_owner_access') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label>Profile URL <input name="profile_href" placeholder="/people/dancer-name" required></label>
+<label>Owner's verified email <input type="email" name="owner_email" placeholder="owner@example.com"></label>
+<label>Action <select name="action"><option value="grant">Grant / update</option><option value="revoke">Revoke</option></select></label>
+<button type="submit">Save access</button></form>
+{% if grants %}<h3>Active owner access</h3><ul>
+{% for grant in grants %}<li><a href="{{ grant.profile_href }}">{{ grant.profile_href }}</a> · {{ grant.masked_email }}</li>{% endfor %}
+</ul>{% endif %}
+</section>
+</main></body></html>
