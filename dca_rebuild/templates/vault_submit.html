@@ -15,22 +15,14 @@
 <p>Help preserve the culture. Choose what you are submitting to see the right questions and review process.</p>
 </header>
 <section class="lfv-submit-types" aria-labelledby="lfv-submit-types-heading">
-  <div class="lfv-submit-types__heading">
-    <h2 id="lfv-submit-types-heading">What are you submitting?</h2>
-    <p>Select a type below. The form underneath will show only the questions relevant to that submission.</p>
-  </div>
-  <div class="lfv-submit-types__grid" role="group" aria-label="Available submission types">
-  {% for value, label in submission_types %}
-    <button type="button" class="lfv-submit-type-card" data-submit-kind="gathering" data-submit-value="{{ value }}" aria-pressed="false" aria-controls="lfv-general-event-form">
-      <strong>{{ label|title }}</strong><span>Upcoming event / calendar</span>
-    </button>
-  {% endfor %}
-  {% for value, label in archive_contribution_types %}
-    <button type="button" class="lfv-submit-type-card" data-submit-kind="archive" data-submit-value="{{ value }}" aria-pressed="false" aria-controls="lfv-general-archive-form">
-      <strong>{{ label }}</strong><span>Historical archive</span>
-    </button>
-  {% endfor %}
-  </div>
+  <h2 id="lfv-submit-types-heading">What are you submitting?</h2>
+  <label for="lfv-submit-type-select">Choose the submission type</label>
+  <select id="lfv-submit-type-select" name="submission_selector" aria-describedby="lfv-submit-select-instruction" required>
+    <option value="">Select a submission type</option>
+    {% for item in submission_options %}
+    <option value="{{ item.value }}">{{ item.label }} — {{ item.kind }}</option>
+    {% endfor %}
+  </select>
 </section>
 <p id="lfv-submit-select-instruction" class="lfv-submit-selection-note">Choose one submission type above to start.</p>
 <div id="lfv-general-archive-form" class="lfv-submit-selected-form" hidden>
@@ -103,7 +95,7 @@
 <script defer src="{{ url_for('static',filename='js/archive-contribution.js',v='20261123e') }}"></script>
 <script>
 (function(){
-  const cards=[...document.querySelectorAll('[data-submit-kind][data-submit-value]')];
+  const choice=document.getElementById('lfv-submit-type-select');
   const archiveForm=document.getElementById('lfv-general-archive-form');
   const eventForm=document.getElementById('lfv-general-event-form');
   const archiveSelect=archiveForm.querySelector('[data-archive-type-select]');
@@ -135,45 +127,40 @@
       group.querySelectorAll('input,textarea,select').forEach(function(el){el.disabled=!active;});
     });
   }
-  function selectType(kind,value,focus){
-    const isArchive=kind==='archive';
-    const isEvent=kind==='gathering';
+  function selectType(kind,value){
+    const isArchive=kind==='archive'&&Boolean(value);
+    const isEvent=kind==='gathering'&&Boolean(value);
     archiveForm.hidden=!isArchive;
     eventForm.hidden=!isEvent;
     setEnabled(archiveForm,isArchive);
     setEnabled(eventForm,isEvent);
-    cards.forEach(function(card){
-      const selected=card.dataset.submitKind===kind&&card.dataset.submitValue===value;
-      card.setAttribute('aria-pressed',String(selected));
-    });
+    const optionValue=(isArchive||isEvent)?kind+':'+value:'';
+    choice.value=optionValue;
+    const selectedLabel=choice.selectedOptions.length
+      ?choice.selectedOptions[0].textContent.split(' — ')[0].trim()
+      :'';
     if(isArchive){
       archiveSelect.value=value;
       archiveSelect.dispatchEvent(new Event('change',{bubbles:true}));
-      const label=cards.find(card=>card.dataset.submitKind===kind&&card.dataset.submitValue===value)?.querySelector('strong')?.textContent||'Archive information';
-      archiveHeading.textContent='Submit: '+label;
+      archiveHeading.textContent='Submit: '+selectedLabel;
       selectedNote.hidden=true;
     }else if(isEvent){
       eventTypeInput.value=value;
       syncEventDetails(value);
-      const label=cards.find(card=>card.dataset.submitKind===kind&&card.dataset.submitValue===value)?.querySelector('strong')?.textContent||'Upcoming event';
-      eventHeading.textContent='Submit: '+label;
+      eventHeading.textContent='Submit: '+selectedLabel;
       titleLabel.textContent=(eventLabels[value]||['Event name','Event details'])[0];
       descriptionLabel.textContent=(eventLabels[value]||['Event name','Event details'])[1];
       selectedNote.hidden=true;
       syncRepeat();
     }else{
+      eventTypeInput.value='';
+      syncEventDetails('');
       selectedNote.hidden=false;
     }
-    if(focus){
-      const heading=isArchive?archiveHeading:eventHeading;
-      if(heading){
-        heading.scrollIntoView({behavior:'smooth',block:'start'});
-        heading.focus({preventScroll:true});
-      }
-    }
   }
-  cards.forEach(function(card){
-    card.addEventListener('click',function(){selectType(card.dataset.submitKind,card.dataset.submitValue,true);});
+  choice.addEventListener('change',function(){
+    const parts=choice.value.split(':');
+    selectType(parts[0],parts[1]||'');
   });
   const repeatToggle=document.getElementById('repeat-toggle');
   const repeatOptions=document.getElementById('repeat-options');
@@ -218,10 +205,9 @@
   setEnabled(eventForm,false);
   syncEventDetails('');
   const initial=new URLSearchParams(window.location.search).get('type');
-  if(initial&&initial.includes(':')){
+  if(initial && [...choice.options].some(option=>option.value===initial)){
     const parts=initial.split(':');
-    const match=cards.some(card=>card.dataset.submitKind===parts[0]&&card.dataset.submitValue===parts[1]);
-    if(match)selectType(parts[0],parts[1],false);
+    selectType(parts[0],parts[1]);
   }
 })();
 </script></body></html>

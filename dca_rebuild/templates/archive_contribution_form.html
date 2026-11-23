@@ -2,7 +2,7 @@
 <input type="hidden" name="csrf_token" value="{{ archive_contribution_csrf }}">
 <div class="lfv-archive-honeypot" aria-hidden="true"><label>Leave blank<input name="website" tabindex="-1" autocomplete="off"></label></div>
 <div class="lfv-archive-form-grid">
-<label class="lfv-archive-full">What are you submitting? <span aria-hidden="true">*</span><select name="contribution_type" required data-archive-type-select><option value="">Choose a submission type</option>{% for value, label in archive_contribution_types %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></label>
+<label class="lfv-archive-full" data-archive-type-label>What are you submitting? <span aria-hidden="true">*</span><select name="contribution_type" required data-archive-type-select><option value="">Choose a submission type</option>{% for value, label in archive_contribution_types %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></label>
 </div>
 <p class="lfv-archive-type-hint" data-archive-type-hint>Select a type to see the relevant questions.</p>
 <fieldset class="lfv-archive-detail-group" data-archive-type="history" hidden disabled><legend>Historical background</legend><div class="lfv-archive-form-grid">

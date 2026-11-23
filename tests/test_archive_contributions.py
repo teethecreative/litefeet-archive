@@ -104,27 +104,47 @@ def test_type_specific_answers_are_saved_and_only_selected_type_is_used(website,
     assert "Must not be stored" not in admin.get_data(as_text=True)
 
 
-def test_general_submit_lists_every_submission_type_and_tailors_forms(website):
+def test_general_submit_has_one_alphabetical_picker_and_tailored_forms(website):
+    from html.parser import HTMLParser
     from dca_rebuild.gathering_submissions import GATHERING_TYPES
     from dca_rebuild.archive_contributions import CONTRIBUTION_TYPES
-    client = website.test_client()
-    response = client.get("/submit")
+
+    class SelectParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.in_picker = False
+            self.options = []
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag == "select" and attrs.get("id") == "lfv-submit-type-select":
+                self.in_picker = True
+            if tag == "option" and self.in_picker:
+                self.options.append(attrs.get("value"))
+        def handle_endtag(self, tag):
+            if tag == "select" and self.in_picker:
+                self.in_picker = False
+
+    response = website.test_client().get("/submit")
     assert response.status_code == 200
     html = response.get_data(as_text=True)
-    assert 'id="lfv-submit-types-heading"' in html
-    assert 'id="lfv-general-submit-type"' not in html
+    parser = SelectParser()
+    parser.feed(html)
+    expected = sorted(
+        [(label.title(), "Upcoming event", f"gathering:{value}")
+         for value, label in GATHERING_TYPES]
+        + [(label, "Historical archive", f"archive:{value}")
+           for value, label in CONTRIBUTION_TYPES],
+        key=lambda item: (item[0].casefold(), item[1].casefold()),
+    )
+    assert parser.options == [""] + [item[2] for item in expected]
+    assert len(parser.options) == 1 + len(GATHERING_TYPES) + len(CONTRIBUTION_TYPES)
+    assert 'data-submit-kind' not in html
     assert 'id="lfv-general-archive-form"' in html
     assert 'id="lfv-general-event-form"' in html
+    assert 'data-archive-type="person"' in html
+    assert 'data-event-type="battle"' in html
     assert 'action="/archive/contribute"' in html
     assert 'action="/submit"' in html
-    for value, label in GATHERING_TYPES:
-        assert f'data-submit-kind="gathering" data-submit-value="{value}"' in html
-    for value, label in CONTRIBUTION_TYPES:
-        assert f'data-submit-kind="archive" data-submit-value="{value}"' in html
-    assert 'data-event-type="battle"' in html
-    assert 'data-event-type="class"' in html
-    assert 'data-archive-type="person"' in html
-    assert 'data-archive-type="correction"' in html
 
 
 def test_event_type_specific_answers_are_private_and_other_type_ignored(website, database):
