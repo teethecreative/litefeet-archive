@@ -96,6 +96,7 @@ def logout_site_session_at_midnight():
         SESSION_VERIFIED, SESSION_CHALLENGE,
         "lf9e_recent_hash", "lf9e_reminder_hash",
         "ledger_admin_authenticated",
+        "vault_host_account_id",
     )
     if not any(session.get(key) for key in identity_keys):
         return False
