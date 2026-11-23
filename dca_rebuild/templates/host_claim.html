@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Claim Host Access | The LiteFeet Vault</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}"><link rel="stylesheet" href="{{ url_for('static',filename='css/host-workspace.css') }}"></head>
+<body>{% include "_navigation.html" %}
+<main class="lfv-host-wrap lfv-host-auth">
+<p class="lfv-host-eyebrow">PRIVATE EVENT HOST INVITATION</p><h1>Claim your host account</h1>
+<p>This invitation is for <strong>{{ person_name }}</strong> of <strong>{{ host_name }}</strong>. Choose your assigned host and name, verify your email, and create a password.</p>
+{% if notice %}<p role="status" class="lfv-host-notice">{{ notice }}</p>{% endif %}
+{% if stage == 'identity' %}
+<form method="post" class="lfv-host-auth-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="send">
+<label>Event host<select name="host_key" required><option value="">Choose your host</option>
+<option value="hypeituptv" {% if host_key=='hypeituptv' %}selected{% endif %}>HypeItUpTV</option>
+<option value="body-bag" {% if host_key=='body-bag' %}selected{% endif %}>Body Bag</option>
+</select></label>
+<label>Who are you?<select name="person_key" required><option value="">Choose your identity</option>
+<option value="chris-gz" {% if person_key=='chris-gz' %}selected{% endif %}>Chris Gz</option>
+<option value="sns" {% if person_key=='sns' %}selected{% endif %}>SNS</option>
+<option value="ty-shotz" {% if person_key=='ty-shotz' %}selected{% endif %}>Ty Shotz</option>
+<option value="lil-spank" {% if person_key=='lil-spank' %}selected{% endif %}>Lil Spank</option>
+</select></label>
+<p class="lfv-host-muted">The selected host and person must match the private invitation.</p>
+<label>Email address<input type="email" name="email" maxlength="254" required autocomplete="email"></label>
+<button type="submit">Email me a verification code</button>
+</form>
+{% elif stage == 'code' %}
+<form method="post" class="lfv-host-auth-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="verify">
+<label>Six-digit email code<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
+<button type="submit">Verify email</button>
+</form>
+{% elif stage == 'account' %}
+<form method="post" class="lfv-host-auth-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="create">
+<label>Display name<input name="display_name" minlength="2" maxlength="120" autocomplete="nickname" required></label>
+<label>Password (at least 12 characters)<input type="password" name="password" minlength="12" maxlength="200" autocomplete="new-password" required></label>
+<input type="hidden" name="timezone" value="UTC" data-host-timezone>
+<button type="submit">Create my host account</button>
+</form>
+{% endif %}
+<p><a href="{{ url_for('vault_host_login') }}">Already claimed your account? Sign in</a></p></main>
+<script>document.querySelectorAll('[data-host-timezone]').forEach(function(el){try{el.value=Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}catch(e){}})</script>
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+</body></html>
