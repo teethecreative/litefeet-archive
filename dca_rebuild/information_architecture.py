@@ -170,7 +170,7 @@ def install_information_architecture(app, ns):
         current_page = max(1, request.args.get('page', 1, type=int) or 1)
         query = request.args.get('q', '').strip()[:120]
         profiles = profile_index(ns['SessionLocal'])
-        filtered = (find_profiles(profiles, query=query, page=current_page)
+        filtered = (find_profiles(profiles, query=query, page=1, page_size=500)
                     if query else {
                         'items': [], 'count': 0, 'page': 1,
                         'has_more': False, 'next_page': None,
@@ -185,11 +185,13 @@ def install_information_architecture(app, ns):
     def archive_people_api():
         """Pagination and live search share the exact same public profile index."""
         from dca_rebuild.public_profiles import profile_index
-        filtered = find_profiles(
-            profile_index(ns['SessionLocal']),
-            query=request.args.get('q', '')[:120],
-            page=max(1, request.args.get('page', 1, type=int) or 1),
-        )
+        query = request.args.get('q', '').strip()[:120]
+        filtered = (find_profiles(
+            profile_index(ns['SessionLocal']), query=query, page=1, page_size=500,
+        ) if query else {
+            'items': [], 'count': 0, 'page': 1,
+            'has_more': False, 'next_page': None,
+        })
         response = jsonify({
             'records': [{
                 'title': row['title'], 'href': row['href'],
