@@ -213,6 +213,21 @@ def csrf_ok():
     return bool(token and expected and secrets.compare_digest(token, expected))
 
 
+def most_improved_category_description(name, description):
+    """Display the two-moment rule inside the Most Improved category description."""
+    if normalized(name) not in ('most improved', 'most improved dancer'):
+        return description or ''
+    requirement = (
+        "Nominees must have at least two distinct LiteFeet moments during the "
+        "award eligibility period (November 2025–November 2026), such as battles, "
+        "viral videos, or standout performances."
+    )
+    existing = (description or '').strip()
+    if 'at least two distinct litefeet moments' in existing.lower():
+        return existing
+    return f"{existing} {requirement}".strip()
+
+
 def normalized(value):
     return ' '.join(value.casefold().split())
 
@@ -777,7 +792,7 @@ def install_phase9e(app, ns):
                 display_categories.append(dict(
                     id=cid if cid else f'pending-{index}',
                     name=item['name'],
-                    description=item['description'],
+                    description=most_improved_category_description(item['name'], item['description']),
                     nominees=item['public_nominees'],
                     pending=cid is None,
                     activation_name=item['name'] if cid is None else '',
@@ -1236,7 +1251,7 @@ def install_phase9e(app, ns):
                     past = history[cat.id]
                     remaining = remaining_seconds(datetime.fromisoformat(past[0]['at']), now) if past else 0
                     row = dict(id=cat.id, name=writein_category_label(cat.name),
-                               description=cat.description or '', nomination_ui=nomination_fields(cat.name),
+                               description=most_improved_category_description(cat.name, cat.description), nomination_ui=nomination_fields(cat.name),
                                nominees=nominees.get(cat.id, []), history=past,
                                remaining=remaining, available=not remaining and not is_closed(),
                                next_at=(datetime.fromisoformat(past[0]['at']) + timedelta(hours=24)).isoformat() if remaining else '',
