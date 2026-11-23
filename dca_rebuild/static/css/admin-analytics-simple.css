@@ -1,0 +1,48 @@
+/* Analytics admin overview: neutral information, low-noise Vault branding. */
+html.lfv-sitewide body.ledger-admin main.lfv-analytics-simple,
+body.ledger-admin main.lfv-analytics-simple {max-width:1120px!important;}
+.lfv-analytics-simple * {box-sizing:border-box;}
+.lfv-analytics-controls {display:flex;align-items:end;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
+.lfv-analytics-controls label {display:grid;gap:6px;font-size:.78rem;font-weight:800;color:var(--muted);}
+.lfv-analytics-controls select,.lfv-analytics-controls input {
+  border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);
+  min-height:42px;padding:8px 12px;min-width:160px;font:inherit;
+}
+.lfv-analytics-controls button {border:0;border-radius:6px;min-height:42px;padding:10px 20px;font-weight:800;background:var(--blue);color:#fff;}
+.lfv-analytics-custom-dates {display:flex;flex-wrap:wrap;gap:9px;}
+.lfv-analytics-custom-dates[hidden]{display:none!important;}
+.lfv-analytics-period {font-size:.78rem;color:var(--muted);margin:0 0 24px;font-variant-numeric:tabular-nums;}
+.lfv-analytics-section {background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:clamp(17px,2vw,26px);margin-bottom:18px;}
+.lfv-analytics-heading {margin-bottom:20px;}
+.lfv-analytics-heading h2 {color:var(--text);font-size:clamp(1.16rem,2vw,1.48rem);line-height:1.2;margin:0 0 5px;}
+.lfv-analytics-heading p {color:var(--muted);font-size:.84rem;margin:0;line-height:1.45;}
+.lfv-analytics-stats {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;}
+.lfv-analytics-stats article {display:flex;flex-direction:column;gap:6px;min-width:0;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;}
+.lfv-analytics-stats article span {font-size:.78rem;font-weight:750;color:var(--muted);}
+.lfv-analytics-stats article strong {font-size:clamp(1.5rem,2.5vw,2.2rem);font-variant-numeric:tabular-nums;color:var(--text);line-height:1.1;}
+.lfv-analytics-stats article small {font-size:.71rem;color:var(--muted);}
+.lfv-analytics-columns {display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;}
+.lfv-analytics-pages {list-style:none;margin:0;padding:0;}
+.lfv-analytics-pages li {display:grid;grid-template-columns:minmax(0,1fr) 35px;gap:6px 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.lfv-analytics-path {font-size:.82rem;overflow-wrap:anywhere;color:var(--text);}
+.lfv-analytics-pages strong {text-align:right;color:var(--text);font-size:.78rem;font-variant-numeric:tabular-nums;}
+.lfv-analytics-bar {grid-column:1/-1;height:5px;overflow:hidden;border-radius:10px;background:var(--surface-2);display:block;}
+.lfv-analytics-bar i {display:block;height:100%;border-radius:10px;background:var(--blue);}
+html[data-theme="dark"] .lfv-analytics-bar i {background:#7fa4e4;}
+.lfv-analytics-trend {display:grid;gap:9px;max-height:405px;overflow:auto;padding-right:4px;}
+.lfv-analytics-trend-row {display:grid;grid-template-columns:48px minmax(0,1fr) 35px;align-items:center;gap:12px;font-size:.75rem;color:var(--muted);}
+.lfv-analytics-trend-row .lfv-analytics-bar {grid-column:auto;height:8px;}
+.lfv-analytics-trend-row strong {text-align:right;color:var(--text);font-variant-numeric:tabular-nums;}
+.lfv-analytics-links {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.lfv-analytics-links a {display:flex;flex-direction:column;gap:7px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:14px 16px;color:var(--text)!important;text-decoration:none!important;}
+.lfv-analytics-links a:hover {border-color:var(--gold);}
+.lfv-analytics-links strong {font-size:.87rem;}
+.lfv-analytics-links span {color:var(--muted);font-size:.75rem;line-height:1.4;}
+.lfv-analytics-note {margin:18px 0 0;color:var(--muted);font-size:.79rem;line-height:1.56;}
+.lfv-analytics-details {background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:16px 22px;font-size:.85rem;color:var(--text);}
+.lfv-analytics-details summary {cursor:pointer;font-weight:800;}
+.lfv-analytics-details p {color:var(--muted);line-height:1.5;}
+.lfv-analytics-traffic-list {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.lfv-analytics-traffic-list a {display:flex;justify-content:space-between;padding:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text)!important;text-decoration:none!important;}
+@media(max-width:850px) {.lfv-analytics-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.lfv-analytics-columns{grid-template-columns:1fr;}.lfv-analytics-links{grid-template-columns:1fr;}}
+@media(max-width:500px) {.lfv-analytics-stats{gap:8px}.lfv-analytics-controls label{width:100%}.lfv-analytics-controls select{width:100%}.lfv-analytics-traffic-list{grid-template-columns:1fr;}}
