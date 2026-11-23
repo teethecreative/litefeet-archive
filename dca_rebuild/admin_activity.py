@@ -13,6 +13,7 @@ from flask import abort, render_template, request, url_for
 from dca_rebuild.profile_wall import (VaultProfileWallPost, VaultProfileWallDecision,
                                       VaultProfileWallOwnerAudit)
 from dca_rebuild.profile_claims import VaultProfileClaim
+from dca_rebuild.profile_owner_editor import VaultProfileEditRequest
 
 from dca_rebuild.models import (
     BetaChangelog, BetaFeedback, DCANewCategorySuggestion,
@@ -95,6 +96,10 @@ SOURCES = (
                    "created_at", "Submitted", "status", "admin_profile_walls"),
     ActivitySource("community", "Profile Wall", VaultProfileWallPost, "author_name",
                    "resolved_at", "Resolved", "status", "admin_profile_walls"),
+    ActivitySource("people", "Profile edit", VaultProfileEditRequest, "profile_href",
+                   "created_at", "Submitted", "status", "admin_profile_edits"),
+    ActivitySource("people", "Profile edit", VaultProfileEditRequest, "profile_href",
+                   "resolved_at", "Reviewed", "status", "admin_profile_edits"),
     # Other timestamped activity across the Vault, not just award nominations.
     ActivitySource("awards", "DCA category survey", DCACategorySuggestionSubmission, None,
                    "submitted_at", "Received", None, "admin_round1"),
