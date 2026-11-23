@@ -848,7 +848,10 @@ def install_phase9e(app, ns):
     @app.route('/awards/dancers-choice/nomination-reasons', methods=['GET', 'POST'],
                endpoint='phase9e_nomination_reasons')
     def qualification_reasons():
-        """Public list and moderated supporting reasons, separate from nominations."""
+        """Public list with moderated contributions from the verified nomination session."""
+        from dca_rebuild.email_verification import verification_enabled, verified_nominator_hash
+        who = (verified_nominator_hash() if verification_enabled()
+               else session.get('lf9e_recent_hash'))
         with SessionLocal() as db:
             edition = db.query(DCAEdition).filter_by(year=2026).first()
             if not edition:
@@ -856,14 +859,12 @@ def install_phase9e(app, ns):
             session.setdefault('lf9e_nomination_csrf', secrets.token_urlsafe(32))
             pending = nominees_missing_reasons(db, edition)
             if request.method == 'POST':
+                if not who:
+                    abort(403, 'Verify your email through nominations before submitting a reason')
                 token = request.form.get('csrf_token', '')
                 if not token or not secrets.compare_digest(
                     token, session['lf9e_nomination_csrf']):
                     abort(400, 'Invalid form token')
-                email = (request.form.get('email') or '').strip().casefold()
-                if len(email) > 254 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
-                    abort(400, 'Enter a valid email address')
-                who = private_hash('dca-nomination:' + email)
                 nominee_id = request.form.get('nominee_id', type=int)
                 item = next((n for n in pending if n['nominee_id'] == nominee_id), None)
                 if not item:
@@ -891,8 +892,18 @@ def install_phase9e(app, ns):
                     abort(409, 'Reason already submitted')
                 flash('Reason submitted for eligibility review. Nomination totals have not changed.')
                 return redirect(url_for('phase9e_nomination_reasons'), code=303)
-            return render_template('dca_nomination_reasons.html', pending=pending,
-                                   csrf_token=session['lf9e_nomination_csrf'])
+            submitted_ids = set()
+            if who:
+                submitted_ids = {
+                    row.nominee_id for row in
+                    db.query(NomineeQualificationReason9E).filter_by(
+                        edition_id=edition.id, submitter_hash=who).all()
+                }
+            return render_template(
+                'dca_nomination_reasons.html', pending=pending,
+                csrf_token=session['lf9e_nomination_csrf'],
+                identity_verified=bool(who), submitted_ids=submitted_ids
+            )
 
     @app.route('/admin/dca/nomination-reasons', methods=['GET', 'POST'],
                endpoint='phase9e_admin_qualification_reasons')
