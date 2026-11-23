@@ -37,7 +37,7 @@ def test_founder_action_and_award_categories_are_visible(website, database):
     with database[1].begin() as db:
         seed_lfa_2026(db)
     html=website.test_client().get("/").get_data(as_text=True)
-    assert 'href="/about#letter">The Founder' in html
+    assert 'href="/about/founder">The Founder' in html
     assert "Read more from my letter" not in html
     assert 'class="lfv-home-winner-category"' in html
     assert 'class="lfv-home-winner-name"' in html
