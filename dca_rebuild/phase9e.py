@@ -1120,7 +1120,7 @@ def install_phase9e(app, ns):
                 if (not any(match['type'] == 'existing' for match in matches)
                     and any(match['type'] == 'similar' for match in matches)
                     and request.form.get('confirm_distinct') != '1'):
-                    flash('A similar nominee is already listed. Check whether it's the same entry.')
+                    flash("A similar nominee is already listed. Check whether it's the same entry.")
                     return redirect(url_for('dca_nominations_closed', category=cid, nominate=1), code=303)
                 contact = db.get(DCANominationContact, who)
                 if contact is None:
@@ -1135,7 +1135,7 @@ def install_phase9e(app, ns):
                                                       description=reason)
                     if not created:
                         db.rollback()
-                        flash('You've already nominated in this category. Try another category or come back when the 24-hour wait ends.')
+                        flash("You've already nominated in this category. Try another category or come back when the 24-hour wait ends.")
                         return redirect(url_for('dca_nominations_closed'))
                     submission = (db.query(DCANominationSubmission).filter_by(
                         nominee_id=nominee.id, submitter_hash=who)
