@@ -1,8 +1,10 @@
 {# Shared MySpace-inspired presentation for award-linked and published archive profiles.
    Content remains sourced from the public profile index and optional archival record. #}
 {% set archived = record if record is defined and record else none %}
+{% set has_multiple_roles = profile.badges|length > 1 %}
+{% set has_single_role_activity = profile.badges|length == 1 and not profile.is_team and profile.badges[0].key != 'dancer' and profile.badges[0].rows %}
 <main class="lfv-profile-page" id="profile">
-  <header class="lfv-profile-header">
+  <div class="lfv-profile-header">
     <h1>{{ profile.name }}</h1>
     <div class="lfv-profile-header-meta">
       <span class="lfv-profile-type">{{ 'LiteFeet team' if profile.is_team else 'LiteFeet profile' }}</span>
@@ -25,7 +27,7 @@
       <a href="{{ url_for('vault_profile_claim', profile=profile.href) }}">Claim This Profile</a>
       {% endif %}
     </div>
-    {% if profile.badges %}
+    {% if has_multiple_roles %}
     <div class="lfv-profile-role-nav" role="group" aria-label="Profile role views" data-lfv-role-nav>
       <button type="button" class="lfv-profile-role-badge is-active" data-lfv-role="overview" aria-pressed="true">Overview</button>
       {% for badge in profile.badges %}
@@ -34,7 +36,7 @@
     </div>
     <p class="lfv-profile-role-help">Select a role to see that part of the profile. Basic profile information stays the same.</p>
     {% endif %}
-  </header>
+  </div>
 
   <div class="lfv-profile-columns">
     <aside class="lfv-profile-sidebar" aria-label="Profile details">
@@ -109,16 +111,18 @@
       </section>
       {% endif %}
 
-      {% if profile.badges %}
+      {% if has_multiple_roles or has_single_role_activity %}
       <section class="lfv-profile-card" aria-labelledby="profile-role-detail-title">
-        <h2 id="profile-role-detail-title" class="lfv-profile-card-title">Profile Activity</h2>
+        <h2 id="profile-role-detail-title" class="lfv-profile-card-title">{{ 'Profile Activity' if has_multiple_roles else profile.badges[0].title }}</h2>
         <div class="lfv-profile-card-content">
+          {% if has_multiple_roles %}
           <div data-lfv-role-panel="overview">
-            <p class="lfv-profile-note">Select one of the role badges above to explore its documented activity.</p>
+            <p class="lfv-profile-note">Select a role above to view its documented activity.</p>
           </div>
+          {% endif %}
           {% for badge in profile.badges %}
-          <div data-lfv-role-panel="{{ badge.key }}" hidden>
-            <h3 class="lfv-profile-subheading">{{ badge.title }}</h3>
+          <div data-lfv-role-panel="{{ badge.key }}" {% if has_multiple_roles %}hidden{% endif %}>
+            {% if has_multiple_roles %}<h3 class="lfv-profile-subheading">{{ badge.title }}</h3>{% endif %}
             {% if badge.note %}<p class="lfv-profile-note">{{ badge.note }}</p>{% endif %}
             {% if badge.rows %}
             <ul class="lfv-profile-entry-list">
