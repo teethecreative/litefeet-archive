@@ -131,6 +131,21 @@ def documented_role_records(record, role):
     return rows
 
 
+def eligible_historian_contributor(*, approved_contributions=0,
+                                   has_archival_mention=False,
+                                   account_verified=False):
+    """Account-only recognition, not a historical identity/profile type.
+
+    An approved contribution must be attached to a verified account before
+    Historians can be recognized. Never award it from a free-text name,
+    pending submission, anonymous correction, or inferred archival mention.
+    """
+    return (account_verified
+            and not has_archival_mention
+            and isinstance(approved_contributions, int)
+            and approved_contributions > 0)
+
+
 def matchup_participants(value):
     """Extract only explicitly separated sides of an announced matchup.
 
