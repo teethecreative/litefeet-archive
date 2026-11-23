@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Wall Approvals | The LiteFeet Vault</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dca.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/litefeet-sitewide.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lfv-public-profiles.css') }}">
+<style>.lfv-wall-owner-page{max-width:800px;margin:30px auto 80px;padding:0 20px;color:var(--lfv-ink,inherit)}.lfv-wall-owner-page a{color:inherit;text-decoration:underline}.lfv-wall-owner-page article{padding:18px;border:1px solid var(--lfv-line,#d0d8e3);border-radius:9px;margin:14px 0;background:var(--lfv-surface,#fff)}.lfv-wall-owner-page article p{white-space:pre-wrap}.lfv-wall-owner-actions{display:flex;gap:12px}.lfv-wall-owner-actions button{padding:9px 14px;cursor:pointer}</style>
+</head><body>{% include "_navigation.html" %}
+<main class="lfv-wall-owner-page"><h1>My Wall Approvals</h1>
+<p>Approve or reject messages on your claimed profiles. Only one approval is needed: the first decision by you or a Vault administrator resolves the post.</p>
+{% for notice in get_flashed_messages(category_filter=['wall']) %}<p role="status">{{ notice }}</p>{% endfor %}
+{% if paths %}<p>Profiles: {% for path in paths %}<a href="{{ path }}#wall">{{ path }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+{% else %}<p>No profiles have been linked to your verified email for Wall moderation.</p>{% endif %}
+{% for post in posts %}
+<article><p><a href="{{ post.profile_href }}#wall">{{ post.profile_href }}</a> · <strong>{{ post.author_name }}</strong></p>
+<p>{{ post.message }}</p>
+<small>Submitted {{ post.created_at.strftime('%b %d, %Y') }}</small>
+<div class="lfv-wall-owner-actions">
+{% for decision in ['approved','rejected'] %}
+<form method="post" action="{{ url_for('vault_wall_review',post_id=post.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<input type="hidden" name="decision" value="{{ decision }}">
+<button type="submit">{{ decision|capitalize }}</button></form>
+{% endfor %}</div></article>
+{% else %}<p>No Wall posts awaiting your approval.</p>{% endfor %}
+</main>{% include "_footer.html" %}</body></html>
