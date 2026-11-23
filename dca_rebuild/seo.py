@@ -57,7 +57,8 @@ PAGES.update({
     "/awards": ("Awards | The LiteFeet Vault", "Explore LiteFeet award programs, current participation and historical results."),
     "/awards/dancers-choice": ("Dancer’s Choice Awards | The LiteFeet Vault", "Explore Dancer’s Choice award editions, current participation and historical archives."),
     "/community": ("Community | The LiteFeet Vault", "Contribute historical sources, suggest corrections and follow public community updates."),
-    "/about": ("About The LiteFeet Vault | Dear LiteFeet", "Read the founder’s letter, discover the Vault’s mission and learn how community contributions help preserve LiteFeet history."),
+    "/about": ("About The LiteFeet Vault | Our Mission", "Discover the Vault’s mission and learn how community contributions help preserve LiteFeet history."),
+    "/about/founder": ("The Founder | Tee | The LiteFeet Vault", "Meet Tee, founder of The LiteFeet Vault, and read her letter about preserving LiteFeet history and community voices."),
 
 
     "/awards/dancers-choice/nominations": ("Nominate for Dancer's Choice Awards 2026 | The LiteFeet Vault", "Browse official and write-in categories. Nominate or support a LiteFeet community member once per category every rolling 24 hours."),
