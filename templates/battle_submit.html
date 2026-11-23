@@ -10,7 +10,7 @@
             <p class="eyebrow">Battles</p>
             <h1>Add Battle Record</h1>
             <p>
-                Submit a matchup, winner, video, event connection, judges, or battle context.
+                Submit a matchup, round count, winner, video, event connection, judges, or battle context.
                 If something is not fully confirmed, mark it as needing verification.
             </p>
         </div>
@@ -46,6 +46,7 @@
                 Battle type
                 <select name="battle_type">
                     <option value="1v1">1v1</option>
+                    <option value="1v2">1v2</option>
                     <option value="2v2">2v2</option>
                     <option value="Crew Battle">Crew / Team Battle</option>
                     <option value="Main Event">Main Event</option>
@@ -55,6 +56,11 @@
                     <option value="Producer Battle">Producer Battle</option>
                     <option value="Other">Other</option>
                 </select>
+            </label>
+
+            <label>
+                Number of rounds
+                <input type="number" name="round_count" min="1" max="20" value="1" required>
             </label>
 
             <label>
