@@ -23,6 +23,17 @@ def identity_key(value):
     return " ".join(str(value or "").split()).casefold()
 
 
+def is_person_or_team_category(category):
+    """Only people/crews get people profiles; awards for songs or events do not."""
+    text = identity_key(category)
+    return not (
+        text.startswith("best event")
+        or "event of the year" in text
+        or "song of the year" in text
+        or "battle moment" in text
+    )
+
+
 def matchup_participants(value):
     """Extract only explicitly separated sides of an announced matchup.
 
@@ -62,6 +73,8 @@ class PublicProfileIndex:
         self._aliases = aliases
 
         for category in archive_categories:
+            if not is_person_or_team_category(category.name):
+                continue
             for nominee in category.nominees:
                 entry = self._get_or_create(nominee.name)
                 if entry is None:
@@ -77,6 +90,8 @@ class PublicProfileIndex:
                     self._append_once(entry["nominations"], row)
 
         for category in current_categories:
+            if not is_person_or_team_category(category["name"]):
+                continue
             for nominee in category["nominees"]:
                 entry = self._get_or_create(nominee["name"])
                 if entry is None:
