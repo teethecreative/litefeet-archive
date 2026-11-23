@@ -891,7 +891,7 @@ def install_phase9e(app, ns):
                 except IntegrityError:
                     db.rollback()
                     abort(409, 'Reason already submitted')
-                flash('Reason submitted for eligibility review. Nomination totals have not changed.')
+                flash('Reason submitted for review. No additional nomination was added.')
                 return redirect(url_for('phase9e_nomination_reasons'), code=303)
             from dca_rebuild.email_verification import verified_nominator_hash, verification_enabled
             verified_for_reasons = bool(verified_nominator_hash() if verification_enabled()
@@ -1116,11 +1116,11 @@ def install_phase9e(app, ns):
                 if not reason and not nominee_has_reason(
                     db, edition.id, cid, name
                 ):
-                    abort(400, 'Add a reason for this nominee before submitting')
+                    abort(400, 'Please add a reason for this nominee before submitting')
                 if (not any(match['type'] == 'existing' for match in matches)
                     and any(match['type'] == 'similar' for match in matches)
                     and request.form.get('confirm_distinct') != '1'):
-                    flash('A similar name already exists. Check the spelling or confirm a different person before submitting.')
+                    flash('A similar nominee is already listed. Check whether it's the same entry.')
                     return redirect(url_for('dca_nominations_closed', category=cid, nominate=1), code=303)
                 contact = db.get(DCANominationContact, who)
                 if contact is None:
@@ -1135,7 +1135,7 @@ def install_phase9e(app, ns):
                                                       description=reason)
                     if not created:
                         db.rollback()
-                        flash('This category is on cooldown. Other available categories are ready to nominate.')
+                        flash('You've already nominated in this category. Try another category or come back when the 24-hour wait ends.')
                         return redirect(url_for('dca_nominations_closed'))
                     submission = (db.query(DCANominationSubmission).filter_by(
                         nominee_id=nominee.id, submitter_hash=who)
@@ -1146,7 +1146,7 @@ def install_phase9e(app, ns):
                     db.commit()
                 except IntegrityError:
                     db.rollback()
-                    flash('Your nomination could not be recorded. Check your category status and try again.')
+                    flash('Your nomination wasn't saved. Check your category status and try again.')
                     return redirect(url_for('dca_nominations_closed'))
                 session['lf9e_skipped'] = [x for x in session.get('lf9e_skipped', []) if x != cid]
                 # Retain the reminder only while the reviewed feature is enabled.
