@@ -1,13 +1,18 @@
 <header class="lfv-archive-intro"><p class="vault-kicker">PEOPLE &amp; TEAMS</p><h1>People &amp; Teams</h1></header>
 <section class="lfv-people-cloud-section" aria-labelledby="people-cloud-title">
-  <div class="lfv-people-cloud-heading"><h2 id="people-cloud-title">FEATURED PEOPLE &amp; TEAMS</h2></div>
-  <nav class="lfv-people-wordcloud" aria-label="People and team profiles">
+  <div class="lfv-people-cloud-heading"><h2 id="people-cloud-title">ACTIVE IN THE LAST 7 DAYS</h2></div>
+  <p class="lfv-people-activity-intro">Recent nominations, profile searches, confirmed battles, visits, and approved Wall posts.</p>
+  {% if people_cloud %}
+  <nav class="lfv-people-wordcloud" aria-label="Recently active people and teams">
     {% for person in people_cloud %}
     <a class="lfv-people-word" href="{{ person.href }}"
       style="--word-size:{{ (1.0 + ((person.weight if person.weight < 8 else 8) * 0.22)) | round(2) }}rem"
-      title="{{ person.full_name }}{% if person.is_nominee %} · Award nominee{% endif %}">{{ person.title }}</a>
+      title="{{ person.full_name }} · {{ person.reasons }}">{{ person.title }}</a>
     {% endfor %}
   </nav>
+  {% else %}
+  <p class="lfv-people-activity-empty">No recorded activity in the past seven days yet.</p>
+  {% endif %}
 </section>
 <section class="lfv-archive-index" id="records" data-archive-browser data-timeline="0" aria-labelledby="archive-list-title">
   <div class="lfv-archive-list-head"><h2 id="archive-list-title">SEARCH PEOPLE &amp; TEAMS</h2></div>
