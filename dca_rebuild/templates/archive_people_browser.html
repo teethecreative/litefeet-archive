@@ -10,9 +10,7 @@
   </nav>
 </section>
 <section class="lfv-archive-index" id="records" data-archive-browser data-timeline="0" aria-labelledby="archive-list-title">
-  <div class="lfv-archive-list-head"><h2 id="archive-list-title">SEARCH PEOPLE &amp; TEAMS</h2>
-    <span data-archive-count>{{ archive_pagination.count }} {% if archive_pagination.count == 1 %}PROFILE{% else %}PROFILES{% endif %}</span>
-  </div>
+  <div class="lfv-archive-list-head"><h2 id="archive-list-title">SEARCH PEOPLE &amp; TEAMS</h2></div>
   <form class="lfv-archive-filter" action="{{ url_for('vault_archive_people') }}" method="get" role="search" data-archive-filter>
     <label for="archive-search-input">SEARCH PEOPLE &amp; TEAMS</label>
     <div class="lfv-archive-searchline">
@@ -21,7 +19,9 @@
       <button type="submit">SEARCH</button>
     </div>
   </form>
-  <p class="lfv-profile-discovery-note">Includes archive-listed people, teams, and publicly listed award nominees. A nomination does not verify someone's identity or award result.</p>
+  <div data-archive-results {% if not archive_query %}hidden{% endif %}>
+    <p class="lfv-profile-discovery-note">Search includes archive-listed people, teams, and public award nominees.</p>
+    <p class="lfv-people-search-count" data-archive-count aria-live="polite">{% if archive_query %}{{ archive_pagination.count }} {{ 'profile' if archive_pagination.count == 1 else 'profiles' }}{% endif %}</p>
   <div class="lfv-archive-entry-list" data-archive-list role="list">
   {% for entry in archive_items %}
     <article class="lfv-archive-entry" role="listitem">
@@ -35,7 +35,8 @@
   </div>
   <p class="lfv-archive-empty" data-archive-empty {% if archive_items %}hidden{% endif %}>NO MATCHING PROFILES.</p>
   <div class="lfv-archive-pagination">
-    <p class="lfv-archive-load-state" aria-live="polite" data-archive-state>{% if archive_pagination.has_more %}SCROLL FOR MORE{% else %}ALL RESULTS LOADED{% endif %}</p>
+    <p class="lfv-archive-load-state" aria-live="polite" data-archive-state>{% if archive_pagination.has_more %}SCROLL FOR MORE{% elif archive_pagination.count %}ALL RESULTS LOADED{% else %}NO MATCHING PROFILES{% endif %}</p>
     <button type="button" data-archive-load {% if not archive_pagination.has_more %}hidden{% endif %}>LOAD MORE PROFILES</button>
+  </div>
   </div>
 </section>
