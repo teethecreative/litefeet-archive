@@ -1128,8 +1128,8 @@ def install_phase9e(app, ns):
                     if who != session.get('lf9e_recent_hash'):
                         session.pop('lf9e_skipped', None)
                     session['lf9e_recent_hash'] = who
-                    from dca_rebuild.email_verification import start_nomination_day
-                    start_nomination_day(request.form.get('timezone'))
+                    from dca_rebuild.email_verification import start_site_session
+                    start_site_session(request.form.get('timezone'))
                     requested = request.form.get('return_category', '').strip()
                     if requested:
                         try:
