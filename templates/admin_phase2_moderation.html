@@ -1,26 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}Phase 2 Moderation | The LiteFeet Ledger{% endblock %}
+{% block title %}Review Queue | The LiteFeet Vault{% endblock %}
 
 {% block content %}
-<section class="content-section admin-phase2-page">
-    <div class="section-heading-row">
-        <div>
-            <p class="eyebrow">Backend</p>
-            <h1>Phase 2 Moderation</h1>
-            <p>
-                Moderate the new Ledger data layers: profile claims, community perspectives,
-                structured battles, Ask conversations, and calendar metadata.
-            </p>
-        </div>
+<nav aria-label="Review type" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+{% for key,label in [('','All reviews'),('claims','Profile Claims'),('perspectives','Perspectives'),('battles','Battle Records'),('ask','Ask Conversations'),('calendar','Calendar Metadata')] %}
+<a href="/admin/phase2{% if key %}?section={{ key }}{% endif %}"{% if request.args.get('section','') == key %} aria-current="page" style="font-weight:700"{% endif %}>{{ label }}</a>
+{% endfor %}
+</nav>
 
-        <div class="hero-actions">
-            <a class="button secondary" href="{{ url_for('admin_home') }}">Admin Dashboard</a>
-            <a class="button primary" href="{{ url_for('verify_claims') }}">Ledger Review</a>
-        </div>
-    </div>
-</section>
-
+{% if not request.args.get('section') or request.args.get('section') == 'claims' %}
 <section class="homepage-section">
     <div class="section-heading-row">
         <div>
@@ -94,7 +83,9 @@
         </div>
     {% endif %}
 </section>
+{% endif %}
 
+{% if not request.args.get('section') or request.args.get('section') == 'perspectives' %}
 <section class="homepage-section">
     <div class="section-heading-row">
         <div>
@@ -162,7 +153,9 @@
         </div>
     {% endif %}
 </section>
+{% endif %}
 
+{% if not request.args.get('section') or request.args.get('section') == 'battles' %}
 <section class="homepage-section">
     <div class="section-heading-row">
         <div>
@@ -228,7 +221,9 @@
         </div>
     {% endif %}
 </section>
+{% endif %}
 
+{% if not request.args.get('section') or request.args.get('section') == 'ask' %}
 <section class="homepage-section">
     <div class="section-heading-row">
         <div>
@@ -282,7 +277,9 @@
         </div>
     {% endif %}
 </section>
+{% endif %}
 
+{% if not request.args.get('section') or request.args.get('section') == 'calendar' %}
 <section class="homepage-section">
     <div class="section-heading-row">
         <div>
@@ -343,6 +340,7 @@
         </div>
     {% endif %}
 </section>
+{% endif %}
 
 <style>
     .inline-admin-form {
