@@ -34,7 +34,6 @@
       <button type="button" class="lfv-profile-role-badge" data-lfv-role="{{ badge.key }}" aria-pressed="false">{{ badge.label }}</button>
       {% endfor %}
     </div>
-    <p class="lfv-profile-role-help">Select a role to see that part of the profile. Basic profile information stays the same.</p>
     {% endif %}
   </div>
 
@@ -55,10 +54,10 @@
         <h2 id="profile-facts-title" class="lfv-profile-card-title">Profile Details</h2>
         <dl class="lfv-profile-facts">
           <div><dt>Name</dt><dd>{{ profile.name }}</dd></div>
-          <div><dt>Listed as</dt><dd>{{ 'Team / crew' if profile.is_team else ('Archive subject' if archived else 'Award / nomination entry') }}</dd></div>
+          <div><dt>Type</dt><dd>{{ 'Team / crew' if profile.is_team else 'Individual' }}</dd></div>
           {% if profile.is_team %}
-          <div><dt>Founded</dt><dd>{{ profile.team_details.founded or 'Not yet documented' }}</dd></div>
-          <div><dt>Founder(s)</dt><dd>{% if profile.team_details.founders %}{% for founder in profile.team_details.founders %}{% if founder.href %}<a href="{{ founder.href }}">{{ founder.name }}</a>{% else %}{{ founder.name }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}Not yet documented{% endif %}</dd></div>
+          {% if profile.team_details.founded %}<div><dt>Founded</dt><dd>{{ profile.team_details.founded }}</dd></div>{% endif %}
+          {% if profile.team_details.founders %}<div><dt>Founder(s)</dt><dd>{% for founder in profile.team_details.founders %}{% if founder.href %}<a href="{{ founder.href }}">{{ founder.name }}</a>{% else %}{{ founder.name }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</dd></div>{% endif %}
           {% endif %}
           {% if archived and archived.date_label and archived.date_label != 'Historical research' %}
           <div><dt>Record period</dt><dd>{{ archived.date_label }}</dd></div>
@@ -82,7 +81,7 @@
           <ul class="lfv-profile-featured-links">{% for related in presentation.connections %}
             {% if related.href not in (profile.documented_connections|default([])|map(attribute='href')|list) %}<li><a href="{{ related.href }}">{{ related.name }}</a></li>{% endif %}
           {% endfor %}</ul>
-          <p class="lfv-profile-note">Owner-featured links do not establish team affiliation.</p>
+
           {% endif %}
         </div>
       </section>
@@ -98,26 +97,24 @@
     </aside>
 
     <div class="lfv-profile-main">
+      {% if presentation.about_me or presentation.dance_style or presentation.influences or presentation.interests or (archived and archived.record_type != 'legacy_identity' and archived.description) %}
       <section class="lfv-profile-card" aria-labelledby="profile-about-title">
         <h2 id="profile-about-title" class="lfv-profile-card-title">{{ 'About the Team' if profile.is_team else 'About Me' }}</h2>
         <div class="lfv-profile-card-content">
           {% if presentation.about_me %}
           <p class="lfv-profile-owner-intro">{{ presentation.about_me }}</p>
-          <p class="lfv-profile-note">Profile owner's introduction</p>
           {% endif %}
           {% for label, value in [('Style / Specialties', presentation.dance_style),('Influences', presentation.influences),('Interests', presentation.interests)] %}
           {% if value %}<p class="lfv-profile-owner-field"><strong>{{ label }}:</strong> {{ value }}</p>{% endif %}
           {% endfor %}
-          {% if not presentation.about_me %}
-          <p>{% if archived and archived.record_type != 'legacy_identity' and archived.description %}{{ archived.description }}{% else %}{{ 'A team history has not been documented for this profile yet.' if profile.is_team else 'A personal biography has not been documented for this profile yet.' }}{% endif %}</p>
-          {% if archived and archived.record_type != 'legacy_identity' and archived.description %}
-          <p class="lfv-profile-note">This description comes from the archive and should not be treated as an owner-written biography.</p>
-          {% endif %}
+          {% if not presentation.about_me and archived and archived.record_type != 'legacy_identity' and archived.description %}
+          <p>{{ archived.description }}</p>
           {% endif %}
         </div>
       </section>
 
-      {% if profile.is_team %}
+      {% endif %}
+      {% if profile.is_team and (profile.team_details.current_roster or profile.team_details.former_roster or profile.team_details.og_roster or profile.team_details.producer_roster or profile.team_details.reported_roster) %}
       <section class="lfv-profile-card" aria-labelledby="profile-roster-title">
         <div class="lfv-profile-card-title lfv-profile-card-title-row">
           <h2 id="profile-roster-title">Team Roster</h2>
@@ -125,7 +122,7 @@
         </div>
         <div class="lfv-profile-card-content">
           {% for heading, members in [('Current members', profile.team_details.current_roster), ('OG Demons', profile.team_details.og_roster), ('Demon Producers', profile.team_details.producer_roster), ('Former members', profile.team_details.former_roster)] %}
-          {% if members or heading in ['Current members', 'Former members'] %}
+          {% if members %}
           <h3 class="lfv-profile-subheading">{{ heading }}</h3>
           {% if members %}
           <ul class="lfv-profile-roster-list">
@@ -133,7 +130,7 @@
             <li>{% if member.href %}<a href="{{ member.href }}">{{ member.name }}</a>{% else %}{{ member.name }}{% endif %}{% if member.role %}<span class="lfv-profile-meta"> · {{ member.role }}</span>{% endif %}</li>
             {% endfor %}
           </ul>
-          {% else %}<p class="lfv-profile-note">No {{ heading|lower }} documented yet.</p>{% endif %}
+          {% endif %}
           {% endif %}
           {% endfor %}
           {% if profile.team_details.reported_roster %}
@@ -143,7 +140,7 @@
             <li>{% if member.href %}<a href="{{ member.href }}">{{ member.name }}</a>{% else %}{{ member.name }}{% endif %}</li>
             {% endfor %}
           </ul>
-          <p class="lfv-profile-note">Team affiliation was explicitly listed in nomination submissions; current or former membership has not yet been confirmed.</p>
+          <p class="lfv-profile-note">Membership status unconfirmed.</p>
           {% endif %}
         </div>
       </section>
@@ -172,7 +169,7 @@
               {% endfor %}
             </ul>
             {% else %}
-              <p class="lfv-profile-note">No independently documented {{ badge.label|lower }} activity linked yet. An award nomination or role label does not establish an appearance or credit.</p>
+              <p class="lfv-profile-note">No activity listed.</p>
             {% endif %}
           </div>
           {% endfor %}
@@ -180,6 +177,7 @@
       </section>
       {% endif %}
 
+      {% if profile.wins or profile.nominations %}
       <section class="lfv-profile-card" aria-labelledby="profile-awards-title">
         <div class="lfv-profile-card-title lfv-profile-card-title-row">
           <h2 id="profile-awards-title">Awards &amp; Recognition</h2>
@@ -208,12 +206,11 @@
             {% endfor %}
           </ul>
           {% endif %}
-          {% if not profile.wins and not profile.nominations %}
-          <p class="lfv-profile-note">No awards or nominations linked in the Vault yet.</p>
-          {% endif %}
         </div>
       </section>
 
+      {% endif %}
+      {% if profile.battles %}
       <section class="lfv-profile-card" aria-labelledby="profile-battles-title">
         <div class="lfv-profile-card-title lfv-profile-card-title-row">
           <h2 id="profile-battles-title">Battles &amp; Moments</h2>
@@ -221,7 +218,6 @@
         </div>
         <div class="lfv-profile-card-content">
           {% if profile.battles %}
-          <p class="lfv-profile-note">Announced appearances are not proof that a battle happened or confirmation of its winner.</p>
           <ul class="lfv-profile-entry-list">
             {% for battle in profile.battles %}
             <li>
@@ -233,18 +229,11 @@
             </li>
             {% endfor %}
           </ul>
-          {% else %}
-          <p class="lfv-profile-note">No exact-name battle listings or documented moments linked yet.</p>
           {% endif %}
         </div>
       </section>
 
-      <section class="lfv-profile-card" aria-labelledby="profile-media-title">
-        <h2 id="profile-media-title" class="lfv-profile-card-title">Photos &amp; Videos</h2>
-        <div class="lfv-profile-card-content">
-          <p class="lfv-profile-note">Approved photos and videos linked to this profile will appear here.</p>
-        </div>
-      </section>
+      {% endif %}
 
       <section class="lfv-profile-card" id="wall" aria-labelledby="profile-wall-title">
         <div class="lfv-profile-card-title lfv-profile-card-title-row">
@@ -264,7 +253,7 @@
             <textarea id="lfv-wall-message" name="message" required minlength="5" maxlength="2000" rows="3" placeholder="Write something for {{ profile.name }}…"></textarea>
             <input type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" class="lfv-wall-honeypot">
             <div class="lfv-profile-wall-actions">
-              <p>A Vault administrator or the verified profile owner can approve your post. Whoever acts first resolves it.</p>
+              <p>Posts require approval before appearing publicly.</p>
               <button type="submit">Post to Wall</button>
             </div>
           </form>
@@ -284,13 +273,14 @@
             {% endfor %}
           </ul>
           {% else %}
-          <div class="lfv-profile-wall-empty"><span class="lfv-profile-wall-symbol" aria-hidden="true">♡</span><p>No approved Wall posts yet.</p></div>
+          <div class="lfv-profile-wall-empty"><span class="lfv-profile-wall-symbol" aria-hidden="true">♡</span><p>No posts yet.</p></div>
           {% endif %}
         </div>
       </section>
     </div>
   </div>
 
+  {% if archived or (related_records is defined and related_records) %}
   <section class="lfv-profile-archive-panel" aria-labelledby="profile-archive-title">
     <details>
       <summary id="profile-archive-title">
@@ -350,8 +340,6 @@
             <p class="lfv-profile-note">Responses enter editorial review. They do not automatically change the archive.</p>
           </div>
           {% endif %}
-        {% else %}
-        <p class="lfv-profile-note">This page links already-public awards and battle listings. There is no verified personal biography or separate archived identity record yet.</p>
         {% endif %}
         {% if related_records is defined and related_records %}
         <h3>Related records</h3>
@@ -364,6 +352,7 @@
       </div>
     </details>
   </section>
+  {% endif %}
 </main>
 <script>
 (function () {
