@@ -80,14 +80,14 @@ def install_music_public(app, engine):
         if search:
             releases = [row for row in releases if search in " ".join(
                 str(row.get(k) or "") for k in
-                ("title", "artist", "artist_or_creator", "producer", "producer_name",
+                ("title", "artist", "artist_or_creator", "producer", "producer_name", "producer_credit",
                  "description", "project_title", "record_type")
             ).casefold()]
         title = (request.args.get("title") or "").strip()[:120]
         producer = (request.args.get("producer") or "").strip()[:120]
         year = (request.args.get("year") or "").strip()[:4]
         sort = request.args.get("sort", "date_desc")
-        if sort not in ("date_desc", "date_asc", "title_asc", "title_desc", "producer_asc", "producer_desc"):
+        if sort not in ("date_desc", "date_asc", "title_asc", "title_desc", "producer_asc", "producer_desc", "duration_asc", "duration_desc"):
             sort = "date_desc"
         def credit(row):
             return str(row.get("producer_credit") or row.get("producer_name") or row.get("producer") or row.get("artist_or_creator") or row.get("artist") or "")
@@ -99,11 +99,19 @@ def install_music_public(app, engine):
             releases = [r for r in releases if producer.casefold() in credit(r).casefold()]
         if year:
             releases = [r for r in releases if date_key(r).startswith(year)]
+        def duration_key(row):
+            label = music_duration(row)
+            if label == "—":
+                return None
+            seconds = 0
+            for part in label.split(":"):
+                seconds = seconds * 60 + int(part)
+            return seconds
         field, direction = sort.split("_")
         key = {"date": date_key, "title": lambda r: str(r.get("title") or "").casefold(),
-               "producer": lambda r: credit(r).casefold()}[field]
-        known = [r for r in releases if key(r)]
-        unknown = [r for r in releases if not key(r)]
+               "producer": lambda r: credit(r).casefold(), "duration": duration_key}[field]
+        known = [r for r in releases if key(r) not in (None, "")]
+        unknown = [r for r in releases if key(r) in (None, "")]
         releases = sorted(known, key=key, reverse=direction == "desc") + unknown
         total = len(releases)
         pages = max(1, (total + 9) // 10)
@@ -112,6 +120,11 @@ def install_music_public(app, engine):
         return render_template("music_timeline.html",
                                releases=[with_release_display(row) for row in releases[(page-1)*10:page*10]],
                                search=search, filters=filters, page=page, pages=pages, total=total)
+
+    @app.get("/litefeet-music/submit")
+    def vault_music_submit():
+        from flask import redirect, url_for
+        return redirect(url_for("vault_archive_contribute_form", type="music"))
 
     @app.get("/litefeet-music/release/<int:item_id>", endpoint="vault_music_release")
     def vault_music_release(item_id):
