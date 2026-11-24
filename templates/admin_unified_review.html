@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Review Queue | The LiteFeet Vault{% endblock %}
+{% block content %}
+<h1>Review Queue</h1>
+<p>Pending records across the Vault. Select a category or search.</p>
+<form method="get" class="vault-review-filter">
+<label>Category <select name="type"><option value="all">All categories ({{ counts.values()|sum }})</option>{% for key, spec in queues.items() %}<option value="{{ key }}"{% if kind == key %} selected{% endif %}>{{ spec[0] }} ({{ counts.get(key, '—') }})</option>{% endfor %}</select></label>
+<label>Search <input name="q" value="{{ q }}" placeholder="Search records"></label><button type="submit">Filter</button>
+</form>
+{% if unavailable %}<p role="status">Unavailable queues: {{ unavailable|join(', ') }}. Existing management screens remain accessible.</p>{% endif %}
+<p>{{ rows|length }} matching records shown (up to 250 per category).</p>
+<div style="overflow-x:auto"><table class="vault-review-table"><thead><tr><th>Type</th><th>Record</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead><tbody>
+{% for row in rows %}<tr><td>{{ row.label }}</td><td>{{ row.title }}</td><td>{{ row.status }}</td><td>{{ row.date[:10] }}</td><td>
+{% if row.approve_claim %}<form method="post" action="{{ row.approve_claim }}"><input type="hidden" name="_vault_review" value="1"><input type="hidden" name="_queue_type" value="{{ kind }}"><input type="hidden" name="_queue_q" value="{{ q }}"><button type="submit">Approve &amp; link</button></form>{% endif %}
+{% if row.action %}<form method="post" action="{{ row.action }}"><input type="hidden" name="_vault_review" value="1"><input type="hidden" name="_queue_type" value="{{ kind }}"><input type="hidden" name="_queue_q" value="{{ q }}">{% for choice in row.choices %}<button name="{{ row.field }}" value="{{ choice }}" type="submit">{{ 'Approve' if choice in ['Approved','approved'] else 'Reject' if choice in ['Rejected','rejected'] else choice }}</button>{% endfor %}</form>{% endif %}
+{% if row.kind == 'submissions' %}<a href="/admin/submissions/{{ row.id }}/edit">Edit</a>{% endif %}
+<a href="{{ row.screen }}">Review details</a></td></tr>
+{% else %}<tr><td colspan="5">No matching pending records.</td></tr>{% endfor %}
+</tbody></table></div>
+<style>
+.vault-review-filter {display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:12px 0}
+.vault-review-filter label{display:grid;gap:4px}
+.vault-review-table{width:100%;border-collapse:collapse}
+.vault-review-table th,.vault-review-table td{padding:9px;border-bottom:1px solid #8590a455;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.vault-review-table td:nth-child(2){max-width:460px;white-space:pre-wrap}
+.vault-review-table form{display:inline}
+.vault-review-table button,.vault-review-table a{display:inline;padding:0;margin:0 8px 4px 0;background:none!important;color:inherit!important;border:0!important;box-shadow:none!important;text-decoration:underline;cursor:pointer;font:inherit}
+</style>
+{% endblock %}
