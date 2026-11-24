@@ -28932,3 +28932,7 @@ try:
     print("CULTURES_CALL polls active")
 except Exception as exc:
     print(f"CULTURES_CALL_SETUP_FAILED: {type(exc).__name__}: {exc}")
+
+# Unified administration workspace (registered after legacy handlers).
+from admin_workspace import register_admin_workspace
+register_admin_workspace(app, engine, current_user_is_admin)
