@@ -132,7 +132,7 @@ html.lfv-sitewide #archive-record.lfv-film-record * {
             <div><dt>{{ label }}</dt><dd>{{ detail }}</dd></div>
           {% endfor %}
           </dl>
-          <p>These names are published as preserved archival entries, not confirmed identity, team membership, or biographical claims. Historical source records are retained for corrections.</p>
+          <p>Historical identity and affiliations remain unconfirmed.</p>
         </section>
       {% elif record.record_type == 'award_archive' %}
         <section>
@@ -177,7 +177,7 @@ html.lfv-sitewide #archive-record.lfv-film-record * {
           <textarea id="event-source-note" name="source_note" maxlength="180" rows="2" placeholder="Name the flyer, footage, firsthand account or other evidence"></textarea>
           <button type="submit" class="lfv-archive-submit">Submit for review</button>
         </form>
-        <p class="lfv-archive-fineprint">This is an editorial correction request, not a public vote. Community recollections and official results remain distinct.</p>
+        <p class="lfv-archive-fineprint">Submit corrections with supporting information.</p>
       </section>
       {% elif record.can_verify %}
       <section class="lfv-archive-verify" id="verification">
@@ -204,7 +204,7 @@ html.lfv-sitewide #archive-record.lfv-film-record * {
           </fieldset>
           <button type="submit" class="lfv-archive-submit">Submit response</button>
         </form>
-        <p class="lfv-archive-fineprint">Guest responses are permitted. Explanations remain private pending editorial moderation. Community votes do not establish historical truth.</p>
+        <p class="lfv-archive-fineprint">Guest responses are welcome. Explanations remain private during review.</p>
       </section>
       {% endif %}
     </div>
