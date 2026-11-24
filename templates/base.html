@@ -276,9 +276,48 @@
             </div>
         {% endif %}
 
+{% set admin_workspace = request.path.startswith('/admin') and request.path not in ['/admin/login', '/admin/logout'] and session.get('admin_logged_in') %}
+{% if admin_workspace %}
+<style>
+body:has(.vault-admin-shell) .site-shell > .site-header,
+body:has(.vault-admin-shell) .site-shell > .site-footer,
+body:has(.vault-admin-shell) .phase13-mobile-bar {display:none!important}
+body:has(.vault-admin-shell) .site-shell {max-width:none!important;width:100%;padding:0!important;margin:0!important}
+.vault-admin-shell {display:grid;grid-template-columns:210px minmax(0,1fr);min-height:100vh}
+.vault-admin-nav {position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:20px 15px;background:#152747;color:#eef3fa;box-sizing:border-box}
+.vault-admin-nav a {display:block;color:#eef3fa!important;text-decoration:none!important;background:none!important;border:0!important;border-radius:0!important;padding:5px 8px;font-size:13px;line-height:1.4;box-shadow:none!important}
+.vault-admin-nav a:hover,.vault-admin-nav a[aria-current] {text-decoration:underline!important;text-underline-offset:4px;color:white!important}
+.vault-admin-nav h2 {font-size:12px;color:#fff;margin:0 0 16px;letter-spacing:.05em}
+.vault-admin-nav h3 {font-size:10px;color:#b9c8dd;text-transform:uppercase;letter-spacing:.08em;margin:14px 8px 4px}
+.vault-admin-shell > main {min-width:0;width:100%;max-width:none!important;margin:0!important;padding:18px clamp(12px,2vw,30px);box-sizing:border-box}
+.vault-admin-shell > main:has(.lfv-admin-workspace) {padding:0}
+.vault-admin-shell .lfv-admin-workspace {display:block!important;min-height:100vh}
+.vault-admin-shell .lfv-admin-header-actions a {background:none!important;border:0!important;padding:4px!important;min-height:0!important;color:inherit!important;text-decoration:underline!important}
+@media(max-width:760px){.vault-admin-shell{display:block}.vault-admin-nav{position:static;height:auto;padding:12px;display:flex;flex-wrap:wrap;gap:4px 12px}.vault-admin-nav h2{width:100%;margin-bottom:4px}.vault-admin-nav section{min-width:130px;margin:0}.vault-admin-nav h3{margin-top:5px}.vault-admin-nav a{padding:3px 6px}.vault-admin-shell > main{padding:12px}}
+</style>
+<div class="vault-admin-shell">
+<aside class="vault-admin-nav" aria-label="Administration navigation">
+<h2>The LiteFeet Vault · Admin</h2>
+{% set groups = [
+('Workspace', [('Overview','/admin'),('Review Queue','/admin#review-queue'),('Recent Activity','/admin#recent-activity'),('Add Record','/admin/submissions/new')]),
+('People & Accounts', [('Profiles','/admin/dancer-profiles'),('Users','/admin/users'),('Claims','/admin/phase2?section=claims'),('Profile Edits','/admin/profile-corrections'),('Profile Links','/admin/profile-links'),('Visibility Requests','/admin/profile-visibility-requests'),('Role Requests','/admin/role-requests'),('Duplicates','/admin/duplicate-reports')]),
+('Content', [('Submissions','/admin/submissions'),('Battle Records','/admin/phase2?section=battles'),('Events','/admin/calendar-review'),('Music & Media','/admin/media'),('Music Feedback','/admin/music-feedback'),('Awards (public)','/awards'),('Awards Import','/admin/imports/dancers-choice-2023')]),
+('Community', [('Perspectives','/admin/phase2?section=perspectives'),('Ask Conversations','/admin/phase2?section=ask'),('Ask Feedback','/admin/ask-feedback'),('Dancer Feedback','/admin/dancer-feedback'),('Homepage Questions','/admin/home-prompts')]),
+('System', [('Performance','/admin/performance'),('Error Logs','/admin/error-logs'),('Deploy Status','/admin/deploy-status'),('Maintenance','/admin/maintenance'),('View Public Site','/'),('Sign Out','/admin/logout')])
+] %}
+{% for heading, links in groups %}
+<section><h3>{{ heading }}</h3>
+{% for label, href in links %}
+<a href="{{ href }}"{% if request.path == href or (request.path == href.split('?')[0] and '?' in href and request.args.get('section') == href.split('=')[-1]) %} aria-current="page"{% endif %}>{{ label }}</a>
+{% endfor %}
+</section>
+{% endfor %}
+</aside>
+{% endif %}
         <main>
             {% block content %}{% endblock %}
         </main>
+        {% if admin_workspace %}</div>{% endif %}
 
         <footer class="site-footer">
             <p>The LiteFeet Vault — documenting the culture, with the community and for the community.</p>
