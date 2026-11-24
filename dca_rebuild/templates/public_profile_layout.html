@@ -124,7 +124,15 @@
           </ul>
           {% else %}<p class="lfv-profile-note">No {{ heading|lower }} documented yet.</p>{% endif %}
           {% endfor %}
-          <p class="lfv-profile-note">Roster entries are published only when documented. No membership is inferred from nominations or battle listings.</p>
+          {% if profile.team_details.reported_roster %}
+          <h3 class="lfv-profile-subheading">Reported team affiliations</h3>
+          <ul class="lfv-profile-roster-list">
+            {% for member in profile.team_details.reported_roster %}
+            <li>{% if member.href %}<a href="{{ member.href }}">{{ member.name }}</a>{% else %}{{ member.name }}{% endif %}</li>
+            {% endfor %}
+          </ul>
+          <p class="lfv-profile-note">Team affiliation was explicitly listed in nomination submissions; current or former membership has not yet been confirmed.</p>
+          {% endif %}
         </div>
       </section>
       {% endif %}
