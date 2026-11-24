@@ -257,7 +257,14 @@ class PublicProfileIndex:
                 ("founders", [{"name": "Spaceman", "role": "Founder"}]),
                 ("current_roster", [{"name": "D Rillz", "role": "CEO"},
                                     {"name": "Ash Rocket"}, {"name": "Venom"}]),
-                ("former_roster", [{"name": "Baby Robot", "role": "Former CEO · In memoriam"}]),
+                ("former_roster", [{"name": "Baby Robot", "role": "Former CEO · In memoriam"},
+                                   {"name": "Charlie Rocks", "role": "In memoriam"}]),
+                ("reported_roster", [
+                    {"name": name} for name in (
+                        "Baby O", "D Ski", "Hop Skotch", "Phresh Tune",
+                        "Prep Banks", "Radar", "Ty Shots",
+                    )
+                ]),
             ):
                 existing = {identity_key(m if isinstance(m, str) else m.get("name"))
                             for m in details[field]}
@@ -285,7 +292,7 @@ class PublicProfileIndex:
         for entry in self._profiles.values():
             if not entry["is_team"]:
                 continue
-            for field in ("founders", "current_roster", "former_roster"):
+            for field in ("founders", "current_roster", "former_roster", "reported_roster"):
                 linked = []
                 for item in entry["team_details"][field]:
                     member = {"name": item} if isinstance(item, str) else dict(item) if isinstance(item, dict) else {}
@@ -381,6 +388,7 @@ class PublicProfileIndex:
                 "founders": details.get("founders") or [],
                 "current_roster": details.get("current_roster") or [],
                 "former_roster": details.get("former_roster") or [],
+                "reported_roster": [],
             },
         )
 
