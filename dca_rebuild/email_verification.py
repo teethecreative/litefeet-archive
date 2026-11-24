@@ -308,6 +308,8 @@ def install_email_verification(app, session_factory, private_hash):
             abort(404)
         session.setdefault(SESSION_CSRF, secrets.token_urlsafe(32))
         if request.method == "GET":
+            if request.args.get("awards_battle") == "1":
+                session["return_to_awards_battle"] = True
             requested_claim = request.args.get("profile")
             if requested_claim is not None:
                 from dca_rebuild.profile_wall import _profile_for_path
@@ -393,6 +395,8 @@ def install_email_verification(app, session_factory, private_hash):
             start_site_session(request.form.get("timezone") or session.get(SESSION_TIMEZONE))
             session["lf9e_recent_hash"] = who
             session["lf9e_reminder_hash"] = who
+            if session.pop("return_to_awards_battle", False):
+                return redirect(url_for("vault_archive_record", slug="litefeet-awards-battle-day-2026"), code=303)
             claim_path = _claim_return_path(session_factory)
             session.pop(SESSION_RETURN_CLAIM, None)
             if claim_path:

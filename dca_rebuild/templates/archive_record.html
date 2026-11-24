@@ -75,12 +75,13 @@ html.lfv-sitewide #archive-record.lfv-film-record * {
                  {% if battle_poll_verified and not battle.already_voted %}
                  <form class="lfv-battle-poll-form" method="post" action="{{ url_for('vault_battle_vote',slug=record.slug,battle_key=battle.key) }}">
                    <input type="hidden" name="csrf_token" value="{{ archive_csrf }}">
+                   <span>Who do you think won?</span>
                    <label><input type="radio" name="choice" value="a" required> {{ battle.contestants[0] }}</label>
                    <label><input type="radio" name="choice" value="b" required> {{ battle.contestants[1] }}</label>
                    <button type="submit">Vote</button>
                  </form>
                  {% elif battle.already_voted %}<span class="lfv-battle-voted">Your vote is recorded.</span>
-                 {% else %}<span class="lfv-battle-verify">Verify your email to vote.</span>{% endif %}
+                 {% else %}{% if record.slug == 'litefeet-awards-battle-day-2026' %}<a href="/awards/dancers-choice/verify-email?awards_battle=1">Verify your email to vote</a>{% else %}<span class="lfv-battle-verify">Verify your email to vote.</span>{% endif %}{% endif %}
                  {% endif %}
                  {% if battle.interruption_reason %}<small class="lfv-battle-source">Reason: {{ battle.interruption_reason }}</small>{% endif %}
                  {% if battle.youtube_url %}<a class="lfv-battle-video" href="{{ battle.youtube_url }}" target="_blank" rel="noopener noreferrer">Watch battle on YouTube</a>{% endif %}

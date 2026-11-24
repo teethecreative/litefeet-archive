@@ -2,7 +2,7 @@
 
 The advertised historical lineup remains immutable. Administrators can attach a
 sourced occurrence/result to each advertised matchup; only confirmed ties and
-YouTube Decides offer a vote. Polls have no end date, and votes never change
+YouTube Decides offer a vote alongside documented unjudged matchups. Polls have no end date, and votes never change
 the historical outcome.
 """
 from datetime import datetime
@@ -20,9 +20,10 @@ from dca_rebuild.models import VaultBattleOutcome, VaultBattleOutcomeHistory, Va
 
 OCCURRENCE = {"unconfirmed", "scheduled", "happened", "did_not_happen", "postponed"}
 RESULTS = {"unknown", "a", "b", "tie", "youtube_decide", "no_contest"}
-POLL_RESULTS = {"tie", "youtube_decide"}
+POLL_RESULTS = {"tie", "youtube_decide", "unjudged"}
 RESULT_LABELS = {
     "unknown": "Result unconfirmed",
+    "unjudged": "Unjudged",
     "tie": "Official tie",
     "youtube_decide": "YouTube Decide",
     "no_contest": "No contest",
@@ -71,6 +72,14 @@ def find_matchup(record, key, added_battles=None):
     abort(404)
 
 
+def _battle_status(record, matchup, outcome):
+    if outcome and outcome.event_slug == record["slug"]:
+        return outcome.occurred, outcome.result
+    if matchup["label"] in record.get("reported_unjudged", ()) and not matchup.get("added"):
+        return "happened", "unjudged"
+    return "unconfirmed", "unknown"
+
+
 def build_battle_rows(record, factory, voter_hash=None):
     if not record or record.get("record_type") != "event":
         return []
@@ -111,8 +120,7 @@ def build_battle_rows(record, factory, voter_hash=None):
     for group in groups:
         for item in group["items"]:
             row = outcomes.get(item["key"])
-            item["occurred"] = row.occurred if row else "unconfirmed"
-            item["result"] = row.result if row else "unknown"
+            item["occurred"], item["result"] = _battle_status(record, item, row)
             item["source_note"] = row.source_note if row else ""
             item["youtube_url"] = videos.get(item["key"], "")
             interruption = interruptions.get(item["key"])
@@ -156,8 +164,9 @@ def install_battle_polls(app, ns):
             abort(400)
         with ns["SessionLocal"].begin() as db:
             outcome = db.get(VaultBattleOutcome, battle_key)
-            if not outcome or outcome.event_slug != slug or outcome.occurred != "happened" or outcome.result not in POLL_RESULTS:
-                abort(403, "Voting is only available on confirmed ties and YouTube Decides")
+            occurred, result = _battle_status(record, matchup, outcome)
+            if occurred != "happened" or result not in POLL_RESULTS:
+                abort(403, "Community voting is unavailable for this battle")
             existing = db.query(VaultBattleVote).filter_by(
                 battle_key=battle_key, voter_hash=identity
             ).first()

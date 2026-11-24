@@ -259,6 +259,23 @@ def all_records():
                + [_research(x, enrichments.get(x["slug"])) for x in research]
                + _legacy_public_people(research)
                + [awards_archive])
+    battle_day = _event({
+        "slug": "litefeet-awards-battle-day-2026",
+        "title": "5th Annual LiteFeet Awards Weekend — Battle Day",
+        "date": "2026-11-21",
+        "date_label": "November 21, 2026",
+        "venue": "Poe Park Gallery",
+        "battles": [
+            {"section": "One round · 1v1", "items": ["Tay Millz vs Boy Q"]},
+            {"section": "Two rounds · 1v2", "items": ["Flii Boogiie vs King K & Eloise"]},
+        ],
+    }, "flyers")
+    battle_day.update(
+        source_url="https://www.instagram.com/p/DecJMjIOd2z/",
+        description="Two reported unjudged battles from Awards Weekend. Eloise’s dance name is still to be confirmed.",
+        reported_unjudged=[label for group in battle_day["battles"] for label in group["items"]],
+    )
+    entries.append(battle_day)
     slugs = [e["slug"] for e in entries]
     if len(slugs) != len(set(slugs)):
         raise ValueError("Duplicate LiteFeet archive slug")

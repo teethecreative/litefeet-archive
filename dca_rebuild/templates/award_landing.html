@@ -81,6 +81,9 @@
     <a href="{{ url_for('lfa_year', year=edition) }}" {% if edition==year %}class="is-current" aria-current="page"{% endif %}>{{ edition }}</a>
     {% endfor %}
   </nav>
+  {% if year == 2026 %}
+  <p><a href="{{ url_for('vault_archive_record', slug='litefeet-awards-battle-day-2026') }}">See the Battle Day matchups and vote</a></p>
+  {% endif %}
   {% if year == 2026 and winners_2026 %}
     {% include "lfa_results_section.html" %}
   {% else %}
