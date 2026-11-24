@@ -99,7 +99,18 @@ def _milestone_year(label):
 @lru_cache(maxsize=1)
 def all_timeline_entries():
     guide = load_history_guide()
-    entries = []
+    entries = [dict(
+        slug="litefeet-awards-2026", title="5th Annual LiteFeet Awards",
+        collection="awards", date="2026-11-22", date_label="November 22, 2026",
+        period="November 22, 2026", sort_year=2026, sort_date="2026-11-22",
+        href="/awards/litefeet-awards/2026",
+        summary="The November 20–22 awards weekend concluded at District 385 in Ridgewood, Queens. The Vault’s results page records seven winners.",
+        detail=[], kind="record",
+        sources=[{"title": "LiteFeet Awards weekend announcement",
+                  "url": "https://www.instagram.com/p/DfSiFkAijqf/"}],
+        meta_parts=("2026", "November", "22", "Awards"),
+        search="5th annual litefeet awards 2026 november ridgewood queens district 385 winners results",
+    )]
     for item in all_records():
         # Music releases/research have separate Music and Media destinations.
         # Retain the source record and canonical detail URL for old bookmarks.
