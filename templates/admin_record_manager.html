@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ label }} | The LiteFeet Vault{% endblock %}
+{% block content %}
+<h1>{{ label }}</h1>
+<nav><a href="/admin/records/awards">Awards</a> · <a href="/admin/records/teams">Teams</a> · <a href="/admin/review?type={{ kind }}">Pending reviews</a></nav>
+<form method="get" style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0"><input name="q" value="{{ q }}" placeholder="Search {{ label|lower }}" aria-label="Search records"><button type="submit">Search</button></form>
+<p>{{ total }} records · Page {{ page }}</p>
+<div style="overflow-x:auto"><table class="vault-record-table"><thead><tr><th>Record</th><th>Details</th><th>Review status</th><th>Actions</th></tr></thead><tbody>
+{% for row in rows %}<tr><td>{{ row.category if kind == 'awards' else row.team_name }}</td><td>{% if kind == 'awards' %}{{ row.award_year }} · {{ row.winner_name or row.nominee_name or 'Unknown' }}{% else %}{{ row.founder_names or '' }}{% endif %}</td><td>{{ row.review_status or 'Pending Review' }}</td><td>
+<form method="post"><input type="hidden" name="id" value="{{ row.id }}"><input type="hidden" name="q" value="{{ q }}"><input type="hidden" name="page" value="{{ page }}"><button name="review_status" value="Verified">Verify</button> <button name="review_status" value="Rejected">Reject</button></form>
+<details><summary>Edit record</summary><form method="post" class="vault-record-edit"><input type="hidden" name="id" value="{{ row.id }}"><input type="hidden" name="action" value="edit"><input type="hidden" name="q" value="{{ q }}"><input type="hidden" name="page" value="{{ page }}">
+{% for field in fields %}<label>{{ field|replace('_',' ')|title }}{% if field in ['bio','notes'] %}<textarea name="{{ field }}">{{ row.get(field) or '' }}</textarea>{% else %}<input name="{{ field }}" value="{{ row.get(field) or '' }}"{% if field in ['category','team_name'] %} required{% endif %}>{% endif %}</label>{% endfor %}
+<label>Review status <select name="review_status">{% if row.review_status and row.review_status not in statuses %}<option selected>{{ row.review_status }}</option>{% endif %}{% for status in statuses %}<option{% if status == row.review_status %} selected{% endif %}>{{ status }}</option>{% endfor %}</select></label><button type="submit">Save changes</button></form></details>
+</td></tr>{% else %}<tr><td colspan="4">No records found.</td></tr>{% endfor %}
+</tbody></table></div>
+<nav style="display:flex;gap:16px;margin-top:16px">{% if page > 1 %}<a href="{{ url_for('vault_records',kind=kind,q=q,page=page-1) }}">Previous</a>{% endif %}{% if page*25 < total %}<a href="{{ url_for('vault_records',kind=kind,q=q,page=page+1) }}">Next</a>{% endif %}</nav>
+<style>.vault-record-table{width:100%;border-collapse:collapse}.vault-record-table td,.vault-record-table th{padding:9px;border-bottom:1px solid #8590a455;vertical-align:top;text-align:left}.vault-record-table button,.vault-record-table summary{background:none!important;border:0!important;box-shadow:none!important;color:inherit!important;text-decoration:underline;cursor:pointer;padding:2px;font:inherit}.vault-record-edit{display:grid;gap:8px;min-width:220px;margin:8px 0}.vault-record-edit label{display:grid;gap:4px}</style>
+{% endblock %}
