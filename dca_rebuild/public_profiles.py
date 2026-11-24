@@ -245,6 +245,25 @@ class PublicProfileIndex:
                       else "/awards/litefeet-awards"),
             ))
 
+        # Editorially confirmed Team Demon identities and documented roster.
+        # Keep exact-name links; never infer membership from award nominations.
+        demon = self.by_name("Team Demon")
+        if demon is not None:
+            demon["name"] = "Team Demon"
+            demon["is_team"] = True
+            demon["roles"].add("team")
+            details = demon["team_details"]
+            for field, members in (
+                ("founders", [{"name": "Spaceman", "role": "Founder"}]),
+                ("current_roster", [{"name": "D Rillz", "role": "CEO"},
+                                    {"name": "Ash Rocket"}, {"name": "Venom"}]),
+                ("former_roster", [{"name": "Baby Robot", "role": "Former CEO · In memoriam"}]),
+            ):
+                existing = {identity_key(m if isinstance(m, str) else m.get("name"))
+                            for m in details[field]}
+                details[field] = list(details[field]) + [
+                    m for m in members if identity_key(m["name"]) not in existing]
+        
         # Give dynamic (award/nomination-only) names stable, collision-safe
         # routes, without stealing URLs from published people records.
         reserved = {person_slug(record) for record in published_people}
