@@ -256,13 +256,15 @@ class PublicProfileIndex:
             for field, members in (
                 ("founders", [{"name": "Spaceman", "role": "Founder"}]),
                 ("current_roster", [{"name": "D Rillz", "role": "CEO"},
-                                    {"name": "Ash Rocket"}, {"name": "Venom"}]),
+                                    {"name": "Ash Rocket"}]),
+                ("og_roster", [{"name": "Venom", "role": "OG Demon"},
+                               {"name": "Prep Banks", "role": "OG Demon"}]),
+                ("producer_roster", [{"name": "Phresh Tune", "role": "Demon Producer"}]),
                 ("former_roster", [{"name": "Baby Robot", "role": "Former CEO · In memoriam"},
                                    {"name": "Charlie Rocks", "role": "In memoriam"}]),
                 ("reported_roster", [
                     {"name": name} for name in (
-                        "Baby O", "D Ski", "Hop Skotch", "Phresh Tune",
-                        "Prep Banks", "Radar", "Ty Shots",
+                        "Baby O", "D Ski", "Hop Skotch", "Radar", "Ty Shots",
                     )
                 ]),
             ):
@@ -292,7 +294,7 @@ class PublicProfileIndex:
         for entry in self._profiles.values():
             if not entry["is_team"]:
                 continue
-            for field in ("founders", "current_roster", "former_roster", "reported_roster"):
+            for field in ("founders", "current_roster", "former_roster", "og_roster", "producer_roster", "reported_roster"):
                 linked = []
                 for item in entry["team_details"][field]:
                     member = {"name": item} if isinstance(item, str) else dict(item) if isinstance(item, dict) else {}
@@ -388,6 +390,8 @@ class PublicProfileIndex:
                 "founders": details.get("founders") or [],
                 "current_roster": details.get("current_roster") or [],
                 "former_roster": details.get("former_roster") or [],
+                "og_roster": details.get("og_roster") or [],
+                "producer_roster": details.get("producer_roster") or [],
                 "reported_roster": [],
             },
         )
