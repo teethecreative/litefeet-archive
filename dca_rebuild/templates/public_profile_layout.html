@@ -66,17 +66,27 @@
         </dl>
       </section>
 
+      {% if profile.documented_connections or presentation.connections %}
       <section class="lfv-profile-card" aria-labelledby="profile-connections-title">
-        <h2 id="profile-connections-title" class="lfv-profile-card-title">{{ 'Team Connections' if profile.is_team else 'Dance Circle' }}</h2>
+        <h2 id="profile-connections-title" class="lfv-profile-card-title">{{ 'Team Connections' if profile.is_team else ('Team Affiliations' if profile.documented_connections else 'Dance Circle') }}</h2>
         <div class="lfv-profile-card-content">
+          {% if profile.documented_connections %}
+          <ul class="lfv-profile-entry-list">
+            {% for related in profile.documented_connections %}
+            <li><div><a href="{{ related.href }}">{{ related.name }}</a><span class="lfv-profile-meta">{{ related.roles|join(' · ') }}</span></div></li>
+            {% endfor %}
+          </ul>
+          {% endif %}
           {% if presentation.connections %}
+          {% if profile.documented_connections %}<h3 class="lfv-profile-subheading">Owner-featured connections</h3>{% endif %}
           <ul class="lfv-profile-featured-links">{% for related in presentation.connections %}
-            <li><a href="{{ related.href }}">{{ related.name }}</a></li>
+            {% if related.href not in (profile.documented_connections|default([])|map(attribute='href')|list) %}<li><a href="{{ related.href }}">{{ related.name }}</a></li>{% endif %}
           {% endfor %}</ul>
-          <p class="lfv-profile-note">Featured by the profile owner; not a verified team affiliation.</p>
-          {% else %}          <p class="lfv-profile-note">Documented teams and connected dancers will appear here as the archive grows.</p>{% endif %}
+          <p class="lfv-profile-note">Owner-featured links do not establish team affiliation.</p>
+          {% endif %}
         </div>
       </section>
+      {% endif %}
 
       <section class="lfv-profile-card" aria-labelledby="profile-links-title">
         <h2 id="profile-links-title" class="lfv-profile-card-title">Explore</h2>
