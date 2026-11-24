@@ -13,38 +13,7 @@
 {% set errors = admin_error_log_summary if admin_error_log_summary is defined else {} %}
 
 <div class="lfv-admin-workspace" id="admin-top">
-    <aside class="lfv-admin-sidebar" aria-label="Admin console navigation">
-        <div class="lfv-admin-sidebar-top">
-            <span class="lfv-admin-brand">THE LITEFEET VAULT</span>
-            <span class="lfv-admin-brand-sub">Admin Console</span>
-        </div>
 
-        <nav class="lfv-admin-nav" aria-label="Admin sections">
-            <span class="lfv-admin-nav-group">Workspace</span>
-            <a class="is-active" href="/admin" aria-current="page">Overview</a>
-            <a href="#review-queue">Review Queue <span class="lfv-admin-nav-count">{{ pending_total }}</span></a>
-            <a href="#recent-activity">Recent Activity</a>
-
-            <span class="lfv-admin-nav-group">Manage</span>
-            <a href="/admin/dancer-profiles">People &amp; Teams</a>
-            <a href="/admin/calendar-review">Battles &amp; Events</a>
-            <a href="#awards-management">Awards</a>
-            <a href="/admin/media">Music &amp; Media</a>
-            <a href="/admin/phase2">Community</a>
-            <a href="/admin/submissions">Submissions</a>
-            <a href="/admin/users">Users &amp; Accounts</a>
-
-            <span class="lfv-admin-nav-group">System</span>
-            <a href="/admin/error-logs">Error Logs</a>
-            <a href="/admin/deploy-status">Deploy Status</a>
-            <a href="/admin/maintenance">Maintenance</a>
-        </nav>
-
-        <div class="lfv-admin-sidebar-bottom">
-            <a href="/">View Public Site</a>
-            <a href="/admin/logout">Sign Out</a>
-        </div>
-    </aside>
 
     <main class="lfv-admin-main" id="admin-content">
         <header class="lfv-admin-header">
@@ -59,12 +28,7 @@
             </div>
         </header>
 
-        <div class="lfv-admin-mobile-links" aria-label="Jump to admin section">
-            <a href="#review-queue">Review Queue</a>
-            <a href="#management-links">Management</a>
-            <a href="#recent-activity">Activity</a>
-            <a href="/admin/error-logs">Site Health</a>
-        </div>
+
 
         <section class="lfv-admin-metrics" aria-label="Vault summary">
             <div class="lfv-admin-metric">
@@ -133,8 +97,8 @@
                             </td>
                             <td class="lfv-admin-number lfv-admin-col-total">{{ card.total }}</td>
                             <td class="lfv-admin-cell-action">
-                                <a href="{{ phase12_url_for(card.endpoint, card.fallback) }}">
-                                    {% if card.label in ['Battle Records', 'Awards', 'Teams'] %}View{% else %}Review{% endif %}
+                                <a href="{% if card.label == 'Profile Claims' %}/admin/phase2?section=claims{% elif card.label == 'Ledger Review / Context' %}/admin/phase2?section=perspectives{% elif card.label == 'Battle Records' %}/admin/phase2?section=battles{% else %}{{ phase12_url_for(card.endpoint, card.fallback) }}{% endif %}">
+                                    {% if card.label in ['Awards', 'Teams'] %}View{% else %}Review{% endif %}
                                 </a>
                             </td>
                         </tr>
@@ -144,7 +108,7 @@
                     </tbody>
                 </table>
             </div>
-            <p class="lfv-admin-help">Battle, awards, and team record links currently open their existing public views. Their dedicated admin review screens are part of a later phase.</p>
+            <p class="lfv-admin-help">Awards and team record links open their public views; dedicated review tools are not yet available.</p>
         </section>
 
         <section class="lfv-admin-section" id="recent-activity" aria-labelledby="activity-heading">
@@ -180,67 +144,7 @@
             </div>
         </section>
 
-        <section class="lfv-admin-section" id="management-links" aria-labelledby="manage-heading">
-            <div class="lfv-admin-section-heading">
-                <div>
-                    <p class="lfv-admin-kicker">Navigation</p>
-                    <h2 id="manage-heading">More Management Tools</h2>
-                    <p class="lfv-admin-muted">Additional existing tools stay available while their sections are consolidated.</p>
-                </div>
-            </div>
 
-            <div class="lfv-admin-tools">
-                <details>
-                    <summary>Profiles &amp; Accounts</summary>
-                    <div class="lfv-admin-tool-list">
-                        <a href="/admin/users">User Accounts</a>
-                        <a href="/admin/dancer-profiles">Profile Records</a>
-                        <a href="/admin/profile-links">Profile Links</a>
-                        <a href="/admin/phase2">Profile Claims</a>
-                        <a href="/admin/profile-corrections">Profile Corrections</a>
-                        <a href="/admin/duplicate-reports">Duplicate Reports</a>
-                        <a href="/admin/profile-visibility-requests">Visibility Requests</a>
-                        <a href="/admin/role-requests">Role Requests</a>
-                    </div>
-                </details>
-                <details id="awards-management">
-                    <summary>Awards &amp; Historical Records</summary>
-                    <div class="lfv-admin-tool-list">
-                        <a href="/awards">Awards Overview (public)</a>
-                        <a href="/admin/imports/dancers-choice-2023">Dancer’s Choice 2023 Import</a>
-                    </div>
-                    <p class="lfv-admin-help">Category moderation, qualifications, write-ins, nominations and voting will be added to this workspace in a later phase.</p>
-                </details>
-                <details>
-                    <summary>Content &amp; Moderation</summary>
-                    <div class="lfv-admin-tool-list">
-                        <a href="/admin/submissions">Submission Review</a>
-                        <a href="/admin/submissions/new">New Submission</a>
-                        <a href="/admin/calendar-review">Calendar Review</a>
-                        <a href="/admin/music-feedback">Music Feedback</a>
-                        <a href="/admin/ask-feedback">Community Feedback</a>
-                        <a href="/admin/home-prompts">Homepage Questions</a>
-                        <a href="/admin/media">Music &amp; Media</a>
-                    </div>
-                </details>
-                <details>
-                    <summary>Other Existing Admin Links</summary>
-                    <div class="lfv-admin-tool-list">
-                        {% for item in admin_links %}
-                        <a href="{{ phase12_url_for(item.endpoint, item.fallback) }}">{{ item.label }}</a>
-                        {% endfor %}
-                    </div>
-                </details>
-                <details>
-                    <summary>Public Pages</summary>
-                    <div class="lfv-admin-tool-list">
-                        {% for item in public_links %}
-                        <a href="{{ phase12_url_for(item.endpoint, item.fallback) }}">{{ item.label | replace('Ledger', 'Vault') }}</a>
-                        {% endfor %}
-                    </div>
-                </details>
-            </div>
-        </section>
     </main>
 </div>
 
@@ -268,7 +172,7 @@
         --admin-blue: #102a54;
         --admin-gold: #d6af42;
         display: grid;
-        grid-template-columns: 236px minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr);
         min-height: 100vh;
         background: var(--admin-bg);
         color: var(--admin-text);
@@ -325,7 +229,7 @@
     .lfv-admin-muted { color: var(--admin-muted); margin: 0; font-size: 13px; }
     .lfv-admin-header-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .lfv-admin-header-actions a { display: inline-flex; justify-content: center; align-items: center; min-height: 39px; border-radius: 7px; font-size: 13px; font-weight: 700; padding: 8px 15px; }
-    .lfv-admin-action-primary { background: var(--admin-gold); color: #142b4a !important; }
+    .lfv-admin-action-primary { background: transparent; color: var(--admin-text) !important; }
     .lfv-admin-action-secondary { background: var(--admin-surface); border: 1px solid var(--admin-line); color: var(--admin-text) !important; }
     .lfv-admin-mobile-links { display: none; }
     .lfv-admin-metrics { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
@@ -365,7 +269,7 @@
     .lfv-admin-tool-list a { color: var(--admin-text); text-decoration: underline; text-underline-offset: 3px; font-size: 12px; }
     .lfv-admin-tools .lfv-admin-help { padding-bottom: 12px; }
     @media (max-width: 1050px) {
-        .lfv-admin-workspace { grid-template-columns: 205px minmax(0,1fr); }
+        .lfv-admin-workspace { grid-template-columns: minmax(0,1fr); }
         .lfv-admin-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
         .lfv-admin-tool-list { grid-template-columns: repeat(2,minmax(0,1fr)); }
     }
