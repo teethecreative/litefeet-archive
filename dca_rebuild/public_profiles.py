@@ -307,6 +307,32 @@ class PublicProfileIndex:
                     linked.append(member)
                 entry["team_details"][field] = linked
 
+        # Derive reciprocal public connections from the documented roster only.
+        # Nomination-reported affiliations and owner-featured links stay distinct.
+        connection_fields = (
+            ("founders", "Founder"),
+            ("current_roster", "Current member"),
+            ("og_roster", "OG member"),
+            ("producer_roster", "Producer"),
+            ("former_roster", "Former member"),
+        )
+        for team in self._profiles.values():
+            if not team["is_team"]:
+                continue
+            for field, default_role in connection_fields:
+                for member in team["team_details"][field]:
+                    person = self.by_name(member["name"])
+                    if not person or person["is_team"] or not person["href"]:
+                        continue
+                    role = member.get("role") or default_role
+                    for source, target in ((team, person), (person, team)):
+                        rows = source["documented_connections"]
+                        existing = next((row for row in rows if row["href"] == target["href"]), None)
+                        if existing is None:
+                            rows.append({"name": target["name"], "href": target["href"], "roles": [role]})
+                        elif role not in existing["roles"]:
+                            existing["roles"].append(role)
+
         # A flyer that *lists* a judge supports only an event appearance, not
         # a claim that the person judged every battle on that card.
         for event in records:
@@ -385,6 +411,7 @@ class PublicProfileIndex:
             name=name, archive_record=record or None,
             wins=[], nominations=[], battles=[], href="",
             is_team="team" in roles, roles=roles, badges=[], judge_events=[],
+            documented_connections=[],
             team_details={
                 "founded": details.get("founded") or "",
                 "founders": details.get("founders") or [],
