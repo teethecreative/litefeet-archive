@@ -111,10 +111,11 @@
       <section class="lfv-profile-card" aria-labelledby="profile-roster-title">
         <div class="lfv-profile-card-title lfv-profile-card-title-row">
           <h2 id="profile-roster-title">Team Roster</h2>
-          <span class="lfv-profile-count">{{ profile.team_details.current_roster|length + profile.team_details.former_roster|length }} documented</span>
+          <span class="lfv-profile-count">{{ profile.team_details.current_roster|length + profile.team_details.former_roster|length + profile.team_details.og_roster|length + profile.team_details.producer_roster|length }} documented</span>
         </div>
         <div class="lfv-profile-card-content">
-          {% for heading, members in [('Current members', profile.team_details.current_roster), ('Former members', profile.team_details.former_roster)] %}
+          {% for heading, members in [('Current members', profile.team_details.current_roster), ('OG Demons', profile.team_details.og_roster), ('Demon Producers', profile.team_details.producer_roster), ('Former members', profile.team_details.former_roster)] %}
+          {% if members or heading in ['Current members', 'Former members'] %}
           <h3 class="lfv-profile-subheading">{{ heading }}</h3>
           {% if members %}
           <ul class="lfv-profile-roster-list">
@@ -123,6 +124,7 @@
             {% endfor %}
           </ul>
           {% else %}<p class="lfv-profile-note">No {{ heading|lower }} documented yet.</p>{% endif %}
+          {% endif %}
           {% endfor %}
           {% if profile.team_details.reported_roster %}
           <h3 class="lfv-profile-subheading">Reported team affiliations</h3>
