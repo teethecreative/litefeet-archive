@@ -63,6 +63,18 @@ class VaultProfileEditAudit(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 
+class VaultProfileEditReview(Base):
+    """Immutable review snapshot; the owner's proposed_json is never overwritten."""
+    __tablename__ = "vault_profile_edit_reviews"
+    edit_id = Column(Integer, ForeignKey("vault_profile_edit_requests.id"), primary_key=True)
+    before_json = Column(Text, nullable=False)
+    approved_json = Column(Text, nullable=True)
+
+
+def _changed_fields(before, proposed):
+    return [key for key in _blank() if before.get(key) != proposed.get(key)]
+
+
 def _photo_url(value):
     """Only direct HTTPS image URLs, never script/data/blob/local URLs."""
     value = (value or "").strip()
@@ -151,7 +163,7 @@ def install_profile_owner_editor(app, session_factory, admin_required):
     bind = session_factory.kw["bind"]
     Base.metadata.create_all(bind=bind, tables=[
         VaultProfilePresentation.__table__, VaultProfileEditRequest.__table__,
-        VaultProfileEditAudit.__table__,
+        VaultProfileEditAudit.__table__, VaultProfileEditReview.__table__,
     ])
 
     @app.context_processor
@@ -261,13 +273,26 @@ def install_profile_owner_editor(app, session_factory, admin_required):
                 query = query.filter_by(status=view)
             rows = query.order_by(VaultProfileEditRequest.created_at.desc(),
                                   VaultProfileEditRequest.id.desc()).limit(200).all()
-            items = [dict(
-                id=x.id, profile_href=x.profile_href, status=x.status,
-                proposed=json.loads(x.proposed_json), created_at=x.created_at,
-                resolved_at=x.resolved_at, admin_note=x.admin_note,
-                current=_published(db, x.profile_href),
-                owner_active=_owner_for(db, x.profile_href, x.claimant_hash),
-            ) for x in rows]
+            items = []
+            for x in rows:
+                proposed = json.loads(x.proposed_json)
+                review = db.get(VaultProfileEditReview, x.id)
+                current = (json.loads(review.before_json) if review
+                           else _published(db, x.profile_href))
+                approved = (json.loads(review.approved_json)
+                            if review and review.approved_json else None)
+                profile = _profile_for_path(x.profile_href, session_factory)
+                legacy = x.status != "pending" and review is None
+                changed = (_changed_fields(current, proposed) if not legacy else
+                           [key for key in _blank() if proposed.get(key)])
+                items.append(dict(
+                    id=x.id, profile_href=x.profile_href,
+                    profile_name=profile["name"] if profile else x.profile_href.rstrip("/").split("/")[-1].replace("-", " ").title(),
+                    status=x.status, proposed=proposed, created_at=x.created_at,
+                    resolved_at=x.resolved_at, admin_note=x.admin_note,
+                    current=current, approved=approved, changed=changed, legacy=legacy,
+                    owner_active=_owner_for(db, x.profile_href, x.claimant_hash),
+                ))
         return render_template("admin_profile_edits.html",
                                edits=items, view=view, csrf_token=_csrf())
 
@@ -289,12 +314,31 @@ def install_profile_owner_editor(app, session_factory, admin_required):
             if entry.status != "pending":
                 flash("This edit has already been reviewed.", "profile-edit")
                 return redirect(url_for("admin_profile_edits", view="all"), code=303)
+            before = _published(db, entry.profile_href)
+            original = json.loads(entry.proposed_json)
+            approved_data = None
             if action == "approved":
                 if not _owner_for(db, entry.profile_href, entry.claimant_hash):
                     abort(403, "The claimant no longer has owner access.")
                 if _profile_for_path(entry.profile_href, session_factory) is None:
                     abort(404, "The target profile is no longer public.")
-                data = json.loads(entry.proposed_json)
+                # Only submitted changes may be copyedited; other fields remain as published.
+                changed = _changed_fields(before, original)
+                candidate = dict(before)
+                for key in changed:
+                    fallback = original[key]
+                    if key == "featured_connections":
+                        fallback = "\n".join(fallback)
+                    candidate[key] = request.form.get("review_" + key, fallback)
+                if "featured_connections" not in changed:
+                    candidate["featured_connections"] = "\n".join(before["featured_connections"])
+                try:
+                    data = _clean_fields(candidate, entry.profile_href,
+                                         lambda target: _profile_for_path(target, session_factory))
+                except ValueError as exc:
+                    flash(str(exc), "profile-edit")
+                    return redirect(url_for("admin_profile_edits"), code=303)
+                approved_data = data
                 current = db.query(VaultProfilePresentation).filter_by(
                     profile_href=entry.profile_href).first()
                 if not current:
@@ -304,6 +348,13 @@ def install_profile_owner_editor(app, session_factory, admin_required):
                     setattr(current, key, data[key])
                 current.featured_json = json.dumps(data["featured_connections"])
                 current.approved_at = now
+            db.add(VaultProfileEditReview(
+                edit_id=entry.id, before_json=json.dumps(before, ensure_ascii=False),
+                approved_json=json.dumps(approved_data, ensure_ascii=False) if approved_data is not None else None,
+            ))
+            if approved_data is not None and approved_data != original:
+                db.add(VaultProfileEditAudit(
+                    edit_id=entry.id, action="admin_copyedited", actor="administrator", created_at=now))
             entry.status = action
             entry.resolved_at = now
             entry.admin_note = note or None
