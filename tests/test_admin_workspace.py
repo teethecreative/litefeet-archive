@@ -176,3 +176,30 @@ def test_admin_overview_date_scope_and_simple_workspaces(website, database):
     assert "lfv-admin-overview__tools" in html
     assert (now-timedelta(days=2)).strftime("%m-%d-%Y") in html
     assert client.get("/admin?page=0").status_code == 400
+
+
+def test_profile_claims_are_counted_on_admin_overview(website, database):
+    from dca_rebuild.profile_claims import VaultProfileClaim
+    now = datetime.utcnow()
+    with database[1].begin() as db:
+        for i, status in enumerate(("pending", "approved", "rejected")):
+            db.add(VaultProfileClaim(
+                profile_href=f"/people/test-claim-{i}",
+                claimant_hash=str(i) * 64,
+                masked_email="t***@example.org",
+                relationship="self",
+                explanation="Test ownership claim for the admin overview.",
+                status=status,
+                created_at=now,
+                resolved_at=now if status != "pending" else None,
+            ))
+    client = website.test_client()
+    admin(client)
+    response = client.get("/admin")
+    assert response.status_code == 200
+    assert 'aria-label="Profile Claims: 1 pending"' in response.get_data(as_text=True)
+    with database[1].begin() as db:
+        claim = db.query(VaultProfileClaim).filter_by(status="pending").one()
+        claim.status = "approved"
+        claim.resolved_at = now
+    assert 'aria-label="Profile Claims:' not in client.get("/admin").get_data(as_text=True)
