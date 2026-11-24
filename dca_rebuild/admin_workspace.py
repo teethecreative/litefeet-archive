@@ -17,6 +17,7 @@ from dca_rebuild.models import (
     VaultDevelopmentItem, VaultDevelopmentFeedback, VaultArchiveContribution,
 )
 from dca_rebuild.phase9e import NomineeQualificationReason9E
+from dca_rebuild.profile_claims import VaultProfileClaim
 from dca_rebuild.profile_owner_editor import VaultProfileEditRequest
 from dca_rebuild.profile_wall import VaultProfileWallPost
 
@@ -37,6 +38,7 @@ PENDING_REVIEW_SOURCES = (
  ("Beta feedback", BetaFeedback, "status", "new", "admin_beta_feedback", {}),
  ("Website feedback", VaultDevelopmentFeedback, "status", "new", "admin_vault_development", {}),
  ("Profile Walls", VaultProfileWallPost, "status", "pending", "admin_profile_walls", {"view": "pending"}),
+ ("Profile Claims", VaultProfileClaim, "status", "pending", "admin_profile_claims", {"view": "pending"}),
  ("Profile Edits", VaultProfileEditRequest, "status", "pending", "admin_profile_edits", {}),
 )
 
