@@ -1,29 +1,90 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Profile Claims | The LiteFeet Vault Admin</title>
 <link rel="stylesheet" href="{{ url_for('static',filename='css/dca.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/litefeet-sitewide.css') }}">
 <link rel="stylesheet" href="{{ url_for('static',filename='css/admin-workspace.css') }}">
-<style>.lfv-claim-admin{max-width:1000px;margin:30px auto 80px;padding:0 20px;color:var(--lfv-ink,inherit)}.lfv-claim-admin h1{font-size:clamp(1.8rem,4vw,2.5rem)}.lfv-claim-admin nav{display:flex;gap:16px;flex-wrap:wrap;margin:20px 0}.lfv-claim-admin a{color:inherit;text-decoration:underline}.lfv-claim-item{border:1px solid var(--lfv-line,#ccd3db);border-radius:10px;padding:18px;margin:15px 0;background:var(--lfv-surface,#fff)}.lfv-claim-item p{line-height:1.6;overflow-wrap:anywhere}.lfv-claim-item textarea{display:block;width:100%;padding:10px;margin:12px 0;color:inherit;background:var(--lfv-surface,#fff);border:1px solid var(--lfv-line,#ccd3db)}.lfv-claim-item .actions{display:flex;gap:10px;flex-wrap:wrap}.lfv-claim-item button{padding:10px 15px;cursor:pointer}</style>
-</head><body class="ledger-admin">{% include "_admin_navigation.html" %}
-<main class="lfv-claim-admin"><p>THE LITEFEET VAULT / ADMIN</p><h1>Profile Claims</h1>
-<p>Verify each person's identity or team authorization before granting access. Email verification alone does not prove profile ownership.</p>
-<nav aria-label="Claim status">{% for tab in ['pending','approved','rejected','all'] %}<a href="{{ url_for('admin_profile_claims',view=tab) }}" {% if view == tab %}aria-current="page"{% endif %}>{{ tab|title }}</a>{% endfor %}</nav>
+<style>
+body.ledger-admin main.lfv-claim-admin{max-width:1180px;color:var(--text,var(--lfv-ink))}
+body.ledger-admin .lfv-claim-admin .claim-filters{display:flex;flex-wrap:wrap;gap:20px;border-bottom:1px solid var(--border);margin:18px 0 0}
+html body.ledger-admin main.lfv-claim-admin a.claim-link,
+html body.ledger-admin main.lfv-claim-admin .claim-filters a{display:inline!important;background:transparent!important;color:var(--text)!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;min-height:0!important;font-size:inherit!important;line-height:inherit!important;text-transform:none!important;text-decoration:underline!important;text-underline-offset:3px}
+html body.ledger-admin main.lfv-claim-admin .claim-filters a{display:block!important;padding:9px 0!important;text-decoration:none!important;font-size:.88rem!important;color:var(--muted)!important;font-weight:500!important;border-bottom:2px solid transparent!important}
+html body.ledger-admin main.lfv-claim-admin .claim-filters a[aria-current="page"]{border-bottom-color:var(--text)!important;color:var(--text)!important;font-weight:700!important}
+.claim-list{list-style:none!important;margin:0!important;padding:0!important}
+.claim-row,.claim-columns{display:grid;grid-template-columns:minmax(150px,1fr) minmax(200px,2fr) 92px minmax(130px,auto);gap:18px;align-items:start}
+.claim-columns{padding:12px 0;color:var(--muted);font-size:.75rem;font-weight:600}
+.claim-row{padding:14px 0;border-top:1px solid var(--border);font-size:.9rem;line-height:1.45}
+.claim-row p{margin:0!important;padding:0!important;line-height:1.45;overflow-wrap:anywhere}
+.claim-row .claim-meta{font-size:.76rem;color:var(--muted);margin-top:4px!important}
+.claim-row .claim-status{font-size:.8rem;font-weight:600}
+.claim-row .claim-actions{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0!important}
+html body.ledger-admin main.lfv-claim-admin .claim-actions button{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;min-height:0!important;color:var(--text)!important;line-height:1.5!important;font-size:.85rem!important;font-weight:600!important;text-decoration:underline;text-underline-offset:3px;cursor:pointer;text-transform:none!important}
+html body.ledger-admin main.lfv-claim-admin .claim-actions button:disabled{opacity:.45;cursor:not-allowed;text-decoration:none}
+.claim-note{margin-top:7px;font-size:.75rem;color:var(--muted)}
+.claim-note summary{cursor:pointer;width:fit-content}
+body.ledger-admin main.lfv-claim-admin .claim-note textarea{display:block;width:100%;min-height:0;padding:6px;font-size:.8rem;margin-top:5px;box-sizing:border-box}
+.claim-empty{padding:18px 0;color:var(--muted)}
+.claim-row :is(a,button,summary):focus-visible{outline:2px solid currentColor;outline-offset:3px}
+@media(max-width:720px){
+.claim-columns{display:none}
+.claim-row{grid-template-columns:minmax(0,1fr) auto;gap:8px 14px}
+.claim-person{grid-column:1;grid-row:1}.claim-status{grid-column:2;grid-row:1;text-align:right}
+.claim-details{grid-column:1/-1;grid-row:2}.claim-review{grid-column:1/-1;grid-row:3}
+.claim-review .claim-actions{gap:20px}
+html body.ledger-admin main.lfv-claim-admin .claim-actions button{padding:8px 0!important}
+}
+</style>
+</head>
+<body class="ledger-admin">
+{% include "_admin_navigation.html" %}
+<main class="lfv-admin-workspace lfv-claim-admin">
+<header class="lfv-admin-workspace-head">
+<p class="lfv-admin-overline">THE LITEFEET VAULT / ADMIN</p>
+<h1>Profile Claims</h1>
+<p>Verify identity or team authorization before approving ownership.</p>
+</header>
+<nav class="claim-filters" aria-label="Claim status">
+{% for tab in ['pending','approved','rejected','all'] %}
+<a href="{{ url_for('admin_profile_claims',view=tab) }}" {% if view == tab %}aria-current="page"{% endif %}>{{ tab|title }}</a>
+{% endfor %}
+</nav>
 {% for notice in get_flashed_messages(category_filter=['claim']) %}<p role="status">{{ notice }}</p>{% endfor %}
+{% if claims %}
+<div class="claim-columns" aria-hidden="true"><span>Profile / claimant</span><span>Claim details</span><span>Status</span><span>Decision</span></div>
+<ul class="claim-list" aria-label="Profile claims">
 {% for claim in claims %}
-<article class="lfv-claim-item">
-<h2><a href="{{ claim.profile_href }}">{{ claim.profile_href }}</a></h2>
-<p><strong>{{ claim.status|title }}</strong> · {{ claim.relationship|replace('_',' ')|title }} · {{ claim.masked_email }} · {{ claim.created_at.strftime('%b %d, %Y') }}</p>
+<li class="claim-row">
+<div class="claim-person">
+<p><a class="claim-link" href="{{ claim.profile_href }}"><strong>{{ claim.profile_href.rstrip('/').split('/')[-1]|replace('-', ' ')|replace('_', ' ')|title }}</strong></a></p>
+<p class="claim-meta">{{ claim.relationship|replace('_',' ')|title }} · {{ claim.masked_email }}</p>
+<p class="claim-meta"><time datetime="{{ claim.created_at.isoformat() }}">{{ claim.created_at.strftime('%b %d, %Y') }}</time></p>
+</div>
+<div class="claim-details">
 <p>{{ claim.explanation }}</p>
-{% if claim.conflicting_owner %}<p><strong>Ownership conflict:</strong> Another verified mailbox currently manages this profile. Reconcile access before approval.</p>{% endif %}
-{% if claim.admin_note %}<p><strong>Admin note:</strong> {{ claim.admin_note }}</p>{% endif %}
+{% if claim.conflicting_owner %}<p class="claim-meta"><strong>Ownership conflict:</strong> Another verified mailbox manages this profile. Reconcile access before approval.</p>{% endif %}
+{% if claim.admin_note %}<p class="claim-meta"><strong>Admin note:</strong> {{ claim.admin_note }}</p>{% endif %}
+</div>
+<div class="claim-status">{{ claim.status|title }}</div>
+<div class="claim-review">
 {% if claim.status == 'pending' %}
 <form method="post" action="{{ url_for('admin_profile_claim_decision',claim_id=claim.id) }}">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-<label for="note-{{ claim.id }}">Review note (optional)<textarea id="note-{{ claim.id }}" name="admin_note" rows="2" maxlength="1000"></textarea></label>
-<div class="actions"><button name="decision" value="approved" type="submit" {% if claim.conflicting_owner %}disabled{% endif %}>Approve claim</button><button name="decision" value="rejected" type="submit">Reject claim</button></div>
+<div class="claim-actions">
+<button name="decision" value="approved" type="submit" aria-label="Approve claim" {% if claim.conflicting_owner %}disabled{% endif %}>Approve</button>
+<button name="decision" value="rejected" type="submit" aria-label="Reject claim">Reject</button>
+</div>
+<details class="claim-note"><summary>Add note (optional)</summary><label for="note-{{ claim.id }}">Review note</label><textarea id="note-{{ claim.id }}" name="admin_note" rows="2" maxlength="1000"></textarea></details>
 </form>
-{% endif %}
-</article>
-{% else %}<p>No claims in this view.</p>{% endfor %}
-</main></body></html>
+{% elif claim.resolved_at %}<p class="claim-meta">Reviewed {{ claim.resolved_at.strftime('%b %d, %Y') }}</p>{% else %}<span>—</span>{% endif %}
+</div>
+</li>
+{% endfor %}
+</ul>
+{% else %}<p class="claim-empty">No claims in this view.</p>{% endif %}
+</main>
+<script defer src="{{ url_for('static',filename='js/litefeet-sitewide.js') }}"></script>
+</body>
+</html>
