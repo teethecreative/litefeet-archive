@@ -34,7 +34,7 @@
             <div class="lfv-admin-metric">
                 <span>Pending Reviews</span>
                 <strong>{{ pending_total }}</strong>
-                <a href="#review-queue">View queues</a>
+                <a href="/admin/review">View queues</a>
             </div>
             <div class="lfv-admin-metric">
                 <span>User Accounts</span>
@@ -68,7 +68,7 @@
                     <h2 id="review-heading">Review Queue</h2>
                     <p class="lfv-admin-muted">Existing review categories, with their current open and total counts.</p>
                 </div>
-                <a href="/admin/submissions" class="lfv-admin-text-link">All submissions</a>
+                <a href="/admin/review" class="lfv-admin-text-link">Open review queue</a>
             </div>
 
             <div class="lfv-admin-table-shell">
@@ -97,7 +97,7 @@
                             </td>
                             <td class="lfv-admin-number lfv-admin-col-total">{{ card.total }}</td>
                             <td class="lfv-admin-cell-action">
-                                <a href="{% if card.label == 'Profile Claims' %}/admin/phase2?section=claims{% elif card.label == 'Ledger Review / Context' %}/admin/phase2?section=perspectives{% elif card.label == 'Battle Records' %}/admin/phase2?section=battles{% else %}{{ phase12_url_for(card.endpoint, card.fallback) }}{% endif %}">
+                                <a href="{% if card.label == 'Profile Claims' %}/admin/phase2?section=claims{% elif card.label == 'Ledger Review / Context' %}/admin/phase2?section=perspectives{% elif card.label == 'Battle Records' %}/admin/phase2?section=battles{% else %}{% if card.label == 'Awards' %}/admin/records/awards{% elif card.label == 'Teams' %}/admin/records/teams{% else %}{{ phase12_url_for(card.endpoint, card.fallback) }}{% endif %}{% endif %}">
                                     {% if card.label in ['Awards', 'Teams'] %}View{% else %}Review{% endif %}
                                 </a>
                             </td>
@@ -108,7 +108,7 @@
                     </tbody>
                 </table>
             </div>
-            <p class="lfv-admin-help">Awards and team record links open their public views; dedicated review tools are not yet available.</p>
+            <p class="lfv-admin-help"></p>
         </section>
 
         <section class="lfv-admin-section" id="recent-activity" aria-labelledby="activity-heading">
