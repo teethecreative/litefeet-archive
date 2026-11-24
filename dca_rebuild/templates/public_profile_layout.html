@@ -7,28 +7,26 @@
 <main class="lfv-profile-page" id="profile">
   <div class="lfv-profile-header">
     <h1>{{ profile.name }}</h1>
+    {% if presentation.status_line %}<p class="lfv-profile-status-line" style="font-size:clamp(1.1rem,2.2vw,1.5rem);font-weight:700;line-height:1.35;margin:5px 0 12px;">{{ presentation.status_line }}</p>{% endif %}
     <div class="lfv-profile-header-meta">
       <span class="lfv-profile-type">{{ 'LiteFeet team' if profile.is_team else 'LiteFeet profile' }}</span>
-      <span aria-hidden="true">·</span>
-      <span>{{ 'Archive-listed' if archived else 'Award / nomination-linked' }}</span>
       {% if archived and archived.editorial_status %}
       <span aria-hidden="true">·</span>
       <span>{{ archived.editorial_status }}</span>
       {% endif %}
     </div>
     {% set claim_status = vault_profile_claim_status(profile) %}
+    {% if claim_status != 'claimed' %}
     <div class="lfv-profile-claim-line">
       {% if claim_status == 'owned_by_you' %}
       <span class="lfv-profile-claim-state">You manage this profile</span> · <a href="{{ url_for('vault_owner_profile_editor',profile=profile.href) }}">Edit Profile</a>
-      {% elif claim_status == 'claimed' %}
-      <span class="lfv-profile-claim-state">Claimed profile</span>
       {% elif claim_status == 'pending' %}
       <span class="lfv-profile-claim-state">Your profile claim is pending review</span>
       {% else %}
       <a href="{{ url_for('vault_profile_claim', profile=profile.href) }}">Claim This Profile</a>
       {% endif %}
     </div>
-    {% if presentation.status_line %}<p class="lfv-profile-status-line">{{ presentation.status_line }}</p>{% endif %}
+    {% endif %}
     {% if has_multiple_roles %}
     <div class="lfv-profile-role-nav" role="group" aria-label="Profile role views" data-lfv-role-nav>
       <button type="button" class="lfv-profile-role-badge is-active" data-lfv-role="overview" aria-pressed="true">Overview</button>
