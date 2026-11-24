@@ -299,16 +299,16 @@ body:has(.vault-admin-shell) .site-shell {max-width:none!important;width:100%;pa
 <aside class="vault-admin-nav" aria-label="Administration navigation">
 <h2>The LiteFeet Vault · Admin</h2>
 {% set groups = [
-('Workspace', [('Overview','/admin'),('Review Queue','/admin#review-queue'),('Recent Activity','/admin#recent-activity'),('Add Record','/admin/submissions/new')]),
-('People & Accounts', [('Profiles','/admin/dancer-profiles'),('Users','/admin/users'),('Claims','/admin/phase2?section=claims'),('Profile Edits','/admin/profile-corrections'),('Profile Links','/admin/profile-links'),('Visibility Requests','/admin/profile-visibility-requests'),('Role Requests','/admin/role-requests'),('Duplicates','/admin/duplicate-reports')]),
-('Content', [('Submissions','/admin/submissions'),('Battle Records','/admin/phase2?section=battles'),('Events','/admin/calendar-review'),('Music & Media','/admin/media'),('Music Feedback','/admin/music-feedback'),('Awards (public)','/awards'),('Awards Import','/admin/imports/dancers-choice-2023')]),
+('Workspace', [('Overview','/admin'),('Review Queue','/admin/review'),('Recent Activity','/admin#recent-activity'),('Add Record','/admin/submissions/new')]),
+('People & Accounts', [('Profiles','/admin/dancer-profiles'),('Users','/admin/users'),('Claims','/admin/review?type=claims'),('Profile Edits','/admin/profile-corrections'),('Profile Links','/admin/profile-links'),('Visibility Requests','/admin/profile-visibility-requests'),('Role Requests','/admin/role-requests'),('Duplicates','/admin/duplicate-reports')]),
+('Content', [('Submissions','/admin/submissions'),('Battle Records','/admin/phase2?section=battles'),('Events','/admin/calendar-review'),('Music & Media','/admin/media'),('Music Feedback','/admin/music-feedback'),('Awards','/admin/records/awards'),('Teams','/admin/records/teams'),('Awards Import','/admin/imports/dancers-choice-2023')]),
 ('Community', [('Perspectives','/admin/phase2?section=perspectives'),('Ask Conversations','/admin/phase2?section=ask'),('Ask Feedback','/admin/ask-feedback'),('Dancer Feedback','/admin/dancer-feedback'),('Homepage Questions','/admin/home-prompts')]),
 ('System', [('Performance','/admin/performance'),('Error Logs','/admin/error-logs'),('Deploy Status','/admin/deploy-status'),('Maintenance','/admin/maintenance'),('View Public Site','/'),('Sign Out','/admin/logout')])
 ] %}
 {% for heading, links in groups %}
 <section><h3>{{ heading }}</h3>
 {% for label, href in links %}
-<a href="{{ href }}"{% if request.path == href or (request.path == href.split('?')[0] and '?' in href and request.args.get('section') == href.split('=')[-1]) %} aria-current="page"{% endif %}>{{ label }}</a>
+<a href="{{ href }}"{% if request.path == href or (request.path == href.split('?')[0] and '?' in href and request.args.get('section', request.args.get('type')) == href.split('=')[-1]) %} aria-current="page"{% endif %}>{{ label }}</a>
 {% endfor %}
 </section>
 {% endfor %}
